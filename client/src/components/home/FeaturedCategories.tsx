@@ -46,7 +46,7 @@ const FeaturedCategories = () => {
   };
 
   return (
-    <section className="py-16">
+    <section className="py-16 bg-blue-50/30">
       <div className="container mx-auto px-4">
         <div className="flex flex-wrap items-center justify-between mb-8">
           <div>

@@ -42,7 +42,7 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId }: ArtGalleryProps) => {
   };
 
   return (
-    <section className="py-16 bg-gradient-to-b from-white to-primary/5">
+    <section className="py-16 bg-gradient-to-b from-blue-50/50 to-white">
       <div className="container mx-auto px-4">
         <div className="flex flex-wrap items-center justify-between mb-8">
           <div>
