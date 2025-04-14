@@ -54,7 +54,7 @@ const ArtCard = ({ art, userRole }: ArtCardProps) => {
 
   return (
     <div 
-      className="group relative overflow-hidden cursor-pointer"
+      className="group relative overflow-hidden cursor-pointer rounded-xl shadow-sm hover:shadow-lg transition-all duration-300"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleArtClick}
@@ -69,8 +69,8 @@ const ArtCard = ({ art, userRole }: ArtCardProps) => {
         
         {/* Premium Badge */}
         {art.isPremium && (
-          <div className="absolute top-3 right-3">
-            <Badge className="bg-secondary-500 text-white text-xs px-2 py-1 rounded-full">
+          <div className="absolute top-3 right-3 z-10">
+            <Badge className="bg-gradient-to-r from-secondary to-secondary/80 text-white text-xs px-3 py-1 rounded-full font-medium shadow-md">
               Premium
             </Badge>
           </div>
@@ -78,19 +78,31 @@ const ArtCard = ({ art, userRole }: ArtCardProps) => {
         
         {/* Overlay on hover */}
         <div 
-          className={`absolute inset-0 bg-neutral-900 transition-all duration-300 flex items-center justify-center ${
-            isHovered ? 'bg-opacity-20' : 'bg-opacity-0'
+          className={`absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent transition-all duration-300 flex items-center justify-center ${
+            isHovered ? 'opacity-100' : 'opacity-0'
           }`}
         >
           <div 
             className={`transform transition-all duration-300 ${
-              isHovered ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
+              isHovered ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
             }`}
           >
-            <button className="bg-white text-neutral-800 rounded-full p-3">
-              <ExternalLink className="h-5 w-5" />
-            </button>
+            <div className="flex flex-col items-center gap-3">
+              <div className="bg-white text-primary hover:bg-primary hover:text-white rounded-full p-3 shadow-lg transform transition-all duration-200 hover:scale-110">
+                <ExternalLink className="h-5 w-5" />
+              </div>
+              <span className="text-white text-sm font-medium px-3 py-1 bg-black/30 backdrop-blur-sm rounded-md">
+                Editar Arte
+              </span>
+            </div>
           </div>
+        </div>
+        
+        {/* Type indicator at bottom */}
+        <div className="absolute bottom-3 left-3 z-10">
+          <span className="bg-white/80 backdrop-blur-sm text-xs text-primary px-2 py-1 rounded opacity-70 group-hover:opacity-0 transition-opacity duration-300">
+            {art.format} • {art.fileType}
+          </span>
         </div>
       </div>
     </div>

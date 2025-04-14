@@ -42,22 +42,28 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId }: ArtGalleryProps) => {
   };
 
   return (
-    <section className="py-10 bg-neutral-50">
+    <section className="py-16 bg-gradient-to-b from-white to-primary/5">
       <div className="container mx-auto px-4">
-        <div className="flex flex-wrap items-center justify-between mb-6">
-          <h2 className="text-2xl font-semibold text-neutral-800">Artes em Destaque</h2>
-          <Link href="/arts" className="text-primary hover:text-primary/80 font-medium text-sm flex items-center">
+        <div className="flex flex-wrap items-center justify-between mb-8">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-bold text-primary mb-2">Artes em Destaque</h2>
+            <p className="text-neutral-600 max-w-2xl">Designs profissionais prontos para impulsionar suas vendas</p>
+          </div>
+          <Link 
+            href="/arts" 
+            className="text-primary hover:text-primary/80 font-medium text-sm flex items-center border border-primary/20 rounded-full px-4 py-2 transition-all hover:bg-primary/5"
+          >
             Ver todos os designs
             <ArrowRight className="ml-1 h-4 w-4" />
           </Link>
         </div>
         
         {isLoading ? (
-          <div className="columns-2 sm:columns-2 md:columns-3 lg:columns-4 gap-2 md:gap-3 space-y-2 md:space-y-3">
+          <div className="columns-2 sm:columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4 space-y-3 md:space-y-4">
             {[...Array(8)].map((_, index) => (
               <div 
                 key={index} 
-                className="block overflow-hidden animate-pulse break-inside-avoid mb-3"
+                className="block overflow-hidden animate-pulse break-inside-avoid mb-4 rounded-xl shadow-sm"
               >
                 <div className={`${index % 3 === 0 ? 'aspect-1' : (index % 3 === 1 ? 'aspect-[4/5]' : 'aspect-[9/16]')} bg-neutral-200`} />
               </div>
@@ -65,9 +71,9 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId }: ArtGalleryProps) => {
           </div>
         ) : (
           <>
-            <div className="columns-2 sm:columns-2 md:columns-3 lg:columns-4 gap-2 md:gap-3">
+            <div className="columns-2 sm:columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4">
               {arts.map((art) => (
-                <div key={art.id} className="break-inside-avoid mb-3">
+                <div key={art.id} className="break-inside-avoid mb-4 transform hover:-translate-y-1 transition-transform duration-300">
                   <ArtCard 
                     art={art} 
                     userRole={userRole}
@@ -78,17 +84,25 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId }: ArtGalleryProps) => {
             
             {/* Load More Button */}
             {hasMore && (
-              <div className="flex justify-center mt-10">
+              <div className="flex justify-center mt-12">
                 <Button 
                   variant="outline" 
                   onClick={loadMore}
                   disabled={isFetching}
-                  className="px-6 py-3 flex items-center"
+                  className="px-8 py-6 flex items-center rounded-full border-2 border-primary/30 text-primary hover:bg-primary/5 font-medium"
                 >
-                  {isFetching ? 'Carregando...' : (
+                  {isFetching ? (
+                    <span className="flex items-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Carregando...
+                    </span>
+                  ) : (
                     <>
-                      <span>Carregar mais</span>
-                      <ArrowDown className="ml-2 h-4 w-4" />
+                      <span>Carregar mais designs</span>
+                      <ArrowDown className="ml-2 h-5 w-5" />
                     </>
                   )}
                 </Button>

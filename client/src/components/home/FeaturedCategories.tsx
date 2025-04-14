@@ -46,11 +46,17 @@ const FeaturedCategories = () => {
   };
 
   return (
-    <section className="py-10">
+    <section className="py-16">
       <div className="container mx-auto px-4">
-        <div className="flex flex-wrap items-center justify-between mb-6">
-          <h2 className="text-2xl font-semibold text-neutral-800">Escolha sua categoria</h2>
-          <Link href="/categories" className="text-primary hover:text-primary/80 font-medium text-sm flex items-center">
+        <div className="flex flex-wrap items-center justify-between mb-8">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-bold text-primary mb-2">Escolha sua categoria</h2>
+            <p className="text-neutral-600 max-w-2xl">Encontre os melhores designs para impulsionar suas vendas</p>
+          </div>
+          <Link 
+            href="/categories" 
+            className="text-primary hover:text-primary/80 font-medium text-sm flex items-center border border-primary/20 rounded-full px-4 py-2 transition-all hover:bg-primary/5"
+          >
             Ver todas as categorias
             <ArrowRight className="ml-1 h-4 w-4" />
           </Link>
@@ -62,17 +68,17 @@ const FeaturedCategories = () => {
             <>
               <button 
                 onClick={scrollLeft}
-                className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-md hover:bg-neutral-50 focus:outline-none"
+                className="absolute -left-4 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-3 shadow-lg hover:bg-primary hover:text-white focus:outline-none transition-colors duration-200"
                 aria-label="Rolar para a esquerda"
               >
-                <ChevronLeft className="h-5 w-5 text-neutral-700" />
+                <ChevronLeft className="h-5 w-5" />
               </button>
               <button 
                 onClick={scrollRight}
-                className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-md hover:bg-neutral-50 focus:outline-none"
+                className="absolute -right-4 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-3 shadow-lg hover:bg-primary hover:text-white focus:outline-none transition-colors duration-200"
                 aria-label="Rolar para a direita"
               >
-                <ChevronRight className="h-5 w-5 text-neutral-700" />
+                <ChevronRight className="h-5 w-5" />
               </button>
             </>
           )}
@@ -81,10 +87,10 @@ const FeaturedCategories = () => {
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
               {[...Array(4)].map((_, index) => (
-                <div key={index} className="rounded-lg overflow-hidden shadow-sm animate-pulse">
+                <div key={index} className="rounded-xl overflow-hidden shadow-md animate-pulse">
                   <div className="aspect-square bg-neutral-200" />
-                  <div className="p-3 flex flex-col items-center">
-                    <div className="h-4 bg-neutral-200 rounded w-2/3 mb-2" />
+                  <div className="p-4 flex flex-col items-center">
+                    <div className="h-5 bg-neutral-200 rounded w-2/3 mb-2" />
                   </div>
                 </div>
               ))}
@@ -92,18 +98,18 @@ const FeaturedCategories = () => {
           ) : (
             <div 
               ref={scrollContainerRef}
-              className="flex overflow-x-auto pb-4 hide-scrollbar snap-x snap-mandatory pl-4 -mx-4"
+              className="flex overflow-x-auto pb-8 hide-scrollbar snap-x snap-mandatory pl-4 -mx-4"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               {categories?.map((category, index) => (
-                <div key={category.id} className="flex-none w-[75%] sm:w-[45%] md:w-[32%] lg:w-[24%] pr-2 sm:pr-4 snap-start">
+                <div key={category.id} className="flex-none w-[75%] sm:w-[45%] md:w-[32%] lg:w-[24%] pr-3 sm:pr-5 snap-start">
                   <Link href={`/?category=${category.id}`}>
-                    <div className="group rounded-lg overflow-hidden cursor-pointer transition-all hover:shadow-md h-full">
+                    <div className="group rounded-xl overflow-hidden cursor-pointer transition-all hover:shadow-lg h-full border border-neutral-200 bg-white">
                       <div className="aspect-square relative overflow-hidden">
                         <div className="grid grid-cols-2 h-full">
                           {/* Simulando múltiplas imagens em um grid para cada categoria */}
                           {[...Array(4)].map((_, imgIndex) => (
-                            <div key={imgIndex} className="overflow-hidden">
+                            <div key={imgIndex} className="overflow-hidden border border-white">
                               <img 
                                 src={getCategoryImageUrl(category, index + imgIndex)} 
                                 alt="" 
@@ -113,9 +119,13 @@ const FeaturedCategories = () => {
                             </div>
                           ))}
                         </div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                       </div>
-                      <div className="p-3 bg-white text-center">
-                        <h3 className="font-medium text-neutral-800">
+                      <div className="p-4 bg-white relative">
+                        <div className="absolute top-0 right-4 transform -translate-y-1/2 bg-secondary text-white h-8 w-8 rounded-full flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                          <ChevronRight className="h-5 w-5" />
+                        </div>
+                        <h3 className="font-semibold text-neutral-800 group-hover:text-primary transition-colors">
                           Artes de {category.name}
                         </h3>
                       </div>
