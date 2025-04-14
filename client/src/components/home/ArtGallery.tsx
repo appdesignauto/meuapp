@@ -53,7 +53,7 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId }: ArtGalleryProps) => {
         </div>
         
         {isLoading ? (
-          <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-2 md:gap-3 space-y-2 md:space-y-3">
+          <div className="columns-2 sm:columns-2 md:columns-3 lg:columns-4 gap-2 md:gap-3 space-y-2 md:space-y-3">
             {[...Array(8)].map((_, index) => (
               <div 
                 key={index} 
@@ -65,7 +65,7 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId }: ArtGalleryProps) => {
           </div>
         ) : (
           <>
-            <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-2 md:gap-3">
+            <div className="columns-2 sm:columns-2 md:columns-3 lg:columns-4 gap-2 md:gap-3">
               {arts.map((art) => (
                 <div key={art.id} className="break-inside-avoid mb-3">
                   <ArtCard 
