@@ -194,6 +194,9 @@ export class MemStorage implements IStorage {
         isPremium: false,
         categoryId: 2, // Lançamentos
         collectionId: collectionIds[0],
+        width: 1080,
+        height: 1080,
+        aspectRatio: "1:1"
       },
       {
         title: "Promoção de Seminovos",
@@ -204,6 +207,9 @@ export class MemStorage implements IStorage {
         isPremium: true,
         categoryId: 6, // Seminovos
         collectionId: collectionIds[2],
+        width: 1080,
+        height: 1350,
+        aspectRatio: "4:5"
       },
       {
         title: "Black Friday Automóveis",
@@ -214,6 +220,9 @@ export class MemStorage implements IStorage {
         isPremium: false,
         categoryId: 1, // Promoções
         collectionId: collectionIds[1],
+        width: 1080,
+        height: 1920,
+        aspectRatio: "9:16"
       },
       {
         title: "Revisão Promocional",
@@ -224,6 +233,9 @@ export class MemStorage implements IStorage {
         isPremium: false,
         categoryId: 7, // Pós-Venda
         collectionId: collectionIds[3],
+        width: 1080,
+        height: 1080,
+        aspectRatio: "1:1"
       },
       {
         title: "Carro do Mês - Destaque",
@@ -234,6 +246,9 @@ export class MemStorage implements IStorage {
         isPremium: true,
         categoryId: 2, // Lançamentos
         collectionId: collectionIds[0],
+        width: 1080,
+        height: 1350,
+        aspectRatio: "4:5"
       },
       {
         title: "Promoção Relâmpago",
@@ -244,6 +259,9 @@ export class MemStorage implements IStorage {
         isPremium: false,
         categoryId: 1, // Promoções
         collectionId: collectionIds[1],
+        width: 1080,
+        height: 1920,
+        aspectRatio: "9:16"
       },
       {
         title: "Consórcio Facilitado",
@@ -254,6 +272,9 @@ export class MemStorage implements IStorage {
         isPremium: false,
         categoryId: 4, // Consórcios
         collectionId: collectionIds[3],
+        width: 1080,
+        height: 1080,
+        aspectRatio: "1:1"
       },
       {
         title: "Test Drive Exclusivo",
@@ -264,6 +285,9 @@ export class MemStorage implements IStorage {
         isPremium: true,
         categoryId: 3, // Venda Direta
         collectionId: collectionIds[2],
+        width: 1080,
+        height: 1920,
+        aspectRatio: "9:16"
       },
     ];
     

@@ -16,6 +16,9 @@ export interface Art {
   isPremium: boolean;
   categoryId: number;
   collectionId: number;
+  width?: number;
+  height?: number;
+  aspectRatio?: string; // ex: "1:1", "4:5", "9:16" 
 }
 
 export interface Collection {

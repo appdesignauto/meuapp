@@ -40,14 +40,26 @@ const ArtCard = ({ art, userRole }: ArtCardProps) => {
     window.open(art.editUrl, '_blank');
   };
 
+  // Determinar a classe correta baseada na proporção da imagem
+  const getAspectRatioClass = () => {
+    if (!art.aspectRatio) return "aspect-1"; // padrão é 1:1
+    
+    switch (art.aspectRatio) {
+      case "1:1": return "aspect-1";
+      case "4:5": return "aspect-[4/5]"; 
+      case "9:16": return "aspect-[9/16]";
+      default: return "aspect-1";
+    }
+  };
+
   return (
     <div 
-      className="group relative rounded-lg overflow-hidden shadow-sm hover:shadow-md transition cursor-pointer"
+      className="group relative overflow-hidden cursor-pointer"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleArtClick}
     >
-      <div className="aspect-1 bg-neutral-100 relative">
+      <div className={`${getAspectRatioClass()} bg-neutral-100 relative`}>
         <img 
           src={art.imageUrl} 
           alt={art.title} 
@@ -79,18 +91,6 @@ const ArtCard = ({ art, userRole }: ArtCardProps) => {
               <ExternalLink className="h-5 w-5" />
             </button>
           </div>
-        </div>
-      </div>
-      
-      <div className="p-3">
-        <h3 className="text-base font-medium text-neutral-800 truncate">{art.title}</h3>
-        <div className="flex items-center justify-between mt-1">
-          <div className="flex items-center">
-            <Badge variant="outline" className="text-xs text-neutral-500 bg-neutral-100 px-2 py-0.5 rounded-full">
-              {art.format}
-            </Badge>
-          </div>
-          <span className="text-xs text-neutral-500">{art.fileType}</span>
         </div>
       </div>
     </div>
