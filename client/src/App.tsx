@@ -1,10 +1,10 @@
 import { Switch, Route } from "wouter";
-import Header from "./components/layout/Header";
-import Footer from "./components/layout/Footer";
-import Home from "./pages/Home";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Collections from "./pages/Collections";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import Home from "@/pages/Home";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import Collections from "@/pages/Collections";
 import NotFound from "@/pages/not-found";
 
 function App() {
