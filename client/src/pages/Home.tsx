@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Hero from '@/components/home/Hero';
 import CategoryFilters from '@/components/home/CategoryFilters';
-import FeaturedCollections from '@/components/home/FeaturedCollections';
+import FeaturedCategories from '@/components/home/FeaturedCategories';
 import ArtGallery from '@/components/home/ArtGallery';
 import PremiumFeatures from '@/components/home/PremiumFeatures';
 import Testimonials from '@/components/home/Testimonials';
@@ -20,7 +20,7 @@ const Home = () => {
         onFormatChange={setSelectedFormat}
         onFileTypeChange={setSelectedFileType}
       />
-      <FeaturedCollections />
+      <FeaturedCategories />
       <ArtGallery 
         categoryId={selectedCategory} 
         formatId={selectedFormat} 

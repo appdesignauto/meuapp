@@ -5,6 +5,7 @@ import Home from "@/pages/Home";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Collections from "@/pages/Collections";
+import Categories from "@/pages/Categories";
 import NotFound from "@/pages/not-found";
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
           <Route path="/login" component={Login} />
           <Route path="/register" component={Register} />
           <Route path="/collections" component={Collections} />
+          <Route path="/categories" component={Categories} />
           <Route component={NotFound} />
         </Switch>
       </main>
