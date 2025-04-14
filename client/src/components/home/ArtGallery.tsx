@@ -53,32 +53,26 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId }: ArtGalleryProps) => {
         </div>
         
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+          <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-2 md:gap-3 space-y-2 md:space-y-3">
             {[...Array(8)].map((_, index) => (
               <div 
                 key={index} 
-                className="rounded-lg overflow-hidden shadow-sm animate-pulse"
+                className="block overflow-hidden animate-pulse break-inside-avoid mb-3"
               >
-                <div className="aspect-1 bg-neutral-200" />
-                <div className="p-3">
-                  <div className="h-5 bg-neutral-200 rounded mb-2" />
-                  <div className="flex items-center justify-between">
-                    <div className="h-4 bg-neutral-200 rounded w-1/3" />
-                    <div className="h-4 bg-neutral-200 rounded w-1/4" />
-                  </div>
-                </div>
+                <div className={`${index % 3 === 0 ? 'aspect-1' : (index % 3 === 1 ? 'aspect-[4/5]' : 'aspect-[9/16]')} bg-neutral-200`} />
               </div>
             ))}
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-2 md:gap-3">
               {arts.map((art) => (
-                <ArtCard 
-                  key={art.id} 
-                  art={art} 
-                  userRole={userRole} 
-                />
+                <div key={art.id} className="break-inside-avoid mb-3">
+                  <ArtCard 
+                    art={art} 
+                    userRole={userRole}
+                  />
+                </div>
               ))}
             </div>
             
