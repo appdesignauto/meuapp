@@ -1,12 +1,31 @@
+import { useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Category } from '@/types';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const FeaturedCategories = () => {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
+  
   const { data: categories, isLoading } = useQuery<Category[]>({
     queryKey: ['/api/categories'],
   });
+
+  // Função para rolar o carrossel para a esquerda
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -280, behavior: 'smooth' });
+    }
+  };
+
+  // Função para rolar o carrossel para a direita
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 280, behavior: 'smooth' });
+    }
+  };
 
   // Função para gerar uma URL de imagem para categorias
   const getCategoryImageUrl = (category: Category, index: number) => {
@@ -37,47 +56,76 @@ const FeaturedCategories = () => {
           </Link>
         </div>
         
-        {isLoading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
-            {[...Array(4)].map((_, index) => (
-              <div key={index} className="rounded-lg overflow-hidden shadow-sm animate-pulse">
-                <div className="aspect-square bg-neutral-200" />
-                <div className="p-3 flex flex-col items-center">
-                  <div className="h-4 bg-neutral-200 rounded w-2/3 mb-2" />
+        <div className="relative">
+          {/* Botões de navegação do carrossel */}
+          {!isMobile && !isLoading && categories && categories.length > 0 && (
+            <>
+              <button 
+                onClick={scrollLeft}
+                className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-md hover:bg-neutral-50 focus:outline-none"
+                aria-label="Rolar para a esquerda"
+              >
+                <ChevronLeft className="h-5 w-5 text-neutral-700" />
+              </button>
+              <button 
+                onClick={scrollRight}
+                className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-md hover:bg-neutral-50 focus:outline-none"
+                aria-label="Rolar para a direita"
+              >
+                <ChevronRight className="h-5 w-5 text-neutral-700" />
+              </button>
+            </>
+          )}
+          
+          {/* Carrossel de categorias */}
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
+              {[...Array(4)].map((_, index) => (
+                <div key={index} className="rounded-lg overflow-hidden shadow-sm animate-pulse">
+                  <div className="aspect-square bg-neutral-200" />
+                  <div className="p-3 flex flex-col items-center">
+                    <div className="h-4 bg-neutral-200 rounded w-2/3 mb-2" />
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
-            {categories?.slice(0, 8).map((category, index) => (
-              <Link key={category.id} href={`/?category=${category.id}`}>
-                <div className="group rounded-lg overflow-hidden cursor-pointer transition-all hover:shadow-md">
-                  <div className="aspect-square relative overflow-hidden">
-                    <div className="grid grid-cols-2 h-full">
-                      {/* Simulando múltiplas imagens em um grid para cada categoria */}
-                      {[...Array(4)].map((_, imgIndex) => (
-                        <div key={imgIndex} className="overflow-hidden">
-                          <img 
-                            src={getCategoryImageUrl(category, index + imgIndex)} 
-                            alt="" 
-                            className="object-cover w-full h-full transform transition-transform group-hover:scale-105"
-                            loading="lazy"
-                          />
+              ))}
+            </div>
+          ) : (
+            <div 
+              ref={scrollContainerRef}
+              className="flex overflow-x-auto pb-4 hide-scrollbar snap-x snap-mandatory"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {categories?.map((category, index) => (
+                <div key={category.id} className="flex-none w-full sm:w-1/2 md:w-1/3 lg:w-1/4 pl-0 pr-4 snap-start">
+                  <Link href={`/?category=${category.id}`}>
+                    <div className="group rounded-lg overflow-hidden cursor-pointer transition-all hover:shadow-md h-full">
+                      <div className="aspect-square relative overflow-hidden">
+                        <div className="grid grid-cols-2 h-full">
+                          {/* Simulando múltiplas imagens em um grid para cada categoria */}
+                          {[...Array(4)].map((_, imgIndex) => (
+                            <div key={imgIndex} className="overflow-hidden">
+                              <img 
+                                src={getCategoryImageUrl(category, index + imgIndex)} 
+                                alt="" 
+                                className="object-cover w-full h-full transform transition-transform group-hover:scale-105"
+                                loading="lazy"
+                              />
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      </div>
+                      <div className="p-3 bg-white text-center">
+                        <h3 className="font-medium text-neutral-800">
+                          Artes de {category.name}
+                        </h3>
+                      </div>
                     </div>
-                  </div>
-                  <div className="p-3 bg-white text-center">
-                    <h3 className="font-medium text-neutral-800">
-                      Artes de {category.name}
-                    </h3>
-                  </div>
+                  </Link>
                 </div>
-              </Link>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );
