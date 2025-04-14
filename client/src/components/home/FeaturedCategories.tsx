@@ -92,11 +92,11 @@ const FeaturedCategories = () => {
           ) : (
             <div 
               ref={scrollContainerRef}
-              className="flex overflow-x-auto pb-4 hide-scrollbar snap-x snap-mandatory"
+              className="flex overflow-x-auto pb-4 hide-scrollbar snap-x snap-mandatory pl-4 -mx-4"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               {categories?.map((category, index) => (
-                <div key={category.id} className="flex-none w-full sm:w-1/2 md:w-1/3 lg:w-1/4 pl-0 pr-4 snap-start">
+                <div key={category.id} className="flex-none w-[75%] sm:w-[45%] md:w-[32%] lg:w-[24%] pr-2 sm:pr-4 snap-start">
                   <Link href={`/?category=${category.id}`}>
                     <div className="group rounded-lg overflow-hidden cursor-pointer transition-all hover:shadow-md h-full">
                       <div className="aspect-square relative overflow-hidden">
