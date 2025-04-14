@@ -1,5 +1,5 @@
 import { Link } from 'wouter';
-import { Crown } from 'lucide-react';
+import { Crown, X } from 'lucide-react';
 import { UserRole } from '@/types';
 
 interface MobileMenuProps {
@@ -13,30 +13,46 @@ const MobileMenu = ({ isOpen, onClose, navLinks, userRole }: MobileMenuProps) =>
   if (!isOpen) return null;
 
   return (
-    <div className="md:hidden bg-white border-t border-neutral-200 py-3 px-4">
-      <nav className="flex flex-col space-y-3">
-        {navLinks.map((link) => (
-          <Link
-            key={link.path}
-            href={link.path}
-            className="text-neutral-700 hover:text-primary font-medium py-1"
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden" onClick={onClose}>
+      <div 
+        className="absolute right-0 top-0 h-full w-3/4 max-w-xs bg-white shadow-xl py-4 px-6 overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-center mb-6 pb-4 border-b border-neutral-200">
+          <h2 className="text-lg font-semibold text-primary">Menu</h2>
+          <button 
             onClick={onClose}
+            className="text-neutral-500 hover:text-primary transition-colors"
+            aria-label="Close menu"
           >
-            {link.name}
-          </Link>
-        ))}
+            <X className="h-6 w-6" />
+          </button>
+        </div>
         
-        {userRole !== 'premium' && (
-          <Link
-            href="/pricing"
-            className="flex items-center text-neutral-500 hover:text-primary py-1"
-            onClick={onClose}
-          >
-            <Crown className="h-4 w-4 text-secondary-500 mr-1" />
-            <span className="text-sm font-medium">Assinar Premium</span>
-          </Link>
-        )}
-      </nav>
+        <nav className="flex flex-col space-y-5">
+          {navLinks.map((link) => (
+            <Link
+              key={link.path}
+              href={link.path}
+              className="text-neutral-700 hover:text-primary font-medium py-2 border-b border-neutral-100 transition-colors"
+              onClick={onClose}
+            >
+              {link.name}
+            </Link>
+          ))}
+          
+          {userRole !== 'premium' && (
+            <Link
+              href="/pricing"
+              className="flex items-center bg-gradient-to-r from-secondary to-secondary/80 text-white rounded-lg py-3 px-4 mt-4 hover:opacity-90 transition-opacity"
+              onClick={onClose}
+            >
+              <Crown className="h-5 w-5 mr-2" />
+              <span className="font-medium">Assinar Premium</span>
+            </Link>
+          )}
+        </nav>
+      </div>
     </div>
   );
 };
