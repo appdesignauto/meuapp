@@ -28,7 +28,7 @@ const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-neutral-200 shadow-md">
+    <header className="sticky top-0 z-50 bg-white border-b border-blue-100 shadow-md">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
@@ -48,8 +48,8 @@ const Header = () => {
               <Link
                 key={link.path}
                 href={link.path}
-                className={`text-neutral-700 hover:text-primary font-medium text-sm uppercase tracking-wider transition-colors duration-200 ${
-                  location === link.path ? 'text-primary border-b-2 border-primary pb-1' : ''
+                className={`text-neutral-700 hover:text-blue-600 font-medium text-sm uppercase tracking-wider transition-colors duration-200 ${
+                  location === link.path ? 'text-blue-600 border-b-2 border-blue-500 pb-1' : ''
                 }`}
               >
                 {link.name}
@@ -60,8 +60,8 @@ const Header = () => {
           {/* User Actions */}
           <div className="flex items-center space-x-4">
             {userRole !== 'premium' && (
-              <Link href="/pricing" className="text-neutral-700 hover:text-secondary-500 hidden sm:inline-flex items-center transition-colors duration-200">
-                <Crown className="h-4 w-4 text-secondary-500 mr-1" />
+              <Link href="/pricing" className="text-neutral-700 hover:text-blue-600 hidden sm:inline-flex items-center transition-colors duration-200">
+                <Crown className="h-4 w-4 text-blue-500 mr-1" />
                 <span className="text-sm font-medium">Assinar Premium</span>
               </Link>
             )}
@@ -70,13 +70,13 @@ const Header = () => {
               <Button 
                 onClick={() => logout()} 
                 variant="outline"
-                className="border-primary text-primary hover:bg-primary/5 font-medium rounded-md"
+                className="border-blue-400 text-blue-600 hover:bg-blue-50 font-medium rounded-md"
               >
                 Sair
               </Button>
             ) : (
               <Link href="/login">
-                <Button className="bg-secondary hover:bg-secondary/90 text-white font-medium rounded-md">
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md">
                   Entrar
                 </Button>
               </Link>
@@ -84,7 +84,7 @@ const Header = () => {
             
             <button
               type="button"
-              className="md:hidden text-primary hover:text-primary/80 transition-colors duration-200"
+              className="md:hidden text-blue-600 hover:text-blue-500 transition-colors duration-200"
               onClick={toggleMobileMenu}
               aria-label="Toggle menu"
             >

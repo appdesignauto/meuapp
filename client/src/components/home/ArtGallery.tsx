@@ -46,12 +46,12 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId }: ArtGalleryProps) => {
       <div className="container mx-auto px-4">
         <div className="flex flex-wrap items-center justify-between mb-8">
           <div>
-            <h2 className="text-2xl md:text-3xl font-bold text-primary mb-2">Artes em Destaque</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-blue-700 mb-2">Artes em Destaque</h2>
             <p className="text-neutral-600 max-w-2xl">Designs profissionais prontos para impulsionar suas vendas</p>
           </div>
           <Link 
             href="/arts" 
-            className="text-primary hover:text-primary/80 font-medium text-sm flex items-center border border-primary/20 rounded-full px-4 py-2 transition-all hover:bg-primary/5"
+            className="text-blue-600 hover:text-blue-500 font-medium text-sm flex items-center border border-blue-200 rounded-full px-4 py-2 transition-all hover:bg-blue-50"
           >
             Ver todos os designs
             <ArrowRight className="ml-1 h-4 w-4" />
