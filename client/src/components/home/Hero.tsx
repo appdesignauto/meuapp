@@ -25,14 +25,14 @@ const Hero = () => {
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center max-w-4xl mx-auto">
           <div className="flex justify-center items-center mb-5">
-            <span className="bg-secondary/10 text-secondary-foreground rounded-full px-4 py-1.5 text-sm font-medium inline-flex items-center border border-secondary/20">
-              <span className="text-secondary mr-1">★</span>
+            <span className="bg-primary/10 text-primary rounded-full px-4 py-1.5 text-sm font-medium inline-flex items-center border border-primary/20">
+              <span className="text-blue-500 mr-1">★</span>
               +3.000 Artes Exclusivas
             </span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold text-primary mb-6 leading-tight">
+          <h1 className="text-4xl md:text-6xl font-bold text-primary/90 mb-6 leading-tight">
             A MAIOR PLATAFORMA DE
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-secondary to-secondary/80 block"> 
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-400 block"> 
               ARTES AUTOMOTIVAS
             </span>
           </h1>
@@ -59,7 +59,7 @@ const Hero = () => {
               <div>
                 <Button 
                   type="submit" 
-                  className="w-full md:w-auto bg-secondary hover:bg-secondary/90 text-white px-8 py-7 font-medium rounded-b-xl md:rounded-bl-none md:rounded-r-xl transition-colors duration-200"
+                  className="w-full md:w-auto bg-blue-500 hover:bg-blue-600 text-white px-8 py-7 font-medium rounded-b-xl md:rounded-bl-none md:rounded-r-xl transition-colors duration-200"
                 >
                   Pesquisar
                 </Button>
@@ -69,11 +69,11 @@ const Hero = () => {
           
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
-            <Button className="bg-secondary text-white hover:bg-secondary/90 px-6 py-6 rounded-lg font-medium flex items-center shadow-md min-w-[200px]">
+            <Button className="bg-blue-600 text-white hover:bg-blue-700 px-6 py-6 rounded-lg font-medium flex items-center shadow-md min-w-[200px]">
               Começar Agora
               <ChevronRight className="ml-2 h-4 w-4" />
             </Button>
-            <Button variant="outline" className="border-primary text-primary hover:bg-primary/5 px-6 py-6 rounded-lg font-medium flex items-center min-w-[200px]">
+            <Button variant="outline" className="border-blue-400 text-blue-600 hover:bg-blue-50 px-6 py-6 rounded-lg font-medium flex items-center min-w-[200px]">
               Ver Demonstração
             </Button>
           </div>
@@ -81,26 +81,26 @@ const Hero = () => {
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 rounded-xl bg-white shadow-md p-6 max-w-4xl mx-auto">
             <div className="flex flex-col items-center text-center p-3">
-              <div className="bg-primary/10 p-2 rounded-full mb-3">
-                <Images className="text-primary h-6 w-6" />
+              <div className="bg-blue-100 p-2 rounded-full mb-3">
+                <Images className="text-blue-600 h-6 w-6" />
               </div>
               <span className="text-neutral-700 font-medium text-sm">+3.000 Artes Editáveis</span>
             </div>
             <div className="flex flex-col items-center text-center p-3">
-              <div className="bg-primary/10 p-2 rounded-full mb-3">
-                <FileText className="text-primary h-6 w-6" />
+              <div className="bg-blue-100 p-2 rounded-full mb-3">
+                <FileText className="text-blue-600 h-6 w-6" />
               </div>
               <span className="text-neutral-700 font-medium text-sm">Múltiplos Formatos</span>
             </div>
             <div className="flex flex-col items-center text-center p-3">
-              <div className="bg-primary/10 p-2 rounded-full mb-3">
-                <Laptop className="text-primary h-6 w-6" />
+              <div className="bg-blue-100 p-2 rounded-full mb-3">
+                <Laptop className="text-blue-600 h-6 w-6" />
               </div>
               <span className="text-neutral-700 font-medium text-sm">Edição Online</span>
             </div>
             <div className="flex flex-col items-center text-center p-3">
-              <div className="bg-primary/10 p-2 rounded-full mb-3">
-                <RefreshCw className="text-primary h-6 w-6" />
+              <div className="bg-blue-100 p-2 rounded-full mb-3">
+                <RefreshCw className="text-blue-600 h-6 w-6" />
               </div>
               <span className="text-neutral-700 font-medium text-sm">Atualizações Constantes</span>
             </div>

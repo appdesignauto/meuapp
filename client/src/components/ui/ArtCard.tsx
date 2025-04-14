@@ -70,7 +70,7 @@ const ArtCard = ({ art, userRole }: ArtCardProps) => {
         {/* Premium Badge */}
         {art.isPremium && (
           <div className="absolute top-3 right-3 z-10">
-            <Badge className="bg-gradient-to-r from-secondary to-secondary/80 text-white text-xs px-3 py-1 rounded-full font-medium shadow-md">
+            <Badge className="bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs px-3 py-1 rounded-full font-medium shadow-md">
               Premium
             </Badge>
           </div>
@@ -78,7 +78,7 @@ const ArtCard = ({ art, userRole }: ArtCardProps) => {
         
         {/* Overlay on hover */}
         <div 
-          className={`absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent transition-all duration-300 flex items-center justify-center ${
+          className={`absolute inset-0 bg-gradient-to-t from-blue-600/70 to-transparent transition-all duration-300 flex items-center justify-center ${
             isHovered ? 'opacity-100' : 'opacity-0'
           }`}
         >
@@ -88,7 +88,7 @@ const ArtCard = ({ art, userRole }: ArtCardProps) => {
             }`}
           >
             <div className="flex flex-col items-center gap-3">
-              <div className="bg-white text-primary hover:bg-primary hover:text-white rounded-full p-3 shadow-lg transform transition-all duration-200 hover:scale-110">
+              <div className="bg-white text-blue-600 hover:bg-blue-600 hover:text-white rounded-full p-3 shadow-lg transform transition-all duration-200 hover:scale-110">
                 <ExternalLink className="h-5 w-5" />
               </div>
               <span className="text-white text-sm font-medium px-3 py-1 bg-black/30 backdrop-blur-sm rounded-md">
@@ -100,7 +100,7 @@ const ArtCard = ({ art, userRole }: ArtCardProps) => {
         
         {/* Type indicator at bottom */}
         <div className="absolute bottom-3 left-3 z-10">
-          <span className="bg-white/80 backdrop-blur-sm text-xs text-primary px-2 py-1 rounded opacity-70 group-hover:opacity-0 transition-opacity duration-300">
+          <span className="bg-white/80 backdrop-blur-sm text-xs text-blue-600 px-2 py-1 rounded opacity-70 group-hover:opacity-0 transition-opacity duration-300">
             {art.format} • {art.fileType}
           </span>
         </div>

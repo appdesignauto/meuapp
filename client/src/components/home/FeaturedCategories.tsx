@@ -68,14 +68,14 @@ const FeaturedCategories = () => {
             <>
               <button 
                 onClick={scrollLeft}
-                className="absolute -left-4 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-3 shadow-lg hover:bg-primary hover:text-white focus:outline-none transition-colors duration-200"
+                className="absolute -left-4 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-3 shadow-lg hover:bg-blue-500 hover:text-white focus:outline-none transition-colors duration-200"
                 aria-label="Rolar para a esquerda"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
               <button 
                 onClick={scrollRight}
-                className="absolute -right-4 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-3 shadow-lg hover:bg-primary hover:text-white focus:outline-none transition-colors duration-200"
+                className="absolute -right-4 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-3 shadow-lg hover:bg-blue-500 hover:text-white focus:outline-none transition-colors duration-200"
                 aria-label="Rolar para a direita"
               >
                 <ChevronRight className="h-5 w-5" />
@@ -119,13 +119,13 @@ const FeaturedCategories = () => {
                             </div>
                           ))}
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-blue-600/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                       </div>
                       <div className="p-4 bg-white relative">
-                        <div className="absolute top-0 right-4 transform -translate-y-1/2 bg-secondary text-white h-8 w-8 rounded-full flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                        <div className="absolute top-0 right-4 transform -translate-y-1/2 bg-blue-500 text-white h-8 w-8 rounded-full flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
                           <ChevronRight className="h-5 w-5" />
                         </div>
-                        <h3 className="font-semibold text-neutral-800 group-hover:text-primary transition-colors">
+                        <h3 className="font-semibold text-neutral-800 group-hover:text-blue-600 transition-colors">
                           Artes de {category.name}
                         </h3>
                       </div>
