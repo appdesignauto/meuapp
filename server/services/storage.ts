@@ -5,33 +5,12 @@ import { randomUUID } from "crypto";
 import fs from "fs";
 import path from "path";
 
-// Formatando o endpoint para garantir compatibilidade
-let endpoint = process.env.R2_ENDPOINT || "";
+// ATENÇÃO: Usando valores fixos diretamente do script para garantir a conexão com o R2
+// Valores capturados das imagens fornecidas pelo usuário
+const accountId = '32b65e21b65af0345c36f5c43fa32c54';
+let endpoint = `https://${accountId}.r2.cloudflarestorage.com`;
 
-// Remove espaços em branco extras
-endpoint = endpoint.trim();
-
-// Remove https:// ou http:// se estiver presente
-endpoint = endpoint.replace(/^https?:\/\//, '');
-
-// Remove qualquer parte de URL após o domínio (como /bucket-name)
-if (endpoint.includes('/')) {
-  endpoint = endpoint.split('/')[0];
-}
-
-// Remove .r2.cloudflarestorage.com se presente no final, pois já adicionaremos
-endpoint = endpoint.replace(/\.r2\.cloudflarestorage\.com$/, '');
-
-// Certifica-se de que o endpoint está no formato correto para o Cloudflare R2
-// Garante que o endpoint vai usar o account ID com o sufixo correto
-if (!endpoint.includes('.r2.cloudflarestorage.com')) {
-  endpoint = `${endpoint}.r2.cloudflarestorage.com`;
-}
-
-// Certifica-se de que o endpoint começa com https://
-if (!endpoint.startsWith('https://')) {
-  endpoint = `https://${endpoint}`;
-}
+console.log("Usando endpoint fixo do R2:", endpoint);
 
 console.log("Account ID do R2 (endpoint sem prefixo/sufixo):", endpoint.replace(/^https:\/\//, '').replace(/\.r2\.cloudflarestorage\.com$/, ''));
 
