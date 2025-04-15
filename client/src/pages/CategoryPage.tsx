@@ -188,14 +188,14 @@ export default function CategoryPage() {
   const handleFormatChange = (value: string) => {
     setFilters(prev => ({
       ...prev,
-      formatId: value ? parseInt(value) : null
+      formatId: value && value !== "_all" ? parseInt(value) : null
     }));
   };
 
   const handleFileTypeChange = (value: string) => {
     setFilters(prev => ({
       ...prev,
-      fileTypeId: value ? parseInt(value) : null
+      fileTypeId: value && value !== "_all" ? parseInt(value) : null
     }));
   };
 
@@ -299,15 +299,15 @@ export default function CategoryPage() {
           <div className="bg-white rounded-full shadow-sm border border-gray-100 p-1.5 flex items-center justify-between">
             <div className="flex-1 flex justify-center gap-2">
               <Select 
-                value={filters.formatId?.toString() || ""} 
+                value={filters.formatId?.toString() || "_all"} 
                 onValueChange={handleFormatChange}
-                defaultValue=""
+                defaultValue="_all"
               >
                 <SelectTrigger className="border-none bg-transparent shadow-none h-9 text-sm">
                   <SelectValue placeholder="Formato" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os formatos</SelectItem>
+                  <SelectItem value="_all">Todos os formatos</SelectItem>
                   {formats?.map((format: any) => (
                     <SelectItem key={format.id} value={format.id.toString()}>
                       {format.name}
@@ -319,15 +319,15 @@ export default function CategoryPage() {
               <div className="h-6 border-r border-gray-200 my-1.5"></div>
               
               <Select 
-                value={filters.fileTypeId?.toString() || ""} 
+                value={filters.fileTypeId?.toString() || "_all"} 
                 onValueChange={handleFileTypeChange}
-                defaultValue=""
+                defaultValue="_all"
               >
                 <SelectTrigger className="border-none bg-transparent shadow-none h-9 text-sm">
                   <SelectValue placeholder="Tipo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os tipos</SelectItem>
+                  <SelectItem value="_all">Todos os tipos</SelectItem>
                   {fileTypes?.map((fileType: any) => (
                     <SelectItem key={fileType.id} value={fileType.id.toString()}>
                       {fileType.name}
