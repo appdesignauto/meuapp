@@ -1,23 +1,30 @@
 import { useState } from 'react';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Art, UserRole } from '@/types';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/use-auth';
 import { Badge } from '@/components/ui/badge';
 
 interface ArtCardProps {
-  art: Art;
-  userRole: UserRole;
+  art: any;
+  onClick?: () => void;
+  showEditAction?: boolean;
 }
 
-const ArtCard = ({ art, userRole }: ArtCardProps) => {
+const ArtCard = ({ art, onClick, showEditAction = true }: ArtCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const { toast } = useToast();
-  const { isAuthenticated } = useAuth();
+  const { user } = useAuth();
 
   const handleArtClick = () => {
+    // Se onClick foi fornecido, chamar a função
+    if (onClick) {
+      onClick();
+      return;
+    }
+    
+    // Se não, continuar com o comportamento padrão de verificar acesso
     // For premium content, check if user has access
-    if (art.isPremium && userRole !== 'premium') {
+    if (art.isPremium && (!user || user.role !== 'premium')) {
       toast({
         title: "Conteúdo Premium",
         description: "Assine o plano Premium para acessar este conteúdo",
@@ -27,7 +34,7 @@ const ArtCard = ({ art, userRole }: ArtCardProps) => {
     }
 
     // If not authenticated, prompt to log in
-    if (!isAuthenticated) {
+    if (!user) {
       toast({
         title: "Login Necessário",
         description: "Faça login para acessar e editar esta arte",
@@ -89,10 +96,16 @@ const ArtCard = ({ art, userRole }: ArtCardProps) => {
           >
             <div className="flex flex-col items-center gap-3">
               <div className="bg-white text-blue-600 hover:bg-blue-600 hover:text-white rounded-full p-3 shadow-lg transform transition-all duration-200 hover:scale-110">
-                <ExternalLink className="h-5 w-5" />
+                {onClick ? (
+                  // Se onClick foi fornecido, mostra ícone de visualização
+                  <Eye className="h-5 w-5" />
+                ) : (
+                  // Senão, mostra ícone de edição
+                  <ExternalLink className="h-5 w-5" />
+                )}
               </div>
               <span className="text-white text-sm font-medium px-4 py-1.5 bg-black/40 backdrop-blur-sm rounded-full shadow-md">
-                Editar Arte
+                {onClick ? 'Ver Detalhes' : 'Editar Arte'}
               </span>
             </div>
           </div>

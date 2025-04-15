@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { ArrowRight, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Art } from '@/types';
 import ArtCard from '@/components/ui/ArtCard';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/use-auth';
 
 interface ArtGalleryProps {
   categoryId: number | null;
@@ -15,8 +14,9 @@ interface ArtGalleryProps {
 
 const ArtGallery = ({ categoryId, formatId, fileTypeId }: ArtGalleryProps) => {
   const [page, setPage] = useState(1);
+  const [, setLocation] = useLocation();
   const limit = 8; // Items per page
-  const { userRole } = useAuth();
+  const { user } = useAuth();
 
   // Build query key based on filters
   const queryKey = [
@@ -25,7 +25,7 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId }: ArtGalleryProps) => {
   ];
 
   const { data, isLoading, isFetching } = useQuery<{
-    arts: Art[];
+    arts: any[];
     totalCount: number;
   }>({
     queryKey,
@@ -83,7 +83,7 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId }: ArtGalleryProps) => {
                 >
                   <ArtCard 
                     art={art} 
-                    userRole={userRole}
+                    onClick={() => setLocation(`/arts/${art.id}`)}
                   />
                 </div>
               ))}
