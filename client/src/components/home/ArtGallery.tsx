@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
 import { ArrowRight, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ArtCard from '@/components/ui/ArtCard';
 import { useAuth } from '@/hooks/use-auth';
+import { queryClient } from '@/lib/queryClient';
 
 interface ArtGalleryProps {
   categoryId: number | null;
@@ -18,6 +19,24 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId }: ArtGalleryProps) => {
   const limit = 8; // Items per page
   const { user } = useAuth();
 
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [categoryId, formatId, fileTypeId]);
+
+  // Build the URL with query parameters
+  const getArtsUrl = () => {
+    const url = new URL('/api/arts', window.location.origin);
+    url.searchParams.append('page', page.toString());
+    url.searchParams.append('limit', limit.toString());
+    
+    if (categoryId) url.searchParams.append('categoryId', categoryId.toString());
+    if (formatId) url.searchParams.append('formatId', formatId.toString());
+    if (fileTypeId) url.searchParams.append('fileTypeId', fileTypeId.toString());
+    
+    return url.pathname + url.search;
+  };
+
   // Build query key based on filters
   const queryKey = [
     '/api/arts',
@@ -29,7 +48,17 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId }: ArtGalleryProps) => {
     totalCount: number;
   }>({
     queryKey,
+    queryFn: async () => {
+      const res = await fetch(getArtsUrl());
+      if (!res.ok) throw new Error('Erro ao carregar artes');
+      return res.json();
+    },
   });
+
+  // Force re-fetch when filters change
+  useEffect(() => {
+    queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
+  }, [categoryId, formatId, fileTypeId]);
 
   const arts = data?.arts || [];
   const totalCount = data?.totalCount || 0;
