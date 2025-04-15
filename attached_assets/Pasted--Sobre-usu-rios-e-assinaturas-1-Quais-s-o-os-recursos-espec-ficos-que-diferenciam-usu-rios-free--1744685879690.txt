@@ -1,0 +1,84 @@
+✅ Sobre usuários e assinaturas
+1. Quais são os recursos específicos que diferenciam usuários free, premium e visitantes?
+Visitante (não cadastrado):
+Pode visualizar as artes no front-end (vitrine), mas sem acesso aos links para edição ou download.
+Apenas prévia da arte, sem interações.
+
+Usuário Free (cadastrado, mas sem plano):
+Pode visualizar coleções e artes gratuitas.
+Sem acesso aos links premium (Canva/Drive).
+Não pode favoritar nem salvar designs.
+
+Usuário Premium (assinante):
+Acesso completo às artes (inclusive premium).
+Pode visualizar, favoritar, acessar os links do Canva/Drive e fazer downloads.
+Participa da comunidade (ver e postar).
+
+2. Você deseja implementar um sistema de pagamento real para planos premium ou apenas simular?
+Sim, o sistema de pagamento será real, integrado com a Hotmart e Doppus.
+Já existe lógica de ativação via Webhook.
+
+✅ Sobre o banco de dados
+3. Além das tabelas já criadas (users, categories, formats, fileTypes, collections, arts, testimonials), você prevê a necessidade de outras entidades?
+
+Sim, serão úteis também:
+favorites (para salvar artes favoritas)
+downloads (logs de download)
+views (logs de visualização)
+community_posts (postagens feitas na comunidade)
+subscriptions (para controle local de planos)
+
+4. Você deseja implementar um sistema de estatísticas de uso (ex: downloads, visualizações)?
+Sim. É essencial para medir engajamento.
+Deseja contar visualizações por arte, favoritos e downloads.
+
+✅ Sobre funcionalidades
+5. Quais funcionalidades específicas são esperadas na seção de admin?
+Gerenciar categorias, formatos, arquivos e coleções
+Criar/editar/deletar artes
+Moderação da comunidade (aprovar, excluir postagens)
+Gerenciamento de usuários e assinaturas
+Controle de destaques e artes premium
+
+6. Deseja implementar recursos de compartilhamento em redes sociais?
+Sim, o compartilhamento será via link direto da arte (Canva ou Google Drive).
+Não é necessário botão de “compartilhar no Facebook”, mas sim copiar link.
+
+7. É necessário um sistema de busca avançada além do que já temos?
+
+Sim. A busca atual com:
+palavra chave
+tags
+filtro por categoria
+tipo de arquivo
+formato
+texto livre é suficiente neste momento.
+
+✅ Sobre design e experiência
+8. As referências visuais devem ser seguidas fielmente ou servem apenas como inspiração?
+
+O que você fez inicialmente esta espetacular, podemos usar referencia de base, mas confio no seu feeling
+
+9. Você prefere que as imagens sejam carregadas dinamicamente de algum CDN/serviço externo ou que permaneçam como arquivos locais?
+
+As imagens serão carregadas localmente em server no Replit, mas convertidas para .webp automaticamente para garantir performance.
+
+✅ Sobre interações específicas
+10. Como deve funcionar o fluxo de download/uso dos designs?
+O botão “Editar arte no canva” levará o usuário a:
+um link do Canva (definido por arte)
+o botão só aparece para usuários premium
+
+11. Deseja recursos de favoritar/salvar designs para acesso rápido?
+
+Sim. Os usuários premium poderão clicar em um ícone de coração para salvar suas artes favoritas, acessíveis no menu "Favoritos".
+
+✅ Sobre escalabilidade
+12. Qual é a escala esperada para o produto final?
+Cerca de 300 artes no lançamento com atualizações diarias
+Espera-se centenas de usuários simultâneos com tráfego recorrente.
+Alto uso visual, com muitas imagens carregadas por sessão.
+
+13. Considera importante implementar lazy loading ou paginação infinita na visualização das artes?
+
+Sim, o lazy loading será obrigatório nas páginas de artes para evitar gargalos de carregamento e melhorar performance.

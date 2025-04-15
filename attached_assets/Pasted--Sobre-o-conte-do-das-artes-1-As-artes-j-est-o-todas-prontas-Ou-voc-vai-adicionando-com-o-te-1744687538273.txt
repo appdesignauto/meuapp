@@ -1,0 +1,64 @@
+🔲 Sobre o conteúdo das artes:
+1. As artes já estão todas prontas? Ou você vai adicionando com o tempo?
+➡️ As artes já estão prontas — cerca de 300 arquivos. O foco agora é organizá-las por categorias e na vitrine vai exibir sempre das mais antigas para as mais novas, mas o sistema também permitirá adicionar novas tanto o ADM quanto o Designer ADM e o Designer.
+
+2. Existe alguma organização específica que você prefere para as categorias de artes?
+➡️ Sim. As artes serão organizadas por categorias específicas do setor automotivo, como:
+
+Lavagem
+
+Locação
+
+Feirão
+
+Financiamento
+
+Seminovos
+
+Promoção da Semana
+Cada arte dentro da categoria seguirá uma estrutura numerada como "Promoção 01", "Promoção 02", etc., para facilitar o uso e atualização.
+
+📱 Sobre a experiência do usuário:
+3. Como você imagina que os usuários vão descobrir suas artes?
+➡️ A descoberta das artes será principalmente por:
+
+Navegação por categorias
+
+Busca simples por nome/termo
+
+Destaques na Home (artes mais acessadas, mais recentes e coleções especiais)
+
+4. Qual experiência você acha mais importante: mobile ou desktop?
+➡️ A prioridade inicial é mobile e desktop, com layout totalmente responsivo. 
+💰 Sobre o modelo de negócio:
+5. Você trabalha com um único plano premium ou existem diferentes níveis de assinatura?
+➡️ Único plano premium, com acesso completo a todas as artes da plataforma. Não haverá níveis ou tiers.
+
+6. Existe algum período gratuito/trial que os usuários podem testar antes de pagar?
+➡️ Não há período de teste gratuito formal. Porém, visitantes e usuários cadastrados poderão acessar uma quantidade limitada de artes gratuitas para experimentação.
+
+🎯 Sobre o público-alvo:
+7. Quem são seus usuários principais?
+➡️ O público-alvo são:
+
+Vendedores de automóveis
+
+Lojistas
+
+Profissionais de marketing automotivo
+
+Pequenas e médias concessionárias
+
+8. Eles são mais técnicos ou precisam de uma interface bem simplificada?
+➡️ A maioria não é técnica. Por isso, a plataforma será:
+
+Simples
+Com ações diretas como “clicou → abriu arte”
+Sem distrações ou excesso de recursos
+
+🚨 Sobre prioridades imediatas:
+9. O que é mais urgente para você: ter muitas artes disponíveis ou ter um sistema completo de assinaturas?
+➡️ A prioridade número 1 é colocar as artes no ar, bem organizadas, com navegação fluida e sistema básico de acesso liberado.
+
+10. Você pretende divulgar a plataforma logo ou tem um período para testes internos?
+➡️ Sim, a divulgação será em breve, após uma breve fase de testes internos para validar o fluxo e corrigir bugs.
