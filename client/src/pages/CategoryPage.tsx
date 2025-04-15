@@ -59,6 +59,22 @@ export default function CategoryPage() {
       const res = await fetch(`/api/categories/slug/${slug}`);
       if (!res.ok) {
         console.error("Erro ao carregar categoria:", res.status, res.statusText);
+        
+        // Se não encontrar categoria por slug, vamos tentar buscar todas as categorias
+        // e encontrar manualmente pelo slug (para fins de desenvolvimento/teste)
+        if (res.status === 404) {
+          console.log("Tentando obter todas as categorias...");
+          const allCatsRes = await fetch('/api/categories');
+          if (allCatsRes.ok) {
+            const allCategories = await allCatsRes.json();
+            const foundCategory = allCategories.find((cat: any) => cat.slug === slug);
+            if (foundCategory) {
+              console.log("Categoria encontrada manualmente:", foundCategory);
+              return foundCategory;
+            }
+          }
+        }
+        
         throw new Error(`Erro ao carregar categoria: ${res.status}`);
       }
       const data = await res.json();
