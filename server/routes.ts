@@ -20,6 +20,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Erro ao buscar categorias" });
     }
   });
+  
+  // Get Category by Slug
+  app.get("/api/categories/slug/:slug", async (req, res) => {
+    try {
+      const slug = req.params.slug;
+      const category = await storage.getCategoryBySlug(slug);
+      
+      if (!category) {
+        return res.status(404).json({ message: "Categoria não encontrada" });
+      }
+      
+      res.json(category);
+    } catch (error) {
+      console.error("Erro ao buscar categoria por slug:", error);
+      res.status(500).json({ message: "Erro ao buscar categoria" });
+    }
+  });
 
   app.get("/api/categories/:id", async (req, res) => {
     try {

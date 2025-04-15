@@ -12,6 +12,7 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Collections from "@/pages/Collections";
 import Categories from "@/pages/Categories";
+import CategoryPage from "@/pages/CategoryPage";
 import ArtDetail from "@/pages/ArtDetail";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import AuthPage from "@/pages/auth-page";
@@ -44,6 +45,7 @@ function AppRoutes() {
       <Route path="/auth" component={AuthPage} />
       <Route path="/collections" component={Collections} />
       <Route path="/categories" component={Categories} />
+      <Route path="/categories/:slug" component={CategoryPage} />
       <Route path="/arts/:id" component={ArtDetail} />
       <ProtectedRoute 
         path="/admin" 
