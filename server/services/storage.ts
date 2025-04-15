@@ -2,6 +2,8 @@ import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } fro
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import sharp from "sharp";
 import { randomUUID } from "crypto";
+import fs from "fs";
+import path from "path";
 
 // Configuração do cliente S3 (compatível com Cloudflare R2)
 const s3Client = new S3Client({
@@ -11,6 +13,7 @@ const s3Client = new S3Client({
     accessKeyId: process.env.R2_ACCESS_KEY_ID || "",
     secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || "",
   },
+  forcePathStyle: true, // Necessário para alguns serviços S3-compatíveis
 });
 
 const BUCKET_NAME = process.env.R2_BUCKET_NAME || "designauto-images";
