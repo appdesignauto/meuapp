@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initializeDatabase } from "./init-data";
+import { createAdminUser } from "./init-admin";
 
 const app = express();
 app.use(express.json());
@@ -42,6 +43,9 @@ app.use((req, res, next) => {
     // Inicializar o banco de dados com dados
     await initializeDatabase();
     console.log("Banco de dados inicializado com sucesso");
+    
+    // Criar usuário administrador
+    await createAdminUser();
   } catch (error) {
     console.error("Erro ao inicializar banco de dados:", error);
   }
