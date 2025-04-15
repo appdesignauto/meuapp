@@ -1011,10 +1011,9 @@ export class DatabaseStorage implements IStorage {
   
   async getUserByEmail(email: string): Promise<User | undefined> {
     try {
-      const result = await db.execute(
-        `SELECT * FROM users WHERE email = $1`,
-        [email]
-      );
+      const result = await db.execute(sql`
+        SELECT * FROM users WHERE email = ${email}
+      `);
       
       return result.rows[0] as User;
     } catch (error) {
@@ -1030,25 +1029,24 @@ export class DatabaseStorage implements IStorage {
       
       const now = new Date();
       
-      // Execute SQL diretamente com os nomes corretos das colunas
-      const result = await db.execute(
-        `INSERT INTO users (username, password, email, name, role, profileimageurl, bio, isactive, lastlogin, "createdAt", updatedat) 
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
-         RETURNING *`,
-        [
-          username, 
-          password, 
-          email, 
-          name || null, 
-          role || 'free', 
-          profileImageUrl || null, // será inserido na coluna profileimageurl
-          bio || null, 
-          isActive !== undefined ? isActive : true, 
-          now,
-          now,
-          now
-        ]
-      );
+      // Execute SQL usando template literal para evitar problema com parâmetros nomeados
+      const result = await db.execute(sql`
+        INSERT INTO users (username, password, email, name, role, profileimageurl, bio, isactive, lastlogin, "createdAt", updatedat) 
+        VALUES (
+          ${username}, 
+          ${password}, 
+          ${email}, 
+          ${name || null}, 
+          ${role || 'free'}, 
+          ${profileImageUrl || null}, 
+          ${bio || null}, 
+          ${isActive !== undefined ? isActive : true}, 
+          ${now}, 
+          ${now}, 
+          ${now}
+        ) 
+        RETURNING *
+      `);
       
       return result.rows[0] as User;
     } catch (error) {
@@ -1060,17 +1058,12 @@ export class DatabaseStorage implements IStorage {
   async updateUserRole(id: number, role: string): Promise<User | undefined> {
     try {
       const now = new Date();
-      const result = await db.execute(
-        `UPDATE users 
-         SET role = $1, updatedat = $2
-         WHERE id = $3
-         RETURNING *`,
-        [
-          role,
-          now,
-          id
-        ]
-      );
+      const result = await db.execute(sql`
+        UPDATE users 
+        SET role = ${role}, updatedat = ${now}
+        WHERE id = ${id}
+        RETURNING *
+      `);
       
       return result.rows[0] as User;
     } catch (error) {
@@ -1082,38 +1075,28 @@ export class DatabaseStorage implements IStorage {
   async updateUserProfile(id: number, data: { name?: string; bio?: string; profileImageUrl?: string }): Promise<User | undefined> {
     try {
       const now = new Date();
+      const name = data.name !== undefined ? data.name : null;
+      const bio = data.bio !== undefined ? data.bio : null;
       
-      // Se profileImageUrl foi fornecido, precisamos lidar com ele separadamente
       if (data.profileImageUrl !== undefined) {
-        const result = await db.execute(
-          `UPDATE users 
-           SET name = $1, bio = $2, profileimageurl = $3, updatedat = $4
-           WHERE id = $5
-           RETURNING *`,
-          [
-            data.name !== undefined ? data.name : null,
-            data.bio !== undefined ? data.bio : null,
-            data.profileImageUrl,
-            now,
-            id
-          ]
-        );
+        const result = await db.execute(sql`
+          UPDATE users 
+          SET name = ${name}, bio = ${bio}, profileimageurl = ${data.profileImageUrl}, updatedat = ${now}
+          WHERE id = ${id}
+          RETURNING *
+        `);
         
         return result.rows[0] as User;
       } else {
-        // Caso não tenha profileImageUrl, podemos usar o update normal
-        const updateData: any = {
-          ...data,
-          updatedat: now
-        };
+        // Se profileImageUrl não foi fornecido, fazemos um update sem ele
+        const result = await db.execute(sql`
+          UPDATE users 
+          SET name = ${name}, bio = ${bio}, updatedat = ${now}
+          WHERE id = ${id}
+          RETURNING *
+        `);
         
-        const [updatedUser] = await db
-          .update(users)
-          .set(updateData)
-          .where(eq(users.id, id))
-          .returning();
-          
-        return updatedUser;
+        return result.rows[0] as User;
       }
     } catch (error) {
       console.error("Erro em updateUserProfile:", error);
@@ -1124,17 +1107,12 @@ export class DatabaseStorage implements IStorage {
   async updateUserPassword(id: number, newPassword: string): Promise<User | undefined> {
     try {
       const now = new Date();
-      const result = await db.execute(
-        `UPDATE users 
-         SET password = $1, updatedat = $2
-         WHERE id = $3
-         RETURNING *`,
-        [
-          newPassword,
-          now,
-          id
-        ]
-      );
+      const result = await db.execute(sql`
+        UPDATE users 
+        SET password = ${newPassword}, updatedat = ${now}
+        WHERE id = ${id}
+        RETURNING *
+      `);
       
       return result.rows[0] as User;
     } catch (error) {
@@ -1145,16 +1123,12 @@ export class DatabaseStorage implements IStorage {
   
   async updateUserLastLogin(id: number, lastLogin: Date): Promise<User | undefined> {
     try {
-      const result = await db.execute(
-        `UPDATE users 
-         SET lastlogin = $1
-         WHERE id = $2
-         RETURNING *`,
-        [
-          lastLogin,
-          id
-        ]
-      );
+      const result = await db.execute(sql`
+        UPDATE users 
+        SET lastlogin = ${lastLogin}
+        WHERE id = ${id}
+        RETURNING *
+      `);
       
       return result.rows[0] as User;
     } catch (error) {
