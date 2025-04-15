@@ -1,18 +1,19 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import {
   Car,
   Crown,
   Menu,
   Search,
+  LayoutDashboard,
 } from 'lucide-react';
 import MobileMenu from './MobileMenu';
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { isAuthenticated, userRole, logout } = useAuth();
+  const { user, logoutMutation } = useAuth();
   const [location] = useLocation();
 
   const navLinks = [
@@ -59,23 +60,31 @@ const Header = () => {
 
           {/* User Actions */}
           <div className="flex items-center space-x-4">
-            {userRole !== 'premium' && (
+            {user && user.role !== 'premium' && (
               <Link href="/pricing" className="text-neutral-700 hover:text-blue-600 hidden sm:inline-flex items-center transition-colors duration-200">
                 <Crown className="h-4 w-4 text-blue-500 mr-1" />
                 <span className="text-sm font-medium">Assinar Premium</span>
               </Link>
             )}
             
-            {isAuthenticated ? (
+            {/* Link para painel administrativo - mostrado apenas para admin */}
+            {user && (user.role === 'admin' || user.role === 'designer_adm') && (
+              <Link href="/admin" className="text-neutral-700 hover:text-blue-600 hidden sm:inline-flex items-center transition-colors duration-200">
+                <LayoutDashboard className="h-4 w-4 text-blue-500 mr-1" />
+                <span className="text-sm font-medium">Painel Admin</span>
+              </Link>
+            )}
+            
+            {user ? (
               <Button 
-                onClick={() => logout()} 
+                onClick={() => logoutMutation.mutate()} 
                 variant="outline"
                 className="border-blue-400 text-blue-600 hover:bg-blue-50 font-medium rounded-md"
               >
                 Sair
               </Button>
             ) : (
-              <Link href="/login">
+              <Link href="/auth">
                 <Button className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md">
                   Entrar
                 </Button>
@@ -99,7 +108,7 @@ const Header = () => {
         isOpen={isMobileMenuOpen} 
         onClose={() => setIsMobileMenuOpen(false)} 
         navLinks={navLinks} 
-        userRole={userRole}
+        userRole={user?.role}
       />
     </header>
   );
