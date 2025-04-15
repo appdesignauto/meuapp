@@ -113,11 +113,46 @@ export const insertTestimonialSchema = createInsertSchema(testimonials).omit({
   createdAt: true,
 });
 
+// Preferências de Usuário
+export const userPreferences = pgTable("userPreferences", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().references(() => users.id).unique(),
+  emailNotifications: boolean("emailNotifications").notNull().default(true),
+  darkMode: boolean("darkMode").notNull().default(false),
+  language: text("language").notNull().default("pt-BR"),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export const insertUserPreferencesSchema = createInsertSchema(userPreferences).omit({
+  id: true,
+  updatedAt: true,
+});
+
+// Estatísticas de usuário
+export const userStats = pgTable("userStats", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().references(() => users.id).unique(),
+  totalDownloads: integer("totalDownloads").notNull().default(0),
+  totalFavorites: integer("totalFavorites").notNull().default(0),
+  totalViews: integer("totalViews").notNull().default(0),
+  lastActivityDate: timestamp("lastActivityDate").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export const insertUserStatsSchema = createInsertSchema(userStats).omit({
+  id: true,
+  updatedAt: true,
+});
+
 // Types
 export type UserRole = 'visitor' | 'free' | 'premium' | 'designer' | 'designer_adm' | 'support' | 'admin';
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type UserPreferences = typeof userPreferences.$inferSelect;
+export type InsertUserPreferences = z.infer<typeof insertUserPreferencesSchema>;
+export type UserStats = typeof userStats.$inferSelect;
+export type InsertUserStats = z.infer<typeof insertUserStatsSchema>;
 
 export type Category = typeof categories.$inferSelect;
 export type InsertCategory = z.infer<typeof insertCategorySchema>;
@@ -228,3 +263,61 @@ export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
 
 export type CommunityPost = typeof communityPosts.$inferSelect;
 export type InsertCommunityPost = z.infer<typeof insertCommunityPostSchema>;
+
+// Comentários da comunidade
+export const communityComments = pgTable("communityComments", {
+  id: serial("id").primaryKey(),
+  postId: integer("postId").notNull().references(() => communityPosts.id),
+  userId: integer("userId").notNull().references(() => users.id),
+  content: text("content").notNull(),
+  isHidden: boolean("isHidden").notNull().default(false),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export const insertCommunityCommentSchema = createInsertSchema(communityComments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type CommunityComment = typeof communityComments.$inferSelect;
+export type InsertCommunityComment = z.infer<typeof insertCommunityCommentSchema>;
+
+// Designer Stats para artes
+export const designerStats = pgTable("designerStats", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().references(() => users.id),
+  artId: integer("artId").notNull().references(() => arts.id),
+  downloadCount: integer("downloadCount").notNull().default(0),
+  viewCount: integer("viewCount").notNull().default(0),
+  favoriteCount: integer("favoriteCount").notNull().default(0),
+  conversionRate: integer("conversionRate").notNull().default(0), // em percentual x100 (ex: 2550 = 25.5%)
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export const insertDesignerStatsSchema = createInsertSchema(designerStats).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export type DesignerStat = typeof designerStats.$inferSelect;
+export type InsertDesignerStat = z.infer<typeof insertDesignerStatsSchema>;
+
+// Permissões de acesso explícitas (usadas em cenários especiais)
+export const userPermissions = pgTable("userPermissions", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().references(() => users.id),
+  permission: text("permission").notNull(), // formato "recurso:ação" (ex: "arts:edit", "users:view")
+  grantedBy: integer("grantedBy").references(() => users.id),
+  expiresAt: timestamp("expiresAt"),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export const insertUserPermissionSchema = createInsertSchema(userPermissions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type UserPermission = typeof userPermissions.$inferSelect;
+export type InsertUserPermission = z.infer<typeof insertUserPermissionSchema>;
