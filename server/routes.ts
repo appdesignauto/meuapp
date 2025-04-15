@@ -11,12 +11,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication middleware and routes
   const { isAuthenticated, isPremium, isAdmin, isDesigner, hasRole } = setupAuth(app);
 
-  // Categories API
+  // Categories API with art counts and last update
   app.get("/api/categories", async (req, res) => {
     try {
       const categories = await storage.getCategories();
-      res.json(categories);
+      
+      // Para cada categoria, procurar arts e obter contagem e data da última atualização
+      const enhancedCategories = await Promise.all(categories.map(async (category) => {
+        // Buscar todas as artes dessa categoria
+        const { arts, totalCount } = await storage.getArts(1, 1000, { categoryId: category.id });
+        
+        // Ordenar por data de atualização e pegar a mais recente
+        const sortedArts = arts.sort((a, b) => 
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        );
+        
+        // Data da última atualização (a mais recente das artes, ou a data atual se não houver artes)
+        const lastUpdate = sortedArts.length > 0 
+          ? sortedArts[0].updatedAt 
+          : new Date();
+        
+        // Retornar categoria com informações extras
+        return {
+          ...category,
+          artCount: totalCount,
+          lastUpdate
+        };
+      }));
+      
+      res.json(enhancedCategories);
     } catch (error) {
+      console.error("Erro ao buscar categorias com estatísticas:", error);
       res.status(500).json({ message: "Erro ao buscar categorias" });
     }
   });
