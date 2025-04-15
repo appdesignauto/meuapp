@@ -1,3 +1,5 @@
+export type UserRole = 'visitor' | 'free' | 'premium' | 'designer' | 'designer_adm' | 'support' | 'admin';
+
 export interface User {
   id: number;
   username: string;

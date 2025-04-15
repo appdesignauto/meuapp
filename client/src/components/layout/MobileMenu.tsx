@@ -1,12 +1,12 @@
 import { Link } from 'wouter';
-import { Crown, X } from 'lucide-react';
+import { Crown, X, LayoutDashboard } from 'lucide-react';
 import { UserRole } from '@/types';
 
 interface MobileMenuProps {
   isOpen: boolean;
   onClose: () => void;
   navLinks: { name: string; path: string }[];
-  userRole: UserRole;
+  userRole?: string;
 }
 
 const MobileMenu = ({ isOpen, onClose, navLinks, userRole }: MobileMenuProps) => {
@@ -49,6 +49,17 @@ const MobileMenu = ({ isOpen, onClose, navLinks, userRole }: MobileMenuProps) =>
             >
               <Crown className="h-5 w-5 mr-2" />
               <span className="font-medium">Assinar Premium</span>
+            </Link>
+          )}
+          
+          {(userRole === 'admin' || userRole === 'designer_adm') && (
+            <Link
+              href="/admin"
+              className="flex items-center bg-blue-50 text-blue-600 rounded-lg py-3 px-4 mt-4 hover:bg-blue-100 transition-colors"
+              onClick={onClose}
+            >
+              <LayoutDashboard className="h-5 w-5 mr-2" />
+              <span className="font-medium">Painel Admin</span>
             </Link>
           )}
         </nav>
