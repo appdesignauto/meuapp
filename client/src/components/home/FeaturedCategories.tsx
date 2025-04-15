@@ -73,19 +73,20 @@ const FeaturedCategories = () => {
           
           {/* Carrossel de categorias */}
           {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               {[...Array(4)].map((_, index) => (
-                <div key={index} className="rounded-xl overflow-hidden shadow-md animate-pulse">
+                <div key={index} className="rounded-md overflow-hidden shadow-sm animate-pulse">
                   <div className="aspect-square bg-neutral-200">
                     <div className="grid grid-cols-2 h-full">
-                      <div className="bg-neutral-100"></div>
-                      <div className="bg-neutral-100"></div>
-                      <div className="bg-neutral-100"></div>
-                      <div className="bg-neutral-100"></div>
+                      <div className="bg-neutral-100 border-[0.5px] border-white"></div>
+                      <div className="bg-neutral-100 border-[0.5px] border-white"></div>
+                      <div className="bg-neutral-100 border-[0.5px] border-white"></div>
+                      <div className="bg-neutral-100 border-[0.5px] border-white"></div>
                     </div>
                   </div>
-                  <div className="p-4 flex flex-col items-center">
-                    <div className="h-5 bg-neutral-200 rounded w-2/3 mb-2" />
+                  <div className="p-3 flex flex-col relative">
+                    <div className="absolute top-0 right-3 transform -translate-y-1/2 h-5 w-5 rounded-full bg-blue-200"></div>
+                    <div className="h-4 bg-neutral-200 rounded w-1/2" />
                   </div>
                 </div>
               ))}
@@ -103,19 +104,19 @@ const FeaturedCategories = () => {
               {categories?.map((category, index) => (
                 <div 
                   key={category.id} 
-                  className="flex-none w-[85%] sm:w-[70%] md:w-[65%] lg:w-[58%] pr-4 sm:pr-6 snap-start"
+                  className="flex-none w-[65%] sm:w-[50%] md:w-[40%] lg:w-[35%] pr-4 sm:pr-6 snap-start"
                   style={{ 
                     scrollSnapAlign: 'start',
                     marginRight: '10px' // Espaço entre as categorias
                   }}
                 >
                   <Link href={`/?category=${category.id}`}>
-                    <div className="group rounded-xl overflow-hidden cursor-pointer transition-all hover:shadow-lg h-full border border-neutral-200 bg-white">
+                    <div className="group rounded-md overflow-hidden cursor-pointer transition-all hover:shadow-md h-full border border-neutral-100 bg-white">
                       <div className="aspect-square relative overflow-hidden">
                         <div className="grid grid-cols-2 h-full">
                           {/* Exibindo 4 imagens em um grid para cada categoria (2x2) */}
                           {[...Array(4)].map((_, imgIndex) => (
-                            <div key={imgIndex} className="overflow-hidden border border-white">
+                            <div key={imgIndex} className="overflow-hidden border-[0.5px] border-white">
                               <img 
                                 src={`/assets/${
                                   category.slug === 'vendas' && imgIndex === 0 ? 'VENDAS 04.png' : 
@@ -154,12 +155,12 @@ const FeaturedCategories = () => {
                         </div>
                         <div className="absolute inset-0 bg-gradient-to-t from-blue-600/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                       </div>
-                      <div className="p-4 bg-white relative">
-                        <div className="absolute top-0 right-4 transform -translate-y-1/2 bg-blue-500 text-white h-8 w-8 rounded-full flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-                          <ChevronRight className="h-5 w-5" />
+                      <div className="p-3 bg-white relative">
+                        <div className="absolute top-0 right-3 transform -translate-y-1/2 bg-blue-500 text-white h-6 w-6 rounded-full flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                          <ChevronRight className="h-4 w-4" />
                         </div>
-                        <h3 className="font-semibold text-neutral-800 group-hover:text-blue-600 transition-colors">
-                          Artes de {category.name}
+                        <h3 className="font-medium text-sm text-neutral-800 group-hover:text-blue-600 transition-colors">
+                          {category.name}
                         </h3>
                       </div>
                     </div>
