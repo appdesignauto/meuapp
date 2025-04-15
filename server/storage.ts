@@ -163,6 +163,25 @@ export interface IStorage {
   getUserPermissions(userId: number): Promise<UserPermission[]>;
   createUserPermission(permission: InsertUserPermission): Promise<UserPermission>;
   deleteUserPermission(id: number): Promise<boolean>;
+  
+  // Art view methods
+  recordView(view: InsertView): Promise<View>;
+  updateArtViewCount(artId: number, viewCount: number): Promise<boolean>;
+  
+  // Designer methods
+  getArtsByDesignerId(designerId: number, limit?: number): Promise<Art[]>;
+  getDesignerProfile(designerId: number): Promise<User | undefined>;
+  
+  // Follow methods
+  followUser(followerId: number, followingId: number): Promise<UserFollow>;
+  unfollowUser(followerId: number, followingId: number): Promise<boolean>;
+  isFollowing(followerId: number, followingId: number): Promise<boolean>;
+  getFollowers(userId: number): Promise<User[]>;
+  getFollowing(userId: number): Promise<User[]>;
+  getFollowerCount(userId: number): Promise<number>;
+  getFollowingCount(userId: number): Promise<number>;
+  updateFollowerCount(userId: number, count: number): Promise<boolean>;
+  updateFollowingCount(userId: number, count: number): Promise<boolean>;
 }
 
 interface ArtFilters {
@@ -567,6 +586,10 @@ export class MemStorage implements IStorage {
   async getUser(id: number): Promise<User | undefined> {
     return this.users.get(id);
   }
+  
+  async getUserById(id: number): Promise<User | undefined> {
+    return this.getUser(id);
+  }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
     return Array.from(this.users.values()).find(
@@ -908,6 +931,139 @@ export class MemStorage implements IStorage {
   async getViewsCountByArtId(artId: number): Promise<number> {
     return (await this.getViewsByArtId(artId)).length;
   }
+  
+  // View count methods
+  async recordView(view: InsertView): Promise<View> {
+    const newView = await this.createView(view);
+    
+    // Atualiza o contador de visualizações da arte
+    const art = await this.getArtById(view.artId);
+    if (art) {
+      const viewCount = (art.viewCount || 0) + 1;
+      await this.updateArtViewCount(art.id, viewCount);
+    }
+    
+    return newView;
+  }
+  
+  async updateArtViewCount(artId: number, viewCount: number): Promise<boolean> {
+    const art = await this.getArtById(artId);
+    if (!art) return false;
+    
+    const now = new Date();
+    const updatedArt = {
+      ...art,
+      viewCount,
+      updatedAt: now
+    };
+    
+    this.arts.set(artId, updatedArt);
+    return true;
+  }
+  
+  // Designer methods
+  async getArtsByDesignerId(designerId: number, limit: number = 8): Promise<Art[]> {
+    return Array.from(this.arts.values())
+      .filter(art => art.designerId === designerId)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, limit);
+  }
+  
+  async getDesignerProfile(designerId: number): Promise<User | undefined> {
+    return this.getUserById(designerId);
+  }
+  
+  // Follow methods
+  private userFollows: Map<string, UserFollow> = new Map();
+  private currentUserFollowId: number = 1;
+  
+  async followUser(followerId: number, followingId: number): Promise<UserFollow> {
+    const key = `${followerId}-${followingId}`;
+    const existing = this.userFollows.get(key);
+    
+    if (existing) {
+      return existing;
+    }
+    
+    const id = this.currentUserFollowId++;
+    const now = new Date();
+    
+    const follow: UserFollow = {
+      id,
+      followerId,
+      followingId,
+      createdAt: now
+    };
+    
+    this.userFollows.set(key, follow);
+    return follow;
+  }
+  
+  async unfollowUser(followerId: number, followingId: number): Promise<boolean> {
+    const key = `${followerId}-${followingId}`;
+    return this.userFollows.delete(key);
+  }
+  
+  async isFollowing(followerId: number, followingId: number): Promise<boolean> {
+    const key = `${followerId}-${followingId}`;
+    return this.userFollows.has(key);
+  }
+  
+  async getFollowers(userId: number): Promise<User[]> {
+    const followerIds = Array.from(this.userFollows.values())
+      .filter(follow => follow.followingId === userId)
+      .map(follow => follow.followerId);
+    
+    const users: User[] = [];
+    for (const id of followerIds) {
+      const user = await this.getUserById(id);
+      if (user) users.push(user);
+    }
+    
+    return users;
+  }
+  
+  async getFollowing(userId: number): Promise<User[]> {
+    const followingIds = Array.from(this.userFollows.values())
+      .filter(follow => follow.followerId === userId)
+      .map(follow => follow.followingId);
+    
+    const users: User[] = [];
+    for (const id of followingIds) {
+      const user = await this.getUserById(id);
+      if (user) users.push(user);
+    }
+    
+    return users;
+  }
+  
+  async getFollowerCount(userId: number): Promise<number> {
+    return Array.from(this.userFollows.values())
+      .filter(follow => follow.followingId === userId)
+      .length;
+  }
+  
+  async getFollowingCount(userId: number): Promise<number> {
+    return Array.from(this.userFollows.values())
+      .filter(follow => follow.followerId === userId)
+      .length;
+  }
+  
+  async updateFollowerCount(userId: number, count: number): Promise<boolean> {
+    const user = await this.getUserById(userId);
+    if (!user) return false;
+    
+    // Normalmente atualizaríamos as estatísticas do usuário aqui
+    return true;
+  }
+  
+  async updateFollowingCount(userId: number, count: number): Promise<boolean> {
+    const user = await this.getUserById(userId);
+    if (!user) return false;
+    
+    // Normalmente atualizaríamos as estatísticas do usuário aqui
+    return true;
+  }
 
   // Download methods
   async getDownloadsByUserId(userId: number): Promise<Download[]> {
@@ -1040,6 +1196,10 @@ export class DatabaseStorage implements IStorage {
       console.error("Erro em getUser:", error);
       return undefined;
     }
+  }
+  
+  async getUserById(id: number): Promise<User | undefined> {
+    return this.getUser(id);
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
@@ -1478,6 +1638,160 @@ export class DatabaseStorage implements IStorage {
       .from(views)
       .where(eq(views.artId, artId));
     return result[0]?.count || 0;
+  }
+  
+  // View count methods
+  async recordView(view: InsertView): Promise<View> {
+    // Criar a visualização
+    const newView = await this.createView(view);
+    
+    // Atualizar o contador de visualizações da arte
+    const art = await this.getArtById(view.artId);
+    if (art) {
+      const viewCount = (art.viewCount || 0) + 1;
+      await this.updateArtViewCount(art.id, viewCount);
+    }
+    
+    return newView;
+  }
+  
+  async updateArtViewCount(artId: number, viewCount: number): Promise<boolean> {
+    try {
+      const now = new Date();
+      const result = await db.execute(sql`
+        UPDATE arts 
+        SET viewcount = ${viewCount}, updatedat = ${now}
+        WHERE id = ${artId}
+      `);
+      
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error("Erro em updateArtViewCount:", error);
+      return false;
+    }
+  }
+  
+  // Designer methods
+  async getArtsByDesignerId(designerId: number, limit: number = 8): Promise<Art[]> {
+    return db.select()
+      .from(arts)
+      .where(eq(arts.designerId, designerId))
+      .orderBy(desc(arts.createdAt))
+      .limit(limit);
+  }
+  
+  async getDesignerProfile(designerId: number): Promise<User | undefined> {
+    return this.getUserById(designerId);
+  }
+  
+  // Follow methods
+  async followUser(followerId: number, followingId: number): Promise<UserFollow> {
+    const [follow] = await db.insert(userFollows)
+      .values({
+        followerId,
+        followingId
+      })
+      .onConflictDoNothing()
+      .returning();
+    
+    // Se já existia e não foi inserido, buscar o existente
+    if (!follow) {
+      const [existingFollow] = await db.select()
+        .from(userFollows)
+        .where(and(
+          eq(userFollows.followerId, followerId),
+          eq(userFollows.followingId, followingId)
+        ));
+      
+      return existingFollow;
+    }
+    
+    return follow;
+  }
+  
+  async unfollowUser(followerId: number, followingId: number): Promise<boolean> {
+    const result = await db.delete(userFollows)
+      .where(and(
+        eq(userFollows.followerId, followerId),
+        eq(userFollows.followingId, followingId)
+      ));
+    
+    return result.rowCount > 0;
+  }
+  
+  async isFollowing(followerId: number, followingId: number): Promise<boolean> {
+    const [follow] = await db.select()
+      .from(userFollows)
+      .where(and(
+        eq(userFollows.followerId, followerId),
+        eq(userFollows.followingId, followingId)
+      ));
+    
+    return !!follow;
+  }
+  
+  async getFollowers(userId: number): Promise<User[]> {
+    // Busca todos os usuários que seguem o usuário (userId)
+    const followers = await db.select({
+        followerId: userFollows.followerId
+      })
+      .from(userFollows)
+      .where(eq(userFollows.followingId, userId));
+    
+    // Para cada id de seguidor, busca o usuário completo
+    const users: User[] = [];
+    for (const { followerId } of followers) {
+      const user = await this.getUserById(followerId);
+      if (user) users.push(user);
+    }
+    
+    return users;
+  }
+  
+  async getFollowing(userId: number): Promise<User[]> {
+    // Busca todos os usuários que o usuário (userId) segue
+    const following = await db.select({
+        followingId: userFollows.followingId
+      })
+      .from(userFollows)
+      .where(eq(userFollows.followerId, userId));
+    
+    // Para cada id de seguido, busca o usuário completo
+    const users: User[] = [];
+    for (const { followingId } of following) {
+      const user = await this.getUserById(followingId);
+      if (user) users.push(user);
+    }
+    
+    return users;
+  }
+  
+  async getFollowerCount(userId: number): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)` })
+      .from(userFollows)
+      .where(eq(userFollows.followingId, userId));
+    
+    return result[0]?.count || 0;
+  }
+  
+  async getFollowingCount(userId: number): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)` })
+      .from(userFollows)
+      .where(eq(userFollows.followerId, userId));
+    
+    return result[0]?.count || 0;
+  }
+  
+  async updateFollowerCount(userId: number, count: number): Promise<boolean> {
+    // Esta função seria utilizada para atualizar estatísticas do usuário em uma tabela específica
+    // Por enquanto, vamos apenas retornar true
+    return true;
+  }
+  
+  async updateFollowingCount(userId: number, count: number): Promise<boolean> {
+    // Esta função seria utilizada para atualizar estatísticas do usuário em uma tabela específica
+    // Por enquanto, vamos apenas retornar true
+    return true;
   }
 
   // Download methods

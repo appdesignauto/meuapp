@@ -86,6 +86,11 @@ export const arts = pgTable("arts", {
   isPremium: boolean("isPremium").notNull().default(false),
   categoryId: integer("categoryId").notNull().references(() => categories.id),
   collectionId: integer("collectionId").notNull().references(() => collections.id),
+  designerId: integer("designerId").references(() => users.id),
+  viewCount: integer("viewCount").notNull().default(0),
+  width: integer("width"),
+  height: integer("height"),
+  aspectRatio: text("aspectRatio"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 });
@@ -321,3 +326,23 @@ export const insertUserPermissionSchema = createInsertSchema(userPermissions).om
 
 export type UserPermission = typeof userPermissions.$inferSelect;
 export type InsertUserPermission = z.infer<typeof insertUserPermissionSchema>;
+
+// User Follow (relação seguidor-seguido)
+export const userFollows = pgTable("userFollows", {
+  id: serial("id").primaryKey(),
+  followerId: integer("followerId").notNull().references(() => users.id),
+  followingId: integer("followingId").notNull().references(() => users.id),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+}, (table) => {
+  return {
+    userFollowsUnique: primaryKey({ columns: [table.followerId, table.followingId] }),
+  };
+});
+
+export const insertUserFollowSchema = createInsertSchema(userFollows).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type UserFollow = typeof userFollows.$inferSelect;
+export type InsertUserFollow = z.infer<typeof insertUserFollowSchema>;
