@@ -1468,32 +1468,25 @@ export class DatabaseStorage implements IStorage {
   // Art methods
   async getArts(page: number, limit: number, filters?: ArtFilters): Promise<{ arts: Art[], totalCount: number }> {
     try {
-      // Usar consulta SQL direta para evitar problemas com nomes de colunas
+      // Usar abordagem mais simples, sem parameterização
       const offset = (page - 1) * limit;
       
+      // Construir condições sem parâmetros numerados
       let whereClause = '';
-      const values: any[] = [];
-      let index = 1;
       
       if (filters) {
         const conditions = [];
         
         if (filters.categoryId) {
-          conditions.push(`"categoryId" = $${index}`);
-          values.push(filters.categoryId);
-          index++;
+          conditions.push(`"categoryId" = ${filters.categoryId}`);
         }
         
         if (filters.search) {
-          conditions.push(`title ILIKE $${index}`);
-          values.push(`%${filters.search}%`);
-          index++;
+          conditions.push(`title ILIKE '%${filters.search}%'`);
         }
         
         if (filters.isPremium !== undefined) {
-          conditions.push(`"isPremium" = $${index}`);
-          values.push(filters.isPremium);
-          index++;
+          conditions.push(`"isPremium" = ${filters.isPremium ? 'true' : 'false'}`);
         }
         
         if (conditions.length > 0) {
@@ -1501,8 +1494,8 @@ export class DatabaseStorage implements IStorage {
         }
       }
       
-      // Executar a consulta usando SQL bruto com db.query
-      const queryText = `
+      // Construir a consulta SQL diretamente
+      const query = `
         SELECT 
           id, 
           "createdAt", 
@@ -1523,24 +1516,22 @@ export class DatabaseStorage implements IStorage {
         FROM arts
         ${whereClause}
         ORDER BY "createdAt" DESC
-        LIMIT $${index} OFFSET $${index+1}
+        LIMIT ${limit} OFFSET ${offset}
       `;
       
-      values.push(limit, offset);
-      
-      const result = await db.execute(sql.raw(queryText), ...values);
+      // Executar a consulta diretamente
+      const result = await db.execute(sql`${query}`);
       
       // Consulta para contar o total
       const countQuery = `SELECT COUNT(*) as count FROM arts ${whereClause}`;
-      const countValues = values.slice(0, -2); // Remover limit e offset
-      const countResult = await db.execute(sql.raw(countQuery), ...countValues);
+      const countResult = await db.execute(sql`${countQuery}`);
       
       // Mapear os resultados para o tipo Art com nomes em camelCase
       const arts = result.rows.map(row => ({
         ...row,
         designerId: row.designerid,
         viewCount: row.viewcount,
-        aspectRatio: row.aspectratio,
+        aspectRatio: row.aspectratio
       }));
       
       return {
