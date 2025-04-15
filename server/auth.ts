@@ -2,11 +2,12 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Express, Request, Response, NextFunction } from "express";
 import session from "express-session";
-import { scrypt, randomBytes, timingSafeEqual } from "crypto";
-import { promisify } from "util";
+import bcrypt from "bcrypt";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
-import MemoryStore from "memorystore";
+import { UserRole } from "@shared/schema";
+import connectPg from "connect-pg-simple";
+import { pool } from "./db";
 
 declare global {
   namespace Express {
@@ -14,34 +15,32 @@ declare global {
   }
 }
 
-const scryptAsync = promisify(scrypt);
+const PostgresSessionStore = connectPg(session);
 
-async function hashPassword(password: string) {
-  const salt = randomBytes(16).toString("hex");
-  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
-  return `${buf.toString("hex")}.${salt}`;
+const SALT_ROUNDS = 10;
+
+async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, SALT_ROUNDS);
 }
 
-async function comparePasswords(supplied: string, stored: string) {
-  const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
+async function comparePasswords(supplied: string, stored: string): Promise<boolean> {
+  return bcrypt.compare(supplied, stored);
 }
 
 export function setupAuth(app: Express) {
-  const MemStore = MemoryStore(session);
-  
+  // Configure session
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || "design-auto-secret-key",
+    secret: process.env.SESSION_SECRET || "designauto-secret-key",
     resave: false,
     saveUninitialized: false,
-    cookie: {
+    cookie: { 
       secure: process.env.NODE_ENV === "production",
-      maxAge: 24 * 60 * 60 * 1000, // 24 horas
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     },
-    store: new MemStore({
-      checkPeriod: 86400000 // limpar sessões expiradas a cada 24h
+    store: new PostgresSessionStore({
+      pool,
+      createTableIfMissing: true,
+      tableName: 'session'
     })
   };
 
@@ -49,28 +48,27 @@ export function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  // Passport configuration
   passport.use(
-    new LocalStrategy({
-      usernameField: "username",
-      passwordField: "password"
-    }, async (username, password, done) => {
+    new LocalStrategy(async (username, password, done) => {
       try {
         const user = await storage.getUserByUsername(username);
+        
         if (!user) {
           return done(null, false, { message: "Usuário não encontrado" });
         }
         
-        if (!(await comparePasswords(password, user.password))) {
+        const passwordMatch = await comparePasswords(password, user.password);
+        if (!passwordMatch) {
           return done(null, false, { message: "Senha incorreta" });
         }
         
-        // Atualizar o último login
-        const now = new Date();
-        await storage.updateUserLastLogin(user.id, now);
+        // Update last login
+        await storage.updateUserLastLogin(user.id, new Date());
         
         return done(null, user);
-      } catch (error) {
-        return done(error);
+      } catch (err) {
+        return done(err);
       }
     })
   );
@@ -82,257 +80,131 @@ export function setupAuth(app: Express) {
   passport.deserializeUser(async (id: number, done) => {
     try {
       const user = await storage.getUser(id);
-      if (!user) {
-        return done(null, false);
-      }
-      
-      if (!user.isActive) {
-        return done(null, false);
-      }
-      
       done(null, user);
-    } catch (error) {
-      done(error);
+    } catch (err) {
+      done(err);
     }
   });
 
-  // Middleware para verificar autenticação em rotas protegidas
+  // Authentication middleware
   const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
     if (req.isAuthenticated()) {
       return next();
     }
-    res.status(401).json({ message: "Não autenticado" });
+    return res.status(401).json({ message: "Não autenticado" });
   };
 
-  // Middleware para verificar perfil de usuário
-  const hasRole = (roles: string[]) => {
+  // Role-based middlewares
+  const hasRole = (roles: UserRole[]) => {
     return (req: Request, res: Response, next: NextFunction) => {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Não autenticado" });
       }
       
-      if (roles.includes(req.user.role)) {
-        return next();
+      const userRole = req.user.role as UserRole;
+      
+      if (!roles.includes(userRole)) {
+        return res.status(403).json({ message: "Acesso negado" });
       }
       
-      res.status(403).json({ message: "Acesso negado" });
+      next();
     };
   };
 
-  // Middleware para verificar acesso de usuário premium
-  const isPremium = (req: Request, res: Response, next: NextFunction) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Não autenticado" });
-    }
-    
-    if (['premium', 'admin', 'designer_adm', 'designer', 'support'].includes(req.user.role)) {
-      return next();
-    }
-    
-    res.status(403).json({ message: "Acesso apenas para assinantes premium" });
-  };
+  const isPremium = hasRole(['premium', 'designer', 'designer_adm', 'support', 'admin']);
+  const isDesigner = hasRole(['designer', 'designer_adm', 'admin']);
+  const isAdmin = hasRole(['admin']);
+  const isSupport = hasRole(['support', 'admin']);
 
-  // Middleware para verificar acesso de administrador
-  const isAdmin = (req: Request, res: Response, next: NextFunction) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Não autenticado" });
-    }
-    
-    if (req.user.role === 'admin') {
-      return next();
-    }
-    
-    res.status(403).json({ message: "Acesso apenas para administradores" });
-  };
-
-  // Middleware para verificar acesso de designer
-  const isDesigner = (req: Request, res: Response, next: NextFunction) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Não autenticado" });
-    }
-    
-    if (['designer', 'designer_adm', 'admin'].includes(req.user.role)) {
-      return next();
-    }
-    
-    res.status(403).json({ message: "Acesso apenas para designers" });
-  };
-  
-  // Rotas de autenticação
-  // Rota de registro
-  app.post("/api/auth/register", async (req, res, next) => {
-    try {
-      const { username, password, email, name } = req.body;
-      
-      // Verificar se o usuário já existe
-      const existingUser = await storage.getUserByUsername(username);
-      if (existingUser) {
-        return res.status(400).json({ message: "Nome de usuário já está em uso" });
-      }
-      
-      // Verificar se o email já existe
-      const existingEmail = await storage.getUserByEmail(email);
-      if (existingEmail) {
-        return res.status(400).json({ message: "Email já está em uso" });
-      }
-      
-      // Criar novo usuário
-      const hashedPassword = await hashPassword(password);
-      const user = await storage.createUser({
-        username,
-        email,
-        password: hashedPassword,
-        name,
-        role: "free", // Papel padrão para novos usuários
-        isActive: true
-      });
-      
-      // Remover a senha do resultado
-      const { password: _, ...userWithoutPassword } = user;
-      
-      // Fazer login automaticamente
-      req.login(user, (err) => {
-        if (err) return next(err);
-        return res.status(201).json(userWithoutPassword);
-      });
-    } catch (error) {
-      console.error("Erro ao registrar usuário:", error);
-      res.status(500).json({ message: "Erro ao criar conta" });
-    }
-  });
-
-  // Rota de login
-  app.post("/api/auth/login", (req, res, next) => {
+  // Authentication API Routes
+  app.post("/api/login", (req, res, next) => {
     passport.authenticate("local", (err, user, info) => {
       if (err) {
         return next(err);
       }
-      
       if (!user) {
-        return res.status(401).json({ message: info.message || "Login inválido" });
+        return res.status(401).json({ message: info.message });
       }
-      
-      req.login(user, (err) => {
+      req.login(user, async (err) => {
         if (err) {
           return next(err);
         }
         
-        // Remover a senha do resultado
-        const { password: _, ...userWithoutPassword } = user;
-        
+        // Remove password from response
+        const { password, ...userWithoutPassword } = user;
         return res.json(userWithoutPassword);
       });
     })(req, res, next);
   });
 
-  // Rota de logout
-  app.post("/api/auth/logout", (req, res, next) => {
-    req.logout((err) => {
-      if (err) {
-        return next(err);
+  app.post("/api/register", async (req, res) => {
+    try {
+      // Check if username already exists
+      const existingUser = await storage.getUserByUsername(req.body.username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Nome de usuário já existe" });
       }
       
-      res.json({ message: "Logout realizado com sucesso" });
+      // Check if email already exists
+      if (req.body.email) {
+        const existingEmail = await storage.getUserByEmail(req.body.email);
+        if (existingEmail) {
+          return res.status(400).json({ message: "Email já cadastrado" });
+        }
+      }
+      
+      // Hash password
+      const hashedPassword = await hashPassword(req.body.password);
+      
+      // Create user
+      const newUser = await storage.createUser({
+        ...req.body,
+        password: hashedPassword,
+        role: req.body.role || "free", // Default role
+        isActive: true,
+      });
+      
+      // Login the user
+      req.login(newUser, (err) => {
+        if (err) {
+          return res.status(500).json({ message: "Erro ao fazer login após registro" });
+        }
+        
+        // Remove password from response
+        const { password, ...userWithoutPassword } = newUser;
+        return res.status(201).json(userWithoutPassword);
+      });
+    } catch (error) {
+      console.error("Erro ao registrar usuário:", error);
+      return res.status(500).json({ message: "Erro ao registrar usuário" });
+    }
+  });
+
+  app.post("/api/logout", (req, res) => {
+    req.logout((err) => {
+      if (err) {
+        return res.status(500).json({ message: "Erro ao fazer logout" });
+      }
+      res.status(200).json({ message: "Logout realizado com sucesso" });
     });
   });
 
-  // Rota para obter informações do usuário atual
-  app.get("/api/auth/me", (req, res) => {
+  app.get("/api/user", (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Não autenticado" });
     }
     
-    // Remover a senha do resultado
-    const { password: _, ...userWithoutPassword } = req.user;
-    
+    // Remove password from response
+    const { password, ...userWithoutPassword } = req.user as any;
     res.json(userWithoutPassword);
   });
-  
-  // Rota para atualizar informações do perfil de usuário
-  app.put("/api/auth/profile", isAuthenticated, async (req, res) => {
-    try {
-      const { name, bio, profileImageUrl } = req.body;
-      
-      const updatedUser = await storage.updateUserProfile(req.user.id, {
-        name, 
-        bio, 
-        profileImageUrl
-      });
-      
-      if (!updatedUser) {
-        return res.status(404).json({ message: "Usuário não encontrado" });
-      }
-      
-      // Remover a senha do resultado
-      const { password: _, ...userWithoutPassword } = updatedUser;
-      
-      res.json(userWithoutPassword);
-    } catch (error) {
-      console.error("Erro ao atualizar perfil:", error);
-      res.status(500).json({ message: "Erro ao atualizar perfil" });
-    }
-  });
 
-  // Rota para alterar senha
-  app.put("/api/auth/change-password", isAuthenticated, async (req, res) => {
-    try {
-      const { currentPassword, newPassword } = req.body;
-      
-      // Verificar senha atual
-      const user = await storage.getUser(req.user.id);
-      if (!user) {
-        return res.status(404).json({ message: "Usuário não encontrado" });
-      }
-      
-      const isCorrectPassword = await comparePasswords(currentPassword, user.password);
-      if (!isCorrectPassword) {
-        return res.status(400).json({ message: "Senha atual incorreta" });
-      }
-      
-      // Atualizar senha
-      const hashedPassword = await hashPassword(newPassword);
-      await storage.updateUserPassword(user.id, hashedPassword);
-      
-      res.json({ message: "Senha alterada com sucesso" });
-    } catch (error) {
-      console.error("Erro ao alterar senha:", error);
-      res.status(500).json({ message: "Erro ao alterar senha" });
-    }
-  });
-
-  // Rota para atualizar papel de usuário (admin)
-  app.put("/api/users/:id/role", isAdmin, async (req, res) => {
-    try {
-      const userId = parseInt(req.params.id);
-      const { role } = req.body;
-      
-      // Verificar se o papel é válido
-      const validRoles = ['free', 'premium', 'designer', 'designer_adm', 'support', 'admin'];
-      if (!validRoles.includes(role)) {
-        return res.status(400).json({ message: "Papel inválido" });
-      }
-      
-      const updatedUser = await storage.updateUserRole(userId, role);
-      if (!updatedUser) {
-        return res.status(404).json({ message: "Usuário não encontrado" });
-      }
-      
-      // Remover a senha do resultado
-      const { password: _, ...userWithoutPassword } = updatedUser;
-      
-      res.json(userWithoutPassword);
-    } catch (error) {
-      console.error("Erro ao atualizar papel:", error);
-      res.status(500).json({ message: "Erro ao atualizar papel do usuário" });
-    }
-  });
-
-  // Retornar os middlewares para uso em outras partes da aplicação
   return {
     isAuthenticated,
     hasRole,
     isPremium,
+    isDesigner,
     isAdmin,
-    isDesigner
+    isSupport
   };
 }

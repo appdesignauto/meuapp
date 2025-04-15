@@ -27,6 +27,8 @@ import { Car, Loader2 } from 'lucide-react';
 
 const registerSchema = z.object({
   username: z.string().min(3, { message: 'Usuário deve ter pelo menos 3 caracteres' }),
+  name: z.string().optional(),
+  email: z.string().email({ message: 'Email inválido' }),
   password: z.string().min(6, { message: 'Senha deve ter pelo menos 6 caracteres' }),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -45,6 +47,8 @@ const Register = () => {
     resolver: zodResolver(registerSchema),
     defaultValues: {
       username: '',
+      name: '',
+      email: '',
       password: '',
       confirmPassword: '',
     },
@@ -53,7 +57,7 @@ const Register = () => {
   const onSubmit = async (data: RegisterFormValues) => {
     setIsSubmitting(true);
     try {
-      await register(data.username, data.password);
+      await register(data.username, data.password, data.email, data.name);
       setLocation('/');
     } catch (error) {
       console.error('Registration failed:', error);
@@ -90,6 +94,32 @@ const Register = () => {
                       <FormLabel>Usuário</FormLabel>
                       <FormControl>
                         <Input placeholder="Escolha um nome de usuário" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome completo</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Seu nome completo (opcional)" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="Seu email" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
