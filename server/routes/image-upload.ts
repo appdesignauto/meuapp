@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import upload from "../middlewares/upload";
 import { storageService } from "../services/storage";
+import { supabaseStorageService } from "../services/supabase-storage";
 import { Express } from "express";
 
 const router = Router();
