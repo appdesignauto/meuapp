@@ -14,6 +14,7 @@ const s3Client = new S3Client({
     secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || "",
   },
   forcePathStyle: true, // Necessário para alguns serviços S3-compatíveis
+  tls: false, // Desativar TLS/SSL
 });
 
 const BUCKET_NAME = process.env.R2_BUCKET_NAME || "designauto-images";
@@ -230,9 +231,6 @@ export class StorageService {
     options: ImageOptimizationOptions = {}
   ): Promise<{ imageUrl: string; thumbnailUrl: string }> {
     try {
-      const fs = require('fs');
-      const path = require('path');
-      
       // Certifica-se de que o diretório public/uploads existe
       const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
       const thumbnailsDir = path.join(uploadsDir, 'thumbnails');
