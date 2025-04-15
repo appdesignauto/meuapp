@@ -62,9 +62,10 @@ const ArtForm = ({ isOpen, onClose, editingArt }: ArtFormProps) => {
   });
   
   // Fetch collections
-  const { data: collections } = useQuery<any[]>({
+  const { data: collectionsData } = useQuery<{collections: any[]}>({
     queryKey: ['/api/collections'],
   });
+  const collections = collectionsData?.collections;
   
   // Fetch formats
   const { data: formats } = useQuery<any[]>({
