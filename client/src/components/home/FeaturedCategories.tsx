@@ -5,7 +5,12 @@ import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Category } from '@/types';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-const FeaturedCategories = () => {
+interface FeaturedCategoriesProps {
+  selectedCategory?: number | null;
+  onCategorySelect?: (categoryId: number) => void;
+}
+
+const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCategoriesProps) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   
@@ -31,6 +36,12 @@ const FeaturedCategories = () => {
     }
   };
 
+  // Handler para a seleção de categoria
+  const handleCategorySelect = (categoryId: number) => {
+    if (onCategorySelect) {
+      onCategorySelect(categoryId);
+    }
+  };
 
 
   return (
@@ -109,58 +120,69 @@ const FeaturedCategories = () => {
                     marginRight: '8px' // Espaço entre as categorias
                   }}
                 >
-                  <Link href={`/?category=${category.id}`}>
-                    <div className="group rounded-md overflow-hidden cursor-pointer transition-all hover:shadow-md h-full border border-neutral-100 bg-white">
-                      <div className="aspect-square relative overflow-hidden">
-                        <div className="grid grid-cols-2 h-full">
-                          {/* Exibindo 4 imagens em um grid para cada categoria (2x2) */}
-                          {[...Array(4)].map((_, imgIndex) => (
-                            <div key={imgIndex} className="overflow-hidden border-[0.5px] border-white">
-                              <img 
-                                src={`/assets/${
-                                  category.slug === 'vendas' && imgIndex === 0 ? 'VENDAS 04.png' : 
-                                  category.slug === 'vendas' && imgIndex === 1 ? 'VENDAS 10.png' : 
-                                  category.slug === 'vendas' && imgIndex === 2 ? 'VENDAS 17.png' : 
-                                  category.slug === 'vendas' && imgIndex === 3 ? 'VENDAS 32.png' : 
-                                  category.slug === 'lavagem' && imgIndex === 0 ? 'LAVAGEM 01.png' : 
-                                  category.slug === 'lavagem' && imgIndex === 1 ? 'LAVAGEM 03.png' : 
-                                  category.slug === 'lavagem' && imgIndex === 2 ? 'LAVAGEM 04.png' : 
-                                  category.slug === 'lavagem' && imgIndex === 3 ? 'LAVAGEM 10.png' : 
-                                  category.slug === 'mecanica' && imgIndex === 0 ? 'MECÂNICA 08.png' : 
-                                  category.slug === 'mecanica' && imgIndex === 1 ? 'MECÂNICA MOTO 01.png' : 
-                                  category.slug === 'mecanica' && imgIndex === 2 ? 'MECÂNICA 08.png' : 
-                                  category.slug === 'mecanica' && imgIndex === 3 ? 'MECÂNICA MOTO 01.png' : 
-                                  category.slug === 'locacao' ? 'LOCAÇÃO 06.png' : 
-                                  category.slug === 'seminovos' && imgIndex === 0 ? 'VENDAS 36.png' : 
-                                  category.slug === 'seminovos' && imgIndex === 1 ? 'VENDAS 10.png' : 
-                                  category.slug === 'seminovos' && imgIndex === 2 ? 'VENDAS 17.png' : 
-                                  category.slug === 'seminovos' && imgIndex === 3 ? 'VENDAS 32.png' : 
-                                  category.slug === 'promocoes' && imgIndex === 0 ? 'VENDAS 54.png' : 
-                                  category.slug === 'promocoes' && imgIndex === 1 ? 'VENDAS 57.png' : 
-                                  category.slug === 'promocoes' && imgIndex === 2 ? 'VENDAS 10.png' : 
-                                  category.slug === 'promocoes' && imgIndex === 3 ? 'VENDAS 17.png' : 
-                                  category.slug === 'lancamentos' && imgIndex === 0 ? 'VENDAS 32.png' : 
-                                  category.slug === 'lancamentos' && imgIndex === 1 ? 'VENDAS 17.png' : 
-                                  category.slug === 'lancamentos' && imgIndex === 2 ? 'VENDAS 10.png' : 
-                                  category.slug === 'lancamentos' && imgIndex === 3 ? 'VENDAS 04.png' : 
-                                  'VENDAS 32.png'
-                                }`} 
-                                alt="" 
-                                className="object-cover w-full h-full transform transition-transform group-hover:scale-105"
-                                loading="lazy"
-                              />
-                            </div>
-                          ))}
-                        </div>
-                        <div className="absolute inset-0 bg-gradient-to-t from-blue-600/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div 
+                    onClick={() => handleCategorySelect(category.id)}
+                    className={`group rounded-md overflow-hidden cursor-pointer transition-all hover:shadow-md h-full border ${
+                      selectedCategory === category.id 
+                        ? 'border-blue-500 shadow-md ring-2 ring-blue-200' 
+                        : 'border-neutral-100'
+                    } bg-white`}
+                  >
+                    <div className="aspect-square relative overflow-hidden">
+                      <div className="grid grid-cols-2 h-full">
+                        {/* Exibindo 4 imagens em um grid para cada categoria (2x2) */}
+                        {[...Array(4)].map((_, imgIndex) => (
+                          <div key={imgIndex} className="overflow-hidden border-[0.5px] border-white">
+                            <img 
+                              src={`/assets/${
+                                category.slug === 'vendas' && imgIndex === 0 ? 'VENDAS 04.png' : 
+                                category.slug === 'vendas' && imgIndex === 1 ? 'VENDAS 10.png' : 
+                                category.slug === 'vendas' && imgIndex === 2 ? 'VENDAS 17.png' : 
+                                category.slug === 'vendas' && imgIndex === 3 ? 'VENDAS 32.png' : 
+                                category.slug === 'lavagem' && imgIndex === 0 ? 'LAVAGEM 01.png' : 
+                                category.slug === 'lavagem' && imgIndex === 1 ? 'LAVAGEM 03.png' : 
+                                category.slug === 'lavagem' && imgIndex === 2 ? 'LAVAGEM 04.png' : 
+                                category.slug === 'lavagem' && imgIndex === 3 ? 'LAVAGEM 10.png' : 
+                                category.slug === 'mecanica' && imgIndex === 0 ? 'MECÂNICA 08.png' : 
+                                category.slug === 'mecanica' && imgIndex === 1 ? 'MECÂNICA MOTO 01.png' : 
+                                category.slug === 'mecanica' && imgIndex === 2 ? 'MECÂNICA 08.png' : 
+                                category.slug === 'mecanica' && imgIndex === 3 ? 'MECÂNICA MOTO 01.png' : 
+                                category.slug === 'locacao' ? 'LOCAÇÃO 06.png' : 
+                                category.slug === 'seminovos' && imgIndex === 0 ? 'VENDAS 36.png' : 
+                                category.slug === 'seminovos' && imgIndex === 1 ? 'VENDAS 10.png' : 
+                                category.slug === 'seminovos' && imgIndex === 2 ? 'VENDAS 17.png' : 
+                                category.slug === 'seminovos' && imgIndex === 3 ? 'VENDAS 32.png' : 
+                                category.slug === 'promocoes' && imgIndex === 0 ? 'VENDAS 54.png' : 
+                                category.slug === 'promocoes' && imgIndex === 1 ? 'VENDAS 57.png' : 
+                                category.slug === 'promocoes' && imgIndex === 2 ? 'VENDAS 10.png' : 
+                                category.slug === 'promocoes' && imgIndex === 3 ? 'VENDAS 17.png' : 
+                                category.slug === 'lancamentos' && imgIndex === 0 ? 'VENDAS 32.png' : 
+                                category.slug === 'lancamentos' && imgIndex === 1 ? 'VENDAS 17.png' : 
+                                category.slug === 'lancamentos' && imgIndex === 2 ? 'VENDAS 10.png' : 
+                                category.slug === 'lancamentos' && imgIndex === 3 ? 'VENDAS 04.png' : 
+                                'VENDAS 32.png'
+                              }`} 
+                              alt="" 
+                              className="object-cover w-full h-full transform transition-transform group-hover:scale-105"
+                              loading="lazy"
+                            />
+                          </div>
+                        ))}
                       </div>
-                      <div className="p-2 bg-white relative">
-                        <h3 className="font-medium text-xs text-center text-neutral-800 group-hover:text-blue-600 transition-colors">
-                          {category.name}
-                        </h3>
-                      </div>
+                      <div className={`absolute inset-0 bg-gradient-to-t from-blue-600/40 to-transparent ${
+                        selectedCategory === category.id ? 'opacity-20' : 'opacity-0 group-hover:opacity-100'
+                      } transition-opacity duration-300`}></div>
                     </div>
-                  </Link>
+                    <div className="p-2 bg-white relative">
+                      <h3 className={`font-medium text-xs text-center ${
+                        selectedCategory === category.id 
+                          ? 'text-blue-600 font-semibold' 
+                          : 'text-neutral-800 group-hover:text-blue-600'
+                      } transition-colors`}>
+                        {category.name}
+                      </h3>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>

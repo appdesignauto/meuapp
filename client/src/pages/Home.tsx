@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'wouter';
 import Hero from '@/components/home/Hero';
 import CategoryFilters from '@/components/home/CategoryFilters';
 import FeaturedCategories from '@/components/home/FeaturedCategories';
@@ -11,21 +12,60 @@ const Home = () => {
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [selectedFormat, setSelectedFormat] = useState<number | null>(null);
   const [selectedFileType, setSelectedFileType] = useState<number | null>(null);
+  const [location] = useLocation();
+
+  // Processar parâmetros da URL para aplicar filtros
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const categoryParam = params.get('category');
+    
+    if (categoryParam) {
+      const categoryId = parseInt(categoryParam);
+      if (!isNaN(categoryId)) {
+        setSelectedCategory(categoryId);
+        
+        // Rolagem suave até a galeria quando uma categoria é selecionada
+        setTimeout(() => {
+          const galleryElement = document.getElementById('art-gallery');
+          if (galleryElement) {
+            galleryElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 300);
+      }
+    }
+  }, [location]);
+
+  // Função para atualizar os filtros e a URL
+  const handleCategoryChange = (categoryId: number | null) => {
+    setSelectedCategory(categoryId);
+    
+    // Atualizar URL sem recarregar a página
+    const url = new URL(window.location.href);
+    if (categoryId) {
+      url.searchParams.set('category', categoryId.toString());
+    } else {
+      url.searchParams.delete('category');
+    }
+    window.history.pushState({}, '', url.toString());
+  };
 
   return (
     <>
       <Hero />
       <CategoryFilters 
-        onCategoryChange={setSelectedCategory}
+        selectedCategory={selectedCategory}
+        onCategoryChange={handleCategoryChange}
         onFormatChange={setSelectedFormat}
         onFileTypeChange={setSelectedFileType}
       />
-      <FeaturedCategories />
-      <ArtGallery 
-        categoryId={selectedCategory} 
-        formatId={selectedFormat} 
-        fileTypeId={selectedFileType} 
-      />
+      <FeaturedCategories selectedCategory={selectedCategory} onCategorySelect={handleCategoryChange} />
+      <div id="art-gallery">
+        <ArtGallery 
+          categoryId={selectedCategory} 
+          formatId={selectedFormat} 
+          fileTypeId={selectedFileType} 
+        />
+      </div>
       <PremiumFeatures />
       <Testimonials />
       <CallToAction />

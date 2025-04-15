@@ -6,15 +6,28 @@ import { cn } from '@/lib/utils';
 import { Category, Format, FileType } from '@/types';
 
 interface CategoryFiltersProps {
+  selectedCategory?: number | null;
   onCategoryChange: (categoryId: number | null) => void;
   onFormatChange: (formatId: number | null) => void;
   onFileTypeChange: (fileTypeId: number | null) => void;
 }
 
-const CategoryFilters = ({ onCategoryChange, onFormatChange, onFileTypeChange }: CategoryFiltersProps) => {
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+const CategoryFilters = ({ 
+  selectedCategory: externalSelectedCategory, 
+  onCategoryChange, 
+  onFormatChange, 
+  onFileTypeChange 
+}: CategoryFiltersProps) => {
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(externalSelectedCategory || null);
   const [showFormatDropdown, setShowFormatDropdown] = useState(false);
   const [showFileTypeDropdown, setShowFileTypeDropdown] = useState(false);
+
+  // Sincronizar com a categoria selecionada externamente
+  useEffect(() => {
+    if (externalSelectedCategory !== undefined) {
+      setSelectedCategory(externalSelectedCategory);
+    }
+  }, [externalSelectedCategory]);
 
   // Fetch categories
   const { data: categories } = useQuery<Category[]>({
