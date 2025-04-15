@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Category } from '@/types';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -13,6 +13,7 @@ interface FeaturedCategoriesProps {
 const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCategoriesProps) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+  const [, setLocation] = useLocation();
   
   const { data: categories, isLoading } = useQuery<Category[]>({
     queryKey: ['/api/categories'],
@@ -37,9 +38,12 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
   };
 
   // Handler para a seleção de categoria
-  const handleCategorySelect = (categoryId: number) => {
+  const handleCategorySelect = (category: Category) => {
     if (onCategorySelect) {
-      onCategorySelect(categoryId);
+      onCategorySelect(category.id);
+    } else {
+      // Redirecionar para a página da categoria específica
+      setLocation(`/categories/${category.slug}`);
     }
   };
 
@@ -121,7 +125,7 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
                   }}
                 >
                   <div 
-                    onClick={() => handleCategorySelect(category.id)}
+                    onClick={() => handleCategorySelect(category)}
                     className={`group rounded-md overflow-hidden cursor-pointer transition-all hover:shadow-md h-full border ${
                       selectedCategory === category.id 
                         ? 'border-blue-500 shadow-md ring-2 ring-blue-200' 
