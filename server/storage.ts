@@ -1,3 +1,4 @@
+import * as schema from "@shared/schema";
 import {
   User,
   InsertUser,
@@ -996,6 +997,7 @@ export class MemStorage implements IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  private users = schema.users;
   // User methods
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
@@ -1009,12 +1011,12 @@ export class DatabaseStorage implements IStorage {
   
   async getUserByEmail(email: string): Promise<User | undefined> {
     try {
-      // Usando SQL direto para evitar problemas com case sensitivity
-      const result = await db.execute(
-        `SELECT * FROM users WHERE email = $1;`,
-        [email]
-      );
-      return result.rows.length > 0 ? result.rows[0] as User : undefined;
+      // Pegando os registros usando drizzle
+      const users = await db.select().from(this.users);
+      
+      // Filtrando manualmente por email
+      const user = users.find(u => u.email === email);
+      return user;
     } catch (error) {
       console.error("Erro em getUserByEmail:", error);
       return undefined;
@@ -1022,29 +1024,34 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: any): Promise<User> {
-    // Usando SQL direto para evitar problemas com case sensitivity
-    const { username, password, email, name, role, profileImageUrl, bio, isActive, lastLogin } = insertUser;
-    
-    const result = await db.execute(
-      `INSERT INTO users (username, password, email, name, role, profileimageurl, bio, isactive, lastlogin, createdat, updatedat) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
-       RETURNING *`,
-      [
-        username, 
-        password, 
-        email, 
-        name || null, 
-        role || 'free', 
-        profileImageUrl || null, 
-        bio || null, 
-        isActive !== undefined ? isActive : true, 
-        lastLogin || null,
-        new Date(),
-        new Date()
-      ]
-    );
-    
-    return result.rows[0] as User;
+    try {
+      // Usando INSERT INTO direto
+      const { username, password, email, name, role, profileImageUrl, bio, isActive } = insertUser;
+      
+      const now = new Date();
+      
+      // Montando objeto com os nomes exatos das colunas do banco
+      const userData = {
+        username,
+        password,
+        email,
+        name: name || null,
+        role: role || 'free',
+        profileimageurl: profileImageUrl || null,
+        bio: bio || null,
+        isactive: isActive !== undefined ? isActive : true,
+        lastlogin: now,
+        "createdAt": now,
+        updatedat: now
+      };
+      
+      // Inserindo usuário usando drizzle
+      const [newUser] = await db.insert(this.users).values(userData).returning();
+      return newUser;
+    } catch (error) {
+      console.error("Erro em createUser:", error);
+      throw error;
+    }
   }
 
   async updateUserRole(id: number, role: string): Promise<User | undefined> {
