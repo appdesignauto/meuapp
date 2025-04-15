@@ -173,9 +173,11 @@ const Categories = () => {
                       
                       <div className="flex justify-between items-center mt-3">
                         <span className="text-xs text-neutral-500">
-                          {typeof category.lastUpdate === 'string' 
-                            ? formatDate(category.lastUpdate)
-                            : formatDate(category.lastUpdate.toISOString())}
+                          {category.lastUpdate && (
+                            typeof category.lastUpdate === 'string' 
+                              ? formatDate(category.lastUpdate)
+                              : formatDate(new Date(category.lastUpdate).toISOString())
+                          )}
                         </span>
                         
                         <div className="flex items-center text-blue-600 text-xs font-medium">

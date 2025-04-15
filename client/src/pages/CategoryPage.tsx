@@ -301,6 +301,7 @@ export default function CategoryPage() {
               <Select 
                 value={filters.formatId?.toString() || ""} 
                 onValueChange={handleFormatChange}
+                defaultValue=""
               >
                 <SelectTrigger className="border-none bg-transparent shadow-none h-9 text-sm">
                   <SelectValue placeholder="Formato" />
@@ -320,6 +321,7 @@ export default function CategoryPage() {
               <Select 
                 value={filters.fileTypeId?.toString() || ""} 
                 onValueChange={handleFileTypeChange}
+                defaultValue=""
               >
                 <SelectTrigger className="border-none bg-transparent shadow-none h-9 text-sm">
                   <SelectValue placeholder="Tipo" />
@@ -336,7 +338,7 @@ export default function CategoryPage() {
               
               <div className="h-6 border-r border-gray-200 my-1.5"></div>
               
-              <Select>
+              <Select defaultValue="newest">
                 <SelectTrigger className="border-none bg-transparent shadow-none h-9 text-sm">
                   <SelectValue placeholder="Ordenar" />
                 </SelectTrigger>
