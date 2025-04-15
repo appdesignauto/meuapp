@@ -1468,57 +1468,52 @@ export class DatabaseStorage implements IStorage {
   // Art methods
   async getArts(page: number, limit: number, filters?: ArtFilters): Promise<{ arts: Art[], totalCount: number }> {
     try {
-      // Vamos usar SQL bruto para evitar problemas de case-sensitivity nos nomes das colunas
-      let whereClause = "";
-      const params: any[] = [];
+      // Vamos usar SQL direto via template string para evitar problemas com nomes de colunas
+      const offset = (page - 1) * limit;
+      
+      let query = db.select().from(arts);
       
       if (filters) {
-        const conditions = [];
-        
         if (filters.categoryId) {
-          conditions.push(`categoryid = $${params.length + 1}`);
-          params.push(filters.categoryId);
+          query = query.where(eq(arts.categoryId, filters.categoryId));
         }
         
         if (filters.search) {
-          conditions.push(`title ILIKE $${params.length + 1}`);
-          params.push(`%${filters.search}%`);
+          query = query.where(like(arts.title, `%${filters.search}%`));
         }
         
         if (filters.isPremium !== undefined) {
-          conditions.push(`ispremium = $${params.length + 1}`);
-          params.push(filters.isPremium);
-        }
-        
-        if (conditions.length > 0) {
-          whereClause = "WHERE " + conditions.join(" AND ");
+          query = query.where(eq(arts.isPremium, filters.isPremium));
         }
       }
       
-      // Consulta para obter as artes
-      const query = `
-        SELECT * FROM arts
-        ${whereClause}
-        ORDER BY createdat DESC
-        LIMIT $${params.length + 1} OFFSET $${params.length + 2}
-      `;
+      const artsResult = await query
+        .orderBy(desc(arts.createdAt))
+        .limit(limit)
+        .offset(offset);
       
-      const offset = (page - 1) * limit;
-      params.push(limit, offset);
+      // Contar o total usando a mesma consulta base
+      let countQuery = db.select({ count: sql<number>`count(*)` }).from(arts);
       
-      const result = await db.execute(sql.raw(query, ...params));
+      if (filters) {
+        if (filters.categoryId) {
+          countQuery = countQuery.where(eq(arts.categoryId, filters.categoryId));
+        }
+        
+        if (filters.search) {
+          countQuery = countQuery.where(like(arts.title, `%${filters.search}%`));
+        }
+        
+        if (filters.isPremium !== undefined) {
+          countQuery = countQuery.where(eq(arts.isPremium, filters.isPremium));
+        }
+      }
       
-      // Consulta para contar o total
-      const countQuery = `
-        SELECT COUNT(*) as count FROM arts
-        ${whereClause}
-      `;
-      
-      const countResult = await db.execute(sql.raw(countQuery, ...params.slice(0, params.length - 2)));
+      const [{ count }] = await countQuery;
       
       return {
-        arts: result.rows as Art[],
-        totalCount: parseInt(countResult.rows[0].count as string)
+        arts: artsResult,
+        totalCount: count
       };
     } catch (error) {
       console.error("Erro em getArts:", error);
@@ -1680,12 +1675,14 @@ export class DatabaseStorage implements IStorage {
   
   async updateArtViewCount(artId: number, viewCount: number): Promise<boolean> {
     try {
+      // Usar a API Query Builder em vez de SQL bruto
       const now = new Date();
-      const result = await db.execute(sql`
-        UPDATE arts 
-        SET viewcount = ${viewCount}, updatedat = ${now}
-        WHERE id = ${artId}
-      `);
+      const result = await db.update(arts)
+        .set({ 
+          viewCount: viewCount,
+          updatedAt: now
+        })
+        .where(eq(arts.id, artId));
       
       return result.rowCount > 0;
     } catch (error) {
@@ -1697,15 +1694,12 @@ export class DatabaseStorage implements IStorage {
   // Designer methods
   async getArtsByDesignerId(designerId: number, limit: number = 8): Promise<Art[]> {
     try {
-      // Usar SQL bruto para evitar problemas com nomes de colunas
-      const result = await db.execute(sql`
-        SELECT * FROM arts 
-        WHERE designerid = ${designerId}
-        ORDER BY createdat DESC
-        LIMIT ${limit}
-      `);
-      
-      return result.rows as Art[];
+      // Usamos a API Query Builder do Drizzle que lida corretamente com os nomes das colunas
+      return db.select()
+        .from(arts)
+        .where(eq(arts.designerId, designerId))
+        .orderBy(desc(arts.createdAt))
+        .limit(limit);
     } catch (error) {
       console.error("Erro em getArtsByDesignerId:", error);
       throw error;
