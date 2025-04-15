@@ -36,6 +36,7 @@ const artSchema = z.object({
   editUrl: z.string().url('URL de edição inválida').optional().or(z.literal('')),
   isPremium: z.boolean().default(false),
   categoryId: z.string().min(1, 'Selecione uma categoria'),
+  collectionId: z.string().min(1, 'Selecione uma coleção'),
   format: z.string().min(1, 'Selecione um formato'),
   fileType: z.string().min(1, 'Selecione um tipo de arquivo'),
 });
@@ -58,6 +59,11 @@ const ArtForm = ({ isOpen, onClose, editingArt }: ArtFormProps) => {
   // Fetch categories
   const { data: categories } = useQuery<any[]>({
     queryKey: ['/api/categories'],
+  });
+  
+  // Fetch collections
+  const { data: collections } = useQuery<any[]>({
+    queryKey: ['/api/collections'],
   });
   
   // Fetch formats
@@ -132,6 +138,7 @@ const ArtForm = ({ isOpen, onClose, editingArt }: ArtFormProps) => {
       editUrl: '',
       isPremium: false,
       categoryId: '',
+      collectionId: '',
       format: '',
       fileType: '',
     },
@@ -143,6 +150,7 @@ const ArtForm = ({ isOpen, onClose, editingArt }: ArtFormProps) => {
       const transformedData = {
         ...data,
         categoryId: parseInt(data.categoryId),
+        collectionId: parseInt(data.collectionId),
         isPremium,
       };
       
@@ -180,6 +188,7 @@ const ArtForm = ({ isOpen, onClose, editingArt }: ArtFormProps) => {
       setValue('imageUrl', editingArt.imageUrl);
       setValue('editUrl', editingArt.editUrl || '');
       setValue('categoryId', editingArt.categoryId.toString());
+      setValue('collectionId', editingArt.collectionId?.toString() || '1'); // Usa o primeiro como fallback
       setValue('format', editingArt.format || '');
       setValue('fileType', editingArt.fileType || '');
       setIsPremium(editingArt.isPremium);
@@ -335,6 +344,28 @@ const ArtForm = ({ isOpen, onClose, editingArt }: ArtFormProps) => {
               </Select>
               {errors.categoryId && (
                 <p className="text-sm text-red-500">{errors.categoryId.message}</p>
+              )}
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="collectionId">Coleção</Label>
+              <Select
+                value={watch('collectionId')}
+                onValueChange={(value) => setValue('collectionId', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma coleção" />
+                </SelectTrigger>
+                <SelectContent>
+                  {collections?.map((collection) => (
+                    <SelectItem key={collection.id} value={collection.id.toString()}>
+                      {collection.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.collectionId && (
+                <p className="text-sm text-red-500">{errors.collectionId.message}</p>
               )}
             </div>
 
