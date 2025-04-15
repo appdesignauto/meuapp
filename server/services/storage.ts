@@ -105,6 +105,121 @@ export class StorageService {
   }
 
   /**
+   * Tenta fazer upload direto para o R2 sem qualquer otimização da imagem
+   * Para testar se o problema é com o conversor de imagem
+   */
+  async uploadDirectWithoutOptimization(
+    file: Express.Multer.File
+  ): Promise<{ imageUrl: string; thumbnailUrl: string; storageType?: string }> {
+    if (!file) {
+      throw new Error("Nenhum arquivo foi fornecido");
+    }
+    
+    try {
+      console.log("Tentando upload direto para R2 sem otimização...");
+      console.log("Informações do arquivo original:");
+      console.log(`- Nome: ${file.originalname}`);
+      console.log(`- MIME type: ${file.mimetype}`);
+      console.log(`- Tamanho: ${file.size} bytes`);
+      
+      // Gera chaves únicas para o arquivo
+      const uniqueId = randomUUID();
+      const extension = path.extname(file.originalname) || '.jpg';
+      const imageKey = `original/${uniqueId}${extension}`;
+      
+      try {
+        console.log("Tentando fazer upload do arquivo original para R2...");
+        
+        // Upload do arquivo original sem processamento
+        await s3Client.send(
+          new PutObjectCommand({
+            Bucket: BUCKET_NAME,
+            Key: imageKey,
+            Body: file.buffer,
+            ContentType: file.mimetype,
+          })
+        );
+        
+        console.log("Upload direto bem-sucedido para R2!");
+        
+        // Retorna a URL pública
+        return {
+          imageUrl: `${PUBLIC_BUCKET_URL}/${imageKey}`,
+          thumbnailUrl: `${PUBLIC_BUCKET_URL}/${imageKey}`, // Mesmo arquivo para thumbnail
+          storageType: "r2_direct"
+        };
+      } catch (uploadError: any) {
+        console.error("Erro no upload direto para R2:", uploadError);
+        
+        // Tenta usar o fallback local
+        console.log("Tentando fallback local após falha no upload direto...");
+        const localResult = await this.localUploadDirect(file);
+        
+        return {
+          ...localResult,
+          storageType: "local_direct"
+        };
+      }
+    } catch (error) {
+      console.error("Erro completo no upload direto:", error);
+      
+      // Tenta usar o fallback local
+      return await this.localUploadDirect(file);
+    }
+  }
+  
+  /**
+   * Fallback local para upload direto
+   */
+  private async localUploadDirect(
+    file: Express.Multer.File
+  ): Promise<{ imageUrl: string; thumbnailUrl: string }> {
+    try {
+      // Certifica-se de que o diretório public/uploads/original existe
+      const originalDir = path.join(process.cwd(), 'public', 'uploads', 'original');
+      
+      try {
+        if (!fs.existsSync('public')) {
+          fs.mkdirSync('public');
+        }
+        if (!fs.existsSync(path.join('public', 'uploads'))) {
+          fs.mkdirSync(path.join('public', 'uploads'));
+        }
+        if (!fs.existsSync(originalDir)) {
+          fs.mkdirSync(originalDir);
+        }
+      } catch (err) {
+        console.error("Erro ao criar diretórios para upload direto:", err);
+      }
+      
+      // Gera um nome único para o arquivo
+      const uniqueId = randomUUID();
+      const extension = path.extname(file.originalname) || '.jpg';
+      const fileName = `${uniqueId}${extension}`;
+      
+      // Caminho completo do arquivo
+      const filePath = path.join(originalDir, fileName);
+      
+      // Salva o arquivo original
+      fs.writeFileSync(filePath, file.buffer);
+      
+      console.log("Upload direto local bem-sucedido!");
+      
+      // Retorna a URL relativa
+      return {
+        imageUrl: `/uploads/original/${fileName}`,
+        thumbnailUrl: `/uploads/original/${fileName}`, // Mesmo arquivo para thumbnail
+      };
+    } catch (error) {
+      console.error("Erro no fallback local direto:", error);
+      return {
+        imageUrl: "https://placehold.co/800x600?text=Imagem+Indisponível",
+        thumbnailUrl: "https://placehold.co/400x300?text=Thumbnail+Indisponível",
+      };
+    }
+  }
+
+  /**
    * Faz upload de uma imagem otimizada para o R2
    */
   async uploadImage(

@@ -2,15 +2,19 @@ import { useState, useRef } from 'react';
 import { Upload, Loader2, Check, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label'; 
 import { useToast } from '@/hooks/use-toast';
 
 const R2TestUpload = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [skipOptimization, setSkipOptimization] = useState(false);
   const [uploadResult, setUploadResult] = useState<{
     imageUrl?: string;
     thumbnailUrl?: string;
     storageType?: string;
+    uploadType?: string;
     error?: string;
   }>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -28,7 +32,13 @@ const R2TestUpload = () => {
       const formData = new FormData();
       formData.append('image', file);
       
-      const response = await fetch('/api/admin/upload', {
+      // Construir a URL com o parâmetro de consulta para pular a otimização
+      let uploadUrl = '/api/admin/upload';
+      if (skipOptimization) {
+        uploadUrl += '?skipOptimization=true';
+      }
+      
+      const response = await fetch(uploadUrl, {
         method: 'POST',
         body: formData,
       });
@@ -42,9 +52,11 @@ const R2TestUpload = () => {
       setUploadResult(data);
       setUploadStatus('success');
       
+      const uploadTypeStr = skipOptimization ? ' (sem otimização)' : ' (com otimização)';
+      
       toast({
         title: 'Upload realizado com sucesso',
-        description: `Armazenamento: ${data.storageType || 'local'}`,
+        description: `Armazenamento: ${data.storageType || 'local'}${uploadTypeStr}`,
       });
     } catch (error: any) {
       console.error('Erro no upload:', error);
@@ -68,6 +80,17 @@ const R2TestUpload = () => {
 
   return (
     <div>
+      <div className="mb-4 flex items-center space-x-2">
+        <Switch
+          id="skip-optimization"
+          checked={skipOptimization}
+          onCheckedChange={setSkipOptimization}
+        />
+        <Label htmlFor="skip-optimization">
+          Pular otimização (teste para verificar se o conversor interfere na conexão com R2)
+        </Label>
+      </div>
+    
       <div className="flex items-center gap-4 mb-4">
         <input 
           type="file" 
@@ -99,7 +122,7 @@ const R2TestUpload = () => {
           {uploadStatus === 'success' && (
             <span className="flex items-center text-green-600 text-sm">
               <Check className="h-4 w-4 mr-1" />
-              Upload bem-sucedido
+              Upload bem-sucedido {skipOptimization ? '(sem otimização)' : ''}
             </span>
           )}
           

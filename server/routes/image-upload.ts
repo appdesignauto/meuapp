@@ -48,9 +48,22 @@ router.post(
           console.log(`- R2_PUBLIC_URL: ${process.env.R2_PUBLIC_URL || "(não configurado)"}`);
           
           console.log("Iniciando upload para R2...");
-          const urls = await storageService.uploadImage(req.file, options);
-          console.log("Upload R2 concluído com sucesso:", urls);
-          return res.status(200).json(urls);
+          
+          // Verifica se estamos testando sem otimização
+          const skipOptimization = req.query.skipOptimization === 'true';
+          
+          if (skipOptimization) {
+            console.log(">>> TESTE: Fazendo upload direto, sem otimização da imagem");
+            // Upload direto sem processamento para testar se o conversor é o problema
+            const urls = await storageService.uploadDirectWithoutOptimization(req.file);
+            console.log("Upload R2 direto concluído com sucesso:", urls);
+            return res.status(200).json({...urls, uploadType: "direct"});
+          } else {
+            // Upload normal com otimização
+            const urls = await storageService.uploadImage(req.file, options);
+            console.log("Upload R2 concluído com sucesso:", urls);
+            return res.status(200).json(urls);
+          }
         } catch (error: any) {
           console.error("Erro detalhado do R2:", error);
           
