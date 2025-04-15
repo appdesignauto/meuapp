@@ -197,296 +197,245 @@ export default function CategoryPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header com navegação de volta */}
-      <div className="mb-6">
-        <Button 
-          variant="ghost" 
-          size="sm"
-          className="text-blue-600"
-          onClick={() => setLocation('/')}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Voltar para a página inicial
-        </Button>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header com navegação */}
+      <header className="bg-white border-b border-gray-200 py-3 sticky top-0 z-10 shadow-sm">
+        <div className="container mx-auto px-4 flex items-center justify-between">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            className="text-blue-600"
+            onClick={() => setLocation('/')}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Voltar
+          </Button>
+          
+          <div className="flex items-center space-x-3">
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="flex items-center gap-1 border-blue-200 text-blue-600"
+            >
+              <Filter className="h-3.5 w-3.5" />
+              Filtros
+            </Button>
+          </div>
+        </div>
+      </header>
 
       {/* Mensagem de erro */}
       {hasError && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Erro</AlertTitle>
-          <AlertDescription>
-            Ocorreu um erro ao carregar os dados. Por favor, tente novamente mais tarde.
-          </AlertDescription>
-        </Alert>
+        <div className="container mx-auto px-4 py-4">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Erro</AlertTitle>
+            <AlertDescription>
+              Ocorreu um erro ao carregar os dados. Por favor, tente novamente mais tarde.
+            </AlertDescription>
+          </Alert>
+        </div>
       )}
       
-      {/* Título da categoria e estatísticas */}
-      {isLoading ? (
-        <div className="mb-8">
-          <Skeleton className="h-12 w-3/4 mb-2" />
-          <Skeleton className="h-5 w-1/2" />
-        </div>
-      ) : (
-        <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-            {category?.name || 'Categoria'}
-          </h1>
-          <p className="text-neutral-600">
-            {totalCount} designs disponíveis para personalização
-          </p>
-        </div>
-      )}
-
-      {/* Barra de pesquisa e filtros */}
-      <div className="flex flex-col md:flex-row gap-4 mb-8">
-        <div className="flex-1">
+      {/* Área de busca centralizada */}
+      <div className="container mx-auto px-4 py-8 text-center">
+        {isLoading ? (
+          <>
+            <Skeleton className="h-10 w-52 mx-auto mb-3" />
+            <Skeleton className="h-4 w-1/4 mx-auto mb-6" />
+          </>
+        ) : (
+          <>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              BUSCAR
+            </h1>
+            <h2 className="text-2xl font-medium text-blue-600 mb-2">
+              {category?.name || 'Categoria'}
+            </h2>
+            <p className="text-neutral-600 mb-6">
+              Sua pesquisa retornou <span className="font-medium">{totalCount}</span> resultados
+            </p>
+          </>
+        )}
+        
+        <div className="max-w-xl mx-auto mb-6">
           <form onSubmit={handleSearch} className="relative">
             <Input
               type="text"
               placeholder="Buscar design..."
-              className="pr-10"
+              className="pr-12 py-6 text-center rounded-full"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
             <button 
               type="submit" 
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 hover:text-blue-600"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-blue-600 text-white rounded-full p-2 hover:bg-blue-700"
             >
               <Search className="h-5 w-5" />
             </button>
           </form>
         </div>
-        
-        <div className="flex gap-3">
-          <div className="w-40 hidden md:block">
-            <Select 
-              value={filters.formatId?.toString() || ""} 
-              onValueChange={handleFormatChange}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Formato" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Todos os formatos</SelectItem>
-                {formats?.map((format: any) => (
-                  <SelectItem key={format.id} value={format.id.toString()}>
-                    {format.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+      </div>
+      
+      {/* Filtros horizontais centralizados */}
+      <div className="container mx-auto px-4 mb-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-full shadow-sm border border-gray-100 p-1.5 flex items-center justify-between">
+            <div className="flex-1 flex justify-center gap-2">
+              <Select 
+                value={filters.formatId?.toString() || ""} 
+                onValueChange={handleFormatChange}
+              >
+                <SelectTrigger className="border-none bg-transparent shadow-none h-9 text-sm">
+                  <SelectValue placeholder="Formato" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Todos os formatos</SelectItem>
+                  {formats?.map((format: any) => (
+                    <SelectItem key={format.id} value={format.id.toString()}>
+                      {format.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              <div className="h-6 border-r border-gray-200 my-1.5"></div>
+              
+              <Select 
+                value={filters.fileTypeId?.toString() || ""} 
+                onValueChange={handleFileTypeChange}
+              >
+                <SelectTrigger className="border-none bg-transparent shadow-none h-9 text-sm">
+                  <SelectValue placeholder="Tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Todos os tipos</SelectItem>
+                  {fileTypes?.map((fileType: any) => (
+                    <SelectItem key={fileType.id} value={fileType.id.toString()}>
+                      {fileType.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              <div className="h-6 border-r border-gray-200 my-1.5"></div>
+              
+              <Select>
+                <SelectTrigger className="border-none bg-transparent shadow-none h-9 text-sm">
+                  <SelectValue placeholder="Ordenar" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">Mais recentes</SelectItem>
+                  <SelectItem value="oldest">Mais antigos</SelectItem>
+                  <SelectItem value="popular">Mais populares</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <div className="h-6 border-r border-gray-200 my-1.5 last:hidden"></div>
+            </div>
+            
+            {(filters.formatId || filters.fileTypeId || search) && (
+              <Button 
+                variant="ghost"
+                size="sm" 
+                onClick={clearFilters}
+                className="mr-2 text-xs text-blue-600"
+              >
+                Limpar
+              </Button>
+            )}
           </div>
-          
-          <div className="w-40 hidden md:block">
-            <Select 
-              value={filters.fileTypeId?.toString() || ""} 
-              onValueChange={handleFileTypeChange}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Tipo de arquivo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Todos os tipos</SelectItem>
-                {fileTypes?.map((fileType: any) => (
-                  <SelectItem key={fileType.id} value={fileType.id.toString()}>
-                    {fileType.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* Filtros em dispositivos móveis */}
-          <div className="block md:hidden">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-2">
-                  <Filter className="h-4 w-4" />
-                  Filtros
-                </Button>
-              </SheetTrigger>
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle>Filtros</SheetTitle>
-                  <SheetDescription>
-                    Refine sua busca usando os filtros abaixo
-                  </SheetDescription>
-                </SheetHeader>
-                
-                <div className="py-6 space-y-6">
-                  <Accordion type="single" collapsible className="w-full">
-                    <AccordionItem value="formats">
-                      <AccordionTrigger>Formato</AccordionTrigger>
-                      <AccordionContent>
-                        <div className="space-y-2">
-                          <div 
-                            className={`px-4 py-2 rounded-lg cursor-pointer ${!filters.formatId ? 'bg-blue-50 text-blue-600 font-medium' : 'hover:bg-neutral-50'}`}
-                            onClick={() => handleFormatChange("")}
-                          >
-                            Todos os formatos
-                          </div>
-                          {formats?.map((format: any) => (
-                            <div 
-                              key={format.id} 
-                              className={`px-4 py-2 rounded-lg cursor-pointer ${filters.formatId === format.id ? 'bg-blue-50 text-blue-600 font-medium' : 'hover:bg-neutral-50'}`}
-                              onClick={() => handleFormatChange(format.id.toString())}
-                            >
-                              {format.name}
-                            </div>
-                          ))}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                    
-                    <AccordionItem value="fileTypes">
-                      <AccordionTrigger>Tipo de Arquivo</AccordionTrigger>
-                      <AccordionContent>
-                        <div className="space-y-2">
-                          <div 
-                            className={`px-4 py-2 rounded-lg cursor-pointer ${!filters.fileTypeId ? 'bg-blue-50 text-blue-600 font-medium' : 'hover:bg-neutral-50'}`}
-                            onClick={() => handleFileTypeChange("")}
-                          >
-                            Todos os tipos
-                          </div>
-                          {fileTypes?.map((fileType: any) => (
-                            <div 
-                              key={fileType.id} 
-                              className={`px-4 py-2 rounded-lg cursor-pointer ${filters.fileTypeId === fileType.id ? 'bg-blue-50 text-blue-600 font-medium' : 'hover:bg-neutral-50'}`}
-                              onClick={() => handleFileTypeChange(fileType.id.toString())}
-                            >
-                              {fileType.name}
-                            </div>
-                          ))}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                </div>
-                
-                <div className="flex justify-between mt-6">
-                  <Button variant="outline" onClick={clearFilters}>
-                    Limpar filtros
-                  </Button>
-                  <SheetTrigger asChild>
-                    <Button variant="default">Aplicar</Button>
-                  </SheetTrigger>
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
-
-          {/* Botão para ordenação */}
-          <Button 
-            variant="outline" 
-            className="flex items-center gap-2"
-          >
-            <SlidersHorizontal className="h-4 w-4" />
-            <span className="hidden md:inline">Ordenar</span>
-          </Button>
-          
-          {/* Botão para limpar filtros em desktop */}
-          {(filters.formatId || filters.fileTypeId || search) && (
-            <Button 
-              variant="ghost" 
-              onClick={clearFilters}
-              className="hidden md:block"
-            >
-              Limpar filtros
-            </Button>
-          )}
         </div>
       </div>
 
-      {/* Galeria de imagens estilo Pinterest */}
-      {isLoading ? (
-        <div className="columns-2 xs:columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-3 space-y-0">
-          {[...Array(10)].map((_, index) => (
-            <div 
-              key={index} 
-              className="block overflow-hidden animate-pulse break-inside-avoid mb-3 rounded-xl shadow-sm"
-            >
-              <div className={`${index % 3 === 0 ? 'aspect-1' : (index % 3 === 1 ? 'aspect-[4/5]' : 'aspect-[9/16]')} bg-neutral-200 rounded-xl`} />
-            </div>
-          ))}
-        </div>
-      ) : arts.length === 0 ? (
-        <div className="py-16 text-center">
-          <div className="max-w-md mx-auto">
-            <div className="mb-5 flex justify-center">
-              <div className="rounded-full bg-blue-50 p-4">
-                <Search className="h-8 w-8 text-blue-500" />
-              </div>
-            </div>
-            <h3 className="text-xl font-semibold mb-2">Nenhum design encontrado</h3>
-            <p className="text-neutral-500 mb-6">
-              {filters.formatId || filters.fileTypeId || search 
-                ? 'Tente ajustar seus filtros ou realizar uma busca diferente.'
-                : 'Esta categoria ainda não possui designs disponíveis. Confira outras categorias.'}
-            </p>
-            {(filters.formatId || filters.fileTypeId || search) && (
-              <Button 
-                variant="default" 
-                onClick={clearFilters} 
-                className="mr-2"
-              >
-                Limpar filtros
-              </Button>
-            )}
-            <Button 
-              variant="outline" 
-              onClick={() => setLocation('/')}
-            >
-              Voltar para a página inicial
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <>
-          <div className="columns-2 xs:columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-3 space-y-0">
-            {arts.map((art) => (
+      {/* Conteúdo principal */}
+      <div className="container mx-auto px-4 pb-16">
+        {/* Galeria de imagens estilo Pinterest */}
+        {isLoading ? (
+          <div className="columns-2 xs:columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-4 space-y-0">
+            {[...Array(15)].map((_, index) => (
               <div 
-                key={art.id} 
-                className="break-inside-avoid mb-3 transform hover:-translate-y-1 transition-transform duration-300"
-                style={{ 
-                  display: 'inline-block',
-                  width: '100%'
-                }}
+                key={index} 
+                className="block overflow-hidden animate-pulse break-inside-avoid mb-4 rounded-xl shadow-sm"
               >
-                <ArtCard 
-                  art={art} 
-                  onClick={() => setLocation(`/arts/${art.id}`)}
-                />
+                <div className={`${index % 3 === 0 ? 'aspect-[3/4]' : (index % 3 === 1 ? 'aspect-[4/5]' : 'aspect-[1/1]')} bg-neutral-200 rounded-xl`} />
               </div>
             ))}
           </div>
-          
-          {/* Load More Button */}
-          {hasMore && (
-            <div className="flex justify-center mt-12">
+        ) : arts.length === 0 ? (
+          <div className="py-16 text-center">
+            <div className="max-w-md mx-auto">
+              <div className="mb-5 flex justify-center">
+                <div className="rounded-full bg-blue-50 p-4">
+                  <Search className="h-8 w-8 text-blue-500" />
+                </div>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Nenhum design encontrado</h3>
+              <p className="text-neutral-500 mb-6">
+                {filters.formatId || filters.fileTypeId || search 
+                  ? 'Tente ajustar seus filtros ou realizar uma busca diferente.'
+                  : 'Esta categoria ainda não possui designs disponíveis. Confira outras categorias.'}
+              </p>
+              {(filters.formatId || filters.fileTypeId || search) && (
+                <Button 
+                  variant="default" 
+                  onClick={clearFilters} 
+                  className="mr-2"
+                >
+                  Limpar filtros
+                </Button>
+              )}
               <Button 
                 variant="outline" 
-                onClick={loadMore}
-                disabled={isFetching}
-                className="px-8 py-6 flex items-center rounded-full border-2 border-blue-300 text-blue-600 hover:bg-blue-50 font-medium"
+                onClick={() => setLocation('/')}
               >
-                {isFetching ? (
-                  <span className="flex items-center">
-                    <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Carregando...
-                  </span>
-                ) : (
-                  <span>Carregar mais designs</span>
-                )}
+                Voltar para a página inicial
               </Button>
             </div>
-          )}
-        </>
-      )}
+          </div>
+        ) : (
+          <>
+            <div className="columns-2 xs:columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-4 space-y-0">
+              {arts.map((art) => (
+                <div 
+                  key={art.id} 
+                  className="break-inside-avoid mb-4 transform hover:-translate-y-1 transition-transform duration-300"
+                  style={{ 
+                    display: 'inline-block',
+                    width: '100%'
+                  }}
+                >
+                  <ArtCard 
+                    art={art} 
+                    onClick={() => setLocation(`/arts/${art.id}`)}
+                  />
+                </div>
+              ))}
+            </div>
+            
+            {/* Load More Button */}
+            {hasMore && (
+              <div className="flex justify-center mt-12">
+                <Button 
+                  variant="outline" 
+                  onClick={loadMore}
+                  disabled={isFetching}
+                  className="px-8 py-6 flex items-center rounded-full border-2 border-blue-300 text-blue-600 hover:bg-blue-50 font-medium"
+                >
+                  {isFetching ? (
+                    <span className="flex items-center">
+                      <Loader2 className="animate-spin mr-2 h-5 w-5" />
+                      Carregando...
+                    </span>
+                  ) : (
+                    <span>Carregar mais designs</span>
+                  )}
+                </Button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
