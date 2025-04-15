@@ -195,119 +195,170 @@ export default function ArtDetail() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-12">
+    <div className="container mx-auto px-4 py-8">
       <Button 
         variant="ghost" 
         size="sm"
-        className="mb-8 text-blue-600"
+        className="mb-6 text-blue-600"
         onClick={handleBack}
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
         Voltar para a galeria
       </Button>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-        {/* Art Image */}
-        <div className="relative rounded-xl overflow-hidden bg-white shadow-md border border-neutral-200">
-          <img 
-            src={art.imageUrl} 
-            alt={art.title} 
-            className="w-full object-cover"
-          />
-          
-          {/* Premium Badge */}
-          {art.isPremium && (
-            <div className="absolute top-4 right-4">
-              <Badge className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1 rounded-full font-medium shadow-md">
-                Premium
-              </Badge>
-            </div>
-          )}
-        </div>
-        
-        {/* Art Details */}
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-blue-700 mb-2">
-            {art.title}
-          </h1>
-          
-          <div className="flex items-center gap-2 text-sm text-neutral-500 mb-6">
-            <div className="flex items-center">
-              <Calendar className="h-4 w-4 mr-1" />
-              {formatDate(art.createdAt)}
-            </div>
-            <span>•</span>
-            <div className="flex items-center">
-              <Tag className="h-4 w-4 mr-1" />
-              {art.category?.name || 'Categoria não especificada'}
+      <div className="bg-white rounded-xl shadow-md overflow-hidden mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
+          {/* Art Image */}
+          <div className="relative bg-neutral-50 flex items-center justify-center p-4 md:p-8 border-r border-gray-100">
+            <div className="w-full h-full relative">
+              <img 
+                src={art.imageUrl} 
+                alt={art.title} 
+                className="w-full h-full object-contain max-h-[70vh]"
+              />
+              
+              {/* Premium Badge */}
+              {art.isPremium && (
+                <div className="absolute top-4 right-4">
+                  <Badge className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-3 py-1 rounded-full font-medium shadow-md">
+                    Premium
+                  </Badge>
+                </div>
+              )}
             </div>
           </div>
           
-          <p className="text-neutral-600 mb-8">
-            {art.description || 'Sem descrição disponível para esta arte.'}
-          </p>
-          
-          {/* Action Buttons */}
-          <div className="flex flex-wrap gap-3 mb-8">
-            <Button 
-              onClick={handleOpenEdit} 
-              size="lg"
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
-            >
-              <ExternalLink className="h-5 w-5" />
-              Editar no {art.fileType?.name || 'Editor'}
-            </Button>
+          {/* Art Details */}
+          <div className="p-6 md:p-8 flex flex-col">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
+              {art.title}
+            </h1>
             
-            <Button 
-              variant="outline" 
-              size="icon" 
-              className="h-12 w-12 border-blue-200 text-blue-600"
-              onClick={handleLike}
-            >
-              <Heart className={`h-5 w-5 ${liked ? 'fill-blue-600' : ''}`} />
-            </Button>
+            <div className="flex items-center gap-2 text-sm text-neutral-500 mb-4">
+              <div className="flex items-center">
+                <Calendar className="h-4 w-4 mr-1" />
+                {formatDate(art.createdAt)}
+              </div>
+              <span>•</span>
+              <div className="flex items-center">
+                <Tag className="h-4 w-4 mr-1" />
+                {art.category?.name || 'Categoria não especificada'}
+              </div>
+            </div>
             
-            <Button 
-              variant="outline" 
-              size="icon" 
-              className="h-12 w-12 border-blue-200 text-blue-600"
-              onClick={handleShare}
-            >
-              <Share2 className="h-5 w-5" />
-            </Button>
-          </div>
-          
-          {/* Metadata */}
-          <div className="space-y-4 bg-blue-50 p-4 rounded-lg">
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <p className="text-xs text-neutral-500">Formato</p>
-                <p className="font-medium">{art.format?.name || 'Não especificado'}</p>
+            <p className="text-neutral-600 mb-6">
+              {art.description || 'Sem descrição disponível para esta arte.'}
+            </p>
+            
+            {/* Benefits Section */}
+            <div className="mb-6 space-y-3">
+              <div className="flex items-start gap-2 text-sm">
+                <div className="mt-0.5 bg-blue-100 text-blue-700 rounded-full p-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <span>Arquivo em formato {art.fileType?.name || 'editável'}</span>
               </div>
               
-              <div>
-                <p className="text-xs text-neutral-500">Tipo de Arquivo</p>
-                <p className="font-medium">{art.fileType?.name || 'Não especificado'}</p>
+              <div className="flex items-start gap-2 text-sm">
+                <div className="mt-0.5 bg-blue-100 text-blue-700 rounded-full p-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <span>Para qualquer competência e profissional</span>
+              </div>
+              
+              <div className="flex items-start gap-2 text-sm">
+                <div className="mt-0.5 bg-blue-100 text-blue-700 rounded-full p-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <span>Facilmente personalizável</span>
+              </div>
+              
+              <div className="flex items-start gap-2 text-sm">
+                <div className="mt-0.5 bg-blue-100 text-blue-700 rounded-full p-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <span>Qualidade de imagem verificada</span>
               </div>
             </div>
             
-            <Separator />
-            
-            <div>
-              <p className="text-xs text-neutral-500">Visualizações</p>
-              <div className="flex items-center">
-                <Eye className="h-4 w-4 text-blue-600 mr-2" />
-                <p className="font-medium">{art.viewCount || 0}</p>
+            {/* Action Buttons */}
+            <div className="mb-8 space-y-3">
+              <Button 
+                onClick={handleOpenEdit} 
+                size="lg"
+                className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 py-6"
+              >
+                <ExternalLink className="h-5 w-5" />
+                Editar no {art.fileType?.name || 'Editor'}
+              </Button>
+              
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  className="flex-1 flex items-center justify-center gap-2 border-blue-200 text-blue-600"
+                  onClick={handleLike}
+                >
+                  <Heart className={`h-5 w-5 ${liked ? 'fill-blue-600' : ''}`} />
+                  {liked ? 'Favoritado' : 'Favoritar'}
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  className="flex-1 flex items-center justify-center gap-2 border-blue-200 text-blue-600"
+                  onClick={handleShare}
+                >
+                  <Share2 className="h-5 w-5" />
+                  Compartilhar
+                </Button>
               </div>
             </div>
             
-            <Separator />
+            {/* Additional Info Box */}
+            {art.isPremium && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+                <h3 className="text-amber-800 font-semibold flex items-center gap-2 mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+                  Acesso Premium
+                </h3>
+                <p className="text-sm text-amber-700">
+                  Este produto está disponível exclusivamente para os membros premium. 
+                  Faça upgrade para uma conta Premium para ter acesso a todo o conteúdo premium.
+                </p>
+              </div>
+            )}
             
-            <div>
-              <p className="text-xs text-neutral-500">Downloads</p>
-              <div className="flex items-center">
-                <Download className="h-4 w-4 text-blue-600 mr-2" />
-                <p className="font-medium">{art.downloadCount || 0}</p>
+            {/* Metadata */}
+            <div className="border border-neutral-200 rounded-lg overflow-hidden mt-auto">
+              <div className="grid grid-cols-2 divide-x divide-neutral-200">
+                <div className="p-3">
+                  <p className="text-xs text-neutral-500 mb-1">Formato</p>
+                  <p className="font-medium">{art.format?.name || 'Não especificado'}</p>
+                </div>
+                
+                <div className="p-3">
+                  <p className="text-xs text-neutral-500 mb-1">Tipo de Arquivo</p>
+                  <p className="font-medium">{art.fileType?.name || 'Não especificado'}</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 divide-x divide-neutral-200 border-t border-neutral-200">
+                <div className="p-3">
+                  <p className="text-xs text-neutral-500 mb-1">Visualizações</p>
+                  <div className="flex items-center">
+                    <Eye className="h-4 w-4 text-blue-600 mr-2" />
+                    <p className="font-medium">{art.viewCount || 0}</p>
+                  </div>
+                </div>
+                
+                <div className="p-3">
+                  <p className="text-xs text-neutral-500 mb-1">Downloads</p>
+                  <div className="flex items-center">
+                    <Download className="h-4 w-4 text-blue-600 mr-2" />
+                    <p className="font-medium">{art.downloadCount || 0}</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -315,9 +366,9 @@ export default function ArtDetail() {
       </div>
       
       {/* Related Arts Section */}
-      <div className="mt-16">
-        <h2 className="text-2xl font-bold text-blue-700 mb-6">
-          Artes Relacionadas
+      <div className="bg-white rounded-xl shadow-md p-6 md:p-8">
+        <h2 className="text-xl font-bold text-gray-800 mb-6">
+          Conheça nossas artes similares
         </h2>
         <RelatedArts artId={Number(id)} />
       </div>
