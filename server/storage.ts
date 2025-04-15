@@ -1467,58 +1467,81 @@ export class DatabaseStorage implements IStorage {
   
   // Art methods
   async getArts(page: number, limit: number, filters?: ArtFilters): Promise<{ arts: Art[], totalCount: number }> {
-    let query = db.select().from(arts);
-    let whereConditions = [];
-    
-    if (filters) {
-      if (filters.categoryId) {
-        whereConditions.push(eq(arts.categoryId, filters.categoryId));
+    try {
+      // Vamos usar SQL bruto para evitar problemas de case-sensitivity nos nomes das colunas
+      let whereClause = "";
+      const params: any[] = [];
+      
+      if (filters) {
+        const conditions = [];
+        
+        if (filters.categoryId) {
+          conditions.push(`categoryid = $${params.length + 1}`);
+          params.push(filters.categoryId);
+        }
+        
+        if (filters.search) {
+          conditions.push(`title ILIKE $${params.length + 1}`);
+          params.push(`%${filters.search}%`);
+        }
+        
+        if (filters.isPremium !== undefined) {
+          conditions.push(`ispremium = $${params.length + 1}`);
+          params.push(filters.isPremium);
+        }
+        
+        if (conditions.length > 0) {
+          whereClause = "WHERE " + conditions.join(" AND ");
+        }
       }
       
-      if (filters.formatId) {
-        // Implementar filtragem por formato se necessário
-      }
+      // Consulta para obter as artes
+      const query = `
+        SELECT * FROM arts
+        ${whereClause}
+        ORDER BY createdat DESC
+        LIMIT $${params.length + 1} OFFSET $${params.length + 2}
+      `;
       
-      if (filters.fileTypeId) {
-        // Implementar filtragem por tipo de arquivo se necessário
-      }
+      const offset = (page - 1) * limit;
+      params.push(limit, offset);
       
-      if (filters.search) {
-        whereConditions.push(like(arts.title, `%${filters.search}%`));
-      }
+      const result = await db.execute(sql.raw(query, ...params));
       
-      if (filters.isPremium !== undefined) {
-        whereConditions.push(eq(arts.isPremium, filters.isPremium));
-      }
+      // Consulta para contar o total
+      const countQuery = `
+        SELECT COUNT(*) as count FROM arts
+        ${whereClause}
+      `;
+      
+      const countResult = await db.execute(sql.raw(countQuery, ...params.slice(0, params.length - 2)));
+      
+      return {
+        arts: result.rows as Art[],
+        totalCount: parseInt(countResult.rows[0].count as string)
+      };
+    } catch (error) {
+      console.error("Erro em getArts:", error);
+      throw error;
     }
-    
-    if (whereConditions.length > 0) {
-      query = query.where(and(...whereConditions));
-    }
-    
-    const countQuery = db.select({ count: sql<number>`count(*)` }).from(arts);
-    
-    if (whereConditions.length > 0) {
-      countQuery.where(and(...whereConditions));
-    }
-    
-    const offset = (page - 1) * limit;
-    const artsResult = await query
-      .orderBy(desc(arts.createdAt))
-      .limit(limit)
-      .offset(offset);
-    
-    const [{ count }] = await countQuery;
-    
-    return {
-      arts: artsResult,
-      totalCount: count
-    };
   }
   
   async getArtById(id: number): Promise<Art | undefined> {
-    const [art] = await db.select().from(arts).where(eq(arts.id, id));
-    return art;
+    try {
+      // Usar SQL bruto para evitar problemas com nomes de colunas
+      const result = await db.execute(sql`
+        SELECT * FROM arts WHERE id = ${id}
+      `);
+      
+      if (result.rows.length === 0) {
+        return undefined;
+      }
+      
+      return result.rows[0] as Art;
+    } catch (error) {
+      console.error("Erro em getArtById:", error);
+      throw error;
+    }
   }
   
   async getArtsByCollectionId(collectionId: number): Promise<Art[]> {
@@ -1673,11 +1696,20 @@ export class DatabaseStorage implements IStorage {
   
   // Designer methods
   async getArtsByDesignerId(designerId: number, limit: number = 8): Promise<Art[]> {
-    return db.select()
-      .from(arts)
-      .where(eq(arts.designerId, designerId))
-      .orderBy(desc(arts.createdAt))
-      .limit(limit);
+    try {
+      // Usar SQL bruto para evitar problemas com nomes de colunas
+      const result = await db.execute(sql`
+        SELECT * FROM arts 
+        WHERE designerid = ${designerId}
+        ORDER BY createdat DESC
+        LIMIT ${limit}
+      `);
+      
+      return result.rows as Art[];
+    } catch (error) {
+      console.error("Erro em getArtsByDesignerId:", error);
+      throw error;
+    }
   }
   
   async getDesignerProfile(designerId: number): Promise<User | undefined> {

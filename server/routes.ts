@@ -129,7 +129,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await storage.getArts(page, limit, filters);
       res.json(result);
     } catch (error) {
-      res.status(500).json({ message: "Erro ao buscar artes" });
+      console.error("Erro detalhado ao buscar artes:", error);
+      res.status(500).json({ 
+        message: "Erro ao buscar artes", 
+        error: error instanceof Error ? error.message : String(error) 
+      });
     }
   });
 
