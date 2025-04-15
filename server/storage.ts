@@ -13,13 +13,28 @@ import {
   InsertArt,
   Testimonial,
   InsertTestimonial,
+  Favorite,
+  InsertFavorite,
+  View,
+  InsertView,
+  Download,
+  InsertDownload,
+  Subscription,
+  InsertSubscription,
+  CommunityPost,
+  InsertCommunityPost,
   users,
   categories,
   formats,
   fileTypes,
   collections,
   arts,
-  testimonials
+  testimonials,
+  favorites,
+  views,
+  downloads,
+  subscriptions,
+  communityPosts
 } from "@shared/schema";
 
 import { db } from "./db";
@@ -62,6 +77,37 @@ export interface IStorage {
   // Testimonial methods
   getTestimonials(): Promise<Testimonial[]>;
   createTestimonial(testimonial: InsertTestimonial): Promise<Testimonial>;
+  
+  // Favorite methods
+  getFavoritesByUserId(userId: number): Promise<Favorite[]>;
+  getFavorite(userId: number, artId: number): Promise<Favorite | undefined>;
+  createFavorite(favorite: InsertFavorite): Promise<Favorite>;
+  deleteFavorite(userId: number, artId: number): Promise<boolean>;
+  
+  // View methods
+  getViewsByArtId(artId: number): Promise<View[]>;
+  getViewsByUserId(userId: number): Promise<View[]>;
+  createView(view: InsertView): Promise<View>;
+  getViewsCountByArtId(artId: number): Promise<number>;
+  
+  // Download methods
+  getDownloadsByUserId(userId: number): Promise<Download[]>;
+  getDownloadsByArtId(artId: number): Promise<Download[]>;
+  createDownload(download: InsertDownload): Promise<Download>;
+  getDownloadsCountByArtId(artId: number): Promise<number>;
+  
+  // Subscription methods
+  getSubscriptionByUserId(userId: number): Promise<Subscription | undefined>;
+  createSubscription(subscription: InsertSubscription): Promise<Subscription>;
+  updateSubscription(userId: number, data: Partial<InsertSubscription>): Promise<Subscription | undefined>;
+  cancelSubscription(userId: number): Promise<Subscription | undefined>;
+  
+  // Community Post methods
+  getCommunityPosts(page: number, limit: number, status?: string): Promise<{ posts: CommunityPost[], totalCount: number }>;
+  getCommunityPostById(id: number): Promise<CommunityPost | undefined>;
+  getCommunityPostsByUserId(userId: number): Promise<CommunityPost[]>;
+  createCommunityPost(post: InsertCommunityPost): Promise<CommunityPost>;
+  updateCommunityPostStatus(id: number, status: string): Promise<CommunityPost | undefined>;
 }
 
 interface ArtFilters {
@@ -809,6 +855,160 @@ export class DatabaseStorage implements IStorage {
   async createTestimonial(testimonial: InsertTestimonial): Promise<Testimonial> {
     const [newTestimonial] = await db.insert(testimonials).values(testimonial).returning();
     return newTestimonial;
+  }
+
+  // Favorite methods
+  async getFavoritesByUserId(userId: number): Promise<Favorite[]> {
+    return db.select().from(favorites).where(eq(favorites.userId, userId));
+  }
+
+  async getFavorite(userId: number, artId: number): Promise<Favorite | undefined> {
+    const [favorite] = await db.select()
+      .from(favorites)
+      .where(and(
+        eq(favorites.userId, userId),
+        eq(favorites.artId, artId)
+      ));
+    return favorite;
+  }
+
+  async createFavorite(favorite: InsertFavorite): Promise<Favorite> {
+    const [newFavorite] = await db.insert(favorites).values(favorite).returning();
+    return newFavorite;
+  }
+
+  async deleteFavorite(userId: number, artId: number): Promise<boolean> {
+    const result = await db.delete(favorites)
+      .where(and(
+        eq(favorites.userId, userId),
+        eq(favorites.artId, artId)
+      ));
+    return result.rowCount > 0;
+  }
+
+  // View methods
+  async getViewsByArtId(artId: number): Promise<View[]> {
+    return db.select().from(views).where(eq(views.artId, artId));
+  }
+
+  async getViewsByUserId(userId: number): Promise<View[]> {
+    return db.select().from(views).where(eq(views.userId, userId));
+  }
+
+  async createView(view: InsertView): Promise<View> {
+    const [newView] = await db.insert(views).values(view).returning();
+    return newView;
+  }
+
+  async getViewsCountByArtId(artId: number): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)` })
+      .from(views)
+      .where(eq(views.artId, artId));
+    return result[0]?.count || 0;
+  }
+
+  // Download methods
+  async getDownloadsByUserId(userId: number): Promise<Download[]> {
+    return db.select().from(downloads).where(eq(downloads.userId, userId));
+  }
+
+  async getDownloadsByArtId(artId: number): Promise<Download[]> {
+    return db.select().from(downloads).where(eq(downloads.artId, artId));
+  }
+
+  async createDownload(download: InsertDownload): Promise<Download> {
+    const [newDownload] = await db.insert(downloads).values(download).returning();
+    return newDownload;
+  }
+
+  async getDownloadsCountByArtId(artId: number): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)` })
+      .from(downloads)
+      .where(eq(downloads.artId, artId));
+    return result[0]?.count || 0;
+  }
+
+  // Subscription methods
+  async getSubscriptionByUserId(userId: number): Promise<Subscription | undefined> {
+    const [subscription] = await db.select()
+      .from(subscriptions)
+      .where(eq(subscriptions.userId, userId));
+    return subscription;
+  }
+
+  async createSubscription(subscription: InsertSubscription): Promise<Subscription> {
+    const [newSubscription] = await db.insert(subscriptions).values(subscription).returning();
+    return newSubscription;
+  }
+
+  async updateSubscription(userId: number, data: Partial<InsertSubscription>): Promise<Subscription | undefined> {
+    const [updatedSubscription] = await db.update(subscriptions)
+      .set(data)
+      .where(eq(subscriptions.userId, userId))
+      .returning();
+    return updatedSubscription;
+  }
+
+  async cancelSubscription(userId: number): Promise<Subscription | undefined> {
+    const now = new Date();
+    const [updatedSubscription] = await db.update(subscriptions)
+      .set({ 
+        status: 'canceled',
+        updatedAt: now
+      })
+      .where(eq(subscriptions.userId, userId))
+      .returning();
+    return updatedSubscription;
+  }
+
+  // Community Post methods
+  async getCommunityPosts(page: number, limit: number, status?: string): Promise<{ posts: CommunityPost[], totalCount: number }> {
+    let query = db.select().from(communityPosts);
+    
+    if (status) {
+      query = query.where(eq(communityPosts.status, status));
+    }
+    
+    const posts = await query
+      .orderBy(desc(communityPosts.createdAt))
+      .limit(limit)
+      .offset((page - 1) * limit);
+    
+    const countQuery = db.select({ count: sql<number>`count(*)` }).from(communityPosts);
+    if (status) {
+      countQuery.where(eq(communityPosts.status, status));
+    }
+    
+    const result = await countQuery;
+    const totalCount = result[0]?.count || 0;
+    
+    return { posts, totalCount };
+  }
+
+  async getCommunityPostById(id: number): Promise<CommunityPost | undefined> {
+    const [post] = await db.select().from(communityPosts).where(eq(communityPosts.id, id));
+    return post;
+  }
+
+  async getCommunityPostsByUserId(userId: number): Promise<CommunityPost[]> {
+    return db.select().from(communityPosts).where(eq(communityPosts.userId, userId));
+  }
+
+  async createCommunityPost(post: InsertCommunityPost): Promise<CommunityPost> {
+    const [newPost] = await db.insert(communityPosts).values(post).returning();
+    return newPost;
+  }
+
+  async updateCommunityPostStatus(id: number, status: string): Promise<CommunityPost | undefined> {
+    const now = new Date();
+    const [updatedPost] = await db.update(communityPosts)
+      .set({ 
+        status,
+        updatedAt: now
+      })
+      .where(eq(communityPosts.id, id))
+      .returning();
+    return updatedPost;
   }
 }
 

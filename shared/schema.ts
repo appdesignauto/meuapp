@@ -120,5 +120,97 @@ export type InsertCollection = z.infer<typeof insertCollectionSchema>;
 export type Art = typeof arts.$inferSelect;
 export type InsertArt = z.infer<typeof insertArtSchema>;
 
+// Favorites schema
+export const favorites = pgTable("favorites", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().references(() => users.id),
+  artId: integer("artId").notNull().references(() => arts.id),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export const insertFavoriteSchema = createInsertSchema(favorites).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Views schema
+export const views = pgTable("views", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").references(() => users.id),
+  artId: integer("artId").notNull().references(() => arts.id),
+  sourceIP: text("sourceIP"),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export const insertViewSchema = createInsertSchema(views).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Downloads schema
+export const downloads = pgTable("downloads", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().references(() => users.id),
+  artId: integer("artId").notNull().references(() => arts.id),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export const insertDownloadSchema = createInsertSchema(downloads).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Subscriptions schema
+export const subscriptions = pgTable("subscriptions", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().references(() => users.id).unique(),
+  planType: text("planType").notNull().default("premium"),
+  status: text("status").notNull().default("active"), // active, canceled, pending
+  startDate: timestamp("startDate").notNull().defaultNow(),
+  endDate: timestamp("endDate"),
+  webhookData: text("webhookData"),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Community posts schema
+export const communityPosts = pgTable("communityPosts", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().references(() => users.id),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  imageUrl: text("imageUrl"),
+  status: text("status").notNull().default("pending"), // pending, approved, rejected
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export const insertCommunityPostSchema = createInsertSchema(communityPosts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export type Testimonial = typeof testimonials.$inferSelect;
 export type InsertTestimonial = z.infer<typeof insertTestimonialSchema>;
+
+export type Favorite = typeof favorites.$inferSelect;
+export type InsertFavorite = z.infer<typeof insertFavoriteSchema>;
+
+export type View = typeof views.$inferSelect;
+export type InsertView = z.infer<typeof insertViewSchema>;
+
+export type Download = typeof downloads.$inferSelect;
+export type InsertDownload = z.infer<typeof insertDownloadSchema>;
+
+export type Subscription = typeof subscriptions.$inferSelect;
+export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
+
+export type CommunityPost = typeof communityPosts.$inferSelect;
+export type InsertCommunityPost = z.infer<typeof insertCommunityPostSchema>;
