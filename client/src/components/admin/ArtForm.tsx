@@ -32,7 +32,10 @@ import { apiRequest } from '@/lib/queryClient';
 const artSchema = z.object({
   title: z.string().min(3, 'Título deve ter pelo menos 3 caracteres'),
   description: z.string().min(5, 'Descrição deve ter pelo menos 5 caracteres'),
-  imageUrl: z.string().url('URL da imagem inválida'),
+  imageUrl: z.union([
+    z.string().url('URL da imagem inválida'),
+    z.string().startsWith('/uploads/', 'O caminho da imagem deve começar com /uploads/')
+  ]),
   editUrl: z.string().url('URL de edição inválida').optional().or(z.literal('')),
   isPremium: z.boolean().default(false),
   categoryId: z.string().min(1, 'Selecione uma categoria'),
