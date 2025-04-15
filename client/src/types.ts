@@ -53,6 +53,7 @@ export interface Collection {
 export interface Art {
   id: number;
   title: string;
+  description?: string;
   imageUrl: string;
   format: string;
   fileType: string;

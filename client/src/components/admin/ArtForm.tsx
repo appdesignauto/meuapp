@@ -132,8 +132,8 @@ const ArtForm = ({ isOpen, onClose, editingArt }: ArtFormProps) => {
       setValue('imageUrl', editingArt.imageUrl);
       setValue('editUrl', editingArt.editUrl || '');
       setValue('categoryId', editingArt.categoryId.toString());
-      setValue('format', editingArt.format);
-      setValue('fileType', editingArt.fileType);
+      setValue('format', editingArt.format || '');
+      setValue('fileType', editingArt.fileType || '');
       setIsPremium(editingArt.isPremium);
     }
   }, [editingArt, setValue]);
