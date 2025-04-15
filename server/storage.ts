@@ -1008,13 +1008,43 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user;
+    try {
+      // Usando SQL direto para evitar problemas com case sensitivity
+      const result = await db.execute(
+        `SELECT * FROM users WHERE email = $1;`,
+        [email]
+      );
+      return result.rows.length > 0 ? result.rows[0] as User : undefined;
+    } catch (error) {
+      console.error("Erro em getUserByEmail:", error);
+      return undefined;
+    }
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db.insert(users).values(insertUser).returning();
-    return user;
+  async createUser(insertUser: any): Promise<User> {
+    // Usando SQL direto para evitar problemas com case sensitivity
+    const { username, password, email, name, role, profileImageUrl, bio, isActive, lastLogin } = insertUser;
+    
+    const result = await db.execute(
+      `INSERT INTO users (username, password, email, name, role, profileimageurl, bio, isactive, lastlogin, createdat, updatedat) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
+       RETURNING *`,
+      [
+        username, 
+        password, 
+        email, 
+        name || null, 
+        role || 'free', 
+        profileImageUrl || null, 
+        bio || null, 
+        isActive !== undefined ? isActive : true, 
+        lastLogin || null,
+        new Date(),
+        new Date()
+      ]
+    );
+    
+    return result.rows[0] as User;
   }
 
   async updateUserRole(id: number, role: string): Promise<User | undefined> {
