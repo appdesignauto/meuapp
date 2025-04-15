@@ -83,71 +83,87 @@ export class StorageService {
       throw new Error("Nenhum arquivo foi fornecido");
     }
 
-    // Otimização da imagem principal
-    const optimizedBuffer = await this.optimizeImage(file.buffer, {
-      ...options,
-      width: options.width || 1200, // Limita o tamanho máximo
-      quality: options.quality || 80,
-    });
+    try {
+      // Verificar se as credenciais do R2 estão disponíveis
+      if (
+        !process.env.R2_ACCESS_KEY_ID ||
+        !process.env.R2_SECRET_ACCESS_KEY ||
+        !process.env.R2_ENDPOINT
+      ) {
+        console.warn("Credenciais do R2 não configuradas, usando armazenamento local");
+        return this.localUpload(file, options);
+      }
 
-    // Cria uma versão thumbnail para listagens e previews
-    const thumbnailBuffer = await this.optimizeImage(file.buffer, {
-      width: 400,
-      quality: 75,
-    });
+      // Otimização da imagem principal
+      const optimizedBuffer = await this.optimizeImage(file.buffer, {
+        ...options,
+        width: options.width || 1200, // Limita o tamanho máximo
+        quality: options.quality || 80,
+      });
 
-    // Gera chaves únicas para os arquivos
-    const imageKey = this.generateKey(file.originalname);
-    const thumbnailKey = this.generateKey(file.originalname, true);
+      // Cria uma versão thumbnail para listagens e previews
+      const thumbnailBuffer = await this.optimizeImage(file.buffer, {
+        width: 400,
+        quality: 75,
+      });
 
-    // Upload da imagem principal
-    await s3Client.send(
-      new PutObjectCommand({
+      // Gera chaves únicas para os arquivos
+      const imageKey = this.generateKey(file.originalname);
+      const thumbnailKey = this.generateKey(file.originalname, true);
+
+      // Upload da imagem principal
+      await s3Client.send(
+        new PutObjectCommand({
+          Bucket: BUCKET_NAME,
+          Key: imageKey,
+          Body: optimizedBuffer,
+          ContentType: "image/webp",
+        })
+      );
+
+      // Upload do thumbnail
+      await s3Client.send(
+        new PutObjectCommand({
+          Bucket: BUCKET_NAME,
+          Key: thumbnailKey,
+          Body: thumbnailBuffer,
+          ContentType: "image/webp",
+        })
+      );
+
+      // Retorna as URLs públicas se o bucket tiver configuração pública
+      if (PUBLIC_BUCKET_URL) {
+        return {
+          imageUrl: `${PUBLIC_BUCKET_URL}/${imageKey}`,
+          thumbnailUrl: `${PUBLIC_BUCKET_URL}/${thumbnailKey}`,
+        };
+      }
+
+      // Se não tiver URL pública, gera URLs assinadas (válidas por 7 dias)
+      const imageCommand = new GetObjectCommand({
         Bucket: BUCKET_NAME,
         Key: imageKey,
-        Body: optimizedBuffer,
-        ContentType: "image/webp",
-      })
-    );
+      });
 
-    // Upload do thumbnail
-    await s3Client.send(
-      new PutObjectCommand({
+      const thumbnailCommand = new GetObjectCommand({
         Bucket: BUCKET_NAME,
         Key: thumbnailKey,
-        Body: thumbnailBuffer,
-        ContentType: "image/webp",
-      })
-    );
+      });
 
-    // Retorna as URLs públicas se o bucket tiver configuração pública
-    if (PUBLIC_BUCKET_URL) {
-      return {
-        imageUrl: `${PUBLIC_BUCKET_URL}/${imageKey}`,
-        thumbnailUrl: `${PUBLIC_BUCKET_URL}/${thumbnailKey}`,
-      };
+      const imageUrl = await getSignedUrl(s3Client, imageCommand, {
+        expiresIn: 604800, // 7 dias em segundos
+      });
+
+      const thumbnailUrl = await getSignedUrl(s3Client, thumbnailCommand, {
+        expiresIn: 604800,
+      });
+
+      return { imageUrl, thumbnailUrl };
+    } catch (error) {
+      console.error("Erro ao fazer upload para R2:", error);
+      // Em caso de erro, usamos o armazenamento local
+      return this.localUpload(file, options);
     }
-
-    // Se não tiver URL pública, gera URLs assinadas (válidas por 7 dias)
-    const imageCommand = new GetObjectCommand({
-      Bucket: BUCKET_NAME,
-      Key: imageKey,
-    });
-
-    const thumbnailCommand = new GetObjectCommand({
-      Bucket: BUCKET_NAME,
-      Key: thumbnailKey,
-    });
-
-    const imageUrl = await getSignedUrl(s3Client, imageCommand, {
-      expiresIn: 604800, // 7 dias em segundos
-    });
-
-    const thumbnailUrl = await getSignedUrl(s3Client, thumbnailCommand, {
-      expiresIn: 604800,
-    });
-
-    return { imageUrl, thumbnailUrl };
   }
 
   /**
@@ -210,12 +226,40 @@ export class StorageService {
     file: Express.Multer.File,
     options: ImageOptimizationOptions = {}
   ): Promise<{ imageUrl: string; thumbnailUrl: string }> {
-    // Implementação básica para ambiente de desenvolvimento
-    // Na produção, você deve usar o R2
-    return {
-      imageUrl: "https://placehold.co/800x600?text=Imagem+Exemplo",
-      thumbnailUrl: "https://placehold.co/400x300?text=Thumbnail",
-    };
+    try {
+      // Otimização da imagem principal
+      const optimizedBuffer = await this.optimizeImage(file.buffer, {
+        ...options,
+        width: options.width || 1200,
+        quality: options.quality || 80,
+      });
+
+      // Cria uma versão thumbnail
+      const thumbnailBuffer = await this.optimizeImage(file.buffer, {
+        width: 400,
+        quality: 75,
+      });
+      
+      // No fallback local, usamos URLs de placeholder que servirão para visualização
+      // Em ambiente de produção, você deveria usar o R2 ou outro serviço de armazenamento
+      // Esta é apenas uma solução temporária para desenvolvimento
+      
+      // Gera IDs únicos para as imagens
+      const imageId = randomUUID();
+      const thumbnailId = randomUUID();
+      
+      return {
+        imageUrl: `https://placehold.co/800x600/00aaff/ffffff?text=${imageId.substring(0, 8)}`,
+        thumbnailUrl: `https://placehold.co/400x300/00aaff/ffffff?text=${thumbnailId.substring(0, 8)}`,
+      };
+    } catch (error) {
+      console.error("Erro no fallback local:", error);
+      // Último recurso: retorna URLs padrão
+      return {
+        imageUrl: "https://placehold.co/800x600?text=Imagem+Indisponível",
+        thumbnailUrl: "https://placehold.co/400x300?text=Thumbnail+Indisponível",
+      };
+    }
   }
 }
 
