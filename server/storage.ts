@@ -12,8 +12,18 @@ import {
   Art,
   InsertArt,
   Testimonial,
-  InsertTestimonial
+  InsertTestimonial,
+  users,
+  categories,
+  formats,
+  fileTypes,
+  collections,
+  arts,
+  testimonials
 } from "@shared/schema";
+
+import { db } from "./db";
+import { eq, like, desc, and, or, isNull, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -599,4 +609,208 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export class DatabaseStorage implements IStorage {
+  // User methods
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db.insert(users).values(insertUser).returning();
+    return user;
+  }
+
+  async updateUserRole(id: number, role: string): Promise<User | undefined> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ role })
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser;
+  }
+  
+  // Category methods
+  async getCategories(): Promise<Category[]> {
+    return db.select().from(categories);
+  }
+  
+  async getCategoryById(id: number): Promise<Category | undefined> {
+    const [category] = await db.select().from(categories).where(eq(categories.id, id));
+    return category;
+  }
+  
+  async createCategory(category: InsertCategory): Promise<Category> {
+    const [newCategory] = await db.insert(categories).values(category).returning();
+    return newCategory;
+  }
+  
+  // Format methods
+  async getFormats(): Promise<Format[]> {
+    return db.select().from(formats);
+  }
+  
+  async getFormatById(id: number): Promise<Format | undefined> {
+    const [format] = await db.select().from(formats).where(eq(formats.id, id));
+    return format;
+  }
+  
+  async createFormat(format: InsertFormat): Promise<Format> {
+    const [newFormat] = await db.insert(formats).values(format).returning();
+    return newFormat;
+  }
+  
+  // File type methods
+  async getFileTypes(): Promise<FileType[]> {
+    return db.select().from(fileTypes);
+  }
+  
+  async getFileTypeById(id: number): Promise<FileType | undefined> {
+    const [fileType] = await db.select().from(fileTypes).where(eq(fileTypes.id, id));
+    return fileType;
+  }
+  
+  async createFileType(fileType: InsertFileType): Promise<FileType> {
+    const [newFileType] = await db.insert(fileTypes).values(fileType).returning();
+    return newFileType;
+  }
+  
+  // Collection methods
+  async getCollections(page: number, limit: number, search?: string): Promise<{ collections: Collection[], totalCount: number }> {
+    let query = db.select().from(collections);
+    
+    if (search) {
+      query = query.where(
+        or(
+          like(collections.title, `%${search}%`),
+          like(collections.description, `%${search}%`)
+        )
+      );
+    }
+    
+    const countQuery = db.select({ count: sql<number>`count(*)` }).from(collections);
+    
+    if (search) {
+      countQuery.where(
+        or(
+          like(collections.title, `%${search}%`),
+          like(collections.description, `%${search}%`)
+        )
+      );
+    }
+    
+    const offset = (page - 1) * limit;
+    const collectionsResult = await query
+      .orderBy(desc(collections.updatedAt))
+      .limit(limit)
+      .offset(offset);
+      
+    const [{ count }] = await countQuery;
+    
+    return { 
+      collections: collectionsResult,
+      totalCount: count
+    };
+  }
+  
+  async getFeaturedCollections(limit = 4): Promise<Collection[]> {
+    return db
+      .select()
+      .from(collections)
+      .orderBy(desc(collections.updatedAt))
+      .limit(limit);
+  }
+  
+  async getCollectionById(id: number): Promise<Collection | undefined> {
+    const [collection] = await db.select().from(collections).where(eq(collections.id, id));
+    return collection;
+  }
+  
+  async createCollection(collection: InsertCollection): Promise<Collection> {
+    const [newCollection] = await db.insert(collections).values(collection).returning();
+    return newCollection;
+  }
+  
+  // Art methods
+  async getArts(page: number, limit: number, filters?: ArtFilters): Promise<{ arts: Art[], totalCount: number }> {
+    let query = db.select().from(arts);
+    let whereConditions = [];
+    
+    if (filters) {
+      if (filters.categoryId) {
+        whereConditions.push(eq(arts.categoryId, filters.categoryId));
+      }
+      
+      if (filters.formatId) {
+        // Implementar filtragem por formato se necessário
+      }
+      
+      if (filters.fileTypeId) {
+        // Implementar filtragem por tipo de arquivo se necessário
+      }
+      
+      if (filters.search) {
+        whereConditions.push(like(arts.title, `%${filters.search}%`));
+      }
+      
+      if (filters.isPremium !== undefined) {
+        whereConditions.push(eq(arts.isPremium, filters.isPremium));
+      }
+    }
+    
+    if (whereConditions.length > 0) {
+      query = query.where(and(...whereConditions));
+    }
+    
+    const countQuery = db.select({ count: sql<number>`count(*)` }).from(arts);
+    
+    if (whereConditions.length > 0) {
+      countQuery.where(and(...whereConditions));
+    }
+    
+    const offset = (page - 1) * limit;
+    const artsResult = await query
+      .orderBy(desc(arts.createdAt))
+      .limit(limit)
+      .offset(offset);
+    
+    const [{ count }] = await countQuery;
+    
+    return {
+      arts: artsResult,
+      totalCount: count
+    };
+  }
+  
+  async getArtById(id: number): Promise<Art | undefined> {
+    const [art] = await db.select().from(arts).where(eq(arts.id, id));
+    return art;
+  }
+  
+  async getArtsByCollectionId(collectionId: number): Promise<Art[]> {
+    return db.select().from(arts).where(eq(arts.collectionId, collectionId));
+  }
+  
+  async createArt(art: InsertArt): Promise<Art> {
+    const [newArt] = await db.insert(arts).values(art).returning();
+    return newArt;
+  }
+  
+  // Testimonial methods
+  async getTestimonials(): Promise<Testimonial[]> {
+    return db.select().from(testimonials);
+  }
+  
+  async createTestimonial(testimonial: InsertTestimonial): Promise<Testimonial> {
+    const [newTestimonial] = await db.insert(testimonials).values(testimonial).returning();
+    return newTestimonial;
+  }
+}
+
+// Inicialização do armazenamento
+export const storage = new DatabaseStorage();
