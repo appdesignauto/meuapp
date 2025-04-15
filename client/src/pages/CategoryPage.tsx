@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Search, Filter, SlidersHorizontal } from 'lucide-react';
+import { ArrowLeft, Search, Filter, SlidersHorizontal, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -27,6 +27,11 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert";
 
 export default function CategoryPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -39,17 +44,29 @@ export default function CategoryPage() {
   });
   const limit = 12;
 
+  // Verifique se o slug está presente e é válido
+  const isValidSlug = typeof slug === 'string' && slug.length > 0;
+
   // Fetch category by slug
-  const { data: category, isLoading: categoryLoading } = useQuery({
+  const { 
+    data: category, 
+    isLoading: categoryLoading,
+    error: categoryError
+  } = useQuery({
     queryKey: ['/api/categories/slug', slug],
     queryFn: async () => {
       console.log("Buscando categoria com slug:", slug);
       const res = await fetch(`/api/categories/slug/${slug}`);
-      if (!res.ok) throw new Error('Erro ao carregar categoria');
+      if (!res.ok) {
+        console.error("Erro ao carregar categoria:", res.status, res.statusText);
+        throw new Error(`Erro ao carregar categoria: ${res.status}`);
+      }
       const data = await res.json();
       console.log("Categoria carregada:", data);
       return data;
     },
+    // Só execute a consulta se o slug for válido
+    enabled: isValidSlug,
   });
 
   // Fetch formats
@@ -103,11 +120,12 @@ export default function CategoryPage() {
     { page, limit, categoryId: category?.id, formatId: filters.formatId, fileTypeId: filters.fileTypeId, search }
   ];
 
-  // Fetch arts with filters
+  // Fetch arts with filters - só executar quando categoria estiver carregada
   const { 
     data, 
     isLoading: artsLoading, 
-    isFetching 
+    isFetching,
+    error: artsError 
   } = useQuery<{
     arts: any[];
     totalCount: number;
@@ -126,12 +144,19 @@ export default function CategoryPage() {
       console.log("Artes carregadas:", data);
       return data;
     },
+    // Só execute a consulta quando tivermos o ID da categoria
     enabled: !!category?.id,
   });
 
   const arts = data?.arts || [];
   const totalCount = data?.totalCount || 0;
   const hasMore = page * limit < totalCount;
+  
+  // Status geral de carregamento
+  const isLoading = categoryLoading || (artsLoading && !isFetching);
+  
+  // Verificar erro
+  const hasError = categoryError || artsError;
 
   // Reset page when filters change
   useEffect(() => {
@@ -171,8 +196,6 @@ export default function CategoryPage() {
     setSearch('');
   };
 
-  const isLoading = categoryLoading || (artsLoading && !isFetching);
-
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header com navegação de volta */}
@@ -188,6 +211,17 @@ export default function CategoryPage() {
         </Button>
       </div>
 
+      {/* Mensagem de erro */}
+      {hasError && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Erro</AlertTitle>
+          <AlertDescription>
+            Ocorreu um erro ao carregar os dados. Por favor, tente novamente mais tarde.
+          </AlertDescription>
+        </Alert>
+      )}
+      
       {/* Título da categoria e estatísticas */}
       {isLoading ? (
         <div className="mb-8">
@@ -380,12 +414,31 @@ export default function CategoryPage() {
       ) : arts.length === 0 ? (
         <div className="py-16 text-center">
           <div className="max-w-md mx-auto">
-            <h3 className="text-lg font-medium mb-2">Nenhum design encontrado</h3>
+            <div className="mb-5 flex justify-center">
+              <div className="rounded-full bg-blue-50 p-4">
+                <Search className="h-8 w-8 text-blue-500" />
+              </div>
+            </div>
+            <h3 className="text-xl font-semibold mb-2">Nenhum design encontrado</h3>
             <p className="text-neutral-500 mb-6">
-              Tente ajustar seus filtros ou buscar por outra categoria.
+              {filters.formatId || filters.fileTypeId || search 
+                ? 'Tente ajustar seus filtros ou realizar uma busca diferente.'
+                : 'Esta categoria ainda não possui designs disponíveis. Confira outras categorias.'}
             </p>
-            <Button onClick={clearFilters}>
-              Limpar filtros
+            {(filters.formatId || filters.fileTypeId || search) && (
+              <Button 
+                variant="default" 
+                onClick={clearFilters} 
+                className="mr-2"
+              >
+                Limpar filtros
+              </Button>
+            )}
+            <Button 
+              variant="outline" 
+              onClick={() => setLocation('/')}
+            >
+              Voltar para a página inicial
             </Button>
           </div>
         </div>
