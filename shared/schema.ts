@@ -114,6 +114,8 @@ export const insertTestimonialSchema = createInsertSchema(testimonials).omit({
 });
 
 // Types
+export type UserRole = 'visitor' | 'free' | 'premium' | 'designer' | 'designer_adm' | 'support' | 'admin';
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 

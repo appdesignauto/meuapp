@@ -24,7 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check if user is already logged in
     async function checkAuth() {
       try {
-        const res = await fetch('/api/auth/me', { credentials: 'include' });
+        const res = await fetch('/api/user', { credentials: 'include' });
         if (res.ok) {
           const userData = await res.json();
           setUser(userData);
@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (username: string, password: string) => {
     setIsLoading(true);
     try {
-      const res = await apiRequest('POST', '/api/auth/login', { username, password });
+      const res = await apiRequest('POST', '/api/login', { username, password });
       const userData = await res.json();
       setUser(userData);
       toast({
@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (username: string, password: string, email: string, name?: string) => {
     setIsLoading(true);
     try {
-      const res = await apiRequest('POST', '/api/auth/register', { 
+      const res = await apiRequest('POST', '/api/register', { 
         username, 
         password, 
         email,
@@ -95,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     setIsLoading(true);
     try {
-      await apiRequest('POST', '/api/auth/logout', {});
+      await apiRequest('POST', '/api/logout', {});
       setUser(null);
       toast({
         title: "Logout bem-sucedido",
