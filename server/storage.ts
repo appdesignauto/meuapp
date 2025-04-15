@@ -1468,37 +1468,35 @@ export class DatabaseStorage implements IStorage {
   // Art methods
   async getArts(page: number, limit: number, filters?: ArtFilters): Promise<{ arts: Art[], totalCount: number }> {
     try {
-      // Usar SQL bruto para evitar problemas com nomes de colunas
-      let whereClause = "";
-      const params: any[] = [];
-      let paramIndex = 1;
+      // Vamos usar SQL bruto diretamente
+      const offset = (page - 1) * limit;
       
-      if (filters) {
-        const conditions = [];
+      // Construir a consulta SQL base
+      let query = db.select()
+        .from(sql.raw('arts'))
+        .limit(limit)
+        .offset(offset);
         
+      // Aplicar filtros, se necessário
+      if (filters) {
         if (filters.categoryId) {
-          conditions.push(`"categoryId" = $${paramIndex++}`);
-          params.push(filters.categoryId);
+          query = query.where(sql.raw(`"categoryId" = ${filters.categoryId}`));
         }
         
         if (filters.search) {
-          conditions.push(`title ILIKE $${paramIndex++}`);
-          params.push(`%${filters.search}%`);
+          query = query.where(sql.raw(`title ILIKE '%${filters.search}%'`));
         }
         
         if (filters.isPremium !== undefined) {
-          conditions.push(`"isPremium" = $${paramIndex++}`);
-          params.push(filters.isPremium);
-        }
-        
-        if (conditions.length > 0) {
-          whereClause = "WHERE " + conditions.join(" AND ");
+          query = query.where(sql.raw(`"isPremium" = ${filters.isPremium}`));
         }
       }
       
-      // Consulta para obter as artes
-      const offset = (page - 1) * limit;
-      const query = `
+      // Adicionar ordenação
+      query = query.orderBy(sql.raw(`"createdAt" DESC`));
+      
+      // Executar a consulta
+      const result = await db.execute(sql`
         SELECT 
           id, 
           "createdAt", 
@@ -1517,23 +1515,12 @@ export class DatabaseStorage implements IStorage {
           "editUrl", 
           aspectratio as "aspectRatio"
         FROM arts
-        ${whereClause}
         ORDER BY "createdAt" DESC
-        LIMIT $${paramIndex++} OFFSET $${paramIndex++}
-      `;
-      
-      params.push(limit, offset);
-      
-      const result = await db.execute(sql`${query}`, ...params);
+        LIMIT ${limit} OFFSET ${offset}
+      `);
       
       // Consulta para contar o total
-      const countQuery = `
-        SELECT COUNT(*) as count FROM arts
-        ${whereClause}
-      `;
-      
-      const countParams = params.slice(0, params.length - 2);
-      const countResult = await db.execute(sql`${countQuery}`, ...countParams);
+      const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM arts`);
       
       return {
         arts: result.rows as Art[],
