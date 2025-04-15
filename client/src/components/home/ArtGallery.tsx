@@ -71,9 +71,16 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId }: ArtGalleryProps) => {
           </div>
         ) : (
           <>
-            <div className="columns-2 sm:columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4">
+            <div className="columns-2 sm:columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4 space-y-0">
               {arts.map((art) => (
-                <div key={art.id} className="break-inside-avoid mb-4 transform hover:-translate-y-1 transition-transform duration-300">
+                <div 
+                  key={art.id} 
+                  className="break-inside-avoid mb-4 transform hover:-translate-y-1 transition-transform duration-300"
+                  style={{ 
+                    display: 'inline-block',
+                    width: '100%'
+                  }}
+                >
                   <ArtCard 
                     art={art} 
                     userRole={userRole}

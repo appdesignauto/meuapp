@@ -13,17 +13,21 @@ const FeaturedCategories = () => {
     queryKey: ['/api/categories'],
   });
 
-  // Função para rolar o carrossel para a esquerda
+  // Função para rolar o carrossel para a esquerda (uma categoria completa)
   const scrollLeft = () => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: -280, behavior: 'smooth' });
+      const containerWidth = scrollContainerRef.current.offsetWidth;
+      const scrollAmount = containerWidth * 0.7; // Rolagem de aproximadamente uma categoria
+      scrollContainerRef.current.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
     }
   };
 
-  // Função para rolar o carrossel para a direita
+  // Função para rolar o carrossel para a direita (uma categoria completa)
   const scrollRight = () => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: 280, behavior: 'smooth' });
+      const containerWidth = scrollContainerRef.current.offsetWidth;
+      const scrollAmount = containerWidth * 0.7; // Rolagem de aproximadamente uma categoria
+      scrollContainerRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
     }
   };
 
@@ -107,14 +111,14 @@ const FeaturedCategories = () => {
             <>
               <button 
                 onClick={scrollLeft}
-                className="absolute -left-4 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-3 shadow-lg hover:bg-blue-500 hover:text-white focus:outline-none transition-colors duration-200"
+                className="absolute -left-5 top-1/2 transform -translate-y-1/2 z-10 bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg hover:bg-blue-500 hover:text-white focus:outline-none transition-all duration-300 border border-blue-100 hover:scale-110"
                 aria-label="Rolar para a esquerda"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
               <button 
                 onClick={scrollRight}
-                className="absolute -right-4 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-3 shadow-lg hover:bg-blue-500 hover:text-white focus:outline-none transition-colors duration-200"
+                className="absolute -right-5 top-1/2 transform -translate-y-1/2 z-10 bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg hover:bg-blue-500 hover:text-white focus:outline-none transition-all duration-300 border border-blue-100 hover:scale-110"
                 aria-label="Rolar para a direita"
               >
                 <ChevronRight className="h-5 w-5" />
@@ -137,11 +141,22 @@ const FeaturedCategories = () => {
           ) : (
             <div 
               ref={scrollContainerRef}
-              className="flex overflow-x-auto pb-8 hide-scrollbar snap-x snap-mandatory pl-4 -mx-4"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              className="flex overflow-x-auto pb-8 hide-scrollbar snap-x snap-mandatory pl-1 -mx-0 md:-mx-4"
+              style={{ 
+                scrollbarWidth: 'none', 
+                msOverflowStyle: 'none',
+                paddingRight: '15%' // Espaço extra para mostrar parte da próxima categoria 
+              }}
             >
               {categories?.map((category, index) => (
-                <div key={category.id} className="flex-none w-[75%] sm:w-[45%] md:w-[32%] lg:w-[24%] pr-3 sm:pr-5 snap-start">
+                <div 
+                  key={category.id} 
+                  className="flex-none w-[85%] sm:w-[70%] md:w-[65%] lg:w-[58%] pr-4 sm:pr-6 snap-start"
+                  style={{ 
+                    scrollSnapAlign: 'start',
+                    marginRight: '10px' // Espaço entre as categorias
+                  }}
+                >
                   <Link href={`/?category=${category.id}`}>
                     <div className="group rounded-xl overflow-hidden cursor-pointer transition-all hover:shadow-lg h-full border border-neutral-200 bg-white">
                       <div className="aspect-square relative overflow-hidden">
