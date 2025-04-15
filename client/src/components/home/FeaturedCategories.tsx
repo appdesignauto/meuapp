@@ -43,6 +43,7 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
       onCategorySelect(category.id);
     } else {
       // Redirecionar para a página da categoria específica
+      console.log(`Navegando para categoria: /categories/${category.slug}`);
       setLocation(`/categories/${category.slug}`);
     }
   };

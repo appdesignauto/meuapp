@@ -41,11 +41,14 @@ export default function CategoryPage() {
 
   // Fetch category by slug
   const { data: category, isLoading: categoryLoading } = useQuery({
-    queryKey: ['/api/categories', slug],
+    queryKey: ['/api/categories/slug', slug],
     queryFn: async () => {
+      console.log("Buscando categoria com slug:", slug);
       const res = await fetch(`/api/categories/slug/${slug}`);
       if (!res.ok) throw new Error('Erro ao carregar categoria');
-      return res.json();
+      const data = await res.json();
+      console.log("Categoria carregada:", data);
+      return data;
     },
   });
 
@@ -111,9 +114,17 @@ export default function CategoryPage() {
   }>({
     queryKey,
     queryFn: async () => {
-      const res = await fetch(getApiUrl());
-      if (!res.ok) throw new Error('Erro ao carregar artes');
-      return res.json();
+      const apiUrl = getApiUrl();
+      console.log("Buscando artes com URL:", apiUrl);
+      console.log("Categoria ID:", category?.id);
+      const res = await fetch(apiUrl);
+      if (!res.ok) {
+        console.error("Erro ao buscar artes:", res.status, res.statusText);
+        throw new Error('Erro ao carregar artes');
+      }
+      const data = await res.json();
+      console.log("Artes carregadas:", data);
+      return data;
     },
     enabled: !!category?.id,
   });
