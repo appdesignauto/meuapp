@@ -5,16 +5,21 @@ import { randomUUID } from "crypto";
 import fs from "fs";
 import path from "path";
 
+// Formatando o endpoint para garantir compatibilidade
+let endpoint = process.env.R2_ENDPOINT || "";
+if (endpoint && !endpoint.startsWith("http")) {
+  endpoint = `https://${endpoint}`;
+}
+
 // Configuração do cliente S3 (compatível com Cloudflare R2)
 const s3Client = new S3Client({
   region: "auto",
-  endpoint: process.env.R2_ENDPOINT,
+  endpoint: endpoint,
   credentials: {
     accessKeyId: process.env.R2_ACCESS_KEY_ID || "",
     secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || "",
   },
   forcePathStyle: true, // Necessário para alguns serviços S3-compatíveis
-  tls: false, // Desativar TLS/SSL
 });
 
 const BUCKET_NAME = process.env.R2_BUCKET_NAME || "designauto-images";
@@ -97,6 +102,10 @@ export class StorageService {
         console.warn("Credenciais do R2 não configuradas, usando armazenamento local");
         return this.localUpload(file, options);
       }
+      
+      console.log("Tentando upload para R2 com endpoint:", endpoint);
+      console.log("Bucket R2:", BUCKET_NAME);
+      console.log("URL pública R2:", PUBLIC_BUCKET_URL);
 
       // Otimização da imagem principal
       const optimizedBuffer = await this.optimizeImage(file.buffer, {
