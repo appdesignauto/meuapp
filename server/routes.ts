@@ -158,6 +158,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Erro ao buscar arte" });
     }
   });
+  
+  app.get("/api/arts/:id/related", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 4;
+      
+      const relatedArts = await storage.getRelatedArts(id, limit);
+      
+      // Filtrar artes premium se o usuário não estiver logado ou não for premium
+      const user = req.user as any;
+      let filteredArts = relatedArts;
+      
+      if (!user || user.role !== 'premium') {
+        filteredArts = relatedArts.filter(art => !art.isPremium);
+      }
+      
+      res.json(filteredArts);
+    } catch (error) {
+      console.error("Erro ao buscar artes relacionadas:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
 
   // Testimonials API
   app.get("/api/testimonials", async (req, res) => {
