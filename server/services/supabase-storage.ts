@@ -52,6 +52,9 @@ export class SupabaseStorageService {
         throw error;
       }
       
+      // Lista todos os buckets disponíveis para depuração
+      console.log("Buckets disponíveis no Supabase:", buckets?.map(b => b.name).join(', ') || 'Nenhum bucket encontrado');
+      
       // Verifica se o bucket existe
       const bucketExists = buckets?.some(bucket => bucket.name === BUCKET_NAME);
 

@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { UploadCloud, RefreshCw } from "lucide-react";
+import { UploadCloud, RefreshCw, AlertCircle, Info } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface UploadResult {
   imageUrl: string;
@@ -92,6 +94,68 @@ export function SupabaseTestUpload() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            <Alert className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Informação importante</AlertTitle>
+              <AlertDescription>
+                Antes de usar o Supabase Storage, você precisa criar um bucket chamado <strong>designauto-images</strong> no 
+                painel do Supabase e configurar permissões RLS para permitir uploads.
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="link" className="h-auto p-0 text-blue-600">
+                      Ver instruções detalhadas
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>Configuração do Supabase Storage</DialogTitle>
+                      <DialogDescription>
+                        Siga estas etapas para configurar corretamente o armazenamento do Supabase
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="font-semibold text-base mb-2">1. Criar um bucket</h3>
+                        <ol className="list-decimal pl-5 space-y-2">
+                          <li>Acesse o painel do Supabase</li>
+                          <li>Navegue até a seção <strong>Storage</strong></li>
+                          <li>Clique em <strong>New Bucket</strong></li>
+                          <li>Nomeie o bucket como <strong>designauto-images</strong></li>
+                          <li>Marque a opção <strong>Public bucket</strong> para tornar as imagens publicamente acessíveis</li>
+                          <li>Clique em <strong>Create bucket</strong></li>
+                        </ol>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-base mb-2">2. Configurar políticas de segurança (RLS)</h3>
+                        <ol className="list-decimal pl-5 space-y-2">
+                          <li>Na seção Storage, selecione seu bucket recém-criado</li>
+                          <li>Vá para a aba <strong>Policies</strong></li>
+                          <li>Para cada operação (INSERT, SELECT), crie uma política clicando no botão <strong>New Policy</strong></li>
+                          <li>Para SELECT (leitura), configure para permitir acesso público (SELECT, ALL)</li>
+                          <li>Para INSERT (upload), configure para permitir uploads autenticados ou públicos, dependendo da sua necessidade</li>
+                        </ol>
+                      </div>
+                      <div className="bg-yellow-50 p-4 rounded-md border border-yellow-200">
+                        <h4 className="font-semibold text-sm mb-1 text-yellow-800">Dica para depuração</h4>
+                        <p className="text-sm text-yellow-700">
+                          Se estiver com problemas, você pode temporariamente definir políticas RLS permissivas para teste:
+                          <br /> 
+                          <code className="bg-yellow-100 px-2 py-1 rounded">CREATE POLICY "Allow all" ON storage.objects FOR ALL TO public USING (true) WITH CHECK (true);</code>
+                          <br />
+                          <strong>Nota:</strong> Em produção, use políticas mais restritivas!
+                        </p>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button type="button" onClick={() => document.querySelector('[role="dialog"] button[aria-label="Close"]')?.click()}>
+                        Entendi
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </AlertDescription>
+            </Alert>
+            
             <div className="grid gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="image">Imagem</Label>
