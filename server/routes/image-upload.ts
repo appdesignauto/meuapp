@@ -22,12 +22,13 @@ router.post(
       if (
         !process.env.R2_ACCESS_KEY_ID ||
         !process.env.R2_SECRET_ACCESS_KEY ||
-        !process.env.R2_ENDPOINT
+        !process.env.R2_ENDPOINT ||
+        !process.env.R2_BUCKET_NAME
       ) {
-        console.warn("R2 não configurado. Usando fallback local.");
-        // Fallback para desenvolvimento sem R2
-        const urls = await storageService.localUpload(req.file);
-        return res.status(200).json(urls);
+        return res.status(500).json({ 
+          message: "Cloudflare R2 não configurado corretamente",
+          details: "Configure as variáveis de ambiente R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_ENDPOINT, R2_BUCKET_NAME e R2_PUBLIC_URL"
+        });
       }
 
       // Processa e faz upload da imagem no R2
@@ -37,7 +38,9 @@ router.post(
         quality: req.body.quality ? parseInt(req.body.quality) : 80,
       };
 
+      console.log("Iniciando upload para R2...");
       const urls = await storageService.uploadImage(req.file, options);
+      console.log("Upload concluído com sucesso:", urls);
       res.status(200).json(urls);
     } catch (error: any) {
       console.error("Erro no upload de imagem:", error);

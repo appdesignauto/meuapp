@@ -99,8 +99,7 @@ export class StorageService {
         !process.env.R2_SECRET_ACCESS_KEY ||
         !process.env.R2_ENDPOINT
       ) {
-        console.warn("Credenciais do R2 não configuradas, usando armazenamento local");
-        return this.localUpload(file, options);
+        throw new Error("Credenciais do R2 não configuradas. Configure as variáveis de ambiente R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_ENDPOINT e R2_BUCKET_NAME.");
       }
       
       console.log("Tentando upload para R2 com endpoint:", endpoint);
@@ -124,25 +123,30 @@ export class StorageService {
       const imageKey = this.generateKey(file.originalname);
       const thumbnailKey = this.generateKey(file.originalname, true);
 
-      // Upload da imagem principal
-      await s3Client.send(
-        new PutObjectCommand({
-          Bucket: BUCKET_NAME,
-          Key: imageKey,
-          Body: optimizedBuffer,
-          ContentType: "image/webp",
-        })
-      );
+      try {
+        // Upload da imagem principal
+        await s3Client.send(
+          new PutObjectCommand({
+            Bucket: BUCKET_NAME,
+            Key: imageKey,
+            Body: optimizedBuffer,
+            ContentType: "image/webp",
+          })
+        );
 
-      // Upload do thumbnail
-      await s3Client.send(
-        new PutObjectCommand({
-          Bucket: BUCKET_NAME,
-          Key: thumbnailKey,
-          Body: thumbnailBuffer,
-          ContentType: "image/webp",
-        })
-      );
+        // Upload do thumbnail
+        await s3Client.send(
+          new PutObjectCommand({
+            Bucket: BUCKET_NAME,
+            Key: thumbnailKey,
+            Body: thumbnailBuffer,
+            ContentType: "image/webp",
+          })
+        );
+      } catch (uploadError) {
+        console.error("Erro específico no upload para R2:", uploadError);
+        throw new Error("Falha ao fazer upload para o R2. Verifique as configurações e credenciais.");
+      }
 
       // Retorna as URLs públicas se o bucket tiver configuração pública
       if (PUBLIC_BUCKET_URL) {
@@ -173,9 +177,8 @@ export class StorageService {
 
       return { imageUrl, thumbnailUrl };
     } catch (error) {
-      console.error("Erro ao fazer upload para R2:", error);
-      // Em caso de erro, usamos o armazenamento local
-      return this.localUpload(file, options);
+      console.error("Erro completo ao fazer upload para R2:", error);
+      throw error;
     }
   }
 
