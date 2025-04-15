@@ -34,18 +34,19 @@ const FeaturedCategories = () => {
 
 
   return (
-    <section className="py-8 bg-blue-50/30">
+    <section className="py-16 bg-blue-50/30">
       <div className="container mx-auto px-4">
-        <div className="flex flex-wrap items-center justify-between mb-5">
+        <div className="flex flex-wrap items-center justify-between mb-8">
           <div>
-            <h2 className="text-xl md:text-2xl font-bold text-blue-700">Categorias</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-blue-700 mb-2">Escolha sua categoria</h2>
+            <p className="text-neutral-600 max-w-2xl">Encontre os melhores designs para impulsionar suas vendas</p>
           </div>
           <Link 
             href="/categories" 
-            className="text-blue-600 hover:text-blue-500 font-medium text-xs flex items-center border border-blue-200 rounded-full px-3 py-1 transition-all hover:bg-blue-50"
+            className="text-blue-600 hover:text-blue-500 font-medium text-sm flex items-center border border-blue-200 rounded-full px-4 py-2 transition-all hover:bg-blue-50"
           >
-            Ver todas
-            <ArrowRight className="ml-1 h-3 w-3" />
+            Ver todas as categorias
+            <ArrowRight className="ml-1 h-4 w-4" />
           </Link>
         </div>
         
