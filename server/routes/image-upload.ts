@@ -40,6 +40,11 @@ router.post(
       
       // Apenas tenta o R2 sem fallback
       try {
+        // Certifica-se de que o bucket name não contenha = no início
+        if (process.env.R2_BUCKET_NAME?.startsWith('=')) {
+          console.warn(`Aviso: O bucket name "${process.env.R2_BUCKET_NAME}" começa com '=', o que pode causar problemas. Removendo os caracteres '=' iniciais.`);
+        }
+        
         // Exibe informações completas das variáveis para depuração
         console.log("Detalhes das credenciais do R2:");
         console.log(`- R2_ACCESS_KEY_ID: ${process.env.R2_ACCESS_KEY_ID?.length} caracteres`);

@@ -7,9 +7,18 @@ import path from "path";
 
 // Formatando o endpoint para garantir compatibilidade
 let endpoint = process.env.R2_ENDPOINT || "";
+
+// Remove qualquer parte de URL após o domínio (como /bucket-name)
+if (endpoint.includes('/')) {
+  endpoint = endpoint.split('/')[0];
+}
+
+// Certifica-se de que o endpoint começa com https://
 if (endpoint && !endpoint.startsWith("http")) {
   endpoint = `https://${endpoint}`;
 }
+
+console.log("Endpoint formatado:", endpoint);
 
 // Função para sanitizar credenciais
 function sanitizeCredential(credential: string = "", targetLength: number = 32): string {
@@ -19,9 +28,12 @@ function sanitizeCredential(credential: string = "", targetLength: number = 32):
   // Remove aspas que podem ter sido incluídas por engano
   cleaned = cleaned.replace(/["'`]/g, '');
   
-  // Verifica e avisa sobre tamanho incorreto
-  if (cleaned.length !== targetLength) {
-    console.warn(`Aviso: A credencial tem ${cleaned.length} caracteres, mas o tamanho esperado é ${targetLength}.`);
+  // Verifica e ajusta o tamanho da credencial se necessário
+  if (cleaned.length > targetLength) {
+    console.warn(`Aviso: A credencial tem ${cleaned.length} caracteres, cortando para ${targetLength}.`);
+    cleaned = cleaned.substring(0, targetLength);
+  } else if (cleaned.length < targetLength) {
+    console.warn(`Aviso: A credencial tem ${cleaned.length} caracteres, menos que o esperado ${targetLength}.`);
   }
   
   return cleaned;
