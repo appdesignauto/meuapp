@@ -1468,34 +1468,11 @@ export class DatabaseStorage implements IStorage {
   // Art methods
   async getArts(page: number, limit: number, filters?: ArtFilters): Promise<{ arts: Art[], totalCount: number }> {
     try {
-      // Usar abordagem mais simples, sem parameterização
+      // Abordagem utilizando sql.raw() para consultas SQL diretas
       const offset = (page - 1) * limit;
       
-      // Construir condições sem parâmetros numerados
-      let whereClause = '';
-      
-      if (filters) {
-        const conditions = [];
-        
-        if (filters.categoryId) {
-          conditions.push(`"categoryId" = ${filters.categoryId}`);
-        }
-        
-        if (filters.search) {
-          conditions.push(`title ILIKE '%${filters.search}%'`);
-        }
-        
-        if (filters.isPremium !== undefined) {
-          conditions.push(`"isPremium" = ${filters.isPremium ? 'true' : 'false'}`);
-        }
-        
-        if (conditions.length > 0) {
-          whereClause = `WHERE ${conditions.join(' AND ')}`;
-        }
-      }
-      
-      // Construir a consulta SQL diretamente
-      const query = `
+      // Construir a consulta base sem WHERE
+      const baseQuery = `
         SELECT 
           id, 
           "createdAt", 
@@ -1514,17 +1491,72 @@ export class DatabaseStorage implements IStorage {
           "editUrl", 
           aspectratio
         FROM arts
-        ${whereClause}
-        ORDER BY "createdAt" DESC
-        LIMIT ${limit} OFFSET ${offset}
       `;
       
-      // Executar a consulta diretamente
-      const result = await db.execute(sql`${query}`);
+      // Construir consulta usando a funcionalidade correta do Drizzle
+      let query = sql`${sql.raw(baseQuery)}`;
       
-      // Consulta para contar o total
-      const countQuery = `SELECT COUNT(*) as count FROM arts ${whereClause}`;
-      const countResult = await db.execute(sql`${countQuery}`);
+      // Adicionar filtros se existirem
+      if (filters) {
+        const conditions = [];
+        
+        if (filters.categoryId) {
+          query = sql`${query} WHERE "categoryId" = ${filters.categoryId}`;
+        }
+        
+        if (filters.search) {
+          const searchTerm = `%${filters.search}%`;
+          if (filters.categoryId) {
+            query = sql`${query} AND title ILIKE ${searchTerm}`;
+          } else {
+            query = sql`${query} WHERE title ILIKE ${searchTerm}`;
+          }
+        }
+        
+        if (filters.isPremium !== undefined) {
+          const condition = filters.isPremium ? 'TRUE' : 'FALSE';
+          if (filters.categoryId || filters.search) {
+            query = sql`${query} AND "isPremium" = ${sql.raw(condition)}`;
+          } else {
+            query = sql`${query} WHERE "isPremium" = ${sql.raw(condition)}`;
+          }
+        }
+      }
+      
+      // Adicionar ordenação e limite
+      query = sql`${query} ORDER BY "createdAt" DESC LIMIT ${limit} OFFSET ${offset}`;
+      
+      // Executar a consulta
+      const result = await db.execute(query);
+      
+      // Consulta para obter o total de registros
+      let countQuery = sql`SELECT COUNT(*) as count FROM arts`;
+      
+      if (filters) {
+        if (filters.categoryId) {
+          countQuery = sql`${countQuery} WHERE "categoryId" = ${filters.categoryId}`;
+        }
+        
+        if (filters.search) {
+          const searchTerm = `%${filters.search}%`;
+          if (filters.categoryId) {
+            countQuery = sql`${countQuery} AND title ILIKE ${searchTerm}`;
+          } else {
+            countQuery = sql`${countQuery} WHERE title ILIKE ${searchTerm}`;
+          }
+        }
+        
+        if (filters.isPremium !== undefined) {
+          const condition = filters.isPremium ? 'TRUE' : 'FALSE';
+          if (filters.categoryId || filters.search) {
+            countQuery = sql`${countQuery} AND "isPremium" = ${sql.raw(condition)}`;
+          } else {
+            countQuery = sql`${countQuery} WHERE "isPremium" = ${sql.raw(condition)}`;
+          }
+        }
+      }
+      
+      const countResult = await db.execute(countQuery);
       
       // Mapear os resultados para o tipo Art com nomes em camelCase
       const arts = result.rows.map(row => ({
