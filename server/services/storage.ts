@@ -22,7 +22,8 @@ if (endpoint.includes('/')) {
 // Remove .r2.cloudflarestorage.com se presente no final, pois já adicionaremos
 endpoint = endpoint.replace(/\.r2\.cloudflarestorage\.com$/, '');
 
-// Certifica-se de que o endpoint inclui o sufixo do R2
+// Certifica-se de que o endpoint está no formato correto para o Cloudflare R2
+// Garante que o endpoint vai usar o account ID com o sufixo correto
 if (!endpoint.includes('.r2.cloudflarestorage.com')) {
   endpoint = `${endpoint}.r2.cloudflarestorage.com`;
 }
@@ -31,6 +32,8 @@ if (!endpoint.includes('.r2.cloudflarestorage.com')) {
 if (!endpoint.startsWith('https://')) {
   endpoint = `https://${endpoint}`;
 }
+
+console.log("Account ID do R2 (endpoint sem prefixo/sufixo):", endpoint.replace(/^https:\/\//, '').replace(/\.r2\.cloudflarestorage\.com$/, ''));
 
 console.log("Endpoint formatado:", endpoint);
 
