@@ -1229,6 +1229,22 @@ export class DatabaseStorage implements IStorage {
     return newArt;
   }
   
+  async updateArt(id: number, art: Partial<InsertArt>): Promise<Art | undefined> {
+    const [updatedArt] = await db
+      .update(arts)
+      .set(art)
+      .where(eq(arts.id, id))
+      .returning();
+    return updatedArt;
+  }
+  
+  async deleteArt(id: number): Promise<boolean> {
+    const result = await db
+      .delete(arts)
+      .where(eq(arts.id, id));
+    return result.rowCount > 0;
+  }
+  
   // Testimonial methods
   async getTestimonials(): Promise<Testimonial[]> {
     return db.select().from(testimonials);
