@@ -54,11 +54,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
+      console.log("Enviando credenciais de login:", credentials);
       const res = await apiRequest('POST', '/api/login', credentials);
+      
       if (!res.ok) {
-        throw new Error("Falha na autenticação. Verifique suas credenciais.");
+        const errorData = await res.json().catch(() => ({}));
+        console.error("Erro na resposta de login:", res.status, errorData);
+        throw new Error(errorData.message || "Falha na autenticação. Verifique suas credenciais.");
       }
-      return await res.json();
+      
+      const userData = await res.json();
+      console.log("Login bem-sucedido:", userData);
+      return userData;
     },
     onSuccess: (user: User) => {
       queryClient.setQueryData(['/api/user'], user);

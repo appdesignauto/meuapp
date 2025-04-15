@@ -133,24 +133,52 @@ export function setupAuth(app: Express) {
   const isSupport = hasRole(['support', 'admin']);
 
   // Authentication API Routes
-  app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err, user, info) => {
-      if (err) {
-        return next(err);
+  app.post("/api/login", async (req, res, next) => {
+    console.log("Recebendo tentativa de login:", req.body);
+    
+    try {
+      // Autenticação manual para debugging
+      const { username, password } = req.body;
+      
+      if (!username || !password) {
+        return res.status(400).json({ message: "Username e senha são obrigatórios" });
       }
+      
+      // Busca o usuário direto pelo username
+      const user = await storage.getUserByUsername(username);
+      
+      console.log("Usuário encontrado:", user);
+      
       if (!user) {
-        return res.status(401).json({ message: info.message });
+        return res.status(401).json({ message: "Usuário não encontrado" });
       }
+      
+      // Verifica a senha diretamente
+      if (user.password !== password) {
+        console.log("Senha incorreta. Esperado:", user.password, "Recebido:", password);
+        return res.status(401).json({ message: "Senha incorreta" });
+      }
+      
+      // Login manual
       req.login(user, async (err) => {
         if (err) {
+          console.error("Erro no login:", err);
           return next(err);
         }
         
-        // Remove password from response
+        console.log("Login bem-sucedido para:", user.username);
+        
+        // Atualiza último login
+        await storage.updateUserLastLogin(user.id, new Date());
+        
+        // Remove senha da resposta
         const { password, ...userWithoutPassword } = user;
         return res.json(userWithoutPassword);
       });
-    })(req, res, next);
+    } catch (error) {
+      console.error("Erro no processo de login:", error);
+      return res.status(500).json({ message: "Erro interno no servidor" });
+    }
   });
 
   app.post("/api/register", async (req, res) => {
