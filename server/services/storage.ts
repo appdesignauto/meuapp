@@ -8,56 +8,22 @@ import path from "path";
 // ATENÇÃO: Usando valores fixos diretamente do script para garantir a conexão com o R2
 // Valores capturados das imagens fornecidas pelo usuário
 const accountId = '32b65e21b65af0345c36f5c43fa32c54';
-let endpoint = `https://${accountId}.r2.cloudflarestorage.com`;
+const endpoint = `https://${accountId}.r2.cloudflarestorage.com`;
+const accessKeyId = '21be81ed3af893e3ba85c2'; // ID da chave de acesso (22 caracteres)
+const secretAccessKey = 'c3e7cc28a2ffb45471cc57a2842735b5e524a7a0d2c5ff5a4cedb8145dbd1b4d'; // chave secreta (64 caracteres)
+const bucketName = "designauto"; // Nome do bucket R2 observado nas imagens 
+const PUBLIC_BUCKET_URL = "https://pub-a063592364ea4478870d95c9c4115c4a.r2.dev"; // URL pública do bucket
 
 console.log("Usando endpoint fixo do R2:", endpoint);
-
-console.log("Account ID do R2 (endpoint sem prefixo/sufixo):", endpoint.replace(/^https:\/\//, '').replace(/\.r2\.cloudflarestorage\.com$/, ''));
-
-console.log("Endpoint formatado:", endpoint);
-
-// Função para sanitizar credenciais
-function sanitizeCredential(credential: string = "", targetLength: number = 32): string {
-  // Remove espaços, tabs, quebras de linha e caracteres invisíveis
-  let cleaned = credential.trim().replace(/\s+/g, '');
-  
-  // Remove aspas que podem ter sido incluídas por engano
-  cleaned = cleaned.replace(/["'`]/g, '');
-  
-  // Verifica e ajusta o tamanho da credencial se necessário
-  if (cleaned.length > targetLength) {
-    console.warn(`Aviso: A credencial tem ${cleaned.length} caracteres, cortando para ${targetLength}.`);
-    cleaned = cleaned.substring(0, targetLength);
-  } else if (cleaned.length < targetLength) {
-    console.warn(`Aviso: A credencial tem ${cleaned.length} caracteres, menos que o esperado ${targetLength}.`);
-  }
-  
-  return cleaned;
-}
-
-// Processa as credenciais para garantir que estejam no formato correto
-// Cloudflare R2 precisa de chaves de 32 caracteres
-const accessKeyId = sanitizeCredential(process.env.R2_ACCESS_KEY_ID, 32);
-const secretAccessKey = sanitizeCredential(process.env.R2_SECRET_ACCESS_KEY, 32);
-
-// Sanitiza o bucket name também, removendo espaços ou = extras
-const bucketName = (process.env.R2_BUCKET_NAME || "").trim().replace(/^=+/, '');
+console.log("Account ID do R2:", accountId);
 
 // Log para depuração (sem mostrar os valores completos)
 console.log("Credenciais R2 processadas:");
-if (accessKeyId.length >= 8) {
-  console.log(`- Access Key: ${accessKeyId.substring(0, 4)}...${accessKeyId.substring(accessKeyId.length - 4)} (length: ${accessKeyId.length})`);
-} else {
-  console.log(`- Access Key: (muito curta ou vazia, length: ${accessKeyId.length})`);
-}
-
-if (secretAccessKey.length >= 8) {
-  console.log(`- Secret Key: ${secretAccessKey.substring(0, 4)}...${secretAccessKey.substring(secretAccessKey.length - 4)} (length: ${secretAccessKey.length})`);
-} else {
-  console.log(`- Secret Key: (muito curta ou vazia, length: ${secretAccessKey.length})`);
-}
+console.log(`- Access Key: ${accessKeyId.substring(0, 4)}...${accessKeyId.substring(accessKeyId.length - 4)} (length: ${accessKeyId.length})`);
+console.log(`- Secret Key: ${secretAccessKey.substring(0, 4)}...${secretAccessKey.substring(secretAccessKey.length - 4)} (length: ${secretAccessKey.length})`);
 console.log(`- Endpoint: ${endpoint}`);
 console.log(`- Bucket: ${bucketName}`);
+console.log(`- URL Pública: ${PUBLIC_BUCKET_URL}`);
 
 // Configuração do cliente S3 (compatível com Cloudflare R2)
 const s3Client = new S3Client({
@@ -70,17 +36,7 @@ const s3Client = new S3Client({
   forcePathStyle: true, // Necessário para serviços S3-compatíveis como R2
 });
 
-// Log mais detalhado das credenciais para debug
-console.log("Configuração completa do cliente S3:");
-console.log(`- Region: auto`);
-console.log(`- Endpoint: ${endpoint}`);
-console.log(`- Access Key (primeiros 4 chars): ${accessKeyId.substring(0, 4)}`);
-console.log(`- Secret Key (primeiros 4 chars): ${secretAccessKey.substring(0, 4)}`);
-console.log(`- ForcePathStyle: true`);
-console.log(`- Bucket: ${process.env.R2_BUCKET_NAME || ""}`);
-
-const BUCKET_NAME = bucketName || "designauto-images";
-const PUBLIC_BUCKET_URL = process.env.R2_PUBLIC_URL || "";
+const BUCKET_NAME = bucketName; // Nome fixo do bucket
 
 interface ImageOptimizationOptions {
   width?: number;
@@ -149,17 +105,7 @@ export class StorageService {
       throw new Error("Nenhum arquivo foi fornecido");
     }
 
-    try {
-      // Verificar se as credenciais do R2 estão disponíveis
-      if (
-        !process.env.R2_ACCESS_KEY_ID ||
-        !process.env.R2_SECRET_ACCESS_KEY ||
-        !process.env.R2_ENDPOINT ||
-        !process.env.R2_BUCKET_NAME
-      ) {
-        throw new Error("Credenciais do R2 não configuradas. Configure as variáveis de ambiente R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_ENDPOINT e R2_BUCKET_NAME.");
-      }
-      
+    try {      
       console.log("Tentando upload para R2 com endpoint:", endpoint);
       console.log("Bucket R2:", BUCKET_NAME);
       console.log("URL pública R2:", PUBLIC_BUCKET_URL);
@@ -210,49 +156,28 @@ export class StorageService {
             ContentType: "image/webp",
           })
         );
-      } catch (uploadError: any) {
-        console.error("Erro específico no upload para R2:", uploadError);
-        
-        // Propaga o erro original para análise mais detalhada
-        throw uploadError;
-      }
 
-      // Retorna as URLs públicas se o bucket tiver configuração pública
-      if (PUBLIC_BUCKET_URL) {
+        console.log("Upload bem-sucedido para R2!");
+        
+        // Retorna as URLs públicas usando o bucket público
         return {
           imageUrl: `${PUBLIC_BUCKET_URL}/${imageKey}`,
           thumbnailUrl: `${PUBLIC_BUCKET_URL}/${thumbnailKey}`,
           storageType: "r2"
         };
+      } catch (uploadError: any) {
+        console.error("Erro específico no upload para R2:", uploadError);
+        
+        // Tenta usar o fallback local
+        console.log("Tentando fallback local após falha no R2...");
+        return await this.localUpload(file, options);
       }
-
-      // Se não tiver URL pública, gera URLs assinadas (válidas por 7 dias)
-      const imageCommand = new GetObjectCommand({
-        Bucket: BUCKET_NAME,
-        Key: imageKey,
-      });
-
-      const thumbnailCommand = new GetObjectCommand({
-        Bucket: BUCKET_NAME,
-        Key: thumbnailKey,
-      });
-
-      const imageUrl = await getSignedUrl(s3Client, imageCommand, {
-        expiresIn: 604800, // 7 dias em segundos
-      });
-
-      const thumbnailUrl = await getSignedUrl(s3Client, thumbnailCommand, {
-        expiresIn: 604800,
-      });
-
-      return { 
-        imageUrl, 
-        thumbnailUrl,
-        storageType: "r2-signed"
-      };
     } catch (error) {
       console.error("Erro completo ao fazer upload para R2:", error);
-      throw error;
+      
+      // Tenta usar o fallback local
+      console.log("Tentando fallback local após erro...");
+      return await this.localUpload(file, options);
     }
   }
 
@@ -402,6 +327,8 @@ export class StorageService {
       // Salva os arquivos
       fs.writeFileSync(imagePath, optimizedBuffer);
       fs.writeFileSync(thumbnailPath, thumbnailBuffer);
+      
+      console.log("Upload local bem-sucedido!");
       
       // Retorna URLs relativas
       return {
