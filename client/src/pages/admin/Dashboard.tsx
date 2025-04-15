@@ -21,6 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ArtsList from '@/components/admin/ArtsList';
 import CategoriesList from '@/components/admin/CategoriesList';
 import { useToast } from '@/hooks/use-toast';
+import R2TestUpload from '@/components/admin/R2TestUpload';
 
 const AdminDashboard = () => {
   const { user, logoutMutation } = useAuth();
@@ -220,7 +221,16 @@ const AdminDashboard = () => {
             <TabsContent value="settings" className="mt-0">
               <div className="bg-white p-6 rounded-lg shadow-sm">
                 <h2 className="text-xl font-semibold mb-4">Configurações</h2>
-                <p className="text-gray-500">Configurações do sistema em desenvolvimento.</p>
+                
+                <div className="mb-6">
+                  <h3 className="text-lg font-medium mb-2">Teste de Upload (R2)</h3>
+                  <p className="text-gray-500 mb-4">Teste o upload de imagens para o armazenamento em nuvem Cloudflare R2.</p>
+                  <R2TestUpload />
+                </div>
+                
+                <div className="border-t pt-4">
+                  <p className="text-gray-500">Outras configurações do sistema em desenvolvimento.</p>
+                </div>
               </div>
             </TabsContent>
           </Tabs>
