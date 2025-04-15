@@ -11,18 +11,58 @@ if (endpoint && !endpoint.startsWith("http")) {
   endpoint = `https://${endpoint}`;
 }
 
+// Função para sanitizar credenciais
+function sanitizeCredential(credential: string = "", targetLength: number = 32): string {
+  // Remove espaços, tabs, quebras de linha e caracteres invisíveis
+  let cleaned = credential.trim().replace(/\s+/g, '');
+  
+  // Remove aspas que podem ter sido incluídas por engano
+  cleaned = cleaned.replace(/["'`]/g, '');
+  
+  // Verifica e avisa sobre tamanho incorreto
+  if (cleaned.length !== targetLength) {
+    console.warn(`Aviso: A credencial tem ${cleaned.length} caracteres, mas o tamanho esperado é ${targetLength}.`);
+  }
+  
+  return cleaned;
+}
+
+// Processa as credenciais para garantir que estejam no formato correto
+// Cloudflare R2 precisa de chaves de 32 caracteres
+const accessKeyId = sanitizeCredential(process.env.R2_ACCESS_KEY_ID, 32);
+const secretAccessKey = sanitizeCredential(process.env.R2_SECRET_ACCESS_KEY, 32);
+
+// Sanitiza o bucket name também, removendo espaços ou = extras
+const bucketName = (process.env.R2_BUCKET_NAME || "").trim().replace(/^=+/, '');
+
+// Log para depuração (sem mostrar os valores completos)
+console.log("Credenciais R2 processadas:");
+if (accessKeyId.length >= 8) {
+  console.log(`- Access Key: ${accessKeyId.substring(0, 4)}...${accessKeyId.substring(accessKeyId.length - 4)} (length: ${accessKeyId.length})`);
+} else {
+  console.log(`- Access Key: (muito curta ou vazia, length: ${accessKeyId.length})`);
+}
+
+if (secretAccessKey.length >= 8) {
+  console.log(`- Secret Key: ${secretAccessKey.substring(0, 4)}...${secretAccessKey.substring(secretAccessKey.length - 4)} (length: ${secretAccessKey.length})`);
+} else {
+  console.log(`- Secret Key: (muito curta ou vazia, length: ${secretAccessKey.length})`);
+}
+console.log(`- Endpoint: ${endpoint}`);
+console.log(`- Bucket: ${bucketName}`);
+
 // Configuração do cliente S3 (compatível com Cloudflare R2)
 const s3Client = new S3Client({
   region: "auto",
-  endpoint: endpoint,
+  endpoint,
   credentials: {
-    accessKeyId: process.env.R2_ACCESS_KEY_ID || "",
-    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || "",
+    accessKeyId,
+    secretAccessKey,
   },
-  forcePathStyle: true, // Necessário para alguns serviços S3-compatíveis
+  forcePathStyle: true, // Necessário para serviços S3-compatíveis como R2
 });
 
-const BUCKET_NAME = process.env.R2_BUCKET_NAME || "designauto-images";
+const BUCKET_NAME = bucketName || "designauto-images";
 const PUBLIC_BUCKET_URL = process.env.R2_PUBLIC_URL || "";
 
 interface ImageOptimizationOptions {
@@ -125,6 +165,15 @@ export class StorageService {
       const thumbnailKey = this.generateKey(file.originalname, true);
 
       try {
+        // Exibe informações do cliente S3 para depuração
+        console.log("Configuração do cliente S3:");
+        console.log("- Region:", s3Client.config.region);
+        console.log("- Endpoint:", s3Client.config.endpoint);
+        console.log("- ForcePathStyle:", s3Client.config.forcePathStyle);
+        
+        // Testa a conexão antes do upload
+        console.log("Testando conexão com R2...");
+        
         // Upload da imagem principal
         await s3Client.send(
           new PutObjectCommand({
@@ -144,9 +193,11 @@ export class StorageService {
             ContentType: "image/webp",
           })
         );
-      } catch (uploadError) {
+      } catch (uploadError: any) {
         console.error("Erro específico no upload para R2:", uploadError);
-        throw new Error("Falha ao fazer upload para o R2. Verifique as configurações e credenciais.");
+        
+        // Propaga o erro original para análise mais detalhada
+        throw uploadError;
       }
 
       // Retorna as URLs públicas se o bucket tiver configuração pública

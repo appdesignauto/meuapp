@@ -25,34 +25,42 @@ router.post(
         quality: req.body.quality ? parseInt(req.body.quality) : 80,
       };
 
-      // Verifica se o R2 está configurado corretamente
+      // Verifica se o R2 está configurado
       const r2Configured = process.env.R2_ACCESS_KEY_ID && 
-                          process.env.R2_SECRET_ACCESS_KEY && 
-                          process.env.R2_ENDPOINT && 
-                          process.env.R2_BUCKET_NAME;
+                         process.env.R2_SECRET_ACCESS_KEY && 
+                         process.env.R2_ENDPOINT && 
+                         process.env.R2_BUCKET_NAME;
       
-      if (r2Configured) {
-        try {
-          console.log("Iniciando upload para R2...");
-          const urls = await storageService.uploadImage(req.file, options);
-          console.log("Upload R2 concluído com sucesso:", urls);
-          return res.status(200).json(urls);
-        } catch (r2Error: any) {
-          console.error("Falha no upload para R2, tentando fallback local:", r2Error.message);
-          // Continua para o fallback local
-        }
-      } else {
-        console.warn("R2 não configurado completamente. Usando armazenamento local.");
+      if (!r2Configured) {
+        return res.status(500).json({ 
+          message: "Cloudflare R2 não configurado corretamente",
+          details: "Configure as variáveis de ambiente R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_ENDPOINT, R2_BUCKET_NAME e R2_PUBLIC_URL"
+        });
       }
-
-      // Fallback: armazenamento local
-      console.log("Usando armazenamento local como fallback");
-      const localUrls = await storageService.localUpload(req.file, options);
-      console.log("Upload local concluído com sucesso:", localUrls);
-      res.status(200).json({
-        ...localUrls,
-        storageType: "local" // Indica ao cliente que este é um upload local
-      });
+      
+      // Apenas tenta o R2 sem fallback
+      try {
+        // Exibe informações completas das variáveis para depuração
+        console.log("Detalhes das credenciais do R2:");
+        console.log(`- R2_ACCESS_KEY_ID: ${process.env.R2_ACCESS_KEY_ID?.length} caracteres`);
+        console.log(`- R2_SECRET_ACCESS_KEY: ${process.env.R2_SECRET_ACCESS_KEY?.length} caracteres`);
+        console.log(`- R2_ENDPOINT: ${process.env.R2_ENDPOINT}`);
+        console.log(`- R2_BUCKET_NAME: ${process.env.R2_BUCKET_NAME}`);
+        console.log(`- R2_PUBLIC_URL: ${process.env.R2_PUBLIC_URL}`);
+        
+        console.log("Iniciando upload para R2...");
+        const urls = await storageService.uploadImage(req.file, options);
+        console.log("Upload R2 concluído com sucesso:", urls);
+        return res.status(200).json(urls);
+      } catch (error: any) {
+        console.error("Erro detalhado do R2:", error);
+        
+        return res.status(500).json({
+          message: "Erro no upload para R2",
+          details: error.message,
+          errorCode: error.Code || 'unknown'
+        });
+      }
     } catch (error: any) {
       console.error("Erro no upload de imagem:", error);
       res.status(500).json({
