@@ -1011,12 +1011,12 @@ export class DatabaseStorage implements IStorage {
   
   async getUserByEmail(email: string): Promise<User | undefined> {
     try {
-      // Pegando os registros usando drizzle
-      const users = await db.select().from(this.users);
+      const result = await db.execute(
+        `SELECT * FROM users WHERE email = $1`,
+        [email]
+      );
       
-      // Filtrando manualmente por email
-      const user = users.find(u => u.email === email);
-      return user;
+      return result.rows[0] as User;
     } catch (error) {
       console.error("Erro em getUserByEmail:", error);
       return undefined;
@@ -1025,29 +1025,32 @@ export class DatabaseStorage implements IStorage {
 
   async createUser(insertUser: any): Promise<User> {
     try {
-      // Usando INSERT INTO direto
+      // Extraindo os dados do usuário
       const { username, password, email, name, role, profileImageUrl, bio, isActive } = insertUser;
       
       const now = new Date();
       
-      // Montando objeto com os nomes exatos das colunas do banco
-      const userData = {
-        username,
-        password,
-        email,
-        name: name || null,
-        role: role || 'free',
-        profileimageurl: profileImageUrl || null,
-        bio: bio || null,
-        isactive: isActive !== undefined ? isActive : true,
-        lastlogin: now,
-        "createdAt": now,
-        updatedat: now
-      };
+      // Execute SQL diretamente com os nomes corretos das colunas
+      const result = await db.execute(
+        `INSERT INTO users (username, password, email, name, role, profileimageurl, bio, isactive, lastlogin, "createdAt", updatedat) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
+         RETURNING *`,
+        [
+          username, 
+          password, 
+          email, 
+          name || null, 
+          role || 'free', 
+          profileImageUrl || null, // será inserido na coluna profileimageurl
+          bio || null, 
+          isActive !== undefined ? isActive : true, 
+          now,
+          now,
+          now
+        ]
+      );
       
-      // Inserindo usuário usando drizzle
-      const [newUser] = await db.insert(this.users).values(userData).returning();
-      return newUser;
+      return result.rows[0] as User;
     } catch (error) {
       console.error("Erro em createUser:", error);
       throw error;
@@ -1055,51 +1058,109 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUserRole(id: number, role: string): Promise<User | undefined> {
-    const now = new Date();
-    const [updatedUser] = await db
-      .update(users)
-      .set({ 
-        role,
-        updatedAt: now
-      })
-      .where(eq(users.id, id))
-      .returning();
-    return updatedUser;
+    try {
+      const now = new Date();
+      const result = await db.execute(
+        `UPDATE users 
+         SET role = $1, updatedat = $2
+         WHERE id = $3
+         RETURNING *`,
+        [
+          role,
+          now,
+          id
+        ]
+      );
+      
+      return result.rows[0] as User;
+    } catch (error) {
+      console.error("Erro em updateUserRole:", error);
+      return undefined;
+    }
   }
   
   async updateUserProfile(id: number, data: { name?: string; bio?: string; profileImageUrl?: string }): Promise<User | undefined> {
-    const now = new Date();
-    const [updatedUser] = await db
-      .update(users)
-      .set({ 
-        ...data,
-        updatedAt: now 
-      })
-      .where(eq(users.id, id))
-      .returning();
-    return updatedUser;
+    try {
+      const now = new Date();
+      
+      // Se profileImageUrl foi fornecido, precisamos lidar com ele separadamente
+      if (data.profileImageUrl !== undefined) {
+        const result = await db.execute(
+          `UPDATE users 
+           SET name = $1, bio = $2, profileimageurl = $3, updatedat = $4
+           WHERE id = $5
+           RETURNING *`,
+          [
+            data.name !== undefined ? data.name : null,
+            data.bio !== undefined ? data.bio : null,
+            data.profileImageUrl,
+            now,
+            id
+          ]
+        );
+        
+        return result.rows[0] as User;
+      } else {
+        // Caso não tenha profileImageUrl, podemos usar o update normal
+        const updateData: any = {
+          ...data,
+          updatedat: now
+        };
+        
+        const [updatedUser] = await db
+          .update(users)
+          .set(updateData)
+          .where(eq(users.id, id))
+          .returning();
+          
+        return updatedUser;
+      }
+    } catch (error) {
+      console.error("Erro em updateUserProfile:", error);
+      return undefined;
+    }
   }
   
   async updateUserPassword(id: number, newPassword: string): Promise<User | undefined> {
-    const now = new Date();
-    const [updatedUser] = await db
-      .update(users)
-      .set({ 
-        password: newPassword,
-        updatedAt: now 
-      })
-      .where(eq(users.id, id))
-      .returning();
-    return updatedUser;
+    try {
+      const now = new Date();
+      const result = await db.execute(
+        `UPDATE users 
+         SET password = $1, updatedat = $2
+         WHERE id = $3
+         RETURNING *`,
+        [
+          newPassword,
+          now,
+          id
+        ]
+      );
+      
+      return result.rows[0] as User;
+    } catch (error) {
+      console.error("Erro em updateUserPassword:", error);
+      return undefined;
+    }
   }
   
   async updateUserLastLogin(id: number, lastLogin: Date): Promise<User | undefined> {
-    const [updatedUser] = await db
-      .update(users)
-      .set({ lastLogin })
-      .where(eq(users.id, id))
-      .returning();
-    return updatedUser;
+    try {
+      const result = await db.execute(
+        `UPDATE users 
+         SET lastlogin = $1
+         WHERE id = $2
+         RETURNING *`,
+        [
+          lastLogin,
+          id
+        ]
+      );
+      
+      return result.rows[0] as User;
+    } catch (error) {
+      console.error("Erro em updateUserLastLogin:", error);
+      return undefined;
+    }
   }
   
   // Category methods
