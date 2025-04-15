@@ -8,15 +8,16 @@ import path from "path";
 // Formatando o endpoint para garantir compatibilidade
 let endpoint = process.env.R2_ENDPOINT || "";
 
+// Remove https:// ou http:// se estiver presente
+endpoint = endpoint.replace(/^https?:\/\//, '');
+
 // Remove qualquer parte de URL após o domínio (como /bucket-name)
 if (endpoint.includes('/')) {
   endpoint = endpoint.split('/')[0];
 }
 
 // Certifica-se de que o endpoint começa com https://
-if (endpoint && !endpoint.startsWith("http")) {
-  endpoint = `https://${endpoint}`;
-}
+endpoint = `https://${endpoint}`;
 
 console.log("Endpoint formatado:", endpoint);
 
