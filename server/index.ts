@@ -1,4 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
+import path from "path";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initializeDatabase } from "./init-data";
@@ -7,6 +8,9 @@ import { createAdminUser } from "./init-admin";
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Configuração para servir arquivos estáticos da pasta public
+app.use(express.static(path.join(process.cwd(), 'public')));
 
 app.use((req, res, next) => {
   const start = Date.now();

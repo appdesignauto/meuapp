@@ -220,13 +220,34 @@ export class StorageService {
 
   /**
    * Fallback para caso não esteja configurado o R2
-   * Retorna uma URL local para a imagem
+   * Salva a imagem localmente e retorna URLs baseadas no sistema de arquivos local
    */
   async localUpload(
     file: Express.Multer.File,
     options: ImageOptimizationOptions = {}
   ): Promise<{ imageUrl: string; thumbnailUrl: string }> {
     try {
+      const fs = require('fs');
+      const path = require('path');
+      
+      // Certifica-se de que o diretório public/uploads existe
+      const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+      const thumbnailsDir = path.join(uploadsDir, 'thumbnails');
+      
+      try {
+        if (!fs.existsSync('public')) {
+          fs.mkdirSync('public');
+        }
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir);
+        }
+        if (!fs.existsSync(thumbnailsDir)) {
+          fs.mkdirSync(thumbnailsDir);
+        }
+      } catch (err) {
+        console.error("Erro ao criar diretórios:", err);
+      }
+      
       // Otimização da imagem principal
       const optimizedBuffer = await this.optimizeImage(file.buffer, {
         ...options,
@@ -240,17 +261,24 @@ export class StorageService {
         quality: 75,
       });
       
-      // No fallback local, usamos URLs de placeholder que servirão para visualização
-      // Em ambiente de produção, você deveria usar o R2 ou outro serviço de armazenamento
-      // Esta é apenas uma solução temporária para desenvolvimento
-      
-      // Gera IDs únicos para as imagens
+      // Gera nomes únicos para os arquivos
       const imageId = randomUUID();
       const thumbnailId = randomUUID();
+      const imageName = `${imageId}.webp`;
+      const thumbnailName = `${thumbnailId}.webp`;
       
+      // Caminhos completos dos arquivos
+      const imagePath = path.join(uploadsDir, imageName);
+      const thumbnailPath = path.join(thumbnailsDir, thumbnailName);
+      
+      // Salva os arquivos
+      fs.writeFileSync(imagePath, optimizedBuffer);
+      fs.writeFileSync(thumbnailPath, thumbnailBuffer);
+      
+      // Retorna URLs relativas
       return {
-        imageUrl: `https://placehold.co/800x600/00aaff/ffffff?text=${imageId.substring(0, 8)}`,
-        thumbnailUrl: `https://placehold.co/400x300/00aaff/ffffff?text=${thumbnailId.substring(0, 8)}`,
+        imageUrl: `/uploads/${imageName}`,
+        thumbnailUrl: `/uploads/thumbnails/${thumbnailName}`,
       };
     } catch (error) {
       console.error("Erro no fallback local:", error);
