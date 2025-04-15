@@ -126,6 +126,11 @@ export class MemStorage implements IStorage {
   private collections: Map<number, Collection>;
   private arts: Map<number, Art>;
   private testimonials: Map<number, Testimonial>;
+  private favorites: Map<number, Favorite>;
+  private views: Map<number, View>;
+  private downloads: Map<number, Download>;
+  private subscriptions: Map<number, Subscription>;
+  private communityPosts: Map<number, CommunityPost>;
   
   private currentUserId: number;
   private currentCategoryId: number;
@@ -134,6 +139,11 @@ export class MemStorage implements IStorage {
   private currentCollectionId: number;
   private currentArtId: number;
   private currentTestimonialId: number;
+  private currentFavoriteId: number;
+  private currentViewId: number;
+  private currentDownloadId: number;
+  private currentSubscriptionId: number;
+  private currentCommunityPostId: number;
 
   constructor() {
     this.users = new Map();
@@ -143,6 +153,11 @@ export class MemStorage implements IStorage {
     this.collections = new Map();
     this.arts = new Map();
     this.testimonials = new Map();
+    this.favorites = new Map();
+    this.views = new Map();
+    this.downloads = new Map();
+    this.subscriptions = new Map();
+    this.communityPosts = new Map();
     
     this.currentUserId = 1;
     this.currentCategoryId = 1;
@@ -151,6 +166,11 @@ export class MemStorage implements IStorage {
     this.currentCollectionId = 1;
     this.currentArtId = 1;
     this.currentTestimonialId = 1;
+    this.currentFavoriteId = 1;
+    this.currentViewId = 1;
+    this.currentDownloadId = 1;
+    this.currentSubscriptionId = 1;
+    this.currentCommunityPostId = 1;
     
     // Initialize with sample data
     this.initData();
@@ -652,6 +672,179 @@ export class MemStorage implements IStorage {
     };
     this.testimonials.set(id, newTestimonial);
     return newTestimonial;
+  }
+
+  // Favorite methods
+  async getFavoritesByUserId(userId: number): Promise<Favorite[]> {
+    return Array.from(this.favorites.values())
+      .filter(favorite => favorite.userId === userId);
+  }
+
+  async getFavorite(userId: number, artId: number): Promise<Favorite | undefined> {
+    return Array.from(this.favorites.values())
+      .find(favorite => favorite.userId === userId && favorite.artId === artId);
+  }
+
+  async createFavorite(favorite: InsertFavorite): Promise<Favorite> {
+    const id = this.currentFavoriteId++;
+    const now = new Date().toISOString();
+    const newFavorite: Favorite = {
+      ...favorite,
+      id,
+      createdAt: now
+    };
+    this.favorites.set(id, newFavorite);
+    return newFavorite;
+  }
+
+  async deleteFavorite(userId: number, artId: number): Promise<boolean> {
+    const favorite = await this.getFavorite(userId, artId);
+    if (!favorite) return false;
+    
+    return this.favorites.delete(favorite.id);
+  }
+
+  // View methods
+  async getViewsByArtId(artId: number): Promise<View[]> {
+    return Array.from(this.views.values())
+      .filter(view => view.artId === artId);
+  }
+
+  async getViewsByUserId(userId: number): Promise<View[]> {
+    return Array.from(this.views.values())
+      .filter(view => view.userId === userId);
+  }
+
+  async createView(view: InsertView): Promise<View> {
+    const id = this.currentViewId++;
+    const now = new Date().toISOString();
+    const newView: View = {
+      ...view,
+      id,
+      createdAt: now
+    };
+    this.views.set(id, newView);
+    return newView;
+  }
+
+  async getViewsCountByArtId(artId: number): Promise<number> {
+    return (await this.getViewsByArtId(artId)).length;
+  }
+
+  // Download methods
+  async getDownloadsByUserId(userId: number): Promise<Download[]> {
+    return Array.from(this.downloads.values())
+      .filter(download => download.userId === userId);
+  }
+
+  async getDownloadsByArtId(artId: number): Promise<Download[]> {
+    return Array.from(this.downloads.values())
+      .filter(download => download.artId === artId);
+  }
+
+  async createDownload(download: InsertDownload): Promise<Download> {
+    const id = this.currentDownloadId++;
+    const now = new Date().toISOString();
+    const newDownload: Download = {
+      ...download,
+      id,
+      createdAt: now
+    };
+    this.downloads.set(id, newDownload);
+    return newDownload;
+  }
+
+  async getDownloadsCountByArtId(artId: number): Promise<number> {
+    return (await this.getDownloadsByArtId(artId)).length;
+  }
+
+  // Subscription methods
+  async getSubscriptionByUserId(userId: number): Promise<Subscription | undefined> {
+    return Array.from(this.subscriptions.values())
+      .find(subscription => subscription.userId === userId);
+  }
+
+  async createSubscription(subscription: InsertSubscription): Promise<Subscription> {
+    const id = this.currentSubscriptionId++;
+    const now = new Date().toISOString();
+    const newSubscription: Subscription = {
+      ...subscription,
+      id,
+      createdAt: now,
+      updatedAt: now
+    };
+    this.subscriptions.set(id, newSubscription);
+    return newSubscription;
+  }
+
+  async updateSubscription(userId: number, data: Partial<InsertSubscription>): Promise<Subscription | undefined> {
+    const subscription = await this.getSubscriptionByUserId(userId);
+    if (!subscription) return undefined;
+    
+    const now = new Date().toISOString();
+    const updatedSubscription: Subscription = {
+      ...subscription,
+      ...data,
+      updatedAt: now
+    };
+    this.subscriptions.set(subscription.id, updatedSubscription);
+    return updatedSubscription;
+  }
+
+  async cancelSubscription(userId: number): Promise<Subscription | undefined> {
+    return this.updateSubscription(userId, { status: 'canceled' });
+  }
+
+  // Community Post methods
+  async getCommunityPosts(page: number, limit: number, status?: string): Promise<{ posts: CommunityPost[], totalCount: number }> {
+    let posts = Array.from(this.communityPosts.values());
+    
+    if (status) {
+      posts = posts.filter(post => post.status === status);
+    }
+    
+    const totalCount = posts.length;
+    const paginatedPosts = posts
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice((page - 1) * limit, page * limit);
+    
+    return { posts: paginatedPosts, totalCount };
+  }
+
+  async getCommunityPostById(id: number): Promise<CommunityPost | undefined> {
+    return this.communityPosts.get(id);
+  }
+
+  async getCommunityPostsByUserId(userId: number): Promise<CommunityPost[]> {
+    return Array.from(this.communityPosts.values())
+      .filter(post => post.userId === userId);
+  }
+
+  async createCommunityPost(post: InsertCommunityPost): Promise<CommunityPost> {
+    const id = this.currentCommunityPostId++;
+    const now = new Date().toISOString();
+    const newPost: CommunityPost = {
+      ...post,
+      id,
+      createdAt: now,
+      updatedAt: now
+    };
+    this.communityPosts.set(id, newPost);
+    return newPost;
+  }
+
+  async updateCommunityPostStatus(id: number, status: string): Promise<CommunityPost | undefined> {
+    const post = await this.getCommunityPostById(id);
+    if (!post) return undefined;
+    
+    const now = new Date().toISOString();
+    const updatedPost: CommunityPost = {
+      ...post,
+      status,
+      updatedAt: now
+    };
+    this.communityPosts.set(id, updatedPost);
+    return updatedPost;
   }
 }
 
