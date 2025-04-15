@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { X } from 'lucide-react';
+import { X, Upload, Loader2 } from 'lucide-react';
 import { Art } from '@/types';
 import {
   Dialog,
@@ -52,6 +52,8 @@ const ArtForm = ({ isOpen, onClose, editingArt }: ArtFormProps) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [isPremium, setIsPremium] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Fetch categories
   const { data: categories } = useQuery<any[]>({
@@ -67,6 +69,52 @@ const ArtForm = ({ isOpen, onClose, editingArt }: ArtFormProps) => {
   const { data: fileTypes } = useQuery<any[]>({
     queryKey: ['/api/fileTypes'],
   });
+  
+  // Mutation para upload de imagem
+  const uploadMutation = useMutation({
+    mutationFn: async (file: File) => {
+      setUploading(true);
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      const response = await fetch('/api/admin/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Erro ao fazer upload da imagem');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      // A API retorna as URLs da imagem original e da thumbnail
+      setValue('imageUrl', data.imageUrl);
+      toast({
+        title: 'Upload realizado',
+        description: 'Imagem enviada com sucesso',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Erro no upload',
+        description: error.message || 'Não foi possível fazer o upload da imagem.',
+        variant: 'destructive',
+      });
+    },
+    onSettled: () => {
+      setUploading(false);
+    },
+  });
+  
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      uploadMutation.mutate(file);
+    }
+  };
 
   const {
     register,
@@ -193,6 +241,43 @@ const ArtForm = ({ isOpen, onClose, editingArt }: ArtFormProps) => {
               {errors.description && (
                 <p className="text-sm text-red-500">{errors.description.message}</p>
               )}
+            </div>
+            
+            <div className="space-y-2 col-span-2">
+              <Label>Upload de Imagem</Label>
+              <div className="flex items-center gap-4">
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="flex gap-2 items-center"
+                >
+                  {uploading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Enviando...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4" />
+                      Selecionar Imagem
+                    </>
+                  )}
+                </Button>
+                {uploading && (
+                  <p className="text-sm text-muted-foreground">
+                    Enviando e otimizando imagem...
+                  </p>
+                )}
+              </div>
             </div>
             
             <div className="space-y-2 col-span-2">
