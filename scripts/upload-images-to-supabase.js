@@ -65,41 +65,66 @@ async function uploadImageToSupabase(filePath) {
 
 async function uploadAllImages() {
   try {
-    // Lê o diretório de assets
-    const files = fs.readdirSync(ASSETS_DIR);
+    const args = process.argv.slice(2);
+    const specificFiles = [];
     
-    // Filtra apenas imagens
-    const imageFiles = files.filter(file => {
-      const ext = path.extname(file).toLowerCase();
-      return SUPPORTED_EXTENSIONS.includes(ext);
-    });
+    // Verifica se foram passados arquivos específicos
+    if (args.length > 0) {
+      for (const arg of args) {
+        // Se o arquivo existir, adiciona à lista
+        if (fs.existsSync(arg)) {
+          specificFiles.push(arg);
+        }
+      }
+    }
     
-    console.log(`Encontradas ${imageFiles.length} imagens para upload`);
+    let filesToProcess = [];
+    
+    // Se tiver arquivos específicos, usa eles
+    if (specificFiles.length > 0) {
+      filesToProcess = specificFiles;
+      console.log(`Processando ${specificFiles.length} arquivos específicos`);
+    } else {
+      // Caso contrário, usa o comportamento padrão
+      // Lê o diretório de assets
+      const files = fs.readdirSync(ASSETS_DIR);
+      
+      // Filtra apenas imagens
+      const imageFiles = files.filter(file => {
+        const ext = path.extname(file).toLowerCase();
+        return SUPPORTED_EXTENSIONS.includes(ext);
+      });
+      
+      console.log(`Encontradas ${imageFiles.length} imagens para upload`);
+      
+      // Limite de imagens a processar de uma vez
+      const MAX_IMAGES = 5;
+      
+      // Pega o índice inicial dos argumentos (padrão: 0)
+      const startIndex = args.length > 0 ? parseInt(args[0], 10) : 0;
+      
+      // Se startIndex for maior que a quantidade de imagens, já terminou
+      if (startIndex >= imageFiles.length) {
+        console.log('Todas as imagens já foram processadas!');
+        return;
+      }
+      
+      const endIndex = Math.min(startIndex + MAX_IMAGES, imageFiles.length);
+      
+      console.log(`Processando lote de imagens (${startIndex} a ${endIndex - 1})`);
+      
+      // Prepara o caminho completo para cada arquivo
+      for (let i = startIndex; i < endIndex; i++) {
+        filesToProcess.push(path.join(ASSETS_DIR, imageFiles[i]));
+      }
+    }
     
     // Array para armazenar resultados
     const results = [];
     
-    // Limite de imagens a processar de uma vez
-    const MAX_IMAGES = 5;
-    
-    // Pega o índice inicial dos argumentos (padrão: 0)
-    const args = process.argv.slice(2);
-    const startIndex = args.length > 0 ? parseInt(args[0], 10) : 0;
-    
-    // Se startIndex for maior que a quantidade de imagens, já terminou
-    if (startIndex >= imageFiles.length) {
-      console.log('Todas as imagens já foram processadas!');
-      return;
-    }
-    
-    const endIndex = Math.min(startIndex + MAX_IMAGES, imageFiles.length);
-    
-    console.log(`Processando lote de imagens (${startIndex} a ${endIndex - 1})`);
-    
-    // Processa apenas um lote de imagens
-    for (let i = startIndex; i < endIndex; i++) {
-      const fileName = imageFiles[i];
-      const filePath = path.join(ASSETS_DIR, fileName);
+    // Processa os arquivos
+    for (const filePath of filesToProcess) {
+      const fileName = path.basename(filePath);
       
       // Faz upload e aguarda resultado
       const result = await uploadImageToSupabase(filePath);
@@ -131,21 +156,16 @@ async function uploadAllImages() {
     
     // Exibe resumo final
     console.log('\n--- RESUMO ---');
-    console.log(`Total de imagens: ${imageFiles.length}`);
-    console.log(`Processado no lote: ${endIndex - startIndex}`);
+    console.log(`Total de arquivos: ${filesToProcess.length}`);
+    console.log(`Processados: ${filesToProcess.length}`);
     console.log(`Sucesso: ${results.length}`);
-    console.log(`Falhas: ${(endIndex - startIndex) - results.length}`);
+    console.log(`Falhas: ${filesToProcess.length - results.length}`);
     
-    // Informa próximo lote a processar
-    if (endIndex < imageFiles.length) {
-      console.log(`\nPara processar o próximo lote, execute:`);
-      console.log(`node scripts/upload-images-to-supabase.js ${endIndex}`);
-    } else {
-      console.log('\nTodas as imagens foram processadas!');
-    }
+    console.log('\nTodos os arquivos foram processados!');
     
     // Salva os resultados em um arquivo JSON para referência
-    const resultsFileName = `upload-results-batch-${startIndex}-${endIndex-1}.json`;
+    const timestamp = new Date().getTime();
+    const resultsFileName = `upload-results-batch-${timestamp}.json`;
     fs.writeFileSync(
       path.join(__dirname, resultsFileName), 
       JSON.stringify(results, null, 2)
