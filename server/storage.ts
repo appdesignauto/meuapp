@@ -92,6 +92,8 @@ export interface IStorage {
   getArtById(id: number): Promise<Art | undefined>;
   getArtsByCollectionId(collectionId: number): Promise<Art[]>;
   createArt(art: InsertArt): Promise<Art>;
+  updateArt(id: number, art: Partial<InsertArt>): Promise<Art | undefined>;
+  deleteArt(id: number): Promise<boolean>;
   
   // Testimonial methods
   getTestimonials(): Promise<Testimonial[]>;

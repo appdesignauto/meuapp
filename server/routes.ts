@@ -168,6 +168,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin API - Create Art
+  app.post("/api/admin/arts", isAdmin, async (req, res) => {
+    try {
+      const newArt = await storage.createArt(req.body);
+      // Resposta com status 201 (Created) e a nova arte
+      res.status(201).json(newArt);
+    } catch (error) {
+      console.error("Erro ao criar arte:", error);
+      if (error instanceof ZodError) {
+        return res.status(400).json({ 
+          message: "Dados inválidos", 
+          errors: fromZodError(error).message 
+        });
+      }
+      res.status(500).json({ message: "Erro ao criar arte" });
+    }
+  });
+
+  // Admin API - Update Art
+  app.put("/api/admin/arts/:id", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updatedArt = await storage.updateArt(id, req.body);
+      
+      if (!updatedArt) {
+        return res.status(404).json({ message: "Arte não encontrada" });
+      }
+      
+      res.json(updatedArt);
+    } catch (error) {
+      console.error("Erro ao atualizar arte:", error);
+      if (error instanceof ZodError) {
+        return res.status(400).json({ 
+          message: "Dados inválidos", 
+          errors: fromZodError(error).message 
+        });
+      }
+      res.status(500).json({ message: "Erro ao atualizar arte" });
+    }
+  });
+
+  // Admin API - Delete Art
+  app.delete("/api/admin/arts/:id", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteArt(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Arte não encontrada" });
+      }
+      
+      res.status(204).send(); // No Content
+    } catch (error) {
+      console.error("Erro ao excluir arte:", error);
+      res.status(500).json({ message: "Erro ao excluir arte" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
