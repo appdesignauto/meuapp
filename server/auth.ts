@@ -24,7 +24,13 @@ async function hashPassword(password: string): Promise<string> {
 }
 
 async function comparePasswords(supplied: string, stored: string): Promise<boolean> {
-  return bcrypt.compare(supplied, stored);
+  // Verifica se a senha armazenada já está no formato bcrypt (começa com $2a$, $2b$ ou $2y$)
+  if (stored.startsWith('$2a$') || stored.startsWith('$2b$') || stored.startsWith('$2y$')) {
+    return bcrypt.compare(supplied, stored);
+  } else {
+    // Caso a senha esteja armazenada em texto puro, comparação direta
+    return supplied === stored;
+  }
 }
 
 export function setupAuth(app: Express) {
