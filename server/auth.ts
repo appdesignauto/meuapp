@@ -58,13 +58,22 @@ export function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
+        console.log("Tentando autenticar:", username);
+        
         const user = await storage.getUserByUsername(username);
         
         if (!user) {
+          console.log("Usuário não encontrado:", username);
           return done(null, false, { message: "Usuário não encontrado" });
         }
         
+        console.log("Usuário encontrado:", user.username);
+        console.log("Senha fornecida:", password);
+        console.log("Senha armazenada:", user.password);
+        
         const passwordMatch = await comparePasswords(password, user.password);
+        console.log("Comparação de senha:", passwordMatch);
+        
         if (!passwordMatch) {
           return done(null, false, { message: "Senha incorreta" });
         }
@@ -74,6 +83,7 @@ export function setupAuth(app: Express) {
         
         return done(null, user);
       } catch (err) {
+        console.error("Erro na autenticação:", err);
         return done(err);
       }
     })
