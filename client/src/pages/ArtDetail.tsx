@@ -44,8 +44,8 @@ export default function ArtDetail() {
   };
 
   const handleOpenEdit = () => {
-    // For premium content, check if user has access
-    if (art.isPremium && (!user || user.role !== 'premium')) {
+    // Para conteúdo premium bloqueado, mostrar mensagem de upgrade
+    if (art.isPremiumLocked) {
       toast({
         title: "Conteúdo Premium",
         description: "Assine o plano Premium para acessar este conteúdo",
@@ -370,17 +370,32 @@ export default function ArtDetail() {
               </div>
             </div>
             
-            {/* Additional Info Box */}
-            {art.isPremium && (
+            {/* Additional Info Box - Mostra o banner premium */}
+            {art.isPremiumLocked && (
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
                 <h3 className="text-amber-800 font-semibold flex items-center gap-2 mb-2 text-sm">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
-                  Acesso Premium
+                  Acesso Premium Necessário
                 </h3>
                 <p className="text-xs text-amber-700">
                   Este produto está disponível exclusivamente para os membros premium. 
                   Faça upgrade para uma conta Premium para ter acesso a todo o conteúdo premium.
                 </p>
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="mt-2 w-full bg-amber-600 hover:bg-amber-700 text-white"
+                  onClick={() => {
+                    toast({
+                      title: "Upgrade para Premium",
+                      description: "Você será redirecionado para a página de planos premium",
+                    });
+                    // Navegar para página de planos
+                    setLocation('/plans');
+                  }}
+                >
+                  Fazer Upgrade para Premium
+                </Button>
               </div>
             )}
             

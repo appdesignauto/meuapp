@@ -146,14 +146,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Arte não encontrada" });
       }
       
-      // Check if user has access to premium content
+      // Verificar se é conteúdo premium e adicionar flag em vez de bloquear acesso
+      let isPremiumLocked = false;
       if (art.isPremium) {
         const user = req.user as any;
         if (!user || user.role !== 'premium') {
-          return res.status(403).json({ 
-            message: "Conteúdo premium. Faça upgrade para acessar.",
-            isPremium: true
-          });
+          isPremiumLocked = true;
+          // Não bloqueamos mais com 403, apenas marcamos como conteúdo restrito
         }
       }
       
@@ -193,7 +192,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      res.json(art);
+      // Adicionar flag de premium locked ao objeto retornado
+      res.json({
+        ...art,
+        isPremiumLocked
+      });
     } catch (error) {
       console.error("Erro ao buscar arte:", error);
       res.status(500).json({ message: "Erro ao buscar arte" });
