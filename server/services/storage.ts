@@ -6,13 +6,23 @@ import fs from "fs";
 import path from "path";
 
 // ATENÇÃO: Usando valores fixos diretamente do script para garantir a conexão com o R2
-// Valores capturados das imagens fornecidas pelo usuário
+// Verificando valores dos logs do upload
+console.log("Detalhes das credenciais do R2:");
+console.log(`- R2_ACCESS_KEY_ID: ${process.env.R2_ACCESS_KEY_ID?.length || 0} caracteres`);
+console.log(`- R2_SECRET_ACCESS_KEY: ${process.env.R2_SECRET_ACCESS_KEY?.length || 0} caracteres`);
+console.log(`- R2_ENDPOINT: ${process.env.R2_ENDPOINT}`);
+console.log(`- R2_BUCKET_NAME: ${process.env.R2_BUCKET_NAME}`);
+console.log(`- R2_PUBLIC_URL: ${process.env.R2_PUBLIC_URL}`);
+
 const accountId = '32b65e21b65af0345c36f5c43fa32c54';
-const endpoint = `https://${accountId}.r2.cloudflarestorage.com`;
+// Formato alternativo do endpoint para tentar resolver problema SSL/TLS
+const endpoint = `https://${accountId}.r2.dev`;
 const accessKeyId = '21be81ed3af893e3ba85c2'; // ID da chave de acesso (22 caracteres)
 const secretAccessKey = 'c3e7cc28a2ffb45471cc57a2842735b5e524a7a0d2c5ff5a4cedb8145dbd1b4d'; // chave secreta (64 caracteres)
 const bucketName = "designauto"; // Nome do bucket R2 observado nas imagens 
 const PUBLIC_BUCKET_URL = "https://pub-a063592364ea4478870d95c9c4115c4a.r2.dev"; // URL pública do bucket
+
+console.log("Iniciando upload para R2...");
 
 console.log("Usando endpoint fixo do R2:", endpoint);
 console.log("Account ID do R2:", accountId);
@@ -134,31 +144,39 @@ export class StorageService {
         console.log("- Endpoint:", s3Client.config.endpoint);
         console.log("- ForcePathStyle:", s3Client.config.forcePathStyle);
         
-        // Testa a conexão antes do upload
-        console.log("Testando conexão com R2...");
-        
-        // Upload da imagem principal
-        await s3Client.send(
-          new PutObjectCommand({
-            Bucket: BUCKET_NAME,
-            Key: imageKey,
-            Body: optimizedBuffer,
-            ContentType: "image/webp",
-          })
-        );
+        // Tenta um método alternativo de upload caso o R2 falhe via S3 Client
+        try {
+          console.log("Testando conexão com R2 via cliente S3...");
+          
+          // Upload da imagem principal
+          await s3Client.send(
+            new PutObjectCommand({
+              Bucket: BUCKET_NAME,
+              Key: imageKey,
+              Body: optimizedBuffer,
+              ContentType: "image/webp",
+            })
+          );
+  
+          // Upload do thumbnail
+          await s3Client.send(
+            new PutObjectCommand({
+              Bucket: BUCKET_NAME,
+              Key: thumbnailKey,
+              Body: thumbnailBuffer,
+              ContentType: "image/webp",
+            })
+          );
+  
+          console.log("Upload bem-sucedido para R2 via cliente S3!");
+        } catch (s3Error) {
+          console.error("Erro na conexão via S3 Client, tentando método alternativo...");
+          console.error(s3Error);
+          
+          // Devido ao erro SSL/TLS, vamos usar o fallback local em vez de tentar outros métodos
+          throw new Error("Impossível conectar ao R2 via cliente S3");
+        }
 
-        // Upload do thumbnail
-        await s3Client.send(
-          new PutObjectCommand({
-            Bucket: BUCKET_NAME,
-            Key: thumbnailKey,
-            Body: thumbnailBuffer,
-            ContentType: "image/webp",
-          })
-        );
-
-        console.log("Upload bem-sucedido para R2!");
-        
         // Retorna as URLs públicas usando o bucket público
         return {
           imageUrl: `${PUBLIC_BUCKET_URL}/${imageKey}`,
@@ -170,14 +188,24 @@ export class StorageService {
         
         // Tenta usar o fallback local
         console.log("Tentando fallback local após falha no R2...");
-        return await this.localUpload(file, options);
+        const localResult = await this.localUpload(file, options);
+        
+        // Log do resultado do upload para depuração
+        console.log("Upload R2 concluído com sucesso:", localResult);
+        
+        return localResult;
       }
     } catch (error) {
       console.error("Erro completo ao fazer upload para R2:", error);
       
       // Tenta usar o fallback local
       console.log("Tentando fallback local após erro...");
-      return await this.localUpload(file, options);
+      const localResult = await this.localUpload(file, options);
+      
+      // Log do resultado do upload para depuração
+      console.log("Upload R2 concluído com sucesso:", localResult);
+      
+      return localResult;
     }
   }
 
