@@ -19,8 +19,8 @@ const __dirname = path.dirname(__filename);
 // Arquivo com os resultados dos uploads
 const RESULTS_FILE = path.join(__dirname, 'all-images-results.json');
 
-// Apenas para logging, não modifica o banco de dados
-const DRY_RUN = true; // Alterar para false quando estiver pronto para executar
+// Executar as atualizações no banco de dados
+const DRY_RUN = false;
 
 // Função para conectar ao banco de dados
 async function connectToDatabase() {

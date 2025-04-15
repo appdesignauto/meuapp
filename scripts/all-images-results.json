@@ -1,5 +1,35 @@
 [
   {
+    "originalFile": "LAVAGEM 01.png",
+    "imageUrl": "https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/7508e553-1aff-448e-8561-73777ab73ebf.webp",
+    "thumbnailUrl": "https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/thumbnails/88d62931-0559-4f82-99a0-215533552531.webp",
+    "storageType": "supabase"
+  },
+  {
+    "originalFile": "LAVAGEM 03.png",
+    "imageUrl": "https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/26e0d1e1-6341-4d7e-b5db-cbbdbecd6acc.webp",
+    "thumbnailUrl": "https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/thumbnails/8048f78b-82af-4ef4-bd65-4c5e66e71384.webp",
+    "storageType": "supabase"
+  },
+  {
+    "originalFile": "LAVAGEM 04.png",
+    "imageUrl": "https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/1a7acb42-26da-4b37-b3ef-59b660d3d502.webp",
+    "thumbnailUrl": "https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/thumbnails/300f965c-815c-405f-a0d7-db676a5f118f.webp",
+    "storageType": "supabase"
+  },
+  {
+    "originalFile": "LAVAGEM 10.png",
+    "imageUrl": "https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/7dea8f15-5d7f-4949-9a3a-8da191fa1313.webp",
+    "thumbnailUrl": "https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/thumbnails/3a94fa6f-d9c7-484b-87e5-b6cbb4058770.webp",
+    "storageType": "supabase"
+  },
+  {
+    "originalFile": "LOCAÇÃO 06.png",
+    "imageUrl": "https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/e95a8cd1-000b-49de-af84-901bca7157ec.webp",
+    "thumbnailUrl": "https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/thumbnails/86c8b0d3-570c-410b-b74b-f071f0acdf83.webp",
+    "storageType": "supabase"
+  },
+  {
     "originalFile": "LOGO DESIGNAUTO.png",
     "imageUrl": "https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/73329b9a-7593-4909-8733-e60b082df015.webp",
     "thumbnailUrl": "https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/thumbnails/43132288-9c1f-47cc-ab71-33af0beb7cfa.webp",
