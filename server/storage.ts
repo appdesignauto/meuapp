@@ -94,6 +94,7 @@ export interface IStorage {
   getArts(page: number, limit: number, filters?: ArtFilters): Promise<{ arts: Art[], totalCount: number }>;
   getArtById(id: number): Promise<Art | undefined>;
   getArtsByCollectionId(collectionId: number): Promise<Art[]>;
+  getRelatedArts(artId: number, limit?: number): Promise<Art[]>;
   createArt(art: InsertArt): Promise<Art>;
   updateArt(id: number, art: Partial<InsertArt>): Promise<Art | undefined>;
   deleteArt(id: number): Promise<boolean>;
@@ -780,6 +781,31 @@ export class MemStorage implements IStorage {
       .filter(art => art.collectionId === collectionId);
   }
   
+  async getRelatedArts(artId: number, limit: number = 4): Promise<Art[]> {
+    // Pega a arte de referência
+    const art = this.arts.get(artId);
+    if (!art) return [];
+    
+    // Prioriza artes da mesma categoria e mesma coleção
+    const relatedArts = Array.from(this.arts.values())
+      .filter(a => a.id !== artId) // Exclui a própria arte
+      .sort((a, b) => {
+        // Pontuação para critérios de similaridade
+        const aScore = (a.categoryId === art.categoryId ? 3 : 0) + 
+                       (a.collectionId === art.collectionId ? 2 : 0) + 
+                       (a.format === art.format ? 1 : 0);
+        
+        const bScore = (b.categoryId === art.categoryId ? 3 : 0) + 
+                       (b.collectionId === art.collectionId ? 2 : 0) + 
+                       (b.format === art.format ? 1 : 0);
+        
+        return bScore - aScore; // Ordem decrescente
+      })
+      .slice(0, limit);
+    
+    return relatedArts;
+  }
+  
   async createArt(art: InsertArt): Promise<Art> {
     const id = this.currentArtId++;
     const now = new Date().toISOString();
@@ -1333,6 +1359,40 @@ export class DatabaseStorage implements IStorage {
   
   async getArtsByCollectionId(collectionId: number): Promise<Art[]> {
     return db.select().from(arts).where(eq(arts.collectionId, collectionId));
+  }
+  
+  async getRelatedArts(artId: number, limit: number = 4): Promise<Art[]> {
+    // Primeiro obtém a arte de referência
+    const [art] = await db.select().from(arts).where(eq(arts.id, artId));
+    if (!art) return [];
+    
+    // Busca todas as artes exceto a atual
+    const allArts = await db.select().from(arts).where(sql`id != ${artId}`);
+    
+    // Calcula a pontuação de relevância para cada arte com base na similaridade
+    const scoredArts = allArts.map(a => {
+      // Atribui pontuação baseada em diferentes critérios de similaridade
+      let score = 0;
+      
+      // Mesma categoria (maior peso)
+      if (a.categoryId === art.categoryId) score += 3;
+      
+      // Mesma coleção (segundo maior peso)
+      if (a.collectionId === art.collectionId) score += 2;
+      
+      // Mesmo formato (menor peso)
+      if (a.format === art.format) score += 1;
+      
+      return { art: a, score };
+    });
+    
+    // Ordena por pontuação (maior para menor) e limita o número de resultados
+    const relatedArts = scoredArts
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit)
+      .map(item => item.art);
+    
+    return relatedArts;
   }
   
   async createArt(art: InsertArt): Promise<Art> {
