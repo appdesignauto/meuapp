@@ -87,7 +87,7 @@ export class StorageService {
   async uploadImage(
     file: Express.Multer.File,
     options: ImageOptimizationOptions = {}
-  ): Promise<{ imageUrl: string; thumbnailUrl: string }> {
+  ): Promise<{ imageUrl: string; thumbnailUrl: string; storageType?: string }> {
     if (!file) {
       throw new Error("Nenhum arquivo foi fornecido");
     }
@@ -97,7 +97,8 @@ export class StorageService {
       if (
         !process.env.R2_ACCESS_KEY_ID ||
         !process.env.R2_SECRET_ACCESS_KEY ||
-        !process.env.R2_ENDPOINT
+        !process.env.R2_ENDPOINT ||
+        !process.env.R2_BUCKET_NAME
       ) {
         throw new Error("Credenciais do R2 não configuradas. Configure as variáveis de ambiente R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_ENDPOINT e R2_BUCKET_NAME.");
       }
@@ -153,6 +154,7 @@ export class StorageService {
         return {
           imageUrl: `${PUBLIC_BUCKET_URL}/${imageKey}`,
           thumbnailUrl: `${PUBLIC_BUCKET_URL}/${thumbnailKey}`,
+          storageType: "r2"
         };
       }
 
@@ -175,7 +177,11 @@ export class StorageService {
         expiresIn: 604800,
       });
 
-      return { imageUrl, thumbnailUrl };
+      return { 
+        imageUrl, 
+        thumbnailUrl,
+        storageType: "r2-signed"
+      };
     } catch (error) {
       console.error("Erro completo ao fazer upload para R2:", error);
       throw error;
@@ -183,10 +189,16 @@ export class StorageService {
   }
 
   /**
-   * Remove uma imagem do R2
+   * Remove uma imagem (R2 ou local)
    */
   async deleteImage(imageUrl: string): Promise<void> {
-    // Extrai a chave da URL
+    // Verifica se é uma URL local
+    if (imageUrl.startsWith('/uploads/')) {
+      await this.deleteLocalImage(imageUrl);
+      return;
+    }
+    
+    // Caso contrário, tenta deletar do R2
     const key = this.extractKeyFromUrl(imageUrl);
     if (!key) return;
 
@@ -210,7 +222,42 @@ export class StorageService {
         })
       );
     } catch (error) {
-      console.error("Erro ao deletar imagem:", error);
+      console.error("Erro ao deletar imagem do R2:", error);
+    }
+  }
+  
+  /**
+   * Remove uma imagem armazenada localmente
+   */
+  async deleteLocalImage(imageUrl: string): Promise<void> {
+    try {
+      // Caminho da imagem no sistema de arquivos
+      const filePath = path.join(process.cwd(), 'public', imageUrl);
+      
+      // Deleta a imagem principal se existir
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        console.log(`Imagem local deletada: ${filePath}`);
+      }
+      
+      // Tenta encontrar e deletar o thumbnail correspondente
+      if (!imageUrl.includes('/thumbnails/')) {
+        const filename = path.basename(imageUrl);
+        const thumbnailPath = path.join(
+          process.cwd(), 
+          'public', 
+          'uploads', 
+          'thumbnails', 
+          filename
+        );
+        
+        if (fs.existsSync(thumbnailPath)) {
+          fs.unlinkSync(thumbnailPath);
+          console.log(`Thumbnail local deletado: ${thumbnailPath}`);
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao deletar imagem local:", error);
     }
   }
 
