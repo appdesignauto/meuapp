@@ -103,13 +103,13 @@ export class MemStorage implements IStorage {
   private initData() {
     // Sample Categories
     const categories = [
+      { name: "Vendas", slug: "vendas" },
+      { name: "Lavagem", slug: "lavagem" },
+      { name: "Mecânica", slug: "mecanica" },
+      { name: "Locação", slug: "locacao" },
+      { name: "Seminovos", slug: "seminovos" },
       { name: "Promoções", slug: "promocoes" },
       { name: "Lançamentos", slug: "lancamentos" },
-      { name: "Venda Direta", slug: "venda-direta" },
-      { name: "Consórcios", slug: "consorcios" },
-      { name: "Datas Especiais", slug: "datas-especiais" },
-      { name: "Seminovos", slug: "seminovos" },
-      { name: "Pós-Venda", slug: "pos-venda" },
     ];
     
     categories.forEach(cat => {
@@ -144,36 +144,36 @@ export class MemStorage implements IStorage {
     // Sample Collections
     const collections = [
       {
-        title: "Lançamentos 2023",
-        description: "Coleção com artes para divulgação de lançamentos de veículos",
-        imageUrl: "https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=500&q=80",
+        title: "Lavagem de Veículos",
+        description: "Coleção com artes para divulgação de serviços de lavagem",
+        imageUrl: "/assets/LAVAGEM 01.png",
         artCount: 42,
         formats: "Formatos variados",
         isPremium: true,
         updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
       },
       {
-        title: "Ofertas Relâmpago",
-        description: "Artes para promoções de curta duração",
-        imageUrl: "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=500&q=80",
+        title: "Vendas de Carros",
+        description: "Artes para divulgação e promoções de veículos",
+        imageUrl: "/assets/VENDAS 10.png",
         artCount: 28,
         formats: "Formatos variados",
         isPremium: false,
         updatedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
       },
       {
-        title: "Seminovos Premium",
-        description: "Coleção de artes para veículos seminovos premium",
-        imageUrl: "https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=500&q=80",
+        title: "Mecânica Especializada",
+        description: "Coleção de artes para serviços mecânicos e manutenção",
+        imageUrl: "/assets/MECÂNICA 08.png",
         artCount: 35,
         formats: "Formatos variados",
         isPremium: true,
         updatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
       },
       {
-        title: "Pós-Venda e Serviços",
-        description: "Artes para divulgação de serviços e pós-venda",
-        imageUrl: "https://images.unsplash.com/photo-1596384364627-3118ca5133de?w=500&q=80",
+        title: "Locação de Veículos",
+        description: "Artes para divulgação de serviços de locação e aluguel",
+        imageUrl: "/assets/LOCAÇÃO 06.png",
         artCount: 19,
         formats: "Formatos variados",
         isPremium: false,
@@ -186,108 +186,160 @@ export class MemStorage implements IStorage {
     // Sample Arts
     const sampleArts = [
       {
-        title: "SUV Lançamento 2023",
-        imageUrl: "https://images.unsplash.com/photo-1549399542-7e8f2e928464?w=500&q=80",
+        title: "Lavagem Profissional",
+        imageUrl: "/assets/LAVAGEM 01.png",
         format: "Instagram",
         fileType: "Canva",
         editUrl: "https://www.canva.com/design/sample1",
         isPremium: false,
-        categoryId: 2, // Lançamentos
+        categoryId: 2, // Lavagem
         collectionId: collectionIds[0],
         width: 1080,
         height: 1080,
         aspectRatio: "1:1"
       },
       {
-        title: "Promoção de Seminovos",
-        imageUrl: "https://images.unsplash.com/photo-1592840062661-a5a7f2bc6b56?w=500&q=80",
+        title: "Lavagem Premium",
+        imageUrl: "/assets/LAVAGEM 03.png",
         format: "Facebook",
         fileType: "Canva",
         editUrl: "https://www.canva.com/design/sample2",
         isPremium: true,
-        categoryId: 6, // Seminovos
-        collectionId: collectionIds[2],
+        categoryId: 2, // Lavagem
+        collectionId: collectionIds[0],
         width: 1080,
-        height: 1350,
-        aspectRatio: "4:5"
+        height: 1080,
+        aspectRatio: "1:1"
       },
       {
-        title: "Black Friday Automóveis",
-        imageUrl: "https://images.unsplash.com/photo-1570733577524-3a047079e80d?w=500&q=80",
+        title: "Lembrete - Lavagem",
+        imageUrl: "/assets/LAVAGEM 04.png",
         format: "Stories",
         fileType: "Canva",
         editUrl: "https://www.canva.com/design/sample3",
         isPremium: false,
-        categoryId: 1, // Promoções
-        collectionId: collectionIds[1],
-        width: 1080,
-        height: 1920,
-        aspectRatio: "9:16"
-      },
-      {
-        title: "Revisão Promocional",
-        imageUrl: "https://images.unsplash.com/photo-1563720223185-11003d516935?w=500&q=80",
-        format: "Feed",
-        fileType: "Google Drive",
-        editUrl: "https://drive.google.com/file/sample4",
-        isPremium: false,
-        categoryId: 7, // Pós-Venda
-        collectionId: collectionIds[3],
+        categoryId: 2, // Lavagem
+        collectionId: collectionIds[0],
         width: 1080,
         height: 1080,
         aspectRatio: "1:1"
       },
       {
-        title: "Carro do Mês - Destaque",
-        imageUrl: "https://images.unsplash.com/photo-1567818735868-e71b99932e29?w=500&q=80",
-        format: "Web Banner",
+        title: "Lavagem Premium R$69,99",
+        imageUrl: "/assets/LAVAGEM 10.png",
+        format: "Feed",
+        fileType: "Canva",
+        editUrl: "https://www.canva.com/design/sample4",
+        isPremium: false,
+        categoryId: 2, // Lavagem
+        collectionId: collectionIds[0],
+        width: 1080,
+        height: 1080,
+        aspectRatio: "1:1"
+      },
+      {
+        title: "Lembrete de Manutenção",
+        imageUrl: "/assets/MECÂNICA 08.png",
+        format: "Square",
         fileType: "Canva",
         editUrl: "https://www.canva.com/design/sample5",
         isPremium: true,
-        categoryId: 2, // Lançamentos
-        collectionId: collectionIds[0],
+        categoryId: 3, // Mecânica
+        collectionId: collectionIds[2],
         width: 1080,
-        height: 1350,
-        aspectRatio: "4:5"
+        height: 1080,
+        aspectRatio: "1:1"
       },
       {
-        title: "Promoção Relâmpago",
-        imageUrl: "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=500&q=80",
-        format: "WhatsApp",
+        title: "Revisão de Motos",
+        imageUrl: "/assets/MECÂNICA MOTO 01.png",
+        format: "Square",
         fileType: "Canva",
         editUrl: "https://www.canva.com/design/sample6",
         isPremium: false,
-        categoryId: 1, // Promoções
-        collectionId: collectionIds[1],
+        categoryId: 3, // Mecânica
+        collectionId: collectionIds[2],
         width: 1080,
-        height: 1920,
-        aspectRatio: "9:16"
+        height: 1080,
+        aspectRatio: "1:1"
       },
       {
-        title: "Consórcio Facilitado",
-        imageUrl: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=500&q=80",
-        format: "Email",
-        fileType: "Google Drive",
-        editUrl: "https://drive.google.com/file/sample7",
+        title: "Planos de Locação",
+        imageUrl: "/assets/LOCAÇÃO 06.png",
+        format: "Square",
+        fileType: "Canva",
+        editUrl: "https://www.canva.com/design/sample7",
         isPremium: false,
-        categoryId: 4, // Consórcios
+        categoryId: 4, // Locação
         collectionId: collectionIds[3],
         width: 1080,
         height: 1080,
         aspectRatio: "1:1"
       },
       {
-        title: "Test Drive Exclusivo",
-        imageUrl: "https://images.unsplash.com/photo-1534093607318-f025413f49cb?w=500&q=80",
-        format: "Stories",
+        title: "Promoção Volkswagen",
+        imageUrl: "/assets/VENDAS 10.png",
+        format: "Square",
         fileType: "Canva",
         editUrl: "https://www.canva.com/design/sample8",
         isPremium: true,
-        categoryId: 3, // Venda Direta
-        collectionId: collectionIds[2],
+        categoryId: 1, // Vendas
+        collectionId: collectionIds[1],
         width: 1080,
-        height: 1920,
-        aspectRatio: "9:16"
+        height: 1080,
+        aspectRatio: "1:1"
+      },
+      {
+        title: "BMW X6 Premium",
+        imageUrl: "/assets/VENDAS 17.png",
+        format: "Square",
+        fileType: "Canva",
+        editUrl: "https://www.canva.com/design/sample9",
+        isPremium: true,
+        categoryId: 1, // Vendas
+        collectionId: collectionIds[1],
+        width: 1080,
+        height: 1080,
+        aspectRatio: "1:1"
+      },
+      {
+        title: "Volkswagen Polo 2025",
+        imageUrl: "/assets/VENDAS 32.png",
+        format: "Square",
+        fileType: "Canva",
+        editUrl: "https://www.canva.com/design/sample10",
+        isPremium: true,
+        categoryId: 1, // Vendas
+        collectionId: collectionIds[1],
+        width: 1080,
+        height: 1080,
+        aspectRatio: "1:1"
+      },
+      {
+        title: "Vantagens Seminovo",
+        imageUrl: "/assets/VENDAS 36.png",
+        format: "Square",
+        fileType: "Canva",
+        editUrl: "https://www.canva.com/design/sample11",
+        isPremium: true,
+        categoryId: 5, // Seminovos
+        collectionId: collectionIds[1],
+        width: 1080,
+        height: 1080,
+        aspectRatio: "1:1"
+      },
+      {
+        title: "Chaves do Próximo Carro",
+        imageUrl: "/assets/VENDAS 04.png",
+        format: "Square",
+        fileType: "Canva",
+        editUrl: "https://www.canva.com/design/sample12",
+        isPremium: false,
+        categoryId: 1, // Vendas
+        collectionId: collectionIds[1],
+        width: 1080,
+        height: 1080,
+        aspectRatio: "1:1"
       },
     ];
     
