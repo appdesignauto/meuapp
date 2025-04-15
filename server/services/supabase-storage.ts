@@ -35,37 +35,43 @@ export class SupabaseStorageService {
   }
 
   /**
-   * Inicializa o bucket do Supabase se não existir
+   * Inicializa o bucket do Supabase
+   * 
+   * Nota: Assume que o bucket já foi criado manualmente no painel do Supabase.
+   * Criar buckets via API requer permissões especiais de serviço.
    */
   async initBucket(): Promise<void> {
     if (this.initialized) return;
 
     try {
-      // Verifica se o bucket já existe
-      const { data: buckets } = await supabase.storage.listBuckets();
+      // Verifica a conexão com o Supabase
+      const { data: buckets, error } = await supabase.storage.listBuckets();
+      
+      if (error) {
+        console.error("Erro ao conectar com Supabase Storage:", error.message);
+        throw error;
+      }
+      
+      // Verifica se o bucket existe
       const bucketExists = buckets?.some(bucket => bucket.name === BUCKET_NAME);
 
       if (!bucketExists) {
-        console.log(`Criando bucket '${BUCKET_NAME}' no Supabase...`);
-        // Cria o bucket com acesso público para leitura
-        const { error } = await supabase.storage.createBucket(BUCKET_NAME, {
-          public: true, // Permite acesso público às imagens
-          fileSizeLimit: 5 * 1024 * 1024 // Limite de 5MB por arquivo
-        });
-
-        if (error) {
-          throw new Error(`Erro ao criar bucket: ${error.message}`);
-        }
+        console.log(`Aviso: O bucket '${BUCKET_NAME}' não existe no Supabase.`);
+        console.log("Por favor, crie manualmente o bucket no painel do Supabase com as seguintes configurações:");
+        console.log("- Nome: designauto-images");
+        console.log("- Acesso: público");
+        console.log("- Tamanho máximo de arquivo: 5MB");
         
-        console.log(`Bucket '${BUCKET_NAME}' criado com sucesso!`);
+        // Não lançamos erro, apenas avisamos e continuamos - upload fallback para local
+        console.log("Uploads serão direcionados para o armazenamento local até que o bucket seja criado.");
       } else {
-        console.log(`Bucket '${BUCKET_NAME}' já existe no Supabase.`);
+        console.log(`Bucket '${BUCKET_NAME}' encontrado no Supabase.`);
       }
 
       this.initialized = true;
     } catch (error) {
       console.error("Erro ao inicializar o Supabase Storage:", error);
-      throw error;
+      // Não lançamos erro, apenas avisamos - upload fallback para local
     }
   }
 
