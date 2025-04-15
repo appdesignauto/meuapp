@@ -1468,41 +1468,47 @@ export class DatabaseStorage implements IStorage {
   // Art methods
   async getArts(page: number, limit: number, filters?: ArtFilters): Promise<{ arts: Art[], totalCount: number }> {
     try {
-      // Vamos usar SQL bruto diretamente
+      // Usar consulta SQL direta para evitar problemas com nomes de colunas
       const offset = (page - 1) * limit;
       
-      // Construir a consulta SQL base
-      let query = db.select()
-        .from(sql.raw('arts'))
-        .limit(limit)
-        .offset(offset);
-        
-      // Aplicar filtros, se necessário
+      let whereClause = '';
+      const values: any[] = [];
+      let index = 1;
+      
       if (filters) {
+        const conditions = [];
+        
         if (filters.categoryId) {
-          query = query.where(sql.raw(`"categoryId" = ${filters.categoryId}`));
+          conditions.push(`"categoryId" = $${index}`);
+          values.push(filters.categoryId);
+          index++;
         }
         
         if (filters.search) {
-          query = query.where(sql.raw(`title ILIKE '%${filters.search}%'`));
+          conditions.push(`title ILIKE $${index}`);
+          values.push(`%${filters.search}%`);
+          index++;
         }
         
         if (filters.isPremium !== undefined) {
-          query = query.where(sql.raw(`"isPremium" = ${filters.isPremium}`));
+          conditions.push(`"isPremium" = $${index}`);
+          values.push(filters.isPremium);
+          index++;
+        }
+        
+        if (conditions.length > 0) {
+          whereClause = `WHERE ${conditions.join(' AND ')}`;
         }
       }
       
-      // Adicionar ordenação
-      query = query.orderBy(sql.raw(`"createdAt" DESC`));
-      
-      // Executar a consulta
-      const result = await db.execute(sql`
+      // Executar a consulta usando SQL bruto com db.query
+      const queryText = `
         SELECT 
           id, 
           "createdAt", 
           "updatedAt", 
-          designerid as "designerId", 
-          viewcount as "viewCount",
+          designerid, 
+          viewcount,
           width, 
           height, 
           "isPremium", 
@@ -1513,17 +1519,32 @@ export class DatabaseStorage implements IStorage {
           format, 
           "fileType", 
           "editUrl", 
-          aspectratio as "aspectRatio"
+          aspectratio
         FROM arts
+        ${whereClause}
         ORDER BY "createdAt" DESC
-        LIMIT ${limit} OFFSET ${offset}
-      `);
+        LIMIT $${index} OFFSET $${index+1}
+      `;
+      
+      values.push(limit, offset);
+      
+      const result = await db.execute(sql.raw(queryText), ...values);
       
       // Consulta para contar o total
-      const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM arts`);
+      const countQuery = `SELECT COUNT(*) as count FROM arts ${whereClause}`;
+      const countValues = values.slice(0, -2); // Remover limit e offset
+      const countResult = await db.execute(sql.raw(countQuery), ...countValues);
+      
+      // Mapear os resultados para o tipo Art com nomes em camelCase
+      const arts = result.rows.map(row => ({
+        ...row,
+        designerId: row.designerid,
+        viewCount: row.viewcount,
+        aspectRatio: row.aspectratio,
+      }));
       
       return {
-        arts: result.rows as Art[],
+        arts: arts as Art[],
         totalCount: parseInt(countResult.rows[0].count as string)
       };
     } catch (error) {
@@ -1540,8 +1561,8 @@ export class DatabaseStorage implements IStorage {
           id, 
           "createdAt", 
           "updatedAt", 
-          designerid as "designerId", 
-          viewcount as "viewCount",
+          designerid, 
+          viewcount,
           width, 
           height, 
           "isPremium", 
@@ -1552,7 +1573,7 @@ export class DatabaseStorage implements IStorage {
           format, 
           "fileType", 
           "editUrl", 
-          aspectratio as "aspectRatio"
+          aspectratio
         FROM arts 
         WHERE id = ${id}
       `);
@@ -1561,7 +1582,14 @@ export class DatabaseStorage implements IStorage {
         return undefined;
       }
       
-      return result.rows[0] as Art;
+      // Mapear colunas minúsculas para camelCase
+      const art = result.rows[0];
+      return {
+        ...art,
+        designerId: art.designerid,
+        viewCount: art.viewcount,
+        aspectRatio: art.aspectratio
+      } as Art;
     } catch (error) {
       console.error("Erro em getArtById:", error);
       throw error;
@@ -1735,6 +1763,7 @@ export class DatabaseStorage implements IStorage {
     // Atualizar o contador de visualizações da arte
     const art = await this.getArtById(view.artId);
     if (art) {
+      // art já está mapeado para ter a propriedade viewCount em getArtById
       const viewCount = (art.viewCount || 0) + 1;
       await this.updateArtViewCount(art.id, viewCount);
     }
@@ -1768,8 +1797,8 @@ export class DatabaseStorage implements IStorage {
           id, 
           "createdAt", 
           "updatedAt", 
-          designerid as "designerId", 
-          viewcount as "viewCount",
+          designerid, 
+          viewcount,
           width, 
           height, 
           "isPremium", 
@@ -1780,14 +1809,22 @@ export class DatabaseStorage implements IStorage {
           format, 
           "fileType", 
           "editUrl", 
-          aspectratio as "aspectRatio"
+          aspectratio
         FROM arts 
         WHERE designerid = ${designerId}
         ORDER BY "createdAt" DESC
         LIMIT ${limit}
       `);
       
-      return result.rows as Art[];
+      // Mapear as colunas para o formato esperado
+      const arts = result.rows.map(art => ({
+        ...art,
+        designerId: art.designerid,
+        viewCount: art.viewcount,
+        aspectRatio: art.aspectratio
+      }));
+      
+      return arts as Art[];
     } catch (error) {
       console.error("Erro em getArtsByDesignerId:", error);
       throw error;
