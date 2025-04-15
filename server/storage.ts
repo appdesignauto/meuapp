@@ -1000,13 +1000,29 @@ export class DatabaseStorage implements IStorage {
   private users = schema.users;
   // User methods
   async getUser(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+    try {
+      const result = await db.execute(sql`
+        SELECT * FROM users WHERE id = ${id}
+      `);
+      
+      return result.rows[0] as User;
+    } catch (error) {
+      console.error("Erro em getUser:", error);
+      return undefined;
+    }
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user;
+    try {
+      const result = await db.execute(sql`
+        SELECT * FROM users WHERE username = ${username}
+      `);
+      
+      return result.rows[0] as User;
+    } catch (error) {
+      console.error("Erro em getUserByUsername:", error);
+      return undefined;
+    }
   }
   
   async getUserByEmail(email: string): Promise<User | undefined> {
