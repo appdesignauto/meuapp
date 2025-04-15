@@ -34,19 +34,18 @@ const FeaturedCategories = () => {
 
 
   return (
-    <section className="py-16 bg-blue-50/30">
+    <section className="py-8 bg-blue-50/30">
       <div className="container mx-auto px-4">
-        <div className="flex flex-wrap items-center justify-between mb-8">
+        <div className="flex flex-wrap items-center justify-between mb-5">
           <div>
-            <h2 className="text-2xl md:text-3xl font-bold text-blue-700 mb-2">Escolha sua categoria</h2>
-            <p className="text-neutral-600 max-w-2xl">Encontre os melhores designs para impulsionar suas vendas</p>
+            <h2 className="text-xl md:text-2xl font-bold text-blue-700">Categorias</h2>
           </div>
           <Link 
             href="/categories" 
-            className="text-blue-600 hover:text-blue-500 font-medium text-sm flex items-center border border-blue-200 rounded-full px-4 py-2 transition-all hover:bg-blue-50"
+            className="text-blue-600 hover:text-blue-500 font-medium text-xs flex items-center border border-blue-200 rounded-full px-3 py-1 transition-all hover:bg-blue-50"
           >
-            Ver todas as categorias
-            <ArrowRight className="ml-1 h-4 w-4" />
+            Ver todas
+            <ArrowRight className="ml-1 h-3 w-3" />
           </Link>
         </div>
         
@@ -73,8 +72,8 @@ const FeaturedCategories = () => {
           
           {/* Carrossel de categorias */}
           {isLoading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {[...Array(4)].map((_, index) => (
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
+              {[...Array(6)].map((_, index) => (
                 <div key={index} className="rounded-md overflow-hidden shadow-sm animate-pulse">
                   <div className="aspect-square bg-neutral-200">
                     <div className="grid grid-cols-2 h-full">
@@ -84,9 +83,8 @@ const FeaturedCategories = () => {
                       <div className="bg-neutral-100 border-[0.5px] border-white"></div>
                     </div>
                   </div>
-                  <div className="p-3 flex flex-col relative">
-                    <div className="absolute top-0 right-3 transform -translate-y-1/2 h-5 w-5 rounded-full bg-blue-200"></div>
-                    <div className="h-4 bg-neutral-200 rounded w-1/2" />
+                  <div className="p-2 flex justify-center">
+                    <div className="h-3 bg-neutral-200 rounded w-2/3" />
                   </div>
                 </div>
               ))}
@@ -94,20 +92,20 @@ const FeaturedCategories = () => {
           ) : (
             <div 
               ref={scrollContainerRef}
-              className="flex overflow-x-auto pb-8 hide-scrollbar snap-x snap-mandatory pl-1 -mx-0 md:-mx-4"
+              className="flex overflow-x-auto pb-5 hide-scrollbar snap-x snap-mandatory pl-1 -mx-0 md:-mx-4"
               style={{ 
                 scrollbarWidth: 'none', 
                 msOverflowStyle: 'none',
-                paddingRight: '15%' // Espaço extra para mostrar parte da próxima categoria 
+                paddingRight: '5%' // Reduzindo o espaço para mostrar mais categorias
               }}
             >
               {categories?.map((category, index) => (
                 <div 
                   key={category.id} 
-                  className="flex-none w-[65%] sm:w-[50%] md:w-[40%] lg:w-[35%] pr-4 sm:pr-6 snap-start"
+                  className="flex-none w-[47%] sm:w-[32%] md:w-[23%] lg:w-[18%] pr-2 snap-start"
                   style={{ 
                     scrollSnapAlign: 'start',
-                    marginRight: '10px' // Espaço entre as categorias
+                    marginRight: '8px' // Espaço entre as categorias
                   }}
                 >
                   <Link href={`/?category=${category.id}`}>
@@ -155,11 +153,8 @@ const FeaturedCategories = () => {
                         </div>
                         <div className="absolute inset-0 bg-gradient-to-t from-blue-600/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                       </div>
-                      <div className="p-3 bg-white relative">
-                        <div className="absolute top-0 right-3 transform -translate-y-1/2 bg-blue-500 text-white h-6 w-6 rounded-full flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-                          <ChevronRight className="h-4 w-4" />
-                        </div>
-                        <h3 className="font-medium text-sm text-neutral-800 group-hover:text-blue-600 transition-colors">
+                      <div className="p-2 bg-white relative">
+                        <h3 className="font-medium text-xs text-center text-neutral-800 group-hover:text-blue-600 transition-colors">
                           {category.name}
                         </h3>
                       </div>
