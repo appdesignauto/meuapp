@@ -5,6 +5,7 @@ import { insertUserSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth } from "./auth";
+import imageUploadRoutes from "./routes/image-upload";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication middleware and routes
@@ -282,6 +283,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Erro ao excluir categoria" });
     }
   });
+
+  // Registrar rotas de upload de imagem
+  app.use(imageUploadRoutes);
 
   const httpServer = createServer(app);
   return httpServer;
