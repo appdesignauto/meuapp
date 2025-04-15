@@ -1468,52 +1468,76 @@ export class DatabaseStorage implements IStorage {
   // Art methods
   async getArts(page: number, limit: number, filters?: ArtFilters): Promise<{ arts: Art[], totalCount: number }> {
     try {
-      // Vamos usar SQL direto via template string para evitar problemas com nomes de colunas
+      // Usar SQL bruto para evitar problemas com nomes de colunas
+      let whereClause = "";
+      const params: any[] = [];
+      let paramIndex = 1;
+      
+      if (filters) {
+        const conditions = [];
+        
+        if (filters.categoryId) {
+          conditions.push(`"categoryId" = $${paramIndex++}`);
+          params.push(filters.categoryId);
+        }
+        
+        if (filters.search) {
+          conditions.push(`title ILIKE $${paramIndex++}`);
+          params.push(`%${filters.search}%`);
+        }
+        
+        if (filters.isPremium !== undefined) {
+          conditions.push(`"isPremium" = $${paramIndex++}`);
+          params.push(filters.isPremium);
+        }
+        
+        if (conditions.length > 0) {
+          whereClause = "WHERE " + conditions.join(" AND ");
+        }
+      }
+      
+      // Consulta para obter as artes
       const offset = (page - 1) * limit;
+      const query = `
+        SELECT 
+          id, 
+          "createdAt", 
+          "updatedAt", 
+          designerid as "designerId", 
+          viewcount as "viewCount",
+          width, 
+          height, 
+          "isPremium", 
+          "categoryId", 
+          "collectionId", 
+          title, 
+          "imageUrl", 
+          format, 
+          "fileType", 
+          "editUrl", 
+          aspectratio as "aspectRatio"
+        FROM arts
+        ${whereClause}
+        ORDER BY "createdAt" DESC
+        LIMIT $${paramIndex++} OFFSET $${paramIndex++}
+      `;
       
-      let query = db.select().from(arts);
+      params.push(limit, offset);
       
-      if (filters) {
-        if (filters.categoryId) {
-          query = query.where(eq(arts.categoryId, filters.categoryId));
-        }
-        
-        if (filters.search) {
-          query = query.where(like(arts.title, `%${filters.search}%`));
-        }
-        
-        if (filters.isPremium !== undefined) {
-          query = query.where(eq(arts.isPremium, filters.isPremium));
-        }
-      }
+      const result = await db.execute(sql`${query}`, ...params);
       
-      const artsResult = await query
-        .orderBy(desc(arts.createdAt))
-        .limit(limit)
-        .offset(offset);
+      // Consulta para contar o total
+      const countQuery = `
+        SELECT COUNT(*) as count FROM arts
+        ${whereClause}
+      `;
       
-      // Contar o total usando a mesma consulta base
-      let countQuery = db.select({ count: sql<number>`count(*)` }).from(arts);
-      
-      if (filters) {
-        if (filters.categoryId) {
-          countQuery = countQuery.where(eq(arts.categoryId, filters.categoryId));
-        }
-        
-        if (filters.search) {
-          countQuery = countQuery.where(like(arts.title, `%${filters.search}%`));
-        }
-        
-        if (filters.isPremium !== undefined) {
-          countQuery = countQuery.where(eq(arts.isPremium, filters.isPremium));
-        }
-      }
-      
-      const [{ count }] = await countQuery;
+      const countParams = params.slice(0, params.length - 2);
+      const countResult = await db.execute(sql`${countQuery}`, ...countParams);
       
       return {
-        arts: artsResult,
-        totalCount: count
+        arts: result.rows as Art[],
+        totalCount: parseInt(countResult.rows[0].count as string)
       };
     } catch (error) {
       console.error("Erro em getArts:", error);
@@ -1525,7 +1549,25 @@ export class DatabaseStorage implements IStorage {
     try {
       // Usar SQL bruto para evitar problemas com nomes de colunas
       const result = await db.execute(sql`
-        SELECT * FROM arts WHERE id = ${id}
+        SELECT 
+          id, 
+          "createdAt", 
+          "updatedAt", 
+          designerid as "designerId", 
+          viewcount as "viewCount",
+          width, 
+          height, 
+          "isPremium", 
+          "categoryId", 
+          "collectionId", 
+          title, 
+          "imageUrl", 
+          format, 
+          "fileType", 
+          "editUrl", 
+          aspectratio as "aspectRatio"
+        FROM arts 
+        WHERE id = ${id}
       `);
       
       if (result.rows.length === 0) {
@@ -1578,8 +1620,48 @@ export class DatabaseStorage implements IStorage {
   }
   
   async createArt(art: InsertArt): Promise<Art> {
-    const [newArt] = await db.insert(arts).values(art).returning();
-    return newArt;
+    try {
+      // Mapeando os nomes das propriedades para os nomes corretos das colunas
+      const artData: any = { ...art };
+      
+      // Se tiver designerId, precisamos renomear para designerid
+      if (artData.designerId !== undefined) {
+        artData.designerid = artData.designerId;
+        delete artData.designerId;
+      }
+      
+      // Se tiver viewCount, precisamos renomear para viewcount
+      if (artData.viewCount !== undefined) {
+        artData.viewcount = artData.viewCount;
+        delete artData.viewCount;
+      }
+      
+      // Se tiver aspectRatio, precisamos renomear para aspectratio
+      if (artData.aspectRatio !== undefined) {
+        artData.aspectratio = artData.aspectRatio;
+        delete artData.aspectRatio;
+      }
+      
+      const [newArt] = await db.insert(arts).values(artData).returning();
+      
+      // Garantir que o objeto retornado tenha as propriedades em camelCase
+      const result = {
+        ...newArt,
+        designerId: newArt.designerid,
+        viewCount: newArt.viewcount,
+        aspectRatio: newArt.aspectratio
+      };
+      
+      // Remover as propriedades em lowercase
+      delete result.designerid;
+      delete result.viewcount;
+      delete result.aspectratio;
+      
+      return result as Art;
+    } catch (error) {
+      console.error("Erro ao criar arte:", error);
+      throw error;
+    }
   }
   
   async updateArt(id: number, art: Partial<InsertArt>): Promise<Art | undefined> {
@@ -1675,14 +1757,13 @@ export class DatabaseStorage implements IStorage {
   
   async updateArtViewCount(artId: number, viewCount: number): Promise<boolean> {
     try {
-      // Usar a API Query Builder em vez de SQL bruto
+      // Usar SQL bruto com nomes corretos de colunas
       const now = new Date();
-      const result = await db.update(arts)
-        .set({ 
-          viewCount: viewCount,
-          updatedAt: now
-        })
-        .where(eq(arts.id, artId));
+      const result = await db.execute(sql`
+        UPDATE arts 
+        SET viewcount = ${viewCount}, "updatedAt" = ${now}
+        WHERE id = ${artId}
+      `);
       
       return result.rowCount > 0;
     } catch (error) {
@@ -1694,12 +1775,32 @@ export class DatabaseStorage implements IStorage {
   // Designer methods
   async getArtsByDesignerId(designerId: number, limit: number = 8): Promise<Art[]> {
     try {
-      // Usamos a API Query Builder do Drizzle que lida corretamente com os nomes das colunas
-      return db.select()
-        .from(arts)
-        .where(eq(arts.designerId, designerId))
-        .orderBy(desc(arts.createdAt))
-        .limit(limit);
+      // Usar SQL bruto para evitar problemas com nomes de colunas
+      const result = await db.execute(sql`
+        SELECT 
+          id, 
+          "createdAt", 
+          "updatedAt", 
+          designerid as "designerId", 
+          viewcount as "viewCount",
+          width, 
+          height, 
+          "isPremium", 
+          "categoryId", 
+          "collectionId", 
+          title, 
+          "imageUrl", 
+          format, 
+          "fileType", 
+          "editUrl", 
+          aspectratio as "aspectRatio"
+        FROM arts 
+        WHERE designerid = ${designerId}
+        ORDER BY "createdAt" DESC
+        LIMIT ${limit}
+      `);
+      
+      return result.rows as Art[];
     } catch (error) {
       console.error("Erro em getArtsByDesignerId:", error);
       throw error;
