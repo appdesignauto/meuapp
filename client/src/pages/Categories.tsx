@@ -1,140 +1,117 @@
-import { useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
-import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Category } from '@/types';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { ArrowLeft, Search } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Categories = () => {
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const isMobile = useIsMobile();
   const { data: categories, isLoading } = useQuery<Category[]>({
     queryKey: ['/api/categories'],
   });
 
-  // Função para rolar o carrossel para a esquerda
-  const scrollLeft = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: -280, behavior: 'smooth' });
-    }
-  };
-
-  // Função para rolar o carrossel para a direita
-  const scrollRight = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: 280, behavior: 'smooth' });
-    }
-  };
-
-  // Função para gerar uma URL de imagem para categorias
-  const getCategoryImageUrl = (category: Category, index: number) => {
-    // Na implementação real, você teria imagens específicas da categoria
-    // Por enquanto, usamos um placeholder ou uma imagem de carro aleatória
-    const placeholderImages = [
-      "https://images.unsplash.com/photo-1549399542-7e8f2e928464?w=500&q=80", 
-      "https://images.unsplash.com/photo-1592840062661-a5a7f2bc6b56?w=500&q=80",
-      "https://images.unsplash.com/photo-1570733577524-3a047079e80d?w=500&q=80",
-      "https://images.unsplash.com/photo-1563720223185-11003d516935?w=500&q=80",
-      "https://images.unsplash.com/photo-1567818735868-e71b99932e29?w=500&q=80",
-      "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=500&q=80",
-      "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=500&q=80",
-      "https://images.unsplash.com/photo-1534093607318-f025413f49cb?w=500&q=80"
-    ];
+  // Função para obter imagens relacionadas à categoria específica (usando imagens locais)
+  const getCategoryImagePaths = (category: Category): string[] => {
+    const imagePaths: { [key: string]: string[] } = {
+      'vendas': ['/assets/VENDAS 04.png', '/assets/VENDAS 10.png', '/assets/VENDAS 17.png', '/assets/VENDAS 32.png'],
+      'lavagem': ['/assets/LAVAGEM 01.png', '/assets/LAVAGEM 03.png', '/assets/LAVAGEM 04.png', '/assets/LAVAGEM 10.png'],
+      'mecanica': ['/assets/MECÂNICA 08.png', '/assets/MECÂNICA MOTO 01.png', '/assets/MECÂNICA 08.png', '/assets/MECÂNICA MOTO 01.png'],
+      'locacao': ['/assets/LOCAÇÃO 06.png', '/assets/LOCAÇÃO 06.png', '/assets/LOCAÇÃO 06.png', '/assets/LOCAÇÃO 06.png'],
+      'seminovos': ['/assets/VENDAS 36.png', '/assets/VENDAS 10.png', '/assets/VENDAS 17.png', '/assets/VENDAS 32.png'],
+      'promocoes': ['/assets/VENDAS 54.png', '/assets/VENDAS 57.png', '/assets/VENDAS 10.png', '/assets/VENDAS 17.png'],
+      'lancamentos': ['/assets/VENDAS 32.png', '/assets/VENDAS 17.png', '/assets/VENDAS 10.png', '/assets/VENDAS 04.png'],
+    };
     
-    return placeholderImages[index % placeholderImages.length];
+    // Se encontrar imagens para a categoria, use-as; caso contrário, use uma lista padrão
+    return imagePaths[category.slug] || ['/assets/VENDAS 04.png', '/assets/VENDAS 10.png', '/assets/VENDAS 17.png', '/assets/VENDAS 32.png'];
   };
 
   return (
-    <div className="py-12">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-10">
-          <h1 className="text-3xl md:text-4xl font-bold text-neutral-800 mb-4">
-            Escolha sua categoria
-          </h1>
-          <p className="text-neutral-600 max-w-2xl mx-auto">
-            Encontre as melhores artes e modelos para seu negócio automotivo. 
-            Todas as artes são editáveis em Canva ou Google Drive.
-          </p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200 py-3 sticky top-0 z-10 shadow-sm">
+        <div className="container mx-auto px-4 flex items-center justify-between">
+          <Link href="/">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="text-blue-600"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Voltar
+            </Button>
+          </Link>
         </div>
-
+      </header>
+      
+      {/* Área de busca centralizada */}
+      <div className="container mx-auto px-4 py-8 text-center">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          CATEGORIAS
+        </h1>
+        <p className="text-neutral-600 mb-8 max-w-2xl mx-auto">
+          Escolha uma categoria para encontrar centenas de designs automotivos para seu negócio
+        </p>
+        
+        <div className="max-w-xl mx-auto mb-6">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Buscar categoria..."
+              className="w-full py-6 pl-14 pr-12 text-center rounded-full border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+            />
+            <div className="absolute left-5 top-1/2 transform -translate-y-1/2 text-neutral-400">
+              <Search className="h-5 w-5" />
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Conteúdo principal - Grid de categorias */}
+      <div className="container mx-auto px-4 pb-16">
         {isLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {[...Array(8)].map((_, index) => (
-              <div key={index} className="bg-neutral-100 rounded-lg animate-pulse">
-                <div className="aspect-square rounded-lg overflow-hidden bg-neutral-200" />
-                <div className="p-3 flex flex-col items-center">
-                  <div className="h-4 bg-neutral-200 rounded w-2/3 mb-2" />
+              <div key={index} className="bg-white rounded-xl overflow-hidden shadow-sm animate-pulse">
+                <Skeleton className="h-64 w-full" />
+                <div className="p-4">
+                  <Skeleton className="h-6 w-32 mx-auto" />
+                  <Skeleton className="h-4 w-20 mx-auto mt-2" />
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <>
-            <div className="relative mb-8">
-              {/* Botões de navegação do carrossel (apenas no desktop) */}
-              {!isMobile && !isLoading && categories && categories.length > 0 && (
-                <>
-                  <button 
-                    onClick={scrollLeft}
-                    className="absolute -left-4 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-md hover:bg-neutral-50 focus:outline-none"
-                    aria-label="Rolar para a esquerda"
-                  >
-                    <ChevronLeft className="h-5 w-5 text-neutral-700" />
-                  </button>
-                  <button 
-                    onClick={scrollRight}
-                    className="absolute -right-4 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-md hover:bg-neutral-50 focus:outline-none"
-                    aria-label="Rolar para a direita"
-                  >
-                    <ChevronRight className="h-5 w-5 text-neutral-700" />
-                  </button>
-                </>
-              )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {categories?.map((category) => {
+              const imagePaths = getCategoryImagePaths(category);
               
-              {/* Carrossel de categorias */}
-              <div 
-                ref={scrollContainerRef}
-                className="flex overflow-x-auto pb-4 hide-scrollbar snap-x snap-mandatory pl-4 -mx-4"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-              >
-                {categories?.map((category, index) => (
-                  <div key={category.id} className="flex-none w-[75%] sm:w-[45%] md:w-[32%] lg:w-[24%] pr-2 sm:pr-4 snap-start">
-                    <Link href={`/?category=${category.id}`}>
-                      <div className="group rounded-lg overflow-hidden cursor-pointer transition-all hover:shadow-md h-full">
-                        <div className="aspect-square relative overflow-hidden">
-                          <div className="grid grid-cols-2 h-full">
-                            {/* Simulando múltiplas imagens em um grid para cada categoria */}
-                            {[...Array(4)].map((_, imgIndex) => (
-                              <div key={imgIndex} className="overflow-hidden">
-                                <img 
-                                  src={getCategoryImageUrl(category, index + imgIndex)} 
-                                  alt="" 
-                                  className="object-cover w-full h-full transform transition-transform group-hover:scale-105"
-                                  loading="lazy"
-                                />
-                              </div>
-                            ))}
+              return (
+                <Link key={category.id} href={`/categories/${category.slug}`}>
+                  <div className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:-translate-y-1">
+                    <div className="aspect-square">
+                      <div className="grid grid-cols-2 h-full">
+                        {imagePaths.map((path, i) => (
+                          <div key={i} className="overflow-hidden border border-white">
+                            <img 
+                              src={path} 
+                              alt="" 
+                              className="object-cover w-full h-full"
+                              loading="lazy"
+                            />
                           </div>
-                        </div>
-                        <div className="p-3 bg-white text-center">
-                          <h3 className="font-medium text-neutral-800">
-                            Artes de {category.name}
-                          </h3>
-                        </div>
+                        ))}
                       </div>
-                    </Link>
+                    </div>
+                    <div className="p-4 text-center">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-1">{category.name}</h3>
+                      <p className="text-sm text-blue-600">Ver designs</p>
+                    </div>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-8 text-center">
-              <Link href="/" className="text-primary hover:text-primary/80 font-medium inline-flex items-center">
-                <span>Ver todas as artes</span>
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </div>
-          </>
+                </Link>
+              );
+            })}
+          </div>
         )}
       </div>
     </div>
