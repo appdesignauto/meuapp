@@ -226,6 +226,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin API - Create Category
+  app.post("/api/admin/categories", isAdmin, async (req, res) => {
+    try {
+      const newCategory = await storage.createCategory(req.body);
+      res.status(201).json(newCategory);
+    } catch (error) {
+      console.error("Erro ao criar categoria:", error);
+      if (error instanceof ZodError) {
+        return res.status(400).json({ 
+          message: "Dados inválidos", 
+          errors: fromZodError(error).message 
+        });
+      }
+      res.status(500).json({ message: "Erro ao criar categoria" });
+    }
+  });
+
+  // Admin API - Update Category
+  app.put("/api/admin/categories/:id", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updatedCategory = await storage.updateCategory(id, req.body);
+      
+      if (!updatedCategory) {
+        return res.status(404).json({ message: "Categoria não encontrada" });
+      }
+      
+      res.json(updatedCategory);
+    } catch (error) {
+      console.error("Erro ao atualizar categoria:", error);
+      if (error instanceof ZodError) {
+        return res.status(400).json({ 
+          message: "Dados inválidos", 
+          errors: fromZodError(error).message 
+        });
+      }
+      res.status(500).json({ message: "Erro ao atualizar categoria" });
+    }
+  });
+
+  // Admin API - Delete Category
+  app.delete("/api/admin/categories/:id", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteCategory(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Categoria não encontrada" });
+      }
+      
+      res.status(204).send(); // No Content
+    } catch (error) {
+      console.error("Erro ao excluir categoria:", error);
+      res.status(500).json({ message: "Erro ao excluir categoria" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

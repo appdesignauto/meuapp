@@ -70,6 +70,8 @@ export interface IStorage {
   getCategories(): Promise<Category[]>;
   getCategoryById(id: number): Promise<Category | undefined>;
   createCategory(category: InsertCategory): Promise<Category>;
+  updateCategory(id: number, category: Partial<InsertCategory>): Promise<Category | undefined>;
+  deleteCategory(id: number): Promise<boolean>;
   
   // Format methods
   getFormats(): Promise<Format[]>;
@@ -1076,6 +1078,27 @@ export class DatabaseStorage implements IStorage {
   async createCategory(category: InsertCategory): Promise<Category> {
     const [newCategory] = await db.insert(categories).values(category).returning();
     return newCategory;
+  }
+  
+  async updateCategory(id: number, categoryData: Partial<InsertCategory>): Promise<Category | undefined> {
+    const now = new Date();
+    const [updatedCategory] = await db
+      .update(categories)
+      .set({ 
+        ...categoryData,
+        updatedAt: now 
+      })
+      .where(eq(categories.id, id))
+      .returning();
+    return updatedCategory;
+  }
+  
+  async deleteCategory(id: number): Promise<boolean> {
+    const result = await db
+      .delete(categories)
+      .where(eq(categories.id, id));
+      
+    return !!result.rowCount;
   }
   
   // Format methods
