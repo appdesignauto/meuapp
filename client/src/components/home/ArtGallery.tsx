@@ -59,23 +59,23 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId }: ArtGalleryProps) => {
         </div>
         
         {isLoading ? (
-          <div className="columns-2 sm:columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4 space-y-3 md:space-y-4">
+          <div className="columns-2 xs:columns-2 sm:columns-2 md:columns-3 lg:columns-4 gap-2 xs:gap-3 md:gap-4 space-y-0">
             {[...Array(8)].map((_, index) => (
               <div 
                 key={index} 
-                className="block overflow-hidden animate-pulse break-inside-avoid mb-4 rounded-xl shadow-sm"
+                className="block overflow-hidden animate-pulse break-inside-avoid mb-3 xs:mb-4 rounded-xl shadow-sm"
               >
-                <div className={`${index % 3 === 0 ? 'aspect-1' : (index % 3 === 1 ? 'aspect-[4/5]' : 'aspect-[9/16]')} bg-neutral-200`} />
+                <div className={`${index % 3 === 0 ? 'aspect-1' : (index % 3 === 1 ? 'aspect-[4/5]' : 'aspect-[9/16]')} bg-neutral-200 rounded-xl`} />
               </div>
             ))}
           </div>
         ) : (
           <>
-            <div className="columns-2 sm:columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4 space-y-0">
+            <div className="columns-2 xs:columns-2 sm:columns-2 md:columns-3 lg:columns-4 gap-2 xs:gap-3 md:gap-4 space-y-0">
               {arts.map((art) => (
                 <div 
                   key={art.id} 
-                  className="break-inside-avoid mb-4 transform hover:-translate-y-1 transition-transform duration-300"
+                  className="break-inside-avoid mb-3 xs:mb-4 transform hover:-translate-y-1 transition-transform duration-300"
                   style={{ 
                     display: 'inline-block',
                     width: '100%'
