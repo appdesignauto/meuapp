@@ -153,8 +153,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Incrementar contador de visualizações
+      try {
+        // Registrar a visualização
+        const viewData = {
+          artId: id,
+          userId: req.user ? (req.user as any).id : null,
+          sourceIp: req.ip
+        };
+        
+        await storage.recordView(viewData);
+        
+        // Atualizar o contador de visualizações
+        if (art.viewCount !== undefined) {
+          art.viewCount += 1;
+          await storage.updateArtViewCount(id, art.viewCount);
+        }
+      } catch (viewError) {
+        console.error("Erro ao registrar visualização:", viewError);
+        // Não interrompe o fluxo principal se o contador falhar
+      }
+      
+      // Buscar informações do designer se existir
+      if (art.designerId) {
+        try {
+          const designer = await storage.getUserById(art.designerId);
+          if (designer) {
+            // Remover a senha e outras informações sensíveis
+            const { password, ...safeDesigner } = designer;
+            art.designer = safeDesigner;
+          }
+        } catch (designerError) {
+          console.error("Erro ao buscar informações do designer:", designerError);
+          // Se falhar ao buscar o designer, ainda retornamos a arte
+        }
+      }
+      
       res.json(art);
     } catch (error) {
+      console.error("Erro ao buscar arte:", error);
       res.status(500).json({ message: "Erro ao buscar arte" });
     }
   });
