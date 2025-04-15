@@ -62,54 +62,153 @@ async function updateImagesInDatabase() {
     console.log('Conectado ao banco de dados');
 
     // Consulta todas as artes do banco de dados
-    const { rows: arts } = await pool.query('SELECT id, title, "imageUrl", "thumbnailUrl" FROM arts');
+    const { rows: arts } = await pool.query('SELECT id, title, "imageUrl" FROM arts');
     console.log(`Encontradas ${arts.length} artes no banco de dados`);
 
-    // Cria mapeamento de nome para URL
-    const nameToUrlMap = {};
+    // Cria mapeamento organizado por categorias
+    const categoryMap = {
+      lavagem: [],
+      mecanica: [],
+      locacao: [],
+      vendas: []
+    };
+    
+    // Organiza as imagens por categoria
     uploadResults.forEach(result => {
-      // Remove a extensão para facilitar a correspondência parcial
-      const baseName = result.originalFile.split('.')[0];
-      nameToUrlMap[baseName.toLowerCase()] = {
-        imageUrl: result.imageUrl,
-        thumbnailUrl: result.thumbnailUrl
-      };
+      const filename = result.originalFile.toLowerCase();
+      
+      if (filename.includes('lavagem')) {
+        categoryMap.lavagem.push({
+          name: result.originalFile,
+          imageUrl: result.imageUrl,
+          thumbnailUrl: result.thumbnailUrl,
+          category: 'lavagem'
+        });
+      } else if (filename.includes('mecânica') || filename.includes('mecanica')) {
+        categoryMap.mecanica.push({
+          name: result.originalFile,
+          imageUrl: result.imageUrl,
+          thumbnailUrl: result.thumbnailUrl,
+          category: 'mecanica'
+        });
+      } else if (filename.includes('locação') || filename.includes('locacao')) {
+        categoryMap.locacao.push({
+          name: result.originalFile,
+          imageUrl: result.imageUrl,
+          thumbnailUrl: result.thumbnailUrl,
+          category: 'locacao'
+        });
+      } else if (filename.includes('vendas') || filename.includes('venda')) {
+        categoryMap.vendas.push({
+          name: result.originalFile,
+          imageUrl: result.imageUrl,
+          thumbnailUrl: result.thumbnailUrl,
+          category: 'vendas'
+        });
+      }
     });
+    
+    console.log('Imagens organizadas por categoria:');
+    for (const [category, images] of Object.entries(categoryMap)) {
+      console.log(`  ${category}: ${images.length} imagens`);
+    }
 
     // Conta atualizações
     let updateCount = 0;
     let noMatchCount = 0;
+    let manualMatchCount = 0;
+
+    // Atribuições manuais para casos específicos
+    const manualMatches = [
+      { artId: 1, imageFileName: 'LAVAGEM 01.png' },
+      { artId: 2, imageFileName: 'LAVAGEM 03.png' },
+      { artId: 3, imageFileName: 'LAVAGEM 04.png' },
+      { artId: 4, imageFileName: 'LAVAGEM 10.png' },
+      { artId: 5, imageFileName: 'MECÂNICA 08.png' },
+      { artId: 6, imageFileName: 'MECÂNICA MOTO 01.png' },
+      { artId: 7, imageFileName: 'LOCAÇÃO 06.png' },
+      { artId: 8, imageFileName: 'VENDAS 32.png' },
+      { artId: 9, imageFileName: 'VENDAS 04.png' },
+      { artId: 10, imageFileName: 'VENDAS 10.png' },
+      { artId: 11, imageFileName: 'VENDAS 36.png' },
+      { artId: 12, imageFileName: 'VENDAS 57.png' }
+    ];
 
     // Percorre cada arte e tenta encontrar uma correspondência
     for (const art of arts) {
       let matched = false;
       
-      // Tenta encontrar uma correspondência pelo título da arte
-      if (art.title) {
-        const artTitle = art.title.toLowerCase();
-        
-        for (const [baseName, urls] of Object.entries(nameToUrlMap)) {
-          // Verifica se o nome da imagem está contido no título da arte ou vice-versa
-          if (artTitle.includes(baseName) || baseName.includes(artTitle)) {
-            console.log(`Correspondência encontrada:`);
-            console.log(`  Arte ID ${art.id}: "${art.title}"`);
-            console.log(`  Imagem: "${baseName}"`);
-            console.log(`  URL Atual: ${art.imageUrl}`);
-            console.log(`  Novo URL: ${urls.imageUrl}`);
-            console.log('---');
-            
-            // Atualiza os URLs no banco de dados
-            if (!DRY_RUN) {
-              await pool.query(
-                'UPDATE arts SET imageUrl = $1, thumbnailUrl = $2 WHERE id = $3',
-                [urls.imageUrl, urls.thumbnailUrl, art.id]
-              );
-            }
-            
-            updateCount++;
-            matched = true;
-            break;
+      // Primeiro tenta com as atribuições manuais
+      const manualMatch = manualMatches.find(match => match.artId === art.id);
+      if (manualMatch) {
+        const originalFile = manualMatch.imageFileName;
+        const matchedImage = uploadResults.find(result => 
+          result.originalFile.toLowerCase() === originalFile.toLowerCase());
+          
+        if (matchedImage) {
+          console.log(`Correspondência manual encontrada:`);
+          console.log(`  Arte ID ${art.id}: "${art.title}"`);
+          console.log(`  Imagem: "${originalFile}"`);
+          console.log(`  URL Atual: ${art.imageUrl}`);
+          console.log(`  Novo URL: ${matchedImage.imageUrl}`);
+          console.log('---');
+          
+          // Atualiza os URLs no banco de dados
+          if (!DRY_RUN) {
+            await pool.query(
+              'UPDATE arts SET "imageUrl" = $1 WHERE id = $2',
+              [matchedImage.imageUrl, art.id]
+            );
           }
+          
+          updateCount++;
+          manualMatchCount++;
+          matched = true;
+          continue;
+        }
+      }
+      
+      // Se não encontrou correspondência manual, tenta por título
+      if (!matched && art.title) {
+        const artTitle = art.title.toLowerCase();
+        let category = '';
+        
+        // Determina a categoria pelo título
+        if (artTitle.includes('lavagem')) {
+          category = 'lavagem';
+        } else if (artTitle.includes('revisão') || artTitle.includes('manutenção') || artTitle.includes('mecanica')) {
+          category = 'mecanica';
+        } else if (artTitle.includes('locação') || artTitle.includes('plano')) {
+          category = 'locacao';
+        } else if (artTitle.includes('venda') || artTitle.includes('carro') || artTitle.includes('volkswagen') || artTitle.includes('bmw')) {
+          category = 'vendas';
+        }
+        
+        // Se identificou uma categoria, tenta encontrar imagem correspondente
+        if (category && categoryMap[category].length > 0) {
+          // Pega a primeira imagem da categoria
+          const matchedImage = categoryMap[category][0];
+          
+          console.log(`Correspondência por categoria encontrada:`);
+          console.log(`  Arte ID ${art.id}: "${art.title}" (categoria: ${category})`);
+          console.log(`  Imagem: "${matchedImage.name}"`);
+          console.log(`  URL Atual: ${art.imageUrl}`);
+          console.log(`  Novo URL: ${matchedImage.imageUrl}`);
+          console.log('---');
+          
+          // Atualiza os URLs no banco de dados
+          if (!DRY_RUN) {
+            await pool.query(
+              'UPDATE arts SET "imageUrl" = $1 WHERE id = $2',
+              [matchedImage.imageUrl, art.id]
+            );
+          }
+          
+          // Remove a imagem da lista para não reutilizá-la
+          categoryMap[category].shift();
+          
+          updateCount++;
+          matched = true;
         }
       }
       
