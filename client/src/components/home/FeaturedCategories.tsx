@@ -29,20 +29,59 @@ const FeaturedCategories = () => {
 
   // Função para gerar uma URL de imagem para categorias
   const getCategoryImageUrl = (category: Category, index: number) => {
-    // Na implementação real, você teria imagens específicas da categoria
-    // Por enquanto, usamos um placeholder ou uma imagem de carro aleatória
-    const placeholderImages = [
-      "https://images.unsplash.com/photo-1549399542-7e8f2e928464?w=500&q=80", 
-      "https://images.unsplash.com/photo-1592840062661-a5a7f2bc6b56?w=500&q=80",
-      "https://images.unsplash.com/photo-1570733577524-3a047079e80d?w=500&q=80",
-      "https://images.unsplash.com/photo-1563720223185-11003d516935?w=500&q=80",
-      "https://images.unsplash.com/photo-1567818735868-e71b99932e29?w=500&q=80",
-      "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=500&q=80",
-      "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=500&q=80",
-      "https://images.unsplash.com/photo-1534093607318-f025413f49cb?w=500&q=80"
-    ];
+    // Esta função retorna uma URL de imagem com base na categoria
+    // Usamos imagens reais para cada categoria, agrupadas em 4 para formar o grid
+    const categoryImages: Record<string, string[]> = {
+      'vendas': [
+        '/assets/VENDAS 04.png',
+        '/assets/VENDAS 10.png',
+        '/assets/VENDAS 17.png',
+        '/assets/VENDAS 32.png'
+      ],
+      'lavagem': [
+        '/assets/LAVAGEM 01.png',
+        '/assets/LAVAGEM 03.png',
+        '/assets/LAVAGEM 04.png',
+        '/assets/LAVAGEM 10.png'
+      ],
+      'mecanica': [
+        '/assets/MECÂNICA 08.png',
+        '/assets/MECÂNICA MOTO 01.png',
+        '/assets/MECÂNICA 08.png',
+        '/assets/MECÂNICA MOTO 01.png'
+      ],
+      'locacao': [
+        '/assets/LOCAÇÃO 06.png',
+        '/assets/LOCAÇÃO 06.png',
+        '/assets/LOCAÇÃO 06.png',
+        '/assets/LOCAÇÃO 06.png'
+      ],
+      'seminovos': [
+        '/assets/VENDAS 36.png',
+        '/assets/VENDAS 10.png',
+        '/assets/VENDAS 17.png',
+        '/assets/VENDAS 32.png'
+      ],
+      'promocoes': [
+        '/assets/VENDAS 54.png',
+        '/assets/VENDAS 57.png',
+        '/assets/VENDAS 10.png',
+        '/assets/VENDAS 17.png'
+      ],
+      'lancamentos': [
+        '/assets/VENDAS 32.png',
+        '/assets/VENDAS 17.png',
+        '/assets/VENDAS 10.png',
+        '/assets/VENDAS 04.png'
+      ]
+    };
     
-    return placeholderImages[index % placeholderImages.length];
+    // Pega a lista de imagens para a categoria ou usa uma lista padrão
+    const imagesList = categoryImages[category.slug] || categoryImages['vendas'];
+    
+    // Garante que o índice esteja entre 0-3 para as 4 imagens da grade
+    const imageIndex = index % 4;
+    return imagesList[imageIndex];
   };
 
   return (
@@ -107,11 +146,11 @@ const FeaturedCategories = () => {
                     <div className="group rounded-xl overflow-hidden cursor-pointer transition-all hover:shadow-lg h-full border border-neutral-200 bg-white">
                       <div className="aspect-square relative overflow-hidden">
                         <div className="grid grid-cols-2 h-full">
-                          {/* Simulando múltiplas imagens em um grid para cada categoria */}
+                          {/* Exibindo 4 imagens em um grid para cada categoria (2x2) */}
                           {[...Array(4)].map((_, imgIndex) => (
                             <div key={imgIndex} className="overflow-hidden border border-white">
                               <img 
-                                src={getCategoryImageUrl(category, index + imgIndex)} 
+                                src={getCategoryImageUrl(category, imgIndex)} 
                                 alt="" 
                                 className="object-cover w-full h-full transform transition-transform group-hover:scale-105"
                                 loading="lazy"
