@@ -86,7 +86,8 @@ const ArtForm = ({ isOpen, onClose, editingArt }: ArtFormProps) => {
       setUploading(true);
       const formData = new FormData();
       formData.append('image', file);
-      formData.append('r2Only', 'true'); // Força o uso do R2 sem fallback local
+      // Permitimos o fallback para facilitar o uso enquanto debug
+      // formData.append('r2Only', 'true');
       
       const response = await fetch('/api/admin/upload', {
         method: 'POST',

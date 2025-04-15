@@ -8,6 +8,9 @@ import path from "path";
 // Formatando o endpoint para garantir compatibilidade
 let endpoint = process.env.R2_ENDPOINT || "";
 
+// Remove espaços em branco extras
+endpoint = endpoint.trim();
+
 // Remove https:// ou http:// se estiver presente
 endpoint = endpoint.replace(/^https?:\/\//, '');
 
@@ -16,8 +19,18 @@ if (endpoint.includes('/')) {
   endpoint = endpoint.split('/')[0];
 }
 
+// Remove .r2.cloudflarestorage.com se presente no final, pois já adicionaremos
+endpoint = endpoint.replace(/\.r2\.cloudflarestorage\.com$/, '');
+
+// Certifica-se de que o endpoint inclui o sufixo do R2
+if (!endpoint.includes('.r2.cloudflarestorage.com')) {
+  endpoint = `${endpoint}.r2.cloudflarestorage.com`;
+}
+
 // Certifica-se de que o endpoint começa com https://
-endpoint = `https://${endpoint}`;
+if (!endpoint.startsWith('https://')) {
+  endpoint = `https://${endpoint}`;
+}
 
 console.log("Endpoint formatado:", endpoint);
 
@@ -74,6 +87,15 @@ const s3Client = new S3Client({
   },
   forcePathStyle: true, // Necessário para serviços S3-compatíveis como R2
 });
+
+// Log mais detalhado das credenciais para debug
+console.log("Configuração completa do cliente S3:");
+console.log(`- Region: auto`);
+console.log(`- Endpoint: ${endpoint}`);
+console.log(`- Access Key (primeiros 4 chars): ${accessKeyId.substring(0, 4)}`);
+console.log(`- Secret Key (primeiros 4 chars): ${secretAccessKey.substring(0, 4)}`);
+console.log(`- ForcePathStyle: true`);
+console.log(`- Bucket: ${process.env.R2_BUCKET_NAME || ""}`);
 
 const BUCKET_NAME = bucketName || "designauto-images";
 const PUBLIC_BUCKET_URL = process.env.R2_PUBLIC_URL || "";
