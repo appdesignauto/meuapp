@@ -105,12 +105,24 @@ async function uploadAllImages() {
       const result = await uploadImageToSupabase(filePath);
       
       if (result) {
-        results.push({
+        const resultItem = {
           originalFile: fileName,
           imageUrl: result.imageUrl,
           thumbnailUrl: result.thumbnailUrl,
           storageType: result.storageType
-        });
+        };
+        results.push(resultItem);
+        
+        // Salva o resultado após cada upload bem-sucedido
+        try {
+          const logFileName = `upload-result-${fileName.replace(/[^a-zA-Z0-9]/g, '_')}.json`;
+          fs.writeFileSync(
+            path.join(__dirname, logFileName),
+            JSON.stringify(resultItem, null, 2)
+          );
+        } catch (err) {
+          console.error(`Erro ao salvar log para ${fileName}: ${err.message}`);
+        }
       }
       
       // Pequena pausa entre uploads para não sobrecarregar

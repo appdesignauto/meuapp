@@ -1,0 +1,32 @@
+[
+  {
+    "originalFile": "LOGO DESIGNAUTO.png",
+    "imageUrl": "https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/73329b9a-7593-4909-8733-e60b082df015.webp",
+    "thumbnailUrl": "https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/thumbnails/43132288-9c1f-47cc-ab71-33af0beb7cfa.webp",
+    "storageType": "supabase"
+  },
+  {
+    "originalFile": "MECÂNICA 08.png",
+    "imageUrl": "https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/1e7ce2bf-3d93-4b8c-a487-8acada2671fd.webp",
+    "thumbnailUrl": "https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/thumbnails/7544bb8a-66ac-4934-bd3e-399bffdb0eed.webp",
+    "storageType": "supabase"
+  },
+  {
+    "originalFile": "MECÂNICA MOTO 01.png",
+    "imageUrl": "https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/9a897cd2-fb42-4a63-9f8a-182bd890ff5d.webp",
+    "thumbnailUrl": "https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/thumbnails/c6f160cc-9872-4f2b-baa8-651aa005ac1d.webp",
+    "storageType": "supabase"
+  },
+  {
+    "originalFile": "VENDAS 04.png",
+    "imageUrl": "https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/611ee378-3ecd-47ae-ab85-d71527defb85.webp",
+    "thumbnailUrl": "https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/thumbnails/9746e681-4f52-4c63-bcfa-56c44d9d4959.webp",
+    "storageType": "supabase"
+  },
+  {
+    "originalFile": "VENDAS 10.png",
+    "imageUrl": "https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/cbc0b14a-715f-4b10-9d86-5230de6a28d0.webp",
+    "thumbnailUrl": "https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/thumbnails/ba9ce288-8445-4382-ba9b-751b26cf03ef.webp",
+    "storageType": "supabase"
+  }
+]
