@@ -44,8 +44,12 @@ export interface IStorage {
   // User methods
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserRole(id: number, role: string): Promise<User | undefined>;
+  updateUserProfile(id: number, data: { name?: string; bio?: string; profileImageUrl?: string }): Promise<User | undefined>;
+  updateUserPassword(id: number, newPassword: string): Promise<User | undefined>;
+  updateUserLastLogin(id: number, lastLogin: Date): Promise<User | undefined>;
   
   // Category methods
   getCategories(): Promise<Category[]>;
@@ -455,7 +459,56 @@ export class MemStorage implements IStorage {
     this.createUser({
       username: "admin",
       password: "admin123",
-      role: "premium"
+      email: "admin@designauto.com",
+      name: "Administrador",
+      role: "admin",
+      isActive: true
+    });
+    
+    // Criar outros usuários de exemplo para os diferentes papéis
+    this.createUser({
+      username: "designer",
+      password: "designer123",
+      email: "designer@designauto.com",
+      name: "Designer",
+      role: "designer",
+      isActive: true
+    });
+    
+    this.createUser({
+      username: "designeradm",
+      password: "designeradm123",
+      email: "designeradm@designauto.com",
+      name: "Designer Administrador",
+      role: "designer_adm",
+      isActive: true
+    });
+    
+    this.createUser({
+      username: "suporte",
+      password: "suporte123",
+      email: "suporte@designauto.com",
+      name: "Suporte",
+      role: "support",
+      isActive: true
+    });
+    
+    this.createUser({
+      username: "premium",
+      password: "premium123",
+      email: "premium@designauto.com",
+      name: "Usuário Premium",
+      role: "premium",
+      isActive: true
+    });
+    
+    this.createUser({
+      username: "free",
+      password: "free123",
+      email: "free@designauto.com",
+      name: "Usuário Free",
+      role: "free",
+      isActive: true
     });
   }
 
@@ -469,14 +522,22 @@ export class MemStorage implements IStorage {
       (user) => user.username === username
     );
   }
+  
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(
+      (user) => user.email === email
+    );
+  }
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentUserId++;
-    const now = new Date().toISOString();
+    const now = new Date();
     const user: User = { 
       ...insertUser, 
       id,
-      createdAt: now
+      createdAt: now,
+      updatedAt: now,
+      lastLogin: now
     };
     this.users.set(id, user);
     return user;
@@ -486,7 +547,48 @@ export class MemStorage implements IStorage {
     const user = await this.getUser(id);
     if (!user) return undefined;
     
-    const updatedUser = { ...user, role };
+    const now = new Date();
+    const updatedUser = { ...user, role, updatedAt: now };
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+  
+  async updateUserProfile(id: number, data: { name?: string; bio?: string; profileImageUrl?: string }): Promise<User | undefined> {
+    const user = await this.getUser(id);
+    if (!user) return undefined;
+    
+    const now = new Date();
+    const updatedUser = { 
+      ...user, 
+      ...data,
+      updatedAt: now 
+    };
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+  
+  async updateUserPassword(id: number, newPassword: string): Promise<User | undefined> {
+    const user = await this.getUser(id);
+    if (!user) return undefined;
+    
+    const now = new Date();
+    const updatedUser = { 
+      ...user, 
+      password: newPassword,
+      updatedAt: now 
+    };
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+  
+  async updateUserLastLogin(id: number, lastLogin: Date): Promise<User | undefined> {
+    const user = await this.getUser(id);
+    if (!user) return undefined;
+    
+    const updatedUser = { 
+      ...user, 
+      lastLogin 
+    };
     this.users.set(id, updatedUser);
     return updatedUser;
   }
@@ -859,6 +961,11 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db.select().from(users).where(eq(users.username, username));
     return user;
   }
+  
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const [user] = await db.insert(users).values(insertUser).returning();
@@ -866,9 +973,48 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUserRole(id: number, role: string): Promise<User | undefined> {
+    const now = new Date();
     const [updatedUser] = await db
       .update(users)
-      .set({ role })
+      .set({ 
+        role,
+        updatedAt: now
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser;
+  }
+  
+  async updateUserProfile(id: number, data: { name?: string; bio?: string; profileImageUrl?: string }): Promise<User | undefined> {
+    const now = new Date();
+    const [updatedUser] = await db
+      .update(users)
+      .set({ 
+        ...data,
+        updatedAt: now 
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser;
+  }
+  
+  async updateUserPassword(id: number, newPassword: string): Promise<User | undefined> {
+    const now = new Date();
+    const [updatedUser] = await db
+      .update(users)
+      .set({ 
+        password: newPassword,
+        updatedAt: now 
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser;
+  }
+  
+  async updateUserLastLogin(id: number, lastLogin: Date): Promise<User | undefined> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ lastLogin })
       .where(eq(users.id, id))
       .returning();
     return updatedUser;

@@ -7,14 +7,26 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
-  role: text("role").notNull().default("free"), // 'visitor', 'free', 'premium'
+  email: text("email").notNull().unique(),
+  name: text("name"),
+  profileImageUrl: text("profileImageUrl"),
+  bio: text("bio"),
+  role: text("role").notNull().default("free"), // 'visitor', 'free', 'premium', 'designer', 'designer_adm', 'support', 'admin'
+  isActive: boolean("isActive").notNull().default(true),
+  lastLogin: timestamp("lastLogin"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
+  email: true,
+  name: true,
+  profileImageUrl: true,
+  bio: true,
   role: true,
+  isActive: true,
 });
 
 // Category schema
