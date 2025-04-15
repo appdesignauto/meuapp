@@ -23,6 +23,16 @@ import {
   InsertSubscription,
   CommunityPost,
   InsertCommunityPost,
+  CommunityComment,
+  InsertCommunityComment,
+  UserPreferences,
+  InsertUserPreferences,
+  UserStats,
+  InsertUserStats,
+  DesignerStat,
+  InsertDesignerStat,
+  UserPermission,
+  InsertUserPermission,
   users,
   categories,
   formats,
@@ -34,7 +44,12 @@ import {
   views,
   downloads,
   subscriptions,
-  communityPosts
+  communityPosts,
+  communityComments,
+  userPreferences,
+  userStats,
+  designerStats,
+  userPermissions
 } from "@shared/schema";
 
 import { db } from "./db";
@@ -112,6 +127,32 @@ export interface IStorage {
   getCommunityPostsByUserId(userId: number): Promise<CommunityPost[]>;
   createCommunityPost(post: InsertCommunityPost): Promise<CommunityPost>;
   updateCommunityPostStatus(id: number, status: string): Promise<CommunityPost | undefined>;
+  
+  // Community Comment methods
+  getCommunityCommentsByPostId(postId: number): Promise<CommunityComment[]>;
+  createCommunityComment(comment: InsertCommunityComment): Promise<CommunityComment>;
+  updateCommunityComment(id: number, content: string): Promise<CommunityComment | undefined>;
+  hideCommunityComment(id: number, isHidden: boolean): Promise<CommunityComment | undefined>;
+  
+  // User Preferences methods
+  getUserPreferences(userId: number): Promise<UserPreferences | undefined>;
+  createUserPreferences(preferences: InsertUserPreferences): Promise<UserPreferences>;
+  updateUserPreferences(userId: number, data: Partial<InsertUserPreferences>): Promise<UserPreferences | undefined>;
+  
+  // User Stats methods
+  getUserStats(userId: number): Promise<UserStats | undefined>;
+  createUserStats(stats: InsertUserStats): Promise<UserStats>;
+  updateUserStats(userId: number, data: Partial<InsertUserStats>): Promise<UserStats | undefined>;
+  
+  // Designer Stats methods
+  getDesignerStats(userId: number, artId: number): Promise<DesignerStat | undefined>;
+  createDesignerStats(stats: InsertDesignerStat): Promise<DesignerStat>;
+  updateDesignerStats(userId: number, artId: number, data: Partial<InsertDesignerStat>): Promise<DesignerStat | undefined>;
+  
+  // User Permissions methods
+  getUserPermissions(userId: number): Promise<UserPermission[]>;
+  createUserPermission(permission: InsertUserPermission): Promise<UserPermission>;
+  deleteUserPermission(id: number): Promise<boolean>;
 }
 
 interface ArtFilters {
