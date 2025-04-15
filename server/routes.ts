@@ -11,31 +11,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication middleware and routes
   const { isAuthenticated, isPremium, isAdmin, isDesigner, hasRole } = setupAuth(app);
 
-  // Categories API with art counts and last update
+  // Categories API with precise art counts and detailed stats
   app.get("/api/categories", async (req, res) => {
     try {
       const categories = await storage.getCategories();
       
-      // Para cada categoria, procurar arts e obter contagem e data da última atualização
+      // Para cada categoria, realizar uma busca precisa das artes com contagem
       const enhancedCategories = await Promise.all(categories.map(async (category) => {
-        // Buscar todas as artes dessa categoria
+        // Buscar todas as artes dessa categoria com limites altos para garantir precisão
         const { arts, totalCount } = await storage.getArts(1, 1000, { categoryId: category.id });
         
+        // Se não há artes, retornamos com contagem zero e data atual
+        if (arts.length === 0) {
+          return {
+            ...category,
+            artCount: 0,
+            lastUpdate: new Date(),
+            formats: []
+          };
+        }
+        
         // Ordenar por data de atualização e pegar a mais recente
-        const sortedArts = arts.sort((a, b) => 
+        const sortedArts = [...arts].sort((a, b) => 
           new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
         );
         
-        // Data da última atualização (a mais recente das artes, ou a data atual se não houver artes)
-        const lastUpdate = sortedArts.length > 0 
-          ? sortedArts[0].updatedAt 
-          : new Date();
+        // Data da última atualização é a data da arte mais recente
+        const lastUpdate = sortedArts[0].updatedAt;
         
-        // Retornar categoria com informações extras
+        // Coletar formatos únicos de artes nesta categoria
+        const uniqueFormats = Array.from(new Set(arts.map(art => art.format)));
+        
+        // Retornar categoria com informações extras completas
         return {
           ...category,
           artCount: totalCount,
-          lastUpdate
+          lastUpdate,
+          formats: uniqueFormats
         };
       }));
       

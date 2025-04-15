@@ -1,15 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
 import { Category } from '@/types';
-import { ArrowLeft, Search, Calendar, Image } from 'lucide-react';
+import { ArrowLeft, Search, Calendar, Image, Bookmark, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDate } from '@/lib/utils';
 import { useState } from 'react';
+import { Badge } from '@/components/ui/badge';
 
 interface EnhancedCategory extends Category {
   artCount: number;
   lastUpdate: string | Date;
+  formats: string[];
 }
 
 const Categories = () => {
@@ -43,6 +45,14 @@ const Categories = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     // Busca já foi aplicada via state
+  };
+
+  // Formatar a lista de formatos como string
+  const formatFormatsList = (formats: string[] = []): string => {
+    if (formats.length === 0) return "";
+    if (formats.length === 1) return formats[0];
+    if (formats.length === 2) return formats.join(' e ');
+    return formats.join(', ');
   };
 
   return (
@@ -94,9 +104,10 @@ const Categories = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {[...Array(8)].map((_, index) => (
               <div key={index} className="bg-white rounded-xl overflow-hidden shadow-sm animate-pulse">
-                <Skeleton className="h-64 w-full" />
+                <Skeleton className="aspect-video w-full" />
                 <div className="p-4">
                   <Skeleton className="h-6 w-32 mx-auto" />
+                  <Skeleton className="h-4 w-48 mx-auto mt-2" />
                   <Skeleton className="h-4 w-20 mx-auto mt-2" />
                 </div>
               </div>
@@ -129,40 +140,48 @@ const Categories = () => {
               
               return (
                 <Link key={category.id} href={`/categories/${category.slug}`}>
-                  <div className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:-translate-y-1">
-                    <div className="aspect-square">
+                  <div className="group relative bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer h-full">
+                    {/* Imagens em Grid */}
+                    <div className="aspect-square relative">
                       <div className="grid grid-cols-2 h-full">
                         {imagePaths.map((path, i) => (
                           <div key={i} className="overflow-hidden border border-white">
                             <img 
                               src={path} 
                               alt="" 
-                              className="object-cover w-full h-full"
+                              className="object-cover w-full h-full transform group-hover:scale-105 transition-transform duration-500"
                               loading="lazy"
                             />
                           </div>
                         ))}
                       </div>
+
+                      {/* Ícone para favoritar no canto */}
+                      <div className="absolute top-3 right-3 bg-white bg-opacity-80 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <Bookmark className="h-4 w-4 text-blue-600" />
+                      </div>
                     </div>
                     
+                    {/* Informações da Categoria */}
                     <div className="p-4">
-                      <h3 className="text-lg font-semibold text-gray-800 mb-1 text-center">{category.name}</h3>
+                      <h3 className="text-lg font-semibold text-neutral-800 mb-1">{category.name}</h3>
                       
-                      <div className="flex items-center justify-center text-xs text-neutral-500 mb-2">
-                        <div className="flex items-center mr-3">
-                          <Image className="h-3.5 w-3.5 mr-1 text-blue-500" />
-                          <span>{category.artCount || 0} designs</span>
+                      <p className="text-sm text-neutral-600 mb-2">
+                        <span className="font-medium">{category.artCount}</span> {category.artCount === 1 ? 'design' : 'designs'}
+                        {category.formats && category.formats.length > 0 && ` • ${formatFormatsList(category.formats)}`}
+                      </p>
+                      
+                      <div className="flex justify-between items-center mt-3">
+                        <span className="text-xs text-neutral-500">
+                          {typeof category.lastUpdate === 'string' 
+                            ? formatDate(category.lastUpdate)
+                            : formatDate(category.lastUpdate.toISOString())}
+                        </span>
+                        
+                        <div className="flex items-center text-blue-600 text-xs font-medium">
+                          <span>Ver designs</span>
+                          <ChevronRight className="h-4 w-4 ml-1" />
                         </div>
-                        {category.lastUpdate && (
-                          <div className="flex items-center">
-                            <Calendar className="h-3.5 w-3.5 mr-1 text-blue-500" />
-                            <span>Atualizado {formatDate(category.lastUpdate)}</span>
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="text-center">
-                        <span className="text-sm text-blue-600 font-medium">Ver todos os designs</span>
                       </div>
                     </div>
                   </div>
