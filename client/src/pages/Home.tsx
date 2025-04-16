@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
+import { useScrollTop } from '@/hooks/useScrollTop';
 import Hero from '@/components/home/Hero';
 import CategoryFilters from '@/components/home/CategoryFilters';
 import FeaturedCategories from '@/components/home/FeaturedCategories';
@@ -9,6 +10,9 @@ import Testimonials from '@/components/home/Testimonials';
 import CallToAction from '@/components/home/CallToAction';
 
 const Home = () => {
+  // Garantir rolagem para o topo ao navegar para esta página
+  useScrollTop();
+  
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [selectedFormat, setSelectedFormat] = useState<number | null>(null);
   const [selectedFileType, setSelectedFileType] = useState<number | null>(null);
