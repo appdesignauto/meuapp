@@ -257,9 +257,34 @@ const AuthPage = () => {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Senha</FormLabel>
-                            <FormControl>
-                              <Input type="password" placeholder="******" {...field} />
-                            </FormControl>
+                            <div className="relative">
+                              <FormControl>
+                                <Input 
+                                  type={showPassword ? "text" : "password"} 
+                                  placeholder="******" 
+                                  {...field} 
+                                />
+                              </FormControl>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="absolute right-0 top-0 h-full px-3 py-2 text-gray-400 hover:text-gray-600"
+                                onClick={() => setShowPassword(!showPassword)}
+                              >
+                                {showPassword ? (
+                                  <EyeOff className="h-4 w-4" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                                <span className="sr-only">
+                                  {showPassword ? "Esconder senha" : "Mostrar senha"}
+                                </span>
+                              </Button>
+                            </div>
+                            <FormDescription className="text-xs">
+                              A senha deve ter pelo menos 6 caracteres
+                            </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -270,9 +295,31 @@ const AuthPage = () => {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Confirmar senha</FormLabel>
-                            <FormControl>
-                              <Input type="password" placeholder="******" {...field} />
-                            </FormControl>
+                            <div className="relative">
+                              <FormControl>
+                                <Input 
+                                  type={showConfirmPassword ? "text" : "password"} 
+                                  placeholder="******" 
+                                  {...field} 
+                                />
+                              </FormControl>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="absolute right-0 top-0 h-full px-3 py-2 text-gray-400 hover:text-gray-600"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                              >
+                                {showConfirmPassword ? (
+                                  <EyeOff className="h-4 w-4" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                                <span className="sr-only">
+                                  {showConfirmPassword ? "Esconder senha" : "Mostrar senha"}
+                                </span>
+                              </Button>
+                            </div>
                             <FormMessage />
                           </FormItem>
                         )}
