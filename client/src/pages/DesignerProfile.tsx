@@ -139,6 +139,51 @@ export default function DesignerProfile() {
     setArtsPage(page);
   };
   
+  // Mutação para upload de imagem de perfil
+  const profileImageMutation = useMutation({
+    mutationFn: async (formData: FormData) => {
+      const response = await fetch('/api/designers/profile-image', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao fazer upload da imagem');
+      }
+      
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      setIsUploadDialogOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['/api/designers', username] });
+      toast({
+        title: 'Imagem atualizada',
+        description: 'Sua imagem de perfil foi atualizada com sucesso',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro ao atualizar imagem',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  });
+  
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) {
+      return;
+    }
+    
+    const file = e.target.files[0];
+    const formData = new FormData();
+    formData.append('image', file);
+    
+    profileImageMutation.mutate(formData);
+  };
+  
   if (isLoading) {
     return (
       <div className="container py-12 flex justify-center">
@@ -179,15 +224,68 @@ export default function DesignerProfile() {
       <Card className="p-6 mb-8">
         <div className="flex flex-col md:flex-row gap-6">
           <div className="flex-shrink-0 flex flex-col items-center">
-            <Avatar className="h-24 w-24 md:h-36 md:w-36 border">
-              <AvatarImage 
-                src={data.profileImageUrl || ""} 
-                alt={data.name || data.username} 
-              />
-              <AvatarFallback className="text-2xl">
-                {data.name ? data.name.charAt(0).toUpperCase() : data.username.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <Avatar className="h-24 w-24 md:h-36 md:w-36 border">
+                <AvatarImage 
+                  src={data.profileImageUrl || ""} 
+                  alt={data.name || data.username} 
+                />
+                <AvatarFallback className="text-2xl">
+                  {data.name ? data.name.charAt(0).toUpperCase() : data.username.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              
+              {user && user.id === data.id && (
+                <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      size="icon" 
+                      className="absolute -bottom-2 -right-2 rounded-full h-8 w-8 shadow-md"
+                    >
+                      <Camera className="h-4 w-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Atualizar foto de perfil</DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4">
+                      <div className="flex flex-col items-center justify-center gap-4">
+                        <Avatar className="h-24 w-24 border">
+                          <AvatarImage 
+                            src={data.profileImageUrl || ""} 
+                            alt={data.name || data.username} 
+                          />
+                          <AvatarFallback className="text-xl">
+                            {data.name ? data.name.charAt(0).toUpperCase() : data.username.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          ref={fileInputRef}
+                          onChange={handleImageUpload}
+                        />
+                        
+                        <Button 
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={profileImageMutation.isPending}
+                        >
+                          {profileImageMutation.isPending ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <Upload className="mr-2 h-4 w-4" />
+                          )}
+                          Escolher imagem
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              )}
+            </div>
             
             {user && user.id !== data.id && (
               <Button
