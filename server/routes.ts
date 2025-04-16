@@ -574,8 +574,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           "isPremium" as ispremium, 
           format, 
           "createdAt" as createdat,
-          "downloadCount" as downloadcount,
-          "viewCount" as viewcount
+          viewcount
         FROM arts
         WHERE designerid = ${designer.id}
         ORDER BY "createdAt" DESC
@@ -589,7 +588,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const premiumArtCount = designerArts.filter((art: any) => art.isPremium).length;
       
       // Calcular estatísticas
-      const totalDownloads = designerArts.reduce((sum: number, art: any) => sum + (parseInt(art.downloadcount) || 0), 0);
+      // Como não temos a coluna downloadCount no banco de dados, usamos 0 como valor padrão
+      const totalDownloads = 0;
       const totalViews = designerArts.reduce((sum: number, art: any) => sum + (parseInt(art.viewcount) || 0), 0);
       
       // Adaptamos os nomes de campo para o padrão CamelCase esperado pelo frontend
