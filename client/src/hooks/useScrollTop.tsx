@@ -1,39 +1,30 @@
 import { useEffect } from 'react';
-import { useLocation } from 'wouter';
 
-/**
- * Hook que faz com que a página role para o topo sempre que a rota muda
- * 
- * Exemplo de uso:
- * ```
- * function MyComponent() {
- *   useScrollTop();
- *   return <div>...</div>;
- * }
- * ```
- */
-export function useScrollTop() {
-  const [location] = useLocation();
-
+// Hook para garantir que a página inicie no topo ao navegar para uma nova rota
+export default function useScrollTop() {
   useEffect(() => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'instant' // Comportamento instantâneo para evitar animação
-    });
-  }, [location]);
+    window.scrollTo(0, 0);
+  }, []);
 }
 
-/**
- * Componente que faz com que a página role para o topo sempre que a rota muda
- * 
- * Exemplo de uso:
- * ```
- * <ScrollToTop />
- * ```
- */
+// Componente para uso em App.tsx para rolar para o topo em mudanças de rota
 export function ScrollToTop() {
-  useScrollTop();
+  useEffect(() => {
+    // Função para rolar para o topo quando o componente é montado
+    window.scrollTo(0, 0);
+    
+    // Opcional: Adicionar um event listener para mudanças na rota
+    const handleRouteChange = () => {
+      window.scrollTo(0, 0);
+    };
+    
+    // Listener para mudanças de URL (simplificado)
+    window.addEventListener('popstate', handleRouteChange);
+    
+    return () => {
+      window.removeEventListener('popstate', handleRouteChange);
+    };
+  }, []);
+  
   return null;
 }
-
-export default useScrollTop;

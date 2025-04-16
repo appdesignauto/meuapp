@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { useScrollTop } from '@/hooks/useScrollTop';
+import useScrollTop from '@/hooks/useScrollTop';
 import Hero from '@/components/home/Hero';
 import CategoryFilters from '@/components/home/CategoryFilters';
 import FeaturedCategories from '@/components/home/FeaturedCategories';

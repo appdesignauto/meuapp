@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDate } from '@/lib/utils';
 import { useState } from 'react';
-import { useScrollTop } from '@/hooks/useScrollTop';
+import useScrollTop from '@/hooks/useScrollTop';
 import { Badge } from '@/components/ui/badge';
 
 interface EnhancedCategory extends Category {

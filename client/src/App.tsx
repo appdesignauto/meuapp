@@ -15,6 +15,8 @@ import Collections from "@/pages/Collections";
 import Categories from "@/pages/Categories";
 import CategoryPage from "@/pages/CategoryPage";
 import ArtDetail from "@/pages/ArtDetail";
+import Designers from "@/pages/Designers";
+import DesignerProfile from "@/pages/DesignerProfile";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import AuthPage from "@/pages/auth-page";
 import NotFound from "@/pages/not-found";
@@ -48,6 +50,8 @@ function AppRoutes() {
       <Route path="/categories" component={Categories} />
       <Route path="/categories/:slug" component={CategoryPage} />
       <Route path="/arts/:id" component={ArtDetail} />
+      <Route path="/designers" component={Designers} />
+      <Route path="/designers/:username" component={DesignerProfile} />
       <ProtectedRoute 
         path="/admin" 
         component={AdminDashboard} 
