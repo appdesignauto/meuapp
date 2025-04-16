@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Edit, Trash2, Eye, Filter, ArrowUpDown, Plus } from 'lucide-react';
+import { Edit, Trash2, Eye, Filter, ArrowUpDown, Plus, UserCircle } from 'lucide-react';
 import { Art } from '@/types';
 import {
   Table,
@@ -98,6 +98,29 @@ const ArtsList = () => {
       toast({
         title: 'Erro',
         description: error.message || 'Ocorreu um erro ao atualizar o status.',
+        variant: 'destructive',
+      });
+    },
+  });
+  
+  // Mutation para atribuir o admin como designer de todas as artes
+  const updateDesignersMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/admin/update-designers');
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
+      toast({
+        title: 'Designers atualizados',
+        description: 'Todas as artes foram atribuídas ao usuário administrador como designer.',
+        variant: 'default',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Erro',
+        description: error.message || 'Ocorreu um erro ao atualizar os designers.',
         variant: 'destructive',
       });
     },

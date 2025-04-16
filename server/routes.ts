@@ -1,11 +1,13 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema } from "@shared/schema";
+import { arts, insertUserSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth } from "./auth";
 import imageUploadRoutes from "./routes/image-upload";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication middleware and routes
@@ -406,6 +408,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Registrar rotas de upload de imagem
   app.use(imageUploadRoutes);
+
+  // Rota administrativa para atualizar designerId de todas as artes
+  app.post("/api/admin/update-designers", isAdmin, async (req, res) => {
+    try {
+      // Buscar o ID do usuário admin
+      const admin = req.user;
+      
+      if (!admin) {
+        return res.status(400).json({ message: "Usuário admin não encontrado" });
+      }
+      
+      // Atualizar todas as artes sem designerId
+      const result = await db
+        .update(arts)
+        .set({ designerId: admin.id })
+        .where(eq(arts.designerId, null));
+
+      return res.status(200).json({ 
+        message: "Designers atualizados com sucesso", 
+        designerId: admin.id 
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar designers:", error);
+      res.status(500).json({ message: "Erro ao atualizar designers" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
