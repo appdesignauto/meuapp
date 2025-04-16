@@ -20,6 +20,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ArtsList from '@/components/admin/ArtsList';
 import CategoriesList from '@/components/admin/CategoriesList';
+import UserManagement from '@/components/admin/UserManagement';
 import { useToast } from '@/hooks/use-toast';
 import R2TestUpload from '@/components/admin/R2TestUpload';
 import SupabaseTestUpload from '@/components/admin/SupabaseTestUpload';
@@ -193,8 +194,7 @@ const AdminDashboard = () => {
             
             <TabsContent value="users" className="mt-0">
               <div className="bg-white p-6 rounded-lg shadow-sm">
-                <h2 className="text-xl font-semibold mb-4">Usuários</h2>
-                <p className="text-gray-500">Gerenciamento de usuários em desenvolvimento.</p>
+                <UserManagement />
               </div>
             </TabsContent>
             

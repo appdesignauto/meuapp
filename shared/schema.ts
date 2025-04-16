@@ -12,7 +12,7 @@ export const users = pgTable("users", {
   profileimageurl: text("profileimageurl"),
   bio: text("bio"),
   role: text("role").notNull().default("free"), // 'visitor', 'free', 'premium', 'designer', 'designer_adm', 'support', 'admin'
-  isActive: boolean("isActive").notNull().default(true),
+  isactive: boolean("isactive").notNull().default(true),
   lastLogin: timestamp("lastLogin"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
@@ -26,7 +26,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   profileimageurl: true,
   bio: true,
   role: true,
-  isActive: true,
+  isactive: true,
 });
 
 // Category schema

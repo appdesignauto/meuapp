@@ -529,6 +529,246 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // =============================================
+  // GERENCIAMENTO DE USUÁRIOS
+
+  // Rota para listar todos os usuários (apenas para administradores)
+  app.get("/api/users", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as User;
+      
+      // Verificar se o usuário tem permissão de administrador
+      if (user.role !== "admin" && user.role !== "designer_adm" && user.role !== "support") {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+      
+      // Buscar todos os usuários com estatísticas
+      const allUsers = await db.select()
+        .from(users)
+        .orderBy(desc(users.createdAt));
+      
+      // Enriquecer com estatísticas
+      const usersWithStats = await Promise.all(
+        allUsers.map(async (user) => {
+          // Contar seguidores (para designers)
+          const [followersResult] = await db
+            .select({ count: count() })
+            .from(userFollows)
+            .where(eq(userFollows.followingId, user.id));
+            
+          const followersCount = followersResult ? Number(followersResult.count) : 0;
+          
+          // Contar seguindo
+          const [followingResult] = await db
+            .select({ count: count() })
+            .from(userFollows)
+            .where(eq(userFollows.followerId, user.id));
+            
+          const followingCount = followingResult ? Number(followingResult.count) : 0;
+          
+          // Estatísticas para designers
+          let totalDownloads = 0;
+          let totalViews = 0;
+          
+          if (user.role === "designer" || user.role === "designer_adm") {
+            // Contar downloads de artes deste designer
+            const [downloadsResult] = await db
+              .select({ count: count() })
+              .from(downloads)
+              .innerJoin(arts, eq(downloads.artId, arts.id))
+              .where(eq(arts.designerid, user.id));
+              
+            totalDownloads = downloadsResult ? Number(downloadsResult.count) : 0;
+            
+            // Contar visualizações de artes deste designer
+            const [viewsResult] = await db
+              .select({ count: count() })
+              .from(views)
+              .innerJoin(arts, eq(views.artId, arts.id))
+              .where(eq(arts.designerid, user.id));
+              
+            totalViews = viewsResult ? Number(viewsResult.count) : 0;
+          }
+          
+          return {
+            ...user,
+            followersCount,
+            followingCount,
+            totalDownloads,
+            totalViews
+          };
+        })
+      );
+      
+      res.json(usersWithStats);
+    } catch (error: any) {
+      console.error("Erro ao buscar usuários:", error);
+      res.status(500).json({ message: "Erro ao buscar usuários" });
+    }
+  });
+
+  // Rota para criar um novo usuário (apenas para administradores)
+  app.post("/api/users", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as User;
+      
+      // Verificar se o usuário tem permissão de administrador
+      if (user.role !== "admin" && user.role !== "designer_adm") {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+      
+      const { username, email, password, name, role, isactive } = req.body;
+      
+      // Verificar se o username ou email já existem
+      const existingUser = await db
+        .select()
+        .from(users)
+        .where(or(eq(users.username, username), eq(users.email, email)))
+        .limit(1);
+        
+      if (existingUser.length > 0) {
+        return res.status(400).json({ 
+          message: existingUser[0].username === username 
+            ? "Nome de usuário já existe" 
+            : "Email já cadastrado"
+        });
+      }
+      
+      // Criptografar a senha
+      const salt = randomBytes(16).toString("hex");
+      const buf = await scrypt(password, salt, 64) as Buffer;
+      const hashedPassword = `${buf.toString("hex")}.${salt}`;
+      
+      // Criar o usuário
+      const [newUser] = await db
+        .insert(users)
+        .values({
+          username,
+          email,
+          password: hashedPassword,
+          name: name || null,
+          role: role || "free",
+          isactive: isactive !== undefined ? isactive : true,
+          profileimageurl: null,
+          bio: null,
+          lastLogin: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+        .returning();
+      
+      res.status(201).json(newUser);
+    } catch (error: any) {
+      console.error("Erro ao criar usuário:", error);
+      res.status(500).json({ message: "Erro ao criar usuário" });
+    }
+  });
+
+  // Rota para atualizar um usuário existente (apenas para administradores)
+  app.put("/api/users/:id", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const userId = parseInt(req.params.id);
+      
+      // Verificar se o usuário tem permissão de administrador ou é o próprio usuário
+      if (user.role !== "admin" && user.role !== "designer_adm" && user.id !== userId) {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+      
+      // Se não for admin, limitar quais campos podem ser atualizados
+      if (user.role !== "admin" && user.role !== "designer_adm") {
+        // Usuários regulares só podem editar seus próprios dados básicos
+        const { name, bio, profileimageurl } = req.body;
+        
+        await db
+          .update(users)
+          .set({
+            name: name || null,
+            bio: bio || null,
+            profileimageurl: profileimageurl || null,
+            updatedAt: new Date()
+          })
+          .where(eq(users.id, userId));
+      } else {
+        // Admins podem editar tudo
+        const { username, email, password, name, role, isactive, bio } = req.body;
+        
+        // Verificar se usuário existe
+        const [existingUser] = await db
+          .select()
+          .from(users)
+          .where(eq(users.id, userId));
+          
+        if (!existingUser) {
+          return res.status(404).json({ message: "Usuário não encontrado" });
+        }
+        
+        // Verificar se o novo username ou email já existem (se foram alterados)
+        if ((username && username !== existingUser.username) || 
+            (email && email !== existingUser.email)) {
+          const duplicateUser = await db
+            .select()
+            .from(users)
+            .where(
+              and(
+                or(
+                  username ? eq(users.username, username) : sql`FALSE`,
+                  email ? eq(users.email, email) : sql`FALSE`
+                ),
+                ne(users.id, userId)
+              )
+            )
+            .limit(1);
+            
+          if (duplicateUser.length > 0) {
+            return res.status(400).json({ 
+              message: duplicateUser[0].username === username 
+                ? "Nome de usuário já existe" 
+                : "Email já cadastrado"
+            });
+          }
+        }
+        
+        // Preparar objeto de atualização
+        const updateData: Record<string, any> = {
+          updatedAt: new Date()
+        };
+        
+        if (username) updateData.username = username;
+        if (email) updateData.email = email;
+        if (name !== undefined) updateData.name = name || null;
+        if (bio !== undefined) updateData.bio = bio || null;
+        if (role) updateData.role = role;
+        if (isactive !== undefined) updateData.isactive = isactive;
+        
+        // Criptografar a nova senha se fornecida
+        if (password) {
+          const salt = randomBytes(16).toString("hex");
+          const buf = await scrypt(password, salt, 64) as Buffer;
+          const hashedPassword = `${buf.toString("hex")}.${salt}`;
+          updateData.password = hashedPassword;
+        }
+        
+        // Atualizar usuário
+        await db
+          .update(users)
+          .set(updateData)
+          .where(eq(users.id, userId));
+      }
+      
+      // Retornar usuário atualizado
+      const [updatedUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId));
+        
+      res.json(updatedUser);
+    } catch (error: any) {
+      console.error("Erro ao atualizar usuário:", error);
+      res.status(500).json({ message: "Erro ao atualizar usuário" });
+    }
+  });
+
+  // =============================================
   // SISTEMA DE DESIGNERS - ROTAS
   // =============================================
 
