@@ -200,12 +200,66 @@ const UserManagement = () => {
   // Criar usuário
   const createUserMutation = useMutation({
     mutationFn: async (data: UserFormData) => {
+      // Primeiro, criar o usuário
       const res = await apiRequest("POST", "/api/users", data);
       if (!res.ok) {
         const error = await res.json();
         throw new Error(error.message || "Erro ao criar usuário");
       }
-      return await res.json();
+      const user = await res.json();
+      
+      // Se o plano não é free, criar uma assinatura para o usuário
+      if (data.plan !== 'free' && user.id) {
+        // Calcular a data de expiração da assinatura com base no período selecionado
+        let endDate = null;
+        
+        if (data.plan !== 'free') {
+          const today = new Date();
+          endDate = new Date(today);
+          
+          switch (data.periodType) {
+            case 'mensal':
+              endDate.setMonth(today.getMonth() + 1);
+              break;
+            case 'anual':
+              endDate.setFullYear(today.getFullYear() + 1);
+              break;
+            case 'vitalicio':
+              // Para assinaturas vitalícias, definimos uma data muito distante
+              endDate.setFullYear(today.getFullYear() + 100);
+              break;
+            default:
+              endDate.setMonth(today.getMonth() + 1); // Padrão: mensal
+          }
+        }
+        
+        // Criar assinatura para o usuário
+        const subscriptionData = {
+          userId: user.id,
+          planType: data.plan,
+          status: 'active',
+          startDate: new Date().toISOString(),
+          endDate: endDate ? endDate.toISOString() : null
+        };
+        
+        const subscriptionRes = await apiRequest("POST", "/api/subscriptions", subscriptionData);
+        if (!subscriptionRes.ok) {
+          console.error("Erro ao criar assinatura. Usuário criado sem assinatura.");
+          // Não vamos falhar a criação do usuário se a assinatura falhar
+        }
+        
+        // Se o papel do usuário não é 'premium' mas o plano é premium, atualizar o papel
+        if (data.role !== 'premium' && data.plan === 'premium') {
+          const updateRes = await apiRequest("PUT", `/api/users/${user.id}`, { 
+            role: 'premium'
+          });
+          if (!updateRes.ok) {
+            console.error("Erro ao atualizar o papel do usuário para premium.");
+          }
+        }
+      }
+      
+      return user;
     },
     onSuccess: () => {
       toast({
@@ -300,6 +354,21 @@ const UserManagement = () => {
 
   // Submeter formulário de criação
   const handleCreateSubmit = createForm.handleSubmit((data) => {
+    // Gerar username a partir do email se não estiver definido
+    if (!data.username || data.username.trim() === '') {
+      // Remove caracteres especiais e espaços e pega a parte antes do @
+      const emailUsername = data.email.split('@')[0]
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '')
+        .trim();
+        
+      // Adiciona um timestamp para garantir unicidade
+      const timestamp = Date.now().toString().slice(-4);
+      
+      // Define o username final
+      data.username = `${emailUsername}${timestamp}`;
+    }
+    
     createUserMutation.mutate(data);
   });
 
