@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, Link } from "wouter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, UsersRound, Eye, Download, ShieldCheck } from "lucide-react";
+import { Loader2, UsersRound, Eye, Download, ShieldCheck, Upload, Camera } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Pagination } from "@/components/ui/pagination";
 import ArtCard from "@/components/ui/ArtCard";
@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import useScrollTop from "@/hooks/useScrollTop";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 type Designer = {
   id: number;
@@ -49,6 +50,8 @@ export default function DesignerProfile() {
   const { user } = useAuth();
   const [artsPage, setArtsPage] = useState(1);
   const artsPerPage = 12;
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Calcular páginas de artes para paginação
   const displayedArts = (data: Designer) => 

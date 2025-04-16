@@ -889,7 +889,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Atualizar perfil do designer com nova imagem
       await db.update(users)
         .set({
-          profileimageurl: imageUrl,
+          profileImageUrl: imageUrl,
           updatedAt: new Date()
         })
         .where(eq(users.id, userId));
