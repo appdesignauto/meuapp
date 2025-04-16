@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
+import { useScrollTop } from '@/hooks/useScrollTop';
 import { ArrowLeft, Search, Filter, SlidersHorizontal, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,6 +35,9 @@ import {
 } from "@/components/ui/alert";
 
 export default function CategoryPage() {
+  // Garantir rolagem para o topo ao navegar para esta página
+  useScrollTop();
+  
   const { slug } = useParams<{ slug: string }>();
   const [, setLocation] = useLocation();
   const [page, setPage] = useState(1);

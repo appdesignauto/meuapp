@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
+import { useScrollTop } from '@/hooks/useScrollTop';
 import { 
   ArrowLeft, 
   Eye, 
@@ -20,6 +21,9 @@ import { useAuth } from '@/hooks/use-auth';
 import RelatedArts from '@/components/art/RelatedArts';
 
 export default function ArtDetail() {
+  // Garantir rolagem para o topo ao navegar para esta página
+  useScrollTop();
+  
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const { toast } = useToast();

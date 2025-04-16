@@ -1,0 +1,107 @@
+Aqui está a descrição detalhada da seção de planos do aplicativo BíbliaPlus, mantendo a mesma estrutura, organização e design para implementação no Replit:
+
+# Descrição da Seção de Planos (app/planos/page.tsx)
+
+## Estrutura Geral
+
+A página de planos é composta por:
+
+1. Um cabeçalho (header) com navegação
+2. Uma seção principal (main) dividida em:
+
+1. Banner de título com barra de pesquisa
+2. Área de conteúdo com filtros laterais e cards de planos
+
+
+
+3. Um rodapé (footer)
+
+
+## Componentes Específicos
+
+### Cabeçalho
+
+- Barra de navegação superior com logo "BíbliaPlus" à esquerda (ícone BookOpen em verde esmeralda)
+- Links de navegação à direita: "Planos", "Estudo", "Comunidade", "Meu Perfil"
+- Altura fixa de 16 (h-16) com borda inferior
+
+
+### Banner de Título
+
+- Fundo verde claro (bg-emerald-50)
+- Título centralizado "Planos de Leitura" em fonte grande
+- Subtítulo em texto cinza explicando o propósito dos planos
+- Barra de pesquisa centralizada com botão de busca verde
+
+
+### Área de Conteúdo Principal
+
+Dividida em duas seções:
+
+#### 1. Barra Lateral de Filtros (1/4 da largura em desktop)
+
+- Título "Filtros"
+- Seção "Tipos de Plano" com checkboxes:
+
+- Cronológico
+- Temático
+- Devocional
+- Estudo
+
+
+
+- Seção "Duração" com checkboxes:
+
+- Curto (1-4 semanas)
+- Médio (1-3 meses)
+- Longo (6+ meses)
+- Anual
+
+
+
+- Botão "Aplicar Filtros" com ícone de filtro
+
+
+#### 2. Área de Cards de Planos (3/4 da largura em desktop)
+
+- Tabs na parte superior: "Todos", "Populares", "Recentes", "Recomendados"
+- Grid de cards de planos (3 colunas em desktop, 2 em tablet, 1 em mobile)
+- Cada card contém:
+
+- Título do plano (ex: "Bíblia em Um Ano")
+- Descrição curta
+- Ícones com informações: tempo diário, duração, livros abrangidos
+- Descrição detalhada
+- Botão "Iniciar Plano" em verde esmeralda com seta
+
+
+
+
+
+## Estilo e Design
+
+- Esquema de cores: verde esmeralda (`#10b981`) como cor principal
+- Cards com bordas sutis e efeito hover de sombra
+- Ícones da biblioteca Lucide React (BookOpen, Calendar, Clock, etc.)
+- Tipografia: fonte sem serifa, títulos em negrito
+- Espaçamento consistente entre elementos
+- Design responsivo com grid adaptável
+
+
+## Interações
+
+- Cards clicáveis que levam à página de detalhes do plano
+- Tabs para filtrar diferentes categorias de planos
+- Checkboxes para filtrar por tipo e duração
+- Barra de pesquisa para buscar planos específicos
+
+
+## Componentes shadcn/ui Utilizados
+
+- Button
+- Card (CardHeader, CardContent, CardDescription, CardFooter, CardTitle)
+- Input
+- Tabs (TabsContent, TabsList, TabsTrigger)
+
+
+Esta estrutura segue um layout moderno e limpo, com foco na usabilidade e na apresentação clara dos diferentes planos de leitura bíblica disponíveis para os usuários.
