@@ -1,13 +1,13 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { arts, insertUserSchema } from "@shared/schema";
+import { arts, insertUserSchema, users, userFollows } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth } from "./auth";
 import imageUploadRoutes from "./routes/image-upload";
 import { db } from "./db";
-import { eq, isNull } from "drizzle-orm";
+import { eq, isNull, desc, and, count, sql, asc, not, or } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication middleware and routes
@@ -433,6 +433,396 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erro ao atualizar designers:", error);
       res.status(500).json({ message: "Erro ao atualizar designers" });
+    }
+  });
+
+  // =============================================
+  // SISTEMA DE DESIGNERS - ROTAS
+  // =============================================
+
+  // Lista de todos os designers (usuários com role designer ou admin)
+  app.get("/api/designers", async (req, res) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 12;
+      const sort = (req.query.sort as string) || 'followers'; // 'followers', 'activity', 'recent'
+      
+      // Buscar todos os usuários com role 'designer', 'designer_adm' ou 'admin'
+      let designersQuery = db.select({
+        id: users.id,
+        name: users.name,
+        username: users.username,
+        bio: users.bio,
+        profileImageUrl: users.profileImageUrl,
+        role: users.role,
+        followers: users.followers,
+        following: users.following,
+        createdAt: users.createdAt
+      })
+      .from(users)
+      .where(
+        or(
+          eq(users.role, 'designer'),
+          eq(users.role, 'designer_adm'),
+          eq(users.role, 'admin')
+        )
+      );
+      
+      // Aplicar ordenação
+      switch (sort) {
+        case 'followers':
+          designersQuery = designersQuery.orderBy(desc(users.followers));
+          break;
+        case 'activity':
+          // Ordenar pelo número de artes mais recentes
+          // Aqui poderíamos melhorar com uma subconsulta ou join, mas por ora mantemos simples
+          designersQuery = designersQuery.orderBy(desc(users.updatedAt));
+          break;
+        case 'recent':
+          designersQuery = designersQuery.orderBy(desc(users.createdAt));
+          break;
+        default:
+          designersQuery = designersQuery.orderBy(desc(users.followers));
+      }
+      
+      // Aplicar paginação
+      const offset = (page - 1) * limit;
+      const designers = await designersQuery.limit(limit).offset(offset);
+      
+      // Obter contagem total
+      const [{ value: totalCount }] = await db.select({
+        value: count()
+      })
+      .from(users)
+      .where(
+        or(
+          eq(users.role, 'designer'),
+          eq(users.role, 'designer_adm'),
+          eq(users.role, 'admin')
+        )
+      );
+      
+      // Para cada designer, buscar algumas artes para exibir
+      const designersWithArts = await Promise.all(designers.map(async (designer) => {
+        const recentArts = await db.select({
+          id: arts.id,
+          title: arts.title,
+          imageUrl: arts.imageUrl,
+          isPremium: arts.isPremium
+        })
+        .from(arts)
+        .where(eq(arts.designerid, designer.id))
+        .orderBy(desc(arts.createdAt))
+        .limit(4);
+        
+        return {
+          ...designer,
+          arts: recentArts
+        };
+      }));
+      
+      res.json({
+        designers: designersWithArts,
+        totalCount,
+        page,
+        limit,
+        totalPages: Math.ceil(totalCount / limit)
+      });
+    } catch (error) {
+      console.error("Erro ao buscar designers:", error);
+      res.status(500).json({ message: "Erro ao buscar designers" });
+    }
+  });
+  
+  // Detalhes de um designer específico por username
+  app.get("/api/designers/:username", async (req, res) => {
+    try {
+      const username = req.params.username;
+      
+      // Buscar designer pelo username
+      const [designer] = await db.select({
+        id: users.id,
+        name: users.name,
+        username: users.username,
+        bio: users.bio,
+        profileImageUrl: users.profileImageUrl,
+        role: users.role,
+        followers: users.followers,
+        following: users.following,
+        createdAt: users.createdAt
+      })
+      .from(users)
+      .where(eq(users.username, username));
+      
+      if (!designer) {
+        return res.status(404).json({ message: "Designer não encontrado" });
+      }
+      
+      // Verificar se o usuário logado já segue este designer
+      let isFollowing = false;
+      if (req.user) {
+        const [followRecord] = await db.select()
+          .from(userFollows)
+          .where(
+            and(
+              eq(userFollows.followerId, (req.user as any).id),
+              eq(userFollows.followingId, designer.id)
+            )
+          );
+        
+        isFollowing = !!followRecord;
+      }
+      
+      // Buscar as artes deste designer
+      const designerArts = await db.select()
+        .from(arts)
+        .where(eq(arts.designerid, designer.id))
+        .orderBy(desc(arts.createdAt));
+      
+      // Contagens
+      const artCount = designerArts.length;
+      const premiumArtCount = designerArts.filter(art => art.isPremium).length;
+      
+      // Calcular estatísticas
+      const totalDownloads = designerArts.reduce((sum, art) => sum + (art.downloadCount || 0), 0);
+      const totalViews = designerArts.reduce((sum, art) => sum + (art.viewCount || 0), 0);
+      
+      const response = {
+        ...designer,
+        isFollowing,
+        statistics: {
+          totalArts: artCount,
+          premiumArts: premiumArtCount,
+          totalDownloads,
+          totalViews
+        },
+        arts: designerArts.map(art => ({
+          id: art.id,
+          title: art.title,
+          imageUrl: art.imageUrl,
+          format: art.format,
+          isPremium: art.isPremium,
+          createdAt: art.createdAt
+        }))
+      };
+      
+      res.json(response);
+    } catch (error) {
+      console.error("Erro ao buscar detalhes do designer:", error);
+      res.status(500).json({ message: "Erro ao buscar detalhes do designer" });
+    }
+  });
+  
+  // Buscar artes de um designer específico (paginada)
+  app.get("/api/designers/:id/arts", async (req, res) => {
+    try {
+      const designerId = parseInt(req.params.id);
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 12;
+      
+      // Verificar se o designer existe
+      const [designer] = await db.select()
+        .from(users)
+        .where(eq(users.id, designerId));
+      
+      if (!designer) {
+        return res.status(404).json({ message: "Designer não encontrado" });
+      }
+      
+      // Buscar artes com paginação
+      const offset = (page - 1) * limit;
+      const designerArts = await db.select()
+        .from(arts)
+        .where(eq(arts.designerid, designerId))
+        .orderBy(desc(arts.createdAt))
+        .limit(limit)
+        .offset(offset);
+      
+      // Contar total de artes
+      const [{ value: totalCount }] = await db.select({
+        value: count()
+      })
+      .from(arts)
+      .where(eq(arts.designerid, designerId));
+      
+      res.json({
+        arts: designerArts,
+        totalCount,
+        page,
+        limit,
+        totalPages: Math.ceil(totalCount / limit)
+      });
+    } catch (error) {
+      console.error("Erro ao buscar artes do designer:", error);
+      res.status(500).json({ message: "Erro ao buscar artes do designer" });
+    }
+  });
+  
+  // Seguir um designer (protegido por autenticação)
+  app.post("/api/follow/:designerId", isAuthenticated, async (req, res) => {
+    try {
+      const designerId = parseInt(req.params.designerId);
+      const followerId = (req.user as any).id;
+      
+      // Verificar se o designer existe
+      const [designer] = await db.select()
+        .from(users)
+        .where(eq(users.id, designerId));
+      
+      if (!designer) {
+        return res.status(404).json({ message: "Designer não encontrado" });
+      }
+      
+      // Verificar se não está tentando seguir a si mesmo
+      if (followerId === designerId) {
+        return res.status(400).json({ message: "Você não pode seguir a si mesmo" });
+      }
+      
+      // Verificar se já segue
+      const [existingFollow] = await db.select()
+        .from(userFollows)
+        .where(
+          and(
+            eq(userFollows.followerId, followerId),
+            eq(userFollows.followingId, designerId)
+          )
+        );
+      
+      if (existingFollow) {
+        return res.status(400).json({ message: "Você já segue este designer" });
+      }
+      
+      // Criar novo registro de seguidor
+      await db.insert(userFollows)
+        .values({
+          followerId,
+          followingId: designerId
+        });
+      
+      // Atualizar contagens
+      await db.execute(`
+        UPDATE users 
+        SET followers = followers + 1 
+        WHERE id = ${designerId}
+      `);
+      
+      await db.execute(`
+        UPDATE users 
+        SET following = following + 1 
+        WHERE id = ${followerId}
+      `);
+      
+      res.status(201).json({ message: "Designer seguido com sucesso" });
+    } catch (error) {
+      console.error("Erro ao seguir designer:", error);
+      res.status(500).json({ message: "Erro ao seguir designer" });
+    }
+  });
+  
+  // Deixar de seguir um designer (protegido por autenticação)
+  app.delete("/api/unfollow/:designerId", isAuthenticated, async (req, res) => {
+    try {
+      const designerId = parseInt(req.params.designerId);
+      const followerId = (req.user as any).id;
+      
+      // Verificar se o registro de seguidor existe
+      const [existingFollow] = await db.select()
+        .from(userFollows)
+        .where(
+          and(
+            eq(userFollows.followerId, followerId),
+            eq(userFollows.followingId, designerId)
+          )
+        );
+      
+      if (!existingFollow) {
+        return res.status(400).json({ message: "Você não segue este designer" });
+      }
+      
+      // Remover registro de seguidor
+      await db.delete(userFollows)
+        .where(
+          and(
+            eq(userFollows.followerId, followerId),
+            eq(userFollows.followingId, designerId)
+          )
+        );
+      
+      // Atualizar contagens
+      await db.execute(`
+        UPDATE users 
+        SET followers = GREATEST(followers - 1, 0) 
+        WHERE id = ${designerId}
+      `);
+      
+      await db.execute(`
+        UPDATE users 
+        SET following = GREATEST(following - 1, 0) 
+        WHERE id = ${followerId}
+      `);
+      
+      res.status(200).json({ message: "Deixou de seguir o designer com sucesso" });
+    } catch (error) {
+      console.error("Erro ao deixar de seguir designer:", error);
+      res.status(500).json({ message: "Erro ao deixar de seguir designer" });
+    }
+  });
+  
+  // Listar seguidores de um designer
+  app.get("/api/designers/:id/followers", async (req, res) => {
+    try {
+      const designerId = parseInt(req.params.id);
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+      
+      // Verificar se o designer existe
+      const [designer] = await db.select()
+        .from(users)
+        .where(eq(users.id, designerId));
+      
+      if (!designer) {
+        return res.status(404).json({ message: "Designer não encontrado" });
+      }
+      
+      // Calcular offset para paginação
+      const offset = (page - 1) * limit;
+      
+      // Buscar seguidores
+      const followers = await db
+        .select({
+          id: users.id,
+          name: users.name,
+          username: users.username,
+          profileImageUrl: users.profileImageUrl,
+          role: users.role,
+          following: users.following,
+          followers: users.followers,
+          followDate: userFollows.createdAt
+        })
+        .from(userFollows)
+        .innerJoin(users, eq(userFollows.followerId, users.id))
+        .where(eq(userFollows.followingId, designerId))
+        .orderBy(desc(userFollows.createdAt))
+        .limit(limit)
+        .offset(offset);
+      
+      // Contar total de seguidores
+      const [{ value: totalCount }] = await db.select({
+        value: count()
+      })
+      .from(userFollows)
+      .where(eq(userFollows.followingId, designerId));
+      
+      res.json({
+        followers,
+        totalCount,
+        page,
+        limit,
+        totalPages: Math.ceil(totalCount / limit)
+      });
+    } catch (error) {
+      console.error("Erro ao buscar seguidores:", error);
+      res.status(500).json({ message: "Erro ao buscar seguidores" });
     }
   });
 
