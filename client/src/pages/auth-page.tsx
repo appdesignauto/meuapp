@@ -236,12 +236,12 @@ const AuthPage = () => {
 
                       <FormField
                         control={registerForm.control}
-                        name="email"
+                        name="name"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Email</FormLabel>
+                            <FormLabel>Nome completo</FormLabel>
                             <FormControl>
-                              <Input type="email" placeholder="seu@email.com" {...field} />
+                              <Input placeholder="Seu Nome" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -249,12 +249,12 @@ const AuthPage = () => {
                       />
                       <FormField
                         control={registerForm.control}
-                        name="name"
+                        name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Nome completo</FormLabel>
+                            <FormLabel>Email</FormLabel>
                             <FormControl>
-                              <Input placeholder="Seu Nome" {...field} />
+                              <Input type="email" placeholder="seu@email.com" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
