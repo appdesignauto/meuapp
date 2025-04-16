@@ -1051,25 +1051,15 @@ const UserTable = ({
                 <TableCell>{renderRoleBadge(user.role)}</TableCell>
                 <TableCell>{renderStatusBadge(user.isactive)}</TableCell>
                 <TableCell>
-                  <HoverCard>
-                    <HoverCardTrigger asChild>
-                      <span className="cursor-help">{formatDateRelative(user.createdAt)}</span>
-                    </HoverCardTrigger>
-                    <HoverCardContent side="top" className="w-auto p-2">
-                      <p className="text-xs">{formatFullDate(user.createdAt)}</p>
-                    </HoverCardContent>
-                  </HoverCard>
+                  <div className="text-sm">
+                    {formatFullDate(user.createdAt)}
+                  </div>
                 </TableCell>
                 <TableCell>
                   {user.lastLogin ? (
-                    <HoverCard>
-                      <HoverCardTrigger asChild>
-                        <span className="cursor-help">{formatDateRelative(user.lastLogin)}</span>
-                      </HoverCardTrigger>
-                      <HoverCardContent side="top" className="w-auto p-2">
-                        <p className="text-xs">{formatFullDate(user.lastLogin)}</p>
-                      </HoverCardContent>
-                    </HoverCard>
+                    <div className="text-sm">
+                      {formatFullDate(user.lastLogin)}
+                    </div>
                   ) : (
                     <span className="text-muted-foreground text-xs">Nunca</span>
                   )}
