@@ -460,11 +460,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           role, 
           0 AS followers, 
           0 AS following, 
-          createdat,
+          "createdAt" as createdat,
           updatedat
         FROM users 
         WHERE role IN ('designer', 'designer_adm', 'admin')
-        ORDER BY ${sort === 'activity' ? 'updatedat' : 'createdat'} DESC
+        ORDER BY ${sort === 'activity' ? 'updatedat' : '"createdAt"'} DESC
         LIMIT $1 OFFSET $2
       `;
       
@@ -487,11 +487,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           SELECT 
             id, 
             title, 
-            imageurl, 
-            ispremium
+            "imageUrl" as imageurl, 
+            "isPremium" as ispremium
           FROM arts 
           WHERE designerid = $1
-          ORDER BY createdat DESC
+          ORDER BY "createdAt" DESC
           LIMIT 4
         `;
         
@@ -540,7 +540,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           role, 
           0 AS followers, 
           0 AS following, 
-          createdat
+          "createdAt" as createdat
         FROM users 
         WHERE username = $1
       `;
@@ -569,15 +569,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         SELECT 
           id, 
           title, 
-          imageurl, 
-          ispremium, 
+          "imageUrl" as imageurl, 
+          "isPremium" as ispremium, 
           format, 
-          createdat,
-          downloadcount,
+          "createdAt" as createdat,
+          "downloadCount" as downloadcount,
           viewcount
         FROM arts
         WHERE designerid = $1
-        ORDER BY createdat DESC
+        ORDER BY "createdAt" DESC
       `;
       
       const artsResult = await db.execute(sql.raw(artsQuery, [designer.id]));
