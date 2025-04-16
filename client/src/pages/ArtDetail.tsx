@@ -20,6 +20,51 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import RelatedArts from '@/components/art/RelatedArts';
 
+// Interfaces para tipagem de dados
+interface RecentArt {
+  id: number;
+  title: string;
+  imageUrl: string;
+}
+
+interface Designer {
+  id: number;
+  name: string | null;
+  username: string;
+  profileImageUrl: string | null;
+  bio: string | null;
+  followers: number;
+  isFollowing: boolean;
+  totalArts?: number;
+  recentArts?: RecentArt[];
+}
+
+interface Art {
+  id: number;
+  title: string;
+  imageUrl: string;
+  description?: string;
+  editUrl: string;
+  viewCount?: number;
+  downloadCount?: number;
+  isPremium: boolean;
+  isPremiumLocked?: boolean;
+  createdAt: string;
+  category?: {
+    id: number;
+    name: string;
+  };
+  format?: {
+    id: number;
+    name: string;
+  };
+  fileType?: {
+    id: number;
+    name: string;
+  };
+  designer?: Designer;
+}
+
 export default function ArtDetail() {
   // Garantir rolagem para o topo ao navegar para esta página
   useScrollTop();
@@ -252,55 +297,139 @@ export default function ArtDetail() {
             
             {/* Designer Section */}
             {art.designer && (
-              <div className="flex items-center gap-3 py-3 border-t border-b border-neutral-100 mb-4">
-                <div className="flex-shrink-0">
-                  <div className="w-12 h-12 rounded-full overflow-hidden bg-neutral-100">
-                    {art.designer.profileImageUrl ? (
-                      <img 
-                        src={art.designer.profileImageUrl}
-                        alt={art.designer.name || art.designer.username}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-blue-100 text-blue-600 font-medium text-lg">
-                        {(art.designer.name?.[0] || art.designer.username[0]).toUpperCase()}
+              <div className="p-4 rounded-lg border border-neutral-200 shadow-sm mb-4 bg-white">
+                <div className="flex items-center gap-3 mb-3">
+                  <div 
+                    className="flex-shrink-0 cursor-pointer" 
+                    onClick={() => setLocation(`/designers/${art.designer.username}`)}
+                  >
+                    <div className="w-14 h-14 rounded-full overflow-hidden bg-neutral-100 border border-blue-100">
+                      {art.designer.profileImageUrl ? (
+                        <img 
+                          src={art.designer.profileImageUrl}
+                          alt={art.designer.name || art.designer.username}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-blue-100 text-blue-600 font-medium text-lg">
+                          {(art.designer.name?.[0] || art.designer.username[0]).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex-grow min-w-0">
+                    <div className="flex flex-col md:flex-row md:justify-between md:items-center">
+                      <div 
+                        className="cursor-pointer" 
+                        onClick={() => setLocation(`/designers/${art.designer.username}`)}
+                      >
+                        <p className="font-semibold text-gray-900 truncate hover:text-blue-600 transition-colors">
+                          {art.designer.name || art.designer.username}
+                        </p>
+                        <div className="flex items-center text-xs text-neutral-500 mt-1">
+                          <span className="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                            {art.designer.totalArts || '0'} arquivos
+                          </span>
+                          
+                          {art.designer.followers && (
+                            <>
+                              <span className="mx-1">•</span>
+                              <span className="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                                {art.designer.followers} seguidores
+                              </span>
+                            </>
+                          )}
+                        </div>
                       </div>
-                    )}
+                      
+                      {user && user.id !== art.designer.id && (
+                        <Button
+                          variant={art.designer.isFollowing ? "default" : "outline"}
+                          size="sm"
+                          className={`mt-2 md:mt-0 text-xs h-8 ${
+                            art.designer.isFollowing 
+                              ? "bg-blue-600 hover:bg-blue-700 text-white" 
+                              : "border-blue-200 text-blue-600 hover:bg-blue-50"
+                          }`}
+                          onClick={() => {
+                            if (!user) {
+                              toast({
+                                title: "Login Necessário",
+                                description: "Faça login para seguir este designer",
+                                variant: "destructive",
+                              });
+                              return;
+                            }
+                            
+                            const isCurrentlyFollowing = art.designer.isFollowing;
+                            
+                            // Otimistic UI update
+                            const designer = {...art.designer};
+                            designer.isFollowing = !isCurrentlyFollowing;
+                            if (isCurrentlyFollowing) {
+                              designer.followers = (designer.followers || 1) - 1;
+                            } else {
+                              designer.followers = (designer.followers || 0) + 1;
+                            }
+                            
+                            // Update local state
+                            const updatedArt = {...art, designer};
+                            
+                            // API call
+                            fetch(`/api/${isCurrentlyFollowing ? 'unfollow' : 'follow'}/${art.designer.id}`, {
+                              method: isCurrentlyFollowing ? 'DELETE' : 'POST',
+                              headers: {
+                                'Content-Type': 'application/json'
+                              },
+                              credentials: 'include'
+                            })
+                            .then(response => {
+                              if (!response.ok) throw new Error('Falha na operação de seguir');
+                              return response.json();
+                            })
+                            .then(() => {
+                              toast({
+                                title: isCurrentlyFollowing ? "Deixou de seguir" : "Designer seguido",
+                                description: isCurrentlyFollowing 
+                                  ? `Você deixou de seguir ${art.designer.name || art.designer.username}`
+                                  : `Você está seguindo ${art.designer.name || art.designer.username}`,
+                              });
+                            })
+                            .catch(error => {
+                              toast({
+                                title: "Erro na operação",
+                                description: error.message,
+                                variant: "destructive",
+                              });
+                            });
+                          }}
+                        >
+                          {art.designer.isFollowing ? "Seguindo" : "Seguir"}
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
                 
-                <div className="flex-grow min-w-0">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-medium text-gray-900 truncate">
-                        {art.designer.name || art.designer.username}
-                      </p>
-                      <p className="text-xs text-neutral-500">Designer</p>
-                    </div>
-                    
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-xs h-7 border-blue-200 text-blue-600 hover:bg-blue-50"
-                      onClick={() => {
-                        if (!user) {
-                          toast({
-                            title: "Login Necessário",
-                            description: "Faça login para seguir este designer",
-                            variant: "destructive",
-                          });
-                          return;
-                        }
-                        // Implementar lógica para seguir
-                        toast({
-                          title: "Designer seguido",
-                          description: `Você está seguindo ${art.designer.name || art.designer.username}`,
-                        });
-                      }}
-                    >
-                      Seguir
-                    </Button>
-                  </div>
+                {art.designer.bio && (
+                  <p className="text-sm text-neutral-600 mt-2 line-clamp-2">
+                    {art.designer.bio}
+                  </p>
+                )}
+                
+                <div className="mt-3 pt-2 border-t border-neutral-100">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 p-0 h-auto"
+                    onClick={() => setLocation(`/designers/${art.designer.username}`)}
+                  >
+                    Ver perfil completo
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                  </Button>
                 </div>
               </div>
             )}
@@ -450,13 +579,7 @@ export default function ArtDetail() {
               variant="ghost"
               size="sm"
               className="text-blue-600 font-medium"
-              onClick={() => {
-                // Navegar para a página do designer
-                toast({
-                  title: "Em desenvolvimento",
-                  description: "Esta funcionalidade será implementada em breve",
-                });
-              }}
+              onClick={() => setLocation(`/designers/${art.designer.username}`)}
             >
               Ver todas
             </Button>
@@ -464,19 +587,41 @@ export default function ArtDetail() {
           
           {/* Aqui virá um componente para listar as artes do designer */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {/* Exibir artes aqui quando implementado */}
-            <div className="h-48 bg-neutral-100 rounded-lg flex items-center justify-center text-neutral-400">
-              Em breve
-            </div>
-            <div className="h-48 bg-neutral-100 rounded-lg flex items-center justify-center text-neutral-400">
-              Em breve
-            </div>
-            <div className="hidden md:flex h-48 bg-neutral-100 rounded-lg items-center justify-center text-neutral-400">
-              Em breve
-            </div>
-            <div className="hidden md:flex h-48 bg-neutral-100 rounded-lg items-center justify-center text-neutral-400">
-              Em breve
-            </div>
+            {/* Implementar query para buscar outras artes do designer */}
+            {art.designer.recentArts && art.designer.recentArts.length > 0 ? (
+              art.designer.recentArts.map((recentArt: RecentArt) => (
+                <div 
+                  key={recentArt.id}
+                  className="relative aspect-square rounded-lg overflow-hidden bg-neutral-100 shadow-sm cursor-pointer"
+                  onClick={() => {
+                    if (recentArt.id !== art.id) {
+                      setLocation(`/arts/${recentArt.id}`);
+                    }
+                  }}
+                >
+                  <img 
+                    src={recentArt.imageUrl} 
+                    alt={recentArt.title} 
+                    className="w-full h-full object-cover"
+                  />
+                  {recentArt.id === art.id && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <span className="text-white text-xs font-medium">Arte atual</span>
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              // Se não tiver artes recentes, mostrar placeholders
+              Array(4).fill(0).map((_, index) => (
+                <div key={index} 
+                  className={`${index > 1 ? 'hidden md:flex' : 'flex'} h-48 bg-neutral-100 rounded-lg items-center justify-center text-neutral-400 text-sm`}
+                  onClick={() => setLocation(`/designers/${art.designer.username}`)}
+                >
+                  <span className="text-center px-2">Ver mais artes no perfil</span>
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}
