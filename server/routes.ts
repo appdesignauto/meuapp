@@ -450,6 +450,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Buscar todos os usuários com role 'designer', 'designer_adm' ou 'admin'
       // Executar SQL direto para evitar problemas com o TypeScript
+      const offset = (page - 1) * limit;
+      
       const designersQuery = `
         SELECT 
           id, 
@@ -465,11 +467,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         FROM users 
         WHERE role IN ('designer', 'designer_adm', 'admin')
         ORDER BY ${sort === 'activity' ? 'updatedat' : '"createdAt"'} DESC
-        LIMIT $1 OFFSET $2
+        LIMIT ${limit} OFFSET ${offset}
       `;
       
-      const offset = (page - 1) * limit;
-      const designers = await db.execute(sql.raw(designersQuery, [limit, offset]));
+      const designers = await db.execute(sql.raw(designersQuery));
       
       // Obter contagem total
       const totalCountQuery = `
