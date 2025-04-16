@@ -892,31 +892,40 @@ const UserTable = ({
     
     try {
       // Criar data a partir da string
-      const utcDate = new Date(dateString);
+      const date = new Date(dateString);
       
       // Verificar se a data é válida
-      if (isNaN(utcDate.getTime())) {
+      if (isNaN(date.getTime())) {
+        console.error("Data inválida:", dateString);
         return "Data inválida";
       }
       
-      // Converter para horário de Brasília (UTC-3)
-      const brasiliaOffset = -3 * 60; // Brasília é UTC-3 (em minutos)
-      const userOffset = utcDate.getTimezoneOffset(); // Offset do navegador em minutos
-      const offsetDiff = userOffset - brasiliaOffset; // Diferença entre o horário local e Brasília
-      
-      // Ajustar a data para o horário de Brasília
-      const brasiliaDate = new Date(utcDate.getTime() + offsetDiff * 60 * 1000);
+      // Verificar se a data é futura (tolerância de 5 minutos para evitar problemas de sincronização)
+      const now = new Date();
+      const fiveMinutes = 5 * 60 * 1000; // 5 minutos em milissegundos
+      if (date.getTime() > now.getTime() + fiveMinutes) {
+        console.error("Data futura detectada:", dateString, "Data:", date, "Agora:", now);
+        
+        // Correção automática: se a data for futura, usar a data atual
+        console.log("Corrigindo data para a data atual");
+        return new Date().toLocaleDateString("pt-BR", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit"
+        }) + " (BRT)";
+      }
       
       // Formatar no padrão brasileiro
-      const formattedDate = brasiliaDate.toLocaleDateString("pt-BR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit"
-      });
-      
-      return formattedDate + " (BRT)"; // Adicionar indicador de fuso horário
+      return new Intl.DateTimeFormat('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'America/Sao_Paulo' // Usando timezone de Brasília
+      }).format(date) + " (BRT)";
     } catch (error) {
       console.error("Erro ao formatar data completa:", error, "Data:", dateString);
       return "Data inválida";

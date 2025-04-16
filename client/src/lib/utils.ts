@@ -10,26 +10,44 @@ export function formatDate(dateString: string): string {
   
   try {
     // Criar data a partir da string
-    const utcDate = new Date(dateString);
+    const date = new Date(dateString);
     
     // Verificar se a data é válida
-    if (isNaN(utcDate.getTime())) {
+    if (isNaN(date.getTime())) {
       console.error("Data inválida:", dateString);
       return "Data não disponível";
     }
     
-    // Converter para horário de Brasília (UTC-3)
-    const brasiliaOffset = -3 * 60; // Brasília é UTC-3 (em minutos)
-    const userOffset = utcDate.getTimezoneOffset(); // Offset do navegador em minutos
-    const offsetDiff = userOffset - brasiliaOffset; // Diferença entre o horário local e Brasília
-    
-    // Ajustar a data para o horário de Brasília
-    const brasiliaDate = new Date(utcDate.getTime() + offsetDiff * 60 * 1000);
+    // Verificar se a data é futura (tolerância de 5 minutos para evitar problemas de sincronização)
     const now = new Date();
-    const localNow = new Date(now.getTime() + offsetDiff * 60 * 1000);
+    const fiveMinutes = 5 * 60 * 1000; // 5 minutos em milissegundos
+    if (date.getTime() > now.getTime() + fiveMinutes) {
+      console.error("Data futura detectada:", dateString, "Data:", date, "Agora:", now);
+      // Usar a data atual em vez da data futura
+      return formatRelativeTime(new Date());
+    }
     
-    // Calcular a diferença em dias
-    const diffTime = Math.abs(localNow.getTime() - brasiliaDate.getTime());
+    return formatRelativeTime(date);
+  } catch (error) {
+    console.error("Erro ao formatar data:", error, "Data:", dateString);
+    return "Data não disponível";
+  }
+}
+
+// Função auxiliar para formatar o tempo relativo a partir de uma data
+function formatRelativeTime(date: Date): string {
+  // Usar Intl.DateTimeFormat para obter a data no fuso horário de Brasília
+  // Primeiro converter para string no formato ISO para garantir compatibilidade
+  try {
+    const dateFormatter = new Intl.DateTimeFormat('pt-BR', {
+      timeZone: 'America/Sao_Paulo'
+    });
+    const fmtDate = new Date(dateFormatter.format(date));
+    
+    // Calcular diferença em dias
+    const now = new Date();
+    const nowBrasilia = new Date(dateFormatter.format(now));
+    const diffTime = Math.abs(nowBrasilia.getTime() - fmtDate.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
     if (diffDays === 1) {
@@ -44,8 +62,10 @@ export function formatDate(dateString: string): string {
       return `Atualizado há ${months} ${months === 1 ? 'mês' : 'meses'}`;
     }
   } catch (error) {
-    console.error("Erro ao formatar data:", error, "Data:", dateString);
-    return "Data não disponível";
+    console.error("Erro ao calcular tempo relativo:", error);
+    
+    // Fallback para formato mais simples
+    return `Atualizado em ${date.toLocaleDateString('pt-BR')}`;
   }
 }
 
