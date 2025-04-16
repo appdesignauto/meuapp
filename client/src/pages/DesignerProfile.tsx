@@ -426,58 +426,72 @@ export default function DesignerProfile() {
         </div>
       </div>
       
-      {/* Título e Filtros Inteligentes */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-        <h2 className="text-2xl font-bold flex items-center">
-          Artes do Designer
-          <span className="ml-2 text-muted-foreground font-normal text-base">
-            ({data.statistics.totalArts})
-          </span>
-        </h2>
-        
-        {/* Filtros inteligentes */}
-        <div className="flex flex-wrap gap-2 mt-3 md:mt-0">
-          <Button variant="outline" size="sm" className="rounded-full px-4 h-8 bg-white">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path></svg>
-            Filtros
-          </Button>
-          <Button variant="outline" size="sm" className="rounded-full px-4 h-8 bg-white border-blue-200">
-            Todos
-          </Button>
-          <Button variant="outline" size="sm" className="rounded-full px-4 h-8 bg-white">
-            Premium
-          </Button>
-          <Button variant="outline" size="sm" className="rounded-full px-4 h-8 bg-white">
-            Instagram
-          </Button>
-        </div>
-      </div>
-      
-      {data.arts.length === 0 ? (
-        <div className="text-center py-12 bg-muted/30 rounded-lg">
-          <h3 className="text-xl font-medium">Nenhuma arte encontrada</h3>
-          <p className="text-muted-foreground mt-2">
-            Este designer ainda não publicou nenhuma arte.
-          </p>
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {displayedArts(data).map((art) => (
-              <ArtCard key={art.id} art={art} />
-            ))}
-          </div>
+      {/* Seção das Artes com layout centralizado e responsivo */}
+      <div className="max-w-6xl mx-auto">
+        {/* Título e Filtros Inteligentes */}
+        <div className="flex flex-col md:flex-row justify-between items-center mb-8 bg-white/60 p-4 rounded-xl shadow-sm border border-gray-100">
+          <h2 className="text-2xl font-bold flex items-center text-blue-800">
+            Artes do Designer
+            <span className="ml-2 text-blue-400 font-normal text-base">
+              ({data.statistics.totalArts})
+            </span>
+          </h2>
           
-          {totalArtsPages(data) > 1 && (
-            <Pagination
-              currentPage={artsPage}
-              totalPages={totalArtsPages(data)}
-              onPageChange={handlePageChange}
-              className="mt-8"
-            />
-          )}
-        </>
-      )}
+          {/* Filtros inteligentes */}
+          <div className="flex flex-wrap justify-center gap-2 mt-4 md:mt-0">
+            <Button variant="outline" size="sm" className="rounded-full px-4 h-8 bg-white shadow-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path></svg>
+              Filtros
+            </Button>
+            <Button variant="outline" size="sm" className="rounded-full px-4 h-8 bg-white border-blue-200 text-blue-700 shadow-sm">
+              Todos
+            </Button>
+            <Button variant="outline" size="sm" className="rounded-full px-4 h-8 bg-white shadow-sm hover:border-blue-200">
+              Premium
+            </Button>
+            <Button variant="outline" size="sm" className="rounded-full px-4 h-8 bg-white shadow-sm hover:border-blue-200">
+              Instagram
+            </Button>
+          </div>
+        </div>
+        
+        {data.arts.length === 0 ? (
+          <div className="text-center py-16 bg-white rounded-xl shadow-sm border border-gray-100">
+            <h3 className="text-xl font-medium text-gray-800">Nenhuma arte encontrada</h3>
+            <p className="text-gray-500 mt-2">
+              Este designer ainda não publicou nenhuma arte.
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Layout com Masonry adaptativo para estilo Pinterest */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              {displayedArts(data).map((art, index) => (
+                <div 
+                  key={art.id} 
+                  className={`
+                    mb-4 md:mb-6 transition-all duration-200 hover:translate-y-[-5px]
+                    ${index % 3 === 0 ? 'row-span-1' : index % 5 === 0 ? 'row-span-1' : ''}
+                  `}
+                >
+                  <ArtCard art={art} />
+                </div>
+              ))}
+            </div>
+            
+            {/* Paginação centralizada */}
+            {totalArtsPages(data) > 1 && (
+              <div className="flex justify-center mt-10 mb-6">
+                <Pagination
+                  currentPage={artsPage}
+                  totalPages={totalArtsPages(data)}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
