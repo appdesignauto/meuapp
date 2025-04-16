@@ -23,10 +23,13 @@ type LoginData = {
 };
 
 type RegisterData = {
-  username: string;
+  username?: string;
   email: string;
   password: string;
-  name?: string;
+  name: string;
+  role: "user" | "designer" | "admin" | "designer_adm" | "support";
+  plan: "free" | "premium" | "enterprise";
+  periodType: "mensal" | "anual" | "vitalicio";
 };
 
 export const AuthContext = createContext<AuthContextType | null>(null);

@@ -1236,19 +1236,49 @@ export class DatabaseStorage implements IStorage {
   async createUser(insertUser: any): Promise<User> {
     try {
       // Extraindo os dados do usuário
-      const { username, password, email, name, role, profileImageUrl, bio, isActive } = insertUser;
+      const { username, password, email, name, role, profileImageUrl, bio, isActive, plan, periodType } = insertUser;
       
       const now = new Date();
       
+      // Calcular data de expiração baseada no período
+      let expirationDate = null;
+      if (periodType && periodType !== 'vitalicio') {
+        const expDate = new Date(now);
+        if (periodType === 'mensal') {
+          expDate.setMonth(expDate.getMonth() + 1);
+        } else if (periodType === 'anual') {
+          expDate.setFullYear(expDate.getFullYear() + 1);
+        }
+        expirationDate = expDate;
+      }
+      
       // Execute SQL usando template literal para evitar problema com parâmetros nomeados
       const result = await db.execute(sql`
-        INSERT INTO users (username, password, email, name, role, profileimageurl, bio, isactive, lastlogin, "createdAt", updatedat) 
+        INSERT INTO users (
+          username, 
+          password, 
+          email, 
+          name, 
+          role, 
+          plan,
+          periodtype,
+          expirationdate,
+          profileimageurl, 
+          bio, 
+          isactive, 
+          lastlogin, 
+          "createdAt", 
+          updatedat
+        ) 
         VALUES (
           ${username}, 
           ${password}, 
           ${email}, 
           ${name || null}, 
           ${role || 'free'}, 
+          ${plan || 'free'},
+          ${periodType || 'mensal'},
+          ${expirationDate},
           ${profileImageUrl || null}, 
           ${bio || null}, 
           ${isActive !== undefined ? isActive : true}, 
