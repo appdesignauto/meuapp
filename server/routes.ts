@@ -555,7 +555,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           isactive, 
           lastlogin, 
           "createdAt", 
-          "updatedAt"
+          updatedat
         FROM users
         ORDER BY "createdAt" DESC
       `;
@@ -688,7 +688,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           bio: null,
           lastlogin: new Date(),
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedat: new Date()
         })
         .returning();
       
@@ -721,7 +721,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             name: name || null,
             bio: bio || null,
             profileimageurl: profileimageurl || null,
-            updatedAt: new Date()
+            updatedat: new Date()
           })
           .where(eq(users.id, userId));
       } else {
@@ -766,7 +766,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Preparar objeto de atualização
         const updateData: Record<string, any> = {
-          updatedAt: new Date()
+          updatedat: new Date()
         };
         
         if (username) updateData.username = username;
@@ -1173,7 +1173,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           website: website || user.website,
           location: location || user.location,
           sociallinks: socialLinks || user.sociallinks,
-          updatedAt: new Date()
+          updatedat: new Date()
         })
         .where(eq(users.id, userId));
       
@@ -1291,7 +1291,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await db.update(users)
         .set({
           profileimageurl: imageUrl,
-          updatedAt: new Date()
+          updatedat: new Date()
         })
         .where(eq(users.id, userId));
       

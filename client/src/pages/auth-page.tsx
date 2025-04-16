@@ -12,15 +12,16 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 
 const loginSchema = z.object({
-  username: z.string().min(3, "O nome de usuário deve ter pelo menos 3 caracteres"),
+  email: z.string().email("Email inválido"),
   password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
 });
 
@@ -40,6 +41,8 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 const AuthPage = () => {
   const [activeTab, setActiveTab] = useState<string>("login");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [, setLocation] = useLocation();
   const { user, loginMutation, registerMutation } = useAuth();
   const { toast } = useToast();
@@ -54,7 +57,7 @@ const AuthPage = () => {
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
@@ -73,7 +76,13 @@ const AuthPage = () => {
 
   const onLoginSubmit = async (values: LoginFormValues) => {
     try {
-      await loginMutation.mutateAsync(values);
+      // Converter do formato de login por email para o formato que a API espera
+      const loginData = {
+        username: values.email, // Temporariamente usamos o campo username da API
+        password: values.password,
+      };
+      
+      await loginMutation.mutateAsync(loginData);
       setLocation("/");
     } catch (error) {
       // Erro já tratado no hook useAuth
@@ -114,12 +123,12 @@ const AuthPage = () => {
                     <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                       <FormField
                         control={loginForm.control}
-                        name="username"
+                        name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Nome de usuário</FormLabel>
+                            <FormLabel>Email</FormLabel>
                             <FormControl>
-                              <Input placeholder="seu.usuario" {...field} />
+                              <Input type="email" placeholder="seu@email.com" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -131,9 +140,31 @@ const AuthPage = () => {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Senha</FormLabel>
-                            <FormControl>
-                              <Input type="password" placeholder="******" {...field} />
-                            </FormControl>
+                            <div className="relative">
+                              <FormControl>
+                                <Input 
+                                  type={showPassword ? "text" : "password"} 
+                                  placeholder="******" 
+                                  {...field} 
+                                />
+                              </FormControl>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="absolute right-0 top-0 h-full px-3 py-2 text-gray-400 hover:text-gray-600"
+                                onClick={() => setShowPassword(!showPassword)}
+                              >
+                                {showPassword ? (
+                                  <EyeOff className="h-4 w-4" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                                <span className="sr-only">
+                                  {showPassword ? "Esconder senha" : "Mostrar senha"}
+                                </span>
+                              </Button>
+                            </div>
                             <FormMessage />
                           </FormItem>
                         )}
