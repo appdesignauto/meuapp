@@ -575,7 +575,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           format, 
           "createdAt" as createdat,
           "downloadCount" as downloadcount,
-          viewcount
+          "viewCount" as viewcount
         FROM arts
         WHERE designerid = ${designer.id}
         ORDER BY "createdAt" DESC
