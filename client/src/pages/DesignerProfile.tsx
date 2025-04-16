@@ -251,157 +251,184 @@ export default function DesignerProfile() {
   
   return (
     <div className="container py-8">
-      <Card className="p-6 mb-8">
-        <div className="flex flex-col md:flex-row gap-6">
-          <div className="flex-shrink-0 flex flex-col items-center">
-            <div className="relative">
-              <Avatar className="h-24 w-24 md:h-36 md:w-36 border">
-                <AvatarImage 
-                  src={data.profileImageUrl || ""} 
-                  alt={data.name || data.username} 
-                />
-                <AvatarFallback className="text-2xl">
-                  {data.name ? data.name.charAt(0).toUpperCase() : data.username.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              
-              {user && user.id === data.id && (
-                <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button 
-                      size="icon" 
-                      className="absolute -bottom-2 -right-2 rounded-full h-8 w-8 shadow-md"
-                    >
-                      <Camera className="h-4 w-4" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Atualizar foto de perfil</DialogTitle>
-                    </DialogHeader>
-                    <div className="py-4">
-                      <div className="flex flex-col items-center justify-center gap-4">
-                        <Avatar className="h-24 w-24 border">
-                          <AvatarImage 
-                            src={previewImage || data.profileImageUrl || ""} 
-                            alt={data.name || data.username} 
+      {/* Profile Header - Estilo Pinterest moderno */}
+      <div className="mb-8">
+        <div className="bg-gradient-to-r from-blue-50 to-blue-100 h-44 md:h-60 rounded-lg overflow-hidden relative">
+          {/* Cover photo background */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/5 to-blue-400/10"></div>
+          
+          {/* Profile info overlayed */}
+          <div className="absolute bottom-0 left-0 right-0">
+            <div className="container px-4 md:px-8 pb-4 md:pb-6 flex flex-col md:flex-row items-center md:items-end gap-3">
+              <div className="relative -mt-14 md:-mt-20 z-10">
+                <Avatar className="h-28 w-28 md:h-40 md:w-40 border-4 border-white shadow-lg">
+                  <AvatarImage 
+                    src={data.profileImageUrl || ""} 
+                    alt={data.name || data.username} 
+                  />
+                  <AvatarFallback className="text-3xl bg-blue-100">
+                    {data.name ? data.name.charAt(0).toUpperCase() : data.username.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                
+                {user && user.id === data.id && (
+                  <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button 
+                        size="icon" 
+                        className="absolute bottom-2 right-2 rounded-full h-9 w-9 shadow-md"
+                      >
+                        <Camera className="h-4 w-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Atualizar foto de perfil</DialogTitle>
+                      </DialogHeader>
+                      <div className="py-4">
+                        <div className="flex flex-col items-center justify-center gap-4">
+                          <Avatar className="h-24 w-24 border">
+                            <AvatarImage 
+                              src={previewImage || data.profileImageUrl || ""} 
+                              alt={data.name || data.username} 
+                            />
+                            <AvatarFallback className="text-xl">
+                              {data.name ? data.name.charAt(0).toUpperCase() : data.username.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            ref={fileInputRef}
+                            onChange={handleFileChange}
                           />
-                          <AvatarFallback className="text-xl">
-                            {data.name ? data.name.charAt(0).toUpperCase() : data.username.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          ref={fileInputRef}
-                          onChange={handleFileChange}
-                        />
-                        
-                        <div className="flex gap-2">
-                          {!previewImage ? (
-                            <Button 
-                              onClick={() => fileInputRef.current?.click()}
-                              disabled={profileImageMutation.isPending}
-                            >
-                              {profileImageMutation.isPending ? (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              ) : (
-                                <Upload className="mr-2 h-4 w-4" />
-                              )}
-                              Escolher imagem
-                            </Button>
-                          ) : (
-                            <>
+                          
+                          <div className="flex gap-2">
+                            {!previewImage ? (
                               <Button 
-                                onClick={handleImageUpload}
+                                onClick={() => fileInputRef.current?.click()}
                                 disabled={profileImageMutation.isPending}
-                                className="px-4"
                               >
                                 {profileImageMutation.isPending ? (
                                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                ) : null}
-                                Salvar
+                                ) : (
+                                  <Upload className="mr-2 h-4 w-4" />
+                                )}
+                                Escolher imagem
                               </Button>
-                              <Button 
-                                variant="outline" 
-                                onClick={() => {
-                                  if (previewImage) {
-                                    URL.revokeObjectURL(previewImage);
-                                    setPreviewImage(null);
-                                  }
-                                  if (fileInputRef.current) {
-                                    fileInputRef.current.value = '';
-                                  }
-                                }}
-                                disabled={profileImageMutation.isPending}
-                              >
-                                Cancelar
-                              </Button>
-                            </>
-                          )}
+                            ) : (
+                              <>
+                                <Button 
+                                  onClick={handleImageUpload}
+                                  disabled={profileImageMutation.isPending}
+                                  className="px-4"
+                                >
+                                  {profileImageMutation.isPending ? (
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  ) : null}
+                                  Salvar
+                                </Button>
+                                <Button 
+                                  variant="outline" 
+                                  onClick={() => {
+                                    if (previewImage) {
+                                      URL.revokeObjectURL(previewImage);
+                                      setPreviewImage(null);
+                                    }
+                                    if (fileInputRef.current) {
+                                      fileInputRef.current.value = '';
+                                    }
+                                  }}
+                                  disabled={profileImageMutation.isPending}
+                                >
+                                  Cancelar
+                                </Button>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              )}
-            </div>
-            
-            {user && user.id !== data.id && (
-              <Button
-                onClick={handleFollowToggle}
-                variant={data.isFollowing ? "outline" : "default"}
-                className="mt-4 w-full"
-                disabled={followMutation.isPending || unfollowMutation.isPending}
-              >
-                {followMutation.isPending || unfollowMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <UsersRound className="h-4 w-4 mr-2" />
+                    </DialogContent>
+                  </Dialog>
                 )}
-                {data.isFollowing ? "Seguindo" : "Seguir"}
-              </Button>
-            )}
-          </div>
-          
-          <div className="flex-1">
-            <div className="flex flex-wrap items-center">
-              <h1 className="text-3xl font-bold">
-                {data.name || data.username}
-              </h1>
-              {getRoleBadge(data.role)}
-              {data.role === 'admin' && (
-                <ShieldCheck className="w-5 h-5 ml-2 text-primary" />
-              )}
-            </div>
-            
-            <p className="text-muted-foreground">@{data.username}</p>
-            
-            {data.bio && (
-              <p className="mt-4 whitespace-pre-line">{data.bio}</p>
-            )}
-            
-            <div className="flex flex-wrap gap-x-6 gap-y-3 mt-6">
-              <div className="flex items-center">
-                <UsersRound className="w-5 h-5 mr-2 text-muted-foreground" />
-                <span><strong>{data.followers}</strong> seguidores</span>
               </div>
               
-              <div className="flex items-center">
-                <Eye className="w-5 h-5 mr-2 text-muted-foreground" />
-                <span><strong>{data.statistics.totalViews}</strong> visualizações</span>
-              </div>
-              
-              <div className="flex items-center">
-                <Download className="w-5 h-5 mr-2 text-muted-foreground" />
-                <span><strong>{data.statistics.totalDownloads}</strong> downloads</span>
+              <div className="md:ml-4 flex-1 text-center md:text-left mt-2 md:mt-0">
+                <div className="flex flex-col md:flex-row md:items-end gap-4 md:justify-between">
+                  <div>
+                    <div className="flex flex-wrap justify-center md:justify-start items-center gap-2">
+                      <h1 className="text-3xl font-bold text-gray-900">
+                        {data.name || data.username}
+                      </h1>
+                      {getRoleBadge(data.role)}
+                      {data.role === 'admin' && (
+                        <ShieldCheck className="w-5 h-5 text-blue-600" />
+                      )}
+                    </div>
+                    <p className="text-gray-500 text-sm">@{data.username}</p>
+                  </div>
+                  
+                  {user && user.id !== data.id && (
+                    <Button
+                      onClick={handleFollowToggle}
+                      variant={data.isFollowing ? "outline" : "default"}
+                      className={`px-6 h-10 ${data.isFollowing ? 'border-blue-300 text-blue-700 hover:bg-blue-50' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+                      disabled={followMutation.isPending || unfollowMutation.isPending}
+                    >
+                      {followMutation.isPending || unfollowMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <UsersRound className="h-4 w-4 mr-2" />
+                      )}
+                      {data.isFollowing ? (
+                        <>
+                          <span className="hidden md:inline">Seguindo</span>
+                          <span className="md:hidden">Seguindo</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="hidden md:inline">Seguir</span>
+                          <span className="md:hidden">Seguir</span>
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </Card>
+        
+        {/* Designer info and stats */}
+        <div className="pt-16 md:pt-4 px-4 flex flex-col md:flex-row gap-6 md:gap-10 items-center md:items-start">
+          <div className="w-full max-w-3xl mx-auto">
+            {data.bio && (
+              <div className="mb-6 text-center md:text-left">
+                <p className="whitespace-pre-line text-gray-700">{data.bio}</p>
+              </div>
+            )}
+            
+            <div className="grid grid-cols-3 gap-4 mt-4">
+              <div className="text-center p-4 bg-white rounded-lg shadow-sm border border-gray-100">
+                <p className="text-2xl font-bold text-blue-600">{data.followers}</p>
+                <p className="text-xs text-gray-500 mt-1">Seguidores</p>
+              </div>
+              
+              <div className="text-center p-4 bg-white rounded-lg shadow-sm border border-gray-100">
+                <p className="text-2xl font-bold text-blue-600">{data.statistics.totalArts}</p>
+                <p className="text-xs text-gray-500 mt-1">Artes</p>
+              </div>
+              
+              <div className="text-center p-4 bg-white rounded-lg shadow-sm border border-gray-100">
+                <p className="text-2xl font-bold text-blue-600">{data.statistics.totalDownloads}</p>
+                <p className="text-xs text-gray-500 mt-1">Downloads</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       
       <h2 className="text-2xl font-bold mb-6 flex items-center">
         Artes do Designer

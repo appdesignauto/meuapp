@@ -1,9 +1,6 @@
 import { Link } from "wouter";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Crown } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
 
 interface Art {
   id: number;
@@ -20,27 +17,24 @@ interface ArtCardProps {
 }
 
 function ArtCard({ art, onClick }: ArtCardProps) {
-  // Formato a data relativa - ex: "há 2 dias"
-  const formattedDate = art.createdAt 
-    ? formatDistanceToNow(new Date(art.createdAt), { 
-        addSuffix: true, 
-        locale: ptBR 
-      })
-    : null;
-  
+  // Estilo Pinterest: sem rodapé com informações, apenas imagem com badges opcionais
   const renderCard = () => (
-    <Card className="overflow-hidden transition-all duration-300 hover:shadow-md cursor-pointer h-full flex flex-col">
-      <div className="relative aspect-square overflow-hidden bg-muted">
+    <div className="overflow-hidden rounded-xl transition-all duration-300 hover:shadow-md cursor-pointer h-full bg-muted">
+      <div className="relative overflow-hidden w-full h-full">
         <img
           src={art.imageUrl}
           alt={art.title}
           className="object-cover w-full h-full transition-transform duration-300 hover:scale-105"
           loading="lazy"
+          title={art.title} // Mostra o título no hover
         />
+        
+        {/* Overlay escuro sutil no hover para melhorar legibilidade */}
+        <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors duration-300"></div>
         
         {art.isPremium && (
           <div className="absolute top-2 right-2">
-            <Badge variant="default" className="flex items-center gap-1">
+            <Badge variant="default" className="flex items-center gap-1 shadow-sm">
               <Crown className="h-3 w-3" />
               <span>Premium</span>
             </Badge>
@@ -49,25 +43,13 @@ function ArtCard({ art, onClick }: ArtCardProps) {
         
         {art.format && (
           <div className="absolute bottom-2 left-2">
-            <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm">
+            <Badge variant="secondary" className="bg-white/80 backdrop-blur-sm shadow-sm text-xs">
               {art.format}
             </Badge>
           </div>
         )}
       </div>
-      
-      <CardContent className="p-3 flex-grow flex flex-col justify-between">
-        <h3 className="font-medium line-clamp-2 mb-1" title={art.title}>
-          {art.title}
-        </h3>
-        
-        {formattedDate && (
-          <p className="text-xs text-muted-foreground mt-auto">
-            {formattedDate}
-          </p>
-        )}
-      </CardContent>
-    </Card>
+    </div>
   );
 
   return onClick ? (
