@@ -96,6 +96,9 @@ interface UserWithStats extends User {
   lastLogin?: string;
   online?: boolean;  // Novo campo para indicar status online
   lastActivity?: string;  // Último registro de atividade
+  
+  // Índice para permitir acesso dinâmico às propriedades
+  [key: string]: any;
 }
 
 interface UserFormData {
@@ -427,6 +430,20 @@ const UserManagement = () => {
       })
     : [];
     
+  // Função para ordenar a lista de usuários
+  const handleSort = (key: string) => {
+    // Se já estiver ordenando por essa coluna, inverter a direção
+    if (sortConfig?.key === key) {
+      setSortConfig({
+        key,
+        direction: sortConfig.direction === 'asc' ? 'desc' : 'asc',
+      });
+    } else {
+      // Caso contrário, ordenar por essa coluna em ordem ascendente
+      setSortConfig({ key, direction: 'asc' });
+    }
+  };
+
   // Ordenar usuários se sortConfig estiver definido
   const sortedUsers = sortConfig 
     ? [...filteredUsers].sort((a, b) => {
@@ -448,6 +465,65 @@ const UserManagement = () => {
         return sortConfig.direction === 'asc' ? result : -result;
       })
     : filteredUsers;
+    
+  // Função para exportar dados de usuários para CSV
+  const exportUsersToCsv = () => {
+    if (!users || users.length === 0) {
+      toast({
+        title: "Nenhum dado para exportar",
+        description: "Não há usuários disponíveis para exportação",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Cabeçalhos do CSV
+    const headers = [
+      'ID', 
+      'Username', 
+      'Nome', 
+      'Email', 
+      'Papel', 
+      'Status', 
+      'Data de Cadastro', 
+      'Último Login'
+    ];
+    
+    // Linhas de dados
+    const rows = users.map(user => [
+      user.id,
+      user.username,
+      user.name || '',
+      user.email,
+      userRoles.find(r => r.value === user.role)?.label || user.role,
+      user.isactive ? 'Ativo' : 'Inativo',
+      new Date(user.createdAt).toLocaleDateString('pt-BR'),
+      user.lastLogin ? new Date(user.lastLogin).toLocaleDateString('pt-BR') : 'Nunca'
+    ]);
+    
+    // Criar o conteúdo CSV
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.join(','))
+    ].join('\n');
+    
+    // Criar um Blob com o conteúdo CSV
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
+    // Criar um link para download e clicar nele
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `usuarios_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+      title: "Exportação concluída",
+      description: "Os dados dos usuários foram exportados com sucesso",
+    });
+  };
 
   // Submeter formulário de criação
   const handleCreateSubmit = createForm.handleSubmit((data) => {
@@ -640,26 +716,66 @@ const UserManagement = () => {
               </div>
             </div>
             <div className="flex flex-wrap gap-2 mt-4">
-              <Button variant="outline" size="sm" className="flex items-center gap-1">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex items-center gap-1"
+                onClick={exportUsersToCsv}
+              >
                 <DownloadIcon className="h-4 w-4" />
                 Exportar
               </Button>
-              <Button variant="outline" size="sm" className="flex items-center gap-1">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex items-center gap-1"
+                onClick={() => setIsNotificationDialogOpen(true)}
+              >
                 <BellIcon className="h-4 w-4" />
                 Enviar notificação
               </Button>
-              <Button variant="outline" size="sm" className="flex items-center gap-1">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex items-center gap-1"
+                onClick={() => setIsStatsDialogOpen(true)}
+              >
                 <BarChart2Icon className="h-4 w-4" />
                 Estatísticas
               </Button>
-              <Button variant="outline" size="sm" className="flex items-center gap-1">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex items-center gap-1"
+                onClick={() => setIsExportDialogOpen(true)}
+              >
                 <FilterIcon className="h-4 w-4" />
                 Mais filtros
               </Button>
-              <Button variant="outline" size="sm" className="flex items-center gap-1">
-                <CalendarIcon className="h-4 w-4" />
-                Filtrar por data
-              </Button>
+              <Select 
+                value={dateFilter} 
+                onValueChange={(value) => setDateFilter(value as "all" | "today" | "week" | "month" | "custom")}
+              >
+                <SelectTrigger className="h-9 w-[180px]">
+                  <div className="flex items-center gap-1">
+                    <CalendarIcon className="h-4 w-4" />
+                    <span>
+                      {dateFilter === "all" && "Todas as datas"}
+                      {dateFilter === "today" && "Hoje"}
+                      {dateFilter === "week" && "Última semana"}
+                      {dateFilter === "month" && "Último mês"}
+                      {dateFilter === "custom" && "Intervalo personalizado"}
+                    </span>
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as datas</SelectItem>
+                  <SelectItem value="today">Hoje</SelectItem>
+                  <SelectItem value="week">Última semana</SelectItem>
+                  <SelectItem value="month">Último mês</SelectItem>
+                  <SelectItem value="custom">Intervalo personalizado</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>
@@ -674,46 +790,54 @@ const UserManagement = () => {
         </TabsList>
         <TabsContent value="all" className="mt-6">
           <UserTable 
-            users={filteredUsers} 
+            users={sortedUsers} 
             isLoading={isLoadingUsers}
             renderRoleBadge={renderRoleBadge}
             renderStatusBadge={renderStatusBadge}
             setSelectedUser={setSelectedUser}
             setIsEditDialogOpen={setIsEditDialogOpen}
             toggleUserStatusMutation={toggleUserStatusMutation}
+            sortConfig={sortConfig}
+            onSort={handleSort}
           />
         </TabsContent>
         <TabsContent value="active" className="mt-6">
           <UserTable 
-            users={filteredUsers} 
+            users={sortedUsers} 
             isLoading={isLoadingUsers}
             renderRoleBadge={renderRoleBadge}
             renderStatusBadge={renderStatusBadge}
             setSelectedUser={setSelectedUser}
             setIsEditDialogOpen={setIsEditDialogOpen}
             toggleUserStatusMutation={toggleUserStatusMutation}
+            sortConfig={sortConfig}
+            onSort={handleSort}
           />
         </TabsContent>
         <TabsContent value="inactive" className="mt-6">
           <UserTable 
-            users={filteredUsers} 
+            users={sortedUsers} 
             isLoading={isLoadingUsers}
             renderRoleBadge={renderRoleBadge}
             renderStatusBadge={renderStatusBadge}
             setSelectedUser={setSelectedUser}
             setIsEditDialogOpen={setIsEditDialogOpen}
             toggleUserStatusMutation={toggleUserStatusMutation}
+            sortConfig={sortConfig}
+            onSort={handleSort}
           />
         </TabsContent>
         <TabsContent value="designers" className="mt-6">
           <UserTable 
-            users={filteredUsers} 
+            users={sortedUsers} 
             isLoading={isLoadingUsers}
             renderRoleBadge={renderRoleBadge}
             renderStatusBadge={renderStatusBadge}
             setSelectedUser={setSelectedUser}
             setIsEditDialogOpen={setIsEditDialogOpen}
             toggleUserStatusMutation={toggleUserStatusMutation}
+            sortConfig={sortConfig}
+            onSort={handleSort}
           />
         </TabsContent>
       </Tabs>
@@ -996,6 +1120,8 @@ const UserTable = ({
   setSelectedUser,
   setIsEditDialogOpen,
   toggleUserStatusMutation,
+  sortConfig,
+  onSort,
 }: UserTableProps) => {
   // Função para formatar data e mostrar tempo relativo
   const formatDateRelative = (dateString: string) => {
