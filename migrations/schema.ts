@@ -147,7 +147,7 @@ export const users = pgTable("users", {
         email: text().notNull(),
         password: text().notNull(),
         name: text(),
-        profileImageUrl: text(),
+        profileimageurl: text(),
         bio: text(),
         role: text().default('free').notNull(), // 'free', 'premium', 'designer', 'designer_adm', 'support', 'admin'
         isVerified: boolean().default(false).notNull(),
