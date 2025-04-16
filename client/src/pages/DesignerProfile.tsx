@@ -251,21 +251,31 @@ export default function DesignerProfile() {
   
   return (
     <div className="container py-8">
-      {/* Profile Header - Estilo Pinterest moderno e centralizado */}
+      {/* Profile Header - Estilo mais clean baseado na referência */}
       <div className="mb-12">
-        <div className="bg-gradient-to-r from-blue-50 to-blue-100 h-48 md:h-64 rounded-lg overflow-hidden relative">
-          {/* Cover photo background com efeito mais elegante */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/10 to-blue-400/15"></div>
-          
-          {/* Sobreposição central para o avatar e nome */}
-          <div className="absolute -bottom-16 left-0 right-0 flex justify-center">
-            <div className="flex flex-col items-center">
-              <Avatar className="h-32 w-32 border-4 border-white shadow-lg">
+        {/* Cover photo com cores geométricas */}
+        <div className="h-48 md:h-56 rounded-lg overflow-hidden relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-indigo-400 to-cyan-300"></div>
+          <div className="absolute inset-0">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" className="absolute bottom-0 left-0">
+              <path fill="#FF7F50" fillOpacity="0.8" d="M0,96L80,106.7C160,117,320,139,480,154.7C640,171,800,181,960,154.7C1120,128,1280,64,1360,32L1440,0L1440,0L1360,0C1280,0,1120,0,960,0C800,0,640,0,480,0C320,0,160,0,80,0L0,0Z"></path>
+              <path fill="#4169E1" fillOpacity="0.7" d="M0,160L48,170.7C96,181,192,203,288,208C384,213,480,203,576,176C672,149,768,107,864,112C960,117,1056,171,1152,176C1248,181,1344,139,1392,117.3L1440,96L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path>
+            </svg>
+          </div>
+        </div>
+        
+        {/* Conteúdo principal do perfil */}
+        <div className="max-w-4xl mx-auto -mt-16 px-4 relative z-10">
+          <div className="flex flex-col items-center">
+            {/* Avatar e botão de edição */}
+            <div className="relative mb-4">
+              <Avatar className="h-24 w-24 border-4 border-white shadow-md rounded-full bg-white">
                 <AvatarImage 
                   src={data.profileImageUrl || ""} 
                   alt={data.name || data.username} 
+                  className="rounded-full"
                 />
-                <AvatarFallback className="text-3xl bg-blue-100">
+                <AvatarFallback className="text-2xl rounded-full">
                   {data.name ? data.name.charAt(0).toUpperCase() : data.username.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
@@ -275,7 +285,7 @@ export default function DesignerProfile() {
                   <DialogTrigger asChild>
                     <Button 
                       size="icon" 
-                      className="absolute bottom-0 right-0 rounded-full h-9 w-9 shadow-md"
+                      className="absolute bottom-0 right-0 rounded-full h-8 w-8 shadow-md"
                     >
                       <Camera className="h-4 w-4" />
                     </Button>
@@ -353,73 +363,79 @@ export default function DesignerProfile() {
                 </Dialog>
               )}
             </div>
-          </div>
-        </div>
-        
-        {/* Designer info centralizado e social links */}
-        <div className="pt-20 px-4 flex flex-col items-center justify-center">
-          <div className="max-w-2xl w-full text-center">
-            <div className="mb-2">
-              <div className="flex justify-center items-center gap-2">
-                <h1 className="text-3xl font-bold text-gray-900">
+            
+            {/* Nome e informações */}
+            <div className="text-center mb-6">
+              <div className="flex justify-center items-center gap-2 flex-wrap">
+                <h1 className="text-2xl font-bold text-gray-900">
                   {data.name || data.username}
                 </h1>
                 {getRoleBadge(data.role)}
                 {data.role === 'admin' && (
-                  <ShieldCheck className="w-5 h-5 text-blue-600" />
+                  <ShieldCheck className="w-4 h-4 text-blue-600" />
                 )}
               </div>
-              <p className="text-gray-500 text-sm mt-1">@{data.username}</p>
-
-              {/* Botão de seguir centralizado para qualquer usuário exceto o próprio */}
-              {user && user.id !== data.id && (
-                <Button
-                  onClick={handleFollowToggle}
-                  variant={data.isFollowing ? "outline" : "default"}
-                  className={`mt-3 px-8 h-10 ${data.isFollowing ? 'border-blue-300 text-blue-700 hover:bg-blue-50' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
-                  disabled={followMutation.isPending || unfollowMutation.isPending}
-                >
-                  {followMutation.isPending || unfollowMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <UsersRound className="h-4 w-4 mr-2" />
-                  )}
-                  {data.isFollowing ? "Seguindo" : "Seguir"}
-                </Button>
+              
+              <div className="flex items-center justify-center gap-1 mt-1 text-gray-500 text-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                <span className="mr-3">Tocantins</span>
+                
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <span>Desde julho de 2020</span>
+              </div>
+              
+              {data.bio && (
+                <p className="whitespace-pre-line text-gray-700 mt-4 max-w-xl mx-auto text-sm">
+                  Bem-vindo ao nosso perfil oficial, aqui você encontra conteúdos criativos que agregam valor aos seus projetos.
+                </p>
               )}
               
-              {/* Redes sociais minimalistas */}
-              <div className="flex justify-center gap-4 mt-4">
-                <a href="#" className="text-gray-400 hover:text-blue-600 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-instagram"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line></svg>
-                </a>
-                <a href="#" className="text-gray-400 hover:text-green-600 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 7v6a3 3 0 0 1-3 3H5l-4 4V4a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3Z"></path><path d="M13 7c0 5 3 5 3 9v3c0 1.7-1.3 3-3 3h-2c-1.7 0-3-1.3-3-3v-1"></path></svg>
-                </a>
+              <div className="mt-6 flex flex-wrap gap-2 justify-center">
+                {user && user.id !== data.id && (
+                  <Button
+                    onClick={handleFollowToggle}
+                    variant={data.isFollowing ? "outline" : "default"}
+                    className={`px-5 py-1 h-9 rounded-full ${data.isFollowing ? 'border-blue-300 text-blue-700 hover:bg-blue-50' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+                    disabled={followMutation.isPending || unfollowMutation.isPending}
+                  >
+                    {followMutation.isPending || unfollowMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : null}
+                    {data.isFollowing ? "Seguindo" : "Seguir"}
+                  </Button>
+                )}
+                
+                <Button variant="outline" size="sm" className="rounded-full px-3 h-9 border-gray-200">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" x2="12" y1="2" y2="15"></line></svg>
+                  Compartilhar
+                </Button>
+                
+                <Button variant="outline" size="sm" className="rounded-full w-9 h-9 p-0 border-gray-200">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 20h18L12 4Z"></path></svg>
+                </Button>
               </div>
             </div>
             
-            {data.bio && (
-              <div className="mb-6 mt-4">
-                <p className="whitespace-pre-line text-gray-700">{data.bio}</p>
-              </div>
-            )}
-            
-            {/* Estatísticas em cards elegantes */}
-            <div className="grid grid-cols-3 gap-4 mt-6 md:px-10">
-              <div className="text-center p-4 bg-white rounded-lg shadow-sm border border-gray-100 hover:border-blue-200 transition-colors">
-                <p className="text-2xl font-bold text-blue-600">{data.followers}</p>
-                <p className="text-xs text-gray-500 mt-1">Seguidores</p>
+            {/* Estatísticas em linha como na referência */}
+            <div className="flex justify-center flex-wrap gap-8 md:gap-16 py-4 border-t border-b border-gray-100 w-full max-w-2xl">
+              <div className="text-center">
+                <p className="text-xl font-bold text-gray-900">{data.statistics.totalArts}</p>
+                <p className="text-xs text-gray-500 mt-1">Arquivos</p>
               </div>
               
-              <div className="text-center p-4 bg-white rounded-lg shadow-sm border border-gray-100 hover:border-blue-200 transition-colors">
-                <p className="text-2xl font-bold text-blue-600">{data.statistics.totalArts}</p>
-                <p className="text-xs text-gray-500 mt-1">Artes</p>
-              </div>
-              
-              <div className="text-center p-4 bg-white rounded-lg shadow-sm border border-gray-100 hover:border-blue-200 transition-colors">
-                <p className="text-2xl font-bold text-blue-600">{data.statistics.totalDownloads}</p>
+              <div className="text-center">
+                <p className="text-xl font-bold text-gray-900">{data.statistics.totalDownloads}</p>
                 <p className="text-xs text-gray-500 mt-1">Downloads</p>
+              </div>
+              
+              <div className="text-center">
+                <p className="text-xl font-bold text-gray-900">{data.statistics.totalViews}</p>
+                <p className="text-xs text-gray-500 mt-1">Curtidas</p>
+              </div>
+              
+              <div className="text-center">
+                <p className="text-xl font-bold text-gray-900">{data.followers}</p>
+                <p className="text-xs text-gray-500 mt-1">Seguidores</p>
               </div>
             </div>
           </div>
