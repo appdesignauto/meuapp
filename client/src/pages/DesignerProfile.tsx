@@ -51,6 +51,7 @@ export default function DesignerProfile() {
   const [artsPage, setArtsPage] = useState(1);
   const artsPerPage = 12;
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Calcular páginas de artes para paginação
@@ -172,16 +173,45 @@ export default function DesignerProfile() {
     }
   });
   
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) {
       return;
     }
     
     const file = e.target.files[0];
+    
+    // Criar URL temporária para pré-visualização
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewImage(objectUrl);
+  };
+  
+  const handleImageUpload = () => {
+    // Resetar a pré-visualização ao concluir
+    const cleanup = () => {
+      if (previewImage) {
+        URL.revokeObjectURL(previewImage);
+        setPreviewImage(null);
+      }
+      
+      // Resetar o input de arquivo
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    };
+    
+    if (!fileInputRef.current?.files || fileInputRef.current.files.length === 0) {
+      cleanup();
+      return;
+    }
+    
+    const file = fileInputRef.current.files[0];
     const formData = new FormData();
     formData.append('image', file);
     
-    profileImageMutation.mutate(formData);
+    profileImageMutation.mutate(formData, {
+      onSuccess: () => cleanup(),
+      onError: () => cleanup()
+    });
   };
   
   if (isLoading) {
@@ -253,7 +283,7 @@ export default function DesignerProfile() {
                       <div className="flex flex-col items-center justify-center gap-4">
                         <Avatar className="h-24 w-24 border">
                           <AvatarImage 
-                            src={data.profileImageUrl || ""} 
+                            src={previewImage || data.profileImageUrl || ""} 
                             alt={data.name || data.username} 
                           />
                           <AvatarFallback className="text-xl">
@@ -266,20 +296,52 @@ export default function DesignerProfile() {
                           accept="image/*"
                           className="hidden"
                           ref={fileInputRef}
-                          onChange={handleImageUpload}
+                          onChange={handleFileChange}
                         />
                         
-                        <Button 
-                          onClick={() => fileInputRef.current?.click()}
-                          disabled={profileImageMutation.isPending}
-                        >
-                          {profileImageMutation.isPending ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <div className="flex gap-2">
+                          {!previewImage ? (
+                            <Button 
+                              onClick={() => fileInputRef.current?.click()}
+                              disabled={profileImageMutation.isPending}
+                            >
+                              {profileImageMutation.isPending ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              ) : (
+                                <Upload className="mr-2 h-4 w-4" />
+                              )}
+                              Escolher imagem
+                            </Button>
                           ) : (
-                            <Upload className="mr-2 h-4 w-4" />
+                            <>
+                              <Button 
+                                onClick={handleImageUpload}
+                                disabled={profileImageMutation.isPending}
+                                className="px-4"
+                              >
+                                {profileImageMutation.isPending ? (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : null}
+                                Salvar
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                onClick={() => {
+                                  if (previewImage) {
+                                    URL.revokeObjectURL(previewImage);
+                                    setPreviewImage(null);
+                                  }
+                                  if (fileInputRef.current) {
+                                    fileInputRef.current.value = '';
+                                  }
+                                }}
+                                disabled={profileImageMutation.isPending}
+                              >
+                                Cancelar
+                              </Button>
+                            </>
                           )}
-                          Escolher imagem
-                        </Button>
+                        </div>
                       </div>
                     </div>
                   </DialogContent>
