@@ -40,12 +40,6 @@ const registerSchema = z.object({
   role: z.enum(["user", "designer", "admin", "designer_adm", "support"], {
     required_error: "Selecione um papel para o usuário",
   }),
-  plan: z.enum(["free", "premium", "enterprise"], {
-    required_error: "Selecione um plano",
-  }),
-  periodType: z.enum(["mensal", "anual", "vitalicio"], {
-    required_error: "Selecione um período",
-  }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não coincidem",
   path: ["confirmPassword"],
@@ -93,8 +87,6 @@ const AuthPage = () => {
       password: "",
       confirmPassword: "",
       role: "user",
-      plan: "free",
-      periodType: "mensal",
     },
   });
 
@@ -118,7 +110,13 @@ const AuthPage = () => {
     try {
       // Adicionar username gerado a partir do email
       const username = values.email.split('@')[0];
-      await registerMutation.mutateAsync({ ...registerData, username });
+      // Adicionar plano padrão como 'free' e período como 'mensal' para manter API compatível
+      await registerMutation.mutateAsync({ 
+        ...registerData, 
+        username,
+        plan: "free",
+        periodType: "mensal"
+      });
       setLocation("/");
     } catch (error) {
       // Erro já tratado no hook useAuth
@@ -367,57 +365,7 @@ const AuthPage = () => {
                         )}
                       />
                       
-                      <FormField
-                        control={registerForm.control}
-                        name="plan"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Plano</FormLabel>
-                            <Select
-                              value={field.value}
-                              onValueChange={field.onChange}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione um plano" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="free">Gratuito</SelectItem>
-                                <SelectItem value="premium">Premium</SelectItem>
-                                <SelectItem value="enterprise">Empresarial</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={registerForm.control}
-                        name="periodType"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Período</FormLabel>
-                            <Select
-                              value={field.value}
-                              onValueChange={field.onChange}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione um período" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="mensal">Mensal</SelectItem>
-                                <SelectItem value="anual">Anual</SelectItem>
-                                <SelectItem value="vitalicio">Vitalício</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+
                       
                       <Button 
                         type="submit" 
