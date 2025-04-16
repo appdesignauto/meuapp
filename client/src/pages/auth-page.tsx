@@ -37,9 +37,6 @@ const registerSchema = z.object({
   name: z.string().min(2, "O nome deve ter pelo menos 2 caracteres"),
   password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
   confirmPassword: z.string(),
-  role: z.enum(["user", "designer", "admin", "designer_adm", "support"], {
-    required_error: "Selecione um papel para o usuário",
-  }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não coincidem",
   path: ["confirmPassword"],
@@ -86,7 +83,6 @@ const AuthPage = () => {
       name: "",
       password: "",
       confirmPassword: "",
-      role: "user",
     },
   });
 
@@ -110,12 +106,13 @@ const AuthPage = () => {
     try {
       // Adicionar username gerado a partir do email
       const username = values.email.split('@')[0];
-      // Adicionar plano padrão como 'free' e período como 'mensal' para manter API compatível
+      // Adicionar valores padrão para manter API compatível
       await registerMutation.mutateAsync({ 
         ...registerData, 
         username,
-        plan: "free",
-        periodType: "mensal"
+        role: "user", // Definir papel como usuário comum
+        plan: "free", // Plano gratuito por padrão
+        periodType: "mensal" // Período mensal por padrão
       });
       setLocation("/");
     } catch (error) {
@@ -337,33 +334,7 @@ const AuthPage = () => {
                         )}
                       />
                       
-                      <FormField
-                        control={registerForm.control}
-                        name="role"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Papel</FormLabel>
-                            <Select
-                              value={field.value}
-                              onValueChange={field.onChange}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione um papel" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="user">Usuário</SelectItem>
-                                <SelectItem value="designer">Designer</SelectItem>
-                                <SelectItem value="designer_adm">Designer ADM</SelectItem>
-                                <SelectItem value="support">Suporte</SelectItem>
-                                <SelectItem value="admin">Administrador</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+
                       
 
                       
