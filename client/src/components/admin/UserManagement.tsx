@@ -74,6 +74,8 @@ interface UserWithStats extends User {
   totalDownloads?: number;
   totalViews?: number;
   lastLogin?: string;
+  online?: boolean;  // Novo campo para indicar status online
+  lastActivity?: string;  // Último registro de atividade
 }
 
 interface UserFormData {
