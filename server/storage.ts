@@ -155,7 +155,8 @@ export interface IStorage {
   updateUserStats(userId: number, data: Partial<InsertUserStats>): Promise<UserStats | undefined>;
   
   // Designer Stats methods
-  getDesignerStats(userId: number, artId: number): Promise<DesignerStat | undefined>;
+  getDesignerStats(userId: number): Promise<{ followers: number; totalArts: number; } | undefined>;
+  getDesignerStatsByArtId(userId: number, artId: number): Promise<DesignerStat | undefined>;
   createDesignerStats(stats: InsertDesignerStat): Promise<DesignerStat>;
   updateDesignerStats(userId: number, artId: number, data: Partial<InsertDesignerStat>): Promise<DesignerStat | undefined>;
   
@@ -1817,6 +1818,51 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error("Erro em updateArtViewCount:", error);
       return false;
+    }
+  }
+  
+  // Designer Stats methods
+  async getDesignerStats(userId: number): Promise<{ followers: number; totalArts: number; } | undefined> {
+    try {
+      // Buscar contagem de seguidores
+      const followersResult = await db.execute(sql`
+        SELECT COUNT(*) as value 
+        FROM "userFollows"
+        WHERE "followingId" = ${userId}
+      `);
+      
+      const followers = parseInt(followersResult.rows[0].value.toString()) || 0;
+      
+      // Buscar contagem de artes
+      const artsResult = await db.execute(sql`
+        SELECT COUNT(*) as value 
+        FROM arts
+        WHERE designerid = ${userId}
+      `);
+      
+      const totalArts = parseInt(artsResult.rows[0].value.toString()) || 0;
+      
+      return { followers, totalArts };
+    } catch (error) {
+      console.error("Erro ao buscar estatísticas do designer:", error);
+      return { followers: 0, totalArts: 0 };
+    }
+  }
+
+  async getDesignerStatsByArtId(userId: number, artId: number): Promise<DesignerStat | undefined> {
+    try {
+      const [designerStat] = await db
+        .select()
+        .from(designerStats)
+        .where(and(
+          eq(designerStats.designerId, userId),
+          eq(designerStats.artId, artId)
+        ));
+        
+      return designerStat;
+    } catch (error) {
+      console.error("Erro ao buscar estatísticas do designer para arte:", error);
+      return undefined;
     }
   }
   

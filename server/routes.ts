@@ -268,11 +268,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (designer) {
             // Remover a senha e outras informações sensíveis
             const { password, ...safeDesigner } = designer;
-            art.designer = safeDesigner;
+            
+            // Buscar estatísticas do designer
+            const stats = await storage.getDesignerStats(art.designerid);
+            
+            // Buscar status de seguidor para o usuário atual (se autenticado)
+            let isFollowing = false;
+            if (req.user) {
+              const userId = (req.user as any).id;
+              isFollowing = await storage.isFollowing(userId, art.designerid);
+            }
+            
+            // Buscar 4 artes recentes do designer, excluindo a arte atual
+            let recentArts = [];
+            try {
+              const designerArts = await storage.getArtsByDesignerId(art.designerid, 5);
+              recentArts = designerArts
+                .filter(recentArt => recentArt.id !== art.id)
+                .slice(0, 4)
+                .map(recentArt => ({
+                  id: recentArt.id,
+                  title: recentArt.title,
+                  imageUrl: recentArt.imageUrl
+                }));
+            } catch (artsError) {
+              console.error("Erro ao buscar artes recentes do designer:", artsError);
+            }
+            
+            art.designer = {
+              ...safeDesigner,
+              isFollowing,
+              followers: stats?.followers || 0,
+              totalArts: stats?.totalArts || 0,
+              recentArts
+            };
           }
         } catch (designerError) {
           console.error("Erro ao buscar informações do designer:", designerError);
           // Se falhar ao buscar o designer, ainda retornamos a arte
+        }
+      } 
+      // Se não existir designer, usar administrador como designer temporário para demonstração
+      else {
+        // Usar administrador (id 1) como designer temporário (apenas para fins de demonstração)
+        try {
+          const admin = await storage.getUserById(1);
+          if (admin) {
+            const { password, ...safeAdmin } = admin;
+            
+            // Buscar todos as artes do admin
+            const adminArts = await storage.getArtsByDesignerId(1, 10);
+            const otherArts = adminArts
+              .filter(a => a.id !== art.id)
+              .slice(0, 4)
+              .map(a => ({
+                id: a.id,
+                title: a.title || 'Arte sem título',
+                imageUrl: a.imageUrl || ''
+              }));
+            
+            art.designer = {
+              ...safeAdmin,
+              isFollowing: false,
+              followers: Math.floor(Math.random() * 100) + 10, // Valor demonstrativo
+              totalArts: adminArts.length,
+              recentArts: otherArts
+            };
+          }
+        } catch (adminError) {
+          console.error("Erro ao usar admin como designer temporário:", adminError);
         }
       }
       
