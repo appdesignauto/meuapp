@@ -9,10 +9,34 @@ import imageUploadRoutes from "./routes/image-upload";
 import { db } from "./db";
 import { eq, isNull, desc, and, count, sql, asc, not, or } from "drizzle-orm";
 import { SQL } from "drizzle-orm/sql";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication middleware and routes
   const { isAuthenticated, isPremium, isAdmin, isDesigner, hasRole } = setupAuth(app);
+  
+  // Configurar o multer para upload de arquivos
+  const uploadDir = path.join(process.cwd(), 'uploads');
+  
+  // Garantir que o diretório de uploads existe
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+  
+  const multerStorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const ext = path.extname(file.originalname);
+      cb(null, uniqueSuffix + ext);
+    }
+  });
+  
+  const upload = multer({ storage: multerStorage });
 
   // Categories API with precise art counts and detailed stats
   app.get("/api/categories", async (req, res) => {
@@ -574,7 +598,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           "isPremium" as ispremium, 
           format, 
           "createdAt" as createdat,
-          viewcount
+          viewcount,
+          "downloadCount" as downloadcount
         FROM arts
         WHERE designerid = ${designer.id}
         ORDER BY "createdAt" DESC
@@ -588,8 +613,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const premiumArtCount = designerArts.filter((art: any) => art.isPremium).length;
       
       // Calcular estatísticas
-      // Como não temos a coluna downloadCount no banco de dados, usamos 0 como valor padrão
-      const totalDownloads = 0;
+      // Agora que a coluna downloadCount existe, calculamos a soma real
+      const totalDownloads = designerArts.reduce((sum: number, art: any) => sum + (parseInt(art.downloadcount) || 0), 0);
       const totalViews = designerArts.reduce((sum: number, art: any) => sum + (parseInt(art.viewcount) || 0), 0);
       
       // Adaptamos os nomes de campo para o padrão CamelCase esperado pelo frontend
@@ -708,21 +733,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           followingId: designerId
         });
       
-      // As colunas followers e following foram definidas no schema mas não existem na tabela atual
-      // Comentamos as atualizações de contagem até que essas colunas sejam adicionadas ao banco
-      /*
-      await db.execute(`
+      // Atualizar contadores de seguidores e seguindo
+      await db.execute(sql.raw(`
         UPDATE users 
         SET followers = followers + 1 
         WHERE id = ${designerId}
-      `);
+      `));
       
-      await db.execute(`
+      await db.execute(sql.raw(`
         UPDATE users 
         SET following = following + 1 
         WHERE id = ${followerId}
-      `);
-      */
+      `));
       
       res.status(201).json({ message: "Designer seguido com sucesso" });
     } catch (error) {
@@ -760,21 +782,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           )
         );
       
-      // As colunas followers e following foram definidas no schema mas não existem na tabela atual
-      // Comentamos as atualizações de contagem até que essas colunas sejam adicionadas ao banco
-      /*
-      await db.execute(`
+      // Atualizar contadores de seguidores e seguindo (decremento)
+      await db.execute(sql.raw(`
         UPDATE users 
         SET followers = GREATEST(followers - 1, 0) 
         WHERE id = ${designerId}
-      `);
+      `));
       
-      await db.execute(`
+      await db.execute(sql.raw(`
         UPDATE users 
         SET following = GREATEST(following - 1, 0) 
         WHERE id = ${followerId}
-      `);
-      */
+      `));
       
       res.status(200).json({ message: "Deixou de seguir o designer com sucesso" });
     } catch (error) {
@@ -783,6 +802,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Atualizar perfil do designer (protegido por autenticação)
+  app.put("/api/designers/profile", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const { name, bio, website, location, socialLinks } = req.body;
+      
+      // Verificar se o usuário existe
+      const [user] = await db.select()
+        .from(users)
+        .where(eq(users.id, userId));
+      
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+      
+      // Verificar se o usuário tem permissão para ser designer
+      if (user.role !== 'designer' && user.role !== 'admin') {
+        return res.status(403).json({ message: "Apenas designers podem atualizar perfil" });
+      }
+      
+      // Atualizar perfil do designer
+      await db.update(users)
+        .set({
+          name: name || user.name,
+          bio: bio || user.bio,
+          website: website || user.website,
+          location: location || user.location,
+          socialLinks: socialLinks || user.sociallinks,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId));
+      
+      // Buscar dados atualizados do usuário
+      const [updatedUser] = await db.select()
+        .from(users)
+        .where(eq(users.id, userId));
+      
+      res.json({
+        id: updatedUser.id,
+        username: updatedUser.username,
+        name: updatedUser.name,
+        role: updatedUser.role,
+        bio: updatedUser.bio,
+        website: updatedUser.website,
+        location: updatedUser.location,
+        socialLinks: updatedUser.sociallinks,
+        profileImageUrl: updatedUser.profileimageurl,
+        followers: updatedUser.followers,
+        following: updatedUser.following,
+        createdAt: updatedUser.createdAt
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar perfil:", error);
+      res.status(500).json({ message: "Erro ao atualizar perfil" });
+    }
+  });
+  
+  // Atualizar imagem de perfil do designer (protegido por autenticação)
+  app.post("/api/designers/profile-image", isAuthenticated, upload.single('image'), async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      
+      // Verificar se o arquivo foi enviado
+      if (!req.file) {
+        return res.status(400).json({ message: "Nenhuma imagem enviada" });
+      }
+      
+      // Verificar se o usuário existe
+      const [user] = await db.select()
+        .from(users)
+        .where(eq(users.id, userId));
+      
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+      
+      // Verificar se o usuário tem permissão para ser designer
+      if (user.role !== 'designer' && user.role !== 'admin') {
+        return res.status(403).json({ message: "Apenas designers podem atualizar imagem de perfil" });
+      }
+      
+      // Processar e salvar a imagem (usar a mesma lógica de upload de imagens que já existe)
+      const imageUrl = '/uploads/' + req.file.filename; // Simplificado para este exemplo
+      
+      // Atualizar perfil do designer com nova imagem
+      await db.update(users)
+        .set({
+          profileimageurl: imageUrl,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId));
+      
+      res.json({ 
+        message: "Imagem de perfil atualizada com sucesso",
+        profileImageUrl: imageUrl 
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar imagem de perfil:", error);
+      res.status(500).json({ message: "Erro ao atualizar imagem de perfil" });
+    }
+  });
+
   // Listar seguidores de um designer
   app.get("/api/designers/:id/followers", async (req, res) => {
     try {
