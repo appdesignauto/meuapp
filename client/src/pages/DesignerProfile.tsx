@@ -250,44 +250,57 @@ export default function DesignerProfile() {
   };
   
   return (
-    <div className="container py-8">
+    <div className="py-8 max-w-[1200px] mx-auto">
       {/* Profile Header - Estilo mais clean baseado na referência */}
       <div className="mb-12">
         {/* Cover photo com cores geométricas */}
-        <div className="h-48 md:h-56 rounded-lg overflow-hidden relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-indigo-400 to-cyan-300"></div>
-          <div className="absolute inset-0">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" className="absolute bottom-0 left-0">
-              <path fill="#FF7F50" fillOpacity="0.8" d="M0,96L80,106.7C160,117,320,139,480,154.7C640,171,800,181,960,154.7C1120,128,1280,64,1360,32L1440,0L1440,0L1360,0C1280,0,1120,0,960,0C800,0,640,0,480,0C320,0,160,0,80,0L0,0Z"></path>
-              <path fill="#4169E1" fillOpacity="0.7" d="M0,160L48,170.7C96,181,192,203,288,208C384,213,480,203,576,176C672,149,768,107,864,112C960,117,1056,171,1152,176C1248,181,1344,139,1392,117.3L1440,96L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path>
-            </svg>
+        <div className="h-40 md:h-48 lg:h-52 rounded-lg overflow-hidden relative shadow-sm">
+          {/* Background com formas geométricas e cores vibrantes */}
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-400 via-blue-300 to-cyan-200"></div>
+          
+          {/* Formas decorativas */}
+          <div className="absolute inset-0 overflow-hidden">
+            {/* Triangulo laranja */}
+            <div className="absolute -top-5 -left-10 w-60 h-60 bg-orange-400 rotate-12 opacity-80"></div>
+            
+            {/* Retângulo azul */}
+            <div className="absolute top-5 left-40 w-72 h-44 bg-blue-600 -rotate-12 opacity-80"></div>
+            
+            {/* Triangulo ciano */}
+            <div className="absolute top-0 right-0 w-96 h-full bg-cyan-300 -rotate-45 origin-top-right opacity-80"></div>
           </div>
         </div>
         
-        {/* Conteúdo principal do perfil */}
-        <div className="max-w-4xl mx-auto -mt-16 px-4 relative z-10">
-          <div className="flex flex-col items-center">
-            {/* Avatar e botão de edição */}
-            <div className="relative mb-4">
-              <Avatar className="h-24 w-24 border-4 border-white shadow-md rounded-full bg-white">
-                <AvatarImage 
-                  src={data.profileImageUrl || ""} 
-                  alt={data.name || data.username} 
-                  className="rounded-full"
-                />
-                <AvatarFallback className="text-2xl rounded-full">
-                  {data.name ? data.name.charAt(0).toUpperCase() : data.username.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+        {/* Avatar e informações do perfil */}
+        <div className="w-full max-w-3xl mx-auto px-4 relative">
+          {/* Logo central na parte superior */}
+          <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 z-10">
+            <div className="relative">
+              <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center p-1 shadow-md">
+                <Avatar className="h-16 w-16 border border-gray-100">
+                  <AvatarImage 
+                    src={data.profileImageUrl || ""} 
+                    alt={data.name || data.username} 
+                  />
+                  <AvatarFallback className="text-2xl bg-blue-50 text-blue-500">
+                    {data.name ? data.name.charAt(0).toUpperCase() : data.username.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+              
+              {/* Badge verificado */}
+              <div className="absolute -top-1 -right-1 bg-orange-400 w-5 h-5 rounded-full flex items-center justify-center text-white text-xs shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </div>
               
               {user && user.id === data.id && (
                 <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
                   <DialogTrigger asChild>
                     <Button 
                       size="icon" 
-                      className="absolute bottom-0 right-0 rounded-full h-8 w-8 shadow-md"
+                      className="absolute bottom-0 right-0 rounded-full h-6 w-6 shadow-md"
                     >
-                      <Camera className="h-4 w-4" />
+                      <Camera className="h-3 w-3" />
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
@@ -363,79 +376,77 @@ export default function DesignerProfile() {
                 </Dialog>
               )}
             </div>
-            
-            {/* Nome e informações */}
-            <div className="text-center mb-6">
-              <div className="flex justify-center items-center gap-2 flex-wrap">
-                <h1 className="text-2xl font-bold text-gray-900">
-                  {data.name || data.username}
-                </h1>
-                {getRoleBadge(data.role)}
-                {data.role === 'admin' && (
-                  <ShieldCheck className="w-4 h-4 text-blue-600" />
-                )}
-              </div>
+          </div>
+          
+          {/* Conteúdo do perfil */}
+          <div className="pt-14 flex flex-col items-center">
+            {/* Nome e badges */}
+            <div className="text-center">
+              <h1 className="text-xl font-bold text-gray-800">
+                {data.name || data.username}
+              </h1>
               
-              <div className="flex items-center justify-center gap-1 mt-1 text-gray-500 text-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+              <div className="flex items-center justify-center gap-1 mt-2 text-gray-500 text-xs">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
                 <span className="mr-3">Tocantins</span>
                 
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                 <span>Desde julho de 2020</span>
-              </div>
-              
-              {data.bio && (
-                <p className="whitespace-pre-line text-gray-700 mt-4 max-w-xl mx-auto text-sm">
-                  Bem-vindo ao nosso perfil oficial, aqui você encontra conteúdos criativos que agregam valor aos seus projetos.
-                </p>
-              )}
-              
-              <div className="mt-6 flex flex-wrap gap-2 justify-center">
-                {user && user.id !== data.id && (
-                  <Button
-                    onClick={handleFollowToggle}
-                    variant={data.isFollowing ? "outline" : "default"}
-                    className={`px-5 py-1 h-9 rounded-full ${data.isFollowing ? 'border-blue-300 text-blue-700 hover:bg-blue-50' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
-                    disabled={followMutation.isPending || unfollowMutation.isPending}
-                  >
-                    {followMutation.isPending || unfollowMutation.isPending ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : null}
-                    {data.isFollowing ? "Seguindo" : "Seguir"}
-                  </Button>
-                )}
-                
-                <Button variant="outline" size="sm" className="rounded-full px-3 h-9 border-gray-200">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" x2="12" y1="2" y2="15"></line></svg>
-                  Compartilhar
-                </Button>
-                
-                <Button variant="outline" size="sm" className="rounded-full w-9 h-9 p-0 border-gray-200">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 20h18L12 4Z"></path></svg>
-                </Button>
               </div>
             </div>
             
-            {/* Estatísticas em linha como na referência */}
-            <div className="flex justify-center flex-wrap gap-8 md:gap-16 py-4 border-t border-b border-gray-100 w-full max-w-2xl">
+            {/* Bio */}
+            <div className="mt-4 px-6 max-w-xl text-center">
+              <p className="text-sm text-gray-600">
+                Bem-vindo ao nosso perfil oficial, aqui você encontra conteúdos criativos que agregam valor aos seus projetos.
+              </p>
+            </div>
+            
+            {/* Botões de ação */}
+            <div className="flex gap-2 mt-4">
+              {user && user.id !== data.id && (
+                <Button
+                  onClick={handleFollowToggle}
+                  variant={data.isFollowing ? "outline" : "default"}
+                  className={`px-5 py-1 h-8 text-sm rounded-full ${data.isFollowing ? 'border-blue-200 text-blue-600 hover:bg-blue-50' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+                  disabled={followMutation.isPending || unfollowMutation.isPending}
+                >
+                  {followMutation.isPending || unfollowMutation.isPending ? (
+                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                  ) : null}
+                  {data.isFollowing ? "Seguindo" : "Seguir"}
+                </Button>
+              )}
+              
+              <Button variant="outline" size="sm" className="rounded-full h-8 px-2 border-gray-200 text-gray-600 hover:text-gray-800">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" x2="12" y1="2" y2="15"></line></svg>
+              </Button>
+              
+              <Button variant="outline" size="sm" className="rounded-full h-8 w-8 p-0 border-gray-200 text-gray-600 hover:text-gray-800">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 20h18L12 4Z"></path></svg>
+              </Button>
+            </div>
+            
+            {/* Estatísticas */}
+            <div className="flex justify-center gap-6 md:gap-10 mt-6 w-full max-w-2xl">
               <div className="text-center">
-                <p className="text-xl font-bold text-gray-900">{data.statistics.totalArts}</p>
-                <p className="text-xs text-gray-500 mt-1">Arquivos</p>
+                <p className="text-lg font-bold text-gray-900">{data.statistics.totalArts} mil</p>
+                <p className="text-[11px] text-gray-500">Arquivos</p>
               </div>
               
               <div className="text-center">
-                <p className="text-xl font-bold text-gray-900">{data.statistics.totalDownloads}</p>
-                <p className="text-xs text-gray-500 mt-1">Downloads</p>
+                <p className="text-lg font-bold text-gray-900">{data.statistics.totalDownloads} mi</p>
+                <p className="text-[11px] text-gray-500">Downloads</p>
               </div>
               
               <div className="text-center">
-                <p className="text-xl font-bold text-gray-900">{data.statistics.totalViews}</p>
-                <p className="text-xs text-gray-500 mt-1">Curtidas</p>
+                <p className="text-lg font-bold text-gray-900">2.1 mi</p>
+                <p className="text-[11px] text-gray-500">Curtidas</p>
               </div>
               
               <div className="text-center">
-                <p className="text-xl font-bold text-gray-900">{data.followers}</p>
-                <p className="text-xs text-gray-500 mt-1">Seguidores</p>
+                <p className="text-lg font-bold text-gray-900">{data.followers} mil</p>
+                <p className="text-[11px] text-gray-500">Seguidores</p>
               </div>
             </div>
           </div>
