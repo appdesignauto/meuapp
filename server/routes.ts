@@ -447,11 +447,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 12;
       const sort = (req.query.sort as string) || 'recent'; // 'activity', 'recent'
+      const offset = (page - 1) * limit;
       
       // Buscar todos os usuários com role 'designer', 'designer_adm' ou 'admin'
       // Executar SQL direto para evitar problemas com o TypeScript
-      const offset = (page - 1) * limit;
-      
       const designersQuery = `
         SELECT 
           id, 
@@ -479,8 +478,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         WHERE role IN ('designer', 'designer_adm', 'admin')
       `;
       
-      const [totalCountResult] = await db.execute(sql.raw(totalCountQuery));
-      const totalCount = parseInt(totalCountResult.value.toString());
+      const totalCountResult = await db.execute(sql.raw(totalCountQuery));
+      const totalCount = parseInt(totalCountResult.rows[0].value.toString());
       
       // Para cada designer, buscar algumas artes para exibir
       const designersWithArts = await Promise.all(designers.rows.map(async (designer: any) => {
@@ -491,12 +490,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             "imageUrl" as imageurl, 
             "isPremium" as ispremium
           FROM arts 
-          WHERE designerid = $1
+          WHERE designerid = ${designer.id}
           ORDER BY "createdAt" DESC
           LIMIT 4
         `;
         
-        const recentArts = await db.execute(sql.raw(artsQuery, [designer.id]));
+        const recentArts = await db.execute(sql.raw(artsQuery));
         
         // Adaptamos os nomes de campo para o padrão CamelCase esperado pelo frontend
         return {
@@ -543,10 +542,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           0 AS following, 
           "createdAt" as createdat
         FROM users 
-        WHERE username = $1
+        WHERE username = '${username}'
       `;
       
-      const result = await db.execute(sql.raw(designerQuery, [username]));
+      const result = await db.execute(sql.raw(designerQuery));
       const designer = result.rows[0];
       
       if (!designer) {
@@ -556,12 +555,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Verificar se o usuário logado já segue este designer
       let isFollowing = false;
       if (req.user) {
+        const followerId = (req.user as any).id;
         const followQuery = `
           SELECT * FROM "userFollows"
-          WHERE "followerId" = $1 AND "followingId" = $2
+          WHERE "followerId" = ${followerId} AND "followingId" = ${designer.id}
         `;
         
-        const followResult = await db.execute(sql.raw(followQuery, [(req.user as any).id, designer.id]));
+        const followResult = await db.execute(sql.raw(followQuery));
         isFollowing = followResult.rows.length > 0;
       }
       
@@ -577,11 +577,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           "downloadCount" as downloadcount,
           viewcount
         FROM arts
-        WHERE designerid = $1
+        WHERE designerid = ${designer.id}
         ORDER BY "createdAt" DESC
       `;
       
-      const artsResult = await db.execute(sql.raw(artsQuery, [designer.id]));
+      const artsResult = await db.execute(sql.raw(artsQuery));
       const designerArts = artsResult.rows;
       
       // Contagens
@@ -815,23 +815,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           uf.createdat AS "followDate"
         FROM "userFollows" uf
         INNER JOIN users u ON uf."followerId" = u.id
-        WHERE uf."followingId" = $1
+        WHERE uf."followingId" = ${designerId}
         ORDER BY uf.createdat DESC
-        LIMIT $2 OFFSET $3
+        LIMIT ${limit} OFFSET ${offset}
       `;
       
-      const followersResult = await db.execute(sql.raw(followersQuery, [designerId, limit, offset]));
+      const followersResult = await db.execute(sql.raw(followersQuery));
       const followers = followersResult.rows;
       
       // Contar total de seguidores usando SQL direto
       const totalCountQuery = `
         SELECT COUNT(*) as value 
         FROM "userFollows" 
-        WHERE "followingId" = $1
+        WHERE "followingId" = ${designerId}
       `;
       
-      const [totalCountResult] = await db.execute(sql.raw(totalCountQuery, [designerId]));
-      const totalCount = parseInt(totalCountResult.value.toString());
+      const totalCountResult = await db.execute(sql.raw(totalCountQuery));
+      const totalCount = parseInt(totalCountResult.rows[0].value.toString());
       
       res.json({
         followers,
