@@ -48,6 +48,8 @@ import {
   SortDescIcon,
   CalendarIcon,
   ClockIcon,
+  ChevronUpIcon,
+  ChevronDownIcon,
   InfoIcon,
   MailIcon,
   CircleIcon,
@@ -1309,12 +1311,108 @@ const UserTable = ({
         <TableCaption>Lista de usuários do sistema</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead>Usuário</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Papel</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Cadastro</TableHead>
-            <TableHead>Último login</TableHead>
+            <TableHead 
+              className="cursor-pointer hover:text-primary"
+              onClick={() => onSort && onSort('username')}
+            >
+              <div className="flex items-center">
+                Usuário
+                {sortConfig?.key === 'username' && (
+                  <span className="ml-1">
+                    {sortConfig.direction === 'asc' ? (
+                      <ChevronUpIcon className="h-4 w-4" />
+                    ) : (
+                      <ChevronDownIcon className="h-4 w-4" />
+                    )}
+                  </span>
+                )}
+              </div>
+            </TableHead>
+            <TableHead 
+              className="cursor-pointer hover:text-primary"
+              onClick={() => onSort && onSort('email')}
+            >
+              <div className="flex items-center">
+                Email
+                {sortConfig?.key === 'email' && (
+                  <span className="ml-1">
+                    {sortConfig.direction === 'asc' ? (
+                      <ChevronUpIcon className="h-4 w-4" />
+                    ) : (
+                      <ChevronDownIcon className="h-4 w-4" />
+                    )}
+                  </span>
+                )}
+              </div>
+            </TableHead>
+            <TableHead 
+              className="cursor-pointer hover:text-primary"
+              onClick={() => onSort && onSort('role')}
+            >
+              <div className="flex items-center">
+                Papel
+                {sortConfig?.key === 'role' && (
+                  <span className="ml-1">
+                    {sortConfig.direction === 'asc' ? (
+                      <ChevronUpIcon className="h-4 w-4" />
+                    ) : (
+                      <ChevronDownIcon className="h-4 w-4" />
+                    )}
+                  </span>
+                )}
+              </div>
+            </TableHead>
+            <TableHead 
+              className="cursor-pointer hover:text-primary"
+              onClick={() => onSort && onSort('isactive')}
+            >
+              <div className="flex items-center">
+                Status
+                {sortConfig?.key === 'isactive' && (
+                  <span className="ml-1">
+                    {sortConfig.direction === 'asc' ? (
+                      <ChevronUpIcon className="h-4 w-4" />
+                    ) : (
+                      <ChevronDownIcon className="h-4 w-4" />
+                    )}
+                  </span>
+                )}
+              </div>
+            </TableHead>
+            <TableHead 
+              className="cursor-pointer hover:text-primary"
+              onClick={() => onSort && onSort('createdAt')}
+            >
+              <div className="flex items-center">
+                Cadastro
+                {sortConfig?.key === 'createdAt' && (
+                  <span className="ml-1">
+                    {sortConfig.direction === 'asc' ? (
+                      <ChevronUpIcon className="h-4 w-4" />
+                    ) : (
+                      <ChevronDownIcon className="h-4 w-4" />
+                    )}
+                  </span>
+                )}
+              </div>
+            </TableHead>
+            <TableHead 
+              className="cursor-pointer hover:text-primary"
+              onClick={() => onSort && onSort('lastLogin')}
+            >
+              <div className="flex items-center">
+                Último login
+                {sortConfig?.key === 'lastLogin' && (
+                  <span className="ml-1">
+                    {sortConfig.direction === 'asc' ? (
+                      <ChevronUpIcon className="h-4 w-4" />
+                    ) : (
+                      <ChevronDownIcon className="h-4 w-4" />
+                    )}
+                  </span>
+                )}
+              </div>
+            </TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
