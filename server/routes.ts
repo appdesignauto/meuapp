@@ -14,6 +14,7 @@ import path from "path";
 import fs from "fs";
 import { storageService } from "./services/storage";
 import { supabaseStorageService } from "./services/supabase-storage";
+import uploadMemory from "./middlewares/upload";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication middleware and routes
@@ -862,7 +863,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Atualizar imagem de perfil do designer (protegido por autenticação)
-  app.post("/api/designers/profile-image", isAuthenticated, upload.single('image'), async (req, res) => {
+  app.post("/api/designers/profile-image", isAuthenticated, uploadMemory.single('image'), async (req, res) => {
     try {
       const userId = (req.user as any).id;
       
