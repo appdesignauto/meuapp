@@ -82,6 +82,8 @@ interface UserFormData {
   password: string;
   name: string;
   role: UserRole;
+  plan: string;
+  periodType: string;
   isactive: boolean;
 }
 
@@ -160,11 +162,13 @@ const UserManagement = () => {
   // Formulário para criar usuário
   const createForm = useForm<UserFormData>({
     defaultValues: {
-      username: "",
+      username: "", // Será gerado automaticamente a partir do email
       email: "",
       password: "",
       name: "",
       role: "free",
+      plan: "free",
+      periodType: "mensal",
       isactive: true,
     },
   });
@@ -512,30 +516,18 @@ const UserManagement = () => {
           </DialogHeader>
           <form onSubmit={handleCreateSubmit}>
             <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2 sm:col-span-1">
-                  <Label htmlFor="username" className="text-right">
-                    Username
-                  </Label>
-                  <Input
-                    id="username"
-                    {...createForm.register("username", { required: true })}
-                    className="mt-1"
-                  />
-                  {createForm.formState.errors.username && (
-                    <p className="text-sm text-red-500 mt-1">Username é obrigatório</p>
-                  )}
-                </div>
-                <div className="col-span-2 sm:col-span-1">
-                  <Label htmlFor="name" className="text-right">
-                    Nome
-                  </Label>
-                  <Input
-                    id="name"
-                    {...createForm.register("name")}
-                    className="mt-1"
-                  />
-                </div>
+              <div>
+                <Label htmlFor="name" className="text-right">
+                  Nome Completo
+                </Label>
+                <Input
+                  id="name"
+                  {...createForm.register("name", { required: true })}
+                  className="mt-1"
+                />
+                {createForm.formState.errors.name && (
+                  <p className="text-sm text-red-500 mt-1">Nome é obrigatório</p>
+                )}
               </div>
               <div>
                 <Label htmlFor="email" className="text-right">
@@ -583,6 +575,44 @@ const UserManagement = () => {
                           {role.label}
                         </SelectItem>
                       ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="plan" className="text-right">
+                    Plano
+                  </Label>
+                  <Select 
+                    onValueChange={(value) => createForm.setValue("plan", value)} 
+                    defaultValue={createForm.getValues("plan")}
+                  >
+                    <SelectTrigger id="plan" className="mt-1">
+                      <SelectValue placeholder="Selecione um plano" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="free">Free</SelectItem>
+                      <SelectItem value="premium">Premium</SelectItem>
+                      <SelectItem value="enterprise">Enterprise</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="periodType" className="text-right">
+                    Período
+                  </Label>
+                  <Select 
+                    onValueChange={(value) => createForm.setValue("periodType", value)} 
+                    defaultValue={createForm.getValues("periodType")}
+                  >
+                    <SelectTrigger id="periodType" className="mt-1">
+                      <SelectValue placeholder="Selecione o período" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="mensal">Mensal</SelectItem>
+                      <SelectItem value="anual">Anual</SelectItem>
+                      <SelectItem value="vitalicio">Vitalício</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
