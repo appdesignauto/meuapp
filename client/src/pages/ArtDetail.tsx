@@ -295,141 +295,152 @@ export default function ArtDetail() {
               </div>
             </div>
             
-            {/* Designer Section */}
+            {/* Designer Section - Nova versão mais elegante */}
             {art.designer && (
-              <div className="p-4 rounded-lg border border-neutral-200 shadow-sm mb-4 bg-white">
-                <div className="flex items-center gap-3 mb-3">
-                  <div 
-                    className="flex-shrink-0 cursor-pointer" 
-                    onClick={() => setLocation(`/designers/${art.designer.username}`)}
-                  >
-                    <div className="w-14 h-14 rounded-full overflow-hidden bg-neutral-100 border border-blue-100">
-                      {art.designer.profileImageUrl ? (
-                        <img 
-                          src={art.designer.profileImageUrl}
-                          alt={art.designer.name || art.designer.username}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-blue-100 text-blue-600 font-medium text-lg">
-                          {(art.designer.name?.[0] || art.designer.username[0]).toUpperCase()}
-                        </div>
-                      )}
+              <div className="mb-6 bg-gradient-to-br from-blue-50 to-white rounded-lg overflow-hidden">
+                <div className="flex flex-col md:flex-row">
+                  {/* Coluna da esquerda com avatar e botão seguir */}
+                  <div className="p-5 flex flex-col items-center border-b md:border-b-0 md:border-r border-blue-100 md:w-1/3">
+                    <div 
+                      className="cursor-pointer relative group"
+                      onClick={() => setLocation(`/designers/${art.designer.username}`)}
+                    >
+                      <div className="w-20 h-20 rounded-full overflow-hidden bg-white shadow-md border-2 border-blue-200 hover:border-blue-400 transition-colors">
+                        {art.designer.profileImageUrl ? (
+                          <img 
+                            src={art.designer.profileImageUrl}
+                            alt={art.designer.name || art.designer.username}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-blue-100 text-blue-600 font-medium text-2xl">
+                            {(art.designer.name?.[0] || art.designer.username[0]).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      <div className="absolute inset-0 bg-blue-500 bg-opacity-0 rounded-full flex items-center justify-center transition-all group-hover:bg-opacity-10">
+                      </div>
                     </div>
+                    
+                    <div 
+                      className="mt-3 text-center cursor-pointer"
+                      onClick={() => setLocation(`/designers/${art.designer.username}`)}
+                    >
+                      <h3 className="font-semibold text-gray-900 hover:text-blue-600 transition-colors">
+                        {art.designer.name || art.designer.username}
+                      </h3>
+                      <p className="text-sm text-gray-500 mt-1">Designer</p>
+                    </div>
+                    
+                    {user && user.id !== art.designer.id && (
+                      <Button
+                        variant={art.designer.isFollowing ? "default" : "outline"}
+                        size="sm"
+                        className={`mt-4 text-xs w-full ${
+                          art.designer.isFollowing 
+                            ? "bg-blue-600 hover:bg-blue-700 text-white" 
+                            : "border-blue-200 text-blue-600 hover:bg-blue-50"
+                        }`}
+                        onClick={() => {
+                          if (!user) {
+                            toast({
+                              title: "Login Necessário",
+                              description: "Faça login para seguir este designer",
+                              variant: "destructive",
+                            });
+                            return;
+                          }
+                          
+                          const isCurrentlyFollowing = art.designer.isFollowing;
+                          
+                          // Otimistic UI update
+                          const designer = {...art.designer};
+                          designer.isFollowing = !isCurrentlyFollowing;
+                          if (isCurrentlyFollowing) {
+                            designer.followers = (designer.followers || 1) - 1;
+                          } else {
+                            designer.followers = (designer.followers || 0) + 1;
+                          }
+                          
+                          // Update local state
+                          const updatedArt = {...art, designer};
+                          
+                          // API call
+                          fetch(`/api/${isCurrentlyFollowing ? 'unfollow' : 'follow'}/${art.designer.id}`, {
+                            method: isCurrentlyFollowing ? 'DELETE' : 'POST',
+                            headers: {
+                              'Content-Type': 'application/json'
+                            },
+                            credentials: 'include'
+                          })
+                          .then(response => {
+                            if (!response.ok) throw new Error('Falha na operação de seguir');
+                            return response.json();
+                          })
+                          .then(() => {
+                            toast({
+                              title: isCurrentlyFollowing ? "Deixou de seguir" : "Designer seguido",
+                              description: isCurrentlyFollowing 
+                                ? `Você deixou de seguir ${art.designer.name || art.designer.username}`
+                                : `Você está seguindo ${art.designer.name || art.designer.username}`,
+                            });
+                          })
+                          .catch(error => {
+                            toast({
+                              title: "Erro na operação",
+                              description: error.message,
+                              variant: "destructive",
+                            });
+                          });
+                        }}
+                      >
+                        {art.designer.isFollowing ? "Seguindo" : "Seguir"}
+                      </Button>
+                    )}
                   </div>
                   
-                  <div className="flex-grow min-w-0">
-                    <div className="flex flex-col md:flex-row md:justify-between md:items-center">
-                      <div 
-                        className="cursor-pointer" 
+                  {/* Coluna da direita com informações e bio */}
+                  <div className="p-5 md:w-2/3">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="font-medium text-gray-800">Sobre o Designer</h3>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                         onClick={() => setLocation(`/designers/${art.designer.username}`)}
                       >
-                        <p className="font-semibold text-gray-900 truncate hover:text-blue-600 transition-colors">
-                          {art.designer.name || art.designer.username}
-                        </p>
-                        <div className="flex items-center text-xs text-neutral-500 mt-1">
-                          <span className="flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-                            {art.designer.totalArts || '0'} arquivos
-                          </span>
-                          
-                          {art.designer.followers && (
-                            <>
-                              <span className="mx-1">•</span>
-                              <span className="flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                                {art.designer.followers} seguidores
-                              </span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {user && user.id !== art.designer.id && (
-                        <Button
-                          variant={art.designer.isFollowing ? "default" : "outline"}
-                          size="sm"
-                          className={`mt-2 md:mt-0 text-xs h-8 ${
-                            art.designer.isFollowing 
-                              ? "bg-blue-600 hover:bg-blue-700 text-white" 
-                              : "border-blue-200 text-blue-600 hover:bg-blue-50"
-                          }`}
-                          onClick={() => {
-                            if (!user) {
-                              toast({
-                                title: "Login Necessário",
-                                description: "Faça login para seguir este designer",
-                                variant: "destructive",
-                              });
-                              return;
-                            }
-                            
-                            const isCurrentlyFollowing = art.designer.isFollowing;
-                            
-                            // Otimistic UI update
-                            const designer = {...art.designer};
-                            designer.isFollowing = !isCurrentlyFollowing;
-                            if (isCurrentlyFollowing) {
-                              designer.followers = (designer.followers || 1) - 1;
-                            } else {
-                              designer.followers = (designer.followers || 0) + 1;
-                            }
-                            
-                            // Update local state
-                            const updatedArt = {...art, designer};
-                            
-                            // API call
-                            fetch(`/api/${isCurrentlyFollowing ? 'unfollow' : 'follow'}/${art.designer.id}`, {
-                              method: isCurrentlyFollowing ? 'DELETE' : 'POST',
-                              headers: {
-                                'Content-Type': 'application/json'
-                              },
-                              credentials: 'include'
-                            })
-                            .then(response => {
-                              if (!response.ok) throw new Error('Falha na operação de seguir');
-                              return response.json();
-                            })
-                            .then(() => {
-                              toast({
-                                title: isCurrentlyFollowing ? "Deixou de seguir" : "Designer seguido",
-                                description: isCurrentlyFollowing 
-                                  ? `Você deixou de seguir ${art.designer.name || art.designer.username}`
-                                  : `Você está seguindo ${art.designer.name || art.designer.username}`,
-                              });
-                            })
-                            .catch(error => {
-                              toast({
-                                title: "Erro na operação",
-                                description: error.message,
-                                variant: "destructive",
-                              });
-                            });
-                          }}
-                        >
-                          {art.designer.isFollowing ? "Seguindo" : "Seguir"}
-                        </Button>
-                      )}
+                        Ver perfil completo
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                      </Button>
                     </div>
+                    
+                    {/* Estatísticas em cards */}
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      <div className="p-3 bg-white rounded-lg border border-blue-100 shadow-sm text-center">
+                        <p className="text-2xl font-bold text-blue-600">{art.designer.totalArts || '0'}</p>
+                        <p className="text-xs text-gray-500">Arquivos</p>
+                      </div>
+                      <div className="p-3 bg-white rounded-lg border border-blue-100 shadow-sm text-center">
+                        <p className="text-2xl font-bold text-blue-600">{art.designer.followers || '0'}</p>
+                        <p className="text-xs text-gray-500">Seguidores</p>
+                      </div>
+                    </div>
+                    
+                    {/* Bio do designer */}
+                    {art.designer.bio ? (
+                      <div className="bg-white rounded-lg p-3 border border-blue-100 shadow-sm">
+                        <p className="text-sm text-gray-600 line-clamp-3">
+                          {art.designer.bio}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="bg-white rounded-lg p-3 border border-blue-100 shadow-sm">
+                        <p className="text-sm text-gray-500 italic">
+                          Este designer ainda não adicionou uma biografia.
+                        </p>
+                      </div>
+                    )}
                   </div>
-                </div>
-                
-                {art.designer.bio && (
-                  <p className="text-sm text-neutral-600 mt-2 line-clamp-2">
-                    {art.designer.bio}
-                  </p>
-                )}
-                
-                <div className="mt-3 pt-2 border-t border-neutral-100">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 p-0 h-auto"
-                    onClick={() => setLocation(`/designers/${art.designer.username}`)}
-                  >
-                    Ver perfil completo
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                  </Button>
                 </div>
               </div>
             )}
