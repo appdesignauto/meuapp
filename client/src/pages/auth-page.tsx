@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -41,15 +41,22 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 const AuthPage = () => {
   const [activeTab, setActiveTab] = useState<string>("login");
-  const [showPassword, setShowPassword] = useState(false);
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [, setLocation] = useLocation();
   const { user, loginMutation, registerMutation } = useAuth();
   const { toast } = useToast();
 
-  // Redirecionar para home se o usuário já estiver logado
+  // Redirecionamento com useEffect para evitar erros de hooks
+  useEffect(() => {
+    if (user) {
+      setLocation("/");
+    }
+  }, [user, setLocation]);
+
+  // Se o usuário já estiver logado, não renderizamos o resto do componente
   if (user) {
-    setLocation("/");
     return null;
   }
 
@@ -143,7 +150,7 @@ const AuthPage = () => {
                             <div className="relative">
                               <FormControl>
                                 <Input 
-                                  type={showPassword ? "text" : "password"} 
+                                  type={showLoginPassword ? "text" : "password"} 
                                   placeholder="******" 
                                   {...field} 
                                 />
@@ -153,15 +160,15 @@ const AuthPage = () => {
                                 variant="ghost"
                                 size="sm"
                                 className="absolute right-0 top-0 h-full px-3 py-2 text-gray-400 hover:text-gray-600"
-                                onClick={() => setShowPassword(!showPassword)}
+                                onClick={() => setShowLoginPassword(!showLoginPassword)}
                               >
-                                {showPassword ? (
+                                {showLoginPassword ? (
                                   <EyeOff className="h-4 w-4" />
                                 ) : (
                                   <Eye className="h-4 w-4" />
                                 )}
                                 <span className="sr-only">
-                                  {showPassword ? "Esconder senha" : "Mostrar senha"}
+                                  {showLoginPassword ? "Esconder senha" : "Mostrar senha"}
                                 </span>
                               </Button>
                             </div>
@@ -260,7 +267,7 @@ const AuthPage = () => {
                             <div className="relative">
                               <FormControl>
                                 <Input 
-                                  type={showPassword ? "text" : "password"} 
+                                  type={showRegisterPassword ? "text" : "password"} 
                                   placeholder="******" 
                                   {...field} 
                                 />
@@ -270,15 +277,15 @@ const AuthPage = () => {
                                 variant="ghost"
                                 size="sm"
                                 className="absolute right-0 top-0 h-full px-3 py-2 text-gray-400 hover:text-gray-600"
-                                onClick={() => setShowPassword(!showPassword)}
+                                onClick={() => setShowRegisterPassword(!showRegisterPassword)}
                               >
-                                {showPassword ? (
+                                {showRegisterPassword ? (
                                   <EyeOff className="h-4 w-4" />
                                 ) : (
                                   <Eye className="h-4 w-4" />
                                 )}
                                 <span className="sr-only">
-                                  {showPassword ? "Esconder senha" : "Mostrar senha"}
+                                  {showRegisterPassword ? "Esconder senha" : "Mostrar senha"}
                                 </span>
                               </Button>
                             </div>
