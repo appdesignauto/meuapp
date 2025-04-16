@@ -896,7 +896,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           bio: bio || user.bio,
           website: website || user.website,
           location: location || user.location,
-          socialLinks: socialLinks || user.sociallinks,
+          sociallinks: socialLinks || user.sociallinks,
           updatedAt: new Date()
         })
         .where(eq(users.id, userId));
@@ -1014,7 +1014,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Atualizar perfil do designer com nova imagem
       await db.update(users)
         .set({
-          profileImageUrl: imageUrl,
+          profileimageurl: imageUrl,
           updatedAt: new Date()
         })
         .where(eq(users.id, userId));
