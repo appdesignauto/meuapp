@@ -26,6 +26,7 @@ type Designer = {
   following: number;
   createdAt: string;
   isFollowing: boolean;
+  location?: string;
   statistics: {
     totalArts: number;
     premiumArts: number;
@@ -149,6 +150,14 @@ export default function DesignerProfile() {
     } else {
       return value.toString();
     }
+  };
+  
+  // Função para formatar a data de criação do designer
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    const month = date.toLocaleString('pt-BR', { month: 'long' });
+    const year = date.getFullYear();
+    return `${month} de ${year}`;
   };
   
   // Mutação para upload de imagem de perfil
@@ -398,11 +407,15 @@ export default function DesignerProfile() {
               </h1>
               
               <div className="flex items-center justify-center gap-1 mt-2 text-gray-500 text-xs">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                <span className="mr-3">Tocantins</span>
+                {data.location && (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                    <span className="mr-3">{data.location || "Brasil"}</span>
+                  </>
+                )}
                 
                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                <span>Desde julho de 2020</span>
+                <span>Desde {formatDate(data.createdAt)}</span>
               </div>
             </div>
             
