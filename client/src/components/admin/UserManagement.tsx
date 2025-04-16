@@ -886,24 +886,37 @@ const UserTable = ({
     }
   };
   
-  // Função para formatar data completa para tooltip
+  // Função para formatar data completa considerando horário de Brasília (UTC-3)
   const formatFullDate = (dateString: string) => {
     if (!dateString) return "Data não disponível";
     
     try {
-      const date = new Date(dateString);
+      // Criar data a partir da string
+      const utcDate = new Date(dateString);
+      
       // Verificar se a data é válida
-      if (isNaN(date.getTime())) {
+      if (isNaN(utcDate.getTime())) {
         return "Data inválida";
       }
       
-      return date.toLocaleDateString("pt-BR", {
+      // Converter para horário de Brasília (UTC-3)
+      const brasiliaOffset = -3 * 60; // Brasília é UTC-3 (em minutos)
+      const userOffset = utcDate.getTimezoneOffset(); // Offset do navegador em minutos
+      const offsetDiff = userOffset - brasiliaOffset; // Diferença entre o horário local e Brasília
+      
+      // Ajustar a data para o horário de Brasília
+      const brasiliaDate = new Date(utcDate.getTime() + offsetDiff * 60 * 1000);
+      
+      // Formatar no padrão brasileiro
+      const formattedDate = brasiliaDate.toLocaleDateString("pt-BR", {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
         hour: "2-digit",
         minute: "2-digit"
       });
+      
+      return formattedDate + " (BRT)"; // Adicionar indicador de fuso horário
     } catch (error) {
       console.error("Erro ao formatar data completa:", error, "Data:", dateString);
       return "Data inválida";
