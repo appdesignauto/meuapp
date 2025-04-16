@@ -177,6 +177,19 @@ const ArtsList = () => {
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  if (window.confirm('Deseja realmente atribuir o usuário administrador como designer de todas as artes?')) {
+                    updateDesignersMutation.mutate();
+                  }
+                }}
+                disabled={updateDesignersMutation.isPending}
+                className="mr-2"
+              >
+                <UserCircle className="h-4 w-4 mr-2" />
+                {updateDesignersMutation.isPending ? 'Atualizando...' : 'Atribuir Designer'}
+              </Button>
               <Button onClick={handleAddNew}>
                 <Plus className="h-4 w-4 mr-2" />
                 Adicionar Arte

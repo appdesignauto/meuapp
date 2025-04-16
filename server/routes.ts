@@ -7,7 +7,7 @@ import { fromZodError } from "zod-validation-error";
 import { setupAuth } from "./auth";
 import imageUploadRoutes from "./routes/image-upload";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, isNull } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication middleware and routes
@@ -234,9 +234,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Buscar informações do designer se existir
-      if (art.designerId) {
+      if (art.designerid) {
         try {
-          const designer = await storage.getUserById(art.designerId);
+          const designer = await storage.getUserById(art.designerid);
           if (designer) {
             // Remover a senha e outras informações sensíveis
             const { password, ...safeDesigner } = designer;
@@ -419,15 +419,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Usuário admin não encontrado" });
       }
       
-      // Atualizar todas as artes sem designerId
-      const result = await db
-        .update(arts)
-        .set({ designerId: admin.id })
-        .where(eq(arts.designerId, null));
+      // Atualizar todas as artes sem designerid usando SQL direto
+      await db.execute(`
+        UPDATE arts 
+        SET designerid = ${admin.id} 
+        WHERE designerid IS NULL
+      `);
 
       return res.status(200).json({ 
         message: "Designers atualizados com sucesso", 
-        designerId: admin.id 
+        designerid: admin.id 
       });
     } catch (error) {
       console.error("Erro ao atualizar designers:", error);
