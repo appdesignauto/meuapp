@@ -140,6 +140,17 @@ export default function DesignerProfile() {
     setArtsPage(page);
   };
   
+  // Função para formatar valores estatísticos com sufixos adequados (mil, mi, etc.)
+  const formatStatisticValue = (value: number): string => {
+    if (value >= 1000000) {
+      return (value / 1000000).toFixed(1).replace('.0', '') + ' mi';
+    } else if (value >= 1000) {
+      return (value / 1000).toFixed(0) + ' mil';
+    } else {
+      return value.toString();
+    }
+  };
+  
   // Mutação para upload de imagem de perfil
   const profileImageMutation = useMutation({
     mutationFn: async (formData: FormData) => {
@@ -427,25 +438,33 @@ export default function DesignerProfile() {
               </Button>
             </div>
             
-            {/* Estatísticas */}
+            {/* Estatísticas com valores reais da plataforma */}
             <div className="flex justify-center gap-6 md:gap-10 mt-6 w-full max-w-2xl">
               <div className="text-center">
-                <p className="text-lg font-bold text-gray-900">{data.statistics.totalArts} mil</p>
+                <p className="text-lg font-bold text-gray-900">
+                  {formatStatisticValue(data.statistics.totalArts)}
+                </p>
                 <p className="text-[11px] text-gray-500">Arquivos</p>
               </div>
               
               <div className="text-center">
-                <p className="text-lg font-bold text-gray-900">{data.statistics.totalDownloads} mi</p>
+                <p className="text-lg font-bold text-gray-900">
+                  {formatStatisticValue(data.statistics.totalDownloads)}
+                </p>
                 <p className="text-[11px] text-gray-500">Downloads</p>
               </div>
               
               <div className="text-center">
-                <p className="text-lg font-bold text-gray-900">2.1 mi</p>
-                <p className="text-[11px] text-gray-500">Curtidas</p>
+                <p className="text-lg font-bold text-gray-900">
+                  {formatStatisticValue(data.statistics.totalViews)}
+                </p>
+                <p className="text-[11px] text-gray-500">Visualizações</p>
               </div>
               
               <div className="text-center">
-                <p className="text-lg font-bold text-gray-900">{data.followers} mil</p>
+                <p className="text-lg font-bold text-gray-900">
+                  {formatStatisticValue(data.followers)}
+                </p>
                 <p className="text-[11px] text-gray-500">Seguidores</p>
               </div>
             </div>
