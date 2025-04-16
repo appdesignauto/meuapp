@@ -141,11 +141,11 @@ export function setupAuth(app: Express) {
       const { username, password } = req.body;
       
       if (!username || !password) {
-        return res.status(400).json({ message: "Username e senha são obrigatórios" });
+        return res.status(400).json({ message: "Email e senha são obrigatórios" });
       }
       
-      // Busca o usuário direto pelo username
-      const user = await storage.getUserByUsername(username);
+      // Busca o usuário pelo email (username agora é usado como email no frontend)
+      const user = await storage.getUserByEmail(username);
       
       console.log("Usuário encontrado:", user);
       
@@ -166,7 +166,7 @@ export function setupAuth(app: Express) {
           return next(err);
         }
         
-        console.log("Login bem-sucedido para:", user.username);
+        console.log("Login bem-sucedido para:", user.email);
         
         // Atualiza último login
         await storage.updateUserLastLogin(user.id, new Date());
@@ -183,18 +183,25 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res) => {
     try {
-      // Check if username already exists
-      const existingUser = await storage.getUserByUsername(req.body.username);
-      if (existingUser) {
-        return res.status(400).json({ message: "Nome de usuário já existe" });
-      }
-      
-      // Check if email already exists
+      // Check if email already exists (principal identificador)
       if (req.body.email) {
         const existingEmail = await storage.getUserByEmail(req.body.email);
         if (existingEmail) {
           return res.status(400).json({ message: "Email já cadastrado" });
         }
+      } else {
+        return res.status(400).json({ message: "Email é obrigatório" });
+      }
+      
+      // Se username for fornecido, verifica se já existe
+      if (req.body.username) {
+        const existingUser = await storage.getUserByUsername(req.body.username);
+        if (existingUser) {
+          return res.status(400).json({ message: "Nome de usuário já existe" });
+        }
+      } else {
+        // Se não for fornecido, gera com base no email
+        req.body.username = req.body.email.split('@')[0];
       }
       
       // Hash password
