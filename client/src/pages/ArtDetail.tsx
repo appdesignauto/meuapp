@@ -295,32 +295,30 @@ export default function ArtDetail() {
               </div>
             </div>
             
-            {/* Designer Section - Versão minimalista */}
+            {/* Designer Section - Versão minimalista com foco no botão seguir */}
             {art.designer && (
-              <div className="flex items-center justify-between mb-4 py-3 border-t border-b border-neutral-100">
-                <div className="flex items-center">
-                  <div 
-                    className="cursor-pointer" 
-                    onClick={() => setLocation(`/designers/${art.designer.username}`)}
-                  >
-                    <div className="w-10 h-10 rounded-full overflow-hidden bg-neutral-100">
-                      {art.designer.profileImageUrl ? (
-                        <img 
-                          src={art.designer.profileImageUrl}
-                          alt={art.designer.name || art.designer.username}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-blue-50 text-blue-600 font-medium">
-                          {(art.designer.name?.[0] || art.designer.username[0]).toUpperCase()}
-                        </div>
-                      )}
-                    </div>
+              <div 
+                className="flex items-center justify-between mb-4 py-3 border-t border-b border-neutral-100"
+                onClick={() => setLocation(`/designers/${art.designer.username}`)}
+              >
+                <div className="flex items-center cursor-pointer">
+                  <div className="w-9 h-9 rounded-full overflow-hidden bg-neutral-100 flex-shrink-0">
+                    {art.designer.profileImageUrl ? (
+                      <img 
+                        src={art.designer.profileImageUrl}
+                        alt={art.designer.name || art.designer.username}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-blue-50 text-blue-600 font-medium">
+                        {(art.designer.name?.[0] || art.designer.username[0]).toUpperCase()}
+                      </div>
+                    )}
                   </div>
                   
-                  <div className="ml-3" onClick={() => setLocation(`/designers/${art.designer.username}`)}>
+                  <div className="ml-3">
                     <div className="flex items-center">
-                      <p className="font-medium text-sm text-gray-900 cursor-pointer hover:text-blue-600 transition-colors">
+                      <p className="font-medium text-sm text-gray-900 hover:text-blue-600 transition-colors">
                         {art.designer.name || art.designer.username}
                       </p>
                       <span className="mx-2 text-neutral-300">•</span>
@@ -344,83 +342,83 @@ export default function ArtDetail() {
                   </div>
                 </div>
                 
-                <div className="flex items-center">
-                  {user && user.id !== art.designer.id && (
-                    <Button
-                      variant={art.designer.isFollowing ? "default" : "outline"}
-                      size="sm"
-                      className={`text-xs h-8 ${
-                        art.designer.isFollowing 
-                          ? "bg-blue-600 hover:bg-blue-700 text-white" 
-                          : "border-neutral-200 text-blue-600 hover:bg-blue-50"
-                      }`}
-                      onClick={() => {
-                        if (!user) {
-                          toast({
-                            title: "Login Necessário",
-                            description: "Faça login para seguir este designer",
-                            variant: "destructive",
-                          });
-                          return;
-                        }
-                        
-                        const isCurrentlyFollowing = art.designer.isFollowing;
-                        
-                        // Otimistic UI update
-                        const designer = {...art.designer};
-                        designer.isFollowing = !isCurrentlyFollowing;
-                        if (isCurrentlyFollowing) {
-                          designer.followers = (designer.followers || 1) - 1;
-                        } else {
-                          designer.followers = (designer.followers || 0) + 1;
-                        }
-                        
-                        // Update local state
-                        const updatedArt = {...art, designer};
-                        
-                        // API call
-                        fetch(`/api/${isCurrentlyFollowing ? 'unfollow' : 'follow'}/${art.designer.id}`, {
-                          method: isCurrentlyFollowing ? 'DELETE' : 'POST',
-                          headers: {
-                            'Content-Type': 'application/json'
-                          },
-                          credentials: 'include'
-                        })
-                        .then(response => {
-                          if (!response.ok) throw new Error('Falha na operação de seguir');
-                          return response.json();
-                        })
-                        .then(() => {
-                          toast({
-                            title: isCurrentlyFollowing ? "Deixou de seguir" : "Designer seguido",
-                            description: isCurrentlyFollowing 
-                              ? `Você deixou de seguir ${art.designer.name || art.designer.username}`
-                              : `Você está seguindo ${art.designer.name || art.designer.username}`,
-                          });
-                        })
-                        .catch(error => {
-                          toast({
-                            title: "Erro na operação",
-                            description: error.message,
-                            variant: "destructive",
-                          });
-                        });
-                      }}
-                    >
-                      {art.designer.isFollowing ? "Seguindo" : "Seguir"}
-                    </Button>
-                  )}
-                  
+                {user && user.id !== art.designer.id && (
                   <Button
-                    variant="ghost"
+                    variant={art.designer.isFollowing ? "default" : "outline"}
                     size="sm"
-                    className="ml-2 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-2"
-                    onClick={() => setLocation(`/designers/${art.designer.username}`)}
+                    className={`text-xs h-8 min-w-[90px] ${
+                      art.designer.isFollowing 
+                        ? "bg-blue-600 hover:bg-blue-700 text-white" 
+                        : "border-blue-300 text-blue-600 hover:bg-blue-50"
+                    }`}
+                    onClick={(e) => {
+                      e.stopPropagation(); // Evita o redirecionamento para o perfil ao clicar no botão
+                      
+                      if (!user) {
+                        toast({
+                          title: "Login Necessário",
+                          description: "Faça login para seguir este designer",
+                          variant: "destructive",
+                        });
+                        return;
+                      }
+                      
+                      const isCurrentlyFollowing = art.designer.isFollowing;
+                      
+                      // Otimistic UI update
+                      const designer = {...art.designer};
+                      designer.isFollowing = !isCurrentlyFollowing;
+                      if (isCurrentlyFollowing) {
+                        designer.followers = (designer.followers || 1) - 1;
+                      } else {
+                        designer.followers = (designer.followers || 0) + 1;
+                      }
+                      
+                      // Update local state
+                      const updatedArt = {...art, designer};
+                      
+                      // API call
+                      fetch(`/api/${isCurrentlyFollowing ? 'unfollow' : 'follow'}/${art.designer.id}`, {
+                        method: isCurrentlyFollowing ? 'DELETE' : 'POST',
+                        headers: {
+                          'Content-Type': 'application/json'
+                        },
+                        credentials: 'include'
+                      })
+                      .then(response => {
+                        if (!response.ok) throw new Error('Falha na operação de seguir');
+                        return response.json();
+                      })
+                      .then(() => {
+                        toast({
+                          title: isCurrentlyFollowing ? "Deixou de seguir" : "Designer seguido",
+                          description: isCurrentlyFollowing 
+                            ? `Você deixou de seguir ${art.designer.name || art.designer.username}`
+                            : `Você está seguindo ${art.designer.name || art.designer.username}`,
+                        });
+                      })
+                      .catch(error => {
+                        toast({
+                          title: "Erro na operação",
+                          description: error.message,
+                          variant: "destructive",
+                        });
+                      });
+                    }}
                   >
-                    Perfil
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                    {art.designer.isFollowing ? (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M20 6 9 17l-5-5"></path></svg>
+                        Seguindo
+                      </>
+                    ) : (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                        Seguir
+                      </>
+                    )}
                   </Button>
-                </div>
+                )}
               </div>
             )}
             
