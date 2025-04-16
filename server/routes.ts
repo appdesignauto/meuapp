@@ -12,6 +12,8 @@ import { SQL } from "drizzle-orm/sql";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { storageService } from "./services/storage";
+import { supabaseStorageService } from "./services/supabase-storage";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication middleware and routes
@@ -879,12 +881,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verificar se o usuário tem permissão para ser designer
-      if (user.role !== 'designer' && user.role !== 'admin') {
+      if (user.role !== 'designer' && user.role !== 'designer_adm' && user.role !== 'admin') {
         return res.status(403).json({ message: "Apenas designers podem atualizar imagem de perfil" });
       }
       
-      // Processar e salvar a imagem (usar a mesma lógica de upload de imagens que já existe)
-      const imageUrl = '/uploads/' + req.file.filename; // Simplificado para este exemplo
+      // Opções para o processamento da imagem
+      const options = {
+        width: 400,  // Tamanho adequado para avatar de perfil
+        height: 400,
+        quality: 85,
+        format: 'webp' as const
+      };
+      
+      // Tentar fazer upload usando Supabase (prioridade)
+      let imageUrl;
+      
+      // Usando Supabase Storage (prioridade)
+      if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
+        try {
+          console.log("Tentando upload de imagem de perfil para Supabase...");
+          
+          // Verificar se temos um arquivo para processar
+          if (req.file) {
+            const uploadResult = await supabaseStorageService.uploadImage(req.file, options);
+            imageUrl = uploadResult.imageUrl;
+          }
+          
+          console.log("Upload para Supabase concluído com sucesso:", imageUrl);
+        } catch (supabaseError) {
+          console.error("Erro no upload para Supabase:", supabaseError);
+          // Se falhar, continua para próximo método
+        }
+      }
+      
+      // Fallback para R2 se Supabase falhar
+      if (!imageUrl && process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY) {
+        try {
+          console.log("Tentando upload de imagem de perfil para R2...");
+          
+          if (req.file) {
+            const r2Result = await storageService.uploadImage(req.file, options);
+            imageUrl = r2Result.imageUrl;
+          }
+          
+          console.log("Upload para R2 concluído com sucesso:", imageUrl);
+        } catch (r2Error) {
+          console.error("Erro no upload para R2:", r2Error);
+          // Se falhar, continua para o último método
+        }
+      }
+      
+      // Último recurso: armazenamento local
+      if (!imageUrl && req.file) {
+        console.log("Usando armazenamento local para imagem de perfil...");
+        
+        // Se estamos usando o storage em disco do multer, pegamos o caminho do arquivo
+        if (req.file.path) {
+          imageUrl = '/uploads/' + path.basename(req.file.path);
+          console.log("Caminho da imagem local:", imageUrl);
+        } else {
+          // Caso contrário, usamos o método localUpload do serviço
+          const localResult = await storageService.localUpload(req.file, options);
+          imageUrl = localResult.imageUrl;
+        }
+      }
       
       // Atualizar perfil do designer com nova imagem
       await db.update(users)
@@ -899,7 +959,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         profileImageUrl: imageUrl 
       });
     } catch (error) {
-      console.error("Erro ao atualizar imagem de perfil:", error);
+      console.error("Erro ao atualizar imagem de perfil", error);
       res.status(500).json({ message: "Erro ao atualizar imagem de perfil" });
     }
   });
