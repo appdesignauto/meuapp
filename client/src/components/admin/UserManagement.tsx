@@ -749,46 +749,199 @@ const UserTable = ({
   setIsEditDialogOpen,
   toggleUserStatusMutation,
 }: UserTableProps) => {
+  // Função para formatar data e mostrar tempo relativo
+  const formatDateRelative = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) {
+      return "Hoje";
+    } else if (diffDays === 1) {
+      return "Ontem";
+    } else if (diffDays < 7) {
+      return `${diffDays} dias atrás`;
+    } else {
+      return date.toLocaleDateString("pt-BR");
+    }
+  };
+  
+  // Função para formatar data completa para tooltip
+  const formatFullDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  };
+  
+  // Função para renderizar avatar do usuário
+  const renderUserAvatar = (user: UserWithStats) => {
+    const initials = user.name 
+      ? user.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
+      : user.username.substring(0, 2).toUpperCase();
+      
+    const profileUrl = user.profileimageurl;
+    
+    return (
+      <HoverCard>
+        <HoverCardTrigger asChild>
+          <div className="flex items-center">
+            <div className="relative h-8 w-8 mr-2">
+              {profileUrl ? (
+                <img 
+                  src={profileUrl} 
+                  alt={user.username}
+                  className="rounded-full object-cover h-8 w-8" 
+                />
+              ) : (
+                <div className={`rounded-full h-8 w-8 flex items-center justify-center text-xs text-white font-medium ${
+                  userRoles.find(r => r.value === user.role)?.color || "bg-gray-500"
+                }`}>
+                  {initials}
+                </div>
+              )}
+              {user.isactive && (
+                <div className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-green-500 border border-white" />
+              )}
+            </div>
+            <div className="flex flex-col">
+              <span className="font-medium">{user.username}</span>
+              <span className="text-xs text-muted-foreground">{user.name || "-"}</span>
+            </div>
+          </div>
+        </HoverCardTrigger>
+        <HoverCardContent className="w-80">
+          <div className="flex space-x-4">
+            <div className="relative h-16 w-16">
+              {profileUrl ? (
+                <img 
+                  src={profileUrl} 
+                  alt={user.username}
+                  className="rounded-full object-cover h-16 w-16" 
+                />
+              ) : (
+                <div className={`rounded-full h-16 w-16 flex items-center justify-center text-xl text-white font-medium ${
+                  userRoles.find(r => r.value === user.role)?.color || "bg-gray-500"
+                }`}>
+                  {initials}
+                </div>
+              )}
+              {user.isactive && (
+                <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border border-white" />
+              )}
+            </div>
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold">{user.name || user.username}</h4>
+              <div className="space-y-1">
+                <p className="text-xs">{user.email}</p>
+                <p className="text-xs text-muted-foreground">
+                  Cadastrado em {formatFullDate(user.createdAt)}
+                </p>
+                {user.lastLogin && (
+                  <p className="text-xs text-muted-foreground">
+                    Último login: {formatFullDate(user.lastLogin)}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+          {(user.role === "designer" || user.role === "designer_adm") && (
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <div className="text-center p-2 bg-muted rounded-md">
+                <p className="text-xs text-muted-foreground">Artes vistas</p>
+                <p className="text-sm font-medium">{user.totalViews || 0}</p>
+              </div>
+              <div className="text-center p-2 bg-muted rounded-md">
+                <p className="text-xs text-muted-foreground">Downloads</p>
+                <p className="text-sm font-medium">{user.totalDownloads || 0}</p>
+              </div>
+              <div className="text-center p-2 bg-muted rounded-md">
+                <p className="text-xs text-muted-foreground">Seguidores</p>
+                <p className="text-sm font-medium">{user.followersCount || 0}</p>
+              </div>
+              <div className="text-center p-2 bg-muted rounded-md">
+                <p className="text-xs text-muted-foreground">Seguindo</p>
+                <p className="text-sm font-medium">{user.followingCount || 0}</p>
+              </div>
+            </div>
+          )}
+        </HoverCardContent>
+      </HoverCard>
+    );
+  };
+  
   return (
     <div className="border rounded-md">
       <Table>
         <TableCaption>Lista de usuários do sistema</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead>ID</TableHead>
-            <TableHead>Username</TableHead>
-            <TableHead>Nome</TableHead>
+            <TableHead>Usuário</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Papel</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Data de criação</TableHead>
+            <TableHead>Cadastro</TableHead>
+            <TableHead>Último login</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell colSpan={8} className="text-center py-8">
-                Carregando usuários...
+              <TableCell colSpan={7} className="text-center py-8">
+                <div className="flex justify-center">
+                  <svg className="animate-spin h-6 w-6 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </div>
+                <p className="mt-2 text-sm text-muted-foreground">Carregando usuários...</p>
               </TableCell>
             </TableRow>
           ) : users.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={8} className="text-center py-8">
-                Nenhum usuário encontrado.
+              <TableCell colSpan={7} className="text-center py-8">
+                <p className="text-muted-foreground">Nenhum usuário encontrado com os filtros atuais.</p>
+                <Button variant="link" onClick={() => window.location.reload()}>
+                  Redefinir filtros
+                </Button>
               </TableCell>
             </TableRow>
           ) : (
             users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>{user.id}</TableCell>
-                <TableCell>{user.username}</TableCell>
-                <TableCell>{user.name || "-"}</TableCell>
+              <TableRow key={user.id} className={!user.isactive ? "opacity-60" : ""}>
+                <TableCell>{renderUserAvatar(user)}</TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>{renderRoleBadge(user.role)}</TableCell>
                 <TableCell>{renderStatusBadge(user.isactive)}</TableCell>
                 <TableCell>
-                  {new Date(user.createdAt).toLocaleDateString("pt-BR")}
+                  <HoverCard>
+                    <HoverCardTrigger asChild>
+                      <span className="cursor-help">{formatDateRelative(user.createdAt)}</span>
+                    </HoverCardTrigger>
+                    <HoverCardContent side="top" className="w-auto p-2">
+                      <p className="text-xs">{formatFullDate(user.createdAt)}</p>
+                    </HoverCardContent>
+                  </HoverCard>
+                </TableCell>
+                <TableCell>
+                  {user.lastLogin ? (
+                    <HoverCard>
+                      <HoverCardTrigger asChild>
+                        <span className="cursor-help">{formatDateRelative(user.lastLogin)}</span>
+                      </HoverCardTrigger>
+                      <HoverCardContent side="top" className="w-auto p-2">
+                        <p className="text-xs">{formatFullDate(user.lastLogin)}</p>
+                      </HoverCardContent>
+                    </HoverCard>
+                  ) : (
+                    <span className="text-muted-foreground text-xs">Nunca</span>
+                  )}
                 </TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
@@ -831,7 +984,7 @@ const UserTable = ({
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
                         onClick={() => {
-                          window.open(`/designers/${user.id}`, "_blank");
+                          window.open(`/designers/${user.username}`, "_blank");
                         }}
                       >
                         Ver perfil
