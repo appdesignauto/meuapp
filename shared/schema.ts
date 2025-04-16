@@ -9,7 +9,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   email: text("email").notNull().unique(),
   name: text("name"),
-  profileImageUrl: text("profileImageUrl"),
+  profileimageurl: text("profileimageurl"),
   bio: text("bio"),
   role: text("role").notNull().default("free"), // 'visitor', 'free', 'premium', 'designer', 'designer_adm', 'support', 'admin'
   isActive: boolean("isActive").notNull().default(true),
@@ -23,7 +23,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   password: true,
   email: true,
   name: true,
-  profileImageUrl: true,
+  profileimageurl: true,
   bio: true,
   role: true,
   isActive: true,
