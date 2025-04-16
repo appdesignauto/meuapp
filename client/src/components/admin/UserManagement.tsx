@@ -850,32 +850,51 @@ const UserTable = ({
 }: UserTableProps) => {
   // Função para formatar data e mostrar tempo relativo
   const formatDateRelative = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    if (!dateString) return "N/A";
     
-    if (diffDays === 0) {
-      return "Hoje";
-    } else if (diffDays === 1) {
-      return "Ontem";
-    } else if (diffDays < 7) {
-      return `${diffDays} dias atrás`;
-    } else {
-      return date.toLocaleDateString("pt-BR");
+    try {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffMs = now.getTime() - date.getTime();
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 0) {
+        return "Hoje";
+      } else if (diffDays === 1) {
+        return "Ontem";
+      } else if (diffDays < 7) {
+        return `${diffDays} dias atrás`;
+      } else {
+        return date.toLocaleDateString("pt-BR");
+      }
+    } catch (error) {
+      console.error("Erro ao formatar data relativa:", error, "Data:", dateString);
+      return "Data inválida";
     }
   };
   
   // Função para formatar data completa para tooltip
   const formatFullDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit"
-    });
+    if (!dateString) return "Data não disponível";
+    
+    try {
+      const date = new Date(dateString);
+      // Verificar se a data é válida
+      if (isNaN(date.getTime())) {
+        return "Data inválida";
+      }
+      
+      return date.toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    } catch (error) {
+      console.error("Erro ao formatar data completa:", error, "Data:", dateString);
+      return "Data inválida";
+    }
   };
   
   // Função para renderizar avatar do usuário
