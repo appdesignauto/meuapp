@@ -686,9 +686,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           isactive: isactive !== undefined ? isactive : true,
           profileimageurl: null,
           bio: null,
-          lastlogin: new Date(),
-          createdAt: new Date(),
-          updatedat: new Date()
+          // Ajustar para horário de Brasília (UTC-3)
+          lastlogin: new Date(new Date().getTime() - 3 * 60 * 60 * 1000),
+          // Ajustar para horário de Brasília (UTC-3)
+          createdAt: new Date(new Date().getTime() - 3 * 60 * 60 * 1000),
+          updatedat: new Date(new Date().getTime() - 3 * 60 * 60 * 1000)
         })
         .returning();
       
@@ -721,7 +723,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             name: name || null,
             bio: bio || null,
             profileimageurl: profileimageurl || null,
-            updatedat: new Date()
+            // Ajustar para horário de Brasília (UTC-3)
+            updatedat: new Date(new Date().getTime() - 3 * 60 * 60 * 1000)
           })
           .where(eq(users.id, userId));
       } else {
