@@ -8,6 +8,7 @@ import { setupAuth } from "./auth";
 import imageUploadRoutes from "./routes/image-upload";
 import { db } from "./db";
 import { eq, isNull, desc, and, count, sql, asc, not, or } from "drizzle-orm";
+import { SQL } from "drizzle-orm/sql";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication middleware and routes
@@ -445,80 +446,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 12;
-      const sort = (req.query.sort as string) || 'followers'; // 'followers', 'activity', 'recent'
+      const sort = (req.query.sort as string) || 'recent'; // 'activity', 'recent'
       
       // Buscar todos os usuários com role 'designer', 'designer_adm' ou 'admin'
-      let designersQuery = db.select({
-        id: users.id,
-        name: users.name,
-        username: users.username,
-        bio: users.bio,
-        profileImageUrl: users.profileImageUrl,
-        role: users.role,
-        followers: users.followers,
-        following: users.following,
-        createdAt: users.createdAt
-      })
-      .from(users)
-      .where(
-        or(
-          eq(users.role, 'designer'),
-          eq(users.role, 'designer_adm'),
-          eq(users.role, 'admin')
-        )
-      );
+      // Executar SQL direto para evitar problemas com o TypeScript
+      const designersQuery = `
+        SELECT 
+          id, 
+          name, 
+          username, 
+          bio, 
+          "profileImageUrl", 
+          role, 
+          followers, 
+          following, 
+          "createdAt" 
+        FROM users 
+        WHERE role IN ('designer', 'designer_adm', 'admin')
+        ORDER BY ${sort === 'activity' ? '"updatedAt"' : '"createdAt"'} DESC
+        LIMIT $1 OFFSET $2
+      `;
       
-      // Aplicar ordenação
-      switch (sort) {
-        case 'followers':
-          // Ordenar pelo número de seguidores
-          designersQuery = designersQuery.orderBy(desc(sql`${users.id}`));
-          break;
-        case 'activity':
-          // Ordenar pelo número de artes mais recentes
-          // Aqui poderíamos melhorar com uma subconsulta ou join, mas por ora mantemos simples
-          designersQuery = designersQuery.orderBy(desc(users.updatedAt));
-          break;
-        case 'recent':
-          designersQuery = designersQuery.orderBy(desc(users.createdAt));
-          break;
-        default:
-          designersQuery = designersQuery.orderBy(desc(sql`${users.id}`));
-      }
-      
-      // Aplicar paginação
       const offset = (page - 1) * limit;
-      const designers = await designersQuery.limit(limit).offset(offset);
+      const designers = await db.execute(sql.raw(designersQuery, [limit, offset]));
       
       // Obter contagem total
-      const [{ value: totalCount }] = await db.select({
-        value: count()
-      })
-      .from(users)
-      .where(
-        or(
-          eq(users.role, 'designer'),
-          eq(users.role, 'designer_adm'),
-          eq(users.role, 'admin')
-        )
-      );
+      const totalCountQuery = `
+        SELECT COUNT(*) as value 
+        FROM users 
+        WHERE role IN ('designer', 'designer_adm', 'admin')
+      `;
+      
+      const [totalCountResult] = await db.execute(sql.raw(totalCountQuery));
+      const totalCount = parseInt(totalCountResult.value.toString());
       
       // Para cada designer, buscar algumas artes para exibir
-      const designersWithArts = await Promise.all(designers.map(async (designer) => {
-        const recentArts = await db.select({
-          id: arts.id,
-          title: arts.title,
-          imageUrl: arts.imageUrl,
-          isPremium: arts.isPremium
-        })
-        .from(arts)
-        .where(eq(arts.designerid, designer.id))
-        .orderBy(desc(arts.createdAt))
-        .limit(4);
+      const designersWithArts = await Promise.all(designers.rows.map(async (designer: any) => {
+        const artsQuery = `
+          SELECT 
+            id, 
+            title, 
+            "imageUrl", 
+            "isPremium"
+          FROM arts 
+          WHERE designerid = $1
+          ORDER BY "createdAt" DESC
+          LIMIT 4
+        `;
+        
+        const recentArts = await db.execute(sql.raw(artsQuery, [designer.id]));
         
         return {
           ...designer,
-          arts: recentArts
+          arts: recentArts.rows
         };
       }));
       
@@ -540,20 +520,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const username = req.params.username;
       
-      // Buscar designer pelo username
-      const [designer] = await db.select({
-        id: users.id,
-        name: users.name,
-        username: users.username,
-        bio: users.bio,
-        profileImageUrl: users.profileImageUrl,
-        role: users.role,
-        followers: users.followers,
-        following: users.following,
-        createdAt: users.createdAt
-      })
-      .from(users)
-      .where(eq(users.username, username));
+      // Buscar designer pelo username - executando SQL direto
+      const designerQuery = `
+        SELECT 
+          id, 
+          name, 
+          username, 
+          bio, 
+          "profileImageUrl", 
+          role, 
+          followers, 
+          following, 
+          "createdAt" 
+        FROM users 
+        WHERE username = $1
+      `;
+      
+      const result = await db.execute(sql.raw(designerQuery, [username]));
+      const designer = result.rows[0];
       
       if (!designer) {
         return res.status(404).json({ message: "Designer não encontrado" });
@@ -562,31 +546,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Verificar se o usuário logado já segue este designer
       let isFollowing = false;
       if (req.user) {
-        const [followRecord] = await db.select()
-          .from(userFollows)
-          .where(
-            and(
-              eq(userFollows.followerId, (req.user as any).id),
-              eq(userFollows.followingId, designer.id)
-            )
-          );
+        const followQuery = `
+          SELECT * FROM "userFollows"
+          WHERE "followerId" = $1 AND "followingId" = $2
+        `;
         
-        isFollowing = !!followRecord;
+        const followResult = await db.execute(sql.raw(followQuery, [(req.user as any).id, designer.id]));
+        isFollowing = followResult.rows.length > 0;
       }
       
       // Buscar as artes deste designer
-      const designerArts = await db.select()
-        .from(arts)
-        .where(eq(arts.designerid, designer.id))
-        .orderBy(desc(arts.createdAt));
+      const artsQuery = `
+        SELECT * FROM arts
+        WHERE designerid = $1
+        ORDER BY "createdAt" DESC
+      `;
+      
+      const artsResult = await db.execute(sql.raw(artsQuery, [designer.id]));
+      const designerArts = artsResult.rows;
       
       // Contagens
       const artCount = designerArts.length;
-      const premiumArtCount = designerArts.filter(art => art.isPremium).length;
+      const premiumArtCount = designerArts.filter((art: any) => art.isPremium).length;
       
       // Calcular estatísticas
-      const totalDownloads = designerArts.reduce((sum, art) => sum + (art.downloadcount || 0), 0);
-      const totalViews = designerArts.reduce((sum, art) => sum + (art.viewcount || 0), 0);
+      const totalDownloads = designerArts.reduce((sum: number, art: any) => sum + (parseInt(art.downloadcount) || 0), 0);
+      const totalViews = designerArts.reduce((sum: number, art: any) => sum + (parseInt(art.viewcount) || 0), 0);
       
       const response = {
         ...designer,
@@ -597,7 +582,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           totalDownloads,
           totalViews
         },
-        arts: designerArts.map(art => ({
+        arts: designerArts.map((art: any) => ({
           id: art.id,
           title: art.title,
           imageUrl: art.imageUrl,
