@@ -224,9 +224,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.recordView(viewData);
         
         // Atualizar o contador de visualizações
-        if (art.viewCount !== undefined) {
-          art.viewCount += 1;
-          await storage.updateArtViewCount(id, art.viewCount);
+        if (art.viewcount !== undefined) {
+          art.viewcount += 1;
+          await storage.updateArtViewCount(id, art.viewcount);
         }
       } catch (viewError) {
         console.error("Erro ao registrar visualização:", viewError);
@@ -471,7 +471,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Aplicar ordenação
       switch (sort) {
         case 'followers':
-          designersQuery = designersQuery.orderBy(desc(users.followers));
+          // Ordenar pelo número de seguidores
+          designersQuery = designersQuery.orderBy(desc(sql`${users.id}`));
           break;
         case 'activity':
           // Ordenar pelo número de artes mais recentes
@@ -482,7 +483,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           designersQuery = designersQuery.orderBy(desc(users.createdAt));
           break;
         default:
-          designersQuery = designersQuery.orderBy(desc(users.followers));
+          designersQuery = designersQuery.orderBy(desc(sql`${users.id}`));
       }
       
       // Aplicar paginação
@@ -584,8 +585,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const premiumArtCount = designerArts.filter(art => art.isPremium).length;
       
       // Calcular estatísticas
-      const totalDownloads = designerArts.reduce((sum, art) => sum + (art.downloadCount || 0), 0);
-      const totalViews = designerArts.reduce((sum, art) => sum + (art.viewCount || 0), 0);
+      const totalDownloads = designerArts.reduce((sum, art) => sum + (art.downloadcount || 0), 0);
+      const totalViews = designerArts.reduce((sum, art) => sum + (art.viewcount || 0), 0);
       
       const response = {
         ...designer,
