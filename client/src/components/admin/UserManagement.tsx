@@ -854,9 +854,22 @@ const UserTable = ({
     
     try {
       const date = new Date(dateString);
+      
+      // Verificar se a data é válida
+      if (isNaN(date.getTime())) {
+        console.error("Data inválida:", dateString);
+        return "Data inválida";
+      }
+      
       const now = new Date();
       const diffMs = now.getTime() - date.getTime();
       const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      
+      // Validar para evitar valores negativos
+      if (diffDays < 0) {
+        console.warn("Data no futuro detectada:", dateString, "Diferença:", diffDays);
+        return "Recente";
+      }
       
       if (diffDays === 0) {
         return "Hoje";
