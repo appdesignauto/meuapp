@@ -458,8 +458,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           bio, 
           profileimageurl, 
           role, 
-          followers, 
-          following, 
+          0 AS followers, 
+          0 AS following, 
           createdat 
         FROM users 
         WHERE role IN ('designer', 'designer_adm', 'admin')
@@ -537,8 +537,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           bio, 
           profileimageurl, 
           role, 
-          followers, 
-          following, 
+          0 AS followers, 
+          0 AS following, 
           createdat 
         FROM users 
         WHERE username = $1
@@ -697,7 +697,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           followingId: designerId
         });
       
-      // Atualizar contagens
+      // As colunas followers e following foram definidas no schema mas não existem na tabela atual
+      // Comentamos as atualizações de contagem até que essas colunas sejam adicionadas ao banco
+      /*
       await db.execute(`
         UPDATE users 
         SET followers = followers + 1 
@@ -709,6 +711,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         SET following = following + 1 
         WHERE id = ${followerId}
       `);
+      */
       
       res.status(201).json({ message: "Designer seguido com sucesso" });
     } catch (error) {
@@ -746,7 +749,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           )
         );
       
-      // Atualizar contagens
+      // As colunas followers e following foram definidas no schema mas não existem na tabela atual
+      // Comentamos as atualizações de contagem até que essas colunas sejam adicionadas ao banco
+      /*
       await db.execute(`
         UPDATE users 
         SET followers = GREATEST(followers - 1, 0) 
@@ -758,6 +763,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         SET following = GREATEST(following - 1, 0) 
         WHERE id = ${followerId}
       `);
+      */
       
       res.status(200).json({ message: "Deixou de seguir o designer com sucesso" });
     } catch (error) {
@@ -793,8 +799,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           u.username, 
           u.profileimageurl AS "profileImageUrl", 
           u.role, 
-          u.following, 
-          u.followers, 
+          0 AS following, 
+          0 AS followers, 
           uf.createdat AS "followDate"
         FROM "userFollows" uf
         INNER JOIN users u ON uf."followerId" = u.id
