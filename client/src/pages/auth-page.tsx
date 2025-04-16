@@ -89,11 +89,20 @@ const AuthPage = () => {
   const onLoginSubmit = async (values: LoginFormValues) => {
     try {
       // Converter do formato de login por email para o formato que a API espera
+      let username = values.email;
+      
+      // Caso especial para o admin
+      if (values.email === "inovedigitalmarketing10@gmail.com") {
+        username = "admin";
+        console.log("Usando login de administrador");
+      }
+      
       const loginData = {
-        username: values.email, // Temporariamente usamos o campo username da API
+        username: username, 
         password: values.password,
       };
       
+      console.log("Enviando credenciais de login:", loginData);
       await loginMutation.mutateAsync(loginData);
       setLocation("/");
     } catch (error) {
