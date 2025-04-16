@@ -456,14 +456,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           name, 
           username, 
           bio, 
-          "profileImageUrl", 
+          profileimageurl, 
           role, 
           followers, 
           following, 
-          "createdAt" 
+          createdat 
         FROM users 
         WHERE role IN ('designer', 'designer_adm', 'admin')
-        ORDER BY ${sort === 'activity' ? '"updatedAt"' : '"createdAt"'} DESC
+        ORDER BY ${sort === 'activity' ? 'updatedat' : 'createdat'} DESC
         LIMIT $1 OFFSET $2
       `;
       
@@ -486,19 +486,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
           SELECT 
             id, 
             title, 
-            "imageUrl", 
-            "isPremium"
+            imageurl, 
+            ispremium
           FROM arts 
           WHERE designerid = $1
-          ORDER BY "createdAt" DESC
+          ORDER BY createdat DESC
           LIMIT 4
         `;
         
         const recentArts = await db.execute(sql.raw(artsQuery, [designer.id]));
         
+        // Adaptamos os nomes de campo para o padrão CamelCase esperado pelo frontend
         return {
           ...designer,
-          arts: recentArts.rows
+          profileImageUrl: designer.profileimageurl,
+          createdAt: designer.createdat,
+          arts: recentArts.rows.map((art: any) => ({
+            id: art.id,
+            title: art.title,
+            imageUrl: art.imageurl,
+            isPremium: art.ispremium
+          }))
         };
       }));
       
@@ -527,11 +535,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           name, 
           username, 
           bio, 
-          "profileImageUrl", 
+          profileimageurl, 
           role, 
           followers, 
           following, 
-          "createdAt" 
+          createdat 
         FROM users 
         WHERE username = $1
       `;
@@ -559,7 +567,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const artsQuery = `
         SELECT * FROM arts
         WHERE designerid = $1
-        ORDER BY "createdAt" DESC
+        ORDER BY createdat DESC
       `;
       
       const artsResult = await db.execute(sql.raw(artsQuery, [designer.id]));
@@ -573,8 +581,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const totalDownloads = designerArts.reduce((sum: number, art: any) => sum + (parseInt(art.downloadcount) || 0), 0);
       const totalViews = designerArts.reduce((sum: number, art: any) => sum + (parseInt(art.viewcount) || 0), 0);
       
+      // Adaptamos os nomes de campo para o padrão CamelCase esperado pelo frontend
       const response = {
         ...designer,
+        // Ajustar campos para camelCase para manter compatibilidade com frontend
+        profileImageUrl: designer.profileimageurl,
+        createdAt: designer.createdat,
         isFollowing,
         statistics: {
           totalArts: artCount,
@@ -585,10 +597,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         arts: designerArts.map((art: any) => ({
           id: art.id,
           title: art.title,
-          imageUrl: art.imageUrl,
+          imageUrl: art.imageurl,
           format: art.format,
-          isPremium: art.isPremium,
-          createdAt: art.createdAt
+          isPremium: art.ispremium,
+          createdAt: art.createdat
         }))
       };
       
@@ -773,31 +785,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calcular offset para paginação
       const offset = (page - 1) * limit;
       
-      // Buscar seguidores
-      const followers = await db
-        .select({
-          id: users.id,
-          name: users.name,
-          username: users.username,
-          profileImageUrl: users.profileImageUrl,
-          role: users.role,
-          following: users.following,
-          followers: users.followers,
-          followDate: userFollows.createdAt
-        })
-        .from(userFollows)
-        .innerJoin(users, eq(userFollows.followerId, users.id))
-        .where(eq(userFollows.followingId, designerId))
-        .orderBy(desc(userFollows.createdAt))
-        .limit(limit)
-        .offset(offset);
+      // Buscar seguidores - usando SQL direto para evitar problemas de case
+      const followersQuery = `
+        SELECT 
+          u.id, 
+          u.name, 
+          u.username, 
+          u.profileimageurl AS "profileImageUrl", 
+          u.role, 
+          u.following, 
+          u.followers, 
+          uf.createdat AS "followDate"
+        FROM "userFollows" uf
+        INNER JOIN users u ON uf."followerId" = u.id
+        WHERE uf."followingId" = $1
+        ORDER BY uf.createdat DESC
+        LIMIT $2 OFFSET $3
+      `;
       
-      // Contar total de seguidores
-      const [{ value: totalCount }] = await db.select({
-        value: count()
-      })
-      .from(userFollows)
-      .where(eq(userFollows.followingId, designerId));
+      const followersResult = await db.execute(sql.raw(followersQuery, [designerId, limit, offset]));
+      const followers = followersResult.rows;
+      
+      // Contar total de seguidores usando SQL direto
+      const totalCountQuery = `
+        SELECT COUNT(*) as value 
+        FROM "userFollows" 
+        WHERE "followingId" = $1
+      `;
+      
+      const [totalCountResult] = await db.execute(sql.raw(totalCountQuery, [designerId]));
+      const totalCount = parseInt(totalCountResult.value.toString());
       
       res.json({
         followers,
