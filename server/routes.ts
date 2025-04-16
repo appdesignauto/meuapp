@@ -650,7 +650,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           isactive: isactive !== undefined ? isactive : true,
           profileimageurl: null,
           bio: null,
-          lastLogin: new Date(),
+          lastlogin: new Date(),
           createdAt: new Date(),
           updatedAt: new Date()
         })

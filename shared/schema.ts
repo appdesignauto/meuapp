@@ -13,7 +13,7 @@ export const users = pgTable("users", {
   bio: text("bio"),
   role: text("role").notNull().default("free"), // 'visitor', 'free', 'premium', 'designer', 'designer_adm', 'support', 'admin'
   isactive: boolean("isactive").notNull().default(true),
-  lastLogin: timestamp("lastLogin"),
+  lastLogin: timestamp("lastlogin"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 });
