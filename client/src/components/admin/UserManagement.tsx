@@ -37,6 +37,26 @@ import {
   EllipsisVerticalIcon,
   ShieldCheckIcon,
   UserXIcon,
+  FilterIcon,
+  DownloadIcon,
+  BellIcon,
+  HistoryIcon,
+  BarChart2Icon,
+  ActivityIcon,
+  SearchIcon,
+  SortAscIcon,
+  SortDescIcon,
+  CalendarIcon,
+  ClockIcon,
+  InfoIcon,
+  MailIcon,
+  CircleIcon,
+  BadgeCheckIcon,
+  TrashIcon,
+  UserIcon,
+  FileTextIcon,
+  AlertCircleIcon,
+  CheckCircleIcon,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -146,11 +166,20 @@ const UserManagement = () => {
   const [selectedUser, setSelectedUser] = useState<UserWithStats | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
+  const [isStatsDialogOpen, setIsStatsDialogOpen] = useState(false);
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const [isNotificationDialogOpen, setIsNotificationDialogOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [dateFilter, setDateFilter] = useState<"all" | "today" | "week" | "month" | "custom">("all");
+  const [customDateRange, setCustomDateRange] = useState<{from?: Date, to?: Date}>({});
   const [activeTab, setActiveTab] = useState("all");
+  const [sortConfig, setSortConfig] = useState<{key: string, direction: 'asc' | 'desc'} | null>(null);
+  const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
 
   // Buscar usuários
   const { data: users, isLoading: isLoadingUsers } = useQuery<UserWithStats[]>({
@@ -335,24 +364,90 @@ const UserManagement = () => {
   });
 
   // Filtrar usuários
+  // Filtrar usuários
   const filteredUsers = users
     ? users.filter((user) => {
+        // Filtro de busca por texto
         const matchesSearch =
           user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
           user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
           (user.name && user.name.toLowerCase().includes(searchTerm.toLowerCase()));
         
+        // Filtro por papel
         const matchesRole = roleFilter === "all" || user.role === roleFilter;
         
+        // Filtro por status
+        const matchesStatus = 
+          statusFilter === "all" || 
+          (statusFilter === "active" && user.isactive) ||
+          (statusFilter === "inactive" && !user.isactive);
+        
+        // Filtro por tab
         const matchesTab = 
           activeTab === "all" || 
           (activeTab === "active" && user.isactive) || 
           (activeTab === "inactive" && !user.isactive) ||
           (activeTab === "designers" && (user.role === "designer" || user.role === "designer_adm"));
         
-        return matchesSearch && matchesRole && matchesTab;
+        // Filtro por data
+        let matchesDate = true;
+        if (dateFilter !== "all") {
+          const today = new Date();
+          const userCreated = new Date(user.createdAt);
+          
+          switch (dateFilter) {
+            case "today":
+              matchesDate = 
+                userCreated.getDate() === today.getDate() &&
+                userCreated.getMonth() === today.getMonth() &&
+                userCreated.getFullYear() === today.getFullYear();
+              break;
+            case "week":
+              const lastWeek = new Date(today);
+              lastWeek.setDate(lastWeek.getDate() - 7);
+              matchesDate = userCreated >= lastWeek;
+              break;
+            case "month":
+              const lastMonth = new Date(today);
+              lastMonth.setMonth(lastMonth.getMonth() - 1);
+              matchesDate = userCreated >= lastMonth;
+              break;
+            case "custom":
+              if (customDateRange.from) {
+                matchesDate = userCreated >= customDateRange.from;
+              }
+              if (customDateRange.to) {
+                matchesDate = matchesDate && userCreated <= customDateRange.to;
+              }
+              break;
+          }
+        }
+        
+        return matchesSearch && matchesRole && matchesStatus && matchesTab && matchesDate;
       })
     : [];
+    
+  // Ordenar usuários se sortConfig estiver definido
+  const sortedUsers = sortConfig 
+    ? [...filteredUsers].sort((a, b) => {
+        if (!a[sortConfig.key] && !b[sortConfig.key]) return 0;
+        if (!a[sortConfig.key]) return 1;
+        if (!b[sortConfig.key]) return -1;
+        
+        const aValue = a[sortConfig.key];
+        const bValue = b[sortConfig.key];
+        
+        let result = 0;
+        
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          result = aValue.localeCompare(bValue);
+        } else {
+          result = aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+        }
+        
+        return sortConfig.direction === 'asc' ? result : -result;
+      })
+    : filteredUsers;
 
   // Submeter formulário de criação
   const handleCreateSubmit = createForm.handleSubmit((data) => {
@@ -488,9 +583,12 @@ const UserManagement = () => {
             <CardTitle className="text-lg">Filtros</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <Label htmlFor="search">Buscar</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="col-span-1 sm:col-span-2">
+                <Label htmlFor="search" className="flex items-center gap-2">
+                  <SearchIcon className="h-4 w-4 text-muted-foreground" />
+                  Buscar
+                </Label>
                 <Input
                   id="search"
                   placeholder="Buscar por nome, email ou username"
@@ -499,8 +597,11 @@ const UserManagement = () => {
                   className="mt-1"
                 />
               </div>
-              <div className="w-full sm:w-1/3">
-                <Label htmlFor="role-filter">Papel</Label>
+              <div>
+                <Label htmlFor="role-filter" className="flex items-center gap-2">
+                  <UserIcon className="h-4 w-4 text-muted-foreground" />
+                  Papel
+                </Label>
                 <Select 
                   value={roleFilter} 
                   onValueChange={(value) => setRoleFilter(value as UserRole | "all")}
@@ -518,6 +619,47 @@ const UserManagement = () => {
                   </SelectContent>
                 </Select>
               </div>
+              <div>
+                <Label htmlFor="status-filter" className="flex items-center gap-2">
+                  <CircleIcon className="h-4 w-4 text-muted-foreground" />
+                  Status
+                </Label>
+                <Select 
+                  value={statusFilter} 
+                  onValueChange={(value) => setStatusFilter(value as "all" | "active" | "inactive")}
+                >
+                  <SelectTrigger id="status-filter" className="mt-1">
+                    <SelectValue placeholder="Selecione um status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="active">Ativos</SelectItem>
+                    <SelectItem value="inactive">Inativos</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-4">
+              <Button variant="outline" size="sm" className="flex items-center gap-1">
+                <DownloadIcon className="h-4 w-4" />
+                Exportar
+              </Button>
+              <Button variant="outline" size="sm" className="flex items-center gap-1">
+                <BellIcon className="h-4 w-4" />
+                Enviar notificação
+              </Button>
+              <Button variant="outline" size="sm" className="flex items-center gap-1">
+                <BarChart2Icon className="h-4 w-4" />
+                Estatísticas
+              </Button>
+              <Button variant="outline" size="sm" className="flex items-center gap-1">
+                <FilterIcon className="h-4 w-4" />
+                Mais filtros
+              </Button>
+              <Button variant="outline" size="sm" className="flex items-center gap-1">
+                <CalendarIcon className="h-4 w-4" />
+                Filtrar por data
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -839,6 +981,11 @@ interface UserTableProps {
   setSelectedUser: (user: UserWithStats) => void;
   setIsEditDialogOpen: (open: boolean) => void;
   toggleUserStatusMutation: any;
+  sortConfig?: {
+    key: string;
+    direction: 'asc' | 'desc';
+  };
+  onSort?: (key: string) => void;
 }
 
 const UserTable = ({
