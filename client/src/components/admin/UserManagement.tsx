@@ -43,6 +43,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InsertUser, UserRole } from "@shared/schema";
 import { useForm } from "react-hook-form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import { 
   Select, 
   SelectContent, 
@@ -80,14 +85,57 @@ interface UserFormData {
   isactive: boolean;
 }
 
-const userRoles: { value: UserRole; label: string }[] = [
-  { value: "visitor", label: "Visitante" },
-  { value: "free", label: "Usuário Free" },
-  { value: "premium", label: "Usuário Premium" },
-  { value: "designer", label: "Designer" },
-  { value: "designer_adm", label: "Designer Administrador" },
-  { value: "support", label: "Suporte" },
-  { value: "admin", label: "Administrador" },
+// Definição dos papéis de usuário com cores e descrições específicas
+const userRoles: { value: UserRole; label: string; color: string; description: string; group: string }[] = [
+  { 
+    value: "visitor", 
+    label: "Visitante", 
+    color: "bg-slate-500 hover:bg-slate-600",
+    description: "Usuário que não possui conta no sistema, apenas visualiza conteúdo público",
+    group: "clientes"
+  },
+  { 
+    value: "free", 
+    label: "Usuário Free", 
+    color: "bg-sky-500 hover:bg-sky-600",
+    description: "Usuário registrado com acesso a recursos gratuitos",
+    group: "clientes"
+  },
+  { 
+    value: "premium", 
+    label: "Usuário Premium", 
+    color: "bg-violet-500 hover:bg-violet-600",
+    description: "Assinante com acesso completo às artes e downloads",
+    group: "clientes"
+  },
+  { 
+    value: "designer", 
+    label: "Designer", 
+    color: "bg-amber-500 hover:bg-amber-600",
+    description: "Criador de conteúdo que pode enviar e gerenciar artes",
+    group: "equipe" 
+  },
+  { 
+    value: "designer_adm", 
+    label: "Designer Administrador", 
+    color: "bg-orange-500 hover:bg-orange-600",
+    description: "Designer com permissões adicionais para gerenciar outros designers",
+    group: "equipe"
+  },
+  { 
+    value: "support", 
+    label: "Suporte", 
+    color: "bg-emerald-500 hover:bg-emerald-600",
+    description: "Equipe de suporte com acesso para gerenciar usuários e conteúdo",
+    group: "equipe"
+  },
+  { 
+    value: "admin", 
+    label: "Administrador", 
+    color: "bg-rose-500 hover:bg-rose-600",
+    description: "Acesso total ao sistema e todas as funcionalidades",
+    group: "equipe"
+  },
 ];
 
 const UserManagement = () => {
@@ -270,30 +318,41 @@ const UserManagement = () => {
     );
   };
 
-  // Renderização do badge de papel do usuário
+  // Renderização do badge de papel do usuário com tooltip para descrição
   const renderRoleBadge = (role: UserRole) => {
-    const roleColors: Record<UserRole, string> = {
-      visitor: "bg-slate-500 hover:bg-slate-600",
-      free: "bg-sky-500 hover:bg-sky-600",
-      premium: "bg-violet-500 hover:bg-violet-600",
-      designer: "bg-amber-500 hover:bg-amber-600",
-      designer_adm: "bg-orange-500 hover:bg-orange-600",
-      support: "bg-emerald-500 hover:bg-emerald-600",
-      admin: "bg-rose-500 hover:bg-rose-600",
-    };
-
-    const roleLabels: Record<UserRole, string> = {
-      visitor: "Visitante",
-      free: "Free",
-      premium: "Premium",
-      designer: "Designer",
-      designer_adm: "Designer ADM",
-      support: "Suporte",
-      admin: "Admin",
+    const roleInfo = userRoles.find(r => r.value === role) || {
+      value: role,
+      label: role,
+      color: "bg-gray-500 hover:bg-gray-600",
+      description: "Papel indefinido",
+      group: "outros"
     };
 
     return (
-      <Badge className={roleColors[role]}>{roleLabels[role]}</Badge>
+      <HoverCard>
+        <HoverCardTrigger asChild>
+          <div>
+            <Badge className={roleInfo.color}>
+              {roleInfo.label}
+            </Badge>
+          </div>
+        </HoverCardTrigger>
+        <HoverCardContent className="w-80">
+          <div className="flex justify-between space-x-4">
+            <div className="space-y-1">
+              <h4 className="text-sm font-semibold">{roleInfo.label}</h4>
+              <p className="text-sm text-muted-foreground">
+                {roleInfo.description}
+              </p>
+              <div className="flex items-center pt-2">
+                <Badge variant="outline" className="text-xs">
+                  {roleInfo.group === "equipe" ? "Equipe interna" : "Cliente"}
+                </Badge>
+              </div>
+            </div>
+          </div>
+        </HoverCardContent>
+      </HoverCard>
     );
   };
 

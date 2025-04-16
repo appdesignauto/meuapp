@@ -1,13 +1,14 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { arts, insertUserSchema, users, userFollows } from "@shared/schema";
+import { arts, insertUserSchema, users, userFollows, categories, collections, views, downloads, favorites, communityPosts, communityComments, formats, fileTypes, testimonials, designerStats, subscriptions, type User } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth } from "./auth";
 import imageUploadRoutes from "./routes/image-upload";
 import { db } from "./db";
-import { eq, isNull, desc, and, count, sql, asc, not, or } from "drizzle-orm";
+import { eq, isNull, desc, and, count, sql, asc, not, or, ne, inArray } from "drizzle-orm";
+import { randomBytes, scrypt } from "crypto";
 import { SQL } from "drizzle-orm/sql";
 import multer from "multer";
 import path from "path";
@@ -541,56 +542,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Acesso negado" });
       }
       
-      // Buscar todos os usuários com estatísticas
-      const allUsers = await db.select()
-        .from(users)
-        .orderBy(desc(users.createdAt));
+      // Utilizando SQL para evitar problemas de coluna (lastLogin vs lastlogin)
+      const usersQuery = `
+        SELECT 
+          id, 
+          username, 
+          email, 
+          name, 
+          profileimageurl, 
+          bio, 
+          role, 
+          isactive, 
+          lastlogin, 
+          "createdAt", 
+          "updatedAt"
+        FROM users
+        ORDER BY "createdAt" DESC
+      `;
+      
+      const result = await db.execute(sql.raw(usersQuery));
+      const allUsers = result.rows;
       
       // Enriquecer com estatísticas
       const usersWithStats = await Promise.all(
-        allUsers.map(async (user) => {
+        allUsers.map(async (user: any) => {
           // Contar seguidores (para designers)
-          const [followersResult] = await db
-            .select({ count: count() })
-            .from(userFollows)
-            .where(eq(userFollows.followingId, user.id));
-            
-          const followersCount = followersResult ? Number(followersResult.count) : 0;
+          const followersQuery = `
+            SELECT COUNT(*) as count
+            FROM "userFollows"
+            WHERE "followingId" = ${user.id}
+          `;
+          
+          const followersResult = await db.execute(sql.raw(followersQuery));
+          const followersCount = parseInt(followersResult.rows[0].count) || 0;
           
           // Contar seguindo
-          const [followingResult] = await db
-            .select({ count: count() })
-            .from(userFollows)
-            .where(eq(userFollows.followerId, user.id));
-            
-          const followingCount = followingResult ? Number(followingResult.count) : 0;
+          const followingQuery = `
+            SELECT COUNT(*) as count
+            FROM "userFollows"
+            WHERE "followerId" = ${user.id}
+          `;
+          
+          const followingResult = await db.execute(sql.raw(followingQuery));
+          const followingCount = parseInt(followingResult.rows[0].count) || 0;
           
           // Estatísticas para designers
           let totalDownloads = 0;
           let totalViews = 0;
+          let lastLogin = user.lastlogin;
           
           if (user.role === "designer" || user.role === "designer_adm") {
             // Contar downloads de artes deste designer
-            const [downloadsResult] = await db
-              .select({ count: count() })
-              .from(downloads)
-              .innerJoin(arts, eq(downloads.artId, arts.id))
-              .where(eq(arts.designerid, user.id));
-              
-            totalDownloads = downloadsResult ? Number(downloadsResult.count) : 0;
+            const downloadsQuery = `
+              SELECT COUNT(*) as count
+              FROM downloads d
+              JOIN arts a ON d."artId" = a.id
+              WHERE a.designerid = ${user.id}
+            `;
+            
+            const downloadsResult = await db.execute(sql.raw(downloadsQuery));
+            totalDownloads = parseInt(downloadsResult.rows[0].count) || 0;
             
             // Contar visualizações de artes deste designer
-            const [viewsResult] = await db
-              .select({ count: count() })
-              .from(views)
-              .innerJoin(arts, eq(views.artId, arts.id))
-              .where(eq(arts.designerid, user.id));
-              
-            totalViews = viewsResult ? Number(viewsResult.count) : 0;
+            const viewsQuery = `
+              SELECT COUNT(*) as count
+              FROM views v
+              JOIN arts a ON v."artId" = a.id
+              WHERE a.designerid = ${user.id}
+            `;
+            
+            const viewsResult = await db.execute(sql.raw(viewsQuery));
+            totalViews = parseInt(viewsResult.rows[0].count) || 0;
           }
           
+          // Converter para formato CamelCase para o frontend
           return {
-            ...user,
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            name: user.name,
+            profileImageUrl: user.profileimageurl,
+            bio: user.bio,
+            role: user.role,
+            isactive: user.isactive,
+            lastLogin: lastLogin,
+            createdAt: user.createdat || user["createdAt"],
             followersCount,
             followingCount,
             totalDownloads,
