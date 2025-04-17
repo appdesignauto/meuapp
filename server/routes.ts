@@ -683,14 +683,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           password: hashedPassword,
           name: name || null,
           role: role || "free",
-          isActive: isactive !== undefined ? isactive : true,
+          isactive: isactive !== undefined ? isactive : true,
           profileimageurl: null,
           bio: null,
           // Ajustar para horário de Brasília (UTC-3)
           lastLogin: new Date(new Date().getTime() - 3 * 60 * 60 * 1000),
           // Ajustar para horário de Brasília (UTC-3)
           createdAt: new Date(new Date().getTime() - 3 * 60 * 60 * 1000),
-          updatedAt: new Date(new Date().getTime() - 3 * 60 * 60 * 1000)
+          updatedat: new Date(new Date().getTime() - 3 * 60 * 60 * 1000)
         })
         .returning();
       
@@ -724,7 +724,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             bio: bio || null,
             profileimageurl: profileimageurl || null,
             // Ajustar para horário de Brasília (UTC-3)
-            updatedAt: new Date(new Date().getTime() - 3 * 60 * 60 * 1000)
+            updatedat: new Date(new Date().getTime() - 3 * 60 * 60 * 1000)
           })
           .where(eq(users.id, userId));
       } else {
@@ -769,7 +769,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Preparar objeto de atualização
         const updateData: Record<string, any> = {
-          updatedAt: new Date()
+          updatedat: new Date()
         };
         
         if (username) updateData.username = username;
