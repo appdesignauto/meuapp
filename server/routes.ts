@@ -798,6 +798,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = req.user as User;
       const userId = parseInt(req.params.id);
       
+      console.log(`[UserUpdate] Atualizando usuário ${userId}. Requisição feita por: ${user.username} (ID: ${user.id}, Nível: ${user.nivelacesso})`);
+      console.log(`[UserUpdate] Dados recebidos:`, req.body);
+      
       // Verificar se o usuário tem permissão de administrador ou é o próprio usuário
       if (user.nivelacesso !== "admin" && user.nivelacesso !== "designer_adm" && user.id !== userId) {
         return res.status(403).json({ message: "Acesso negado" });
@@ -894,25 +897,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .set(updateData)
           .where(eq(users.id, userId));
           
-        // Verificar se está atualizando para usuário premium - se sim, atualizar a assinatura
-        if (nivelacesso === 'premium') {
-          // Processar data de expiração com base no tipo de plano
-          let endDate: Date | null = null;
+        // Verificar se está atualizando para usuário premium ou se o usuário já era premium
+        // Consultar status atual do usuário para verificar se já era premium
+        if (nivelacesso === 'premium' || existingUser.nivelacesso === 'premium') {
+          // Definir o nível de acesso efetivo para o usuário (o novo valor ou o existente)
+          const effectiveNivelAcesso = nivelacesso || existingUser.nivelacesso;
           
-          if (acessovitalicio) {
-            // Usuário com acesso vitalício não tem data de expiração
-            endDate = null;
-          } else if (dataexpiracao) {
-            // Usar a data de expiração fornecida
-            endDate = new Date(dataexpiracao);
+          // Se o usuário for premium (atual ou após atualização), atualizar dados da assinatura
+          if (effectiveNivelAcesso === 'premium') {
+            // Processar data de expiração com base no tipo de plano
+            let endDate: Date | null = null;
+            
+            // Determinar se tem acesso vitalício (novo valor ou o existente)
+            const hasLifetimeAccess = acessovitalicio !== undefined ? acessovitalicio : existingUser.acessovitalicio;
+            
+            if (hasLifetimeAccess) {
+              // Usuário com acesso vitalício não tem data de expiração
+              endDate = null;
+            } else if (dataexpiracao) {
+              // Usar a data de expiração fornecida
+              endDate = new Date(dataexpiracao);
+            } else if (existingUser.dataexpiracao) {
+              // Manter a data de expiração existente
+              endDate = new Date(existingUser.dataexpiracao);
+            }
+            
+            // Determinar o tipo de plano (novo valor ou o existente)
+            const effectiveTipoPlano = tipoplano || existingUser.tipoplano || 'mensal';
+            
+            console.log(`Atualizando assinatura premium para o usuário ${userId}:`, {
+              tipo: effectiveTipoPlano,
+              vitalicio: hasLifetimeAccess,
+              expiracao: endDate
+            });
+            
+            // Criar ou atualizar registro de assinatura
+            await SubscriptionService.createOrUpdateSubscription(
+              userId, 
+              effectiveTipoPlano, 
+              new Date(), // Data de início (atual)
+              endDate
+            );
           }
-          
-          // Criar ou atualizar registro de assinatura
-          await SubscriptionService.createOrUpdateSubscription(
-            userId, 
-            tipoplano || 'mensal', 
-            endDate
-          );
         }
       }
       
@@ -921,6 +947,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .select()
         .from(users)
         .where(eq(users.id, userId));
+      
+      console.log(`[UserUpdate] Usuário ${userId} atualizado. Novos dados:`, {
+        username: updatedUser.username,
+        nivelacesso: updatedUser.nivelacesso,
+        tipoplano: updatedUser.tipoplano,
+        origemassinatura: updatedUser.origemassinatura,
+        dataassinatura: updatedUser.dataassinatura,
+        dataexpiracao: updatedUser.dataexpiracao,
+        acessovitalicio: updatedUser.acessovitalicio
+      });
         
       res.json(updatedUser);
     } catch (error: any) {

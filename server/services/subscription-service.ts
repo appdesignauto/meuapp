@@ -24,8 +24,27 @@ export class SubscriptionService {
     origin: string = 'manual'
   ) {
     try {
+      // Registrar os dados recebidos para depuração
+      console.log(`[SubscriptionService] Criando/atualizando assinatura para usuário ${userId}:`, {
+        planType, 
+        startDate,
+        endDate,
+        origin
+      });
+      
       // 1. Atualizar os dados do usuário para refletir o status premium
       const isLifetime = planType === 'vitalicio';
+      
+      // Consultar dados atuais do usuário antes da atualização (para debug)
+      const [userBefore] = await db.select()
+        .from(users)
+        .where(eq(users.id, userId));
+      
+      console.log(`[SubscriptionService] Dados do usuário ${userId} antes da atualização:`, {
+        nivelacesso: userBefore.nivelacesso,
+        tipoplano: userBefore.tipoplano,
+        acessovitalicio: userBefore.acessovitalicio
+      });
       
       // Atualizar dados do usuário
       await db.update(users)
