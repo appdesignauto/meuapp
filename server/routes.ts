@@ -708,12 +708,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = parseInt(req.params.id);
       
       // Verificar se o usuário tem permissão de administrador ou é o próprio usuário
-      if (user.role !== "admin" && user.role !== "designer_adm" && user.id !== userId) {
+      if (user.nivelacesso !== "admin" && user.nivelacesso !== "designer_adm" && user.id !== userId) {
         return res.status(403).json({ message: "Acesso negado" });
       }
       
       // Se não for admin, limitar quais campos podem ser atualizados
-      if (user.role !== "admin" && user.role !== "designer_adm") {
+      if (user.nivelacesso !== "admin" && user.nivelacesso !== "designer_adm") {
         // Usuários regulares só podem editar seus próprios dados básicos
         const { name, bio, profileimageurl } = req.body;
         
@@ -729,7 +729,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .where(eq(users.id, userId));
       } else {
         // Admins podem editar tudo
-        const { username, email, password, name, role, isactive, bio } = req.body;
+        const { username, email, password, name, nivelacesso, isactive, bio, origemassinatura, tipoplano, dataassinatura, dataexpiracao, acessovitalicio, observacaoadmin } = req.body;
         
         // Verificar se usuário existe
         const [existingUser] = await db
@@ -776,8 +776,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (email) updateData.email = email;
         if (name !== undefined) updateData.name = name || null;
         if (bio !== undefined) updateData.bio = bio || null;
-        if (role) updateData.role = role;
+        if (nivelacesso) {
+          updateData.nivelacesso = nivelacesso;
+          // Também atualizamos o role para compatibilidade
+          updateData.role = nivelacesso;
+        }
         if (isactive !== undefined) updateData.isactive = isactive;
+        if (origemassinatura !== undefined) updateData.origemassinatura = origemassinatura || null;
+        if (tipoplano !== undefined) updateData.tipoplano = tipoplano || null;
+        if (dataassinatura !== undefined) updateData.dataassinatura = dataassinatura ? new Date(dataassinatura) : null;
+        if (dataexpiracao !== undefined) updateData.dataexpiracao = dataexpiracao ? new Date(dataexpiracao) : null;
+        if (acessovitalicio !== undefined) updateData.acessovitalicio = acessovitalicio;
+        if (observacaoadmin !== undefined) updateData.observacaoadmin = observacaoadmin || null;
         
         // Criptografar a nova senha se fornecida
         if (password) {
