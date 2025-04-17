@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { SiHotjar } from "react-icons/si"; // Ícone similar ao da Hotmart
 import {
   Dialog,
   DialogContent,
@@ -72,7 +73,6 @@ import {
   InfinityIcon,
   UserCog,
 } from "lucide-react";
-import { SiHotmart } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InsertUser, NivelAcesso, OrigemAssinatura, TipoPlano } from "@shared/schema";
@@ -1158,6 +1158,113 @@ const UserManagement = () => {
     ) : (
       <Badge variant="secondary" className="bg-gray-500 hover:bg-gray-600">Inativo</Badge>
     );
+  };
+  
+  // Função para formatar informações de expiração
+  const formatExpirationInfo = (user: UserWithStats) => {
+    if (user.nivelacesso !== 'premium') {
+      return "-";
+    }
+    
+    if (user.acessovitalicio) {
+      return (
+        <Badge variant="outline" className="bg-indigo-600 text-white border-0 whitespace-nowrap">
+          <InfinityIcon className="w-3 h-3 mr-1" />
+          Vitalício
+        </Badge>
+      );
+    }
+    
+    if (!user.dataexpiracao) {
+      return <span className="text-muted-foreground text-xs">Não definida</span>;
+    }
+    
+    try {
+      const expDate = new Date(user.dataexpiracao);
+      
+      // Verificar se a data é válida
+      if (isNaN(expDate.getTime())) {
+        return <span className="text-yellow-500 text-xs">Data inválida</span>;
+      }
+      
+      const now = new Date();
+      const diffDays = Math.ceil((expDate.getTime() - now.getTime()) / (1000 * 3600 * 24));
+      
+      // Formatar data no padrão brasileiro (dd/mm/yyyy)
+      const formattedDate = new Intl.DateTimeFormat('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      }).format(expDate);
+      
+      if (diffDays < 0) {
+        // Expirado
+        return (
+          <div className="flex flex-col">
+            <Badge variant="destructive" className="whitespace-nowrap mb-1">
+              Expirado
+            </Badge>
+            <span className="text-xs text-muted-foreground">{formattedDate}</span>
+          </div>
+        );
+      } else if (diffDays <= 7) {
+        // Próximo de expirar (até 7 dias)
+        return (
+          <div className="flex flex-col">
+            <Badge className="whitespace-nowrap mb-1 bg-yellow-500 hover:bg-yellow-600">
+              {diffDays === 0 ? "Expira hoje" : `Expira em ${diffDays} dias`}
+            </Badge>
+            <span className="text-xs text-muted-foreground">{formattedDate}</span>
+          </div>
+        );
+      } else {
+        // Ativo com mais de 7 dias
+        return (
+          <div className="flex flex-col">
+            <Badge className="whitespace-nowrap mb-1 bg-green-500 hover:bg-green-600">
+              Ativo
+            </Badge>
+            <span className="text-xs text-muted-foreground">{formattedDate}</span>
+          </div>
+        );
+      }
+    } catch (error) {
+      console.error("Erro ao formatar data de expiração:", error);
+      return <span className="text-yellow-500 text-xs">Erro ao processar data</span>;
+    }
+  };
+  
+  // Função para renderizar a origem da assinatura
+  const renderSubscriptionSource = (user: UserWithStats) => {
+    if (user.nivelacesso !== 'premium') {
+      return "-";
+    }
+    
+    if (!user.origemassinatura) {
+      return <span className="text-muted-foreground text-xs">Não definida</span>;
+    }
+    
+    if (user.origemassinatura === 'hotmart') {
+      return (
+        <Badge variant="outline" className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0">
+          <SiHotjar className="w-3 h-3 mr-1" />
+          Hotmart
+        </Badge>
+      );
+    } else if (user.origemassinatura === 'manual') {
+      return (
+        <Badge variant="outline" className="bg-gray-200 text-gray-800">
+          <UserCog className="w-3 h-3 mr-1" />
+          Manual
+        </Badge>
+      );
+    } else {
+      return (
+        <span className="text-xs text-muted-foreground capitalize">
+          {user.origemassinatura}
+        </span>
+      );
+    }
   };
 
   // Renderização do badge de papel do usuário com tooltip para descrição
