@@ -212,7 +212,7 @@ export function setupAuth(app: Express) {
         ...req.body,
         password: hashedPassword,
         role: req.body.role || "free", // Default role
-        isActive: true,
+        isactive: true,
       });
       
       // Login the user

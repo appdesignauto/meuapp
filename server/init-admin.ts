@@ -33,12 +33,12 @@ export async function createAdminUser() {
       password: await hashPassword('admin123'),
       name: 'Administrador',
       role: 'admin',
-      isActive: true,
-      profileImageUrl: null,
+      isactive: true,
+      profileimageurl: null,
       bio: null,
       lastLogin: new Date(),
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedat: new Date()
     };
     
     await storage.createUser(adminUser);

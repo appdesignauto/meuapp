@@ -552,7 +552,7 @@ export class MemStorage implements IStorage {
       email: "designeradm@designauto.com",
       name: "Designer Administrador",
       role: "designer_adm",
-      isActive: true
+      isactive: true
     });
     
     this.createUser({
@@ -561,7 +561,7 @@ export class MemStorage implements IStorage {
       email: "suporte@designauto.com",
       name: "Suporte",
       role: "support",
-      isActive: true
+      isactive: true
     });
     
     this.createUser({
