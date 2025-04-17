@@ -165,6 +165,21 @@ export default function PainelLayout({ children }: PainelLayoutProps) {
         </div>
       </header>
 
+      {/* Banner de renovação para assinaturas expiradas */}
+      {isExpired && (
+        <div className="bg-amber-50 border-b border-amber-200 text-amber-800 px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center">
+            <AlertTriangle className="h-5 w-5 mr-2 text-amber-500" />
+            <span className="text-sm font-medium">Sua assinatura Premium expirou. Renove agora para continuar acessando todos os benefícios.</span>
+          </div>
+          <Link href="/planos">
+            <Button size="sm" className="ml-4 bg-amber-600 hover:bg-amber-700 text-white">
+              Renovar
+            </Button>
+          </Link>
+        </div>
+      )}
+      
       <div className="flex flex-1">
         {/* Sidebar para Desktop */}
         <aside
