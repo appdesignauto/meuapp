@@ -1176,20 +1176,41 @@ const UserManagement = () => {
   // Função para formatar informações de expiração
   const formatExpirationInfo = (user: UserWithStats) => {
     if (user.nivelacesso !== 'premium') {
-      return "-";
+      return <span className="text-muted-foreground text-xs italic">-</span>;
     }
     
     if (user.acessovitalicio) {
       return (
-        <Badge variant="outline" className="bg-indigo-600 text-white border-0 whitespace-nowrap">
-          <InfinityIcon className="w-3 h-3 mr-1" />
-          Vitalício
-        </Badge>
+        <HoverCard>
+          <HoverCardTrigger asChild>
+            <div className="inline-block">
+              <Badge variant="outline" className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-0 shadow-sm hover:shadow-md transition-all duration-300 flex items-center px-2 py-1 cursor-pointer whitespace-nowrap">
+                <InfinityIcon className="w-3 h-3 mr-1.5" />
+                <span>Vitalício</span>
+              </Badge>
+            </div>
+          </HoverCardTrigger>
+          <HoverCardContent className="w-72 p-3 shadow-lg rounded-lg border border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50 backdrop-blur-sm">
+            <div className="flex flex-col gap-2">
+              <h4 className="text-sm font-semibold text-purple-900 flex items-center">
+                <InfinityIcon className="w-4 h-4 mr-1.5 text-purple-600" />
+                Acesso Vitalício
+              </h4>
+              <p className="text-xs text-purple-800">
+                Este usuário possui acesso permanente à plataforma. Não há data de expiração e o acesso não será revogado automaticamente.
+              </p>
+              <div className="text-xs text-purple-700 mt-1 flex items-center">
+                <BadgeCheckIcon className="w-3 h-3 mr-1" />
+                <span>Benefício premium permanente</span>
+              </div>
+            </div>
+          </HoverCardContent>
+        </HoverCard>
       );
     }
     
     if (!user.dataexpiracao) {
-      return <span className="text-muted-foreground text-xs">Não definida</span>;
+      return <span className="text-muted-foreground text-xs italic">Não definida</span>;
     }
     
     try {
@@ -1197,7 +1218,7 @@ const UserManagement = () => {
       
       // Verificar se a data é válida
       if (isNaN(expDate.getTime())) {
-        return <span className="text-yellow-500 text-xs">Data inválida</span>;
+        return <span className="text-yellow-500 text-xs italic">Data inválida</span>;
       }
       
       const now = new Date();
@@ -1212,38 +1233,108 @@ const UserManagement = () => {
       
       if (diffDays < 0) {
         // Expirado
+        const daysAgo = Math.abs(diffDays);
         return (
-          <div className="flex flex-col">
-            <Badge variant="destructive" className="whitespace-nowrap mb-1">
-              Expirado
-            </Badge>
-            <span className="text-xs text-muted-foreground">{formattedDate}</span>
-          </div>
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <div className="inline-block">
+                <Badge variant="outline" className="whitespace-nowrap bg-gradient-to-r from-red-500 to-rose-500 text-white border-0 shadow-sm hover:shadow-md transition-all duration-300 flex items-center px-2 py-1 cursor-pointer">
+                  <AlertCircleIcon className="w-3 h-3 mr-1.5" />
+                  <span>Expirado</span>
+                </Badge>
+              </div>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-72 p-3 shadow-lg rounded-lg border border-red-200 bg-gradient-to-br from-red-50 to-rose-50 backdrop-blur-sm">
+              <div className="flex flex-col gap-2">
+                <h4 className="text-sm font-semibold text-red-900 flex items-center">
+                  <AlertCircleIcon className="w-4 h-4 mr-1.5 text-red-600" />
+                  Assinatura Expirada
+                </h4>
+                <p className="text-xs text-red-800">
+                  A assinatura deste usuário expirou há {daysAgo} {daysAgo === 1 ? 'dia' : 'dias'}. O acesso a conteúdos premium foi revogado.
+                </p>
+                <div className="text-xs text-red-700 mt-1">
+                  <div className="flex items-center">
+                    <ClockIcon className="w-3 h-3 mr-1" />
+                    <span>Expirou em: </span>
+                    <span className="ml-1 font-medium">{formattedDate}</span>
+                  </div>
+                </div>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
         );
       } else if (diffDays <= 7) {
         // Próximo de expirar (até 7 dias)
         return (
-          <div className="flex flex-col">
-            <Badge className="whitespace-nowrap mb-1 bg-yellow-500 hover:bg-yellow-600">
-              {diffDays === 0 ? "Expira hoje" : `Expira em ${diffDays} dias`}
-            </Badge>
-            <span className="text-xs text-muted-foreground">{formattedDate}</span>
-          </div>
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <div className="inline-block">
+                <Badge className="whitespace-nowrap bg-gradient-to-r from-amber-400 to-yellow-500 text-white border-0 shadow-sm hover:shadow-md transition-all duration-300 flex items-center px-2 py-1 cursor-pointer">
+                  <ClockIcon className="w-3 h-3 mr-1.5" />
+                  <span>{diffDays === 0 ? "Expira hoje" : `${diffDays} ${diffDays === 1 ? 'dia' : 'dias'}`}</span>
+                </Badge>
+              </div>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-72 p-3 shadow-lg rounded-lg border border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 backdrop-blur-sm">
+              <div className="flex flex-col gap-2">
+                <h4 className="text-sm font-semibold text-amber-900 flex items-center">
+                  <ClockIcon className="w-4 h-4 mr-1.5 text-amber-600" />
+                  Assinatura Prestes a Expirar
+                </h4>
+                <p className="text-xs text-amber-800">
+                  {diffDays === 0 
+                    ? "A assinatura deste usuário expira hoje. Recomenda-se verificar a renovação."
+                    : `A assinatura deste usuário expira em ${diffDays} ${diffDays === 1 ? 'dia' : 'dias'}. Recomenda-se notificar sobre a renovação.`
+                  }
+                </p>
+                <div className="text-xs text-amber-700 mt-1">
+                  <div className="flex items-center">
+                    <CalendarIcon className="w-3 h-3 mr-1" />
+                    <span>Expira em: </span>
+                    <span className="ml-1 font-medium">{formattedDate}</span>
+                  </div>
+                </div>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
         );
       } else {
         // Ativo com mais de 7 dias
         return (
-          <div className="flex flex-col">
-            <Badge className="whitespace-nowrap mb-1 bg-green-500 hover:bg-green-600">
-              Ativo
-            </Badge>
-            <span className="text-xs text-muted-foreground">{formattedDate}</span>
-          </div>
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <div className="inline-block">
+                <Badge className="whitespace-nowrap bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 shadow-sm hover:shadow-md transition-all duration-300 flex items-center px-2 py-1 cursor-pointer">
+                  <CheckCircleIcon className="w-3 h-3 mr-1.5" />
+                  <span>Ativo</span>
+                </Badge>
+              </div>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-72 p-3 shadow-lg rounded-lg border border-emerald-200 bg-gradient-to-br from-emerald-50 to-green-50 backdrop-blur-sm">
+              <div className="flex flex-col gap-2">
+                <h4 className="text-sm font-semibold text-emerald-900 flex items-center">
+                  <CheckCircleIcon className="w-4 h-4 mr-1.5 text-emerald-600" />
+                  Assinatura Ativa
+                </h4>
+                <p className="text-xs text-emerald-800">
+                  A assinatura deste usuário está ativa e expira em {diffDays} dias. O usuário tem acesso a todos os conteúdos premium.
+                </p>
+                <div className="text-xs text-emerald-700 mt-1">
+                  <div className="flex items-center">
+                    <CalendarIcon className="w-3 h-3 mr-1" />
+                    <span>Expira em: </span>
+                    <span className="ml-1 font-medium">{formattedDate}</span>
+                  </div>
+                </div>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
         );
       }
     } catch (error) {
       console.error("Erro ao formatar data de expiração:", error);
-      return <span className="text-yellow-500 text-xs">Erro ao processar data</span>;
+      return <span className="text-yellow-500 text-xs italic">Erro ao processar data</span>;
     }
   };
   
