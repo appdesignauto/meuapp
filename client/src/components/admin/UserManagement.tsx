@@ -69,7 +69,10 @@ import {
   ShoppingCartIcon,
   BookmarkIcon,
   HeartIcon,
+  InfinityIcon,
+  UserCog,
 } from "lucide-react";
+import { SiHotmart } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InsertUser, NivelAcesso, OrigemAssinatura, TipoPlano } from "@shared/schema";
