@@ -263,14 +263,35 @@ export function setupAuth(app: Express) {
     });
   });
 
-  app.get("/api/user", (req, res) => {
+  app.get("/api/user", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Não autenticado" });
     }
     
-    // Remove password from response
-    const { password, ...userWithoutPassword } = req.user as any;
-    res.json(userWithoutPassword);
+    try {
+      // Obter o usuário completo do banco de dados para garantir dados atualizados
+      const userId = (req.user as any).id;
+      const userDetails = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+      
+      if (!userDetails.length) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+      
+      // Remove password from response
+      const { password, ...userWithoutPassword } = userDetails[0];
+      
+      // Log para depuração
+      console.log("Dados completos do usuário:", userWithoutPassword);
+      
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Erro ao obter detalhes do usuário:", error);
+      res.status(500).json({ message: "Erro ao obter detalhes do usuário" });
+    }
   });
 
   return {
