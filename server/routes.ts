@@ -688,8 +688,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const user = req.user as User;
       
-      // Verificar se o usuário tem permissão de administrador
-      if (user.nivelacesso !== "admin" && user.nivelacesso !== "designer_adm") {
+      // Verificar se o usuário tem permissão de administrador ou suporte
+      if (user.nivelacesso !== "admin" && user.nivelacesso !== "designer_adm" && user.nivelacesso !== "support") {
         return res.status(403).json({ message: "Acesso negado" });
       }
       
@@ -732,9 +732,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      // Nova regra: todo usuário criado pelo adm ou pelo suporte terá senha padrão designauto@123
+      const senhaParaUsar = (user.nivelacesso === "admin" || user.nivelacesso === "support") 
+        ? "designauto@123" 
+        : password;
+        
+      console.log(`Usuário sendo criado por ${user.nivelacesso}, usando ${senhaParaUsar === password ? "senha personalizada" : "senha padrão"}`);
+      
       // Criptografar a senha
       const salt = randomBytes(16).toString("hex");
-      const buf = await scryptAsync(password, salt, 64) as Buffer;
+      const buf = await scryptAsync(senhaParaUsar, salt, 64) as Buffer;
       const hashedPassword = `${buf.toString("hex")}.${salt}`;
       
       // Nível de acesso padrão se não for especificado
@@ -897,8 +904,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Criptografar a nova senha se fornecida
         if (password) {
+          // Nova regra: quando admin ou suporte reseta a senha de outros usuários, usa a senha padrão designauto@123
+          const senhaParaUsar = (user.nivelacesso === "admin" || user.nivelacesso === "support") && user.id !== userId
+            ? "designauto@123" 
+            : password;
+            
+          console.log(`Senha sendo alterada por ${user.nivelacesso}, usando ${senhaParaUsar === password ? "senha personalizada" : "senha padrão"}`);
+          
           const salt = randomBytes(16).toString("hex");
-          const buf = await scryptAsync(password, salt, 64) as Buffer;
+          const buf = await scryptAsync(senhaParaUsar, salt, 64) as Buffer;
           const hashedPassword = `${buf.toString("hex")}.${salt}`;
           updateData.password = hashedPassword;
         }
