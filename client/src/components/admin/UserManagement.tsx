@@ -850,13 +850,38 @@ const UserManagement = () => {
     }
     // 3. Para usuários premium (nivel_acesso = premium)
     else if (data.nivelacesso === 'premium') {
+      // Sempre definir valores padrão para os campos obrigatórios
+      
+      // Verificar campo obrigatório data de assinatura para usuários premium
+      if (!data.dataassinatura) {
+        data.dataassinatura = new Date().toISOString().split('T')[0];
+      }
+      
+      // Verifica e garante que origem da assinatura seja definida
+      if (!data.origemassinatura) {
+        data.origemassinatura = 'manual' as OrigemAssinatura;
+      }
+      
+      // Verifica e garante que tipo de plano seja definido (padrão: mensal)
+      if (!data.tipoplano) {
+        data.tipoplano = 'mensal' as TipoPlano;
+        // Como definimos tipo mensal, vamos calcular a data de expiração padrão
+        const dataAssinatura = new Date(data.dataassinatura);
+        const dataExpiracao = new Date(dataAssinatura);
+        dataExpiracao.setDate(dataExpiracao.getDate() + 30);
+        data.dataexpiracao = dataExpiracao.toISOString().split('T')[0];
+        data.acessovitalicio = false;
+      }
+      
+      // Agora que garantimos que tipo de plano está definido, aplicamos a lógica específica
+      
       // Se for plano vitalício, garantir acesso vitalício = true e sem data de expiração
       if (data.tipoplano === 'vitalicio') {
         data.acessovitalicio = true;
         data.dataexpiracao = null as any;
       }
       // Se for plano mensal, calcular data_expiracao (30 dias)
-      else if (data.tipoplano === 'mensal' && data.dataassinatura) {
+      else if (data.tipoplano === 'mensal') {
         const dataAssinatura = new Date(data.dataassinatura);
         const dataExpiracao = new Date(dataAssinatura);
         dataExpiracao.setDate(dataExpiracao.getDate() + 30);
@@ -864,18 +889,34 @@ const UserManagement = () => {
         data.acessovitalicio = false;
       }
       // Se for plano anual, calcular data_expiracao (365 dias)
-      else if (data.tipoplano === 'anual' && data.dataassinatura) {
+      else if (data.tipoplano === 'anual') {
         const dataAssinatura = new Date(data.dataassinatura);
         const dataExpiracao = new Date(dataAssinatura);
         dataExpiracao.setDate(dataExpiracao.getDate() + 365);
         data.dataexpiracao = dataExpiracao.toISOString().split('T')[0];
         data.acessovitalicio = false;
       }
-      
-      // Verificar campo obrigatório data de assinatura para usuários premium
-      if (!data.dataassinatura) {
-        data.dataassinatura = new Date().toISOString().split('T')[0];
+      // Se for plano personalizado, verificamos se a data de expiração foi fornecida
+      else if (data.tipoplano === 'personalizado') {
+        if (!data.dataexpiracao) {
+          // Se não foi, definimos uma data padrão de 30 dias (como no plano mensal)
+          const dataAssinatura = new Date(data.dataassinatura);
+          const dataExpiracao = new Date(dataAssinatura);
+          dataExpiracao.setDate(dataExpiracao.getDate() + 30);
+          data.dataexpiracao = dataExpiracao.toISOString().split('T')[0];
+        }
+        data.acessovitalicio = false;
       }
+      
+      // Log para debug dos dados antes de enviar
+      console.log("Dados de usuário premium a serem enviados:", {
+        nivelacesso: data.nivelacesso,
+        tipoplano: data.tipoplano,
+        origemassinatura: data.origemassinatura,
+        dataassinatura: data.dataassinatura,
+        dataexpiracao: data.dataexpiracao,
+        acessovitalicio: data.acessovitalicio
+      });
     }
     
     createUserMutation.mutate(data);
@@ -903,13 +944,38 @@ const UserManagement = () => {
       }
       // 3. Para usuários premium (nivel_acesso = premium)
       else if (data.nivelacesso === 'premium') {
+        // Sempre definir valores padrão para os campos obrigatórios
+        
+        // Verificar campo obrigatório data de assinatura para usuários premium
+        if (!data.dataassinatura) {
+          data.dataassinatura = new Date().toISOString().split('T')[0];
+        }
+        
+        // Verifica e garante que origem da assinatura seja definida
+        if (!data.origemassinatura) {
+          data.origemassinatura = 'manual' as OrigemAssinatura;
+        }
+        
+        // Verifica e garante que tipo de plano seja definido (padrão: mensal)
+        if (!data.tipoplano) {
+          data.tipoplano = 'mensal' as TipoPlano;
+          // Como definimos tipo mensal, vamos calcular a data de expiração padrão
+          const dataAssinatura = new Date(data.dataassinatura);
+          const dataExpiracao = new Date(dataAssinatura);
+          dataExpiracao.setDate(dataExpiracao.getDate() + 30);
+          data.dataexpiracao = dataExpiracao.toISOString().split('T')[0];
+          data.acessovitalicio = false;
+        }
+        
+        // Agora que garantimos que tipo de plano está definido, aplicamos a lógica específica
+        
         // Se for plano vitalício, garantir acesso vitalício = true e sem data de expiração
         if (data.tipoplano === 'vitalicio') {
           data.acessovitalicio = true;
           data.dataexpiracao = null as any;
         }
         // Se for plano mensal, calcular data_expiracao (30 dias)
-        else if (data.tipoplano === 'mensal' && data.dataassinatura) {
+        else if (data.tipoplano === 'mensal') {
           const dataAssinatura = new Date(data.dataassinatura);
           const dataExpiracao = new Date(dataAssinatura);
           dataExpiracao.setDate(dataExpiracao.getDate() + 30);
@@ -917,18 +983,34 @@ const UserManagement = () => {
           data.acessovitalicio = false;
         }
         // Se for plano anual, calcular data_expiracao (365 dias)
-        else if (data.tipoplano === 'anual' && data.dataassinatura) {
+        else if (data.tipoplano === 'anual') {
           const dataAssinatura = new Date(data.dataassinatura);
           const dataExpiracao = new Date(dataAssinatura);
           dataExpiracao.setDate(dataExpiracao.getDate() + 365);
           data.dataexpiracao = dataExpiracao.toISOString().split('T')[0];
           data.acessovitalicio = false;
         }
-        
-        // Verificar campo obrigatório data de assinatura para usuários premium
-        if (!data.dataassinatura) {
-          data.dataassinatura = new Date().toISOString().split('T')[0];
+        // Se for plano personalizado, verificamos se a data de expiração foi fornecida
+        else if (data.tipoplano === 'personalizado') {
+          if (!data.dataexpiracao) {
+            // Se não foi, definimos uma data padrão de 30 dias (como no plano mensal)
+            const dataAssinatura = new Date(data.dataassinatura);
+            const dataExpiracao = new Date(dataAssinatura);
+            dataExpiracao.setDate(dataExpiracao.getDate() + 30);
+            data.dataexpiracao = dataExpiracao.toISOString().split('T')[0];
+          }
+          data.acessovitalicio = false;
         }
+        
+        // Log para debug dos dados antes de enviar
+        console.log("Dados de edição de usuário premium:", {
+          nivelacesso: data.nivelacesso,
+          tipoplano: data.tipoplano,
+          origemassinatura: data.origemassinatura,
+          dataassinatura: data.dataassinatura,
+          dataexpiracao: data.dataexpiracao,
+          acessovitalicio: data.acessovitalicio
+        });
       }
       
       updateUserMutation.mutate({
