@@ -1548,7 +1548,7 @@ const UserTable = ({
                 />
               ) : (
                 <div className={`rounded-full h-16 w-16 flex items-center justify-center text-xl text-white font-medium ${
-                  userRoles.find(r => r.value === user.role)?.color || "bg-gray-500"
+                  userRoles.find(r => r.value === user.nivelacesso)?.color || "bg-gray-500"
                 }`}>
                   {initials}
                 </div>
@@ -1572,7 +1572,7 @@ const UserTable = ({
               </div>
             </div>
           </div>
-          {(user.role === "designer" || user.role === "designer_adm") && (
+          {(user.nivelacesso === "designer" || user.nivelacesso === "designer_adm") && (
             <div className="mt-4 grid grid-cols-2 gap-2">
               <div className="text-center p-2 bg-muted rounded-md">
                 <p className="text-xs text-muted-foreground">Artes vistas</p>
@@ -1639,11 +1639,11 @@ const UserTable = ({
             </TableHead>
             <TableHead 
               className="cursor-pointer hover:text-primary"
-              onClick={() => onSort && onSort('role')}
+              onClick={() => onSort && onSort('nivelacesso')}
             >
               <div className="flex items-center">
                 Papel
-                {sortConfig?.key === 'role' && (
+                {sortConfig?.key === 'nivelacesso' && (
                   <span className="ml-1">
                     {sortConfig.direction === 'asc' ? (
                       <ChevronUpIcon className="h-4 w-4" />
@@ -1735,7 +1735,7 @@ const UserTable = ({
               <TableRow key={user.id} className={!user.isactive ? "opacity-60" : ""}>
                 <TableCell>{renderUserAvatar(user)}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell>{renderRoleBadge(user.role)}</TableCell>
+                <TableCell>{renderRoleBadge(user.nivelacesso)}</TableCell>
                 <TableCell>{renderStatusBadge(user.isactive)}</TableCell>
                 <TableCell>
                   <div className="text-sm">
