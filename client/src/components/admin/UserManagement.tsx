@@ -1513,13 +1513,7 @@ const UserTable = ({
                         Alterar função
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => {
-                          // Implementação de reset de senha (simulada)
-                          toast({
-                            title: "Reset de senha",
-                            description: `Uma nova senha foi enviada para ${user.email}`,
-                          });
-                        }}
+                        onClick={() => handleResetPassword(user.email)}
                       >
                         <KeyRoundIcon className="h-4 w-4 mr-2" />
                         Resetar senha
@@ -1534,13 +1528,7 @@ const UserTable = ({
                         Ver perfil detalhado
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => {
-                          // Futura implementação de histórico
-                          toast({
-                            title: "Histórico de atividades",
-                            description: "Funcionalidade em desenvolvimento",
-                          });
-                        }}
+                        onClick={handleShowHistory}
                       >
                         <HistoryIcon className="h-4 w-4 mr-2" />
                         Histórico de atividades
@@ -1567,14 +1555,7 @@ const UserTable = ({
                         )}
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => {
-                          // Implementação de exclusão de usuário (com confirmação)
-                          toast({
-                            title: "Atenção",
-                            description: "Funcionalidade de exclusão requer confirmação adicional",
-                            variant: "destructive",
-                          });
-                        }}
+                        onClick={handleDeleteConfirmation}
                         className="text-red-500 focus:text-red-500"
                       >
                         <TrashIcon className="h-4 w-4 mr-2" />
