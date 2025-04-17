@@ -71,7 +71,6 @@ import {
   BookmarkIcon,
   HeartIcon,
   InfinityIcon,
-  UserCog,
   CrownIcon,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -1265,7 +1264,7 @@ const UserManagement = () => {
     } else if (user.origemassinatura === 'manual') {
       return (
         <Badge variant="outline" className="bg-gray-200 text-gray-800">
-          <UserCog className="w-3 h-3 mr-1" />
+          <UserCogIcon className="w-3 h-3 mr-1" />
           Manual
         </Badge>
       );
