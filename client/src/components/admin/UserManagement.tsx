@@ -203,6 +203,15 @@ const UserManagement = () => {
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [dateFilter, setDateFilter] = useState<"all" | "today" | "week" | "month" | "custom">("all");
   const [customDateRange, setCustomDateRange] = useState<{from?: Date, to?: Date}>({});
+
+  // Buscar o usuário atual (autenticado)
+  const { data: currentUser } = useQuery({
+    queryKey: ["/api/user"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/user");
+      return await res.json();
+    },
+  });
   const [activeTab, setActiveTab] = useState("all");
   const [sortConfig, setSortConfig] = useState<{key: string, direction: 'asc' | 'desc'} | null>(null);
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
@@ -271,14 +280,9 @@ const UserManagement = () => {
 
   // Função para lidar com a solicitação de exclusão
   const handleDeleteConfirmation = (userId: number) => {
-    // Se o usuário for admin, excluir diretamente sem confirmação adicional
-    if (currentUser?.role === 'admin') {
-      deleteUserMutation.mutate(userId);
-    } else {
-      // Para não-admins, mostrar diálogo de confirmação
-      setUserToDelete(userId);
-      setIsDeleteDialogOpen(true);
-    }
+    // Excluir diretamente sem confirmação adicional
+    // Conforme solicitado pelo usuário, estamos simplificando a exclusão
+    deleteUserMutation.mutate(userId);
   };
 
   // Buscar usuários
@@ -1979,7 +1983,7 @@ interface UserTableProps {
   onSort?: (key: string) => void;
   handleResetPassword: (email: string) => void;
   handleShowHistory: () => void;
-  handleDeleteConfirmation: () => void;
+  handleDeleteConfirmation: (userId: number) => void;
 }
 
 const UserTable = ({
