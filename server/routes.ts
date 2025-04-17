@@ -538,7 +538,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = req.user as User;
       
       // Verificar se o usuário tem permissão de administrador
-      if (user.role !== "admin" && user.role !== "designer_adm" && user.role !== "support") {
+      if (user.nivelacesso !== "admin" && user.nivelacesso !== "designer_adm" && user.nivelacesso !== "support") {
         return res.status(403).json({ message: "Acesso negado" });
       }
       
@@ -648,11 +648,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = req.user as User;
       
       // Verificar se o usuário tem permissão de administrador
-      if (user.role !== "admin" && user.role !== "designer_adm") {
+      if (user.nivelacesso !== "admin" && user.nivelacesso !== "designer_adm") {
         return res.status(403).json({ message: "Acesso negado" });
       }
       
-      const { username, email, password, name, role, isactive } = req.body;
+      const { username, email, password, name, nivelacesso, isactive } = req.body;
       
       // Verificar se o username ou email já existem
       const existingUser = await db
@@ -674,6 +674,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const buf = await scrypt(password, salt, 64) as Buffer;
       const hashedPassword = `${buf.toString("hex")}.${salt}`;
       
+      // Nível de acesso padrão se não for especificado
+      const userNivelAcesso = nivelacesso || "free";
+      
       // Criar o usuário usando nomes de colunas em lowercase conforme o banco
       const [newUser] = await db
         .insert(users)
@@ -682,7 +685,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           email,
           password: hashedPassword,
           name: name || null,
-          role: role || "free",
+          nivelacesso: userNivelAcesso,
+          role: userNivelAcesso, // Mantemos o role igual ao nivelacesso para compatibilidade
           isactive: isactive !== undefined ? isactive : true,
           profileimageurl: null,
           bio: null,
@@ -829,7 +833,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const sort = (req.query.sort as string) || 'recent'; // 'activity', 'recent'
       const offset = (page - 1) * limit;
       
-      // Buscar todos os usuários com role 'designer', 'designer_adm' ou 'admin'
+      // Buscar todos os usuários com nivelacesso 'designer', 'designer_adm' ou 'admin'
       // Executar SQL direto para evitar problemas com o TypeScript
       const designersQuery = `
         SELECT 
@@ -838,13 +842,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           username, 
           bio, 
           profileimageurl, 
+          nivelacesso, 
           role, 
           0 AS followers, 
           0 AS following, 
           "createdAt" as createdat,
           updatedat
         FROM users 
-        WHERE role IN ('designer', 'designer_adm', 'admin')
+        WHERE nivelacesso IN ('designer', 'designer_adm', 'admin')
         ORDER BY ${sort === 'activity' ? 'updatedat' : '"createdAt"'} DESC
         LIMIT ${limit} OFFSET ${offset}
       `;
@@ -855,7 +860,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const totalCountQuery = `
         SELECT COUNT(*) as value 
         FROM users 
-        WHERE role IN ('designer', 'designer_adm', 'admin')
+        WHERE nivelacesso IN ('designer', 'designer_adm', 'admin')
       `;
       
       const totalCountResult = await db.execute(sql.raw(totalCountQuery));
@@ -917,6 +922,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           username, 
           bio, 
           profileimageurl, 
+          nivelacesso, 
           role, 
           0 AS followers, 
           0 AS following, 
@@ -979,6 +985,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Ajustar campos para camelCase para manter compatibilidade com frontend
         profileImageUrl: designer.profileimageurl,
         createdAt: designer.createdat,
+        nivelAcesso: designer.nivelacesso, // Adicionamos o nivelacesso explicitamente
         isFollowing,
         statistics: {
           totalArts: artCount,
@@ -1174,7 +1181,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verificar se o usuário tem permissão para ser designer
-      if (user.role !== 'designer' && user.role !== 'admin') {
+      if (user.nivelacesso !== 'designer' && user.nivelacesso !== 'admin') {
         return res.status(403).json({ message: "Apenas designers podem atualizar perfil" });
       }
       
@@ -1200,6 +1207,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         username: updatedUser.username,
         name: updatedUser.name,
         role: updatedUser.role,
+        nivelAcesso: updatedUser.nivelacesso,
         bio: updatedUser.bio,
         website: updatedUser.website,
         location: updatedUser.location,
@@ -1235,7 +1243,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verificar se o usuário tem permissão para ser designer
-      if (user.role !== 'designer' && user.role !== 'designer_adm' && user.role !== 'admin') {
+      if (user.nivelacesso !== 'designer' && user.nivelacesso !== 'designer_adm' && user.nivelacesso !== 'admin') {
         return res.status(403).json({ message: "Apenas designers podem atualizar imagem de perfil" });
       }
       
@@ -1344,7 +1352,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           u.name, 
           u.username, 
           u.profileimageurl AS "profileImageUrl", 
-          u.role, 
+          u.role,
+          u.nivelacesso AS "nivelAcesso", 
           0 AS following, 
           0 AS followers, 
           uf.createdat AS "followDate"
