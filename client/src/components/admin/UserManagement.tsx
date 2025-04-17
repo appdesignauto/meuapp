@@ -2446,16 +2446,16 @@ const UserTable = ({
   };
   
   // Função para formatar data completa considerando horário de Brasília (UTC-3)
-  const formatFullDate = (dateString: string) => {
-    if (!dateString) return "Data não disponível";
+  const formatFullDate = (dateValue: string | Date) => {
+    if (!dateValue) return "Data não disponível";
     
     try {
-      // Criar data a partir da string
-      const date = new Date(dateString);
+      // Criar data a partir do valor (que pode ser string ou Date)
+      const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
       
       // Verificar se a data é válida
       if (isNaN(date.getTime())) {
-        console.error("Data inválida:", dateString);
+        console.error("Data inválida:", dateValue);
         return "Data inválida";
       }
       
@@ -2463,7 +2463,7 @@ const UserTable = ({
       const now = new Date();
       const fiveMinutes = 5 * 60 * 1000; // 5 minutos em milissegundos
       if (date.getTime() > now.getTime() + fiveMinutes) {
-        console.error("Data futura detectada:", dateString, "Data:", date, "Agora:", now);
+        console.error("Data futura detectada:", dateValue, "Data:", date, "Agora:", now);
         
         // Correção automática: se a data for futura, usar a data atual
         console.log("Corrigindo data para a data atual");
@@ -2486,7 +2486,7 @@ const UserTable = ({
         timeZone: 'America/Sao_Paulo' // Usando timezone de Brasília
       }).format(date) + " (BRT)";
     } catch (error) {
-      console.error("Erro ao formatar data completa:", error, "Data:", dateString);
+      console.error("Erro ao formatar data completa:", error, "Data:", dateValue);
       return "Data inválida";
     }
   };
