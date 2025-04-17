@@ -72,6 +72,7 @@ import {
   HeartIcon,
   InfinityIcon,
   UserCog,
+  CrownIcon,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
