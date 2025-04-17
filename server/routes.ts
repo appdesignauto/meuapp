@@ -16,6 +16,7 @@ import path from "path";
 import fs from "fs";
 import { storageService } from "./services/storage";
 import { supabaseStorageService } from "./services/supabase-storage";
+import { SubscriptionService } from "./services/subscription-service";
 import uploadMemory from "./middlewares/upload";
 
 // Versão promisificada do scrypt
