@@ -1532,6 +1532,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Rota para webhook da Hotmart
+  app.post("/api/webhooks/hotmart", async (req, res) => {
+    try {
+      console.log("Webhook da Hotmart recebido:", req.body);
+      
+      // Validação básica do webhook
+      if (!req.body || !req.body.data || !req.body.event) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Webhook inválido" 
+        });
+      }
+      
+      // Processar o webhook usando o serviço
+      const result = await SubscriptionService.processHotmartWebhook(req.body);
+      
+      res.json({ 
+        success: true, 
+        message: "Webhook processado com sucesso", 
+        result 
+      });
+    } catch (error) {
+      console.error("Erro ao processar webhook da Hotmart:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Erro ao processar webhook", 
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Rota para testar rebaixamento de usuário específico (com verificação Hotmart)
+  // Temporariamente removida restrição isAdmin para testes
+  app.post("/api/test/downgradeUser/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const forceDowngrade = req.body.force === true;
+      
+      const result = await SubscriptionService.downgradeUserToFree(userId, forceDowngrade);
+      
+      res.json({ 
+        success: true, 
+        message: `Processamento de rebaixamento concluído.`, 
+        result 
+      });
+    } catch (error) {
+      console.error(`Erro ao rebaixar usuário ${req.params.userId}:`, error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Erro ao rebaixar usuário", 
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   const httpServer = createServer(app);
+  
+  // Inicializar o serviço da Hotmart se as credenciais estiverem disponíveis
+  if (process.env.HOTMART_CLIENT_ID && process.env.HOTMART_CLIENT_SECRET) {
+    const useSandbox = true; // Usar sandbox para desenvolvimento/teste
+    HotmartService.initialize(
+      process.env.HOTMART_CLIENT_ID,
+      process.env.HOTMART_CLIENT_SECRET,
+      useSandbox
+    );
+    console.log('Serviço da Hotmart inicializado com sucesso no modo Sandbox');
+  } else {
+    console.log('Credenciais da Hotmart não encontradas. A verificação de renovações na Hotmart não estará disponível.');
+  }
+  
   return httpServer;
 }
