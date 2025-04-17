@@ -978,15 +978,15 @@ const UserManagement = () => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="role" className="text-right">
-                    Papel
+                  <Label htmlFor="nivelacesso" className="text-right">
+                    Nível de Acesso
                   </Label>
                   <Select 
-                    onValueChange={(value) => createForm.setValue("role", value as NivelAcesso)} 
-                    defaultValue={createForm.getValues("role")}
+                    onValueChange={(value) => createForm.setValue("nivelacesso", value as NivelAcesso)} 
+                    defaultValue={createForm.getValues("nivelacesso") || "usuario"}
                   >
-                    <SelectTrigger id="role" className="mt-1">
-                      <SelectValue placeholder="Selecione um papel" />
+                    <SelectTrigger id="nivelacesso" className="mt-1">
+                      <SelectValue placeholder="Selecione o nível de acesso" />
                     </SelectTrigger>
                     <SelectContent>
                       {userRoles.map((role) => (
@@ -998,44 +998,45 @@ const UserManagement = () => {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="plan" className="text-right">
-                    Plano
+                  <Label htmlFor="tipoplano" className="text-right">
+                    Tipo de Plano
                   </Label>
                   <Select 
-                    onValueChange={(value) => createForm.setValue("plan", value)} 
-                    defaultValue={createForm.getValues("plan")}
+                    onValueChange={(value) => createForm.setValue("tipoplano", value as TipoPlano)} 
+                    defaultValue={createForm.getValues("tipoplano") || "mensal"}
                   >
-                    <SelectTrigger id="plan" className="mt-1">
-                      <SelectValue placeholder="Selecione um plano" />
+                    <SelectTrigger id="tipoplano" className="mt-1">
+                      <SelectValue placeholder="Selecione o tipo de plano" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="free">Free</SelectItem>
-                      <SelectItem value="premium">Premium</SelectItem>
-                      <SelectItem value="enterprise">Enterprise</SelectItem>
+                      <SelectItem value="mensal">Mensal</SelectItem>
+                      <SelectItem value="anual">Anual</SelectItem>
+                      <SelectItem value="personalizado">Personalizado</SelectItem>
+                      <SelectItem value="vitalicio">Vitalício</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="periodType" className="text-right">
-                    Período
+                  <Label htmlFor="origemassinatura" className="text-right">
+                    Origem da Assinatura
                   </Label>
                   <Select 
-                    onValueChange={(value) => createForm.setValue("periodType", value)} 
-                    defaultValue={createForm.getValues("periodType")}
+                    onValueChange={(value) => createForm.setValue("origemassinatura", value as OrigemAssinatura)} 
+                    defaultValue={createForm.getValues("origemassinatura") || "manual"}
                   >
-                    <SelectTrigger id="periodType" className="mt-1">
-                      <SelectValue placeholder="Selecione o período" />
+                    <SelectTrigger id="origemassinatura" className="mt-1">
+                      <SelectValue placeholder="Selecione a origem" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="mensal">Mensal</SelectItem>
-                      <SelectItem value="anual">Anual</SelectItem>
-                      <SelectItem value="vitalicio">Vitalício</SelectItem>
+                      <SelectItem value="manual">Manual</SelectItem>
+                      <SelectItem value="hotmart">Hotmart</SelectItem>
+                      <SelectItem value="nenhuma">Nenhuma</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex items-end mb-1">
+                <div className="flex items-end gap-2 mb-1">
                   <div className="flex items-center space-x-2">
                     <Checkbox 
                       id="isactive" 
@@ -1043,6 +1044,14 @@ const UserManagement = () => {
                       onCheckedChange={(checked) => createForm.setValue("isactive", !!checked)}
                     />
                     <Label htmlFor="isactive">Usuário ativo</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="acessovitalicio" 
+                      checked={createForm.watch("acessovitalicio")}
+                      onCheckedChange={(checked) => createForm.setValue("acessovitalicio", !!checked)}
+                    />
+                    <Label htmlFor="acessovitalicio">Acesso vitalício</Label>
                   </div>
                 </div>
               </div>
@@ -1138,16 +1147,16 @@ const UserManagement = () => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="edit-role" className="text-right">
-                    Papel
+                  <Label htmlFor="edit-nivelacesso" className="text-right">
+                    Nível de Acesso
                   </Label>
                   <Select 
-                    onValueChange={(value) => editForm.setValue("role", value as NivelAcesso)} 
-                    defaultValue={editForm.getValues("role")}
-                    value={editForm.watch("role")}
+                    onValueChange={(value) => editForm.setValue("nivelacesso", value as NivelAcesso)} 
+                    defaultValue={editForm.getValues("nivelacesso") || "usuario"}
+                    value={editForm.watch("nivelacesso")}
                   >
-                    <SelectTrigger id="edit-role" className="mt-1">
-                      <SelectValue placeholder="Selecione um papel" />
+                    <SelectTrigger id="edit-nivelacesso" className="mt-1">
+                      <SelectValue placeholder="Selecione o nível de acesso" />
                     </SelectTrigger>
                     <SelectContent>
                       {userRoles.map((role) => (
@@ -1158,7 +1167,48 @@ const UserManagement = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex items-end mb-1">
+                <div>
+                  <Label htmlFor="edit-tipoplano" className="text-right">
+                    Tipo de Plano
+                  </Label>
+                  <Select 
+                    onValueChange={(value) => editForm.setValue("tipoplano", value as TipoPlano)} 
+                    defaultValue={editForm.getValues("tipoplano") || "mensal"}
+                    value={editForm.watch("tipoplano")}
+                  >
+                    <SelectTrigger id="edit-tipoplano" className="mt-1">
+                      <SelectValue placeholder="Selecione o tipo de plano" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="mensal">Mensal</SelectItem>
+                      <SelectItem value="anual">Anual</SelectItem>
+                      <SelectItem value="personalizado">Personalizado</SelectItem>
+                      <SelectItem value="vitalicio">Vitalício</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-origemassinatura" className="text-right">
+                    Origem da Assinatura
+                  </Label>
+                  <Select 
+                    onValueChange={(value) => editForm.setValue("origemassinatura", value as OrigemAssinatura)} 
+                    defaultValue={editForm.getValues("origemassinatura") || "manual"}
+                    value={editForm.watch("origemassinatura")}
+                  >
+                    <SelectTrigger id="edit-origemassinatura" className="mt-1">
+                      <SelectValue placeholder="Selecione a origem" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="manual">Manual</SelectItem>
+                      <SelectItem value="hotmart">Hotmart</SelectItem>
+                      <SelectItem value="nenhuma">Nenhuma</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-end gap-2 mb-1">
                   <div className="flex items-center space-x-2">
                     <Checkbox 
                       id="edit-isactive" 
@@ -1166,6 +1216,14 @@ const UserManagement = () => {
                       onCheckedChange={(checked) => editForm.setValue("isactive", !!checked)}
                     />
                     <Label htmlFor="edit-isactive">Usuário ativo</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="edit-acessovitalicio" 
+                      checked={editForm.watch("acessovitalicio")}
+                      onCheckedChange={(checked) => editForm.setValue("acessovitalicio", !!checked)}
+                    />
+                    <Label htmlFor="edit-acessovitalicio">Acesso vitalício</Label>
                   </div>
                 </div>
               </div>
@@ -1464,7 +1522,7 @@ const UserTable = ({
                 />
               ) : (
                 <div className={`rounded-full h-8 w-8 flex items-center justify-center text-xs text-white font-medium ${
-                  userRoles.find(r => r.value === user.role)?.color || "bg-gray-500"
+                  userRoles.find(r => r.value === user.nivelacesso)?.color || "bg-gray-500"
                 }`}>
                   {initials}
                 </div>
