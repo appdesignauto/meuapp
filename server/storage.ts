@@ -1435,6 +1435,26 @@ export class DatabaseStorage implements IStorage {
       return undefined;
     }
   }
+
+  async deleteUser(id: number): Promise<boolean> {
+    try {
+      // Antes de excluir o usuário, vamos verificar se ele existe
+      const user = await this.getUser(id);
+      if (!user) return false;
+
+      // Excluir o usuário
+      const result = await db.execute(sql`
+        DELETE FROM users
+        WHERE id = ${id}
+      `);
+
+      // Se a consulta afetou pelo menos uma linha, a exclusão foi bem-sucedida
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error("Erro em deleteUser:", error);
+      return false;
+    }
+  }
   
   // Category methods
   async getCategories(): Promise<Category[]> {
