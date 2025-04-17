@@ -54,19 +54,7 @@ const AuthPage = () => {
   const { user, loginMutation, registerMutation } = useAuth();
   const { toast } = useToast();
 
-  // Redirecionamento com useEffect para evitar erros de hooks
-  useEffect(() => {
-    if (user) {
-      setLocation("/");
-    }
-  }, [user, setLocation]);
-
-  // Se o usuário já estiver logado, não renderizamos o resto do componente
-  if (user) {
-    return null;
-  }
-
-  // Form para login
+  // Form para login - IMPORTANTE: todos os hooks precisam ser chamados em todas as renderizações
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -75,7 +63,7 @@ const AuthPage = () => {
     },
   });
 
-  // Form para registro
+  // Form para registro - IMPORTANTE: todos os hooks precisam ser chamados em todas as renderizações
   const registerForm = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -85,6 +73,19 @@ const AuthPage = () => {
       confirmPassword: "",
     },
   });
+
+  // Redirecionamento com useEffect para evitar erros de hooks
+  useEffect(() => {
+    if (user) {
+      setLocation("/");
+    }
+  }, [user, setLocation]);
+
+  // Se o usuário já estiver logado, não renderizamos o resto do componente
+  // IMPORTANTE: este retorno ocorre APÓS chamar todos os hooks
+  if (user) {
+    return null;
+  }
 
   const onLoginSubmit = async (values: LoginFormValues) => {
     try {
