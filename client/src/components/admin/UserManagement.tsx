@@ -552,19 +552,58 @@ const UserManagement = () => {
   // Carregar dados do usuário no formulário de edição
   useEffect(() => {
     if (selectedUser && isEditDialogOpen) {
-      editForm.reset({
+      console.log("Carregando usuário para edição:", selectedUser);
+      
+      // Converter valores do banco para o formato esperado pelo formulário
+      const formData = {
         username: selectedUser.username,
         email: selectedUser.email,
         name: selectedUser.name || "",
         nivelacesso: selectedUser.nivelacesso,
-        tipoplano: selectedUser.tipoplano || null,
-        origemassinatura: selectedUser.origemassinatura || null,
-        dataassinatura: selectedUser.dataassinatura || null,
-        dataexpiracao: selectedUser.dataexpiracao || null,
+        tipoplano: selectedUser.tipoplano as TipoPlano | undefined,
+        origemassinatura: selectedUser.origemassinatura as OrigemAssinatura | undefined,
+        dataassinatura: selectedUser.dataassinatura || "",
+        dataexpiracao: selectedUser.dataexpiracao || "",
         acessovitalicio: selectedUser.acessovitalicio || false,
         isactive: selectedUser.isactive,
-        role: selectedUser.role, // Campo mantido para compatibilidade
-      });
+        role: selectedUser.role || "", // Campo mantido para compatibilidade
+      };
+      
+      console.log("Dados formatados para o formulário:", formData);
+      
+      // Para usuários premium, garantir que os campos específicos de assinatura estejam preenchidos
+      if (selectedUser.nivelacesso === 'premium') {
+        // Se for premium sem tipo de plano definido, definir como padrão
+        if (!formData.tipoplano) {
+          formData.tipoplano = 'mensal' as TipoPlano;
+        }
+        
+        // Se for premium sem origem de assinatura definida, definir como padrão
+        if (!formData.origemassinatura) {
+          formData.origemassinatura = 'manual' as OrigemAssinatura;
+        }
+        
+        // Se for premium sem data de assinatura, definir como hoje
+        if (!formData.dataassinatura) {
+          formData.dataassinatura = new Date().toISOString().split('T')[0];
+        }
+        
+        // Para planos não vitalícios sem data de expiração, calcular com base no tipo
+        if (!formData.dataexpiracao && formData.tipoplano !== 'vitalicio') {
+          const dataAssinatura = new Date(formData.dataassinatura);
+          const dataExpiracao = new Date(dataAssinatura);
+          
+          if (formData.tipoplano === 'anual') {
+            dataExpiracao.setDate(dataExpiracao.getDate() + 365);
+          } else {
+            dataExpiracao.setDate(dataExpiracao.getDate() + 30); // padrão para mensal e personalizado
+          }
+          
+          formData.dataexpiracao = dataExpiracao.toISOString().split('T')[0];
+        }
+      }
+      
+      editForm.reset(formData);
 
       // Aplicar regras de visibilidade com base no nível de acesso carregado
       handleNivelAcessoChange(selectedUser.nivelacesso, 'edit');
