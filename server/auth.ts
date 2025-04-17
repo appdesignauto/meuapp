@@ -208,11 +208,12 @@ export function setupAuth(app: Express) {
       const hashedPassword = await hashPassword(req.body.password);
       
       // Create user
+      const nivelAcesso = req.body.nivelacesso || "free"; // Valor padrão é "free"
       const newUser = await storage.createUser({
         ...req.body,
         password: hashedPassword,
-        nivelacesso: req.body.nivelacesso || "free", // Usar nivelacesso
-        role: req.body.nivelacesso || req.body.role || "free", // Manter role para compatibilidade
+        nivelacesso: nivelAcesso, // Usar nivelacesso
+        role: nivelAcesso, // Manter role para compatibilidade
         isactive: true,
       });
       

@@ -1244,7 +1244,7 @@ export class DatabaseStorage implements IStorage {
         name, 
         profileimageurl, 
         bio, 
-        nivelacesso = "usuario", 
+        nivelacesso = "free", // Alterado para "free" como padrão
         origemassinatura, 
         tipoplano, 
         dataassinatura,
@@ -1261,13 +1261,13 @@ export class DatabaseStorage implements IStorage {
       if (role) {
         // Mapear os valores antigos para os novos
         switch (role) {
-          case 'free': nivelAcessoFinal = 'usuario'; break;
+          case 'free': nivelAcessoFinal = 'free'; break;  // Mantém como "free" em vez de "usuario"
           case 'premium': nivelAcessoFinal = 'premium'; break;
           case 'admin': nivelAcessoFinal = 'admin'; break;
           case 'designer': nivelAcessoFinal = 'designer'; break;
           case 'designer_adm': nivelAcessoFinal = 'designer_adm'; break;
           case 'support': nivelAcessoFinal = 'suporte'; break;
-          default: nivelAcessoFinal = 'usuario';
+          default: nivelAcessoFinal = 'free';  // Valor padrão é "free"
         }
       }
       
