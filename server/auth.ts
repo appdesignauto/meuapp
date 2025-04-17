@@ -56,25 +56,31 @@ export function setupAuth(app: Express) {
 
   // Passport configuration
   passport.use(
-    new LocalStrategy(async (username, password, done) => {
+    new LocalStrategy(async (usernameOrEmail, password, done) => {
       try {
-        console.log("Tentando autenticar:", username);
+        console.log("Recebendo tentativa de login:", { username: usernameOrEmail, password });
         
-        const user = await storage.getUserByUsername(username);
+        // Primeiro tenta encontrar o usuário pelo username
+        let user = await storage.getUserByUsername(usernameOrEmail);
         
+        // Se não encontrar pelo username, tenta pelo email
         if (!user) {
-          console.log("Usuário não encontrado:", username);
-          return done(null, false, { message: "Usuário não encontrado" });
+          console.log("Usuário não encontrado pelo username, tentando por email:", usernameOrEmail);
+          user = await storage.getUserByEmail(usernameOrEmail);
         }
         
-        console.log("Usuário encontrado:", user.username);
-        console.log("Senha fornecida:", password);
-        console.log("Senha armazenada:", user.password);
+        if (!user) {
+          console.log("Usuário não encontrado:", usernameOrEmail);
+          return done(null, false, { message: "Usuário ou email não encontrado" });
+        }
+        
+        console.log("Usuário encontrado:", user);
         
         const passwordMatch = await comparePasswords(password, user.password);
         console.log("Comparação de senha:", passwordMatch);
         
         if (!passwordMatch) {
+          console.log(`Senha incorreta para usuário: ${user.email}`);
           return done(null, false, { message: "Senha incorreta" });
         }
         

@@ -733,6 +733,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Nova regra: todo usuário criado pelo adm ou pelo suporte terá senha padrão designauto@123
+      // Nova regra: todo usuário criado pelo adm ou pelo suporte terá senha padrão designauto@123
       const usandoSenhaPadrao = (user.nivelacesso === "admin" || user.nivelacesso === "support");
       const senhaParaUsar = usandoSenhaPadrao ? "designauto@123" : password;
         
