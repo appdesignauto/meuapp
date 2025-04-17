@@ -623,7 +623,8 @@ export class MemStorage implements IStorage {
     if (!user) return undefined;
     
     const now = new Date();
-    const updatedUser = { ...user, role, updatedAt: now };
+    // Atualiza tanto role quanto nivelacesso para manter compatibilidade
+    const updatedUser = { ...user, role, nivelacesso: role, updatedAt: now };
     this.users.set(id, updatedUser);
     return updatedUser;
   }
