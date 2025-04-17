@@ -173,9 +173,10 @@ export function setupAuth(app: Express) {
         return res.status(401).json({ message: "Usuário não encontrado" });
       }
       
-      // Verifica a senha diretamente
-      if (user.password !== password) {
-        console.log("Senha incorreta. Esperado:", user.password, "Recebido:", password);
+      // Verifica a senha usando a função de comparação de hash
+      const passwordMatch = await comparePasswords(password, user.password);
+      if (!passwordMatch) {
+        console.log("Senha incorreta para usuário:", username);
         return res.status(401).json({ message: "Senha incorreta" });
       }
       
