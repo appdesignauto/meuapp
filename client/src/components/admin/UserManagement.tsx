@@ -348,6 +348,7 @@ const UserManagement = () => {
       } else {
         setShowCreateExpirationDate(false);
       }
+      form.setValue('dataexpiracao', null as any);
     } 
     // Se tipo for personalizado, mostrar campo de expiração (a menos que acesso seja vitalício)
     else if (tipo === 'personalizado') {
@@ -357,13 +358,36 @@ const UserManagement = () => {
       } else {
         setShowCreateExpirationDate(!acessoVitalicio);
       }
+      // Se não for acesso vitalício, limpar o campo para entrada manual
+      if (!acessoVitalicio) {
+        form.setValue('dataexpiracao', null as any);
+      }
     } 
-    // Para outros tipos, esconder expiração e manter acesso vitalício como está
+    // Para outros tipos (mensal e anual), calcular a data de expiração automaticamente
     else {
       if (formType === 'edit') {
         setShowExpirationDate(false);
       } else {
         setShowCreateExpirationDate(false);
+      }
+      
+      // Calcular a data de expiração baseada na data de assinatura
+      const dataAssinatura = form.getValues().dataassinatura;
+      if (dataAssinatura) {
+        const dataAssinaturaObj = new Date(dataAssinatura);
+        const dataExpiracao = new Date(dataAssinaturaObj);
+        
+        if (tipo === 'mensal') {
+          // Adicionar 30 dias
+          dataExpiracao.setDate(dataExpiracao.getDate() + 30);
+        } else if (tipo === 'anual') {
+          // Adicionar 365 dias
+          dataExpiracao.setDate(dataExpiracao.getDate() + 365);
+        }
+        
+        // Formatar a data para YYYY-MM-DD
+        const dataExpiracaoFormatada = dataExpiracao.toISOString().split('T')[0];
+        form.setValue('dataexpiracao', dataExpiracaoFormatada);
       }
     }
   };
@@ -733,12 +757,106 @@ const UserManagement = () => {
       data.username = `${emailUsername}${timestamp}`;
     }
     
+    // Aplicar regras de negócio com base no nível de acesso antes de enviar
+    // 1. Para usuários normais (nivel_acesso = usuario)
+    if (data.nivelacesso === 'usuario') {
+      data.tipoplano = null as any;
+      data.origemassinatura = null as any;
+      data.dataassinatura = null as any;
+      data.dataexpiracao = null as any;
+      data.acessovitalicio = false;
+    }
+    // 2. Para papéis administrativos (admin, suporte, designer, designer_adm)
+    else if (['admin', 'suporte', 'designer', 'designer_adm'].includes(data.nivelacesso)) {
+      data.tipoplano = null as any;
+      data.origemassinatura = null as any;
+      data.dataassinatura = null as any;
+      data.dataexpiracao = null as any;
+      data.acessovitalicio = true; // Todos os papéis administrativos têm acesso vitalício
+    }
+    // 3. Para usuários premium (nivel_acesso = premium)
+    else if (data.nivelacesso === 'premium') {
+      // Se for plano vitalício, garantir acesso vitalício = true e sem data de expiração
+      if (data.tipoplano === 'vitalicio') {
+        data.acessovitalicio = true;
+        data.dataexpiracao = null as any;
+      }
+      // Se for plano mensal, calcular data_expiracao (30 dias)
+      else if (data.tipoplano === 'mensal' && data.dataassinatura) {
+        const dataAssinatura = new Date(data.dataassinatura);
+        const dataExpiracao = new Date(dataAssinatura);
+        dataExpiracao.setDate(dataExpiracao.getDate() + 30);
+        data.dataexpiracao = dataExpiracao.toISOString().split('T')[0];
+        data.acessovitalicio = false;
+      }
+      // Se for plano anual, calcular data_expiracao (365 dias)
+      else if (data.tipoplano === 'anual' && data.dataassinatura) {
+        const dataAssinatura = new Date(data.dataassinatura);
+        const dataExpiracao = new Date(dataAssinatura);
+        dataExpiracao.setDate(dataExpiracao.getDate() + 365);
+        data.dataexpiracao = dataExpiracao.toISOString().split('T')[0];
+        data.acessovitalicio = false;
+      }
+      
+      // Verificar campo obrigatório data de assinatura para usuários premium
+      if (!data.dataassinatura) {
+        data.dataassinatura = new Date().toISOString().split('T')[0];
+      }
+    }
+    
     createUserMutation.mutate(data);
   });
 
   // Submeter formulário de edição
   const handleEditSubmit = editForm.handleSubmit((data) => {
     if (selectedUser) {
+      // Aplicar regras de negócio com base no nível de acesso antes de enviar
+      // 1. Para usuários normais (nivel_acesso = usuario)
+      if (data.nivelacesso === 'usuario') {
+        data.tipoplano = null as any;
+        data.origemassinatura = null as any;
+        data.dataassinatura = null as any;
+        data.dataexpiracao = null as any;
+        data.acessovitalicio = false;
+      }
+      // 2. Para papéis administrativos (admin, suporte, designer, designer_adm)
+      else if (['admin', 'suporte', 'designer', 'designer_adm'].includes(data.nivelacesso)) {
+        data.tipoplano = null as any;
+        data.origemassinatura = null as any;
+        data.dataassinatura = null as any;
+        data.dataexpiracao = null as any;
+        data.acessovitalicio = true; // Todos os papéis administrativos têm acesso vitalício
+      }
+      // 3. Para usuários premium (nivel_acesso = premium)
+      else if (data.nivelacesso === 'premium') {
+        // Se for plano vitalício, garantir acesso vitalício = true e sem data de expiração
+        if (data.tipoplano === 'vitalicio') {
+          data.acessovitalicio = true;
+          data.dataexpiracao = null as any;
+        }
+        // Se for plano mensal, calcular data_expiracao (30 dias)
+        else if (data.tipoplano === 'mensal' && data.dataassinatura) {
+          const dataAssinatura = new Date(data.dataassinatura);
+          const dataExpiracao = new Date(dataAssinatura);
+          dataExpiracao.setDate(dataExpiracao.getDate() + 30);
+          data.dataexpiracao = dataExpiracao.toISOString().split('T')[0];
+          data.acessovitalicio = false;
+        }
+        // Se for plano anual, calcular data_expiracao (365 dias)
+        else if (data.tipoplano === 'anual' && data.dataassinatura) {
+          const dataAssinatura = new Date(data.dataassinatura);
+          const dataExpiracao = new Date(dataAssinatura);
+          dataExpiracao.setDate(dataExpiracao.getDate() + 365);
+          data.dataexpiracao = dataExpiracao.toISOString().split('T')[0];
+          data.acessovitalicio = false;
+        }
+        
+        // Verificar campo obrigatório data de assinatura para usuários premium
+        if (!data.dataassinatura) {
+          data.dataassinatura = new Date().toISOString().split('T')[0];
+        }
+      }
+      
       updateUserMutation.mutate({
         id: selectedUser.id,
         userData: data,

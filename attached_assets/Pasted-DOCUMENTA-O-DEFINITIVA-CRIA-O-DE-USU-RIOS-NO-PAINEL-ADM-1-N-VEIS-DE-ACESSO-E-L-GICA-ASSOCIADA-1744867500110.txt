@@ -1,0 +1,148 @@
+DOCUMENTAÇÃO DEFINITIVA — CRIAÇÃO DE USUÁRIOS NO PAINEL ADM
+✅ 1. NÍVEIS DE ACESSO E LÓGICA ASSOCIADA
+🔹 Usuário (nivel_acesso = usuario)
+Significa que o usuário está logado e cadastrado, mas não tem plano ativo
+
+Pode:
+
+Navegar na plataforma
+
+Curtir e favoritar
+
+Visualizar artes com limitações
+
+Campos a serem preenchidos:
+
+nome, email, senha, nivel_acesso
+
+Campos que devem ser ocultados ou desativados:
+
+tipo_plano, origem_assinatura, data_assinatura, data_expiracao, acesso_vitalicio
+
+🔹 Premium (nivel_acesso = premium)
+Tem acesso completo à plataforma (downloads, links, favoritos etc.)
+
+Pode ter origem:
+
+Hotmart: mensal ou anual (automático)
+
+Manual: mensal, anual, personalizado, vitalício
+
+Campos obrigatórios:
+
+nome, email, senha, nivel_acesso
+
+tipo_plano
+
+origem_assinatura
+
+data_assinatura
+
+Regras por tipo de plano (se origem_assinatura = manual):
+
+
+Tipo de Plano	Comportamento
+mensal	Calcula data_expiracao = data_assinatura + 30 dias
+anual	Calcula data_expiracao = data_assinatura + 365 dias
+personalizado	Abre campo para seleção manual de data_expiracao
+vitalicio	Oculta data_expiracao, ativa acesso_vitalicio = true
+Exibe checkbox marcada como padrão, podendo ser desmarcada
+🔹 Designer / Designer ADM / Suporte / Admin
+São papéis administrativos que não têm plano, mas têm acesso permanente à plataforma conforme permissões
+
+Campos obrigatórios:
+
+nome, email, senha, nivel_acesso
+
+Campos a serem ocultados ou desativados:
+
+tipo_plano, origem_assinatura, data_assinatura, data_expiracao
+
+acesso_vitalicio deve ser marcado como true automaticamente, sem exibição no formulário
+
+✅ 2. ESTRUTURA DO FORMULÁRIO DE “CRIAR NOVO USUÁRIO”
+📋 CAMPOS FIXOS (sempre aparecem)
+
+Campo	Tipo	Obrigatório
+Nome Completo	Text	✅
+Email	Email	✅ (único)
+Senha	Password	✅
+Nível de Acesso	Dropdown	✅
+Usuário Ativo	Checkbox	✅ (default: true)
+📋 CAMPOS CONDICIONAIS (aparecem com base no nivel_acesso)
+🔸 Se nivel_acesso = premium
+
+Campo	Tipo	Regras
+Tipo de Plano	Dropdown	mensal, anual, personalizado, vitalicio
+Origem da Assinatura	Dropdown	hotmart, manual
+Data de Assinatura	Date	Sempre obrigatório
+Data de Expiração	Date	Só aparece se tipo_plano = personalizado
+Acesso Vitalício	Checkbox	Só aparece se tipo_plano = vitalicio, já marcado como padrão
+🔸 Se nivel_acesso = usuario ou qualquer papel administrativo
+Todos os campos abaixo devem ser ocultados:
+
+Tipo de Plano
+
+Origem da Assinatura
+
+Data de Assinatura
+
+Data de Expiração
+
+Acesso Vitalício
+
+No backend, forçar:
+
+ts
+Copiar
+Editar
+tipo_plano = null;
+origem_assinatura = null;
+data_assinatura = null;
+data_expiracao = null;
+acesso_vitalicio = nivel_acesso in ['admin', 'suporte', 'designer', 'designer_adm'];
+✅ 3. EXEMPLOS DE VALORES GERADOS NO BACKEND
+Exemplo 1: Usuário premium com plano anual, inserido manualmente
+json
+Copiar
+Editar
+{
+  "nivel_acesso": "premium",
+  "origem_assinatura": "manual",
+  "tipo_plano": "anual",
+  "data_assinatura": "2025-04-17",
+  "data_expiracao": "2026-04-17",
+  "acesso_vitalicio": false
+}
+Exemplo 2: Usuário com plano personalizado
+json
+Copiar
+Editar
+{
+  "nivel_acesso": "premium",
+  "origem_assinatura": "manual",
+  "tipo_plano": "personalizado",
+  "data_assinatura": "2025-04-17",
+  "data_expiracao": "2025-07-10",
+  "acesso_vitalicio": false
+}
+Exemplo 3: Designer (acesso permanente, sem plano)
+json
+Copiar
+Editar
+{
+  "nivel_acesso": "designer",
+  "origem_assinatura": null,
+  "tipo_plano": null,
+  "data_assinatura": null,
+  "data_expiracao": null,
+  "acesso_vitalicio": true
+}
+🎯 CONSIDERAÇÕES FINAIS
+O formulário deve mudar dinamicamente com base no nivel_acesso
+
+O tipo_plano comanda o restante do comportamento
+
+A flag acesso_vitalicio nunca é manualmente marcada, exceto quando tipo_plano = vitalicio
+
+O backend deve validar tudo novamente, mesmo que o frontend faça as mudanças visuais corretamente
