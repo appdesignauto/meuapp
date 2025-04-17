@@ -280,30 +280,76 @@ const UserManagement = () => {
   const handleNivelAcessoChange = (nivel: NivelAcesso, formType: 'create' | 'edit') => {
     const form = formType === 'create' ? createForm : editForm;
     
-    // Regras para cada nível de acesso
+    // Regras para cada nível de acesso de acordo com a documentação
     if (nivel === 'premium') {
-      // Premium: mostrar campos de plano, permitir configuração de acesso vitalício
+      // Premium: mostrar campos de plano, configurar valores padrão
       if (formType === 'edit') {
         setShowPlanFields(true);
       } else {
         setShowCreatePlanFields(true);
       }
       
-      // Verificar tipo de plano atual
-      const tipoPlano = form.getValues().tipoplano;
-      const acessoVitalicio = form.getValues().acessovitalicio;
-      
-      // Se tipo de plano é personalizado, mostrar data de expiração
-      if (formType === 'edit') {
-        setShowExpirationDate(tipoPlano === 'personalizado' && !acessoVitalicio);
-      } else {
-        setShowCreateExpirationDate(tipoPlano === 'personalizado' && !acessoVitalicio);
+      // Definir valores padrão se estiverem vazios
+      if (!form.getValues().tipoplano) {
+        form.setValue('tipoplano', 'mensal' as TipoPlano);
       }
       
-      // Manter os valores atuais dos campos do plano
+      if (!form.getValues().origemassinatura) {
+        form.setValue('origemassinatura', 'manual' as OrigemAssinatura);
+      }
+      
+      if (!form.getValues().dataassinatura) {
+        form.setValue('dataassinatura', new Date().toISOString().split('T')[0]);
+      }
+      
+      // Verificar tipo de plano atual e aplicar regras de visibilidade
+      const tipoPlano = form.getValues().tipoplano;
+      
+      if (tipoPlano === 'vitalicio') {
+        // Se for vitalício, forçar acesso vitalício = true e esconder data de expiração
+        form.setValue('acessovitalicio', true);
+        form.setValue('dataexpiracao', null as any);
+        if (formType === 'edit') {
+          setShowExpirationDate(false);
+        } else {
+          setShowCreateExpirationDate(false);
+        }
+      } 
+      else if (tipoPlano === 'personalizado') {
+        // Se for personalizado, mostrar data de expiração (a menos que tenha acesso vitalício)
+        const acessoVitalicio = form.getValues().acessovitalicio;
+        if (formType === 'edit') {
+          setShowExpirationDate(!acessoVitalicio);
+        } else {
+          setShowCreateExpirationDate(!acessoVitalicio);
+        }
+      }
+      else {
+        // Para mensal e anual, calcular data de expiração automaticamente
+        if (formType === 'edit') {
+          setShowExpirationDate(false);
+        } else {
+          setShowCreateExpirationDate(false);
+        }
+        
+        const dataAssinatura = form.getValues().dataassinatura;
+        if (dataAssinatura) {
+          const dataAssinaturaObj = new Date(dataAssinatura);
+          const dataExpiracao = new Date(dataAssinaturaObj);
+          
+          if (tipoPlano === 'mensal') {
+            dataExpiracao.setDate(dataExpiracao.getDate() + 30);
+          } else if (tipoPlano === 'anual') {
+            dataExpiracao.setDate(dataExpiracao.getDate() + 365);
+          }
+          
+          form.setValue('dataexpiracao', dataExpiracao.toISOString().split('T')[0]);
+          form.setValue('acessovitalicio', false);
+        }
+      }
     } 
     else if (nivel === 'usuario') {
-      // Usuário básico: ocultar campos de plano e resetar valores
+      // Usuário comum: ocultar todos os campos de plano conforme documentação
       if (formType === 'edit') {
         setShowPlanFields(false);
         setShowExpirationDate(false);
@@ -312,14 +358,15 @@ const UserManagement = () => {
         setShowCreateExpirationDate(false);
       }
       
-      // Resetar campos de plano
+      // Resetar valores conforme documentação
       form.setValue('tipoplano', null as any);
-      form.setValue('origemassinatura', 'nenhuma' as any);
+      form.setValue('origemassinatura', null as any);
+      form.setValue('dataassinatura', null as any);
       form.setValue('dataexpiracao', null as any);
       form.setValue('acessovitalicio', false);
     } 
     else {
-      // Admin/Designer/Suporte: ocultar campos de plano e forçar acesso vitalício
+      // Admin/Designer/Suporte/Designer ADM: ocultar campos e forçar acesso vitalício
       if (formType === 'edit') {
         setShowPlanFields(false);
         setShowExpirationDate(false);
@@ -328,17 +375,20 @@ const UserManagement = () => {
         setShowCreateExpirationDate(false);
       }
       
-      // Limpar plano e forçar acesso vitalício
+      // Limpar plano e forçar acesso vitalício conforme documentação
       form.setValue('tipoplano', null as any);
       form.setValue('origemassinatura', null as any);
+      form.setValue('dataassinatura', null as any);
       form.setValue('dataexpiracao', null as any);
       form.setValue('acessovitalicio', true);
     }
   };
   
-  // Handler para mudança no tipo de plano
+  // Handler para mudança no tipo de plano conforme documentação
   const handleTipoPlanoChange = (tipo: TipoPlano, formType: 'create' | 'edit') => {
     const form = formType === 'create' ? createForm : editForm;
+    
+    // Seguir regras da documentação por tipo de plano
     
     // Se tipo for vitalício, forçar acesso vitalício = true e esconder expiração
     if (tipo === 'vitalicio') {
@@ -350,26 +400,32 @@ const UserManagement = () => {
       }
       form.setValue('dataexpiracao', null as any);
     } 
-    // Se tipo for personalizado, mostrar campo de expiração (a menos que acesso seja vitalício)
+    // Se tipo for personalizado, mostrar campo de expiração (nunca terá acesso vitalício)
     else if (tipo === 'personalizado') {
-      const acessoVitalicio = form.getValues().acessovitalicio;
+      // No plano personalizado, desativar acesso vitalício
+      form.setValue('acessovitalicio', false);
+      
+      // Mostrar campo de expiração para entrada manual
       if (formType === 'edit') {
-        setShowExpirationDate(!acessoVitalicio);
+        setShowExpirationDate(true);
       } else {
-        setShowCreateExpirationDate(!acessoVitalicio);
+        setShowCreateExpirationDate(true);
       }
-      // Se não for acesso vitalício, limpar o campo para entrada manual
-      if (!acessoVitalicio) {
-        form.setValue('dataexpiracao', null as any);
-      }
+      
+      // Limpar o campo para entrada manual
+      form.setValue('dataexpiracao', null as any);
     } 
-    // Para outros tipos (mensal e anual), calcular a data de expiração automaticamente
+    // Para mensal (30 dias) e anual (365 dias), calcular a data de expiração automaticamente
     else {
+      // Ocultar campo de expiração pois será calculado automaticamente
       if (formType === 'edit') {
         setShowExpirationDate(false);
       } else {
         setShowCreateExpirationDate(false);
       }
+      
+      // Desativar acesso vitalício para planos temporários
+      form.setValue('acessovitalicio', false);
       
       // Calcular a data de expiração baseada na data de assinatura
       const dataAssinatura = form.getValues().dataassinatura;
@@ -378,10 +434,10 @@ const UserManagement = () => {
         const dataExpiracao = new Date(dataAssinaturaObj);
         
         if (tipo === 'mensal') {
-          // Adicionar 30 dias
+          // Adicionar 30 dias conforme documentação
           dataExpiracao.setDate(dataExpiracao.getDate() + 30);
         } else if (tipo === 'anual') {
-          // Adicionar 365 dias
+          // Adicionar 365 dias conforme documentação
           dataExpiracao.setDate(dataExpiracao.getDate() + 365);
         }
         
@@ -392,34 +448,52 @@ const UserManagement = () => {
     }
   };
   
-  // Handler para mudança no checkbox de acesso vitalício
+  // Handler para mudança no checkbox de acesso vitalício conforme documentação
   const handleAcessoVitalicioChange = (checked: boolean, formType: 'create' | 'edit') => {
     const form = formType === 'create' ? createForm : editForm;
+    const nivelAcesso = form.getValues().nivelacesso;
     
-    // Se marcar acesso vitalício, esconder expiração
-    if (checked) {
-      if (formType === 'edit') {
-        setShowExpirationDate(false);
-      } else {
-        setShowCreateExpirationDate(false);
-      }
-      form.setValue('dataexpiracao', null as any);
-      
-      // Se for usuário premium, alterar tipo de plano para vitalício
-      const nivelAcesso = form.getValues().nivelacesso;
-      if (nivelAcesso === 'premium') {
+    // Conforme a documentação, acesso vitalício só é manipulável para premium com plano vitalício
+    if (nivelAcesso === 'premium') {
+      // Se marcar acesso vitalício, deve alterar para plano vitalício e esconder expiração
+      if (checked) {
         form.setValue('tipoplano', 'vitalicio' as TipoPlano);
+        form.setValue('dataexpiracao', null as any);
+        
+        if (formType === 'edit') {
+          setShowExpirationDate(false);
+        } else {
+          setShowCreateExpirationDate(false);
+        }
+      } 
+      // Se desmarcar, alterar para plano mensal (padrão) se estava em vitalício
+      else {
+        const tipoPlano = form.getValues().tipoplano;
+        
+        // Se estava em plano vitalício, alterar para mensal
+        if (tipoPlano === 'vitalicio') {
+          form.setValue('tipoplano', 'mensal' as TipoPlano);
+          
+          // Calcular data de expiração para plano mensal
+          const dataAssinatura = form.getValues().dataassinatura;
+          if (dataAssinatura) {
+            const dataAssinaturaObj = new Date(dataAssinatura);
+            const dataExpiracao = new Date(dataAssinaturaObj);
+            dataExpiracao.setDate(dataExpiracao.getDate() + 30);
+            form.setValue('dataexpiracao', dataExpiracao.toISOString().split('T')[0]);
+          }
+        }
       }
     } 
-    // Se desmarcar e for plano personalizado, mostrar expiração
+    // Para usuários de outros níveis de acesso, o acesso vitalício é decidido automaticamente
     else {
-      const tipoPlano = form.getValues().tipoplano;
-      if (tipoPlano === 'personalizado') {
-        if (formType === 'edit') {
-          setShowExpirationDate(true);
-        } else {
-          setShowCreateExpirationDate(true);
-        }
+      // Se for papel administrativo, força acesso vitalício = true
+      if (['admin', 'suporte', 'designer', 'designer_adm'].includes(nivelAcesso)) {
+        form.setValue('acessovitalicio', true);
+      } 
+      // Se for usuário padrão, força acesso vitalício = false
+      else if (nivelAcesso === 'usuario') {
+        form.setValue('acessovitalicio', false);
       }
     }
   };
