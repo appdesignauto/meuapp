@@ -144,13 +144,6 @@ interface UserFormData {
 // Definição dos papéis de usuário com cores e descrições específicas
 const userRoles: { value: NivelAcesso; label: string; color: string; description: string; group: string }[] = [
   { 
-    value: "visitante", 
-    label: "Visitante", 
-    color: "bg-slate-500 hover:bg-slate-600",
-    description: "Usuário que não possui conta no sistema, apenas visualiza conteúdo público",
-    group: "clientes"
-  },
-  { 
     value: "usuario", 
     label: "Usuário Básico", 
     color: "bg-sky-500 hover:bg-sky-600",
@@ -213,6 +206,10 @@ const UserManagement = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [sortConfig, setSortConfig] = useState<{key: string, direction: 'asc' | 'desc'} | null>(null);
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
+  
+  // Estados para controlar a visibilidade dos campos do formulário
+  const [showPlanFields, setShowPlanFields] = useState(false);
+  const [showExpirationDate, setShowExpirationDate] = useState(false);
 
   // Funções handlers para os menus de ações
   const handleResetPassword = (email: string) => {
@@ -277,6 +274,92 @@ const UserManagement = () => {
     },
   });
 
+  // Função para processar as regras de negócio com base no nível de acesso
+  const handleNivelAcessoChange = (nivel: NivelAcesso, formType: 'create' | 'edit') => {
+    const form = formType === 'create' ? createForm : editForm;
+    
+    // Regras para cada nível de acesso
+    if (nivel === 'premium') {
+      // Premium: mostrar campos de plano, permitir configuração de acesso vitalício
+      setShowPlanFields(true);
+      
+      // Verificar tipo de plano atual
+      const tipoPlano = form.getValues().tipoplano;
+      const acessoVitalicio = form.getValues().acessovitalicio;
+      
+      // Se tipo de plano é personalizado, mostrar data de expiração
+      setShowExpirationDate(tipoPlano === 'personalizado' && !acessoVitalicio);
+      
+      // Manter os valores atuais dos campos do plano
+    } 
+    else if (nivel === 'usuario') {
+      // Usuário básico: ocultar campos de plano e resetar valores
+      setShowPlanFields(false);
+      setShowExpirationDate(false);
+      
+      // Resetar campos de plano
+      form.setValue('tipoplano', null as any);
+      form.setValue('origemassinatura', 'nenhuma' as any);
+      form.setValue('dataexpiracao', null as any);
+      form.setValue('acessovitalicio', false);
+    } 
+    else {
+      // Admin/Designer/Suporte: ocultar campos de plano e forçar acesso vitalício
+      setShowPlanFields(false);
+      setShowExpirationDate(false);
+      
+      // Limpar plano e forçar acesso vitalício
+      form.setValue('tipoplano', null as any);
+      form.setValue('origemassinatura', null as any);
+      form.setValue('dataexpiracao', null as any);
+      form.setValue('acessovitalicio', true);
+    }
+  };
+  
+  // Handler para mudança no tipo de plano
+  const handleTipoPlanoChange = (tipo: TipoPlano, formType: 'create' | 'edit') => {
+    const form = formType === 'create' ? createForm : editForm;
+    
+    // Se tipo for vitalício, forçar acesso vitalício = true e esconder expiração
+    if (tipo === 'vitalicio') {
+      form.setValue('acessovitalicio', true);
+      setShowExpirationDate(false);
+    } 
+    // Se tipo for personalizado, mostrar campo de expiração (a menos que acesso seja vitalício)
+    else if (tipo === 'personalizado') {
+      const acessoVitalicio = form.getValues().acessovitalicio;
+      setShowExpirationDate(!acessoVitalicio);
+    } 
+    // Para outros tipos, esconder expiração e manter acesso vitalício como está
+    else {
+      setShowExpirationDate(false);
+    }
+  };
+  
+  // Handler para mudança no checkbox de acesso vitalício
+  const handleAcessoVitalicioChange = (checked: boolean, formType: 'create' | 'edit') => {
+    const form = formType === 'create' ? createForm : editForm;
+    
+    // Se marcar acesso vitalício, esconder expiração
+    if (checked) {
+      setShowExpirationDate(false);
+      form.setValue('dataexpiracao', null as any);
+      
+      // Se for usuário premium, alterar tipo de plano para vitalício
+      const nivelAcesso = form.getValues().nivelacesso;
+      if (nivelAcesso === 'premium') {
+        form.setValue('tipoplano', 'vitalicio' as TipoPlano);
+      }
+    } 
+    // Se desmarcar e for plano personalizado, mostrar expiração
+    else {
+      const tipoPlano = form.getValues().tipoplano;
+      if (tipoPlano === 'personalizado') {
+        setShowExpirationDate(true);
+      }
+    }
+  };
+
   // Carregar dados do usuário no formulário de edição
   useEffect(() => {
     if (selectedUser && isEditDialogOpen) {
@@ -284,9 +367,18 @@ const UserManagement = () => {
         username: selectedUser.username,
         email: selectedUser.email,
         name: selectedUser.name || "",
-        role: selectedUser.role,
+        nivelacesso: selectedUser.nivelacesso,
+        tipoplano: selectedUser.tipoplano || null,
+        origemassinatura: selectedUser.origemassinatura || null,
+        dataassinatura: selectedUser.dataassinatura || null,
+        dataexpiracao: selectedUser.dataexpiracao || null,
+        acessovitalicio: selectedUser.acessovitalicio || false,
         isactive: selectedUser.isactive,
+        role: selectedUser.role, // Campo mantido para compatibilidade
       });
+
+      // Aplicar regras de visibilidade com base no nível de acesso carregado
+      handleNivelAcessoChange(selectedUser.nivelacesso, 'edit');
     }
   }, [selectedUser, isEditDialogOpen, editForm]);
 
@@ -1151,7 +1243,13 @@ const UserManagement = () => {
                     Nível de Acesso
                   </Label>
                   <Select 
-                    onValueChange={(value) => editForm.setValue("nivelacesso", value as NivelAcesso)} 
+                    onValueChange={(value) => {
+                      const nivelAcesso = value as NivelAcesso;
+                      editForm.setValue("nivelacesso", nivelAcesso);
+                      
+                      // Aplicar regras baseadas no nível de acesso
+                      handleNivelAcessoChange(nivelAcesso, 'edit');
+                    }} 
                     defaultValue={editForm.getValues("nivelacesso") || "usuario"}
                     value={editForm.watch("nivelacesso")}
                   >
@@ -1168,48 +1266,7 @@ const UserManagement = () => {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="edit-tipoplano" className="text-right">
-                    Tipo de Plano
-                  </Label>
-                  <Select 
-                    onValueChange={(value) => editForm.setValue("tipoplano", value as TipoPlano)} 
-                    defaultValue={editForm.getValues("tipoplano") || "mensal"}
-                    value={editForm.watch("tipoplano")}
-                  >
-                    <SelectTrigger id="edit-tipoplano" className="mt-1">
-                      <SelectValue placeholder="Selecione o tipo de plano" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="mensal">Mensal</SelectItem>
-                      <SelectItem value="anual">Anual</SelectItem>
-                      <SelectItem value="personalizado">Personalizado</SelectItem>
-                      <SelectItem value="vitalicio">Vitalício</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="edit-origemassinatura" className="text-right">
-                    Origem da Assinatura
-                  </Label>
-                  <Select 
-                    onValueChange={(value) => editForm.setValue("origemassinatura", value as OrigemAssinatura)} 
-                    defaultValue={editForm.getValues("origemassinatura") || "manual"}
-                    value={editForm.watch("origemassinatura")}
-                  >
-                    <SelectTrigger id="edit-origemassinatura" className="mt-1">
-                      <SelectValue placeholder="Selecione a origem" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="manual">Manual</SelectItem>
-                      <SelectItem value="hotmart">Hotmart</SelectItem>
-                      <SelectItem value="nenhuma">Nenhuma</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-end gap-2 mb-1">
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 mb-1">
                     <Checkbox 
                       id="edit-isactive" 
                       checked={editForm.watch("isactive")}
@@ -1217,16 +1274,87 @@ const UserManagement = () => {
                     />
                     <Label htmlFor="edit-isactive">Usuário ativo</Label>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="edit-acessovitalicio" 
-                      checked={editForm.watch("acessovitalicio")}
-                      onCheckedChange={(checked) => editForm.setValue("acessovitalicio", !!checked)}
-                    />
-                    <Label htmlFor="edit-acessovitalicio">Acesso vitalício</Label>
-                  </div>
                 </div>
               </div>
+              
+              {/* Campos de plano - visíveis apenas para nível premium */}
+              {showPlanFields && (
+                <div className="grid grid-cols-2 gap-4 mt-2 pt-2 border-t">
+                  <div>
+                    <Label htmlFor="edit-tipoplano" className="text-right">
+                      Tipo de Plano
+                    </Label>
+                    <Select 
+                      onValueChange={(value) => {
+                        const tipoPlano = value as TipoPlano;
+                        editForm.setValue("tipoplano", tipoPlano);
+                        
+                        // Aplicar regras baseadas no tipo de plano
+                        handleTipoPlanoChange(tipoPlano, 'edit');
+                      }} 
+                      defaultValue={editForm.getValues("tipoplano") || "mensal"}
+                      value={editForm.watch("tipoplano")}
+                    >
+                      <SelectTrigger id="edit-tipoplano" className="mt-1">
+                        <SelectValue placeholder="Selecione o tipo de plano" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="mensal">Mensal</SelectItem>
+                        <SelectItem value="anual">Anual</SelectItem>
+                        <SelectItem value="personalizado">Personalizado</SelectItem>
+                        <SelectItem value="vitalicio">Vitalício</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-origemassinatura" className="text-right">
+                      Origem da Assinatura
+                    </Label>
+                    <Select 
+                      onValueChange={(value) => editForm.setValue("origemassinatura", value as OrigemAssinatura)} 
+                      defaultValue={editForm.getValues("origemassinatura") || "manual"}
+                      value={editForm.watch("origemassinatura")}
+                    >
+                      <SelectTrigger id="edit-origemassinatura" className="mt-1">
+                        <SelectValue placeholder="Selecione a origem" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="manual">Manual</SelectItem>
+                        <SelectItem value="hotmart">Hotmart</SelectItem>
+                        <SelectItem value="nenhuma">Nenhuma</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* Data de expiração - visível apenas para plano personalizado sem acesso vitalício */}
+                  {showExpirationDate && (
+                    <div className="col-span-2">
+                      <Label htmlFor="edit-dataexpiracao" className="text-right">
+                        Data de Expiração
+                      </Label>
+                      <Input
+                        id="edit-dataexpiracao"
+                        type="date"
+                        {...editForm.register("dataexpiracao")}
+                        className="mt-1"
+                      />
+                    </div>
+                  )}
+                  
+                  <div className="col-span-2">
+                    <div className="flex items-center space-x-2 mt-2">
+                      <Checkbox 
+                        id="edit-acessovitalicio" 
+                        checked={editForm.watch("acessovitalicio")}
+                        onCheckedChange={(checked) => {
+                          handleAcessoVitalicioChange(!!checked, 'edit');
+                        }}
+                      />
+                      <Label htmlFor="edit-acessovitalicio">Acesso vitalício</Label>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             <DialogFooter>
               <Button
