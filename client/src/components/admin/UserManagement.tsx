@@ -1497,6 +1497,8 @@ const UserManagement = () => {
             isLoading={isLoadingUsers}
             renderRoleBadge={renderRoleBadge}
             renderStatusBadge={renderStatusBadge}
+            formatExpirationInfo={formatExpirationInfo}
+            renderSubscriptionSource={renderSubscriptionSource}
             setSelectedUser={setSelectedUser}
             setIsEditDialogOpen={setIsEditDialogOpen}
             toggleUserStatusMutation={toggleUserStatusMutation}
@@ -1513,6 +1515,8 @@ const UserManagement = () => {
             isLoading={isLoadingUsers}
             renderRoleBadge={renderRoleBadge}
             renderStatusBadge={renderStatusBadge}
+            formatExpirationInfo={formatExpirationInfo}
+            renderSubscriptionSource={renderSubscriptionSource}
             setSelectedUser={setSelectedUser}
             setIsEditDialogOpen={setIsEditDialogOpen}
             toggleUserStatusMutation={toggleUserStatusMutation}
@@ -1529,6 +1533,8 @@ const UserManagement = () => {
             isLoading={isLoadingUsers}
             renderRoleBadge={renderRoleBadge}
             renderStatusBadge={renderStatusBadge}
+            formatExpirationInfo={formatExpirationInfo}
+            renderSubscriptionSource={renderSubscriptionSource}
             setSelectedUser={setSelectedUser}
             setIsEditDialogOpen={setIsEditDialogOpen}
             toggleUserStatusMutation={toggleUserStatusMutation}
@@ -1545,6 +1551,8 @@ const UserManagement = () => {
             isLoading={isLoadingUsers}
             renderRoleBadge={renderRoleBadge}
             renderStatusBadge={renderStatusBadge}
+            formatExpirationInfo={formatExpirationInfo}
+            renderSubscriptionSource={renderSubscriptionSource}
             setSelectedUser={setSelectedUser}
             setIsEditDialogOpen={setIsEditDialogOpen}
             toggleUserStatusMutation={toggleUserStatusMutation}
