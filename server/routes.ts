@@ -887,6 +887,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ...designer,
           profileImageUrl: designer.profileimageurl,
           createdAt: designer.createdat,
+          nivelAcesso: designer.nivelacesso, // Adicionamos o nivelacesso explicitamente
           arts: recentArts.rows.map((art: any) => ({
             id: art.id,
             title: art.title,

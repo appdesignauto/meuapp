@@ -111,15 +111,16 @@ export function setupAuth(app: Express) {
   };
 
   // Role-based middlewares
-  const hasRole = (roles: UserRole[]) => {
+  const hasRole = (roles: string[]) => {
     return (req: Request, res: Response, next: NextFunction) => {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Não autenticado" });
       }
       
-      const userRole = req.user.role as UserRole;
+      // Usar o campo nivelacesso para verificação de permissões
+      const userNivelAcesso = req.user.nivelacesso;
       
-      if (!roles.includes(userRole)) {
+      if (!roles.includes(userNivelAcesso)) {
         return res.status(403).json({ message: "Acesso negado" });
       }
       
