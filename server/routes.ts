@@ -733,11 +733,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Nova regra: todo usuário criado pelo adm ou pelo suporte terá senha padrão designauto@123
-      const senhaParaUsar = (user.nivelacesso === "admin" || user.nivelacesso === "support") 
-        ? "designauto@123" 
-        : password;
+      const usandoSenhaPadrao = (user.nivelacesso === "admin" || user.nivelacesso === "support");
+      const senhaParaUsar = usandoSenhaPadrao ? "designauto@123" : password;
         
-      console.log(`Usuário sendo criado por ${user.nivelacesso}, usando ${senhaParaUsar === password ? "senha personalizada" : "senha padrão"}`);
+      console.log(`Usuário sendo criado por ${user.nivelacesso}, usando ${usandoSenhaPadrao ? "senha padrão 'designauto@123'" : "senha personalizada"}`);
+      
+      // Se estiver usando a senha padrão, registrar isso na observação do administrador
+      if (usandoSenhaPadrao) {
+        const dataAtual = new Date().toISOString().split('T')[0];
+        const observacao = req.body.observacaoadmin || '';
+        req.body.observacaoadmin = `${observacao} [${dataAtual}] Criado com senha padrão por ${user.username} (${user.nivelacesso}).`.trim();
+      }
       
       // Criptografar a senha
       const salt = randomBytes(16).toString("hex");
@@ -905,11 +911,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Criptografar a nova senha se fornecida
         if (password) {
           // Nova regra: quando admin ou suporte reseta a senha de outros usuários, usa a senha padrão designauto@123
-          const senhaParaUsar = (user.nivelacesso === "admin" || user.nivelacesso === "support") && user.id !== userId
-            ? "designauto@123" 
-            : password;
+          const usandoSenhaPadrao = (user.nivelacesso === "admin" || user.nivelacesso === "support") && user.id !== userId;
+          const senhaParaUsar = usandoSenhaPadrao ? "designauto@123" : password;
             
-          console.log(`Senha sendo alterada por ${user.nivelacesso}, usando ${senhaParaUsar === password ? "senha personalizada" : "senha padrão"}`);
+          console.log(`Senha sendo alterada por ${user.nivelacesso}, usando ${usandoSenhaPadrao ? "senha padrão 'designauto@123'" : "senha personalizada"}`);
+          
+          // Se estiver usando a senha padrão, registrar isso na observação do administrador
+          if (usandoSenhaPadrao) {
+            const dataAtual = new Date().toISOString().split('T')[0];
+            const observacaoAtual = existingUser.observacaoadmin || '';
+            const observacaoNova = observacaoadmin || '';
+            
+            // Usar a nova observação se fornecida, ou adicionar à existente
+            const observacaoFinal = observacaoadmin !== undefined 
+              ? `${observacaoNova} [${dataAtual}] Senha redefinida para padrão por ${user.username} (${user.nivelacesso}).`.trim()
+              : `${observacaoAtual} [${dataAtual}] Senha redefinida para padrão por ${user.username} (${user.nivelacesso}).`.trim();
+              
+            updateData.observacaoadmin = observacaoFinal;
+          }
           
           const salt = randomBytes(16).toString("hex");
           const buf = await scryptAsync(senhaParaUsar, salt, 64) as Buffer;
