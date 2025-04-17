@@ -811,6 +811,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .update(users)
           .set(updateData)
           .where(eq(users.id, userId));
+          
+        // Verificar se está atualizando para usuário premium - se sim, atualizar a assinatura
+        if (nivelacesso === 'premium') {
+          // Processar data de expiração com base no tipo de plano
+          let endDate: Date | null = null;
+          
+          if (acessovitalicio) {
+            // Usuário com acesso vitalício não tem data de expiração
+            endDate = null;
+          } else if (dataexpiracao) {
+            // Usar a data de expiração fornecida
+            endDate = new Date(dataexpiracao);
+          }
+          
+          // Criar ou atualizar registro de assinatura
+          await SubscriptionService.createOrUpdateSubscription(
+            userId, 
+            tipoplano || 'mensal', 
+            endDate
+          );
+        }
       }
       
       // Retornar usuário atualizado
@@ -1433,6 +1454,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erro ao buscar seguidores:", error);
       res.status(500).json({ message: "Erro ao buscar seguidores" });
+    }
+  });
+  
+  // =============================================
+  // SISTEMA DE ASSINATURAS - ROTAS
+  // =============================================
+  
+  // Verificar assinaturas expiradas e rebaixar usuários (apenas para admin)
+  app.post("/api/admin/subscriptions/check-expired", isAdmin, async (req, res) => {
+    try {
+      const downgradedCount = await SubscriptionService.checkExpiredSubscriptions();
+      res.json({ 
+        success: true, 
+        message: `${downgradedCount} usuários rebaixados para free`,
+        downgradedCount
+      });
+    } catch (error) {
+      console.error("Erro ao verificar assinaturas expiradas:", error);
+      res.status(500).json({ message: "Erro ao verificar assinaturas expiradas" });
+    }
+  });
+  
+  // Força downgrade de um usuário específico para nível free (apenas para admin - para testes)
+  app.post("/api/admin/subscriptions/force-downgrade/:userId", isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      // Verificar se o usuário existe
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId));
+        
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+      
+      // Forçar rebaixamento
+      const success = await SubscriptionService.downgradeUserToFree(userId);
+      
+      if (!success) {
+        return res.status(500).json({ message: "Erro ao rebaixar usuário" });
+      }
+      
+      res.json({ 
+        success: true, 
+        message: `Usuário ${user.username} rebaixado para free com sucesso`
+      });
+    } catch (error) {
+      console.error("Erro ao rebaixar usuário:", error);
+      res.status(500).json({ message: "Erro ao rebaixar usuário" });
     }
   });
 

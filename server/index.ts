@@ -4,6 +4,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initializeDatabase } from "./init-data";
 import { createAdminUser } from "./init-admin";
+import { SubscriptionService } from "./services/subscription-service";
 
 const app = express();
 app.use(express.json());
@@ -50,6 +51,25 @@ app.use((req, res, next) => {
     
     // Criar usuário administrador
     await createAdminUser();
+    
+    // Configurar verificação diária de assinaturas expiradas (executar a cada 12 horas)
+    const VERIFICAR_ASSINATURAS_INTERVALO = 12 * 60 * 60 * 1000; // 12 horas em milissegundos
+    
+    // Iniciar verificador de assinaturas expiradas
+    setInterval(async () => {
+      try {
+        console.log("Verificando assinaturas expiradas...");
+        const downgradedCount = await SubscriptionService.checkExpiredSubscriptions();
+        console.log(`Verificação concluída: ${downgradedCount} usuários rebaixados para free`);
+      } catch (error) {
+        console.error("Erro ao verificar assinaturas expiradas:", error);
+      }
+    }, VERIFICAR_ASSINATURAS_INTERVALO);
+    
+    // Executar verificação inicial na inicialização do servidor
+    console.log("Executando verificação inicial de assinaturas expiradas...");
+    const initialDowngradedCount = await SubscriptionService.checkExpiredSubscriptions();
+    console.log(`Verificação inicial concluída: ${initialDowngradedCount} usuários rebaixados para free`);
   } catch (error) {
     console.error("Erro ao inicializar banco de dados:", error);
   }
