@@ -1211,11 +1211,10 @@ export class DatabaseStorage implements IStorage {
 
   async getUserByUsername(username: string): Promise<User | undefined> {
     try {
-      const result = await db.execute(sql`
-        SELECT * FROM users WHERE username = ${username}
-      `);
-      
-      return result.rows[0] as User;
+      console.log("DatabaseStorage.getUserByUsername buscando:", username);
+      const users = await db.select().from(schema.users).where(eq(schema.users.username, username));
+      console.log("DatabaseStorage.getUserByUsername resultado:", users.length > 0 ? users[0].username : "nenhum");
+      return users[0];
     } catch (error) {
       console.error("Erro em getUserByUsername:", error);
       return undefined;

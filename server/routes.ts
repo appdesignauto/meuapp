@@ -17,12 +17,36 @@ import fs from "fs";
 import { storageService } from "./services/storage";
 import { supabaseStorageService } from "./services/supabase-storage";
 import { SubscriptionService } from "./services/subscription-service";
+import { HotmartService } from "./services/hotmart-service";
 import uploadMemory from "./middlewares/upload";
 
 // Versão promisificada do scrypt
 const scryptAsync = promisify(scrypt);
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Rota de debug para testar getUserByUsername
+  app.get('/api/debug/getUserByUsername/:username', async (req, res) => {
+    try {
+      console.log('DEBUG tentando encontrar usuário:', req.params.username);
+      
+      // Usar consulta SQL direta para diagnóstico
+      const result = await db.execute(sql`
+        SELECT * FROM users WHERE username = ${req.params.username}
+      `);
+      console.log('DEBUG resultado SQL direto:', result.rows);
+      
+      // Tentar buscar usando o método do storage
+      const user = await storage.getUserByUsername(req.params.username);
+      console.log('DEBUG getUserByUsername result:', user);
+      
+      res.setHeader('Content-Type', 'application/json');
+      return res.json({ success: true, sqlResult: result.rows, storageResult: user });
+    } catch (error) {
+      console.error('DEBUG error in getUserByUsername:', error);
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(500).json({ success: false, error: String(error) });
+    }
+  });
   // Setup authentication middleware and routes
   const { isAuthenticated, isPremium, isAdmin, isDesigner, hasRole } = setupAuth(app);
   
