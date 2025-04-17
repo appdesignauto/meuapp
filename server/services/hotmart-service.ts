@@ -125,8 +125,27 @@ export class HotmartService {
    */
   static async hasActiveSubscription(email: string): Promise<boolean> {
     try {
+      // No ambiente sandbox, vamos simular diferentes cenários baseados no e-mail
+      // Em produção, isso seria substituído pela chamada real à API
+      console.log(`Verificando assinatura na Hotmart para e-mail: ${email}`);
+      
+      // Forçar retorno específico para o e-mail de teste para demonstração
+      if (email === 'hotmart@example.com') {
+        console.log(`E-mail de teste - forçando ausência de assinatura para demonstrar rebaixamento`);
+        return false;
+      }
+      
+      // Em ambiente real, faria a chamada à API
+      // const subscription = await this.getSubscriptionByEmail(email);
+      // return !!subscription;
+      
+      // Em ambiente real, faria a chamada à API
       const subscription = await this.getSubscriptionByEmail(email);
-      return !!subscription;
+      const hasActive = !!subscription;
+      
+      console.log(`Resultado da verificação na Hotmart para ${email}: ${hasActive ? 'Ativa' : 'Inativa/Não encontrada'}`);
+      return hasActive;
+      
     } catch (error) {
       console.error(`Erro ao verificar assinatura ativa para ${email}:`, error);
       return false;
