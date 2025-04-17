@@ -1,0 +1,184 @@
+LÓGICA DO SISTEMA DE USUÁRIOS NO DESIGNAUTO
+O sistema de usuários do DesignAuto precisa contemplar diferentes perfis com diferentes formas de acesso e controle de expiração. A lógica deve ser estruturada para funcionar com integração automática com a Hotmart (via webhook) e também com inserções manuais de usuários diretamente pelo administrador da plataforma.
+
+👤 1. TIPOS DE USUÁRIOS
+a) Visitante (não logado)
+Pode visualizar algumas artes públicas.
+
+Não possui conta cadastrada.
+
+nivel_acesso = visitante
+
+b) Usuário logado (sem plano)
+Tem conta criada, mas sem plano ativo.
+
+Pode visualizar artes limitadas, sem download.
+
+nivel_acesso = usuario
+
+c) Usuário assinante (via Hotmart)
+Acessa todos os recursos (downloads, links, favoritos).
+
+O acesso é gerenciado por webhook da Hotmart.
+
+Pode ter plano mensal ou anual.
+
+nivel_acesso = premium
+
+origem_assinatura = hotmart
+
+tipo_plano = mensal | anual
+
+data_assinatura e data_expiracao devem ser preenchidos com base no plano.
+
+Ao expirar, o sistema deve automaticamente rebaixar para nivel_acesso = usuario.
+
+d) Usuário manual (inserido pelo administrador)
+Criado quando o cliente paga diretamente fora da Hotmart.
+
+Pode receber:
+
+Um plano com data personalizada de expiração.
+
+Ou um acesso vitalício.
+
+origem_assinatura = manual
+
+tipo_plano = personalizado | vitalicio
+
+acesso_vitalicio = true/false
+
+O sistema deve verificar data_expiracao e, caso expire, rebaixar para usuario.
+
+e) Perfis administrativos (sem prazo)
+Incluem: designer, designer_adm, suporte, admin
+
+Esses perfis não expiram. O campo acesso_vitalicio deve ser true ou data_expiracao ser null.
+
+🧠 2. ESTRUTURA DE BANCO DE DADOS (TABELA USUÁRIOS)
+A tabela de usuários deve conter os seguintes campos:
+
+id (chave primária)
+
+nome
+
+email
+
+senha_hash
+
+nivel_acesso (visitante, usuario, premium, suporte, designer, designer_adm, admin)
+
+origem_assinatura (hotmart, manual, nenhuma)
+
+tipo_plano (mensal, anual, personalizado, vitalicio)
+
+data_assinatura
+
+data_expiracao
+
+acesso_vitalicio (booleano)
+
+ultimo_login
+
+criado_em
+
+atualizado_em
+
+observacao_admin (anotações internas do administrador)
+
+🔁 3. COMPORTAMENTO DA INTEGRAÇÃO COM A HOTMART
+Quando a Hotmart enviar um webhook de compra/ativação:
+
+Se o usuário já existe, o sistema deve:
+
+atualizar o nivel_acesso para premium
+
+preencher tipo_plano, data_assinatura, data_expiracao
+
+marcar origem_assinatura = hotmart
+
+Se o usuário não existe, criar com os dados acima.
+
+Quando a Hotmart enviar um webhook de cancelamento ou expiração:
+
+O sistema deve rebaixar o usuário para usuario
+
+Remover data_assinatura, data_expiracao, tipo_plano
+
+🔧 4. INSERÇÃO MANUAL DE USUÁRIOS PELO ADMIN
+No painel administrativo, o admin poderá:
+
+Criar um novo usuário manualmente
+
+Escolher o plano:
+
+Mensal (expira em 30 dias)
+
+Anual (expira em 365 dias)
+
+Vitalício (não expira)
+
+Personalizado (escolhe a data final no calendário)
+
+O sistema deve preencher os campos corretamente:
+
+nivel_acesso = premium
+
+origem_assinatura = manual
+
+tipo_plano conforme selecionado
+
+Se for vitalício, marca acesso_vitalicio = true
+
+Se for personalizado, grava a data_expiracao manualmente
+
+⏳ 5. LÓGICA DE EXPIRAÇÃO AUTOMÁTICA
+O sistema deve rodar um verificador (cron ou a cada login) que:
+
+Ignora usuários com acesso_vitalicio = true
+
+Para os demais:
+
+Se data_expiracao estiver ultrapassada, rebaixa o nivel_acesso para usuario
+
+Zera os campos data_assinatura, tipo_plano, data_expiracao, origem_assinatura
+
+✅ 6. FORMULÁRIO NO PAINEL ADMINISTRATIVO
+Na tela de criação/edição de usuário, o painel deve permitir:
+
+Nome
+
+E-mail
+
+Nível de Acesso
+
+Origem da Assinatura
+
+Tipo de Plano:
+
+☐ Mensal (30 dias)
+
+☐ Anual (365 dias)
+
+☐ Vitalício (sem expiração)
+
+☐ Personalizado (escolhe data de expiração)
+
+Campo de calendário (se personalizado)
+
+Checkbox Acesso Vitalício
+
+Campo de Observação
+
+🎯 OBJETIVO FINAL
+Com essa estrutura:
+
+O sistema será compatível com Hotmart
+
+Permitirá controle total sobre inserções manuais
+
+Automatiza o downgrade de usuários expirados
+
+Garante que perfis administrativos tenham acesso vitalício
+
+Evita qualquer falha na gestão de permissões e expiração

@@ -1235,21 +1235,69 @@ export class DatabaseStorage implements IStorage {
 
   async createUser(insertUser: any): Promise<User> {
     try {
-      // Extraindo os dados do usuário e normalizando para lowercase conforme o banco
-      const { username, password, email, name, role, profileimageurl, bio, isactive, plan, periodType } = insertUser;
+      // Extrair e normalizar os dados do usuário conforme o novo esquema
+      const { 
+        username, 
+        password, 
+        email, 
+        name, 
+        profileimageurl, 
+        bio, 
+        nivelacesso = "usuario", 
+        origemassinatura, 
+        tipoplano, 
+        dataassinatura,
+        dataexpiracao,
+        acessovitalicio,
+        observacaoadmin,
+        isactive = true 
+      } = insertUser;
       
-      const now = new Date();
+      // Compatibilidade com código existente (mapear role -> nivelacesso)
+      const role = insertUser.role;
+      let nivelAcessoFinal = nivelacesso;
       
-      // Calcular data de expiração baseada no período
-      let expirationDate = null;
-      if (periodType && periodType !== 'vitalicio') {
-        const expDate = new Date(now);
-        if (periodType === 'mensal') {
-          expDate.setMonth(expDate.getMonth() + 1);
-        } else if (periodType === 'anual') {
-          expDate.setFullYear(expDate.getFullYear() + 1);
+      if (role) {
+        // Mapear os valores antigos para os novos
+        switch (role) {
+          case 'free': nivelAcessoFinal = 'usuario'; break;
+          case 'premium': nivelAcessoFinal = 'premium'; break;
+          case 'admin': nivelAcessoFinal = 'admin'; break;
+          case 'designer': nivelAcessoFinal = 'designer'; break;
+          case 'designer_adm': nivelAcessoFinal = 'designer_adm'; break;
+          case 'support': nivelAcessoFinal = 'suporte'; break;
+          default: nivelAcessoFinal = 'usuario';
         }
-        expirationDate = expDate;
+      }
+      
+      // Mapear periodType (parametro antigo) para o novo esquema
+      const periodType = insertUser.periodType;
+      let tipoPlanoFinal = tipoplano || null;
+      let dataExpiracaoFinal = dataexpiracao || null;
+      let acessoVitalicioFinal = acessovitalicio || false;
+      
+      // Se for um perfil administrativo, automaticamente é vitalício
+      if (['admin', 'designer', 'designer_adm', 'suporte'].includes(nivelAcessoFinal)) {
+        acessoVitalicioFinal = true;
+      }
+      
+      // Calcular data de expiração baseada no período (compatibilidade)
+      const now = new Date();
+      if (periodType && !dataExpiracaoFinal) {
+        if (periodType === 'vitalicio') {
+          acessoVitalicioFinal = true;
+          tipoPlanoFinal = 'vitalicio';
+        } else {
+          const expDate = new Date(now);
+          if (periodType === 'mensal') {
+            expDate.setMonth(expDate.getMonth() + 1);
+            tipoPlanoFinal = 'mensal';
+          } else if (periodType === 'anual') {
+            expDate.setFullYear(expDate.getFullYear() + 1);
+            tipoPlanoFinal = 'anual';
+          }
+          dataExpiracaoFinal = expDate;
+        }
       }
       
       // Execute SQL usando template literal com nomes de colunas em lowercase consistentes
@@ -1258,33 +1306,41 @@ export class DatabaseStorage implements IStorage {
           username, 
           password, 
           email, 
-          name, 
-          role, 
-          plan,
-          periodtype,
-          expirationdate,
+          name,
           profileimageurl, 
-          bio, 
+          bio,
+          nivelacesso,
+          origemassinatura,
+          tipoplano,
+          dataassinatura,
+          dataexpiracao,
+          acessovitalicio,
+          observacaoadmin, 
           isactive, 
-          lastlogin, 
-          createdat, 
-          updatedat
+          ultimologin, 
+          criadoem, 
+          atualizadoem,
+          role
         ) 
         VALUES (
           ${username}, 
           ${password}, 
           ${email}, 
-          ${name || null}, 
-          ${role || 'free'}, 
-          ${plan || 'free'},
-          ${periodType || 'mensal'},
-          ${expirationDate},
+          ${name || null},
           ${profileimageurl || null}, 
-          ${bio || null}, 
-          ${isactive !== undefined ? isactive : true}, 
+          ${bio || null},
+          ${nivelAcessoFinal},
+          ${origemassinatura || null},
+          ${tipoPlanoFinal},
+          ${dataassinatura || now},
+          ${dataExpiracaoFinal},
+          ${acessoVitalicioFinal},
+          ${observacaoadmin || null},
+          ${isactive},
           ${now}, 
           ${now}, 
-          ${now}
+          ${now},
+          ${role} /* Campo mantido para compatibilidade com código existente */
         ) 
         RETURNING *
       `);

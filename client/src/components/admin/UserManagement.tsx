@@ -72,7 +72,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { InsertUser, UserRole } from "@shared/schema";
+import { InsertUser, NivelAcesso, OrigemAssinatura, TipoPlano } from "@shared/schema";
 import { useForm } from "react-hook-form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -94,19 +94,27 @@ interface User {
   username: string;
   email: string;
   name: string | null;
-  role: UserRole;
+  role?: string;
+  nivelacesso: NivelAcesso;
+  origemassinatura?: OrigemAssinatura | null;
+  tipoplano?: TipoPlano | null;
+  dataassinatura?: string | null;
+  dataexpiracao?: string | null;
+  acessovitalicio: boolean;
+  observacaoadmin?: string | null;
   isactive: boolean;
-  createdAt: string;
+  criadoem: string;
+  ultimologin?: string | null;
   profileimageurl: string | null;
+  bio: string | null;
 }
 
 interface UserWithStats extends User {
-  followersCount?: number;
-  followingCount?: number;
+  followers?: number;
+  following?: number;
   totalDownloads?: number;
   totalViews?: number;
-  lastLogin?: string;
-  online?: boolean;  // Novo campo para indicar status online
+  online?: boolean;  // Campo para indicar status online
   lastActivity?: string;  // Último registro de atividade
   
   // Índice para permitir acesso dinâmico às propriedades
@@ -118,24 +126,33 @@ interface UserFormData {
   email: string;
   password: string;
   name: string;
-  role: UserRole;
-  plan: string;
-  periodType: string;
+  nivelacesso: NivelAcesso;
+  origemassinatura?: OrigemAssinatura;
+  tipoplano?: TipoPlano;
+  dataassinatura?: string;
+  dataexpiracao?: string;
+  acessovitalicio?: boolean;
+  observacaoadmin?: string;
   isactive: boolean;
+  
+  // Campos para compatibilidade com código existente
+  role?: string;
+  plan?: string;
+  periodType?: string;
 }
 
 // Definição dos papéis de usuário com cores e descrições específicas
-const userRoles: { value: UserRole; label: string; color: string; description: string; group: string }[] = [
+const userRoles: { value: NivelAcesso; label: string; color: string; description: string; group: string }[] = [
   { 
-    value: "visitor", 
+    value: "visitante", 
     label: "Visitante", 
     color: "bg-slate-500 hover:bg-slate-600",
     description: "Usuário que não possui conta no sistema, apenas visualiza conteúdo público",
     group: "clientes"
   },
   { 
-    value: "free", 
-    label: "Usuário Free", 
+    value: "usuario", 
+    label: "Usuário Básico", 
     color: "bg-sky-500 hover:bg-sky-600",
     description: "Usuário registrado com acesso a recursos gratuitos",
     group: "clientes"
@@ -162,7 +179,7 @@ const userRoles: { value: UserRole; label: string; color: string; description: s
     group: "equipe"
   },
   { 
-    value: "support", 
+    value: "suporte", 
     label: "Suporte", 
     color: "bg-emerald-500 hover:bg-emerald-600",
     description: "Equipe de suporte com acesso para gerenciar usuários e conteúdo",

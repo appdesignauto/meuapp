@@ -11,22 +11,32 @@ export const users = pgTable("users", {
   name: text("name"),
   profileimageurl: text("profileimageurl"),
   bio: text("bio"),
-  role: text("role").notNull().default("free"), // 'visitor', 'free', 'premium', 'designer', 'designer_adm', 'support', 'admin'
+  // Campo de nível de acesso com todos os tipos de usuários
+  // 'visitante', 'usuario', 'premium', 'designer', 'designer_adm', 'suporte', 'admin'
+  nivelacesso: text("nivelacesso").notNull().default("usuario"),
+  
+  // Campos para gerenciamento de assinatura
+  origemassinatura: text("origemassinatura"), // 'hotmart', 'manual', 'nenhuma'
+  tipoplano: text("tipoplano"), // 'mensal', 'anual', 'personalizado', 'vitalicio'
+  dataassinatura: timestamp("dataassinatura"),
+  dataexpiracao: timestamp("dataexpiracao"),
+  acessovitalicio: boolean("acessovitalicio").default(false),
+  
+  // Campos administrativos e de controle
+  observacaoadmin: text("observacaoadmin"),
   isactive: boolean("isactive").notNull().default(true),
-  lastLogin: timestamp("lastlogin"),
-  createdAt: timestamp("createdAt").notNull().defaultNow(),
-  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+  ultimologin: timestamp("ultimologin"),
+  criadoem: timestamp("criadoem").notNull().defaultNow(),
+  atualizadoem: timestamp("atualizadoem").notNull().defaultNow(),
+  
+  // Campo para compatibilidade com o código existente - será descontinuado gradualmente
+  role: text("role"),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
-  email: true,
-  name: true,
-  profileimageurl: true,
-  bio: true,
-  role: true,
-  isactive: true,
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  criadoem: true,
+  atualizadoem: true,
 });
 
 // Category schema
@@ -150,7 +160,9 @@ export const insertUserStatsSchema = createInsertSchema(userStats).omit({
 });
 
 // Types
-export type UserRole = 'visitor' | 'free' | 'premium' | 'designer' | 'designer_adm' | 'support' | 'admin';
+export type NivelAcesso = 'visitante' | 'usuario' | 'premium' | 'designer' | 'designer_adm' | 'suporte' | 'admin';
+export type OrigemAssinatura = 'hotmart' | 'manual' | 'nenhuma';
+export type TipoPlano = 'mensal' | 'anual' | 'personalizado' | 'vitalicio';
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
