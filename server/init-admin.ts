@@ -17,7 +17,8 @@ export async function createAdminUser() {
     
     if (existingUser) {
       // Se o usuário já existe, atualiza o papel para admin se necessário
-      if (existingUser.role !== 'admin') {
+      if (existingUser.nivelacesso !== 'admin') {
+        // Atualiza tanto nivelacesso quanto role por compatibilidade
         await storage.updateUserRole(existingUser.id, 'admin');
         console.log('Usuário administrador atualizado com sucesso.');
       } else {
@@ -31,8 +32,9 @@ export async function createAdminUser() {
       username: 'admin',
       email: 'inovedigitalmarketing10@gmail.com',
       password: await hashPassword('admin123'),
-      name: 'Administrador',
-      role: 'admin',
+      name: 'Design Auto', // Nome atualizado conforme solicitação
+      role: 'admin', // Mantido para compatibilidade
+      nivelacesso: 'admin', // Usando o novo campo
       isactive: true,
       profileimageurl: null,
       bio: null,

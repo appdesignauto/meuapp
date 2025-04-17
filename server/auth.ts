@@ -5,7 +5,6 @@ import session from "express-session";
 import bcrypt from "bcrypt";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
-import { UserRole } from "@shared/schema";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
 
@@ -212,7 +211,8 @@ export function setupAuth(app: Express) {
       const newUser = await storage.createUser({
         ...req.body,
         password: hashedPassword,
-        role: req.body.role || "free", // Default role
+        nivelacesso: req.body.nivelacesso || "free", // Usar nivelacesso
+        role: req.body.nivelacesso || req.body.role || "free", // Manter role para compatibilidade
         isactive: true,
       });
       

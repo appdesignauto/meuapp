@@ -1357,7 +1357,7 @@ export class DatabaseStorage implements IStorage {
       const now = new Date();
       const result = await db.execute(sql`
         UPDATE users 
-        SET role = ${role}, updatedat = ${now}
+        SET role = ${role}, nivelacesso = ${role}, updatedat = ${now}
         WHERE id = ${id}
         RETURNING *
       `);
