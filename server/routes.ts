@@ -64,11 +64,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Ordenar por data de atualização e pegar a mais recente
         const sortedArts = [...arts].sort((a, b) => 
-          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+          new Date(b.updatedat).getTime() - new Date(a.updatedat).getTime()
         );
         
         // Data da última atualização é a data da arte mais recente
-        const lastUpdate = sortedArts[0].updatedAt;
+        const lastUpdate = sortedArts[0].updatedat;
         
         // Coletar formatos únicos de artes nesta categoria
         const uniqueFormats = Array.from(new Set(arts.map(art => art.format)));

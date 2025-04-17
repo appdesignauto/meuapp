@@ -570,7 +570,7 @@ export class MemStorage implements IStorage {
       email: "premium@designauto.com",
       name: "Usuário Premium",
       role: "premium",
-      isActive: true
+      isactive: true
     });
     
     this.createUser({
@@ -579,7 +579,7 @@ export class MemStorage implements IStorage {
       email: "free@designauto.com",
       name: "Usuário Free",
       role: "free",
-      isActive: true
+      isactive: true
     });
   }
 
