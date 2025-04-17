@@ -2332,26 +2332,26 @@ const UserTable = ({
       <HoverCard>
         <HoverCardTrigger asChild>
           <div className="flex items-center">
-            <div className="relative h-8 w-8 mr-2">
+            <div className="relative h-9 w-9 mr-3">
               {profileUrl ? (
                 <img 
                   src={profileUrl} 
                   alt={user.username}
-                  className="rounded-full object-cover h-8 w-8" 
+                  className="rounded-full object-cover h-9 w-9 shadow-sm border border-gray-100" 
                 />
               ) : (
-                <div className={`rounded-full h-8 w-8 flex items-center justify-center text-xs text-white font-medium ${
+                <div className={`rounded-full h-9 w-9 flex items-center justify-center text-xs text-white font-medium shadow-sm ${
                   userRoles.find(r => r.value === user.nivelacesso)?.color || "bg-gray-500"
                 }`}>
                   {initials}
                 </div>
               )}
               {user.isactive && (
-                <div className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-green-500 border border-white" />
+                <div className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-500 border border-white shadow-sm" />
               )}
             </div>
             <div className="flex flex-col">
-              <span className="font-medium">{user.username}</span>
+              <span className="font-medium text-sm">{user.username}</span>
               <span className="text-xs text-muted-foreground">{user.name || "-"}</span>
             </div>
           </div>
@@ -2363,49 +2363,79 @@ const UserTable = ({
                 <img 
                   src={profileUrl} 
                   alt={user.username}
-                  className="rounded-full object-cover h-16 w-16" 
+                  className="rounded-full object-cover h-16 w-16 shadow-sm border border-gray-100" 
                 />
               ) : (
-                <div className={`rounded-full h-16 w-16 flex items-center justify-center text-xl text-white font-medium ${
+                <div className={`rounded-full h-16 w-16 flex items-center justify-center text-xl text-white font-medium shadow-sm ${
                   userRoles.find(r => r.value === user.nivelacesso)?.color || "bg-gray-500"
                 }`}>
                   {initials}
                 </div>
               )}
               {user.isactive && (
-                <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border border-white" />
+                <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border border-white shadow-sm" />
               )}
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <h4 className="text-sm font-semibold">{user.name || user.username}</h4>
               <div className="space-y-1">
                 <p className="text-xs">{user.email}</p>
-                <p className="text-xs text-muted-foreground">
-                  Cadastrado em {formatFullDate(user.createdAt)}
-                </p>
-                {user.lastLogin && (
+                <div className="flex items-center gap-1">
+                  <CalendarIcon className="h-3 w-3 text-muted-foreground" />
                   <p className="text-xs text-muted-foreground">
-                    Último login: {formatFullDate(user.lastLogin)}
+                    Cadastrado em {formatFullDate(user.createdAt)}
                   </p>
+                </div>
+                {user.lastLogin && (
+                  <div className="flex items-center gap-1">
+                    <ClockIcon className="h-3 w-3 text-muted-foreground" />
+                    <p className="text-xs text-muted-foreground">
+                      Último login: {formatFullDate(user.lastLogin)}
+                    </p>
+                  </div>
                 )}
               </div>
             </div>
           </div>
+          
+          {user.nivelacesso === 'premium' && (
+            <div className="mt-3 border rounded-lg p-3 bg-gray-50">
+              <div className="text-xs font-medium mb-2 flex items-center">
+                <CrownIcon className="h-3.5 w-3.5 mr-1 text-amber-500" />
+                <span>Detalhes da assinatura</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <span className="text-muted-foreground">Plano:</span>{' '}
+                  <span className="font-medium capitalize">{user.tipoplano || '-'}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Origem:</span>{' '}
+                  <span className="font-medium capitalize">{user.origemassinatura || '-'}</span>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-muted-foreground">Expiração:</span>{' '}
+                  <span className="font-medium">{formatExpirationInfo(user)}</span>
+                </div>
+              </div>
+            </div>
+          )}
+          
           {(user.nivelacesso === "designer" || user.nivelacesso === "designer_adm") && (
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <div className="text-center p-2 bg-muted rounded-md">
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <div className="text-center p-2 bg-blue-50 rounded-md shadow-sm border border-blue-100">
                 <p className="text-xs text-muted-foreground">Artes vistas</p>
                 <p className="text-sm font-medium">{user.totalViews || 0}</p>
               </div>
-              <div className="text-center p-2 bg-muted rounded-md">
+              <div className="text-center p-2 bg-blue-50 rounded-md shadow-sm border border-blue-100">
                 <p className="text-xs text-muted-foreground">Downloads</p>
                 <p className="text-sm font-medium">{user.totalDownloads || 0}</p>
               </div>
-              <div className="text-center p-2 bg-muted rounded-md">
+              <div className="text-center p-2 bg-blue-50 rounded-md shadow-sm border border-blue-100">
                 <p className="text-xs text-muted-foreground">Seguidores</p>
                 <p className="text-sm font-medium">{user.followersCount || 0}</p>
               </div>
-              <div className="text-center p-2 bg-muted rounded-md">
+              <div className="text-center p-2 bg-blue-50 rounded-md shadow-sm border border-blue-100">
                 <p className="text-xs text-muted-foreground">Seguindo</p>
                 <p className="text-sm font-medium">{user.followingCount || 0}</p>
               </div>
