@@ -1154,9 +1154,19 @@ const UserManagement = () => {
   // Renderização do badge de status do usuário
   const renderStatusBadge = (isactive: boolean) => {
     return isactive ? (
-      <Badge className="bg-green-500 hover:bg-green-600">Ativo</Badge>
+      <div className="flex items-center gap-1.5">
+        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+        <Badge variant="outline" className="bg-green-50 text-green-600 hover:bg-green-50 border-green-200">
+          Ativo
+        </Badge>
+      </div>
     ) : (
-      <Badge variant="secondary" className="bg-gray-500 hover:bg-gray-600">Inativo</Badge>
+      <div className="flex items-center gap-1.5">
+        <div className="w-2 h-2 rounded-full bg-red-400"></div>
+        <Badge variant="outline" className="bg-red-50 text-red-600 hover:bg-red-50 border-red-200">
+          Inativo
+        </Badge>
+      </div>
     );
   };
   
