@@ -674,7 +674,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const buf = await scrypt(password, salt, 64) as Buffer;
       const hashedPassword = `${buf.toString("hex")}.${salt}`;
       
-      // Criar o usuário
+      // Criar o usuário usando nomes de colunas em lowercase conforme o banco
       const [newUser] = await db
         .insert(users)
         .values({
@@ -687,9 +687,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           profileimageurl: null,
           bio: null,
           // Ajustar para horário de Brasília (UTC-3)
-          lastLogin: new Date(new Date().getTime() - 3 * 60 * 60 * 1000),
+          lastlogin: new Date(new Date().getTime() - 3 * 60 * 60 * 1000),
           // Ajustar para horário de Brasília (UTC-3)
-          createdAt: new Date(new Date().getTime() - 3 * 60 * 60 * 1000),
+          createdat: new Date(new Date().getTime() - 3 * 60 * 60 * 1000),
           updatedat: new Date(new Date().getTime() - 3 * 60 * 60 * 1000)
         })
         .returning();

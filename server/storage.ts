@@ -1235,8 +1235,8 @@ export class DatabaseStorage implements IStorage {
 
   async createUser(insertUser: any): Promise<User> {
     try {
-      // Extraindo os dados do usuário
-      const { username, password, email, name, role, profileImageUrl, bio, isActive, plan, periodType } = insertUser;
+      // Extraindo os dados do usuário e normalizando para lowercase conforme o banco
+      const { username, password, email, name, role, profileimageurl, bio, isactive, plan, periodType } = insertUser;
       
       const now = new Date();
       
@@ -1252,7 +1252,7 @@ export class DatabaseStorage implements IStorage {
         expirationDate = expDate;
       }
       
-      // Execute SQL usando template literal para evitar problema com parâmetros nomeados
+      // Execute SQL usando template literal com nomes de colunas em lowercase consistentes
       const result = await db.execute(sql`
         INSERT INTO users (
           username, 
@@ -1267,7 +1267,7 @@ export class DatabaseStorage implements IStorage {
           bio, 
           isactive, 
           lastlogin, 
-          "createdAt", 
+          createdat, 
           updatedat
         ) 
         VALUES (
@@ -1279,9 +1279,9 @@ export class DatabaseStorage implements IStorage {
           ${plan || 'free'},
           ${periodType || 'mensal'},
           ${expirationDate},
-          ${profileImageUrl || null}, 
+          ${profileimageurl || null}, 
           ${bio || null}, 
-          ${isActive !== undefined ? isActive : true}, 
+          ${isactive !== undefined ? isactive : true}, 
           ${now}, 
           ${now}, 
           ${now}
