@@ -562,8 +562,11 @@ const UserManagement = () => {
         nivelacesso: selectedUser.nivelacesso,
         tipoplano: selectedUser.tipoplano as TipoPlano | undefined,
         origemassinatura: selectedUser.origemassinatura as OrigemAssinatura | undefined,
-        dataassinatura: selectedUser.dataassinatura || "",
-        dataexpiracao: selectedUser.dataexpiracao || "",
+        // Garantir que datas sejam formatadas corretamente se existirem ou vazias se não existirem
+        dataassinatura: selectedUser.dataassinatura ? 
+          new Date(selectedUser.dataassinatura).toISOString().split('T')[0] : "",
+        dataexpiracao: selectedUser.dataexpiracao ? 
+          new Date(selectedUser.dataexpiracao).toISOString().split('T')[0] : "",
         acessovitalicio: selectedUser.acessovitalicio || false,
         isactive: selectedUser.isactive,
         role: selectedUser.role || "", // Campo mantido para compatibilidade
@@ -1015,6 +1018,12 @@ const UserManagement = () => {
   // Submeter formulário de edição
   const handleEditSubmit = editForm.handleSubmit((data) => {
     if (selectedUser) {
+      // Log importante para debug
+      console.log("Dados do usuário antes de processar regras:", {
+        original: selectedUser,
+        form: data
+      });
+      
       // Aplicar regras de negócio com base no nível de acesso antes de enviar
       // 1. Para usuários normais (nivel_acesso = usuario)
       if (data.nivelacesso === 'usuario') {
@@ -1034,7 +1043,36 @@ const UserManagement = () => {
       }
       // 3. Para usuários premium (nivel_acesso = premium)
       else if (data.nivelacesso === 'premium') {
-        // Sempre definir valores padrão para os campos obrigatórios
+        // Preservar dados originais do usuário quando não forem modificados explicitamente
+        // Se o usuário já for premium, manter os valores originais a menos que sejam alterados
+        if (selectedUser.nivelacesso === 'premium') {
+          // Manter origemassinatura original se não foi alterada no formulário ou está vazia
+          if (!data.origemassinatura && selectedUser.origemassinatura) {
+            data.origemassinatura = selectedUser.origemassinatura as OrigemAssinatura;
+          }
+          
+          // Manter tipoplano original se não foi alterado no formulário ou está vazio
+          if (!data.tipoplano && selectedUser.tipoplano) {
+            data.tipoplano = selectedUser.tipoplano as TipoPlano;
+          }
+          
+          // Manter dataassinatura original se não foi alterada no formulário ou está vazia
+          if (!data.dataassinatura && selectedUser.dataassinatura) {
+            data.dataassinatura = new Date(selectedUser.dataassinatura).toISOString().split('T')[0];
+          }
+          
+          // Manter dataexpiracao original se não foi alterada no formulário ou está vazia
+          if (!data.dataexpiracao && selectedUser.dataexpiracao && selectedUser.tipoplano !== 'vitalicio') {
+            data.dataexpiracao = new Date(selectedUser.dataexpiracao).toISOString().split('T')[0];
+          }
+          
+          // Manter acessovitalicio original 
+          if (selectedUser.acessovitalicio !== undefined) {
+            data.acessovitalicio = data.acessovitalicio !== undefined ? data.acessovitalicio : selectedUser.acessovitalicio;
+          }
+        }
+        
+        // Depois de preservar dados, aplicar regras para preencher campos faltantes
         
         // Verificar campo obrigatório data de assinatura para usuários premium
         if (!data.dataassinatura) {
