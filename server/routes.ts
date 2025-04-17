@@ -9,6 +9,7 @@ import imageUploadRoutes from "./routes/image-upload";
 import { db } from "./db";
 import { eq, isNull, desc, and, count, sql, asc, not, or, ne, inArray } from "drizzle-orm";
 import { randomBytes, scrypt } from "crypto";
+import { promisify } from "util";
 import { SQL } from "drizzle-orm/sql";
 import multer from "multer";
 import path from "path";
@@ -16,6 +17,9 @@ import fs from "fs";
 import { storageService } from "./services/storage";
 import { supabaseStorageService } from "./services/supabase-storage";
 import uploadMemory from "./middlewares/upload";
+
+// Versão promisificada do scrypt
+const scryptAsync = promisify(scrypt);
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication middleware and routes
@@ -671,7 +675,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Criptografar a senha
       const salt = randomBytes(16).toString("hex");
-      const buf = await scrypt(password, salt, 64) as Buffer;
+      const buf = await scryptAsync(password, salt, 64) as Buffer;
       const hashedPassword = `${buf.toString("hex")}.${salt}`;
       
       // Nível de acesso padrão se não for especificado
@@ -796,7 +800,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Criptografar a nova senha se fornecida
         if (password) {
           const salt = randomBytes(16).toString("hex");
-          const buf = await scrypt(password, salt, 64) as Buffer;
+          const buf = await scryptAsync(password, salt, 64) as Buffer;
           const hashedPassword = `${buf.toString("hex")}.${salt}`;
           updateData.password = hashedPassword;
         }
