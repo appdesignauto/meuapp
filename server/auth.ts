@@ -116,10 +116,30 @@ export function setupAuth(app: Express) {
         return res.status(401).json({ message: "Não autenticado" });
       }
       
-      // Usar o campo nivelacesso para verificação de permissões
-      const userNivelAcesso = req.user.nivelacesso;
+      // Usar o campo nivelacesso para verificação de permissões (com fallback para o campo role)
+      const userNivelAcesso = req.user.nivelacesso || req.user.role;
       
-      if (!roles.includes(userNivelAcesso)) {
+      // Mapeamento entre roles antigas e novas para compatibilidade
+      const roleMap: {[key: string]: string[]} = {
+        'free': ['free', 'usuario'],
+        'premium': ['premium'],
+        'designer': ['designer'],
+        'designer_adm': ['designer_adm'],
+        'admin': ['admin'],
+        'support': ['support', 'suporte']
+      };
+      
+      // Verificar se o usuário tem alguma das roles permitidas (considerando o mapeamento)
+      const hasPermission = roles.some(role => {
+        // Verificar correspondência direta
+        if (userNivelAcesso === role) return true;
+        
+        // Verificar correspondência via mapeamento
+        const mappedRoles = roleMap[role] || [];
+        return mappedRoles.includes(userNivelAcesso);
+      });
+      
+      if (!hasPermission) {
         return res.status(403).json({ message: "Acesso negado" });
       }
       
