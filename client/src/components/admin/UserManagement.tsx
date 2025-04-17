@@ -2392,7 +2392,7 @@ const UserTable = ({
                         )}
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={handleDeleteConfirmation}
+                        onClick={() => handleDeleteConfirmation(user.id)}
                         className="text-red-500 focus:text-red-500"
                       >
                         <TrashIcon className="h-4 w-4 mr-2" />

@@ -825,6 +825,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Rota para excluir um usuário (apenas para administradores)
+  app.delete("/api/admin/users/:id", isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      // Evitar que um administrador exclua a si mesmo
+      const requestingUser = req.user as User;
+      if (requestingUser.id === userId) {
+        return res.status(400).json({ message: "Não é possível excluir seu próprio usuário" });
+      }
+      
+      // Verificar se o usuário existe
+      const userToDelete = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId));
+        
+      if (userToDelete.length === 0) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+      
+      // Excluir o usuário
+      const result = await db
+        .delete(users)
+        .where(eq(users.id, userId));
+        
+      if (!result || result.rowCount === 0) {
+        return res.status(500).json({ message: "Erro ao excluir usuário" });
+      }
+      
+      res.json({ 
+        success: true, 
+        message: "Usuário excluído com sucesso" 
+      });
+    } catch (error) {
+      console.error("Erro ao excluir usuário:", error);
+      res.status(500).json({ message: "Erro ao excluir usuário" });
+    }
+  });
+
   // =============================================
   // SISTEMA DE DESIGNERS - ROTAS
   // =============================================
