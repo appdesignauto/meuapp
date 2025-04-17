@@ -280,9 +280,17 @@ const UserManagement = () => {
 
   // Função para lidar com a solicitação de exclusão
   const handleDeleteConfirmation = (userId: number) => {
-    // Excluir diretamente sem confirmação adicional
-    // Conforme solicitado pelo usuário, estamos simplificando a exclusão
-    deleteUserMutation.mutate(userId);
+    // Exibir um diálogo de confirmação para evitar exclusões acidentais
+    setUserToDelete(userId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  // Função para confirmar a exclusão após confirmação
+  const confirmDelete = () => {
+    if (userToDelete) {
+      deleteUserMutation.mutate(userToDelete);
+      setUserToDelete(null);
+    }
   };
 
   // Buscar usuários
@@ -1961,6 +1969,35 @@ const UserManagement = () => {
               Fechar
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de confirmação de exclusão */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirmar exclusão</DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsDeleteDialogOpen(false);
+                setUserToDelete(null);
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+            >
+              Excluir
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
