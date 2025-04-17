@@ -898,45 +898,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       try {
         // Remover assinaturas
-        await db.delete(subscriptions).where(eq(subscriptions.userId, userId));
-        console.log("- Assinaturas removidas");
+        try {
+          await db.delete(subscriptions).where(eq(subscriptions.userId, userId));
+          console.log("- Assinaturas removidas");
+        } catch (error) {
+          console.log("- Não foi possível remover assinaturas:", error);
+        }
         
         // Remover favoritos
-        await db.delete(favorites).where(eq(favorites.userId, userId));
-        console.log("- Favoritos removidos");
+        try {
+          await db.delete(favorites).where(eq(favorites.userId, userId));
+          console.log("- Favoritos removidos");
+        } catch (error) {
+          console.log("- Não foi possível remover favoritos:", error);
+        }
         
         // Remover visualizações
-        await db.delete(views).where(eq(views.userId, userId));
-        console.log("- Visualizações removidas");
+        try {
+          await db.delete(views).where(eq(views.userId, userId));
+          console.log("- Visualizações removidas");
+        } catch (error) {
+          console.log("- Não foi possível remover visualizações:", error);
+        }
         
         // Remover downloads
-        await db.delete(downloads).where(eq(downloads.userId, userId));
-        console.log("- Downloads removidos");
+        try {
+          await db.delete(downloads).where(eq(downloads.userId, userId));
+          console.log("- Downloads removidos");
+        } catch (error) {
+          console.log("- Não foi possível remover downloads:", error);
+        }
         
         // Remover comentários na comunidade
-        await db.delete(communityComments).where(eq(communityComments.userId, userId));
-        console.log("- Comentários removidos");
+        try {
+          await db.delete(communityComments).where(eq(communityComments.userId, userId));
+          console.log("- Comentários removidos");
+        } catch (error) {
+          console.log("- Não foi possível remover comentários:", error);
+        }
         
         // Remover posts na comunidade
-        await db.delete(communityPosts).where(eq(communityPosts.userId, userId));
-        console.log("- Posts removidos");
+        try {
+          await db.delete(communityPosts).where(eq(communityPosts.userId, userId));
+          console.log("- Posts removidos");
+        } catch (error) {
+          console.log("- Não foi possível remover posts:", error);
+        }
         
-        // Remover preferências
-        await db.delete(userPreferences).where(eq(userPreferences.userId, userId));
-        console.log("- Preferências removidas");
-        
-        // Remover estatísticas
-        await db.delete(userStats).where(eq(userStats.userId, userId));
-        console.log("- Estatísticas removidas");
-        
-        // Remover permissões
-        await db.delete(userPermissions).where(eq(userPermissions.userId, userId));
-        console.log("- Permissões removidas");
-        
-        // Remover relações de seguidores/seguindo
-        await db.delete(userFollows).where(eq(userFollows.followerId, userId));
-        await db.delete(userFollows).where(eq(userFollows.followingId, userId));
-        console.log("- Relações de seguidores removidas");
+        // Verificar se a tabela userFollows existe antes de tentar usar
+        try {
+          // Remover relações de seguidores/seguindo
+          await db.execute(sql.raw(`
+            DELETE FROM "userFollows" 
+            WHERE "followerId" = ${userId} 
+            OR "followingId" = ${userId}
+          `));
+          console.log("- Relações de seguidores removidas");
+        } catch (error) {
+          console.log("- Não foi possível remover relações de seguidores:", error);
+        }
         
         // Verificar artes criadas pelo usuário e decidir se serão excluídas
         if (userToDelete[0].role === 'designer' || userToDelete[0].role === 'designer_adm') {
