@@ -72,6 +72,9 @@ import {
   HeartIcon,
   InfinityIcon,
   CrownIcon,
+  PaletteIcon,
+  HeadphonesIcon,
+  ShieldIcon,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -1247,30 +1250,74 @@ const UserManagement = () => {
   // Função para renderizar a origem da assinatura
   const renderSubscriptionSource = (user: UserWithStats) => {
     if (user.nivelacesso !== 'premium') {
-      return "-";
+      return <span className="text-muted-foreground text-xs italic">-</span>;
     }
     
     if (!user.origemassinatura) {
-      return <span className="text-muted-foreground text-xs">Não definida</span>;
+      return <span className="text-muted-foreground text-xs italic">Não definida</span>;
     }
     
     if (user.origemassinatura === 'hotmart') {
       return (
-        <Badge variant="outline" className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0">
-          <SiHotjar className="w-3 h-3 mr-1" />
-          Hotmart
-        </Badge>
+        <HoverCard>
+          <HoverCardTrigger asChild>
+            <Badge variant="outline" className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0 shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-center px-2 py-1 cursor-pointer">
+              <SiHotjar className="w-3 h-3 mr-1.5" />
+              <span>Hotmart</span>
+            </Badge>
+          </HoverCardTrigger>
+          <HoverCardContent className="w-72 p-3 shadow-lg rounded-lg border border-orange-200 bg-gradient-to-br from-orange-50 to-red-50 backdrop-blur-sm">
+            <div className="flex flex-col gap-2">
+              <h4 className="text-sm font-semibold text-orange-900 flex items-center">
+                <SiHotjar className="w-4 h-4 mr-1.5 text-red-500" />
+                Assinatura via Hotmart
+              </h4>
+              <p className="text-xs text-orange-800">
+                Assinatura processada automaticamente através da plataforma Hotmart. O sistema verifica o status periodicamente.
+              </p>
+              <div className="text-xs text-orange-700 mt-1 flex items-center">
+                <CalendarIcon className="w-3 h-3 mr-1" />
+                <span>Assinado em: </span>
+                <span className="ml-1 font-medium">
+                  {user.dataassinatura ? new Date(user.dataassinatura).toLocaleDateString('pt-BR') : 'Data não informada'}
+                </span>
+              </div>
+            </div>
+          </HoverCardContent>
+        </HoverCard>
       );
     } else if (user.origemassinatura === 'manual') {
       return (
-        <Badge variant="outline" className="bg-gray-200 text-gray-800">
-          <UserCogIcon className="w-3 h-3 mr-1" />
-          Manual
-        </Badge>
+        <HoverCard>
+          <HoverCardTrigger asChild>
+            <Badge variant="outline" className="bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border-blue-200 shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-center px-2 py-1 cursor-pointer">
+              <UserCogIcon className="w-3 h-3 mr-1.5" />
+              <span>Manual</span>
+            </Badge>
+          </HoverCardTrigger>
+          <HoverCardContent className="w-72 p-3 shadow-lg rounded-lg border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 backdrop-blur-sm">
+            <div className="flex flex-col gap-2">
+              <h4 className="text-sm font-semibold text-blue-900 flex items-center">
+                <UserCogIcon className="w-4 h-4 mr-1.5" />
+                Assinatura Manual
+              </h4>
+              <p className="text-xs text-blue-800">
+                Assinatura registrada manualmente pela administração. Não há verificação automática com plataformas externas.
+              </p>
+              <div className="text-xs text-blue-700 mt-1 flex items-center">
+                <CalendarIcon className="w-3 h-3 mr-1" />
+                <span>Registrada em: </span>
+                <span className="ml-1 font-medium">
+                  {user.dataassinatura ? new Date(user.dataassinatura).toLocaleDateString('pt-BR') : 'Data não informada'}
+                </span>
+              </div>
+            </div>
+          </HoverCardContent>
+        </HoverCard>
       );
     } else {
       return (
-        <span className="text-xs text-muted-foreground capitalize">
+        <span className="text-xs text-muted-foreground px-2 py-1 rounded-md bg-gray-100 inline-block capitalize">
           {user.origemassinatura}
         </span>
       );
@@ -1287,24 +1334,47 @@ const UserManagement = () => {
       group: "outros"
     };
 
+    const getIcon = () => {
+      switch (roleInfo.value) {
+        case "usuario":
+          return <UserIcon className="w-3 h-3 mr-1" />;
+        case "premium":
+          return <CrownIcon className="w-3 h-3 mr-1" />;
+        case "designer":
+          return <PencilIcon className="w-3 h-3 mr-1" />;
+        case "designer_adm":
+          return <PencilIcon className="w-3 h-3 mr-1" />;
+        case "suporte":
+          return <HeadphonesIcon className="w-3 h-3 mr-1" />;
+        case "admin":
+          return <ShieldCheckIcon className="w-3 h-3 mr-1" />;
+        default:
+          return <UserIcon className="w-3 h-3 mr-1" />;
+      }
+    };
+
     return (
       <HoverCard>
         <HoverCardTrigger asChild>
-          <div>
-            <Badge className={roleInfo.color}>
-              {roleInfo.label}
+          <div className="inline-flex">
+            <Badge className={`${roleInfo.color} transition-all shadow-sm hover:shadow-md flex items-center px-2 py-1`}>
+              {getIcon()}
+              <span>{roleInfo.label}</span>
             </Badge>
           </div>
         </HoverCardTrigger>
-        <HoverCardContent className="w-80">
+        <HoverCardContent className="w-80 p-4 shadow-lg rounded-lg border border-slate-200 bg-white/95 backdrop-blur-sm">
           <div className="flex justify-between space-x-4">
-            <div className="space-y-1">
-              <h4 className="text-sm font-semibold">{roleInfo.label}</h4>
+            <div className="space-y-2">
+              <h4 className="text-base font-semibold">{roleInfo.label}</h4>
               <p className="text-sm text-muted-foreground">
                 {roleInfo.description}
               </p>
               <div className="flex items-center pt-2">
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className={`
+                  text-xs px-2 py-0.5 
+                  ${roleInfo.group === "equipe" ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-green-50 border-green-200 text-green-700"}
+                `}>
                   {roleInfo.group === "equipe" ? "Equipe interna" : "Cliente"}
                 </Badge>
               </div>
