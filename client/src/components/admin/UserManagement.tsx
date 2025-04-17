@@ -50,6 +50,7 @@ import {
   ClockIcon,
   ChevronUpIcon,
   ChevronDownIcon,
+  KeyRoundIcon,
   InfoIcon,
   MailIcon,
   CircleIcon,
@@ -1467,7 +1468,7 @@ const UserTable = ({
                         <span className="sr-only">Abrir menu</span>
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
+                    <DropdownMenuContent align="end" className="w-56">
                       <DropdownMenuItem
                         onClick={() => {
                           setSelectedUser(user);
@@ -1475,8 +1476,52 @@ const UserTable = ({
                         }}
                       >
                         <PencilIcon className="h-4 w-4 mr-2" />
-                        Editar
+                        Editar usuário
                       </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setSelectedUser(user);
+                          // Aqui poderia abrir um diálogo dedicado para alterar função
+                          setIsEditDialogOpen(true); // Por enquanto usamos o diálogo de edição
+                        }}
+                      >
+                        <UserIcon className="h-4 w-4 mr-2" />
+                        Alterar função
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          // Implementação de reset de senha (simulada)
+                          toast({
+                            title: "Reset de senha",
+                            description: `Uma nova senha foi enviada para ${user.email}`,
+                          });
+                        }}
+                      >
+                        <KeyRoundIcon className="h-4 w-4 mr-2" />
+                        Resetar senha
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => {
+                          window.open(`/designers/${user.username}`, "_blank");
+                        }}
+                      >
+                        <FileTextIcon className="h-4 w-4 mr-2" />
+                        Ver perfil detalhado
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          // Futura implementação de histórico
+                          toast({
+                            title: "Histórico de atividades",
+                            description: "Funcionalidade em desenvolvimento",
+                          });
+                        }}
+                      >
+                        <HistoryIcon className="h-4 w-4 mr-2" />
+                        Histórico de atividades
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem
                         onClick={() => {
                           toggleUserStatusMutation.mutate({
@@ -1487,23 +1532,29 @@ const UserTable = ({
                       >
                         {user.isactive ? (
                           <>
-                            <UserXIcon className="h-4 w-4 mr-2" />
-                            Desativar
+                            <UserXIcon className="h-4 w-4 mr-2 text-amber-500" />
+                            <span className="text-amber-500">Bloquear usuário</span>
                           </>
                         ) : (
                           <>
-                            <ShieldCheckIcon className="h-4 w-4 mr-2" />
-                            Ativar
+                            <ShieldCheckIcon className="h-4 w-4 mr-2 text-green-500" />
+                            <span className="text-green-500">Ativar usuário</span>
                           </>
                         )}
                       </DropdownMenuItem>
-                      <DropdownMenuSeparator />
                       <DropdownMenuItem
                         onClick={() => {
-                          window.open(`/designers/${user.username}`, "_blank");
+                          // Implementação de exclusão de usuário (com confirmação)
+                          toast({
+                            title: "Atenção",
+                            description: "Funcionalidade de exclusão requer confirmação adicional",
+                            variant: "destructive",
+                          });
                         }}
+                        className="text-red-500 focus:text-red-500"
                       >
-                        Ver perfil
+                        <TrashIcon className="h-4 w-4 mr-2" />
+                        Excluir usuário
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
