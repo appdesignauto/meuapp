@@ -24,12 +24,40 @@ async function hashPassword(password: string): Promise<string> {
 }
 
 async function comparePasswords(supplied: string, stored: string): Promise<boolean> {
-  // Verifica se a senha armazenada já está no formato bcrypt (começa com $2a$, $2b$ ou $2y$)
-  if (stored.startsWith('$2a$') || stored.startsWith('$2b$') || stored.startsWith('$2y$')) {
-    return bcrypt.compare(supplied, stored);
-  } else {
+  try {
+    console.log("Comparando senhas:");
+    console.log("- Senha fornecida:", supplied);
+    console.log("- Senha armazenada:", stored);
+
+    // Verifica se a senha armazenada já está no formato bcrypt (começa com $2a$, $2b$ ou $2y$)
+    if (stored.startsWith('$2a$') || stored.startsWith('$2b$') || stored.startsWith('$2y$')) {
+      console.log("Formato de senha: bcrypt");
+      return bcrypt.compare(supplied, stored);
+    } 
+    // Verifica se a senha está no formato scrypt (formato: hash.salt)
+    else if (stored.includes('.')) {
+      console.log("Formato de senha: scrypt (hash.salt)");
+      const [hashedPassword, salt] = stored.split('.');
+      const keyBuffer = await import('crypto').then(({ scrypt }) => {
+        return new Promise<Buffer>((resolve, reject) => {
+          scrypt(supplied, salt, 64, (err, derivedKey) => {
+            if (err) reject(err);
+            else resolve(derivedKey);
+          });
+        });
+      });
+      
+      const hashedSupplied = keyBuffer.toString('hex');
+      return hashedSupplied === hashedPassword;
+    }
     // Caso a senha esteja armazenada em texto puro, comparação direta
-    return supplied === stored;
+    else {
+      console.log("Formato de senha: texto puro");
+      return supplied === stored;
+    }
+  } catch (error) {
+    console.error("Erro ao comparar senhas:", error);
+    return false;
   }
 }
 
