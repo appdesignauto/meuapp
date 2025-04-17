@@ -2554,14 +2554,14 @@ const UserTable = ({
                 <div className="flex items-center gap-1">
                   <CalendarIcon className="h-3 w-3 text-muted-foreground" />
                   <p className="text-xs text-muted-foreground">
-                    Cadastrado em {formatFullDate(user.createdAt)}
+                    Cadastrado em {formatFullDate(user.criadoem)}
                   </p>
                 </div>
-                {user.lastLogin && (
+                {user.ultimologin && (
                   <div className="flex items-center gap-1">
                     <ClockIcon className="h-3 w-3 text-muted-foreground" />
                     <p className="text-xs text-muted-foreground">
-                      Último login: {formatFullDate(user.lastLogin)}
+                      Último login: {formatFullDate(user.ultimologin)}
                     </p>
                   </div>
                 )}
