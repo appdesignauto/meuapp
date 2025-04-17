@@ -11,7 +11,8 @@ import {
   Menu,
   X,
   Crown,
-  ChevronRight
+  ChevronRight,
+  AlertTriangle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -75,6 +76,22 @@ export default function PainelLayout({ children }: PainelLayoutProps) {
      (user.nivelacesso && 
       user.nivelacesso !== "free" && 
       user.nivelacesso !== "usuario"));
+      
+  // Verificar se a assinatura está expirada
+  const hasExpiredSubscription = () => {
+    if (!user || !user.dataexpiracao) return false;
+    
+    // Se tem acesso vitalício, nunca expira
+    if (user.acessovitalicio) return false;
+    
+    const expirationDate = new Date(user.dataexpiracao);
+    const currentDate = new Date();
+    
+    return expirationDate < currentDate;
+  };
+  
+  // Indicador se o plano está expirado
+  const isExpired = isPremium && hasExpiredSubscription();
 
   const menuItems = [
     {

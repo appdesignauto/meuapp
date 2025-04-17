@@ -1,10 +1,12 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
-import { Download, Eye, Clock, Star } from "lucide-react";
+import { Download, Eye, Clock, Star, Activity } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Link } from "wouter";
 
 export default function PainelInicio() {
   const { user } = useAuth();
@@ -63,34 +65,62 @@ export default function PainelInicio() {
       
       {/* Cartões de estatísticas */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard 
-          title="Artes Favoritas" 
-          value={stats.favoriteCount} 
-          icon={<Star className="h-4 w-4 text-yellow-500" />}
-          loading={statsLoading}
-        />
-        <StatCard 
-          title="Downloads" 
-          value={stats.downloadCount} 
-          icon={<Download className="h-4 w-4 text-green-500" />}
-          loading={statsLoading}
-        />
-        <StatCard 
-          title="Visualizações" 
-          value={stats.viewCount} 
-          icon={<Eye className="h-4 w-4 text-blue-500" />}
-          loading={statsLoading}
-        />
-        <StatCard 
-          title="Acesso" 
-          value={isPremium ? "Premium" : "Básico"} 
-          icon={isPremium ? 
-            <Star className="h-4 w-4 text-amber-500" /> : 
-            <Clock className="h-4 w-4 text-gray-500" />
-          }
-          loading={statsLoading}
-          isText
-        />
+        <Link href="/painel/favoritas" className="cursor-pointer transition-transform hover:scale-105 duration-200">
+          <StatCard 
+            title="Artes Favoritas" 
+            value={stats.favoriteCount} 
+            icon={<Star className="h-4 w-4 text-yellow-500" />}
+            loading={statsLoading}
+          />
+        </Link>
+        <Link href="/painel/downloads" className="cursor-pointer transition-transform hover:scale-105 duration-200">
+          <StatCard 
+            title="Downloads" 
+            value={stats.downloadCount} 
+            icon={<Download className="h-4 w-4 text-green-500" />}
+            loading={statsLoading}
+          />
+        </Link>
+        <Link href="/painel/artes" className="cursor-pointer transition-transform hover:scale-105 duration-200">
+          <StatCard 
+            title="Visualizações" 
+            value={stats.viewCount} 
+            icon={<Eye className="h-4 w-4 text-blue-500" />}
+            loading={statsLoading}
+          />
+        </Link>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Acesso</CardTitle>
+            {isPremium ? 
+              <Star className="h-4 w-4 text-amber-500" /> : 
+              <Clock className="h-4 w-4 text-gray-500" />
+            }
+          </CardHeader>
+          <CardContent>
+            {statsLoading ? (
+              <Skeleton className="h-7 w-1/2" />
+            ) : (
+              <div className="space-y-1">
+                <div className="text-xl font-bold">
+                  {isPremium ? "Premium" : "Básico"}
+                </div>
+                {isPremium && user?.tipoplano && (
+                  <div className="text-xs text-muted-foreground flex items-center">
+                    <span className="capitalize">{user.tipoplano}</span>
+                    {user.acessovitalicio ? (
+                      <Badge variant="outline" className="ml-2 text-[10px]">Vitalício</Badge>
+                    ) : user.dataexpiracao ? (
+                      <span className="ml-2">
+                        Expira: {new Date(user.dataexpiracao).toLocaleDateString()}
+                      </span>
+                    ) : null}
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Informações específicas com base no tipo de acesso */}
