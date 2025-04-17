@@ -1586,6 +1586,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+  
+  // Rota para testar verificação de assinaturas expiradas
+  app.post("/api/test/expireSubscriptions", async (req, res) => {
+    try {
+      const result = await SubscriptionService.checkExpiredSubscriptions();
+      res.status(200).json(result);
+    } catch (error) {
+      console.error('Erro ao verificar assinaturas expiradas:', error);
+      res.status(500).json({ message: 'Erro ao verificar assinaturas' });
+    }
+  });
+  
+  // Rota para testar verificação de assinatura na Hotmart
+  app.post("/api/test/checkHotmart", async (req, res) => {
+    try {
+      const email = req.query.email as string || 'hotmart@example.com';
+      console.log(`Teste - Verificando assinatura na Hotmart para e-mail: ${email}`);
+      
+      const hasActiveSubscription = await HotmartService.hasActiveSubscription(email);
+      
+      console.log(`Teste - Resultado da verificação na Hotmart: ${hasActiveSubscription ? 'Ativa' : 'Inativa'}`);
+      
+      res.status(200).json({ 
+        email, 
+        hasActiveSubscription,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Erro ao verificar assinatura na Hotmart:', error);
+      res.status(500).json({ message: 'Erro ao verificar assinatura na Hotmart' });
+    }
+  });
+  
+  // Rota para teste de logs
+  app.post("/api/test/log", (req, res) => {
+    const message = req.query.message || 'Teste de log';
+    console.log(`[TESTE] ${message}`);
+    res.status(200).json({ message: `Log registrado: ${message}` });
+  });
 
   const httpServer = createServer(app);
   
