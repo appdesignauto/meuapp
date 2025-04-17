@@ -188,6 +188,29 @@ const UserManagement = () => {
   const [sortConfig, setSortConfig] = useState<{key: string, direction: 'asc' | 'desc'} | null>(null);
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
 
+  // Funções handlers para os menus de ações
+  const handleResetPassword = (email: string) => {
+    toast({
+      title: "Reset de senha",
+      description: `Uma nova senha foi enviada para ${email}`,
+    });
+  };
+
+  const handleShowHistory = () => {
+    toast({
+      title: "Histórico de atividades",
+      description: "Funcionalidade em desenvolvimento",
+    });
+  };
+
+  const handleDeleteConfirmation = () => {
+    toast({
+      title: "Atenção",
+      description: "Funcionalidade de exclusão requer confirmação adicional",
+      variant: "destructive",
+    });
+  };
+
   // Buscar usuários
   const { data: users, isLoading: isLoadingUsers } = useQuery<UserWithStats[]>({
     queryKey: ["/api/users"],
@@ -1492,7 +1515,6 @@ const UserTable = ({
                       <DropdownMenuItem
                         onClick={() => {
                           // Implementação de reset de senha (simulada)
-                          const { toast } = useToast();
                           toast({
                             title: "Reset de senha",
                             description: `Uma nova senha foi enviada para ${user.email}`,
@@ -1514,7 +1536,6 @@ const UserTable = ({
                       <DropdownMenuItem
                         onClick={() => {
                           // Futura implementação de histórico
-                          const { toast } = useToast();
                           toast({
                             title: "Histórico de atividades",
                             description: "Funcionalidade em desenvolvimento",
@@ -1548,7 +1569,6 @@ const UserTable = ({
                       <DropdownMenuItem
                         onClick={() => {
                           // Implementação de exclusão de usuário (com confirmação)
-                          const { toast } = useToast();
                           toast({
                             title: "Atenção",
                             description: "Funcionalidade de exclusão requer confirmação adicional",
