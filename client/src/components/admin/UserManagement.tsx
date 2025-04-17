@@ -51,6 +51,7 @@ import {
   ChevronUpIcon,
   ChevronDownIcon,
   KeyRoundIcon,
+  UserCogIcon,
   InfoIcon,
   MailIcon,
   CircleIcon,
@@ -1491,6 +1492,7 @@ const UserTable = ({
                       <DropdownMenuItem
                         onClick={() => {
                           // Implementação de reset de senha (simulada)
+                          const { toast } = useToast();
                           toast({
                             title: "Reset de senha",
                             description: `Uma nova senha foi enviada para ${user.email}`,
@@ -1512,6 +1514,7 @@ const UserTable = ({
                       <DropdownMenuItem
                         onClick={() => {
                           // Futura implementação de histórico
+                          const { toast } = useToast();
                           toast({
                             title: "Histórico de atividades",
                             description: "Funcionalidade em desenvolvimento",
@@ -1545,6 +1548,7 @@ const UserTable = ({
                       <DropdownMenuItem
                         onClick={() => {
                           // Implementação de exclusão de usuário (com confirmação)
+                          const { toast } = useToast();
                           toast({
                             title: "Atenção",
                             description: "Funcionalidade de exclusão requer confirmação adicional",
