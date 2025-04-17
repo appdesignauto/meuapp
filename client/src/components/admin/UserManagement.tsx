@@ -210,6 +210,8 @@ const UserManagement = () => {
   // Estados para controlar a visibilidade dos campos do formulário
   const [showPlanFields, setShowPlanFields] = useState(false);
   const [showExpirationDate, setShowExpirationDate] = useState(false);
+  const [showCreatePlanFields, setShowCreatePlanFields] = useState(false);
+  const [showCreateExpirationDate, setShowCreateExpirationDate] = useState(false);
 
   // Funções handlers para os menus de ações
   const handleResetPassword = (email: string) => {
@@ -281,21 +283,34 @@ const UserManagement = () => {
     // Regras para cada nível de acesso
     if (nivel === 'premium') {
       // Premium: mostrar campos de plano, permitir configuração de acesso vitalício
-      setShowPlanFields(true);
+      if (formType === 'edit') {
+        setShowPlanFields(true);
+      } else {
+        setShowCreatePlanFields(true);
+      }
       
       // Verificar tipo de plano atual
       const tipoPlano = form.getValues().tipoplano;
       const acessoVitalicio = form.getValues().acessovitalicio;
       
       // Se tipo de plano é personalizado, mostrar data de expiração
-      setShowExpirationDate(tipoPlano === 'personalizado' && !acessoVitalicio);
+      if (formType === 'edit') {
+        setShowExpirationDate(tipoPlano === 'personalizado' && !acessoVitalicio);
+      } else {
+        setShowCreateExpirationDate(tipoPlano === 'personalizado' && !acessoVitalicio);
+      }
       
       // Manter os valores atuais dos campos do plano
     } 
     else if (nivel === 'usuario') {
       // Usuário básico: ocultar campos de plano e resetar valores
-      setShowPlanFields(false);
-      setShowExpirationDate(false);
+      if (formType === 'edit') {
+        setShowPlanFields(false);
+        setShowExpirationDate(false);
+      } else {
+        setShowCreatePlanFields(false);
+        setShowCreateExpirationDate(false);
+      }
       
       // Resetar campos de plano
       form.setValue('tipoplano', null as any);
@@ -305,8 +320,13 @@ const UserManagement = () => {
     } 
     else {
       // Admin/Designer/Suporte: ocultar campos de plano e forçar acesso vitalício
-      setShowPlanFields(false);
-      setShowExpirationDate(false);
+      if (formType === 'edit') {
+        setShowPlanFields(false);
+        setShowExpirationDate(false);
+      } else {
+        setShowCreatePlanFields(false);
+        setShowCreateExpirationDate(false);
+      }
       
       // Limpar plano e forçar acesso vitalício
       form.setValue('tipoplano', null as any);
@@ -323,16 +343,28 @@ const UserManagement = () => {
     // Se tipo for vitalício, forçar acesso vitalício = true e esconder expiração
     if (tipo === 'vitalicio') {
       form.setValue('acessovitalicio', true);
-      setShowExpirationDate(false);
+      if (formType === 'edit') {
+        setShowExpirationDate(false);
+      } else {
+        setShowCreateExpirationDate(false);
+      }
     } 
     // Se tipo for personalizado, mostrar campo de expiração (a menos que acesso seja vitalício)
     else if (tipo === 'personalizado') {
       const acessoVitalicio = form.getValues().acessovitalicio;
-      setShowExpirationDate(!acessoVitalicio);
+      if (formType === 'edit') {
+        setShowExpirationDate(!acessoVitalicio);
+      } else {
+        setShowCreateExpirationDate(!acessoVitalicio);
+      }
     } 
     // Para outros tipos, esconder expiração e manter acesso vitalício como está
     else {
-      setShowExpirationDate(false);
+      if (formType === 'edit') {
+        setShowExpirationDate(false);
+      } else {
+        setShowCreateExpirationDate(false);
+      }
     }
   };
   
@@ -342,7 +374,11 @@ const UserManagement = () => {
     
     // Se marcar acesso vitalício, esconder expiração
     if (checked) {
-      setShowExpirationDate(false);
+      if (formType === 'edit') {
+        setShowExpirationDate(false);
+      } else {
+        setShowCreateExpirationDate(false);
+      }
       form.setValue('dataexpiracao', null as any);
       
       // Se for usuário premium, alterar tipo de plano para vitalício
@@ -355,7 +391,11 @@ const UserManagement = () => {
     else {
       const tipoPlano = form.getValues().tipoplano;
       if (tipoPlano === 'personalizado') {
-        setShowExpirationDate(true);
+        if (formType === 'edit') {
+          setShowExpirationDate(true);
+        } else {
+          setShowCreateExpirationDate(true);
+        }
       }
     }
   };
@@ -1014,8 +1054,10 @@ const UserManagement = () => {
               Preencha os dados para criar um novo usuário no sistema
             </DialogDescription>
           </DialogHeader>
+          
           <form onSubmit={handleCreateSubmit}>
             <div className="grid gap-4 py-4">
+              {/* Campo de nome */}
               <div>
                 <Label htmlFor="name" className="text-right">
                   Nome Completo
@@ -1029,6 +1071,8 @@ const UserManagement = () => {
                   <p className="text-sm text-red-500 mt-1">Nome é obrigatório</p>
                 )}
               </div>
+              
+              {/* Campo de e-mail */}
               <div>
                 <Label htmlFor="email" className="text-right">
                   Email
@@ -1043,6 +1087,8 @@ const UserManagement = () => {
                   <p className="text-sm text-red-500 mt-1">Email é obrigatório</p>
                 )}
               </div>
+              
+              {/* Campo de senha */}
               <div>
                 <Label htmlFor="password" className="text-right">
                   Senha
@@ -1068,14 +1114,21 @@ const UserManagement = () => {
                   <p className="text-sm text-red-500 mt-1">Senha é obrigatória</p>
                 )}
               </div>
+              
+              {/* Campos de nível e status */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="nivelacesso" className="text-right">
                     Nível de Acesso
                   </Label>
                   <Select 
-                    onValueChange={(value) => createForm.setValue("nivelacesso", value as NivelAcesso)} 
+                    onValueChange={(value) => {
+                      const nivelAcesso = value as NivelAcesso;
+                      createForm.setValue("nivelacesso", nivelAcesso);
+                      handleNivelAcessoChange(nivelAcesso, 'create');
+                    }} 
                     defaultValue={createForm.getValues("nivelacesso") || "usuario"}
+                    value={createForm.watch("nivelacesso")}
                   >
                     <SelectTrigger id="nivelacesso" className="mt-1">
                       <SelectValue placeholder="Selecione o nível de acesso" />
@@ -1089,65 +1142,106 @@ const UserManagement = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label htmlFor="tipoplano" className="text-right">
-                    Tipo de Plano
-                  </Label>
-                  <Select 
-                    onValueChange={(value) => createForm.setValue("tipoplano", value as TipoPlano)} 
-                    defaultValue={createForm.getValues("tipoplano") || "mensal"}
-                  >
-                    <SelectTrigger id="tipoplano" className="mt-1">
-                      <SelectValue placeholder="Selecione o tipo de plano" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="mensal">Mensal</SelectItem>
-                      <SelectItem value="anual">Anual</SelectItem>
-                      <SelectItem value="personalizado">Personalizado</SelectItem>
-                      <SelectItem value="vitalicio">Vitalício</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="flex items-center space-x-2 mt-7">
+                  <Checkbox 
+                    id="isactive" 
+                    checked={createForm.watch("isactive")}
+                    onCheckedChange={(checked) => createForm.setValue("isactive", !!checked)}
+                  />
+                  <Label htmlFor="isactive">Usuário ativo</Label>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="origemassinatura" className="text-right">
-                    Origem da Assinatura
-                  </Label>
-                  <Select 
-                    onValueChange={(value) => createForm.setValue("origemassinatura", value as OrigemAssinatura)} 
-                    defaultValue={createForm.getValues("origemassinatura") || "manual"}
-                  >
-                    <SelectTrigger id="origemassinatura" className="mt-1">
-                      <SelectValue placeholder="Selecione a origem" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="manual">Manual</SelectItem>
-                      <SelectItem value="hotmart">Hotmart</SelectItem>
-                      <SelectItem value="nenhuma">Nenhuma</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-end gap-2 mb-1">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="isactive" 
-                      checked={createForm.watch("isactive")}
-                      onCheckedChange={(checked) => createForm.setValue("isactive", !!checked)}
-                    />
-                    <Label htmlFor="isactive">Usuário ativo</Label>
+              
+              {/* Campos condicionais para planos */}
+              {showCreatePlanFields && (
+                <div className="grid grid-cols-2 gap-4 mt-2 pt-2 border-t">
+                  <div>
+                    <Label htmlFor="tipoplano" className="text-right">
+                      Tipo de Plano
+                    </Label>
+                    <Select 
+                      onValueChange={(value) => {
+                        const tipoPlano = value as TipoPlano;
+                        createForm.setValue("tipoplano", tipoPlano);
+                        handleTipoPlanoChange(tipoPlano, 'create');
+                      }} 
+                      defaultValue={createForm.getValues("tipoplano") || "mensal"}
+                      value={createForm.watch("tipoplano")}
+                    >
+                      <SelectTrigger id="tipoplano" className="mt-1">
+                        <SelectValue placeholder="Selecione o tipo de plano" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="mensal">Mensal</SelectItem>
+                        <SelectItem value="anual">Anual</SelectItem>
+                        <SelectItem value="personalizado">Personalizado</SelectItem>
+                        <SelectItem value="vitalicio">Vitalício</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="acessovitalicio" 
-                      checked={createForm.watch("acessovitalicio")}
-                      onCheckedChange={(checked) => createForm.setValue("acessovitalicio", !!checked)}
+                  <div>
+                    <Label htmlFor="origemassinatura" className="text-right">
+                      Origem da Assinatura
+                    </Label>
+                    <Select 
+                      onValueChange={(value) => createForm.setValue("origemassinatura", value as OrigemAssinatura)} 
+                      defaultValue={createForm.getValues("origemassinatura") || "manual"}
+                      value={createForm.watch("origemassinatura")}
+                    >
+                      <SelectTrigger id="origemassinatura" className="mt-1">
+                        <SelectValue placeholder="Selecione a origem" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="manual">Manual</SelectItem>
+                        <SelectItem value="hotmart">Hotmart</SelectItem>
+                        <SelectItem value="nenhuma">Nenhuma</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="dataassinatura" className="text-right">
+                      Data de Assinatura
+                    </Label>
+                    <Input
+                      id="dataassinatura"
+                      type="date"
+                      {...createForm.register("dataassinatura")}
+                      className="mt-1"
+                      defaultValue={new Date().toISOString().split('T')[0]}
                     />
-                    <Label htmlFor="acessovitalicio">Acesso vitalício</Label>
+                  </div>
+                  
+                  {showCreateExpirationDate && (
+                    <div>
+                      <Label htmlFor="dataexpiracao" className="text-right">
+                        Data de Expiração
+                      </Label>
+                      <Input
+                        id="dataexpiracao"
+                        type="date"
+                        {...createForm.register("dataexpiracao")}
+                        className="mt-1"
+                      />
+                    </div>
+                  )}
+                  
+                  <div className="col-span-2">
+                    <div className="flex items-center space-x-2 mt-2">
+                      <Checkbox 
+                        id="acessovitalicio" 
+                        checked={createForm.watch("acessovitalicio")}
+                        onCheckedChange={(checked) => {
+                          handleAcessoVitalicioChange(!!checked, 'create');
+                        }}
+                      />
+                      <Label htmlFor="acessovitalicio">Acesso vitalício</Label>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
+            
             <DialogFooter>
               <Button
                 type="button"
