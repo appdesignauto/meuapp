@@ -28,7 +28,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 
 const loginSchema = z.object({
-  email: z.string().email("Email inválido"),
+  email: z.string().min(3, "Digite seu email ou nome de usuário"),
   password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
 });
 
