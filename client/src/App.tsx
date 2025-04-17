@@ -21,12 +21,20 @@ import AdminDashboard from "@/pages/admin/Dashboard";
 import AuthPage from "@/pages/auth-page";
 import NotFound from "@/pages/not-found";
 
+// Páginas do Painel do Usuário
+import { ProtectedPainelRoute } from "@/components/painel/ProtectedPainelRoute";
+import PainelInicio from "@/pages/painel/PainelInicio";
+import PainelArtes from "@/pages/painel/PainelArtes";
+import PainelFavoritas from "@/pages/painel/PainelFavoritas";
+import PainelDownloads from "@/pages/painel/PainelDownloads";
+import PainelPerfil from "@/pages/painel/PainelPerfil";
+
 // Componente para decidir se mostra o layout padrão
 function AppLayout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   
-  // Não mostrar o layout padrão para páginas administrativas
-  if (location.startsWith('/admin')) {
+  // Não mostrar o layout padrão para páginas administrativas ou do painel
+  if (location.startsWith('/admin') || location.startsWith('/painel')) {
     return <>{children}</>;
   }
   
@@ -42,6 +50,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
 function AppRoutes() {
   return (
     <Switch>
+      {/* Rotas públicas */}
       <Route path="/" component={Home} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
@@ -52,6 +61,23 @@ function AppRoutes() {
       <Route path="/arts/:id" component={ArtDetail} />
       <Route path="/designers" component={Designers} />
       <Route path="/designers/:username" component={DesignerProfile} />
+      
+      {/* Rotas do Painel do Usuário */}
+      <ProtectedPainelRoute path="/painel/inicio" component={PainelInicio} />
+      <ProtectedPainelRoute path="/painel/artes" component={PainelArtes} />
+      <ProtectedPainelRoute path="/painel/favoritas" component={PainelFavoritas} />
+      <ProtectedPainelRoute path="/painel/downloads" component={PainelDownloads} />
+      <ProtectedPainelRoute path="/painel/perfil" component={PainelPerfil} />
+      
+      {/* Redirecionamento da raiz do painel para /painel/inicio */}
+      <Route path="/painel">
+        {() => {
+          window.location.href = "/painel/inicio";
+          return null;
+        }}
+      </Route>
+      
+      {/* Rotas Administrativas */}
       <ProtectedRoute 
         path="/admin" 
         component={AdminDashboard} 
@@ -62,6 +88,8 @@ function AppRoutes() {
         component={AdminDashboard}
         roles={['admin', 'designer_adm']} 
       />
+      
+      {/* Página não encontrada */}
       <Route component={NotFound} />
     </Switch>
   );

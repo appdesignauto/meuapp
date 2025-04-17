@@ -8,6 +8,7 @@ import {
   Menu,
   Search,
   LayoutDashboard,
+  User,
 } from 'lucide-react';
 import MobileMenu from './MobileMenu';
 
@@ -65,6 +66,14 @@ const Header = () => {
               <Link href="/pricing" className="text-neutral-700 hover:text-blue-600 hidden sm:inline-flex items-center transition-colors duration-200">
                 <Crown className="h-4 w-4 text-blue-500 mr-1" />
                 <span className="text-sm font-medium">Assinar Premium</span>
+              </Link>
+            )}
+            
+            {/* Link para painel do usuário */}
+            {user && (
+              <Link href="/painel/inicio" className="text-neutral-700 hover:text-blue-600 hidden sm:inline-flex items-center transition-colors duration-200">
+                <User className="h-4 w-4 text-blue-500 mr-1" />
+                <span className="text-sm font-medium">Meu Painel</span>
               </Link>
             )}
             

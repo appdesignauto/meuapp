@@ -1,5 +1,5 @@
 import { Link } from 'wouter';
-import { Crown, X, LayoutDashboard } from 'lucide-react';
+import { Crown, X, LayoutDashboard, User } from 'lucide-react';
 import { UserRole } from '@/types';
 
 interface MobileMenuProps {
@@ -40,6 +40,18 @@ const MobileMenu = ({ isOpen, onClose, navLinks, userRole }: MobileMenuProps) =>
               {link.name}
             </Link>
           ))}
+          
+          {/* Link para Meu Painel - mostrado para qualquer usuário logado */}
+          {userRole && (
+            <Link
+              href="/painel/inicio"
+              className="flex items-center bg-blue-50 text-blue-600 rounded-lg py-3 px-4 mt-2 hover:bg-blue-100 transition-colors"
+              onClick={onClose}
+            >
+              <User className="h-5 w-5 mr-2" />
+              <span className="font-medium">Meu Painel</span>
+            </Link>
+          )}
           
           {userRole !== 'premium' && (
             <Link
