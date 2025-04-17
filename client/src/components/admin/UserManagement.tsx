@@ -61,6 +61,13 @@ import {
   FileTextIcon,
   AlertCircleIcon,
   CheckCircleIcon,
+  LogInIcon,
+  LogOutIcon,
+  EyeIcon,
+  ThumbsUpIcon,
+  ShoppingCartIcon,
+  BookmarkIcon,
+  HeartIcon,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -197,10 +204,16 @@ const UserManagement = () => {
   };
 
   const handleShowHistory = () => {
-    toast({
-      title: "Histórico de atividades",
-      description: "Funcionalidade em desenvolvimento",
-    });
+    if (!selectedUser) {
+      toast({
+        title: "Erro",
+        description: "Selecione um usuário para ver o histórico de atividades",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsHistoryDialogOpen(true);
   };
 
   const handleDeleteConfirmation = () => {
@@ -1131,6 +1144,143 @@ const UserManagement = () => {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog de histórico de atividades */}
+      <Dialog open={isHistoryDialogOpen} onOpenChange={setIsHistoryDialogOpen}>
+        <DialogContent className="sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Histórico de Atividades</DialogTitle>
+            <DialogDescription>
+              {selectedUser && (
+                <span>
+                  Histórico de atividades recentes de <strong>{selectedUser.name || selectedUser.username}</strong>
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+            {selectedUser && (
+              <div className="space-y-6 pt-2 pb-4">
+                {/* Lista de atividades exemplo - Em uma implementação real, isso seria carregado da API */}
+                <div className="flex items-start space-x-4">
+                  <div className="bg-blue-100 p-2 rounded-full">
+                    <LogInIcon className="h-5 w-5 text-blue-500" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="text-sm font-medium">Login no sistema</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Acesso realizado via navegador Chrome no Windows
+                        </p>
+                      </div>
+                      <span className="text-xs text-muted-foreground">Hoje às 10:25</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-4">
+                  <div className="bg-purple-100 p-2 rounded-full">
+                    <DownloadIcon className="h-5 w-5 text-purple-500" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="text-sm font-medium">Download de arte</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Arte "Poster de Lavagem" foi baixada
+                        </p>
+                      </div>
+                      <span className="text-xs text-muted-foreground">Ontem às 15:40</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-4">
+                  <div className="bg-green-100 p-2 rounded-full">
+                    <EyeIcon className="h-5 w-5 text-green-500" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="text-sm font-medium">Visualização de arte</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Visualizou 12 artes na categoria "Vendas"
+                        </p>
+                      </div>
+                      <span className="text-xs text-muted-foreground">15/04/2025</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-4">
+                  <div className="bg-amber-100 p-2 rounded-full">
+                    <HeartIcon className="h-5 w-5 text-amber-500" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="text-sm font-medium">Favoritou artes</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Adicionou 3 artes aos favoritos
+                        </p>
+                      </div>
+                      <span className="text-xs text-muted-foreground">14/04/2025</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-4">
+                  <div className="bg-pink-100 p-2 rounded-full">
+                    <ShoppingCartIcon className="h-5 w-5 text-pink-500" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="text-sm font-medium">Assinatura realizada</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Assinou o plano Premium - Anual
+                        </p>
+                      </div>
+                      <span className="text-xs text-muted-foreground">10/04/2025</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-4">
+                  <div className="bg-gray-100 p-2 rounded-full">
+                    <LogInIcon className="h-5 w-5 text-gray-500" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="text-sm font-medium">Registro no sistema</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Criação de conta no sistema
+                        </p>
+                      </div>
+                      <span className="text-xs text-muted-foreground">01/04/2025</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            {!selectedUser && (
+              <div className="flex justify-center items-center py-8">
+                <p className="text-muted-foreground">Nenhum usuário selecionado</p>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsHistoryDialogOpen(false)}
+            >
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
@@ -1520,16 +1670,7 @@ const UserTable = ({
                         <PencilIcon className="h-4 w-4 mr-2" />
                         Editar usuário
                       </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setSelectedUser(user);
-                          // Aqui poderia abrir um diálogo dedicado para alterar função
-                          setIsEditDialogOpen(true); // Por enquanto usamos o diálogo de edição
-                        }}
-                      >
-                        <UserIcon className="h-4 w-4 mr-2" />
-                        Alterar função
-                      </DropdownMenuItem>
+
                       <DropdownMenuItem
                         onClick={() => handleResetPassword(user.email)}
                       >
