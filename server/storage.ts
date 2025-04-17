@@ -70,6 +70,7 @@ export interface IStorage {
   updateUserProfile(id: number, data: { name?: string; bio?: string; profileImageUrl?: string }): Promise<User | undefined>;
   updateUserPassword(id: number, newPassword: string): Promise<User | undefined>;
   updateUserLastLogin(id: number, lastLogin: Date): Promise<User | undefined>;
+  deleteUser(id: number): Promise<boolean>;
   
   // Category methods
   getCategories(): Promise<Category[]>;

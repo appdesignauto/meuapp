@@ -234,12 +234,51 @@ const UserManagement = () => {
     setIsHistoryDialogOpen(true);
   };
 
-  const handleDeleteConfirmation = () => {
-    toast({
-      title: "Atenção",
-      description: "Funcionalidade de exclusão requer confirmação adicional",
-      variant: "destructive",
-    });
+  // Mutação para excluir usuário
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: number) => {
+      const res = await apiRequest("DELETE", `/api/admin/users/${userId}`);
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Erro ao excluir usuário");
+      }
+      return await res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Usuário excluído",
+        description: "O usuário foi excluído com sucesso",
+      });
+      
+      // Invalidar a consulta de usuários para atualizar a lista
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      
+      // Fechar o diálogo se estiver aberto
+      setIsDeleteDialogOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao excluir usuário",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Estado para controlar o diálogo de confirmação de exclusão
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<number | null>(null);
+
+  // Função para lidar com a solicitação de exclusão
+  const handleDeleteConfirmation = (userId: number) => {
+    // Se o usuário for admin, excluir diretamente sem confirmação adicional
+    if (currentUser?.role === 'admin') {
+      deleteUserMutation.mutate(userId);
+    } else {
+      // Para não-admins, mostrar diálogo de confirmação
+      setUserToDelete(userId);
+      setIsDeleteDialogOpen(true);
+    }
   };
 
   // Buscar usuários
