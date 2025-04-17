@@ -2197,6 +2197,8 @@ interface UserTableProps {
   isLoading: boolean;
   renderRoleBadge: (role: NivelAcesso) => JSX.Element;
   renderStatusBadge: (isactive: boolean) => JSX.Element;
+  formatExpirationInfo: (user: UserWithStats) => React.ReactNode;
+  renderSubscriptionSource: (user: UserWithStats) => React.ReactNode;
   setSelectedUser: (user: UserWithStats) => void;
   setIsEditDialogOpen: (open: boolean) => void;
   toggleUserStatusMutation: any;
@@ -2215,6 +2217,8 @@ const UserTable = ({
   isLoading,
   renderRoleBadge,
   renderStatusBadge,
+  formatExpirationInfo,
+  renderSubscriptionSource,
   setSelectedUser,
   setIsEditDialogOpen,
   toggleUserStatusMutation,
@@ -2463,6 +2467,40 @@ const UserTable = ({
             </TableHead>
             <TableHead 
               className="cursor-pointer hover:text-primary"
+              onClick={() => onSort && onSort('origemassinatura')}
+            >
+              <div className="flex items-center">
+                Origem
+                {sortConfig?.key === 'origemassinatura' && (
+                  <span className="ml-1">
+                    {sortConfig.direction === 'asc' ? (
+                      <ChevronUpIcon className="h-4 w-4" />
+                    ) : (
+                      <ChevronDownIcon className="h-4 w-4" />
+                    )}
+                  </span>
+                )}
+              </div>
+            </TableHead>
+            <TableHead 
+              className="cursor-pointer hover:text-primary"
+              onClick={() => onSort && onSort('dataexpiracao')}
+            >
+              <div className="flex items-center">
+                Expiração
+                {sortConfig?.key === 'dataexpiracao' && (
+                  <span className="ml-1">
+                    {sortConfig.direction === 'asc' ? (
+                      <ChevronUpIcon className="h-4 w-4" />
+                    ) : (
+                      <ChevronDownIcon className="h-4 w-4" />
+                    )}
+                  </span>
+                )}
+              </div>
+            </TableHead>
+            <TableHead 
+              className="cursor-pointer hover:text-primary"
               onClick={() => onSort && onSort('isactive')}
             >
               <div className="flex items-center">
@@ -2480,11 +2518,11 @@ const UserTable = ({
             </TableHead>
             <TableHead 
               className="cursor-pointer hover:text-primary"
-              onClick={() => onSort && onSort('createdAt')}
+              onClick={() => onSort && onSort('criadoem')}
             >
               <div className="flex items-center">
                 Cadastro
-                {sortConfig?.key === 'createdAt' && (
+                {sortConfig?.key === 'criadoem' && (
                   <span className="ml-1">
                     {sortConfig.direction === 'asc' ? (
                       <ChevronUpIcon className="h-4 w-4" />
@@ -2497,11 +2535,11 @@ const UserTable = ({
             </TableHead>
             <TableHead 
               className="cursor-pointer hover:text-primary"
-              onClick={() => onSort && onSort('lastLogin')}
+              onClick={() => onSort && onSort('ultimologin')}
             >
               <div className="flex items-center">
                 Último login
-                {sortConfig?.key === 'lastLogin' && (
+                {sortConfig?.key === 'ultimologin' && (
                   <span className="ml-1">
                     {sortConfig.direction === 'asc' ? (
                       <ChevronUpIcon className="h-4 w-4" />
@@ -2518,7 +2556,7 @@ const UserTable = ({
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center py-8">
+              <TableCell colSpan={9} className="text-center py-8">
                 <div className="flex justify-center">
                   <svg className="animate-spin h-6 w-6 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -2530,7 +2568,7 @@ const UserTable = ({
             </TableRow>
           ) : users.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center py-8">
+              <TableCell colSpan={9} className="text-center py-8">
                 <p className="text-muted-foreground">Nenhum usuário encontrado com os filtros atuais.</p>
                 <Button variant="link" onClick={() => window.location.reload()}>
                   Redefinir filtros
@@ -2543,16 +2581,18 @@ const UserTable = ({
                 <TableCell>{renderUserAvatar(user)}</TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>{renderRoleBadge(user.nivelacesso)}</TableCell>
+                <TableCell>{renderSubscriptionSource(user)}</TableCell>
+                <TableCell>{formatExpirationInfo(user)}</TableCell>
                 <TableCell>{renderStatusBadge(user.isactive)}</TableCell>
                 <TableCell>
                   <div className="text-sm">
-                    {formatFullDate(user.createdAt)}
+                    {formatFullDate(user.criadoem)}
                   </div>
                 </TableCell>
                 <TableCell>
-                  {user.lastLogin ? (
+                  {user.ultimologin ? (
                     <div className="text-sm">
-                      {formatFullDate(user.lastLogin)}
+                      {formatFullDate(user.ultimologin)}
                     </div>
                   ) : (
                     <span className="text-muted-foreground text-xs">Nunca</span>
