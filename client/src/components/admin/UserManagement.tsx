@@ -185,6 +185,7 @@ const UserManagement = () => {
   const [isStatsDialogOpen, setIsStatsDialogOpen] = useState(false);
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [isNotificationDialogOpen, setIsNotificationDialogOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
@@ -1099,13 +1100,24 @@ const UserManagement = () => {
                 <Label htmlFor="edit-password" className="text-right">
                   Nova senha (opcional)
                 </Label>
-                <Input
-                  id="edit-password"
-                  type="password"
-                  {...editForm.register("password")}
-                  className="mt-1"
-                  placeholder="Deixe em branco para manter a senha atual"
-                />
+                <div className="flex mt-1">
+                  <Input
+                    id="edit-password"
+                    type={showPassword ? "text" : "password"}
+                    {...editForm.register("password")}
+                    className="flex-1"
+                    placeholder="Deixe em branco para manter a senha atual"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="ml-1"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+                  </Button>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
