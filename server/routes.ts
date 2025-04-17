@@ -892,19 +892,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Usuário não encontrado" });
       }
       
-      // Excluir o usuário
-      const result = await db
-        .delete(users)
-        .where(eq(users.id, userId));
-        
-      if (!result || result.rowCount === 0) {
-        return res.status(500).json({ message: "Erro ao excluir usuário" });
-      }
+      // Excluir todas as referências ao usuário em outras tabelas
+      console.log(`Deletando usuário ${userId} - ${userToDelete[0].username} (${userToDelete[0].email})`);
+      console.log("Removendo referências em outras tabelas...");
       
-      res.json({ 
-        success: true, 
-        message: "Usuário excluído com sucesso" 
-      });
+      try {
+        // Remover assinaturas
+        await db.delete(subscriptions).where(eq(subscriptions.userId, userId));
+        console.log("- Assinaturas removidas");
+        
+        // Remover favoritos
+        await db.delete(favorites).where(eq(favorites.userId, userId));
+        console.log("- Favoritos removidos");
+        
+        // Remover visualizações
+        await db.delete(views).where(eq(views.userId, userId));
+        console.log("- Visualizações removidas");
+        
+        // Remover downloads
+        await db.delete(downloads).where(eq(downloads.userId, userId));
+        console.log("- Downloads removidos");
+        
+        // Remover comentários na comunidade
+        await db.delete(communityComments).where(eq(communityComments.userId, userId));
+        console.log("- Comentários removidos");
+        
+        // Remover posts na comunidade
+        await db.delete(communityPosts).where(eq(communityPosts.userId, userId));
+        console.log("- Posts removidos");
+        
+        // Remover preferências
+        await db.delete(userPreferences).where(eq(userPreferences.userId, userId));
+        console.log("- Preferências removidas");
+        
+        // Remover estatísticas
+        await db.delete(userStats).where(eq(userStats.userId, userId));
+        console.log("- Estatísticas removidas");
+        
+        // Remover permissões
+        await db.delete(userPermissions).where(eq(userPermissions.userId, userId));
+        console.log("- Permissões removidas");
+        
+        // Remover relações de seguidores/seguindo
+        await db.delete(userFollows).where(eq(userFollows.followerId, userId));
+        await db.delete(userFollows).where(eq(userFollows.followingId, userId));
+        console.log("- Relações de seguidores removidas");
+        
+        // Verificar artes criadas pelo usuário e decidir se serão excluídas
+        if (userToDelete[0].role === 'designer' || userToDelete[0].role === 'designer_adm') {
+          const artsCount = await db
+            .select({ count: count() })
+            .from(arts)
+            .where(eq(arts.designerid, userId));
+            
+          if (artsCount[0].count > 0) {
+            console.log(`- Usuário possui ${artsCount[0].count} artes como designer. Artes serão mantidas.`);
+          }
+        }
+        
+        // Finalmente, excluir o usuário
+        const result = await db
+          .delete(users)
+          .where(eq(users.id, userId));
+          
+        if (!result || result.rowCount === 0) {
+          return res.status(500).json({ message: "Erro ao excluir usuário" });
+        }
+        
+        console.log(`Usuário ${userId} excluído com sucesso`);
+        
+        res.json({ 
+          success: true, 
+          message: "Usuário excluído com sucesso" 
+        });
+      } catch (deleteError) {
+        console.error("Erro ao excluir referências do usuário:", deleteError);
+        throw deleteError; // Propaga o erro para o tratamento geral
+      }
     } catch (error) {
       console.error("Erro ao excluir usuário:", error);
       res.status(500).json({ message: "Erro ao excluir usuário" });
