@@ -53,6 +53,8 @@ import {
   KeyRoundIcon,
   UserCogIcon,
   InfoIcon,
+  EyeIcon,
+  EyeOffIcon,
   MailIcon,
   CircleIcon,
   BadgeCheckIcon,
@@ -63,7 +65,6 @@ import {
   CheckCircleIcon,
   LogInIcon,
   LogOutIcon,
-  EyeIcon,
   ThumbsUpIcon,
   ShoppingCartIcon,
   BookmarkIcon,
@@ -936,12 +937,23 @@ const UserManagement = () => {
                 <Label htmlFor="password" className="text-right">
                   Senha
                 </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  {...createForm.register("password", { required: true })}
-                  className="mt-1"
-                />
+                <div className="flex mt-1">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    {...createForm.register("password", { required: true })}
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="ml-1"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+                  </Button>
+                </div>
                 {createForm.formState.errors.password && (
                   <p className="text-sm text-red-500 mt-1">Senha é obrigatória</p>
                 )}
