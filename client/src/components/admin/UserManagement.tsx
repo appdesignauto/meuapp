@@ -1344,12 +1344,13 @@ const UserManagement = () => {
                 </div>
               </div>
               
-              {/* Campos condicionais para planos */}
-              {showCreatePlanFields && (
+              {/* Campos condicionais para planos - Somente para Premium */}
+              {showCreatePlanFields && createForm.watch("nivelacesso") === 'premium' && (
                 <div className="grid grid-cols-2 gap-4 mt-2 pt-2 border-t">
+                  {/* Campo Tipo de Plano - sempre aparece para nivel_acesso = premium */}
                   <div>
-                    <Label htmlFor="tipoplano" className="text-right">
-                      Tipo de Plano
+                    <Label htmlFor="tipoplano" className="text-right font-medium">
+                      Tipo de Plano <span className="text-red-500">*</span>
                     </Label>
                     <Select 
                       onValueChange={(value) => {
@@ -1371,9 +1372,11 @@ const UserManagement = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                  
+                  {/* Campo Origem da Assinatura - sempre aparece para nivel_acesso = premium */}
                   <div>
-                    <Label htmlFor="origemassinatura" className="text-right">
-                      Origem da Assinatura
+                    <Label htmlFor="origemassinatura" className="text-right font-medium">
+                      Origem da Assinatura <span className="text-red-500">*</span>
                     </Label>
                     <Select 
                       onValueChange={(value) => createForm.setValue("origemassinatura", value as OrigemAssinatura)} 
@@ -1386,50 +1389,63 @@ const UserManagement = () => {
                       <SelectContent>
                         <SelectItem value="manual">Manual</SelectItem>
                         <SelectItem value="hotmart">Hotmart</SelectItem>
-                        <SelectItem value="nenhuma">Nenhuma</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   
+                  {/* Campo Data de Assinatura - sempre aparece para nivel_acesso = premium */}
                   <div>
-                    <Label htmlFor="dataassinatura" className="text-right">
-                      Data de Assinatura
+                    <Label htmlFor="dataassinatura" className="text-right font-medium">
+                      Data de Assinatura <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="dataassinatura"
                       type="date"
-                      {...createForm.register("dataassinatura")}
+                      {...createForm.register("dataassinatura", { required: true })}
                       className="mt-1"
                       defaultValue={new Date().toISOString().split('T')[0]}
                     />
+                    {createForm.formState.errors.dataassinatura && (
+                      <p className="text-sm text-red-500 mt-1">Data de assinatura é obrigatória</p>
+                    )}
                   </div>
                   
+                  {/* Campo Data de Expiração - aparece apenas se tipo_plano = personalizado */}
                   {showCreateExpirationDate && (
                     <div>
-                      <Label htmlFor="dataexpiracao" className="text-right">
-                        Data de Expiração
+                      <Label htmlFor="dataexpiracao" className="text-right font-medium">
+                        Data de Expiração <span className="text-red-500">*</span>
                       </Label>
                       <Input
                         id="dataexpiracao"
                         type="date"
-                        {...createForm.register("dataexpiracao")}
+                        {...createForm.register("dataexpiracao", { 
+                          required: createForm.watch("tipoplano") === 'personalizado' 
+                        })}
                         className="mt-1"
                       />
+                      {createForm.formState.errors.dataexpiracao && (
+                        <p className="text-sm text-red-500 mt-1">Data de expiração é obrigatória</p>
+                      )}
                     </div>
                   )}
                   
-                  <div className="col-span-2">
-                    <div className="flex items-center space-x-2 mt-2">
-                      <Checkbox 
-                        id="acessovitalicio" 
-                        checked={createForm.watch("acessovitalicio")}
-                        onCheckedChange={(checked) => {
-                          handleAcessoVitalicioChange(!!checked, 'create');
-                        }}
-                      />
-                      <Label htmlFor="acessovitalicio">Acesso vitalício</Label>
+                  {/* Checkbox Acesso Vitalício - aparece apenas se tipo_plano = vitalicio */}
+                  {createForm.watch("tipoplano") === 'vitalicio' && (
+                    <div className="col-span-2">
+                      <div className="flex items-center space-x-2 mt-2">
+                        <Checkbox 
+                          id="acessovitalicio" 
+                          checked={createForm.watch("acessovitalicio")}
+                          onCheckedChange={(checked) => {
+                            handleAcessoVitalicioChange(!!checked, 'create');
+                          }}
+                          defaultChecked={true}
+                        />
+                        <Label htmlFor="acessovitalicio">Acesso vitalício</Label>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1564,11 +1580,12 @@ const UserManagement = () => {
               </div>
               
               {/* Campos de plano - visíveis apenas para nível premium */}
-              {showPlanFields && (
+              {showPlanFields && editForm.watch("nivelacesso") === 'premium' && (
                 <div className="grid grid-cols-2 gap-4 mt-2 pt-2 border-t">
+                  {/* Campo Tipo de Plano - sempre aparece para nivel_acesso = premium */}
                   <div>
-                    <Label htmlFor="edit-tipoplano" className="text-right">
-                      Tipo de Plano
+                    <Label htmlFor="edit-tipoplano" className="text-right font-medium">
+                      Tipo de Plano <span className="text-red-500">*</span>
                     </Label>
                     <Select 
                       onValueChange={(value) => {
@@ -1592,9 +1609,11 @@ const UserManagement = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                  
+                  {/* Campo Origem da Assinatura - sempre aparece para nivel_acesso = premium */}
                   <div>
-                    <Label htmlFor="edit-origemassinatura" className="text-right">
-                      Origem da Assinatura
+                    <Label htmlFor="edit-origemassinatura" className="text-right font-medium">
+                      Origem da Assinatura <span className="text-red-500">*</span>
                     </Label>
                     <Select 
                       onValueChange={(value) => editForm.setValue("origemassinatura", value as OrigemAssinatura)} 
@@ -1607,38 +1626,63 @@ const UserManagement = () => {
                       <SelectContent>
                         <SelectItem value="manual">Manual</SelectItem>
                         <SelectItem value="hotmart">Hotmart</SelectItem>
-                        <SelectItem value="nenhuma">Nenhuma</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   
-                  {/* Data de expiração - visível apenas para plano personalizado sem acesso vitalício */}
+                  {/* Campo Data de Assinatura - sempre aparece para nivel_acesso = premium */}
+                  <div>
+                    <Label htmlFor="edit-dataassinatura" className="text-right font-medium">
+                      Data de Assinatura <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="edit-dataassinatura"
+                      type="date"
+                      {...editForm.register("dataassinatura", { required: true })}
+                      className="mt-1"
+                      defaultValue={new Date().toISOString().split('T')[0]}
+                    />
+                    {editForm.formState.errors.dataassinatura && (
+                      <p className="text-sm text-red-500 mt-1">Data de assinatura é obrigatória</p>
+                    )}
+                  </div>
+                  
+                  {/* Campo Data de Expiração - aparece apenas se tipo_plano = personalizado */}
                   {showExpirationDate && (
-                    <div className="col-span-2">
-                      <Label htmlFor="edit-dataexpiracao" className="text-right">
-                        Data de Expiração
+                    <div>
+                      <Label htmlFor="edit-dataexpiracao" className="text-right font-medium">
+                        Data de Expiração <span className="text-red-500">*</span>
                       </Label>
                       <Input
                         id="edit-dataexpiracao"
                         type="date"
-                        {...editForm.register("dataexpiracao")}
+                        {...editForm.register("dataexpiracao", { 
+                          required: editForm.watch("tipoplano") === 'personalizado' 
+                        })}
                         className="mt-1"
                       />
+                      {editForm.formState.errors.dataexpiracao && (
+                        <p className="text-sm text-red-500 mt-1">Data de expiração é obrigatória</p>
+                      )}
                     </div>
                   )}
                   
-                  <div className="col-span-2">
-                    <div className="flex items-center space-x-2 mt-2">
-                      <Checkbox 
-                        id="edit-acessovitalicio" 
-                        checked={editForm.watch("acessovitalicio")}
-                        onCheckedChange={(checked) => {
-                          handleAcessoVitalicioChange(!!checked, 'edit');
-                        }}
-                      />
-                      <Label htmlFor="edit-acessovitalicio">Acesso vitalício</Label>
+                  {/* Checkbox Acesso Vitalício - aparece apenas se tipo_plano = vitalicio */}
+                  {editForm.watch("tipoplano") === 'vitalicio' && (
+                    <div className="col-span-2">
+                      <div className="flex items-center space-x-2 mt-2">
+                        <Checkbox 
+                          id="edit-acessovitalicio" 
+                          checked={editForm.watch("acessovitalicio")}
+                          onCheckedChange={(checked) => {
+                            handleAcessoVitalicioChange(!!checked, 'edit');
+                          }}
+                          defaultChecked={true}
+                        />
+                        <Label htmlFor="edit-acessovitalicio">Acesso vitalício</Label>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               )}
             </div>
