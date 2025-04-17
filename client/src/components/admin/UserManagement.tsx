@@ -206,7 +206,7 @@ const UserManagement = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
-  const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
+  const [roleFilter, setRoleFilter] = useState<NivelAcesso | "all">("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [dateFilter, setDateFilter] = useState<"all" | "today" | "week" | "month" | "custom">("all");
   const [customDateRange, setCustomDateRange] = useState<{from?: Date, to?: Date}>({});
@@ -624,9 +624,9 @@ const UserManagement = () => {
   };
 
   // Renderização do badge de papel do usuário com tooltip para descrição
-  const renderRoleBadge = (role: UserRole) => {
+  const renderRoleBadge = (role: NivelAcesso) => {
     const roleInfo = userRoles.find(r => r.value === role) || {
-      value: role,
+      value: role as NivelAcesso,
       label: role,
       color: "bg-gray-500 hover:bg-gray-600",
       description: "Papel indefinido",
@@ -739,7 +739,7 @@ const UserManagement = () => {
                 </Label>
                 <Select 
                   value={roleFilter} 
-                  onValueChange={(value) => setRoleFilter(value as UserRole | "all")}
+                  onValueChange={(value) => setRoleFilter(value as NivelAcesso | "all")}
                 >
                   <SelectTrigger id="role-filter" className="mt-1">
                     <SelectValue placeholder="Selecione um papel" />
@@ -982,7 +982,7 @@ const UserManagement = () => {
                     Papel
                   </Label>
                   <Select 
-                    onValueChange={(value) => createForm.setValue("role", value as UserRole)} 
+                    onValueChange={(value) => createForm.setValue("role", value as NivelAcesso)} 
                     defaultValue={createForm.getValues("role")}
                   >
                     <SelectTrigger id="role" className="mt-1">
@@ -1142,7 +1142,7 @@ const UserManagement = () => {
                     Papel
                   </Label>
                   <Select 
-                    onValueChange={(value) => editForm.setValue("role", value as UserRole)} 
+                    onValueChange={(value) => editForm.setValue("role", value as NivelAcesso)} 
                     defaultValue={editForm.getValues("role")}
                     value={editForm.watch("role")}
                   >
@@ -1330,7 +1330,7 @@ const UserManagement = () => {
 interface UserTableProps {
   users: UserWithStats[];
   isLoading: boolean;
-  renderRoleBadge: (role: UserRole) => JSX.Element;
+  renderRoleBadge: (role: NivelAcesso) => JSX.Element;
   renderStatusBadge: (isactive: boolean) => JSX.Element;
   setSelectedUser: (user: UserWithStats) => void;
   setIsEditDialogOpen: (open: boolean) => void;
