@@ -784,7 +784,7 @@ const UserManagement = () => {
         let matchesDate = true;
         if (dateFilter !== "all") {
           const today = new Date();
-          const userCreated = new Date(user.createdAt);
+          const userCreated = new Date(user.criadoem);
           
           switch (dateFilter) {
             case "today":
@@ -885,8 +885,8 @@ const UserManagement = () => {
       user.email,
       userRoles.find(r => r.value === user.role)?.label || user.role,
       user.isactive ? 'Ativo' : 'Inativo',
-      new Date(user.createdAt).toLocaleDateString('pt-BR'),
-      user.lastLogin ? new Date(user.lastLogin).toLocaleDateString('pt-BR') : 'Nunca'
+      new Date(user.criadoem).toLocaleDateString('pt-BR'),
+      user.ultimologin ? new Date(user.ultimologin).toLocaleDateString('pt-BR') : 'Nunca'
     ]);
     
     // Criar o conteúdo CSV
