@@ -681,7 +681,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Acesso negado" });
       }
       
-      const { username, email, password, name, nivelacesso, isactive } = req.body;
+      const { 
+        username, 
+        email, 
+        password, 
+        name, 
+        nivelacesso, 
+        isactive,
+        tipoplano,
+        origemassinatura,
+        dataassinatura,
+        dataexpiracao,
+        acessovitalicio
+      } = req.body;
+      
+      // Log para debug
+      console.log("Dados recebidos para criação de usuário:", {
+        nivelacesso,
+        tipoplano,
+        origemassinatura,
+        dataassinatura,
+        dataexpiracao,
+        acessovitalicio
+      });
       
       // Verificar se o username ou email já existem
       const existingUser = await db
@@ -707,24 +729,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userNivelAcesso = nivelacesso || "free";
       
       // Criar o usuário usando nomes de colunas em lowercase conforme o banco
+      const userData: any = {
+        username,
+        email,
+        password: hashedPassword,
+        name: name || null,
+        nivelacesso: userNivelAcesso,
+        role: userNivelAcesso, // Mantemos o role igual ao nivelacesso para compatibilidade
+        isactive: isactive !== undefined ? isactive : true,
+        profileimageurl: null,
+        bio: null,
+        // Ajustar para horário de Brasília (UTC-3)
+        lastlogin: new Date(new Date().getTime() - 3 * 60 * 60 * 1000),
+        // Ajustar para horário de Brasília (UTC-3)
+        createdat: new Date(new Date().getTime() - 3 * 60 * 60 * 1000),
+        updatedat: new Date(new Date().getTime() - 3 * 60 * 60 * 1000)
+      };
+      
+      // Adicionar campos de assinatura para usuários premium
+      if (userNivelAcesso === 'premium') {
+        userData.origemassinatura = origemassinatura || 'manual';
+        userData.tipoplano = tipoplano || 'mensal';
+        userData.dataassinatura = dataassinatura ? new Date(dataassinatura) : new Date();
+        
+        // Para planos vitalícios
+        if (tipoplano === 'vitalicio' || acessovitalicio) {
+          userData.acessovitalicio = true;
+          userData.dataexpiracao = null;
+        } 
+        // Para planos com expiração
+        else {
+          userData.acessovitalicio = false;
+          
+          if (dataexpiracao) {
+            userData.dataexpiracao = new Date(dataexpiracao);
+          } else {
+            // Calcular data de expiração baseada no tipo de plano
+            const expDate = new Date(userData.dataassinatura);
+            if (tipoplano === 'anual') {
+              expDate.setDate(expDate.getDate() + 365);
+            } else {
+              // padrão para mensal e personalizado: 30 dias
+              expDate.setDate(expDate.getDate() + 30);
+            }
+            userData.dataexpiracao = expDate;
+          }
+        }
+      }
+      
+      // Log para debug
+      console.log("Dados finais para inserção de usuário:", userData);
+      
       const [newUser] = await db
         .insert(users)
-        .values({
-          username,
-          email,
-          password: hashedPassword,
-          name: name || null,
-          nivelacesso: userNivelAcesso,
-          role: userNivelAcesso, // Mantemos o role igual ao nivelacesso para compatibilidade
-          isactive: isactive !== undefined ? isactive : true,
-          profileimageurl: null,
-          bio: null,
-          // Ajustar para horário de Brasília (UTC-3)
-          lastlogin: new Date(new Date().getTime() - 3 * 60 * 60 * 1000),
-          // Ajustar para horário de Brasília (UTC-3)
-          createdat: new Date(new Date().getTime() - 3 * 60 * 60 * 1000),
-          updatedat: new Date(new Date().getTime() - 3 * 60 * 60 * 1000)
-        })
+        .values(userData)
         .returning();
       
       res.status(201).json(newUser);

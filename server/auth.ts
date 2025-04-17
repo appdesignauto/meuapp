@@ -4,9 +4,10 @@ import { Express, Request, Response, NextFunction } from "express";
 import session from "express-session";
 import bcrypt from "bcrypt";
 import { storage } from "./storage";
-import { User as SelectUser } from "@shared/schema";
+import { User as SelectUser, users } from "@shared/schema";
 import connectPg from "connect-pg-simple";
-import { pool } from "./db";
+import { db, pool } from "./db";
+import { eq } from "drizzle-orm";
 
 declare global {
   namespace Express {
