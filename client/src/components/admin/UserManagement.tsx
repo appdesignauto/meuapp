@@ -826,6 +826,9 @@ const UserManagement = () => {
             toggleUserStatusMutation={toggleUserStatusMutation}
             sortConfig={sortConfig}
             onSort={handleSort}
+            handleResetPassword={handleResetPassword}
+            handleShowHistory={handleShowHistory}
+            handleDeleteConfirmation={handleDeleteConfirmation}
           />
         </TabsContent>
         <TabsContent value="active" className="mt-6">
@@ -839,6 +842,9 @@ const UserManagement = () => {
             toggleUserStatusMutation={toggleUserStatusMutation}
             sortConfig={sortConfig}
             onSort={handleSort}
+            handleResetPassword={handleResetPassword}
+            handleShowHistory={handleShowHistory}
+            handleDeleteConfirmation={handleDeleteConfirmation}
           />
         </TabsContent>
         <TabsContent value="inactive" className="mt-6">
@@ -852,6 +858,9 @@ const UserManagement = () => {
             toggleUserStatusMutation={toggleUserStatusMutation}
             sortConfig={sortConfig}
             onSort={handleSort}
+            handleResetPassword={handleResetPassword}
+            handleShowHistory={handleShowHistory}
+            handleDeleteConfirmation={handleDeleteConfirmation}
           />
         </TabsContent>
         <TabsContent value="designers" className="mt-6">
@@ -865,6 +874,9 @@ const UserManagement = () => {
             toggleUserStatusMutation={toggleUserStatusMutation}
             sortConfig={sortConfig}
             onSort={handleSort}
+            handleResetPassword={handleResetPassword}
+            handleShowHistory={handleShowHistory}
+            handleDeleteConfirmation={handleDeleteConfirmation}
           />
         </TabsContent>
       </Tabs>
@@ -1137,6 +1149,9 @@ interface UserTableProps {
     direction: 'asc' | 'desc';
   };
   onSort?: (key: string) => void;
+  handleResetPassword: (email: string) => void;
+  handleShowHistory: () => void;
+  handleDeleteConfirmation: () => void;
 }
 
 const UserTable = ({
@@ -1149,6 +1164,9 @@ const UserTable = ({
   toggleUserStatusMutation,
   sortConfig,
   onSort,
+  handleResetPassword,
+  handleShowHistory,
+  handleDeleteConfirmation
 }: UserTableProps) => {
   // Função para formatar data e mostrar tempo relativo
   const formatDateRelative = (dateString: string) => {
