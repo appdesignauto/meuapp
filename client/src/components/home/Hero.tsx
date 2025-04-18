@@ -16,7 +16,7 @@ const Hero = () => {
   };
 
   return (
-    <section className="relative bg-gradient-to-b from-[#e8f0fb] to-white py-16 md:py-24 overflow-hidden">
+    <section className="relative bg-gradient-to-b from-[#e8f0fb] to-white py-10 md:py-14 pb-4 md:pb-6 overflow-hidden">
       {/* Decorative elements */}
       <div className="absolute top-20 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>
       <div className="absolute -left-20 bottom-20 w-80 h-80 bg-secondary/5 rounded-full blur-3xl"></div>
@@ -24,19 +24,19 @@ const Hero = () => {
       
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center max-w-4xl mx-auto">
-          <div className="flex justify-center items-center mb-5">
-            <span className="bg-primary/10 text-primary rounded-full px-4 py-1.5 text-sm font-medium inline-flex items-center border border-primary/20">
+          <div className="flex justify-center items-center mb-4">
+            <span className="bg-primary/10 text-primary rounded-full px-3 py-1 text-xs font-medium inline-flex items-center border border-primary/20">
               <span className="text-blue-500 mr-1">★</span>
               +3.000 Artes Exclusivas
             </span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold text-primary/90 mb-6 leading-tight">
+          <h1 className="text-3xl md:text-5xl font-bold text-primary/90 mb-4 leading-tight">
             A MAIOR PLATAFORMA DE
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-400 block"> 
               ARTES AUTOMOTIVAS
             </span>
           </h1>
-          <p className="text-lg md:text-xl text-neutral-600 mb-10 max-w-3xl mx-auto">
+          <p className="text-base md:text-lg text-neutral-600 mb-6 max-w-3xl mx-auto">
             Tudo o que você precisa para impulsionar suas vendas com materiais 
             profissionais prontos para edição.
           </p>
@@ -68,12 +68,12 @@ const Hero = () => {
           </form>
           
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
-            <Button className="bg-blue-600 text-white hover:bg-blue-700 px-6 py-6 rounded-lg font-medium flex items-center shadow-md min-w-[200px]">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
+            <Button className="bg-blue-600 text-white hover:bg-blue-700 px-5 py-5 rounded-lg font-medium flex items-center shadow-md min-w-[180px]">
               Começar Agora
               <ChevronRight className="ml-2 h-4 w-4" />
             </Button>
-            <Button variant="outline" className="border-blue-400 text-blue-600 hover:bg-blue-50 px-6 py-6 rounded-lg font-medium flex items-center min-w-[200px]">
+            <Button variant="outline" className="border-blue-400 text-blue-600 hover:bg-blue-50 px-5 py-5 rounded-lg font-medium flex items-center min-w-[180px]">
               Ver Demonstração
             </Button>
           </div>

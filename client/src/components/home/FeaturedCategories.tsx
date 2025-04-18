@@ -92,11 +92,11 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
   };
 
   return (
-    <section className="py-8 md:py-10">
+    <section className="py-2 md:py-4">
       <div className="container mx-auto px-4">
-        <div className="flex flex-wrap items-center justify-between mb-4">
+        <div className="flex flex-wrap items-center justify-between mb-3">
           <div className="flex items-center gap-3">
-            <h2 className="text-base font-medium text-neutral-800">Categorias</h2>
+            <h2 className="text-sm font-medium text-neutral-800">Categorias</h2>
             <MinimalCategoryFilters 
               selectedCategory={selectedCategory} 
               onCategorySelect={handleCategorySelect} 
