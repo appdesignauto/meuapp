@@ -383,7 +383,7 @@ export class SupabaseStorageService {
   }
   
   /**
-   * Upload específico para logos com nome de arquivo personalizado
+   * Nova solução para upload de logos que corrige os problemas de arquivos vazios
    */
   async uploadLogoWithCustomFilename(
     file: Express.Multer.File, 
@@ -393,128 +393,116 @@ export class SupabaseStorageService {
       throw new Error("Nenhum arquivo foi fornecido");
     }
 
-    // Certifica-se de que o bucket existe
+    console.log("=== INÍCIO DO PROCESSO DE UPLOAD DE LOGO ===");
+    console.log(`Arquivo recebido: ${file.originalname} (${file.size} bytes)`);
+    console.log(`Tipo MIME: ${file.mimetype}`);
+    
+    // A inicialização do bucket é feita de qualquer forma, independente de usar local ou não
     await this.initBucket();
 
+    // Verificar se o buffer do arquivo tem conteúdo
+    if (!file.buffer || file.buffer.length === 0) {
+      console.error("ERRO CRÍTICO: O buffer do arquivo está vazio!");
+      throw new Error("O arquivo enviado está vazio ou corrompido");
+    }
+
+    // Criar diretório local de qualquer forma (para fallback)
+    const logosDir = path.join(process.cwd(), 'public/images/logos');
     try {
-      // Usar nome de arquivo customizado ou gerar um único
-      const extension = path.extname(file.originalname) || '.png';
-      const filename = customFilename 
-        ? (customFilename.endsWith(extension) ? customFilename : customFilename + extension)
-        : `logo-${Date.now()}-${randomUUID().slice(0, 8)}${extension}`;
-        
-      // Garantir que o nome do arquivo seja seguro para URLs
-      const safeFilename = filename
-        .replace(/[^a-zA-Z0-9_.-]/g, '_')
-        .toLowerCase();
-      
-      console.log(`Tentando upload de logo para Supabase com nome personalizado: ${safeFilename}`);
-      
-      // Diretório específico para logos no bucket - usando 'original' para manter consistência
-      const filePath = `original/${safeFilename}`;
-
-      // Usar diretamente o buffer original sem otimizações para evitar problemas
-      let imageBuffer = file.buffer;
-      
-      // Registro de informações de depuração
-      console.log(`Tamanho do buffer original: ${file.buffer.length} bytes`);
-      console.log(`Tipo de arquivo: ${file.mimetype}`);
-      
-      // Verificar se o buffer do arquivo tem conteúdo
-      if (!file.buffer || file.buffer.length === 0) {
-        console.error("ERRO CRÍTICO: O buffer do arquivo está vazio!");
-        throw new Error("O arquivo enviado está vazio ou corrompido");
+      if (!fs.existsSync(logosDir)) {
+        fs.mkdirSync(logosDir, { recursive: true });
       }
+    } catch (err) {
+      console.error("Erro ao criar diretório local de logos:", err);
+    }
+    
+    // Preparar nome de arquivo e caminhos
+    const timestamp = Date.now();
+    const randomId = Math.random().toString(36).substring(2, 8);
+    const extension = path.extname(file.originalname) || '.png';
+    
+    // Nome do arquivo padronizado para evitar problemas
+    const safeFilename = `logo_${timestamp}_${randomId}${extension}`
+      .replace(/[^a-zA-Z0-9_.-]/g, '_')
+      .toLowerCase();
+    
+    // Caminho no Supabase (usando original para manter padrão)
+    const supabasePath = `original/${safeFilename}`;
+    
+    // Caminho local (fallback)
+    const localPath = path.join(logosDir, safeFilename);
+    
+    // Determinar o tipo de conteúdo adequado
+    let contentType = file.mimetype;
+    if (!contentType || contentType === 'application/octet-stream') {
+      if (extension.toLowerCase() === '.png') contentType = 'image/png';
+      else if (['.jpg', '.jpeg'].includes(extension.toLowerCase())) contentType = 'image/jpeg';
+      else if (extension.toLowerCase() === '.svg') contentType = 'image/svg+xml';
+      else contentType = 'image/png';
+    }
+    
+    console.log(`Processando upload com nome: ${safeFilename}`);
+    console.log(`Tipo de conteúdo: ${contentType}`);
+    
+    // Primeiro: tentar upload para supabase
+    try {
+      console.log("Tentando upload para Supabase...");
       
-      // Salvar arquivo temporário para depuração
-      try {
-        const originalFilePath = path.join('/tmp', `original_logo_${Date.now()}.bin`);
-        fs.writeFileSync(originalFilePath, file.buffer);
-        console.log(`Arquivo original salvo para depuração em ${originalFilePath}`);
-      } catch (tempError) {
-        console.error("Erro ao salvar arquivo temporário:", tempError);
-      }
-
-      // Determinar o tipo de conteúdo adequado
-      let contentType = file.mimetype;
-      
-      // Garantir que temos um tipo MIME válido
-      if (!contentType || contentType === 'application/octet-stream') {
-        // Inferir pelo final do nome original
-        if (file.originalname.toLowerCase().endsWith('.png')) {
-          contentType = 'image/png';
-        } else if (file.originalname.toLowerCase().endsWith('.jpg') || file.originalname.toLowerCase().endsWith('.jpeg')) {
-          contentType = 'image/jpeg';
-        } else if (file.originalname.toLowerCase().endsWith('.svg')) {
-          contentType = 'image/svg+xml';
-        } else {
-          contentType = 'image/png'; // Fallback seguro
-        }
-      }
-      
-      console.log(`Usando contentType: ${contentType} para upload`);
-
-      // Upload do logo para o Supabase com substituição se já existir
-      const { error, data } = await supabase.storage
+      const { error } = await supabase.storage
         .from(BUCKET_NAME)
-        .upload(filePath, imageBuffer, {
+        .upload(supabasePath, file.buffer, {
           contentType: contentType,
-          upsert: true // Substituir se já existir
+          upsert: true
         });
 
-      if (error) {
-        console.error(`Erro no upload do logo: ${error.message}`);
-        throw new Error(`Erro no upload do logo: ${error.message}`);
-      }
-
-      console.log("Upload de logo para Supabase concluído com sucesso!");
-
-      // Obtém URL pública para acesso
+      if (error) throw error;
+      
+      // Sucesso no upload para Supabase
       const { data: urlData } = supabase.storage
         .from(BUCKET_NAME)
-        .getPublicUrl(filePath);
-
+        .getPublicUrl(supabasePath);
+        
+      console.log(`Upload para Supabase concluído: ${urlData.publicUrl}`);
+      
+      // Verificar se o arquivo tem conteúdo após upload
+      try {
+        const response = await fetch(urlData.publicUrl, { method: 'HEAD' });
+        const contentLength = Number(response.headers.get('content-length') || '0');
+        
+        console.log(`Verificação de conteúdo: ${contentLength} bytes`);
+        
+        if (contentLength <= 0) {
+          console.warn("AVISO: Arquivo enviado para Supabase tem tamanho zero. Tentando fallback local.");
+          throw new Error("Arquivo vazio após upload para Supabase");
+        }
+      } catch (verifyError) {
+        console.error("Erro ao verificar arquivo no Supabase:", verifyError);
+        throw verifyError;
+      }
+        
       return {
         logoUrl: urlData.publicUrl,
         storageType: "supabase"
       };
-    } catch (error) {
-      console.error("Erro no upload do logo para Supabase:", error);
       
-      // Fallback para upload local
-      console.log("Usando fallback local para logo após falha no Supabase");
+    } catch (supabaseError) {
+      console.error("Erro no upload para Supabase:", supabaseError);
+      console.log("Tentando fallback para armazenamento local...");
       
+      // Fallback: armazenamento local
       try {
-        // Criar diretório de logos se não existir
-        const logosDir = path.join(process.cwd(), 'public/images/logos');
-        if (!fs.existsSync(logosDir)) {
-          fs.mkdirSync(logosDir, { recursive: true });
-        }
+        // Escrever arquivo localmente
+        fs.writeFileSync(localPath, file.buffer);
         
-        // Usar nome de arquivo customizado ou gerar um único
-        const extension = path.extname(file.originalname) || '.png';
-        const filename = customFilename 
-          ? (customFilename.endsWith(extension) ? customFilename : customFilename + extension)
-          : `logo-${Date.now()}-${randomUUID().slice(0, 8)}${extension}`;
-          
-        // Garantir que o nome do arquivo seja seguro
-        const safeFilename = filename
-          .replace(/[^a-zA-Z0-9_.-]/g, '_')
-          .toLowerCase();
+        const localUrl = `/images/logos/${safeFilename}`;
+        console.log(`Upload local concluído: ${localUrl}`);
         
-        // Caminho de destino local
-        const logoPath = path.join(logosDir, safeFilename);
-        
-        // Escrever arquivo
-        fs.writeFileSync(logoPath, file.buffer);
-        
-        // Retornar URL local relativa
         return {
-          logoUrl: `/images/logos/${safeFilename}`,
+          logoUrl: localUrl,
           storageType: "local"
         };
       } catch (localError) {
-        console.error("Erro no fallback local para logo:", localError);
+        console.error("Erro no fallback local:", localError);
         throw new Error("Falha em todas as tentativas de upload do logo");
       }
     }
