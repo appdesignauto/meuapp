@@ -36,9 +36,14 @@ export default function PainelInicio() {
   const { data: userStats, isLoading: statsLoading } = useQuery({
     queryKey: ["/api/users/stats"],
     enabled: !!user?.id,
-    onSuccess: (data) => console.log("Stats dados recebidos:", data),
-    onError: (error) => console.error("Erro ao buscar estatísticas:", error),
   });
+  
+  // Adicionar log fora da query para evitar erros LSP
+  React.useEffect(() => {
+    if (userStats) {
+      console.log("Stats dados recebidos:", userStats);
+    }
+  }, [userStats]);
 
   // Buscar artes recentes
   const { data: recentArtsData, isLoading: artsLoading } = useQuery({

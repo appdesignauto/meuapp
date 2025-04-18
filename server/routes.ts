@@ -484,49 +484,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Favorites API
-  // Estatísticas do usuário
+  // Estatísticas do usuário - versão corrigida
   app.get("/api/users/stats", isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
       console.log("Buscando estatísticas para o usuário:", userId);
       
+      // Usar Drizzle ORM direto para minimizar erros de SQL
       // Contar favoritos
-      const favoritesQuery = `
-        SELECT COUNT(*) as count
-        FROM favorites 
-        WHERE "userId" = ${userId}
-      `;
-      
-      console.log("Executando query de favoritos:", favoritesQuery);
-      const favoritesResult = await db.execute(sql.raw(favoritesQuery));
-      console.log("Resultado da query de favoritos:", favoritesResult.rows);
-      const totalFavorites = parseInt(favoritesResult.rows[0].count) || 0;
+      const favoritesQuery = db.select({ count: sql<number>`count(*)` })
+        .from(favorites)
+        .where(eq(favorites.userId, userId));
+        
+      const favoritesResult = await favoritesQuery;
+      const totalFavorites = favoritesResult[0]?.count || 0;
       console.log("Total de favoritos:", totalFavorites);
       
       // Contar downloads
-      const downloadsQuery = `
-        SELECT COUNT(*) as count
-        FROM downloads 
-        WHERE "userId" = ${userId}
-      `;
-      
-      console.log("Executando query de downloads:", downloadsQuery);
-      const downloadsResult = await db.execute(sql.raw(downloadsQuery));
-      console.log("Resultado da query de downloads:", downloadsResult.rows);
-      const totalDownloads = parseInt(downloadsResult.rows[0].count) || 0;
+      const downloadsQuery = db.select({ count: sql<number>`count(*)` })
+        .from(downloads)
+        .where(eq(downloads.userId, userId));
+        
+      const downloadsResult = await downloadsQuery;
+      const totalDownloads = downloadsResult[0]?.count || 0;
       console.log("Total de downloads:", totalDownloads);
       
       // Contar visualizações
-      const viewsQuery = `
-        SELECT COUNT(*) as count
-        FROM views 
-        WHERE "userId" = ${userId}
-      `;
-      
-      console.log("Executando query de views:", viewsQuery);
-      const viewsResult = await db.execute(sql.raw(viewsQuery));
-      console.log("Resultado da query de views:", viewsResult.rows);
-      const totalViews = parseInt(viewsResult.rows[0].count) || 0;
+      const viewsQuery = db.select({ count: sql<number>`count(*)` })
+        .from(views)
+        .where(eq(views.userId, userId));
+        
+      const viewsResult = await viewsQuery;
+      const totalViews = viewsResult[0]?.count || 0;
       console.log("Total de views:", totalViews);
       
       // Estatísticas para retornar
