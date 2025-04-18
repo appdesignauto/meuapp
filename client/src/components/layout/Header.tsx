@@ -61,7 +61,7 @@ const LogoImage = ({ siteSettings }: LogoImageProps) => {
   
   // Limpar completamente o cache armazenado para o logo
   useEffect(() => {
-    // Limpeza agressiva de cache ao montar o componente
+    // Limpeza de cache ao montar o componente
     const cacheNames = ['logo-cache', 'image-cache', 'site-settings'];
     localStorage.removeItem('newLogoUrl');
     localStorage.removeItem('logoUpdatedAt');
@@ -71,16 +71,6 @@ const LogoImage = ({ siteSettings }: LogoImageProps) => {
       cacheNames.forEach(cacheName => {
         caches.delete(cacheName).catch(() => {});
       });
-    }
-    
-    // Forçar recarregamento da página após upload do logo
-    const logoUpdated = localStorage.getItem('logo_just_updated');
-    if (logoUpdated === 'true') {
-      localStorage.removeItem('logo_just_updated');
-      // Recarregar a página depois de um breve intervalo
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
     }
   }, []);
   
@@ -155,21 +145,23 @@ const Header = () => {
   
   // Forçar recarregamento imediato das configurações ao subir um novo logo
   useEffect(() => {
-    window.addEventListener('logo_updated', () => {
-      console.log("Recarregando configurações...");
-      setSettingsRefreshCounter(prev => prev + 100); // Força recarga imediata
+    // Função para lidar com o evento de atualização do logo
+    const handleLogoUpdated = (event: Event) => {
+      console.log("Logo atualizado, atualizando configurações sem recarregar...");
       
-      // Definir flag no localStorage para recarregar a página
-      localStorage.setItem('logo_just_updated', 'true');
+      // Extrair detalhes do evento customizado
+      const customEvent = event as CustomEvent<{logoUrl: string, timestamp: number}>;
       
-      // Recarregar a página após um breve intervalo
-      setTimeout(() => {
-        window.location.reload();
-      }, 2000);
-    });
+      // Forçar recarregar as configurações imediatamente
+      setSettingsRefreshCounter(prev => prev + 1000); // Valor alto para garantir nova consulta
+    };
+    
+    // Adicionar listener para o evento customizado 'logo-updated'
+    window.addEventListener('logo-updated', handleLogoUpdated);
     
     return () => {
-      window.removeEventListener('logo_updated', () => {});
+      // Remover listener quando componente for desmontado
+      window.removeEventListener('logo-updated', handleLogoUpdated);
     };
   }, []);
   

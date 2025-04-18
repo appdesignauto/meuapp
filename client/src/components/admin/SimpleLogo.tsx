@@ -71,14 +71,18 @@ const SimpleLogo = () => {
       
       toast({
         title: 'Logo atualizado com sucesso',
-        description: 'A página será recarregada para aplicar as mudanças.',
+        description: 'O novo logo foi aplicado com sucesso.',
         variant: 'default',
       });
       
-      // Recarregar a página após um breve intervalo
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
+      // Atualizar o estado local para mostrar o novo logo
+      setCurrentLogo(`${data.logoUrl}?t=${Date.now()}`);
+      
+      // Criar e disparar um evento personalizado para notificar outros componentes
+      const logoEvent = new CustomEvent('logo-updated', {
+        detail: { logoUrl: data.logoUrl, timestamp: Date.now() }
+      });
+      window.dispatchEvent(logoEvent);
     } catch (error) {
       console.error('Erro ao fazer upload:', error);
       toast({
