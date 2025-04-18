@@ -152,7 +152,7 @@ const LogoUploader = () => {
     }
   };
 
-  // Função para fazer upload do logo - abordagem ultra-radical
+  // NOVO: Versão simplificada para upload direto de logo
   const handleLogoUpload = async () => {
     if (!fileInputRef.current?.files?.length) {
       toast({
@@ -168,55 +168,53 @@ const LogoUploader = () => {
       
       const file = fileInputRef.current.files[0];
       
+      // Faça uma verificação básica do tipo e tamanho do arquivo
+      if (!['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'].includes(file.type)) {
+        toast({
+          title: 'Formato não suportado',
+          description: 'Por favor, selecione uma imagem PNG, JPEG, GIF, WebP ou SVG.',
+          variant: 'destructive',
+        });
+        setUploadingLogo(false);
+        return;
+      }
+      
+      if (file.size > 2 * 1024 * 1024) { // 2MB
+        toast({
+          title: 'Arquivo muito grande',
+          description: 'O tamanho máximo permitido é 2MB. Por favor, otimize sua imagem.',
+          variant: 'destructive',
+        });
+        setUploadingLogo(false);
+        return;
+      }
+      
       // Gera um nome de arquivo único usando múltiplas fontes de randomização
       const timestamp = Date.now();
-      const randomPart1 = Math.random().toString(36).substring(2, 10);
-      const randomPart2 = Math.random().toString(16).substring(2, 8);
-      const uniqueFileName = `logo_${timestamp}_${randomPart1}_${randomPart2}.${file.name.split('.').pop()}`;
+      const randomPart = Math.random().toString(36).substring(2, 8);
+      const extension = file.name.split('.').pop() || 'png';
+      const uniqueFileName = `logo_${timestamp}_${randomPart}.${extension}`;
       
       console.log("Gerando nome único para logo:", uniqueFileName);
+      console.log("Tamanho do arquivo:", file.size, "bytes");
+      console.log("Tipo de arquivo:", file.type);
       
-      // Criar FormData com informações detalhadas para forçar renovação
+      // Criar um FormData simplificado
       const formData = new FormData();
-      formData.append('uniqueFileName', uniqueFileName);
       
-      // IMPORTANTE: A chave 'logo' deve corresponder ao campo que o multer espera no servidor!
-      // No servidor está configurado para 'logo', não 'logo'
+      // *** IMPORTANTE: Este é o campo que o multer está verificando no servidor! ***
       formData.append('logo', file, file.name);
       
-      console.log("Buffer do arquivo disponível?", file instanceof Blob ? "Sim" : "Não");
-      console.log("Tamanho do arquivo:", file.size, "bytes");
-      
+      // Incluir configurações extras
+      formData.append('useLocalStorage', 'true');  // Forçar armazenamento local
+      formData.append('uniqueFileName', uniqueFileName);
       formData.append('timestamp', timestamp.toString());
-      formData.append('forceNewUpload', 'true');
-      formData.append('randomToken', randomPart1);
-      formData.append('bypassCache', 'true');
       
-      // Adicionar parâmetros de query para evitar cache também na URL
-      const queryParams = new URLSearchParams({
-        t: timestamp.toString(),
-        forceNew: 'true',
-        rand: randomPart2,
-        cache: 'bust'
-      }).toString();
-      
-      // Configurar cabeçalhos para forçar bypass de cache em todos os níveis
-      const fetchHeaders = {
-        'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
-        'Pragma': 'no-cache',
-        'Expires': '0',
-        'X-Force-New-Upload': 'true',
-        'X-No-Cache': timestamp.toString(),
-        'X-Bypass-Cache': randomPart1
-      };
-      
-      // Fazer upload com todas as medidas anti-cache possíveis
-      console.log("Iniciando upload com medidas anti-cache extremas");
-      const response = await fetch(`/api/site-settings?${queryParams}`, {
+      // Fazer upload simplificado sem headers complexos
+      console.log("Iniciando upload simplificado para armazenamento local");
+      const response = await fetch(`/api/site-settings?t=${timestamp}`, {
         method: 'PUT',
         body: formData,
-        headers: fetchHeaders,
-        cache: 'no-store',
         credentials: 'same-origin'  // Importante para sessões
       });
       
@@ -233,8 +231,8 @@ const LogoUploader = () => {
       
       // Adicionar timestamp ao final para garantir que a URL seja única
       const finalLogoUrl = newLogoUrl.includes('?') 
-        ? `${newLogoUrl}&ts=${timestamp}&r=${randomPart1}`
-        : `${newLogoUrl}?ts=${timestamp}&r=${randomPart1}`;
+        ? `${newLogoUrl}&ts=${timestamp}&r=${randomPart}`
+        : `${newLogoUrl}?ts=${timestamp}&r=${randomPart}`;
       
       toast({
         title: 'Logo atualizado com sucesso',
@@ -250,7 +248,7 @@ const LogoUploader = () => {
       setTimeout(() => {
         localStorage.setItem('newLogoUrl', finalLogoUrl);
         localStorage.setItem('logoUpdatedAt', timestamp.toString());
-        localStorage.setItem('logoRandomToken', randomPart1);
+        localStorage.setItem('logoRandomToken', randomPart);
         localStorage.setItem('forceCacheRefresh', 'true');
         
         // Limpar também os caches de consulta TanStack
