@@ -179,7 +179,14 @@ const LogoUploader = () => {
       // Criar FormData com informações detalhadas para forçar renovação
       const formData = new FormData();
       formData.append('uniqueFileName', uniqueFileName);
-      formData.append('logo', file);
+      
+      // IMPORTANTE: A chave 'logo' deve corresponder ao campo que o multer espera no servidor!
+      // No servidor está configurado para 'logo', não 'logo'
+      formData.append('logo', file, file.name);
+      
+      console.log("Buffer do arquivo disponível?", file instanceof Blob ? "Sim" : "Não");
+      console.log("Tamanho do arquivo:", file.size, "bytes");
+      
       formData.append('timestamp', timestamp.toString());
       formData.append('forceNewUpload', 'true');
       formData.append('randomToken', randomPart1);

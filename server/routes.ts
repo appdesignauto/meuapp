@@ -944,6 +944,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Solicitação de atualização de logo recebida");
       
+      // Logs para depuração do upload
+      console.log("Corpo da requisição:", Object.keys(req.body || {}).join(', '));
+      console.log("Campos do multer recebidos:", Object.keys(req).filter(k => !['file', 'body', 'params', 'query'].includes(k)).slice(0, 5).join(', '));
+      console.log("Arquivo anexado presente:", req.file ? "SIM" : "NÃO");
+      
       // Definir cabeçalhos anti-cache agressivos
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
       res.setHeader('Pragma', 'no-cache');
