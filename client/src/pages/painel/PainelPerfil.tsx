@@ -1,5 +1,5 @@
 import { useAuth } from "@/hooks/use-auth";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState, useEffect, useRef } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -95,6 +95,18 @@ export default function PainelPerfil() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Buscar estatísticas do usuário
+  const { data: userStats } = useQuery({
+    queryKey: ['/api/users/stats'],
+    queryFn: async () => {
+      if (!user) return null;
+      const res = await fetch('/api/users/stats');
+      if (!res.ok) return { totalFavorites: 0, totalDownloads: 0, totalViews: 0 };
+      return res.json();
+    },
+    enabled: !!user, // Só executa se o usuário estiver logado
+  });
 
   // Verificar se o usuário é premium
   const isPremium = user && 
