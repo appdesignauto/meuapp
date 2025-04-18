@@ -1421,14 +1421,14 @@ export class DatabaseStorage implements IStorage {
   
   async updateUserLastLogin(id: number, lastLogin: Date): Promise<User | undefined> {
     try {
-      const result = await db.execute(sql`
-        UPDATE users 
-        SET lastlogin = ${lastLogin}
-        WHERE id = ${id}
-        RETURNING *
-      `);
+      // Como definido no schema, o nome da coluna é "lastLogin" com L maiúsculo
+      const result = await db.update(users)
+        .set({ lastLogin })
+        .where(eq(users.id, id))
+        .returning();
       
-      return result.rows[0] as User;
+      console.log("Usuário atualizado com último login:", result[0]);
+      return result[0];
     } catch (error) {
       console.error("Erro em updateUserLastLogin:", error);
       return undefined;
