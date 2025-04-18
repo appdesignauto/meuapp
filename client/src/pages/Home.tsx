@@ -56,14 +56,6 @@ const Home = () => {
   return (
     <>
       <Hero />
-      {/* Movemos a galeria de artes para cima para impactar o usuário mais rapidamente */}
-      <div id="art-gallery">
-        <ArtGallery 
-          categoryId={selectedCategory} 
-          formatId={selectedFormat} 
-          fileTypeId={selectedFileType} 
-        />
-      </div>
       <CategoryFilters 
         selectedCategory={selectedCategory}
         onCategoryChange={handleCategoryChange}
@@ -71,6 +63,13 @@ const Home = () => {
         onFileTypeChange={setSelectedFileType}
       />
       <FeaturedCategories selectedCategory={selectedCategory} onCategorySelect={handleCategoryChange} />
+      <div id="art-gallery">
+        <ArtGallery 
+          categoryId={selectedCategory} 
+          formatId={selectedFormat} 
+          fileTypeId={selectedFileType} 
+        />
+      </div>
       <PremiumFeatures />
       <Testimonials />
       <CallToAction />
