@@ -1539,6 +1539,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Atualizar imagem de perfil do designer (protegido por autenticação)
+  // Endpoint para upload de imagem de perfil para usuários comuns
+  app.post("/api/users/profile-image", isAuthenticated, uploadMemory.single('image'), async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      
+      // Verificar se o arquivo foi enviado
+      if (!req.file) {
+        return res.status(400).json({ message: "Nenhuma imagem enviada" });
+      }
+      
+      // Verificar se o usuário existe
+      const [user] = await db.select()
+        .from(users)
+        .where(eq(users.id, userId));
+      
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+      
+      // Opções para o processamento da imagem
+      const options = {
+        width: 400,  // Tamanho adequado para avatar de perfil
+        height: 400,
+        quality: 85,
+        format: 'webp' as const
+      };
+      
+      // Tentar fazer upload usando Supabase (prioridade)
+      let imageUrl;
+      
+      // Usando Supabase Storage (prioridade)
+      if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
+        try {
+          console.log("Tentando upload de imagem de perfil para Supabase...");
+          
+          // Verificar se temos um arquivo para processar
+          if (req.file) {
+            const uploadResult = await supabaseStorageService.uploadImage(req.file, options);
+            imageUrl = uploadResult.imageUrl;
+          }
+          
+          console.log("Upload para Supabase concluído com sucesso:", imageUrl);
+        } catch (supabaseError) {
+          console.error("Erro no upload para Supabase:", supabaseError);
+          // Se falhar, continua para próximo método
+        }
+      }
+      
+      // Fallback para R2 se Supabase falhar
+      if (!imageUrl && process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY) {
+        try {
+          console.log("Tentando upload de imagem de perfil para R2...");
+          
+          if (req.file) {
+            const r2Result = await storageService.uploadImage(req.file, options);
+            imageUrl = r2Result.imageUrl;
+          }
+          
+          console.log("Upload para R2 concluído com sucesso:", imageUrl);
+        } catch (r2Error) {
+          console.error("Erro no upload para R2:", r2Error);
+          // Se falhar, continua para o último método
+        }
+      }
+      
+      // Último recurso: armazenamento local
+      if (!imageUrl && req.file) {
+        console.log("Usando armazenamento local para imagem de perfil...");
+        
+        // Se estamos usando o storage em disco do multer, pegamos o caminho do arquivo
+        if (req.file.path) {
+          imageUrl = '/uploads/' + path.basename(req.file.path);
+          console.log("Caminho da imagem local:", imageUrl);
+        } else {
+          // Caso contrário, usamos o método localUpload do serviço
+          const localResult = await storageService.localUpload(req.file, options);
+          imageUrl = localResult.imageUrl;
+        }
+      }
+      
+      // Atualizar perfil do usuário com nova imagem
+      await db.update(users)
+        .set({
+          profileimageurl: imageUrl,
+          updatedat: new Date()
+        })
+        .where(eq(users.id, userId));
+      
+      // Retornar URL da imagem para uso no frontend
+      return res.json({ imageUrl });
+    } catch (error) {
+      console.error("Erro ao processar upload de imagem de perfil:", error);
+      return res.status(500).json({ message: "Erro ao processar imagem de perfil" });
+    }
+  });
+  
+  // Endpoint específico para designers (mantido para compatibilidade)
   app.post("/api/designers/profile-image", isAuthenticated, uploadMemory.single('image'), async (req, res) => {
     try {
       const userId = (req.user as any).id;

@@ -469,17 +469,21 @@ export default function PainelPerfil() {
                       <p className="text-sm font-medium text-muted-foreground">Último Login</p>
                       <p>{user?.ultimologin ? formatDate(user.ultimologin) : "N/A"}</p>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <p className="text-sm font-medium text-muted-foreground">Status da Conta</p>
-                      <Badge className={user?.isactive ? "bg-green-500" : "bg-red-500"}>
-                        {user?.isactive ? "Ativa" : "Inativa"}
-                      </Badge>
+                      <div>
+                        <Badge className={user?.isactive ? "bg-green-500" : "bg-red-500"}>
+                          {user?.isactive ? "Ativa" : "Inativa"}
+                        </Badge>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <p className="text-sm font-medium text-muted-foreground">Tipo de Usuário</p>
-                      <Badge variant="outline" className="capitalize">
-                        {user?.role || "Usuário"}
-                      </Badge>
+                      <div>
+                        <Badge variant="outline" className="capitalize">
+                          {user?.role || "Usuário"}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
                 </div>
