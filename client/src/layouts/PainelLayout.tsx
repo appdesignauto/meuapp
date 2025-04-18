@@ -68,31 +68,9 @@ export default function PainelLayout({ children }: PainelLayoutProps) {
     );
   };
 
-  // Verificação de acesso premium baseado no nível de acesso do usuário
-  const isPremium = user && 
-    (user.role === "premium" || 
-     user.role === "designer" || 
-     user.role === "designer_adm" || 
-     user.role === "admin" ||
-     (user.nivelacesso && 
-      user.nivelacesso !== "free" && 
-      user.nivelacesso !== "usuario"));
-      
-  // Verificar se a assinatura está expirada
-  const hasExpiredSubscription = () => {
-    if (!user || !user.dataexpiracao) return false;
-    
-    // Se tem acesso vitalício, nunca expira
-    if (user.acessovitalicio) return false;
-    
-    const expirationDate = new Date(user.dataexpiracao);
-    const currentDate = new Date();
-    
-    return expirationDate < currentDate;
-  };
-  
-  // Indicador se o plano está expirado
-  const isExpired = isPremium && hasExpiredSubscription();
+  // Utilizar o hook de assinatura para obter status do usuário
+  const subscription = useSubscription(user);
+  const { isPremium, isExpired } = subscription;
 
   const menuItems = [
     {

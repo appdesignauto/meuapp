@@ -1,4 +1,5 @@
 import { useAuth } from "@/hooks/use-auth";
+import { useSubscription } from "@/hooks/use-subscription";
 import { useQuery } from "@tanstack/react-query";
 import { Download, Eye, Clock, Star, Activity, ImageIcon, Crown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +13,14 @@ import { Link } from "wouter";
 export default function PainelInicio() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [stats, setStats] = useState({
+  interface Stats {
+    favoriteCount: number;
+    downloadCount: number;
+    viewCount: number;
+    recentArts: any[];
+  }
+  
+  const [stats, setStats] = useState<Stats>({
     favoriteCount: 0,
     downloadCount: 0,
     viewCount: 0,
@@ -33,32 +41,25 @@ export default function PainelInicio() {
 
   // Atualizar estatísticas quando os dados estiverem disponíveis
   useEffect(() => {
-    if (userStats) {
+    if (userStats && typeof userStats === 'object') {
       setStats(prev => ({
         ...prev,
-        favoriteCount: userStats.totalFavorites || 0,
-        downloadCount: userStats.totalDownloads || 0,
-        viewCount: userStats.totalViews || 0,
+        favoriteCount: userStats.totalFavorites ?? 0,
+        downloadCount: userStats.totalDownloads ?? 0,
+        viewCount: userStats.totalViews ?? 0,
       }));
     }
     
-    if (recentArtsData) {
+    if (recentArtsData && typeof recentArtsData === 'object') {
       setStats(prev => ({
         ...prev,
-        recentArts: recentArtsData.arts || [],
+        recentArts: Array.isArray(recentArtsData.arts) ? recentArtsData.arts : [],
       }));
     }
   }, [userStats, recentArtsData]);
 
-  // Determinar o nível de acesso
-  const isPremium = user && 
-    (user.role === "premium" || 
-     user.role === "designer" || 
-     user.role === "designer_adm" || 
-     user.role === "admin" ||
-     (user.nivelacesso && 
-      user.nivelacesso !== "free" && 
-      user.nivelacesso !== "usuario"));
+  // Obter informações de assinatura do usuário com o hook personalizado
+  const { isPremium, isExpired, expirationDate, planType, isLifetime } = useSubscription(user);
 
   return (
     <div className="space-y-6">
@@ -106,14 +107,14 @@ export default function PainelInicio() {
                 <div className="text-xl font-bold">
                   {isPremium ? "Premium" : "Básico"}
                 </div>
-                {isPremium && user?.tipoplano && (
+                {isPremium && (
                   <div className="text-xs text-muted-foreground flex items-center">
-                    <span className="capitalize">{user.tipoplano}</span>
-                    {user.acessovitalicio ? (
+                    <span className="capitalize">{planType || ""}</span>
+                    {isLifetime ? (
                       <Badge variant="outline" className="ml-2 text-[10px]">Vitalício</Badge>
-                    ) : user.dataexpiracao ? (
+                    ) : expirationDate ? (
                       <span className="ml-2">
-                        Expira: {new Date(user.dataexpiracao).toLocaleDateString()}
+                        Expira: {expirationDate.toLocaleDateString()}
                       </span>
                     ) : null}
                   </div>

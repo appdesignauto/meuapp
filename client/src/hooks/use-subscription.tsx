@@ -1,12 +1,12 @@
-import { User } from "@/types";
+import { User, OrigemAssinatura, TipoPlano } from "@/types";
 
 interface SubscriptionStatus {
   isPremium: boolean;
   isExpired: boolean;
   expirationDate: Date | null;
-  planType: string | null;
+  planType: TipoPlano | null;
   isLifetime: boolean;
-  subscriptionOrigin: string | null;
+  subscriptionOrigin: OrigemAssinatura | null;
 }
 
 export function useSubscription(user: User | null): SubscriptionStatus {
@@ -22,14 +22,18 @@ export function useSubscription(user: User | null): SubscriptionStatus {
   }
 
   // Verificação de acesso premium baseado no nível de acesso do usuário
-  const isPremium = 
+  const isPremiumRole = 
     user.role === "premium" || 
     user.role === "designer" || 
     user.role === "designer_adm" || 
-    user.role === "admin" ||
-    (user.nivelacesso && 
-     user.nivelacesso !== "free" && 
-     user.nivelacesso !== "usuario");
+    user.role === "admin";
+    
+  const isPremiumAccess = 
+    user.nivelacesso && 
+    user.nivelacesso !== "free" && 
+    user.nivelacesso !== "usuario";
+
+  const isPremium = isPremiumRole || isPremiumAccess;
 
   // Verificar se tem acesso vitalício
   const isLifetime = user.acessovitalicio === true;
@@ -38,7 +42,7 @@ export function useSubscription(user: User | null): SubscriptionStatus {
   const expirationDate = user.dataexpiracao ? new Date(user.dataexpiracao) : null;
   const isExpired = isPremium && 
                     !isLifetime && 
-                    !!expirationDate && 
+                    expirationDate !== null && 
                     expirationDate < new Date();
 
   return {
