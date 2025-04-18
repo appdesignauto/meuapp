@@ -410,38 +410,55 @@ export class SupabaseStorageService {
       
       console.log(`Tentando upload de logo para Supabase com nome personalizado: ${safeFilename}`);
       
-      // Diretório específico para logos no bucket
-      const filePath = `logos/${safeFilename}`;
+      // Diretório específico para logos no bucket - usando 'original' para manter consistência
+      const filePath = `original/${safeFilename}`;
 
-      // Otimizar logo antes de fazer upload
+      // Usar diretamente o buffer original sem otimizações para evitar problemas
       let imageBuffer = file.buffer;
       
-      // Se não for SVG, otimizar com sharp
-      if (!file.mimetype.includes('svg')) {
-        try {
-          imageBuffer = await sharp(file.buffer)
-            .resize({ 
-              width: 500, 
-              height: 200, 
-              fit: 'inside',
-              withoutEnlargement: true 
-            })
-            .toFormat('png')
-            .png({ quality: 90 })
-            .toBuffer();
-            
-          console.log("Logo otimizado com sucesso");
-        } catch (optimizeError) {
-          console.error("Erro ao otimizar logo, usando original:", optimizeError);
-          // Continua com o buffer original
+      // Registro de informações de depuração
+      console.log(`Tamanho do buffer original: ${file.buffer.length} bytes`);
+      console.log(`Tipo de arquivo: ${file.mimetype}`);
+      
+      // Verificar se o buffer do arquivo tem conteúdo
+      if (!file.buffer || file.buffer.length === 0) {
+        console.error("ERRO CRÍTICO: O buffer do arquivo está vazio!");
+        throw new Error("O arquivo enviado está vazio ou corrompido");
+      }
+      
+      // Salvar arquivo temporário para depuração
+      try {
+        const originalFilePath = path.join('/tmp', `original_logo_${Date.now()}.bin`);
+        fs.writeFileSync(originalFilePath, file.buffer);
+        console.log(`Arquivo original salvo para depuração em ${originalFilePath}`);
+      } catch (tempError) {
+        console.error("Erro ao salvar arquivo temporário:", tempError);
+      }
+
+      // Determinar o tipo de conteúdo adequado
+      let contentType = file.mimetype;
+      
+      // Garantir que temos um tipo MIME válido
+      if (!contentType || contentType === 'application/octet-stream') {
+        // Inferir pelo final do nome original
+        if (file.originalname.toLowerCase().endsWith('.png')) {
+          contentType = 'image/png';
+        } else if (file.originalname.toLowerCase().endsWith('.jpg') || file.originalname.toLowerCase().endsWith('.jpeg')) {
+          contentType = 'image/jpeg';
+        } else if (file.originalname.toLowerCase().endsWith('.svg')) {
+          contentType = 'image/svg+xml';
+        } else {
+          contentType = 'image/png'; // Fallback seguro
         }
       }
+      
+      console.log(`Usando contentType: ${contentType} para upload`);
 
       // Upload do logo para o Supabase com substituição se já existir
       const { error, data } = await supabase.storage
         .from(BUCKET_NAME)
         .upload(filePath, imageBuffer, {
-          contentType: file.mimetype.includes('svg') ? 'image/svg+xml' : 'image/png',
+          contentType: contentType,
           upsert: true // Substituir se já existir
         });
 
