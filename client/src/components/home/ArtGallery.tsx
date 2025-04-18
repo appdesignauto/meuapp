@@ -93,7 +93,7 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
               </div>
             )}
             {onCategorySelect && (
-              <div className="w-full sm:w-auto overflow-x-auto">
+              <div className="w-full">
                 <MinimalCategoryFilters
                   selectedCategory={categoryId}
                   onCategorySelect={onCategorySelect}
