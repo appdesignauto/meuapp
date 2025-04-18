@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
@@ -40,6 +40,59 @@ import {
 } from 'lucide-react';
 import MobileMenu from './MobileMenu';
 import { useQuery } from '@tanstack/react-query';
+
+// Componente dedicado para o logo que verifica localStorage
+type LogoImageProps = { 
+  siteSettings: any 
+};
+
+const LogoImage = ({ siteSettings }: LogoImageProps) => {
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  
+  useEffect(() => {
+    // Verificar se existe uma nova URL no localStorage e se é recente (< 5 minutos)
+    const storedLogoUrl = localStorage.getItem('newLogoUrl');
+    const storedTimestamp = localStorage.getItem('logoUpdatedAt');
+    
+    if (storedLogoUrl && storedTimestamp) {
+      const updatedAt = parseInt(storedTimestamp);
+      const now = Date.now();
+      const fiveMinutesAgo = now - (5 * 60 * 1000);
+      
+      if (updatedAt > fiveMinutesAgo) {
+        // URL do logo guardada é recente, usar ela
+        console.log('Usando URL do logo do localStorage:', storedLogoUrl);
+        setLogoUrl(storedLogoUrl);
+        return;
+      }
+    }
+    
+    // Caso contrário, usar a URL das configurações do site
+    if (siteSettings?.logoUrl) {
+      setLogoUrl(siteSettings.logoUrl);
+    }
+  }, [siteSettings]);
+  
+  // Para garantir refresh da imagem, incluir um parâmetro de timestamp na URL
+  const timestamp = Date.now();
+  const finalLogoUrl = logoUrl ? 
+    `${logoUrl}${logoUrl.includes('?') ? '&' : '?'}v=${timestamp}` : 
+    '/images/logo.png';
+  
+  return (
+    <img 
+      src={finalLogoUrl}
+      alt="DesignAuto App" 
+      className="h-full w-auto max-w-[180px] sm:max-w-[200px] object-contain mr-3 transition-transform duration-200 hover:scale-105 pr-1"
+      key={`logo-${timestamp}`}
+      loading="eager"
+      onError={(e) => {
+        console.error('Erro ao carregar logo:', e);
+        (e.target as HTMLImageElement).src = "/images/logo.png";
+      }}
+    />
+  );
+};
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -113,17 +166,7 @@ const Header = () => {
             <Link href="/" className="flex items-center">
               {siteSettings?.logoUrl ? (
                 <div className="h-10 sm:h-11 md:h-12 flex items-center">
-                  <img 
-                    src={`${siteSettings.logoUrl}?timestamp=${new Date().getTime()}`}
-                    alt="DesignAuto App" 
-                    className="h-full w-auto max-w-[180px] sm:max-w-[200px] object-contain mr-3 transition-transform duration-200 hover:scale-105 pr-1"
-                    key={`logo-${new Date().getTime()}`}
-                    loading="eager"
-                    onError={(e) => {
-                      console.error('Erro ao carregar logo:', e);
-                      (e.target as HTMLImageElement).src = "/images/logo.png";
-                    }}
-                  />
+                  <LogoImage siteSettings={siteSettings} />
                 </div>
               ) : (
                 <img 

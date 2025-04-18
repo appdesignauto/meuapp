@@ -73,7 +73,7 @@ const LogoUploader = () => {
     }
   };
 
-  // Função para fazer upload do logo
+  // Função para fazer upload do logo - abordagem radical
   const handleLogoUpload = async () => {
     if (!fileInputRef.current?.files?.length) {
       toast({
@@ -88,12 +88,19 @@ const LogoUploader = () => {
       setUploadingLogo(true);
       
       const file = fileInputRef.current.files[0];
+      
+      // Gera um nome de arquivo único com timestamp para forçar nova URL
+      const uniqueFileName = `logo_${Date.now()}_${Math.floor(Math.random() * 1000000)}.${file.name.split('.').pop()}`;
+      
+      // Adiciona o nome do arquivo no FormData para que o servidor use esse nome
       const formData = new FormData();
+      formData.append('uniqueFileName', uniqueFileName); // Nome de arquivo único
       formData.append('logo', file);
       formData.append('timestamp', Date.now().toString());
+      formData.append('forceNewUpload', 'true'); // Indicador para forçar upload novo
       
-      // Fazer upload diretamente
-      const response = await fetch(`/api/site-settings?t=${Date.now()}`, {
+      // Fazer upload diretamente com configurações anti-cache
+      const response = await fetch(`/api/site-settings?t=${Date.now()}&forceNew=true`, {
         method: 'PUT',
         body: formData,
         headers: {
@@ -101,7 +108,6 @@ const LogoUploader = () => {
           'Pragma': 'no-cache',
           'Expires': '0'
         },
-        // Evitar que o navegador use cache de requisições anteriores
         cache: 'no-store'
       });
       
@@ -112,18 +118,25 @@ const LogoUploader = () => {
       const data = await response.json();
       console.log('Logo atualizado com sucesso:', data);
       
+      // Aqui pegamos a nova URL do logo retornada pelo servidor
+      const newLogoUrl = data.logoUrl;
+      
       toast({
-        title: 'Logo atualizado',
-        description: 'O logo foi atualizado com sucesso! A página será recarregada.',
+        title: 'Logo atualizado com sucesso',
+        description: 'Redirecionando para aplicar as mudanças em todo o site...',
         variant: 'default',
       });
       
-      // Forçar atualização do navegador para limpar completamente o cache
+      // Usando localStorage para indicar que um logo novo foi carregado
+      localStorage.setItem('newLogoUrl', newLogoUrl);
+      localStorage.setItem('logoUpdatedAt', Date.now().toString());
+      
+      // Recarrega a página completa usando location.replace (mais agressivo que href)
       setTimeout(() => {
-        console.log("Redirecionando para página admin com parâmetros anti-cache...");
-        // Método mais agressivo para limpar cache
-        window.location.href = `/admin?reloaded=true&forceUpdate=true&t=${Date.now()}`;
-      }, 2500); // Espera mais tempo para garantir que a imagem foi enviada
+        console.log("Redirecionando para página admin com limpeza total de cache...");
+        // Solução nuclear: recarregar com reload=true
+        window.location.replace(`/admin?reload=true&nocache=${Date.now()}`);
+      }, 1500);
       
     } catch (error: any) {
       console.error('Erro ao fazer upload do logo:', error);
