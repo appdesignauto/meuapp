@@ -93,18 +93,18 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
   };
 
   return (
-    <section className="py-2 md:py-4">
-      <div className="container mx-auto px-4">
-        <div className="flex flex-wrap items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <h2 className="text-sm font-medium text-neutral-800">Categorias em destaque</h2>
+    <section className="py-1 sm:py-2 md:py-4">
+      <div className="container mx-auto px-3 sm:px-4">
+        <div className="flex flex-wrap items-center justify-between mb-2 sm:mb-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <h2 className="text-xs sm:text-sm font-medium text-neutral-800">Categorias em destaque</h2>
           </div>
           <Link 
             href="/arts" 
-            className="text-blue-600 hover:text-blue-500 font-medium text-xs flex items-center px-2 py-1 transition-all"
+            className="text-blue-600 hover:text-blue-500 font-medium text-[10px] sm:text-xs flex items-center px-2 py-1 transition-all"
           >
             Ver todos
-            <ArrowRight className="ml-1 h-3 w-3" />
+            <ArrowRight className="ml-1 h-2 w-2 sm:h-3 sm:w-3" />
           </Link>
         </div>
         
@@ -114,24 +114,24 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
             <>
               <button 
                 onClick={scrollLeft}
-                className="absolute left-1 md:left-6 top-1/2 transform -translate-y-1/2 z-20 bg-white/95 backdrop-blur-sm rounded-full p-3.5 shadow-xl hover:bg-blue-500 hover:text-white focus:outline-none transition-all duration-300 border border-blue-100 animate-fade-in"
+                className="absolute left-1 md:left-6 top-1/2 transform -translate-y-1/2 z-20 bg-white/95 backdrop-blur-sm rounded-full p-2 sm:p-3.5 shadow-lg sm:shadow-xl hover:bg-blue-500 hover:text-white focus:outline-none transition-all duration-300 border border-blue-100 animate-fade-in"
                 aria-label="Rolar para a esquerda"
               >
-                <ChevronLeft className="h-5 w-5" />
+                <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
               <button 
                 onClick={scrollRight}
-                className="absolute right-1 md:right-6 top-1/2 transform -translate-y-1/2 z-20 bg-white/95 backdrop-blur-sm rounded-full p-3.5 shadow-xl hover:bg-blue-500 hover:text-white focus:outline-none transition-all duration-300 border border-blue-100 animate-fade-in"
+                className="absolute right-1 md:right-6 top-1/2 transform -translate-y-1/2 z-20 bg-white/95 backdrop-blur-sm rounded-full p-2 sm:p-3.5 shadow-lg sm:shadow-xl hover:bg-blue-500 hover:text-white focus:outline-none transition-all duration-300 border border-blue-100 animate-fade-in"
                 aria-label="Rolar para a direita"
               >
-                <ChevronRight className="h-5 w-5" />
+                <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
             </>
           )}
           
           {/* Gradientes para indicar continuação */}
-          <div className="absolute top-0 left-0 h-full w-20 bg-gradient-to-r from-white via-white/90 to-transparent z-10 pointer-events-none"></div>
-          <div className="absolute top-0 right-0 h-full w-20 bg-gradient-to-l from-white via-white/90 to-transparent z-10 pointer-events-none"></div>
+          <div className="absolute top-0 left-0 h-full w-12 sm:w-20 bg-gradient-to-r from-white via-white/90 to-transparent z-10 pointer-events-none"></div>
+          <div className="absolute top-0 right-0 h-full w-12 sm:w-20 bg-gradient-to-l from-white via-white/90 to-transparent z-10 pointer-events-none"></div>
           
           {/* Carrossel de categorias */}
           {isLoading ? (
@@ -155,7 +155,7 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
           ) : (
             <div 
               ref={scrollContainerRef}
-              className="flex overflow-x-auto pb-8 hide-scrollbar snap-x snap-mandatory pl-4 pt-2"
+              className="flex overflow-x-auto pb-6 sm:pb-8 hide-scrollbar snap-x snap-mandatory pl-2 sm:pl-4 pt-1 sm:pt-2"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               {categories?.map((category) => {
@@ -166,7 +166,7 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
                 return (
                   <div 
                     key={category.id} 
-                    className="flex-none w-[270px] md:w-[300px] pr-5 snap-start"
+                    className="flex-none w-[220px] sm:w-[250px] md:w-[300px] pr-4 sm:pr-5 snap-start"
                     style={{ scrollSnapAlign: 'start' }}
                     onMouseEnter={() => setHoveredCategory(category.id)}
                     onMouseLeave={() => setHoveredCategory(null)}
@@ -209,8 +209,8 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
                       {/* Nome da categoria com estilo especial */}
                       <div className="relative px-3 py-2 text-center">
                         {/* Badge de categoria com estilo minimalista */}
-                        <div className={`absolute -top-[18px] left-1/2 transform -translate-x-1/2 rounded-md bg-gradient-to-r ${categoryColor} px-3 py-1`}>
-                          <h3 className="text-xs font-medium text-white">{category.name}</h3>
+                        <div className={`absolute -top-[18px] left-1/2 transform -translate-x-1/2 rounded-md bg-gradient-to-r ${categoryColor} px-2 sm:px-3 py-[2px] sm:py-1`}>
+                          <h3 className="text-[10px] sm:text-xs font-medium text-white">{category.name}</h3>
                         </div>
                         
                         {/* Espaço para o nome da categoria */}
@@ -231,12 +231,12 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
           
           {/* Indicadores de paginação (bolinhas) */}
           {!isLoading && categories && categories.length > 4 && (
-            <div className="flex justify-center mt-4 space-x-1.5">
+            <div className="flex justify-center mt-2 sm:mt-4 space-x-1 sm:space-x-1.5">
               {Array.from({ length: Math.ceil((categories.length || 0) / 4) }).map((_, index) => (
                 <div 
                   key={index}
-                  className={`w-2 h-2 rounded-full transition-all duration-300 
-                    ${index === 0 ? 'bg-blue-500 w-4' : 'bg-blue-200 hover:bg-blue-300'}`}
+                  className={`w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full transition-all duration-300 
+                    ${index === 0 ? 'bg-blue-500 w-3 sm:w-4' : 'bg-blue-200 hover:bg-blue-300'}`}
                 />
               ))}
             </div>
