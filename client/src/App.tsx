@@ -26,6 +26,7 @@ import { ProtectedPainelRoute } from "@/components/painel/ProtectedPainelRoute";
 import PainelInicio from "@/pages/painel/PainelInicio";
 import PainelArtes from "@/pages/painel/PainelArtes";
 import PainelFavoritas from "@/pages/painel/PainelFavoritas";
+import PainelSeguindo from "@/pages/painel/PainelSeguindo";
 import PainelDownloads from "@/pages/painel/PainelDownloads";
 import PainelPerfil from "@/pages/painel/PainelPerfil";
 
@@ -66,6 +67,7 @@ function AppRoutes() {
       <ProtectedPainelRoute path="/painel/inicio" component={PainelInicio} />
       <ProtectedPainelRoute path="/painel/artes" component={PainelArtes} />
       <ProtectedPainelRoute path="/painel/favoritas" component={PainelFavoritas} />
+      <ProtectedPainelRoute path="/painel/seguindo" component={PainelSeguindo} />
       <ProtectedPainelRoute path="/painel/downloads" component={PainelDownloads} />
       <ProtectedPainelRoute path="/painel/perfil" component={PainelPerfil} />
       

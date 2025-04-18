@@ -13,7 +13,8 @@ import {
   X,
   Crown,
   ChevronRight,
-  Infinity
+  Infinity,
+  Users
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -97,6 +98,12 @@ export default function PainelLayout({ children }: PainelLayoutProps) {
       label: "Favoritas",
       path: "/painel/favoritas",
       icon: <Heart className="h-5 w-5" />,
+      access: "all",
+    },
+    {
+      label: "Seguindo",
+      path: "/painel/seguindo",
+      icon: <Users className="h-5 w-5" />,
       access: "all",
     },
     {
