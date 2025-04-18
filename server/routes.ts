@@ -381,6 +381,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Rota para buscar artes recentes (usada no painel inicial)
+  app.get("/api/arts/recent", async (req, res) => {
+    try {
+      // Buscar as 6 artes mais recentes
+      const result = await db.execute(sql`
+        SELECT 
+          id, 
+          "createdAt", 
+          "updatedAt", 
+          title, 
+          "imageUrl",
+          format,
+          "isPremium"
+        FROM arts 
+        ORDER BY "createdAt" DESC 
+        LIMIT 6
+      `);
+      
+      const arts = result.rows.map(art => ({
+        id: art.id,
+        title: art.title,
+        imageUrl: art.imageUrl,
+        format: art.format,
+        isPremium: art.isPremium,
+        createdAt: art.createdAt,
+        updatedAt: art.updatedAt
+      }));
+      
+      res.json({ arts });
+    } catch (error) {
+      console.error("Erro ao buscar artes recentes:", error);
+      res.status(500).json({ message: "Erro ao buscar artes recentes" });
+    }
+  });
+
   app.get("/api/arts/:id/related", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
