@@ -829,6 +829,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Registrar rotas de upload de imagem
   app.use(imageUploadRoutes);
+  
+  // Configurar rotas de seguidores (following)
+  setupFollowRoutes(app, isAuthenticated);
 
   // Rota administrativa para atualizar designerId de todas as artes
   app.post("/api/admin/update-designers", isAdmin, async (req, res) => {

@@ -4,9 +4,22 @@ import { users, userFollows } from "../../shared/schema";
 import { eq, and, sql, count } from "drizzle-orm";
 import { FollowRequest } from "../../shared/interfaces/follows";
 
+interface CustomRequest extends Request {
+  user?: {
+    id: number;
+    username: string;
+    email: string;
+    name?: string;
+    profileimageurl?: string;
+    bio?: string;
+    nivelacesso: string;
+    role?: string;
+  }
+}
+
 export function setupFollowRoutes(app: any, isAuthenticated: (req: Request, res: Response, next: NextFunction) => void) {
   // Rota para buscar os designers que o usuário segue
-  app.get("/api/users/following", isAuthenticated, async (req: Request, res: Response) => {
+  app.get("/api/users/following", isAuthenticated, async (req: CustomRequest, res: Response) => {
     try {
       const userId = req.user?.id;
       
@@ -69,7 +82,7 @@ export function setupFollowRoutes(app: any, isAuthenticated: (req: Request, res:
   });
 
   // Rota para buscar designers populares
-  app.get("/api/designers/popular", isAuthenticated, async (req: Request, res: Response) => {
+  app.get("/api/designers/popular", isAuthenticated, async (req: CustomRequest, res: Response) => {
     try {
       const userId = req.user?.id;
       
@@ -142,7 +155,7 @@ export function setupFollowRoutes(app: any, isAuthenticated: (req: Request, res:
   });
 
   // Rota para seguir/deixar de seguir um designer
-  app.post("/api/users/follow/:id", isAuthenticated, async (req: Request, res: Response) => {
+  app.post("/api/users/follow/:id", isAuthenticated, async (req: CustomRequest, res: Response) => {
     try {
       const userId = req.user?.id;
       const designerId = parseInt(req.params.id);
