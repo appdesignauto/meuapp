@@ -13,6 +13,7 @@ import {
   X,
   Crown,
   ChevronRight,
+  ChevronDown,
   Infinity,
   Users,
   CreditCard
@@ -22,6 +23,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Card, CardContent } from "@/components/ui/card";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -146,22 +154,62 @@ export default function PainelLayout({ children }: PainelLayoutProps) {
             </Link>
           </div>
 
-          <div className="flex items-center gap-4">
-            {isPremium && (
-              <Badge variant="premium" className="hidden sm:flex items-center gap-1">
-                <Crown className="h-3.5 w-3.5" />
-                <span>Premium</span>
-              </Badge>
+          <div className="flex items-center gap-3">
+            {isPremium ? (
+              <div className="hidden sm:flex items-center">
+                <Badge variant="premium" className="flex items-center gap-1">
+                  <Crown className="h-3.5 w-3.5" />
+                  <span>{isLifetime ? "Vitalício" : planType?.charAt(0).toUpperCase() + planType?.slice(1) || "Premium"}</span>
+                </Badge>
+              </div>
+            ) : (
+              <div className="hidden sm:block text-xs text-muted-foreground">
+                <span className="px-2 py-1 rounded-md bg-gray-100">Gratuito</span>
+              </div>
             )}
-            <div className="flex items-center space-x-1">
-              <Avatar>
-                <AvatarImage
-                  src={user?.profileimageurl || ""}
-                  alt={user?.name || "Usuário"}
-                />
-                <AvatarFallback>{getInitials()}</AvatarFallback>
-              </Avatar>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div className="flex items-center space-x-1 cursor-pointer">
+                  <Avatar>
+                    <AvatarImage
+                      src={user?.profileimageurl || ""}
+                      alt={user?.name || "Usuário"}
+                    />
+                    <AvatarFallback>{getInitials()}</AvatarFallback>
+                  </Avatar>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground hidden sm:block" />
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="px-2 py-1.5">
+                  <p className="text-sm font-medium leading-none">{user?.name || user?.username}</p>
+                  <p className="text-xs text-muted-foreground mt-1 truncate">{user?.email}</p>
+                </div>
+                <DropdownMenuSeparator />
+                <Link href="/painel/perfil">
+                  <DropdownMenuItem className="cursor-pointer">
+                    <User className="h-4 w-4 mr-2" />
+                    <span>Meu Perfil</span>
+                  </DropdownMenuItem>
+                </Link>
+                <Link href="/painel/assinatura">
+                  <DropdownMenuItem className="cursor-pointer">
+                    <CreditCard className="h-4 w-4 mr-2" />
+                    <span>Assinatura</span>
+                    {!isPremium && (
+                      <span className="ml-auto text-xs bg-green-500 text-white px-2 py-0.5 rounded font-medium">
+                        UPGRADE
+                      </span>
+                    )}
+                  </DropdownMenuItem>
+                </Link>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                  <LogOut className="h-4 w-4 mr-2" />
+                  <span>Sair</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>
@@ -186,12 +234,19 @@ export default function PainelLayout({ children }: PainelLayoutProps) {
               <Link 
                 key={item.path} 
                 href={item.path}
-                className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors hover:bg-muted ${
-                  location === item.path ? "bg-muted font-medium" : ""
+                className={`flex items-center space-x-3 px-3 py-3 rounded-md transition-colors hover:bg-muted ${
+                  location === item.path ? "bg-muted font-medium text-primary" : "text-gray-700"
                 }`}
               >
-                {item.icon}
+                <div className="flex-shrink-0 w-5 flex justify-center">
+                  {item.icon}
+                </div>
                 <span>{item.label}</span>
+                {item.label === "Assinatura" && !isPremium && (
+                  <span className="ml-auto text-xs bg-green-500 text-white px-2 py-0.5 rounded font-medium">
+                    UPGRADE
+                  </span>
+                )}
                 {location === item.path && (
                   <ChevronRight className="ml-auto h-4 w-4" />
                 )}
@@ -329,13 +384,20 @@ export default function PainelLayout({ children }: PainelLayoutProps) {
                   <Link 
                     key={item.path} 
                     href={item.path}
-                    className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors hover:bg-muted ${
-                      location === item.path ? "bg-muted font-medium" : ""
+                    className={`flex items-center space-x-3 px-3 py-3 rounded-md transition-colors hover:bg-muted ${
+                      location === item.path ? "bg-muted font-medium text-primary" : "text-gray-700"
                     }`}
                     onClick={() => setSidebarOpen(false)}
                   >
-                    {item.icon}
+                    <div className="flex-shrink-0 w-5 flex justify-center">
+                      {item.icon}
+                    </div>
                     <span>{item.label}</span>
+                    {item.label === "Assinatura" && !isPremium && (
+                      <span className="ml-auto text-xs bg-green-500 text-white px-2 py-0.5 rounded font-medium">
+                        UPGRADE
+                      </span>
+                    )}
                     {location === item.path && (
                       <ChevronRight className="ml-auto h-4 w-4" />
                     )}
