@@ -89,16 +89,16 @@ const Header = () => {
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm backdrop-blur-sm bg-white/95">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16 sm:h-18">
+        <div className="flex items-center justify-between h-16 sm:h-[4.5rem] md:h-20">
           {/* Logo */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center">
               {siteSettings?.logoUrl ? (
-                <div className="h-8 sm:h-9 flex items-center">
+                <div className="h-10 sm:h-11 md:h-12 flex items-center">
                   <img 
                     src={siteSettings.logoUrl + '?v=' + new Date().getTime()} 
                     alt="DesignAuto App" 
-                    className="h-full w-auto max-w-[150px] object-contain mr-2 transition-transform duration-200 hover:scale-105" 
+                    className="h-full w-auto max-w-[180px] sm:max-w-[200px] object-contain mr-3 transition-transform duration-200 hover:scale-105 pr-1" 
                     onError={(e) => {
                       console.error('Erro ao carregar logo:', e);
                       (e.target as HTMLImageElement).src = "/images/logo.png";
@@ -109,7 +109,7 @@ const Header = () => {
                 <img 
                   src="/images/logo.png" 
                   alt="DesignAuto App" 
-                  className="h-8 sm:h-9 mr-2 transition-transform duration-200 hover:scale-105" 
+                  className="h-10 sm:h-11 md:h-12 mr-3 transition-transform duration-200 hover:scale-105" 
                 />
               )}
             </Link>

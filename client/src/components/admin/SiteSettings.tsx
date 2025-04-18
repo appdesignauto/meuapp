@@ -150,13 +150,15 @@ const SiteSettings = () => {
                 <div className="mb-4">
                   <div className="border rounded-lg p-6 flex items-center justify-center bg-gray-50">
                     {logoPreview ? (
-                      <img 
-                        src={logoPreview} 
-                        alt="Logo Preview" 
-                        className="max-h-24 max-w-full object-contain" 
-                      />
+                      <div className="h-32 flex items-center justify-center">
+                        <img 
+                          src={logoPreview} 
+                          alt="Logo Preview" 
+                          className="h-full max-w-full object-contain" 
+                        />
+                      </div>
                     ) : settings?.logoUrl ? (
-                      <div className="h-24 flex items-center justify-center">
+                      <div className="h-32 flex items-center justify-center">
                         <img 
                           src={settings.logoUrl + '?v=' + new Date().getTime()} 
                           alt="Current Logo" 
@@ -193,7 +195,8 @@ const SiteSettings = () => {
                   
                   <div className="mt-4 text-sm text-gray-500">
                     <p>Formatos recomendados: PNG, WEBP ou SVG com fundo transparente</p>
-                    <p>Tamanho ideal: altura de 32-40px, proporção original de aspecto</p>
+                    <p>Tamanho ideal: altura de 40-60px, proporção original de aspecto</p>
+                    <p>Dimensões máximas: até 1200px de largura, até 400px de altura</p>
                   </div>
                 </div>
               </CardContent>
