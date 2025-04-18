@@ -484,6 +484,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Favorites API
+  // Estatísticas do usuário
+  app.get("/api/users/stats", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      
+      // Contar favoritos
+      const favoritesQuery = `
+        SELECT COUNT(*) as count
+        FROM favorites 
+        WHERE "userId" = ${userId}
+      `;
+      
+      const favoritesResult = await db.execute(sql.raw(favoritesQuery));
+      const totalFavorites = parseInt(favoritesResult.rows[0].count) || 0;
+      
+      // Contar downloads
+      const downloadsQuery = `
+        SELECT COUNT(*) as count
+        FROM downloads 
+        WHERE "userId" = ${userId}
+      `;
+      
+      const downloadsResult = await db.execute(sql.raw(downloadsQuery));
+      const totalDownloads = parseInt(downloadsResult.rows[0].count) || 0;
+      
+      // Contar visualizações
+      const viewsQuery = `
+        SELECT COUNT(*) as count
+        FROM views 
+        WHERE "userId" = ${userId}
+      `;
+      
+      const viewsResult = await db.execute(sql.raw(viewsQuery));
+      const totalViews = parseInt(viewsResult.rows[0].count) || 0;
+      
+      // Retornar estatísticas
+      res.json({
+        totalFavorites,
+        totalDownloads,
+        totalViews
+      });
+    } catch (error) {
+      console.error("Erro ao buscar estatísticas do usuário:", error);
+      res.status(500).json({ message: "Erro ao buscar estatísticas do usuário" });
+    }
+  });
+  
   // Downloads API
   app.get("/api/downloads", isAuthenticated, async (req, res) => {
     try {
