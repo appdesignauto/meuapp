@@ -522,44 +522,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("[GET /api/users/stats] Buscando estatísticas para o usuário:", userId);
       
       // Usar SQL bruto para evitar problemas com maiúsculas/minúsculas nos nomes das colunas
-      // Consultar favoritos diretamente
-      const favoritesQuery = `
-        SELECT COUNT(*) as count 
-        FROM favorites 
-        WHERE "userId" = $1
-      `;
-      const favoritesResult = await db.execute(sql.raw(favoritesQuery, [userId]));
-      const totalFavorites = Number(favoritesResult.rows[0]?.count) || 0;
+      // Usar o Drizzle ORM diretamente para contar favoritos
+      const favoritesQuery = db.select({ count: sql<number>`count(*)` })
+        .from(favorites)
+        .where(eq(favorites.userId, userId));
+        
+      const favoritesResult = await favoritesQuery;
+      const totalFavorites = Number(favoritesResult[0]?.count) || 0;
       console.log("[GET /api/users/stats] Total de favoritos:", totalFavorites);
       
-      // Consultar downloads diretamente
-      const downloadsQuery = `
-        SELECT COUNT(*) as count 
-        FROM downloads 
-        WHERE "userId" = $1
-      `;
-      const downloadsResult = await db.execute(sql.raw(downloadsQuery, [userId]));
-      const totalDownloads = Number(downloadsResult.rows[0]?.count) || 0;
+      // Usar o Drizzle ORM diretamente para contar downloads
+      const downloadsQuery = db.select({ count: sql<number>`count(*)` })
+        .from(downloads)
+        .where(eq(downloads.userId, userId));
+        
+      const downloadsResult = await downloadsQuery;
+      const totalDownloads = Number(downloadsResult[0]?.count) || 0;
       console.log("[GET /api/users/stats] Total de downloads:", totalDownloads);
       
-      // Consultar visualizações diretamente
-      const viewsQuery = `
-        SELECT COUNT(*) as count 
-        FROM views 
-        WHERE "userId" = $1
-      `;
-      const viewsResult = await db.execute(sql.raw(viewsQuery, [userId]));
-      const totalViews = Number(viewsResult.rows[0]?.count) || 0;
+      // Usar o Drizzle ORM diretamente para contar visualizações
+      const viewsQuery = db.select({ count: sql<number>`count(*)` })
+        .from(views)
+        .where(eq(views.userId, userId));
+        
+      const viewsResult = await viewsQuery;
+      const totalViews = Number(viewsResult[0]?.count) || 0;
       console.log("[GET /api/users/stats] Total de views:", totalViews);
       
-      // Consultar último acesso
-      const lastLoginQuery = `
-        SELECT lastlogin
-        FROM users
-        WHERE id = $1
-      `;
-      const lastLoginResult = await db.execute(sql.raw(lastLoginQuery, [userId]));
-      const lastLogin = lastLoginResult.rows[0]?.lastlogin || null;
+      // Buscar dados do usuário para obter o último login
+      const userQuery = db.select()
+        .from(users)
+        .where(eq(users.id, userId));
+        
+      const userResult = await userQuery;
+      const lastLogin = userResult[0]?.ultimologin || null;
       
       // Estatísticas para retornar com valores forçados como Number e último login
       const stats = {

@@ -102,7 +102,12 @@ export default function PainelPerfil() {
     queryFn: async () => {
       if (!user) return null;
       const res = await fetch('/api/users/stats');
-      if (!res.ok) return { totalFavorites: 0, totalDownloads: 0, totalViews: 0 };
+      if (!res.ok) return { 
+        totalFavorites: 0, 
+        totalDownloads: 0, 
+        totalViews: 0, 
+        lastLogin: null 
+      };
       return res.json();
     },
     enabled: !!user, // Só executa se o usuário estiver logado
