@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
 import { ArrowRight, ChevronLeft, ChevronRight, Eye, Filter } from 'lucide-react';
 import { Category } from '@/types';
-import MinimalCategoryFilters from './MinimalCategoryFilters';
 
 interface FeaturedCategoriesProps {
   selectedCategory?: number | null;
@@ -97,10 +96,6 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
         <div className="flex flex-wrap items-center justify-between mb-3">
           <div className="flex items-center gap-3">
             <h2 className="text-sm font-medium text-neutral-800">Categorias</h2>
-            <MinimalCategoryFilters 
-              selectedCategory={selectedCategory} 
-              onCategorySelect={handleCategorySelect} 
-            />
           </div>
           <Link 
             href="/arts" 
