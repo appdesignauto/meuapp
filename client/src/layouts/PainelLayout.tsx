@@ -5,7 +5,6 @@ import { useSubscription } from "@/hooks/use-subscription";
 import { RenewalBanner } from "@/components/subscription/RenewalBanner";
 import {
   Home,
-  Image,
   Heart,
   Download,
   User,
@@ -95,12 +94,6 @@ export default function PainelLayout({ children }: PainelLayoutProps) {
       access: "all",
     },
     {
-      label: "Artes",
-      path: "/painel/artes",
-      icon: <Image className="h-5 w-5" />,
-      access: "all",
-    },
-    {
       label: "Favoritas",
       path: "/painel/favoritas",
       icon: <Heart className="h-5 w-5" />,
@@ -176,18 +169,18 @@ export default function PainelLayout({ children }: PainelLayoutProps) {
         >
           <nav className="space-y-2 flex-1">
             {menuItems.map((item) => (
-              <Link key={item.path} href={item.path}>
-                <a
-                  className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors hover:bg-muted ${
-                    location === item.path ? "bg-muted font-medium" : ""
-                  }`}
-                >
-                  {item.icon}
-                  <span>{item.label}</span>
-                  {location === item.path && (
-                    <ChevronRight className="ml-auto h-4 w-4" />
-                  )}
-                </a>
+              <Link 
+                key={item.path} 
+                href={item.path}
+                className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors hover:bg-muted ${
+                  location === item.path ? "bg-muted font-medium" : ""
+                }`}
+              >
+                {item.icon}
+                <span>{item.label}</span>
+                {location === item.path && (
+                  <ChevronRight className="ml-auto h-4 w-4" />
+                )}
               </Link>
             ))}
           </nav>
@@ -319,19 +312,19 @@ export default function PainelLayout({ children }: PainelLayoutProps) {
             <aside className="fixed top-16 left-0 bottom-0 w-3/4 max-w-xs bg-white dark:bg-gray-950 overflow-y-auto border-r p-4">
               <nav className="space-y-2 flex-1">
                 {menuItems.map((item) => (
-                  <Link key={item.path} href={item.path}>
-                    <a
-                      className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors hover:bg-muted ${
-                        location === item.path ? "bg-muted font-medium" : ""
-                      }`}
-                      onClick={() => setSidebarOpen(false)}
-                    >
-                      {item.icon}
-                      <span>{item.label}</span>
-                      {location === item.path && (
-                        <ChevronRight className="ml-auto h-4 w-4" />
-                      )}
-                    </a>
+                  <Link 
+                    key={item.path} 
+                    href={item.path}
+                    className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors hover:bg-muted ${
+                      location === item.path ? "bg-muted font-medium" : ""
+                    }`}
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    {item.icon}
+                    <span>{item.label}</span>
+                    {location === item.path && (
+                      <ChevronRight className="ml-auto h-4 w-4" />
+                    )}
                   </Link>
                 ))}
               </nav>
