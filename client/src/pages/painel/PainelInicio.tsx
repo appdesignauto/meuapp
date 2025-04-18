@@ -1,7 +1,7 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useSubscription } from "@/hooks/use-subscription";
 import { useQuery } from "@tanstack/react-query";
-import { Download, Eye, Clock, Star, Activity, ImageIcon, Crown, AlertCircle, CalendarClock, RefreshCw, Heart, CheckCircle2 } from "lucide-react";
+import { Download, Eye, Clock, Star, Activity, ImageIcon, Crown, AlertCircle, CalendarClock, RefreshCw, Heart, CheckCircle2, FolderPlus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
@@ -355,47 +355,86 @@ export default function PainelInicio() {
         </Card>
       )}
       
-      {/* Bloco alternativo para usuários premium */}
+      {/* Métricas para usuários premium */}
       {isPremium && (
         <Card>
           <CardHeader className="flex flex-row items-center space-y-0 pb-2">
-            <CardTitle>Atividades Recentes do Sistema</CardTitle>
+            <CardTitle>Métricas da Plataforma</CardTitle>
             <Activity className="h-5 w-5 text-blue-500 ml-2" />
           </CardHeader>
           <CardContent>
             <div className="space-y-4 mt-2">
-              {/* Lista de eventos do sistema */}
-              <div className="flex items-center space-x-2 p-2 rounded-md bg-muted/50">
-                <div className="bg-green-100 p-2 rounded-full">
-                  <Download className="h-4 w-4 text-green-600" />
+              {/* Métrica: Total de artes disponíveis */}
+              <div className="flex items-center space-x-3 p-3 rounded-md bg-muted/50">
+                <div className="bg-indigo-100 p-2 rounded-full">
+                  <ImageIcon className="h-5 w-5 text-indigo-600" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium">Novas artes adicionadas</p>
-                  <p className="text-xs text-muted-foreground">10 novas artes foram adicionadas na categoria Vendas</p>
+                  <div className="flex justify-between items-baseline">
+                    <p className="text-sm font-medium">Total de artes disponíveis</p>
+                    <span className="text-lg font-bold text-indigo-600">3.247</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1.5">
+                    <div className="bg-indigo-600 h-1.5 rounded-full" style={{ width: '100%' }}></div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">+78 artes adicionadas este mês</p>
                 </div>
-                <div className="text-xs text-muted-foreground">Hoje</div>
               </div>
               
-              <div className="flex items-center space-x-2 p-2 rounded-md bg-muted/50">
-                <div className="bg-blue-100 p-2 rounded-full">
-                  <ImageIcon className="h-4 w-4 text-blue-600" />
+              {/* Métrica: Top downloads do mês */}
+              <div className="space-y-2 p-3 rounded-md bg-muted/50">
+                <div className="flex items-center space-x-2">
+                  <div className="bg-green-100 p-2 rounded-full">
+                    <Download className="h-5 w-5 text-green-600" />
+                  </div>
+                  <p className="text-sm font-medium">Top 3 artes mais baixadas do mês</p>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Coleção atualizada</p>
-                  <p className="text-xs text-muted-foreground">Nova coleção "Mecânica" foi atualizada com 5 artes</p>
+                
+                <div className="pl-10 space-y-2 mt-1">
+                  <div className="flex items-center space-x-2 py-1 border-b border-border/40">
+                    <div className="h-7 w-7 rounded overflow-hidden flex-shrink-0">
+                      <img src="https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/arte_21.webp" alt="Arte popular" className="h-full w-full object-cover" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium truncate">Banner Promoção de Fiat Strada</p>
+                      <p className="text-[11px] text-muted-foreground">247 downloads</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2 py-1 border-b border-border/40">
+                    <div className="h-7 w-7 rounded overflow-hidden flex-shrink-0">
+                      <img src="https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/arte_22.webp" alt="Arte popular" className="h-full w-full object-cover" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium truncate">Stories Lavagem Completa</p>
+                      <p className="text-[11px] text-muted-foreground">189 downloads</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2 py-1">
+                    <div className="h-7 w-7 rounded overflow-hidden flex-shrink-0">
+                      <img src="https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/arte_23.webp" alt="Arte popular" className="h-full w-full object-cover" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium truncate">Post Ofertas do Final de Semana</p>
+                      <p className="text-[11px] text-muted-foreground">156 downloads</p>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-xs text-muted-foreground">Ontem</div>
               </div>
               
-              <div className="flex items-center space-x-2 p-2 rounded-md bg-muted/50">
-                <div className="bg-purple-100 p-2 rounded-full">
-                  <Crown className="h-4 w-4 text-purple-600" />
+              {/* Métrica: Novas coleções */}
+              <div className="flex items-center space-x-3 p-3 rounded-md bg-muted/50">
+                <div className="bg-amber-100 p-2 rounded-full">
+                  <FolderPlus className="h-5 w-5 text-amber-600" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium">Status Premium</p>
-                  <p className="text-xs text-muted-foreground">Você tem acesso a conteúdo exclusivo e novos lançamentos</p>
+                  <div className="flex justify-between items-baseline">
+                    <p className="text-sm font-medium">Novas coleções este mês</p>
+                    <span className="text-lg font-bold text-amber-600">4</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">Lavagem Premium, Oficina Motos, SUVs e Ofertas Relâmpago</p>
                 </div>
-                <div className="text-xs text-muted-foreground">Esta semana</div>
               </div>
             </div>
           </CardContent>
@@ -473,9 +512,33 @@ export default function PainelInicio() {
                 ))
               )}
               
-              {/* Mensagem se não houver atividades */}
+              {/* Sugestão para o primeiro uso */}
               {!stats.recentFavorites?.length && !stats.recentDownloads?.length && !stats.recentArts?.length && (
-                <p className="text-sm text-muted-foreground py-2">Nenhuma atividade recente registrada.</p>
+                <div className="rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 p-5 border border-blue-100">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="bg-blue-100 p-3 rounded-full mb-3">
+                      <Activity className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2">Começando sua jornada</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Você ainda não interagiu com nenhuma arte. Que tal começar por aqui?
+                    </p>
+                    <div className="flex gap-3 flex-wrap justify-center">
+                      <Link href="/painel/artes">
+                        <Button variant="outline" className="flex items-center gap-1">
+                          <ImageIcon className="h-4 w-4 mr-1" />
+                          Explorar Artes
+                        </Button>
+                      </Link>
+                      <Link href="/painel/colecoes">
+                        <Button variant="outline" className="flex items-center gap-1">
+                          <FolderPlus className="h-4 w-4 mr-1" />
+                          Ver Coleções
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           )}
