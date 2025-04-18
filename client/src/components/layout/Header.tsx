@@ -123,49 +123,73 @@ const Header = () => {
                 <DropdownMenuTrigger asChild>
                   <Button 
                     variant="outline" 
-                    className="border-blue-100 hover:border-blue-200 hover:bg-blue-50 rounded-full p-0 flex items-center bg-[#0f1729] text-white pl-3 pr-2 h-10 overflow-hidden"
+                    className="border-none hover:bg-gray-100 rounded-full p-0 flex items-center pl-2 pr-2 h-12 space-x-2 overflow-hidden shadow-sm transition-all duration-200"
                   >
-                    <span className="mr-2 whitespace-nowrap font-medium">Meu Perfil</span>
-                    <ChevronDown className="w-4 h-4 mr-2" />
                     {user.profileimageurl ? (
                       <img 
                         src={user.profileimageurl} 
                         alt={user.name || user.username} 
-                        className="w-8 h-8 rounded-full object-cover border-2 border-white"
+                        className="w-9 h-9 rounded-full object-cover border-[3px] border-blue-100"
                       />
                     ) : (
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-300 text-[#0f1729] font-medium border-2 border-white">
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center bg-blue-100 text-blue-600 font-medium">
                         {(user.name?.[0] || user.username[0]).toUpperCase()}
                       </div>
                     )}
+                    <div className="flex flex-col items-start leading-none">
+                      <span className="text-sm font-medium text-gray-800">{user.name || user.username}</span>
+                      <span className="text-xs text-gray-500 mt-0.5">
+                        {user.nivelacesso === 'usuario' || !user.tipoplano 
+                          ? 'Conta Free' 
+                          : `Conta ${user.tipoplano}`}
+                      </span>
+                    </div>
+                    <ChevronDown className="w-4 h-4 text-gray-500 ml-1" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-72 mr-2 mt-1 p-0 rounded-xl shadow-xl" align="end">
-                  {/* Banner de status de membro no topo */}
-                  <div className="w-full bg-green-100 py-2 px-4 text-center rounded-t-xl">
-                    <p className="text-green-700 font-medium">
-                      {user.nivelacesso === 'usuario' || !user.tipoplano ? 'MEMBRO GRÁTIS' : `MEMBRO ${user.tipoplano?.toUpperCase()}`}
-                    </p>
-                  </div>
+                  {/* Informações do usuário com banner de status incorporado */}
+                  <div className="relative">
+                    {/* Banner colorido no fundo que depende do tipo de conta */}
+                    <div className={`absolute top-0 left-0 right-0 h-20 rounded-t-xl ${
+                      user.nivelacesso === 'usuario' || !user.tipoplano 
+                        ? 'bg-gradient-to-r from-blue-500 to-blue-600' 
+                        : 'bg-gradient-to-r from-green-500 to-green-600'
+                    }`}></div>
                   
-                  {/* Informações do usuário */}
-                  <div className="flex items-center p-4 border-b">
-                    <div className="w-14 h-14 mr-3 rounded-full overflow-hidden bg-gray-200">
-                      {user.profileimageurl ? (
-                        <img 
-                          src={user.profileimageurl} 
-                          alt={user.name || user.username} 
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gray-300 text-gray-600 font-medium">
-                          {(user.name?.[0] || user.username[0]).toUpperCase()}
+                    {/* Container do perfil com espaçamento para ficar sobre o banner */}
+                    <div className="relative z-10 px-4 pt-4 pb-3">
+                      {/* Avatar grande */}
+                      <div className="w-20 h-20 mb-3 mx-auto rounded-full overflow-hidden border-4 border-white bg-white shadow-md">
+                        {user.profileimageurl ? (
+                          <img 
+                            src={user.profileimageurl} 
+                            alt={user.name || user.username} 
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-blue-100 text-blue-600 font-medium text-3xl">
+                            {(user.name?.[0] || user.username[0]).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Dados do usuário centralizados */}
+                      <div className="text-center">
+                        <h3 className="font-medium text-lg">{user.name || user.username}</h3>
+                        <p className="text-sm text-gray-500 mb-2">{user.email}</p>
+                        
+                        {/* Badge de tipo de conta */}
+                        <div className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                          user.nivelacesso === 'usuario' || !user.tipoplano 
+                            ? 'bg-blue-100 text-blue-700' 
+                            : 'bg-green-100 text-green-700'
+                        }`}>
+                          {user.nivelacesso === 'usuario' || !user.tipoplano 
+                            ? 'CONTA GRÁTIS' 
+                            : `CONTA ${user.tipoplano?.toUpperCase()}`}
                         </div>
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-base">{user.name || user.username}</h3>
-                      <p className="text-sm text-gray-500">{user.email}</p>
+                      </div>
                     </div>
                   </div>
                   
@@ -184,82 +208,122 @@ const Header = () => {
                   {/* Menu de opções */}
                   <div className="py-2">
                     <Link href="/painel/perfil">
-                      <DropdownMenuItem className="cursor-pointer py-3 px-4">
-                        <User className="w-5 h-5 mr-3 text-gray-600" />
-                        <span>Minha conta</span>
+                      <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-blue-50 mr-3">
+                          <User className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-medium">Minha conta</span>
+                          <span className="text-xs text-gray-500">Perfil, privacidade e dados</span>
+                        </div>
                       </DropdownMenuItem>
                     </Link>
                     
                     {user.nivelacesso === 'usuario' || !user.tipoplano ? (
                       <Link href="/pricing">
-                        <DropdownMenuItem className="cursor-pointer py-3 px-4">
-                          <CreditCard className="w-5 h-5 mr-3 text-gray-600" />
-                          <span className="flex-1">Cobrança</span>
+                        <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center bg-green-50 mr-3">
+                            <CreditCard className="w-5 h-5 text-green-600" />
+                          </div>
+                          <div className="flex flex-col flex-1">
+                            <span className="font-medium">Cobrança</span>
+                            <span className="text-xs text-gray-500">Assinar premium</span>
+                          </div>
                           <Badge variant="outline" className="bg-green-100 border-green-200 text-green-700 text-xs">UPGRADE</Badge>
                         </DropdownMenuItem>
                       </Link>
                     ) : (
                       <Link href="/painel/assinatura">
-                        <DropdownMenuItem className="cursor-pointer py-3 px-4">
-                          <CreditCard className="w-5 h-5 mr-3 text-gray-600" />
-                          <span>Assinatura</span>
+                        <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center bg-blue-50 mr-3">
+                            <CreditCard className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-medium">Assinatura</span>
+                            <span className="text-xs text-gray-500">Gerenciar sua assinatura</span>
+                          </div>
                         </DropdownMenuItem>
                       </Link>
                     )}
                     
                     <Link href="/painel/downloads">
-                      <DropdownMenuItem className="cursor-pointer py-3 px-4">
-                        <Download className="w-5 h-5 mr-3 text-gray-600" />
-                        <span className="flex-1">Downloads</span>
-                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                      <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-purple-50 mr-3">
+                          <Download className="w-5 h-5 text-purple-600" />
+                        </div>
+                        <div className="flex flex-col flex-1">
+                          <span className="font-medium">Downloads</span>
+                          <span className="text-xs text-gray-500">Histórico de downloads</span>
+                        </div>
+                        <span className="text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-700 font-medium">
                           {user.nivelacesso === 'premium' || user.tipoplano 
                             ? '∞' 
-                            : `${userStats?.totalDownloads || 0}/10 DIA`}
+                            : `${userStats?.totalDownloads || 0}/10`}
                         </span>
                       </DropdownMenuItem>
                     </Link>
                     
                     <Link href="/painel/favoritas">
-                      <DropdownMenuItem className="cursor-pointer py-3 px-4">
-                        <Heart className="w-5 h-5 mr-3 text-gray-600" />
-                        <span>Curtidas</span>
+                      <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-red-50 mr-3">
+                          <Heart className="w-5 h-5 text-red-600" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-medium">Curtidas</span>
+                          <span className="text-xs text-gray-500">Seus itens favoritos</span>
+                        </div>
                       </DropdownMenuItem>
                     </Link>
                     
                     <Link href="/painel/salvos">
-                      <DropdownMenuItem className="cursor-pointer py-3 px-4">
-                        <Bookmark className="w-5 h-5 mr-3 text-gray-600" />
-                        <span>Salvos</span>
+                      <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-yellow-50 mr-3">
+                          <Bookmark className="w-5 h-5 text-yellow-600" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-medium">Salvos</span>
+                          <span className="text-xs text-gray-500">Artes para usar depois</span>
+                        </div>
                       </DropdownMenuItem>
                     </Link>
                     
                     <Link href="/painel/seguindo">
-                      <DropdownMenuItem className="cursor-pointer py-3 px-4">
-                        <Users className="w-5 h-5 mr-3 text-gray-600" />
-                        <span>Seguindo</span>
+                      <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-indigo-50 mr-3">
+                          <Users className="w-5 h-5 text-indigo-600" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-medium">Seguindo</span>
+                          <span className="text-xs text-gray-500">Designers que você segue</span>
+                        </div>
                       </DropdownMenuItem>
                     </Link>
                     
                     {/* Link para o programa de afiliados */}
                     <Link href="/painel/afiliados">
-                      <DropdownMenuItem className="cursor-pointer py-3 px-4">
-                        <LinkIcon className="w-5 h-5 mr-3 text-gray-600" />
-                        <span>Afiliado</span>
+                      <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-teal-50 mr-3">
+                          <LinkIcon className="w-5 h-5 text-teal-600" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-medium">Afiliado</span>
+                          <span className="text-xs text-gray-500">Programa de indicação</span>
+                        </div>
                       </DropdownMenuItem>
                     </Link>
                   </div>
                   
                   {/* Seção de Suporte */}
-                  <div className="border-t">
+                  <div className="border-t pt-2 pb-2">
                     <Link href="https://wa.me/5527999999999" target="_blank" rel="noopener noreferrer">
-                      <DropdownMenuItem className="cursor-pointer py-3 px-4 flex items-center">
-                        <div className="w-5 h-5 mr-3 text-green-500 flex-shrink-0">
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                      <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-green-50 mr-3">
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="#25D366" xmlns="http://www.w3.org/2000/svg">
                             <path d="M17.6 6.32c-1.44-1.52-3.4-2.32-5.55-2.32-4.48 0-8.13 3.75-8.13 8.35 0 1.62.46 3.2 1.33 4.55L4.17 20.8l4.05-1.06c1.28.7 2.7 1.07 4.06 1.07 4.48 0 8.12-3.76 8.12-8.35s-2.14-6.14-2.8-6.14z" />
                           </svg>
                         </div>
                         <div className="flex flex-col">
-                          <span>Suporte por WhatsApp</span>
+                          <span className="font-medium">Suporte por WhatsApp</span>
                           <span className="text-xs text-gray-500">Dúvidas e perguntas</span>
                         </div>
                       </DropdownMenuItem>
@@ -267,13 +331,18 @@ const Header = () => {
                   </div>
                   
                   {/* Logout */}
-                  <div className="border-t">
+                  <div className="border-t pt-2 pb-2">
                     <DropdownMenuItem 
-                      className="cursor-pointer py-3 px-4 text-red-600 hover:text-red-700 hover:bg-red-50"
+                      className="cursor-pointer py-4 px-4 hover:bg-red-50"
                       onClick={() => logoutMutation.mutate()}
                     >
-                      <LogOut className="w-5 h-5 mr-3" />
-                      <span>Sair</span>
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-red-50 mr-3">
+                        <LogOut className="w-5 h-5 text-red-600" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-medium text-red-600">Sair da conta</span>
+                        <span className="text-xs text-gray-500">Encerrar sessão atual</span>
+                      </div>
                     </DropdownMenuItem>
                   </div>
                 </DropdownMenuContent>
