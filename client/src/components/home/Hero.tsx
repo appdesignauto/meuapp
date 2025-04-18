@@ -69,12 +69,12 @@ const Hero = () => {
           </form>
           
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-6 px-3">
-            <Button className="bg-blue-600 text-white hover:bg-blue-700 px-4 sm:px-5 py-4 sm:py-5 rounded-lg font-medium flex items-center shadow-md w-full sm:w-auto sm:min-w-[180px] text-sm sm:text-base">
+          <div className="flex flex-row items-center justify-center gap-3 sm:gap-4 mb-6 px-3">
+            <Button className="bg-blue-600 text-white hover:bg-blue-700 px-3 sm:px-5 py-3 sm:py-5 rounded-lg font-medium flex items-center shadow-md flex-1 sm:flex-initial sm:min-w-[180px] text-sm sm:text-base justify-center">
               Começar Agora
               <ChevronRight className="ml-2 h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
-            <Button variant="outline" className="border-blue-400 text-blue-600 hover:bg-blue-50 px-4 sm:px-5 py-4 sm:py-5 rounded-lg font-medium flex items-center w-full sm:w-auto sm:min-w-[180px] text-sm sm:text-base">
+            <Button variant="outline" className="border-blue-400 text-blue-600 hover:bg-blue-50 px-3 sm:px-5 py-3 sm:py-5 rounded-lg font-medium flex items-center flex-1 sm:flex-initial sm:min-w-[180px] text-sm sm:text-base justify-center">
               Ver Demonstração
             </Button>
           </div>

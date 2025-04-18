@@ -75,24 +75,35 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
   return (
     <section className="py-8 md:py-10 bg-gradient-to-b from-blue-50/50 to-white">
       <div className="container mx-auto px-4">
-        <div className="flex flex-wrap items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <h2 className="text-sm font-medium text-neutral-800">Artes em Destaque</h2>
+        <div className="flex flex-wrap items-center justify-between mb-2 sm:mb-4">
+          <div className="flex flex-col sm:flex-row w-full sm:w-auto items-start sm:items-center gap-2 sm:gap-3">
+            <div className="flex w-full sm:w-auto items-center justify-between">
+              <h2 className="text-xs sm:text-sm font-medium text-neutral-800">Artes em Destaque</h2>
+              <Link 
+                href="/arts" 
+                className="text-blue-600 hover:text-blue-500 font-medium text-[10px] sm:text-xs flex items-center px-2 py-1 transition-all sm:hidden"
+              >
+                Ver todos
+                <ArrowRight className="ml-1 h-2 w-2 sm:h-3 sm:w-3" />
+              </Link>
+            </div>
             {categoryId && (
-              <div className="bg-blue-600 text-white text-xs px-3 py-1 rounded-md">
+              <div className="bg-blue-600 text-white text-[10px] sm:text-xs px-2 sm:px-3 py-1 rounded-md shadow-sm">
                 Filtrado por categoria
               </div>
             )}
             {onCategorySelect && (
-              <MinimalCategoryFilters
-                selectedCategory={categoryId}
-                onCategorySelect={onCategorySelect}
-              />
+              <div className="w-full sm:w-auto overflow-x-auto">
+                <MinimalCategoryFilters
+                  selectedCategory={categoryId}
+                  onCategorySelect={onCategorySelect}
+                />
+              </div>
             )}
           </div>
           <Link 
             href="/arts" 
-            className="text-blue-600 hover:text-blue-500 font-medium text-xs flex items-center px-2 py-1 transition-all"
+            className="text-blue-600 hover:text-blue-500 font-medium text-xs flex items-center px-2 py-1 transition-all hidden sm:flex"
           >
             Ver todos
             <ArrowRight className="ml-1 h-3 w-3" />
