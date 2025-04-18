@@ -30,14 +30,16 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
 
   // Handler para a seleção de categoria
   const handleCategorySelect = (categoryId: number | null) => {
-    if (onCategorySelect) {
-      onCategorySelect(categoryId);
-    } else if (categoryId !== null) {
+    // Sempre redirecionar para a página da categoria específica
+    if (categoryId !== null) {
       const category = categories?.find(c => c.id === categoryId);
       if (category) {
         // Redirecionar para a página da categoria específica
         setLocation(`/categories/${category.slug}`);
       }
+    } else if (onCategorySelect) {
+      // Se não for uma categoria específica, usar o onCategorySelect apenas como fallback
+      onCategorySelect(categoryId);
     }
   };
   
