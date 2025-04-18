@@ -59,7 +59,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     fs.mkdirSync(uploadDir, { recursive: true });
   }
   
-  const multerStorage = multer.diskStorage({
+  // Armazenamento em disco para uploads gerais
+  const diskStorage = multer.diskStorage({
     destination: function (req, file, cb) {
       cb(null, uploadDir);
     },
@@ -70,7 +71,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  const upload = multer({ storage: multerStorage });
+  // Armazenamento em memória para uploads de logo que precisam ser processados antes de salvar
+  const memoryStorage = multer.memoryStorage();
+  
+  // Configuração padrão para upload em disco
+  const upload = multer({ storage: diskStorage });
+  
+  // Configuração específica para upload de logo em memória
+  const logoUpload = multer({ 
+    storage: memoryStorage,
+    limits: {
+      fileSize: 5 * 1024 * 1024, // limite de 5MB
+    },
+    fileFilter: (req, file, cb) => {
+      // Aceitar apenas imagens
+      if (!file.mimetype.startsWith('image/')) {
+        return cb(new Error('Apenas imagens são permitidas'));
+      }
+      cb(null, true);
+    }
+  });
 
   // Categories API with precise art counts and detailed stats
   app.get("/api/categories", async (req, res) => {
@@ -940,7 +960,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Endpoint para atualizar configurações do site (requer admin)
-  app.put("/api/site-settings", isAdmin, upload.single('logo'), async (req, res) => {
+  app.put("/api/site-settings", isAdmin, logoUpload.single('logo'), async (req, res) => {
     try {
       console.log("Solicitação de atualização de logo recebida");
       

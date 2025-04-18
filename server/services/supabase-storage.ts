@@ -400,10 +400,27 @@ export class SupabaseStorageService {
     // A inicialização do bucket é feita de qualquer forma, independente de usar local ou não
     await this.initBucket();
 
-    // Verificar se o buffer do arquivo tem conteúdo
-    if (!file.buffer || file.buffer.length === 0) {
-      console.error("ERRO CRÍTICO: O buffer do arquivo está vazio!");
-      throw new Error("O arquivo enviado está vazio ou corrompido");
+    // Verificar se o buffer do arquivo tem conteúdo e validar em detalhes
+    if (!file.buffer) {
+      console.error("ERRO CRÍTICO: Propriedade buffer não existe no arquivo!");
+      throw new Error("Estrutura do arquivo inválida - buffer não existe");
+    }
+    
+    if (file.buffer.length === 0) {
+      console.error("ERRO CRÍTICO: O buffer do arquivo existe mas está vazio (comprimento zero)!");
+      throw new Error("O arquivo enviado está vazio (buffer com comprimento zero)");
+    }
+    
+    // Logar detalhes do buffer para diagnóstico
+    console.log(`Buffer válido encontrado: ${file.buffer.length} bytes`);
+    console.log(`Tipo do buffer: ${Buffer.isBuffer(file.buffer) ? 'Buffer nativo' : typeof file.buffer}`);
+    console.log(`Primeiros 20 bytes (hex): ${file.buffer.slice(0, 20).toString('hex')}`);
+    
+    // Verificação adicional para garantir que é um buffer válido
+    if (!Buffer.isBuffer(file.buffer)) {
+      console.error("AVISO: O buffer não é um Buffer nativo. Tentando converter...");
+      file.buffer = Buffer.from(file.buffer);
+      console.log(`Buffer convertido: ${file.buffer.length} bytes após conversão`);
     }
 
     // Criar diretório local de qualquer forma (para fallback)
