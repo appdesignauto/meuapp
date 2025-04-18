@@ -193,7 +193,7 @@ export default function PainelInicio() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Bem-vindo{user?.name ? `, ${user.name.split(' ')[0]}` : ''}</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Painel{user?.name ? ` de ${user.name.split(' ')[0]}` : ''}</h1>
         {ultimoAcessoFormatado && (
           <p className="text-sm text-muted-foreground mt-1">
             Último acesso em {ultimoAcessoFormatado}

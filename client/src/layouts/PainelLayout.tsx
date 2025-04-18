@@ -90,7 +90,7 @@ export default function PainelLayout({ children }: PainelLayoutProps) {
 
   const menuItems = [
     {
-      label: "Início",
+      label: "Painel",
       path: "/painel/inicio",
       icon: <Home className="h-5 w-5" />,
       access: "all",
