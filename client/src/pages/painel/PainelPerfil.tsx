@@ -1,10 +1,10 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useMutation } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { User as UserIcon, Eye, EyeOff, Save, Crown, Loader2, CalendarClock, Download, Heart } from "lucide-react";
+import { User as UserIcon, Eye, EyeOff, Save, Crown, Loader2, CalendarClock, Download, Heart, Upload, Camera } from "lucide-react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -93,6 +93,8 @@ export default function PainelPerfil() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Verificar se o usuário é premium
   const isPremium = user && 
@@ -199,6 +201,58 @@ export default function PainelPerfil() {
   function onPasswordSubmit(data: z.infer<typeof passwordFormSchema>) {
     updatePasswordMutation.mutate(data);
   }
+  
+  // Mutação para upload de imagem de perfil
+  const uploadImageMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      const response = await fetch('/api/users/profile-image', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Falha ao fazer upload da imagem');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      // Invalidar query do usuário para atualizar a imagem do perfil
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+      toast({
+        title: 'Imagem atualizada',
+        description: 'Sua imagem de perfil foi atualizada com sucesso',
+      });
+      setUploading(false);
+    },
+    onError: (error) => {
+      console.error('Erro ao fazer upload:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível atualizar a imagem. Tente novamente.',
+        variant: 'destructive',
+      });
+      setUploading(false);
+    },
+  });
+  
+  // Handler para o clique no botão de upload
+  const handleImageUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+  
+  // Handler para quando o arquivo é selecionado
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setUploading(true);
+      uploadImageMutation.mutate(file);
+    }
+  };
 
   // Formatação de data para exibição
   const formatDate = (dateInput: string | Date | null | undefined) => {
@@ -247,15 +301,39 @@ export default function PainelPerfil() {
             <CardContent>
               <div className="flex flex-col md:flex-row gap-6">
                 <div className="flex flex-col items-center gap-4">
-                  <Avatar className="h-24 w-24">
+                  <Avatar className="h-24 w-24 relative group">
                     <AvatarImage
                       src={user?.profileimageurl || ""}
                       alt={user?.name || "Usuário"}
                     />
                     <AvatarFallback className="text-2xl">{getInitials()}</AvatarFallback>
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Camera className="h-6 w-6 text-white" />
+                    </div>
                   </Avatar>
-                  <Button disabled className="w-full">
-                    Alterar imagem
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    className="hidden" 
+                    accept="image/*"
+                    onChange={handleFileChange}
+                  />
+                  <Button 
+                    onClick={handleImageUploadClick}
+                    disabled={uploading}
+                    className="w-full"
+                  >
+                    {uploading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Enviando...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Alterar imagem
+                      </>
+                    )}
                   </Button>
                 </div>
                 
