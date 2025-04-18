@@ -93,11 +93,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Ordenar por data de atualização e pegar a mais recente
         const sortedArts = [...arts].sort((a, b) => 
-          new Date(b.updatedat).getTime() - new Date(a.updatedat).getTime()
+          new Date(b.atualizadoem).getTime() - new Date(a.atualizadoem).getTime()
         );
         
         // Data da última atualização é a data da arte mais recente
-        const lastUpdate = sortedArts[0].updatedat;
+        const lastUpdate = sortedArts[0].atualizadoem;
         
         // Coletar formatos únicos de artes nesta categoria
         const uniqueFormats = Array.from(new Set(arts.map(art => art.format)));
@@ -1508,7 +1508,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           website: website || user.website,
           location: location || user.location,
           sociallinks: socialLinks || user.sociallinks,
-          updatedat: new Date()
+          atualizadoem: new Date()
         })
         .where(eq(users.id, userId));
       
@@ -1530,7 +1530,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         profileImageUrl: updatedUser.profileimageurl,
         followers: updatedUser.followers,
         following: updatedUser.following,
-        createdAt: updatedUser.createdAt
+        createdAt: updatedUser.criadoem
       });
     } catch (error) {
       console.error("Erro ao atualizar perfil:", error);

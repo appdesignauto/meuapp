@@ -28,6 +28,8 @@ interface ExtendedUser {
   criadoem: string | Date;
   atualizadoem: string | Date;
   role: string;
+  website?: string;
+  location?: string;
 }
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -65,6 +67,8 @@ const profileFormSchema = z.object({
     message: "O nome de usuário deve ter pelo menos 3 caracteres.",
   }),
   bio: z.string().optional(),
+  website: z.string().optional(),
+  location: z.string().optional(),
 });
 
 // Schema de validação para o formulário de senha
@@ -110,6 +114,8 @@ export default function PainelPerfil() {
       email: "",
       username: "",
       bio: "",
+      website: "",
+      location: "",
     },
   });
 
@@ -131,6 +137,8 @@ export default function PainelPerfil() {
         email: user.email || "",
         username: user.username || "",
         bio: user.bio || "",
+        website: user.website || "",
+        location: user.location || "",
       });
     }
   }, [user, profileForm]);
@@ -396,7 +404,35 @@ export default function PainelPerfil() {
                         )}
                       />
                       
-                      {/* Campos de website e location foram removidos pois não existem no modelo de usuário */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={profileForm.control}
+                          name="website"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Site</FormLabel>
+                              <FormControl>
+                                <Input placeholder="https://seusite.com" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={profileForm.control}
+                          name="location"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Localização</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Cidade, Estado" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                       
                       <div className="flex justify-end">
                         <Button 
