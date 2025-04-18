@@ -676,6 +676,14 @@ export default function PainelPerfil() {
                       </CardContent>
                     </Card>
                   </div>
+                  
+                  {/* Último acesso */}
+                  <div className="mt-4">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <CalendarClock className="h-4 w-4" />
+                      <span>Último acesso: {userStats?.lastLogin ? formatDate(userStats.lastLogin) : "Primeiro acesso"}</span>
+                    </div>
+                  </div>
                 </div>
 
                 <Separator />
@@ -686,7 +694,7 @@ export default function PainelPerfil() {
                   <div className="space-y-4">
                     <div className="flex justify-between">
                       <p className="text-sm font-medium text-muted-foreground">Último Login</p>
-                      <p>{user?.ultimologin ? formatDate(user.ultimologin) : "N/A"}</p>
+                      <p>{userStats?.lastLogin ? formatDate(userStats.lastLogin) : (user?.ultimologin ? formatDate(user.ultimologin) : "N/A")}</p>
                     </div>
                     <div className="flex justify-between items-center">
                       <p className="text-sm font-medium text-muted-foreground">Status da Conta</p>
