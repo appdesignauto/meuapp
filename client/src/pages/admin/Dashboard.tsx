@@ -24,8 +24,6 @@ import CategoriesList from '@/components/admin/CategoriesList';
 import UserManagement from '@/components/admin/UserManagement';
 import SiteSettings from '@/components/admin/SiteSettings';
 import { useToast } from '@/hooks/use-toast';
-import R2TestUpload from '@/components/admin/R2TestUpload';
-import SupabaseTestUpload from '@/components/admin/SupabaseTestUpload';
 
 const AdminDashboard = () => {
   const { user, logoutMutation } = useAuth();
@@ -226,28 +224,11 @@ const AdminDashboard = () => {
                 <Tabs defaultValue="site">
                   <TabsList>
                     <TabsTrigger value="site">Configurações do Site</TabsTrigger>
-                    <TabsTrigger value="storage">Armazenamento</TabsTrigger>
                     <TabsTrigger value="advanced">Avançado</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="site" className="mt-6">
                     <SiteSettings />
-                  </TabsContent>
-                  
-                  <TabsContent value="storage" className="mt-6">
-                    <div className="space-y-6">
-                      <div>
-                        <h3 className="text-lg font-medium mb-2">Teste de Upload (Supabase)</h3>
-                        <p className="text-gray-500 mb-4">Teste o upload de imagens para o armazenamento em nuvem Supabase.</p>
-                        <SupabaseTestUpload />
-                      </div>
-                      
-                      <div className="border-t pt-6">
-                        <h3 className="text-lg font-medium mb-2">Teste de Upload (R2)</h3>
-                        <p className="text-gray-500 mb-4">Teste o upload de imagens para o armazenamento em nuvem Cloudflare R2.</p>
-                        <R2TestUpload />
-                      </div>
-                    </div>
                   </TabsContent>
                   
                   <TabsContent value="advanced" className="mt-6">
