@@ -130,7 +130,15 @@ export default function PainelInicio() {
     
     try {
       const ultimoLogin = new Date(user.ultimologin);
-      return `${ultimoLogin.toLocaleDateString()} às ${ultimoLogin.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+      
+      // Formatar como dd/mm/yyyy hh:mm conforme solicitado
+      const dia = ultimoLogin.getDate().toString().padStart(2, '0');
+      const mes = (ultimoLogin.getMonth() + 1).toString().padStart(2, '0');
+      const ano = ultimoLogin.getFullYear();
+      const horas = ultimoLogin.getHours().toString().padStart(2, '0');
+      const minutos = ultimoLogin.getMinutes().toString().padStart(2, '0');
+      
+      return `${dia}/${mes}/${ano} ${horas}:${minutos}`;
     } catch (e) {
       console.error("Erro ao formatar data de último acesso:", e);
       return null;
@@ -166,7 +174,7 @@ export default function PainelInicio() {
       
       {/* Cartões de estatísticas */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Link href="/painel/favoritas" className="cursor-pointer transition-transform hover:scale-105 duration-200">
+        <div onClick={() => window.location.href = "/painel/favoritas"} className="cursor-pointer transition-transform hover:scale-105 duration-200">
           <StatCard 
             title="Artes Favoritas" 
             value={stats.favoriteCount} 
@@ -194,8 +202,8 @@ export default function PainelInicio() {
               ) : undefined
             }
           />
-        </Link>
-        <Link href="/painel/downloads" className="cursor-pointer transition-transform hover:scale-105 duration-200">
+        </div>
+        <div onClick={() => window.location.href = "/painel/downloads"} className="cursor-pointer transition-transform hover:scale-105 duration-200">
           <StatCard 
             title="Downloads" 
             value={stats.downloadCount} 
@@ -223,73 +231,84 @@ export default function PainelInicio() {
               ) : undefined
             }
           />
-        </Link>
-        <Link href="/painel/artes" className="cursor-pointer transition-transform hover:scale-105 duration-200">
+        </div>
+        <div onClick={() => window.location.href = "/painel/artes"} className="cursor-pointer transition-transform hover:scale-105 duration-200">
           <StatCard 
             title="Visualizações" 
             value={stats.viewCount} 
             icon={<Eye className="h-4 w-4 text-blue-500" />}
             loading={statsLoading}
           />
-        </Link>
-        <Card className={`${
-          isExpired ? "border-red-400" :
-          isLifetime ? "border-amber-400" :
-          isPremium ? "border-green-400" :
-          "border-blue-200"
-        }`}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Acesso</CardTitle>
-            {isLifetime ? (
-              <Crown className="h-4 w-4 text-amber-500" />
-            ) : isPremium ? (
-              <Star className="h-4 w-4 text-green-500" /> 
-            ) : isExpired ? (
-              <AlertCircle className="h-4 w-4 text-red-500" />
-            ) : (
-              <Clock className="h-4 w-4 text-blue-500" />
-            )}
-          </CardHeader>
-          <CardContent>
-            {statsLoading ? (
-              <Skeleton className="h-7 w-1/2" />
-            ) : (
-              <div className="space-y-3">
-                <div className={`text-xl font-bold ${
-                  isExpired ? "text-red-600" :
-                  isLifetime ? "text-amber-600" :
-                  isPremium ? "text-green-600" : 
-                  "text-blue-600"
-                }`}>
-                  {isLifetime ? "Premium Vitalício" :
-                   isPremium ? `Premium ${planType ? planType.charAt(0).toUpperCase() + planType.slice(1) : ""}` :
-                   isExpired ? "Expirado" : 
-                   "Básico"}
+        </div>
+        
+        {/* Card de Acesso com lógica dinâmica baseada no tipo de assinatura */}
+        <div onClick={() => window.location.href = "/painel/planos"} className="cursor-pointer">
+          <Card className={`${
+            isExpired ? "border-red-400" :
+            isLifetime ? "border-amber-400" :
+            isPremium ? "border-green-400" :
+            "border-blue-200"
+          } h-full transition-all hover:shadow-md`}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Assinatura</CardTitle>
+              {isLifetime ? (
+                <Crown className="h-4 w-4 text-amber-500" />
+              ) : isPremium ? (
+                <Star className="h-4 w-4 text-green-500" /> 
+              ) : isExpired ? (
+                <AlertCircle className="h-4 w-4 text-red-500" />
+              ) : (
+                <Clock className="h-4 w-4 text-blue-500" />
+              )}
+            </CardHeader>
+            <CardContent>
+              {statsLoading ? (
+                <Skeleton className="h-7 w-1/2" />
+              ) : (
+                <div className="space-y-3">
+                  <div className={`text-xl font-bold ${
+                    isExpired ? "text-red-600" :
+                    isLifetime ? "text-amber-600" :
+                    isPremium ? "text-green-600" : 
+                    "text-blue-600"
+                  }`}>
+                    {isLifetime ? "Premium Vitalício" :
+                     isPremium ? `Premium ${planType ? planType.charAt(0).toUpperCase() + planType.slice(1) : ""}` :
+                     isExpired ? "Expirado" : 
+                     "Plano Básico"}
+                  </div>
+                  
+                  {isPremium && !isLifetime && !isExpired && expirationDate && daysLeft !== null && (
+                    <div className="text-xs text-muted-foreground flex items-center">
+                      <CalendarClock className="h-3 w-3 mr-1" />
+                      <span>{daysLeft} {daysLeft === 1 ? 'dia restante' : 'dias restantes'}</span>
+                    </div>
+                  )}
+                  
+                  {isLifetime && (
+                    <div className="text-xs flex items-center">
+                      <Badge variant="outline" className="bg-amber-50 text-amber-700 hover:bg-amber-100">Acesso vitalício</Badge>
+                    </div>
+                  )}
+                  
+                  {/* Origem da assinatura, se disponível */}
+                  {user?.origemassinatura && (
+                    <div className="text-xs text-muted-foreground">
+                      Via {user.origemassinatura === 'hotmart' ? 'Hotmart' : 'Portal'}
+                    </div>
+                  )}
+                  
+                  {isExpired && (
+                    <Button size="sm" variant="destructive" className="w-full mt-2 text-xs">
+                      <RefreshCw className="h-3 w-3 mr-1" />
+                      Renovar agora
+                    </Button>
+                  )}
                 </div>
-                
-                {isPremium && !isLifetime && !isExpired && expirationDate && daysLeft !== null && (
-                  <div className="text-xs text-muted-foreground flex items-center">
-                    <CalendarClock className="h-3 w-3 mr-1" />
-                    <span>{daysLeft} {daysLeft === 1 ? 'dia restante' : 'dias restantes'}</span>
-                  </div>
-                )}
-                
-                {isLifetime && (
-                  <div className="text-xs flex items-center">
-                    <Badge variant="outline" className="bg-amber-50 text-amber-700 hover:bg-amber-100">Acesso vitalício</Badge>
-                  </div>
-                )}
-                
-                {isExpired && (
-                  <Button size="sm" variant="destructive" className="w-full mt-2 text-xs">
-                    <RefreshCw className="h-3 w-3 mr-1" />
-                    Renovar agora
-                  </Button>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* Informações específicas com base no tipo de acesso */}
