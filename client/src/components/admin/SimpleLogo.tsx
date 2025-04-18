@@ -38,19 +38,19 @@ const SimpleLogo = () => {
     }
   };
 
-  // Função para remover o logo
+  // Função para remover completamente o logo do sistema
   const handleRemoveLogo = async () => {
-    if (!currentLogo) {
+    if (!currentLogo || currentLogo.includes('/images/logo.png')) {
       toast({
         title: 'Sem logo para remover',
-        description: 'Não há logo configurado para remover.',
+        description: 'Não há logo personalizado configurado para remover.',
         variant: 'destructive',
       });
       return;
     }
     
     // Confirmar com o usuário
-    if (!confirm('Tem certeza que deseja remover o logo atual?')) {
+    if (!confirm('Tem certeza que deseja remover completamente o logo atual? Esta ação não pode ser desfeita.')) {
       return;
     }
     
@@ -59,21 +59,26 @@ const SimpleLogo = () => {
     try {
       const response = await fetch('/api/remove-logo', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Importante para a autenticação
       });
       
       if (!response.ok) {
-        throw new Error('Falha ao remover o logo. Tente novamente.');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Falha ao remover o logo. Tente novamente.');
       }
       
       const data = await response.json();
       
       toast({
         title: 'Logo removido com sucesso',
-        description: 'O logo foi removido e substituído pelo padrão.',
+        description: 'O logo foi completamente removido do sistema.',
         variant: 'default',
       });
       
-      // Atualizar o estado local para mostrar o novo logo
+      // Atualizar o estado local para mostrar o logo padrão ou nenhum logo
       setCurrentLogo(`${data.logoUrl}?t=${Date.now()}`);
       setLogoPreview(null);
       
@@ -91,7 +96,7 @@ const SimpleLogo = () => {
       console.error('Erro ao remover logo:', error);
       toast({
         title: 'Erro na remoção',
-        description: 'Não foi possível remover o logo. Tente novamente.',
+        description: error.message || 'Não foi possível remover o logo. Tente novamente.',
         variant: 'destructive',
       });
     } finally {

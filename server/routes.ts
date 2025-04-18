@@ -57,7 +57,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Registrar as rotas relacionadas ao logo
   app.use('/api/upload-logo', logoUploadRouter);
-  app.use('/api/remove-logo', removeLogoRouter);
+  
+  // Adicionar rota para remover o logo
+  removeLogoRouter(app);
   
   // Configurar o multer para upload de arquivos
   const uploadDir = path.join(process.cwd(), 'uploads');
