@@ -362,3 +362,25 @@ export const insertUserFollowSchema = createInsertSchema(userFollows).omit({
 
 export type UserFollow = typeof userFollows.$inferSelect;
 export type InsertUserFollow = z.infer<typeof insertUserFollowSchema>;
+
+// Configurações do sistema
+export const siteSettings = pgTable("siteSettings", {
+  id: serial("id").primaryKey(),
+  logoUrl: text("logoUrl").notNull().default('/images/logo.png'),
+  faviconUrl: text("faviconUrl").notNull().default('/favicon.ico'),
+  siteName: text("siteName").notNull().default('DesignAuto'),
+  primaryColor: text("primaryColor").notNull().default('#1e40af'),
+  footerText: text("footerText").notNull().default('© DesignAuto App. Todos os direitos reservados.'),
+  metaDescription: text("metaDescription").notNull().default('Plataforma de designs automotivos personalizáveis'),
+  contactEmail: text("contactEmail").notNull().default('contato@designauto.app'),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+  updatedBy: integer("updatedBy").references(() => users.id),
+});
+
+export const insertSiteSettingsSchema = createInsertSchema(siteSettings).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export type SiteSettings = typeof siteSettings.$inferSelect;
+export type InsertSiteSettings = z.infer<typeof insertSiteSettingsSchema>;

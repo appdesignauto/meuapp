@@ -1,7 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { arts, insertUserSchema, users, userFollows, categories, collections, views, downloads, favorites, communityPosts, communityComments, formats, fileTypes, testimonials, designerStats, subscriptions, type User } from "@shared/schema";
+import { arts, insertUserSchema, users, userFollows, categories, collections, views, downloads, favorites, communityPosts, communityComments, formats, fileTypes, testimonials, designerStats, subscriptions, siteSettings, insertSiteSettingsSchema, type User } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth } from "./auth";
@@ -832,6 +832,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Configurar rotas de seguidores (following)
   setupFollowRoutes(app, isAuthenticated);
+  
+  // Endpoints para gerenciar configurações do site
+  app.get("/api/site-settings", async (req, res) => {
+    try {
+      // Buscar as configurações do site (sempre retorna a única linha ou cria uma nova)
+      const settings = await db.select().from(siteSettings).limit(1);
+      
+      // Se não existir configuração, criar uma com valores padrão
+      if (settings.length === 0) {
+        const [newSettings] = await db.insert(siteSettings).values({}).returning();
+        return res.json(newSettings);
+      }
+      
+      return res.json(settings[0]);
+    } catch (error) {
+      console.error("Erro ao buscar configurações do site:", error);
+      res.status(500).json({ message: "Erro ao buscar configurações do site" });
+    }
+  });
+  
+  // Endpoint para atualizar configurações do site (requer admin)
+  app.put("/api/site-settings", isAdmin, upload.single('logo'), async (req, res) => {
+    try {
+      // Validar os dados recebidos
+      let updateData = req.body;
+      
+      // Se um arquivo de logo foi enviado, processar e salvar
+      if (req.file) {
+        // Definir o caminho público para a imagem
+        const logoUrl = `/images/${path.basename(req.file.path)}`;
+        
+        // Mover o arquivo para o diretório público de imagens
+        const publicImagesDir = path.join(process.cwd(), 'public/images');
+        if (!fs.existsSync(publicImagesDir)) {
+          fs.mkdirSync(publicImagesDir, { recursive: true });
+        }
+        
+        // Nome do arquivo baseado no timestamp para evitar cache de navegador
+        const logoFileName = `logo-${Date.now()}${path.extname(req.file.originalname)}`;
+        const logoDestination = path.join(publicImagesDir, logoFileName);
+        
+        // Copiar o arquivo do upload para o diretório público
+        fs.copyFileSync(req.file.path, logoDestination);
+        
+        // Adicionar logoUrl aos dados de atualização
+        updateData = {
+          ...updateData,
+          logoUrl: `/images/${logoFileName}`
+        };
+      }
+      
+      // Buscar a configuração existente (ou criar uma nova)
+      const existingSettings = await db.select().from(siteSettings).limit(1);
+      
+      if (existingSettings.length === 0) {
+        // Se não existe, criar uma nova configuração
+        const [newSettings] = await db.insert(siteSettings).values({
+          ...updateData,
+          updatedBy: (req.user as any).id
+        }).returning();
+        return res.json(newSettings);
+      } else {
+        // Se existe, atualizar a configuração existente
+        const [updatedSettings] = await db.update(siteSettings)
+          .set({
+            ...updateData,
+            updatedAt: new Date(),
+            updatedBy: (req.user as any).id
+          })
+          .where(eq(siteSettings.id, existingSettings[0].id))
+          .returning();
+        
+        return res.json(updatedSettings);
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar configurações do site:", error);
+      res.status(500).json({ message: "Erro ao atualizar configurações do site" });
+    }
+  });
 
   // Rota administrativa para atualizar designerId de todas as artes
   app.post("/api/admin/update-designers", isAdmin, async (req, res) => {
