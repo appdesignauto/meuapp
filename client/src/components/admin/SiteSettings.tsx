@@ -60,7 +60,15 @@ const SiteSettings = () => {
         description: 'As configurações do site foram atualizadas com sucesso.',
         variant: 'default',
       });
+      
+      // Invalidar todas as queries que usam as configurações do site
       queryClient.invalidateQueries({ queryKey: ['/api/site-settings'] });
+      
+      // Forçar a atualização da página após um pequeno delay para garantir que o cache seja atualizado
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+      
       setLogoPreview(null);
       setUploadingLogo(false);
     },

@@ -70,7 +70,10 @@ const Header = () => {
         console.error("Erro ao carregar configurações:", error);
         return { logoUrl: '/images/logo.png' };
       }
-    }
+    },
+    refetchOnWindowFocus: true,
+    refetchInterval: 60000, // Recarregar a cada 60 segundos
+    staleTime: 30000 // Considerar os dados obsoletos após 30 segundos
   });
 
   const navLinks = [
