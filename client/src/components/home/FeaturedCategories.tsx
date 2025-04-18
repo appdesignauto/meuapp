@@ -82,6 +82,21 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
     return imagePaths[category.slug] || ['/assets/VENDAS 04.png', '/assets/VENDAS 10.png', '/assets/VENDAS 17.png', '/assets/VENDAS 32.png'];
   };
 
+  // Função para determinar a cor de fundo do card da categoria
+  const getCategoryCardStyle = (slug: string): string => {
+    const styles: { [key: string]: string } = {
+      'vendas': 'bg-blue-50',
+      'lavagem': 'bg-green-50',
+      'mecanica': 'bg-red-50',
+      'locacao': 'bg-yellow-50',
+      'seminovos': 'bg-purple-50',
+      'promocoes': 'bg-orange-50',
+      'lancamentos': 'bg-indigo-50',
+    };
+    
+    return styles[slug] || 'bg-gray-50';
+  };
+
   return (
     <section className="py-12 md:py-16 bg-gradient-to-b from-white to-blue-50/30">
       <div className="container mx-auto px-4">
@@ -104,7 +119,7 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {[...Array(4)].map((_, index) => (
               <div key={index} className="rounded-xl overflow-hidden shadow-sm animate-pulse">
-                <div className="aspect-video bg-neutral-200">
+                <div className="aspect-square bg-neutral-200">
                   <div className="grid grid-cols-2 h-full">
                     <div className="bg-neutral-100 border-[0.5px] border-white"></div>
                     <div className="bg-neutral-100 border-[0.5px] border-white"></div>
@@ -123,16 +138,17 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {categories?.map((category) => {
               const imagePaths = getCategoryImagePaths(category);
+              const cardBgColor = getCategoryCardStyle(category.slug);
               
               return (
                 <div 
                   key={category.id} 
                   onClick={() => handleCategorySelect(category)}
-                  className={`group relative bg-white rounded-xl overflow-hidden cursor-pointer h-full transition-all duration-300 hover:shadow-lg ${
-                    selectedCategory === category.id ? 'ring-2 ring-primary' : 'shadow-md'
+                  className={`group relative ${cardBgColor} rounded-xl overflow-hidden cursor-pointer h-full transition-all duration-300 hover:shadow-lg ${
+                    selectedCategory === category.id ? 'ring-2 ring-blue-500' : 'shadow-md'
                   }`}
                 >
-                  {/* Imagens em Grid */}
+                  {/* Imagens em Grid 2x2 */}
                   <div className="aspect-square relative">
                     <div className="grid grid-cols-2 h-full">
                       {imagePaths.map((path, i) => (
@@ -146,22 +162,17 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
                         </div>
                       ))}
                     </div>
-
-                    {/* Ícone para favoritar no canto */}
-                    <div className="absolute top-3 right-3 bg-white bg-opacity-80 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <Bookmark className="h-4 w-4 text-blue-600" />
-                    </div>
                   </div>
                   
                   {/* Informações da Categoria */}
                   <div className="p-4">
-                    <h3 className="text-lg font-semibold text-neutral-800 mb-1">{category.name}</h3>
+                    <h3 className="text-lg font-semibold text-neutral-800 mb-1 text-center">{category.name}</h3>
                     
                     {/* Estatísticas da categoria */}
-                    <p className="text-sm text-neutral-600 mb-2">
+                    <p className="text-sm text-neutral-600 mb-2 text-center">
                       {artsStats?.totalArts[category.id] && (
-                        <span className="font-medium">{artsStats.totalArts[category.id]}</span>
-                      )} designs
+                        <><span className="font-medium">{artsStats.totalArts[category.id]}</span> designs</>
+                      )}
                     </p>
                     
                     <div className="flex justify-between items-center mt-3">
