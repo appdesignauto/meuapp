@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'wouter';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import useScrollTop from '@/hooks/useScrollTop';
 import { 
   ArrowLeft, 
@@ -19,6 +19,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import RelatedArts from '@/components/art/RelatedArts';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 
 // Interfaces para tipagem de dados
 interface RecentArt {
@@ -87,6 +88,64 @@ export default function ArtDetail() {
     },
     retry: 1,
   });
+  
+  // Verificar se a arte está favoritada
+  const { data: favoriteStatus } = useQuery({
+    queryKey: ['/api/favorites/check', id],
+    queryFn: async () => {
+      const res = await fetch(`/api/favorites/check/${id}`);
+      if (!res.ok) return { isFavorited: false };
+      return res.json();
+    },
+    enabled: !!user && !!id,
+  });
+  
+  // Efeito para sincronizar o estado liked com o resultado da API
+  useEffect(() => {
+    if (favoriteStatus) {
+      setLiked(favoriteStatus.isFavorited);
+    }
+  }, [favoriteStatus]);
+  
+  // Mutação para adicionar aos favoritos
+  const addFavoriteMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/favorites", { artId: Number(id) });
+      return await res.json();
+    },
+    onSuccess: () => {
+      setLiked(true);
+      queryClient.invalidateQueries({ queryKey: ['/api/favorites'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/favorites/check', id] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro",
+        description: "Não foi possível adicionar aos favoritos. Tente novamente.",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Mutação para remover dos favoritos
+  const removeFavoriteMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("DELETE", `/api/favorites/${id}`);
+      return await res.json();
+    },
+    onSuccess: () => {
+      setLiked(false);
+      queryClient.invalidateQueries({ queryKey: ['/api/favorites'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/favorites/check', id] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro",
+        description: "Não foi possível remover dos favoritos. Tente novamente.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleBack = () => {
     setLocation('/');
@@ -126,13 +185,21 @@ export default function ArtDetail() {
       });
       return;
     }
+
+    if (liked) {
+      // Remove dos favoritos
+      removeFavoriteMutation.mutate();
+    } else {
+      // Adiciona aos favoritos
+      addFavoriteMutation.mutate();
+    }
     
-    setLiked(!liked);
+    // Feedback visual imediato (será sobrescrito pelo resultado da mutação)
     toast({
-      title: liked ? "Removido dos favoritos" : "Adicionado aos favoritos",
+      title: liked ? "Removendo dos favoritos..." : "Adicionando aos favoritos...",
       description: liked 
-        ? "A arte foi removida da sua lista de favoritos" 
-        : "A arte foi adicionada à sua lista de favoritos",
+        ? "Removendo a arte da sua lista de favoritos" 
+        : "Adicionando a arte à sua lista de favoritos",
     });
   };
 
