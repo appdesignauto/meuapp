@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
-import { ArrowRight, Clock, Calendar, Bookmark, ChevronRight } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Category } from '@/types';
 
 interface FeaturedCategoriesProps {
@@ -10,51 +10,12 @@ interface FeaturedCategoriesProps {
 }
 
 const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCategoriesProps) => {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [, setLocation] = useLocation();
   
   const { data: categories, isLoading } = useQuery<Category[]>({
     queryKey: ['/api/categories'],
   });
-
-  // Obter estatísticas de artes para cada categoria
-  const { data: artsStats } = useQuery<any>({
-    queryKey: ['/api/categories/stats'],
-    queryFn: async () => {
-      try {
-        // API fictícia - os números reais viriam do backend
-        return {
-          totalArts: {
-            1: 523, // Categoria ID 1: 523 artes
-            2: 188,
-            3: 276,
-            4: 92,
-            5: 154,
-            6: 341,
-            7: 89,
-          },
-          lastUpdates: {
-            1: '2025-04-16',
-            2: '2025-04-15',
-            3: '2025-04-17',
-            4: '2025-04-10',
-            5: '2025-04-14',
-            6: '2025-04-16',
-            7: '2025-04-12',
-          }
-        };
-      } catch (error) {
-        console.error('Erro ao buscar estatísticas de categorias:', error);
-        return { totalArts: {}, lastUpdates: {} };
-      }
-    },
-  });
-
-  // Formatar data para exibição
-  const formatDate = (dateString: string) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-  };
 
   // Handler para a seleção de categoria
   const handleCategorySelect = (category: Category) => {
@@ -82,19 +43,22 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
     return imagePaths[category.slug] || ['/assets/VENDAS 04.png', '/assets/VENDAS 10.png', '/assets/VENDAS 17.png', '/assets/VENDAS 32.png'];
   };
 
-  // Função para determinar a cor de fundo do card da categoria
-  const getCategoryCardStyle = (slug: string): string => {
-    const styles: { [key: string]: string } = {
-      'vendas': 'bg-blue-50',
-      'lavagem': 'bg-green-50',
-      'mecanica': 'bg-red-50',
-      'locacao': 'bg-yellow-50',
-      'seminovos': 'bg-purple-50',
-      'promocoes': 'bg-orange-50',
-      'lancamentos': 'bg-indigo-50',
-    };
-    
-    return styles[slug] || 'bg-gray-50';
+  // Função para rolar o carrossel para a esquerda
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      const containerWidth = scrollContainerRef.current.offsetWidth;
+      const scrollAmount = containerWidth * 0.75;
+      scrollContainerRef.current.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+    }
+  };
+
+  // Função para rolar o carrossel para a direita
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      const containerWidth = scrollContainerRef.current.offsetWidth;
+      const scrollAmount = containerWidth * 0.75;
+      scrollContainerRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
   };
 
   return (
@@ -114,92 +78,105 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
           </Link>
         </div>
         
-        {/* Grid de categorias */}
-        {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, index) => (
-              <div key={index} className="rounded-xl overflow-hidden shadow-sm animate-pulse">
-                <div className="aspect-square bg-neutral-200">
-                  <div className="grid grid-cols-2 h-full">
-                    <div className="bg-neutral-100 border-[0.5px] border-white"></div>
-                    <div className="bg-neutral-100 border-[0.5px] border-white"></div>
-                    <div className="bg-neutral-100 border-[0.5px] border-white"></div>
-                    <div className="bg-neutral-100 border-[0.5px] border-white"></div>
-                  </div>
-                </div>
-                <div className="p-3">
-                  <div className="h-5 bg-neutral-200 rounded mb-2 w-2/3" />
-                  <div className="h-3 bg-neutral-100 rounded w-1/2" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {categories?.map((category) => {
-              const imagePaths = getCategoryImagePaths(category);
-              const cardBgColor = getCategoryCardStyle(category.slug);
-              
-              return (
-                <div 
-                  key={category.id} 
-                  onClick={() => handleCategorySelect(category)}
-                  className={`group relative ${cardBgColor} rounded-xl overflow-hidden cursor-pointer h-full transition-all duration-300 hover:shadow-lg ${
-                    selectedCategory === category.id ? 'ring-2 ring-blue-500' : 'shadow-md'
-                  }`}
-                >
-                  {/* Imagens em Grid 2x2 */}
-                  <div className="aspect-square relative">
+        <div className="relative overflow-hidden">
+          {/* Botões de navegação do carrossel */}
+          {!isLoading && categories && categories.length > 0 && (
+            <>
+              <button 
+                onClick={scrollLeft}
+                className="absolute left-1 md:left-6 top-1/2 transform -translate-y-1/2 z-20 bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg hover:bg-blue-500 hover:text-white focus:outline-none transition-all duration-300 border border-blue-100"
+                aria-label="Rolar para a esquerda"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button 
+                onClick={scrollRight}
+                className="absolute right-1 md:right-6 top-1/2 transform -translate-y-1/2 z-20 bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg hover:bg-blue-500 hover:text-white focus:outline-none transition-all duration-300 border border-blue-100"
+                aria-label="Rolar para a direita"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </>
+          )}
+          
+          {/* Gradientes para indicar continuação */}
+          <div className="absolute top-0 left-0 h-full w-16 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none"></div>
+          <div className="absolute top-0 right-0 h-full w-16 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none"></div>
+          
+          {/* Carrossel de categorias */}
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {[...Array(4)].map((_, index) => (
+                <div key={index} className="rounded-xl overflow-hidden shadow-sm animate-pulse">
+                  <div className="aspect-square bg-neutral-200">
                     <div className="grid grid-cols-2 h-full">
-                      {imagePaths.map((path, i) => (
-                        <div key={i} className="overflow-hidden border border-white">
-                          <img 
-                            src={path} 
-                            alt="" 
-                            className="object-cover w-full h-full transform group-hover:scale-105 transition-transform duration-500"
-                            loading="lazy"
-                          />
-                        </div>
-                      ))}
+                      <div className="bg-neutral-100 border-[0.5px] border-white"></div>
+                      <div className="bg-neutral-100 border-[0.5px] border-white"></div>
+                      <div className="bg-neutral-100 border-[0.5px] border-white"></div>
+                      <div className="bg-neutral-100 border-[0.5px] border-white"></div>
                     </div>
                   </div>
-                  
-                  {/* Informações da Categoria */}
-                  <div className="p-4">
-                    <h3 className="text-lg font-semibold text-neutral-800 mb-1 text-center">{category.name}</h3>
-                    
-                    {/* Estatísticas da categoria */}
-                    <p className="text-sm text-neutral-600 mb-2 text-center">
-                      {artsStats?.totalArts[category.id] && (
-                        <><span className="font-medium">{artsStats.totalArts[category.id]}</span> designs</>
-                      )}
-                    </p>
-                    
-                    <div className="flex justify-between items-center mt-3">
-                      <span className="text-xs text-neutral-500">
-                        {artsStats?.lastUpdates[category.id] && (
-                          <>Atualizado em {formatDate(artsStats.lastUpdates[category.id])}</>
-                        )}
-                      </span>
-                      
-                      <div className="flex items-center text-blue-600 text-xs font-medium">
-                        <span>Ver designs</span>
-                        <ChevronRight className="h-4 w-4 ml-1" />
-                      </div>
-                    </div>
+                  <div className="p-3">
+                    <div className="h-5 bg-neutral-200 rounded mb-2 w-2/3" />
                   </div>
-                  
-                  {/* Badge de selecionado */}
-                  {selectedCategory === category.id && (
-                    <div className="absolute top-2 right-2 bg-blue-500 text-white text-xs rounded-full px-2 py-0.5 z-10">
-                      Selecionado
-                    </div>
-                  )}
                 </div>
-              );
-            })}
-          </div>
-        )}
+              ))}
+            </div>
+          ) : (
+            <div 
+              ref={scrollContainerRef}
+              className="flex overflow-x-auto pb-5 hide-scrollbar snap-x snap-mandatory pl-4"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {categories?.map((category) => {
+                const imagePaths = getCategoryImagePaths(category);
+                
+                return (
+                  <div 
+                    key={category.id} 
+                    className="flex-none w-[250px] md:w-[280px] pr-4 snap-start"
+                    style={{ scrollSnapAlign: 'start' }}
+                  >
+                    <div 
+                      onClick={() => handleCategorySelect(category)}
+                      className={`group relative bg-white rounded-xl overflow-hidden cursor-pointer h-full transition-all duration-300 hover:shadow-lg ${
+                        selectedCategory === category.id ? 'ring-2 ring-blue-500' : 'shadow-md'
+                      }`}
+                    >
+                      {/* Imagens em Grid 2x2 */}
+                      <div className="aspect-square relative">
+                        <div className="grid grid-cols-2 h-full">
+                          {imagePaths.map((path, i) => (
+                            <div key={i} className="overflow-hidden border border-white">
+                              <img 
+                                src={path} 
+                                alt="" 
+                                className="object-cover w-full h-full transform group-hover:scale-105 transition-transform duration-500"
+                                loading="lazy"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Apenas o nome da categoria */}
+                      <div className="p-3 text-center">
+                        <h3 className="text-lg font-semibold text-neutral-800">{category.name}</h3>
+                      </div>
+                      
+                      {/* Badge de selecionado */}
+                      {selectedCategory === category.id && (
+                        <div className="absolute top-2 right-2 bg-blue-500 text-white text-xs rounded-full px-2 py-0.5 z-10">
+                          Selecionado
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );
