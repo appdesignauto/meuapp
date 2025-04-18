@@ -39,21 +39,35 @@ export default function PainelInicio() {
     enabled: !!user?.id,
   });
 
+  // Interface para tipar os dados de estatísticas
+  interface UserStatsData {
+    totalFavorites?: number;
+    totalDownloads?: number;
+    totalViews?: number;
+  }
+  
+  // Interface para tipar os dados de artes recentes
+  interface RecentArtsData {
+    arts?: any[];
+  }
+
   // Atualizar estatísticas quando os dados estiverem disponíveis
   useEffect(() => {
-    if (userStats && typeof userStats === 'object') {
+    if (userStats) {
+      const typedStats = userStats as UserStatsData;
       setStats(prev => ({
         ...prev,
-        favoriteCount: userStats.totalFavorites ?? 0,
-        downloadCount: userStats.totalDownloads ?? 0,
-        viewCount: userStats.totalViews ?? 0,
+        favoriteCount: typedStats.totalFavorites ?? 0,
+        downloadCount: typedStats.totalDownloads ?? 0,
+        viewCount: typedStats.totalViews ?? 0,
       }));
     }
     
-    if (recentArtsData && typeof recentArtsData === 'object') {
+    if (recentArtsData) {
+      const typedArtsData = recentArtsData as RecentArtsData;
       setStats(prev => ({
         ...prev,
-        recentArts: Array.isArray(recentArtsData.arts) ? recentArtsData.arts : [],
+        recentArts: Array.isArray(typedArtsData.arts) ? typedArtsData.arts : [],
       }));
     }
   }, [userStats, recentArtsData]);

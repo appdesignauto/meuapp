@@ -2,6 +2,7 @@ import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation, useRoute } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useSubscription } from "@/hooks/use-subscription";
+import { RenewalBanner } from "@/components/subscription/RenewalBanner";
 import {
   Home,
   Image,
@@ -12,8 +13,7 @@ import {
   Menu,
   X,
   Crown,
-  ChevronRight,
-  AlertTriangle
+  ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -145,19 +145,7 @@ export default function PainelLayout({ children }: PainelLayoutProps) {
       </header>
 
       {/* Banner de renovação para assinaturas expiradas */}
-      {isExpired && (
-        <div className="bg-amber-50 border-b border-amber-200 text-amber-800 px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center">
-            <AlertTriangle className="h-5 w-5 mr-2 text-amber-500" />
-            <span className="text-sm font-medium">Sua assinatura Premium expirou. Renove agora para continuar acessando todos os benefícios.</span>
-          </div>
-          <Link href="/planos">
-            <Button size="sm" className="ml-4 bg-amber-600 hover:bg-amber-700 text-white">
-              Renovar
-            </Button>
-          </Link>
-        </div>
-      )}
+      <RenewalBanner showBanner={isExpired} />
       
       <div className="flex flex-1">
         {/* Sidebar para Desktop */}
