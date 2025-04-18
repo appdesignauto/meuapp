@@ -36,10 +36,11 @@ const Hero = () => {
               ARTES AUTOMOTIVAS
             </span>
           </h1>
-          <p className="text-base md:text-lg text-neutral-600 mb-6 max-w-3xl mx-auto">
-            Tudo o que você precisa para impulsionar suas vendas com materiais 
-            profissionais prontos para edição.
-          </p>
+          <div className="mb-6 max-w-2xl mx-auto px-4">
+            <p className="text-sm md:text-base text-neutral-600 leading-relaxed bg-blue-50/50 py-2 px-3 rounded-lg inline-block">
+              <span className="font-medium text-blue-600">Tudo o que você precisa</span> para impulsionar suas vendas com materiais profissionais prontos para edição.
+            </p>
+          </div>
           
           {/* Search Bar */}
           <form onSubmit={handleSearch} className="max-w-2xl mx-auto relative mb-10">
