@@ -1,12 +1,13 @@
 import { useRef, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
-import { ArrowRight, ChevronLeft, ChevronRight, Eye, Tag } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, Eye, Filter } from 'lucide-react';
 import { Category } from '@/types';
+import MinimalCategoryFilters from './MinimalCategoryFilters';
 
 interface FeaturedCategoriesProps {
   selectedCategory?: number | null;
-  onCategorySelect?: (categoryId: number) => void;
+  onCategorySelect?: (categoryId: number | null) => void;
 }
 
 const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCategoriesProps) => {
@@ -29,12 +30,15 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
   });
 
   // Handler para a seleção de categoria
-  const handleCategorySelect = (category: Category) => {
+  const handleCategorySelect = (categoryId: number | null) => {
     if (onCategorySelect) {
-      onCategorySelect(category.id);
-    } else {
-      // Redirecionar para a página da categoria específica
-      setLocation(`/categories/${category.slug}`);
+      onCategorySelect(categoryId);
+    } else if (categoryId !== null) {
+      const category = categories?.find(c => c.id === categoryId);
+      if (category) {
+        // Redirecionar para a página da categoria específica
+        setLocation(`/categories/${category.slug}`);
+      }
     }
   };
   
@@ -93,16 +97,24 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
         <div className="flex flex-wrap items-center justify-between mb-8">
           <div className="relative">
             <div className="absolute -left-3 top-0 w-1 h-8 bg-blue-600 rounded-full"></div>
-            <h2 className="text-2xl md:text-3xl font-bold text-blue-700 mb-2 pl-1">Categorias Populares</h2>
-            <p className="text-neutral-600 max-w-2xl">Navegue por categoria para encontrar designs específicos para seu negócio</p>
+            <h2 className="text-2xl md:text-3xl font-bold text-blue-700 mb-2 pl-1">Designs em Destaque</h2>
+            <p className="text-neutral-600 max-w-2xl">Encontre artes profissionais prontas para seu negócio</p>
           </div>
           <Link 
-            href="/categories" 
+            href="/arts" 
             className="text-blue-600 hover:text-blue-500 font-medium text-sm flex items-center border border-blue-200 rounded-full px-4 py-2 transition-all hover:bg-blue-50 hover:shadow-md"
           >
-            Ver todas as categorias
+            Ver todos os designs
             <ArrowRight className="ml-1 h-4 w-4" />
           </Link>
+        </div>
+        
+        {/* Filtros Minimalistas */}
+        <div className="mb-6">
+          <MinimalCategoryFilters 
+            selectedCategory={selectedCategory} 
+            onCategorySelect={handleCategorySelect} 
+          />
         </div>
         
         <div className="relative overflow-hidden">
@@ -169,7 +181,7 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
                     onMouseLeave={() => setHoveredCategory(null)}
                   >
                     <div 
-                      onClick={() => handleCategorySelect(category)}
+                      onClick={() => handleCategorySelect(category.id)}
                       className={`group relative bg-white rounded-2xl overflow-hidden cursor-pointer h-full transition-all duration-300 
                         ${isHovered ? 'shadow-2xl scale-[1.02] -translate-y-1' : 'shadow-lg hover:shadow-xl hover:-translate-y-1'} 
                         ${selectedCategory === category.id ? 'ring-2 ring-blue-500' : ''}`}

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import useScrollTop from '@/hooks/useScrollTop';
 import Hero from '@/components/home/Hero';
-import CategoryFilters from '@/components/home/CategoryFilters';
 import FeaturedCategories from '@/components/home/FeaturedCategories';
 import ArtGallery from '@/components/home/ArtGallery';
 import PremiumFeatures from '@/components/home/PremiumFeatures';
@@ -58,12 +57,6 @@ const Home = () => {
     <>
       <Hero />
       <FeaturedCategories selectedCategory={selectedCategory} onCategorySelect={handleCategoryChange} />
-      <CategoryFilters 
-        selectedCategory={selectedCategory}
-        onCategoryChange={handleCategoryChange}
-        onFormatChange={setSelectedFormat}
-        onFileTypeChange={setSelectedFileType}
-      />
       <div id="art-gallery">
         <ArtGallery 
           categoryId={selectedCategory} 
