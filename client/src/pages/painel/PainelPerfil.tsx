@@ -4,8 +4,33 @@ import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { User, Eye, EyeOff, Save, Crown, Loader2, CalendarClock, Download, Heart } from "lucide-react";
+import { User as UserIcon, Eye, EyeOff, Save, Crown, Loader2, CalendarClock, Download, Heart } from "lucide-react";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+// Definição estendida do tipo User para incluir campos adicionais usados no perfil
+interface ExtendedUser {
+  id: number;
+  username: string;
+  email: string;
+  name: string | null;
+  profileimageurl: string | null;
+  bio: string | null;
+  nivelacesso: string | null;
+  origemassinatura: string | null;
+  tipoplano: string | null;
+  dataassinatura: string | Date | null;
+  dataexpiracao: string | Date | null;
+  acessovitalicio: boolean;
+  observacaoadmin: string | null;
+  isactive: boolean;
+  ultimologin: string | Date | null;
+  criadoem: string | Date;
+  atualizadoem: string | Date;
+  role: string;
+  website?: string;
+  location?: string;
+}
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -110,8 +135,9 @@ export default function PainelPerfil() {
         email: user.email || "",
         username: user.username || "",
         bio: user.bio || "",
-        website: user.website || "",
-        location: user.location || "",
+        // Se os campos não existirem, usaremos valores vazios
+        website: "",
+        location: "",
       });
     }
   }, [user, profileForm]);
