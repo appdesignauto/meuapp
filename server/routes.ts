@@ -836,6 +836,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Endpoints para gerenciar configurações do site
   app.get("/api/site-settings", async (req, res) => {
     try {
+      // Definir cabeçalhos para evitar cache
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      
       // Buscar as configurações do site (sempre retorna a única linha ou cria uma nova)
       const settings = await db.select().from(siteSettings).limit(1);
       
@@ -843,6 +848,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (settings.length === 0) {
         const [newSettings] = await db.insert(siteSettings).values({}).returning();
         return res.json(newSettings);
+      }
+      
+      // Adiciona um parâmetro de versão na URL do logo para evitar cache
+      if (settings[0].logoUrl) {
+        settings[0].logoUrl = `${settings[0].logoUrl}`;
       }
       
       return res.json(settings[0]);
@@ -855,6 +865,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Endpoint para atualizar configurações do site (requer admin)
   app.put("/api/site-settings", isAdmin, upload.single('logo'), async (req, res) => {
     try {
+      // Definir cabeçalhos para evitar cache
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      
       // Validar os dados recebidos
       let updateData = req.body;
       

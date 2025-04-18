@@ -43,9 +43,17 @@ const SiteSettings = () => {
   // Mutation para atualizar configurações
   const updateSettingsMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const res = await fetch('/api/site-settings', {
+      // Adiciona um timestamp à requisição para evitar cache
+      data.append('timestamp', Date.now().toString());
+      
+      const res = await fetch('/api/site-settings?nocache=' + Math.random(), {
         method: 'PUT',
         body: data,
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
       });
       
       if (!res.ok) {
@@ -54,17 +62,22 @@ const SiteSettings = () => {
       
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: 'Configurações atualizadas',
         description: 'As configurações do site foram atualizadas com sucesso.',
         variant: 'default',
       });
       
-      // Invalidar todas as queries que usam as configurações do site
-      queryClient.invalidateQueries({ queryKey: ['/api/site-settings'] });
+      console.log('Logo atualizado com sucesso:', data);
       
-      // Forçar a atualização da página após um pequeno delay para garantir que o cache seja atualizado
+      // Invalidar todas as queries que usam as configurações do site com opções de cache
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/site-settings'],
+        refetchType: 'all'
+      });
+      
+      // Forçar a atualização da página após um pequeno delay
       setTimeout(() => {
         window.location.reload();
       }, 500);
@@ -73,6 +86,7 @@ const SiteSettings = () => {
       setUploadingLogo(false);
     },
     onError: (error) => {
+      console.error('Erro ao atualizar logo:', error);
       toast({
         title: 'Erro ao atualizar',
         description: error.message,
@@ -168,8 +182,9 @@ const SiteSettings = () => {
                     ) : settings?.logoUrl ? (
                       <div className="h-32 flex items-center justify-center">
                         <img 
-                          src={settings.logoUrl + '?v=' + new Date().getTime()} 
+                          src={`${settings.logoUrl}?v=${Math.random().toString(36).substring(2, 15)}`}
                           alt="Current Logo" 
+                          key={`logo-settings-${Math.random()}`}
                           className="h-full max-w-full object-contain" 
                           onError={(e) => {
                             console.error('Erro ao carregar logo:', e);
