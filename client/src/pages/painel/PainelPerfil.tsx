@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { User, Eye, EyeOff, Save, Crown, Loader2, CalendarClock } from "lucide-react";
+import { User, Eye, EyeOff, Save, Crown, Loader2, CalendarClock, Download, Heart } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -175,10 +175,10 @@ export default function PainelPerfil() {
   }
 
   // Formatação de data para exibição
-  const formatDate = (dateString: string | null | undefined) => {
-    if (!dateString) return "N/A";
+  const formatDate = (dateInput: string | Date | null | undefined) => {
+    if (!dateInput) return "N/A";
     
-    const date = new Date(dateString);
+    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
     return new Intl.DateTimeFormat('pt-BR', {
       day: '2-digit',
       month: '2-digit',
@@ -202,9 +202,10 @@ export default function PainelPerfil() {
       <h1 className="text-3xl font-bold tracking-tight">Meu Perfil</h1>
       
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList>
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="profile">Perfil</TabsTrigger>
-          <TabsTrigger value="account">Conta</TabsTrigger>
+          <TabsTrigger value="details">Detalhes</TabsTrigger>
+          <TabsTrigger value="account">Segurança</TabsTrigger>
           <TabsTrigger value="subscription">Assinatura</TabsTrigger>
         </TabsList>
         
@@ -356,7 +357,112 @@ export default function PainelPerfil() {
           </Card>
         </TabsContent>
         
-        {/* Aba de Conta */}
+        {/* Aba de Detalhes */}
+        <TabsContent value="details" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Detalhes da Conta</CardTitle>
+              <CardDescription>
+                Visualize informações detalhadas sobre sua conta e status.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {/* Informações Pessoais */}
+                <div>
+                  <h3 className="text-lg font-medium mb-4">Informações Pessoais</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-muted-foreground">Nome de Usuário</p>
+                      <p>{user?.username || "-"}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-muted-foreground">Email</p>
+                      <p>{user?.email || "-"}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-muted-foreground">Nome Completo</p>
+                      <p>{user?.name || "-"}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-muted-foreground">Data de Registro</p>
+                      <p>{formatDate(user?.criadoem)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Estatísticas da Conta */}
+                <div>
+                  <h3 className="text-lg font-medium mb-4">Estatísticas</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card className="bg-muted/50">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Downloads</p>
+                            <p className="text-2xl font-bold">0</p>
+                          </div>
+                          <Download className="h-8 w-8 text-blue-500 opacity-80" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-muted/50">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Favoritos</p>
+                            <p className="text-2xl font-bold">0</p>
+                          </div>
+                          <Heart className="h-8 w-8 text-red-500 opacity-80" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-muted/50">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Visualizações</p>
+                            <p className="text-2xl font-bold">0</p>
+                          </div>
+                          <Eye className="h-8 w-8 text-green-500 opacity-80" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Atividade da Conta */}
+                <div>
+                  <h3 className="text-lg font-medium mb-4">Atividade da Conta</h3>
+                  <div className="space-y-4">
+                    <div className="flex justify-between">
+                      <p className="text-sm font-medium text-muted-foreground">Último Login</p>
+                      <p>{user?.ultimologin ? formatDate(user.ultimologin) : "N/A"}</p>
+                    </div>
+                    <div className="flex justify-between">
+                      <p className="text-sm font-medium text-muted-foreground">Status da Conta</p>
+                      <Badge className={user?.isactive ? "bg-green-500" : "bg-red-500"}>
+                        {user?.isactive ? "Ativa" : "Inativa"}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <p className="text-sm font-medium text-muted-foreground">Tipo de Usuário</p>
+                      <Badge variant="outline" className="capitalize">
+                        {user?.role || "Usuário"}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        {/* Aba de Segurança */}
         <TabsContent value="account" className="space-y-6">
           <Card>
             <CardHeader>
