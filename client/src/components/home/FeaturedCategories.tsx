@@ -1,7 +1,7 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
-import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, Eye, Tag } from 'lucide-react';
 import { Category } from '@/types';
 
 interface FeaturedCategoriesProps {
@@ -12,6 +12,17 @@ interface FeaturedCategoriesProps {
 const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCategoriesProps) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [, setLocation] = useLocation();
+  const [hoveredCategory, setHoveredCategory] = useState<number | null>(null);
+  const [showArrows, setShowArrows] = useState(false);
+  
+  // Mostrar as setas de navegação após um pequeno delay para uma entrada mais suave
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowArrows(true);
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, []);
   
   const { data: categories, isLoading } = useQuery<Category[]>({
     queryKey: ['/api/categories'],
@@ -43,6 +54,21 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
     return imagePaths[category.slug] || ['/assets/VENDAS 04.png', '/assets/VENDAS 10.png', '/assets/VENDAS 17.png', '/assets/VENDAS 32.png'];
   };
 
+  // Função para determinar a cor de destaque da categoria
+  const getCategoryColor = (slug: string): string => {
+    const colors: { [key: string]: string } = {
+      'vendas': 'from-blue-500 to-blue-600',
+      'lavagem': 'from-green-500 to-green-600',
+      'mecanica': 'from-red-500 to-red-600',
+      'locacao': 'from-yellow-500 to-yellow-600',
+      'seminovos': 'from-purple-500 to-purple-600',
+      'promocoes': 'from-orange-500 to-orange-600',
+      'lancamentos': 'from-indigo-500 to-indigo-600',
+    };
+    
+    return colors[slug] || 'from-blue-500 to-blue-600';
+  };
+
   // Função para rolar o carrossel para a esquerda
   const scrollLeft = () => {
     if (scrollContainerRef.current) {
@@ -65,13 +91,14 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
     <section className="py-12 md:py-16 bg-gradient-to-b from-white to-blue-50/30">
       <div className="container mx-auto px-4">
         <div className="flex flex-wrap items-center justify-between mb-8">
-          <div>
-            <h2 className="text-2xl md:text-3xl font-bold text-blue-700 mb-2">Categorias Populares</h2>
+          <div className="relative">
+            <div className="absolute -left-3 top-0 w-1 h-8 bg-blue-600 rounded-full"></div>
+            <h2 className="text-2xl md:text-3xl font-bold text-blue-700 mb-2 pl-1">Categorias Populares</h2>
             <p className="text-neutral-600 max-w-2xl">Navegue por categoria para encontrar designs específicos para seu negócio</p>
           </div>
           <Link 
             href="/categories" 
-            className="text-blue-600 hover:text-blue-500 font-medium text-sm flex items-center border border-blue-200 rounded-full px-4 py-2 transition-all hover:bg-blue-50"
+            className="text-blue-600 hover:text-blue-500 font-medium text-sm flex items-center border border-blue-200 rounded-full px-4 py-2 transition-all hover:bg-blue-50 hover:shadow-md"
           >
             Ver todas as categorias
             <ArrowRight className="ml-1 h-4 w-4" />
@@ -79,19 +106,19 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
         </div>
         
         <div className="relative overflow-hidden">
-          {/* Botões de navegação do carrossel */}
-          {!isLoading && categories && categories.length > 0 && (
+          {/* Botões de navegação do carrossel com animação */}
+          {!isLoading && categories && categories.length > 0 && showArrows && (
             <>
               <button 
                 onClick={scrollLeft}
-                className="absolute left-1 md:left-6 top-1/2 transform -translate-y-1/2 z-20 bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg hover:bg-blue-500 hover:text-white focus:outline-none transition-all duration-300 border border-blue-100"
+                className="absolute left-1 md:left-6 top-1/2 transform -translate-y-1/2 z-20 bg-white/95 backdrop-blur-sm rounded-full p-3.5 shadow-xl hover:bg-blue-500 hover:text-white focus:outline-none transition-all duration-300 border border-blue-100 animate-fade-in"
                 aria-label="Rolar para a esquerda"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
               <button 
                 onClick={scrollRight}
-                className="absolute right-1 md:right-6 top-1/2 transform -translate-y-1/2 z-20 bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg hover:bg-blue-500 hover:text-white focus:outline-none transition-all duration-300 border border-blue-100"
+                className="absolute right-1 md:right-6 top-1/2 transform -translate-y-1/2 z-20 bg-white/95 backdrop-blur-sm rounded-full p-3.5 shadow-xl hover:bg-blue-500 hover:text-white focus:outline-none transition-all duration-300 border border-blue-100 animate-fade-in"
                 aria-label="Rolar para a direita"
               >
                 <ChevronRight className="h-5 w-5" />
@@ -100,8 +127,8 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
           )}
           
           {/* Gradientes para indicar continuação */}
-          <div className="absolute top-0 left-0 h-full w-16 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none"></div>
-          <div className="absolute top-0 right-0 h-full w-16 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none"></div>
+          <div className="absolute top-0 left-0 h-full w-20 bg-gradient-to-r from-white via-white/90 to-transparent z-10 pointer-events-none"></div>
+          <div className="absolute top-0 right-0 h-full w-20 bg-gradient-to-l from-white via-white/90 to-transparent z-10 pointer-events-none"></div>
           
           {/* Carrossel de categorias */}
           {isLoading ? (
@@ -125,55 +152,90 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
           ) : (
             <div 
               ref={scrollContainerRef}
-              className="flex overflow-x-auto pb-5 hide-scrollbar snap-x snap-mandatory pl-4"
+              className="flex overflow-x-auto pb-8 hide-scrollbar snap-x snap-mandatory pl-4 pt-2"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               {categories?.map((category) => {
                 const imagePaths = getCategoryImagePaths(category);
+                const categoryColor = getCategoryColor(category.slug);
+                const isHovered = hoveredCategory === category.id;
                 
                 return (
                   <div 
                     key={category.id} 
-                    className="flex-none w-[250px] md:w-[280px] pr-4 snap-start"
+                    className="flex-none w-[270px] md:w-[300px] pr-5 snap-start"
                     style={{ scrollSnapAlign: 'start' }}
+                    onMouseEnter={() => setHoveredCategory(category.id)}
+                    onMouseLeave={() => setHoveredCategory(null)}
                   >
                     <div 
                       onClick={() => handleCategorySelect(category)}
-                      className={`group relative bg-white rounded-xl overflow-hidden cursor-pointer h-full transition-all duration-300 hover:shadow-lg ${
-                        selectedCategory === category.id ? 'ring-2 ring-blue-500' : 'shadow-md'
-                      }`}
+                      className={`group relative bg-white rounded-2xl overflow-hidden cursor-pointer h-full transition-all duration-300 
+                        ${isHovered ? 'shadow-2xl scale-[1.02] -translate-y-1' : 'shadow-lg hover:shadow-xl hover:-translate-y-1'} 
+                        ${selectedCategory === category.id ? 'ring-2 ring-blue-500' : ''}`}
+                      style={{
+                        transformStyle: 'preserve-3d',
+                      }}
                     >
                       {/* Imagens em Grid 2x2 */}
                       <div className="aspect-square relative">
                         <div className="grid grid-cols-2 h-full">
                           {imagePaths.map((path, i) => (
-                            <div key={i} className="overflow-hidden border border-white">
+                            <div key={i} className="overflow-hidden border-[1.5px] border-white">
                               <img 
                                 src={path} 
                                 alt="" 
-                                className="object-cover w-full h-full transform group-hover:scale-105 transition-transform duration-500"
+                                className="object-cover w-full h-full transform group-hover:scale-110 transition-transform duration-700"
                                 loading="lazy"
                               />
                             </div>
                           ))}
                         </div>
+                        
+                        {/* Overlay com gradiente na parte inferior para nome da categoria */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        
+                        {/* Badge de selecionado */}
+                        {selectedCategory === category.id && (
+                          <div className="absolute top-3 right-3 bg-blue-500 text-white text-xs font-medium rounded-full px-3 py-1 z-10 shadow-lg">
+                            Selecionado
+                          </div>
+                        )}
                       </div>
                       
-                      {/* Apenas o nome da categoria */}
-                      <div className="p-3 text-center">
-                        <h3 className="text-lg font-semibold text-neutral-800">{category.name}</h3>
-                      </div>
-                      
-                      {/* Badge de selecionado */}
-                      {selectedCategory === category.id && (
-                        <div className="absolute top-2 right-2 bg-blue-500 text-white text-xs rounded-full px-2 py-0.5 z-10">
-                          Selecionado
+                      {/* Nome da categoria com estilo especial */}
+                      <div className="relative px-4 py-3 text-center">
+                        {/* Badge de categoria com gradiente */}
+                        <div className={`absolute -top-[18px] left-1/2 transform -translate-x-1/2 rounded-full bg-gradient-to-r ${categoryColor} px-4 py-1 shadow-md`}>
+                          <h3 className="text-sm font-medium text-white">{category.name}</h3>
                         </div>
-                      )}
+                        
+                        {/* Espaço para o nome da categoria */}
+                        <div className="h-2"></div>
+                      </div>
+                      
+                      {/* Ícone "Ver" que aparece ao passar o mouse */}
+                      <div className={`absolute bottom-3 right-3 bg-white rounded-full p-2 shadow-md 
+                        transition-all duration-300 ${isHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}`}>
+                        <Eye className="h-4 w-4 text-blue-600" />
+                      </div>
                     </div>
                   </div>
                 );
               })}
+            </div>
+          )}
+          
+          {/* Indicadores de paginação (bolinhas) */}
+          {!isLoading && categories && categories.length > 4 && (
+            <div className="flex justify-center mt-4 space-x-1.5">
+              {Array.from({ length: Math.ceil((categories.length || 0) / 4) }).map((_, index) => (
+                <div 
+                  key={index}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 
+                    ${index === 0 ? 'bg-blue-500 w-4' : 'bg-blue-200 hover:bg-blue-300'}`}
+                />
+              ))}
             </div>
           )}
         </div>
