@@ -291,7 +291,7 @@ export default function PainelPerfil() {
         <TabsContent value="profile" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Informações do Perfil</CardTitle>
+              <CardTitle>Meu Perfil</CardTitle>
               <CardDescription>
                 Atualize suas informações pessoais aqui. Elas serão visíveis para outros usuários.
               </CardDescription>

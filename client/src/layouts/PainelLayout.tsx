@@ -96,6 +96,12 @@ export default function PainelLayout({ children }: PainelLayoutProps) {
       access: "all",
     },
     {
+      label: "Meu Perfil",
+      path: "/painel/perfil",
+      icon: <User className="h-5 w-5" />,
+      access: "all",
+    },
+    {
       label: "Favoritas",
       path: "/painel/favoritas",
       icon: <Heart className="h-5 w-5" />,
@@ -117,12 +123,6 @@ export default function PainelLayout({ children }: PainelLayoutProps) {
       label: "Assinatura",
       path: "/painel/assinatura",
       icon: <CreditCard className="h-5 w-5" />,
-      access: "all",
-    },
-    {
-      label: "Perfil",
-      path: "/painel/perfil",
-      icon: <User className="h-5 w-5" />,
       access: "all",
     },
   ];
