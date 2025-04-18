@@ -228,16 +228,6 @@ const AdminDashboard = () => {
                   </TabsList>
                   
                   <TabsContent value="site" className="mt-6">
-                    <div className="mb-6">
-                      <Button
-                        variant="outline"
-                        onClick={() => setLocation('/admin/logo-upload')}
-                        className="flex items-center"
-                      >
-                        <Image className="w-4 h-4 mr-2" />
-                        Gerenciar Logo do Site
-                      </Button>
-                    </div>
                     <SiteSettings />
                   </TabsContent>
                   
