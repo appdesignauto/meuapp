@@ -6,6 +6,7 @@ import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth } from "./auth";
 import imageUploadRoutes from "./routes/image-upload";
+import { setupFollowRoutes } from "./routes/follows";
 import { db } from "./db";
 import { eq, isNull, desc, and, count, sql, asc, not, or, ne, inArray } from "drizzle-orm";
 import { randomBytes, scrypt } from "crypto";
