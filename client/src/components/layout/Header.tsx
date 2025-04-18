@@ -137,6 +137,16 @@ const Header = () => {
               </Link>
             )}
             
+            {/* Botão do menu mobile */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="md:hidden h-9 w-9 rounded-full ml-1 text-neutral-600 hover:bg-blue-50 hover:text-blue-600"
+              onClick={toggleMobileMenu}
+            >
+              <Menu className="h-[18px] w-[18px]" />
+            </Button>
+
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
