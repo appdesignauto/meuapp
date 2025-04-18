@@ -41,75 +41,24 @@ import {
 import MobileMenu from './MobileMenu';
 import { useQuery } from '@tanstack/react-query';
 
-// Componente dedicado para o logo que sempre usa a versão mais recente
+// Componente dedicado para o logo com cache simplificado
 type LogoImageProps = { 
   siteSettings: any 
 };
 
 const LogoImage = ({ siteSettings }: LogoImageProps) => {
-  // Forçamos uma renderização completamente nova a cada 3 segundos
-  const [counter, setCounter] = useState(0);
+  // O logo agora é muito mais simples e usa diretamente o caminho padrão
+  // sem toda a complexidade anti-cache excessiva
   
-  // Forçar atualização aggressiva para garantir que o logo seja sempre atual
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCounter(prev => prev + 1);
-    }, 3000); // Forçar rerender a cada 3 segundos
-    
-    return () => clearInterval(interval);
-  }, []);
-  
-  // Limpar completamente o cache armazenado para o logo
-  useEffect(() => {
-    // Limpeza de cache ao montar o componente
-    const cacheNames = ['logo-cache', 'image-cache', 'site-settings'];
-    localStorage.removeItem('newLogoUrl');
-    localStorage.removeItem('logoUpdatedAt');
-    
-    // Limpar cache do service worker se existir
-    if ('caches' in window) {
-      cacheNames.forEach(cacheName => {
-        caches.delete(cacheName).catch(() => {});
-      });
-    }
-  }, []);
-  
-  // Certifique-se de que sempre usamos a versão mais recente do logo
-  // Criamos uma URL única a cada renderização para evitar cache
-  const generateUniqueUrl = (baseUrl: string) => {
-    const uniqueId = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}_${counter}`;
-    const separator = baseUrl.includes('?') ? '&' : '?';
-    return `${baseUrl}${separator}v=${uniqueId}`;
-  };
-  
-  // Determinar a URL final do logo, com parâmetros anti-cache
-  const logoBaseUrl = siteSettings?.logoUrl || '/images/logo.png';
-  const currentTimestamp = Date.now(); // Usado na key e URL para forçar recarregamento
-  const finalLogoUrl = generateUniqueUrl(logoBaseUrl);
-  
-  console.log(`Renderizando logo na iteração ${counter} com URL: ${finalLogoUrl}`);
+  // Caso não haja configurações do site, usar logo padrão
+  const logoUrl = '/images/logo.png';
   
   return (
     <img 
-      src={finalLogoUrl}
+      src={logoUrl}
       alt="DesignAuto App" 
       className="h-full w-auto max-w-[180px] sm:max-w-[200px] object-contain mr-3 transition-transform duration-200 hover:scale-105 pr-1"
-      key={`logo-${currentTimestamp}-${counter}`} // Key única para forçar o React a recriar o elemento
       loading="eager"
-      referrerPolicy="no-referrer"
-      fetchPriority="high"
-      style={{
-        // Usar timestamp no CSS para evitar cache do navegador
-        filter: `_:nth-child(${currentTimestamp%10+counter})` // Hack CSS para forçar renderização
-      }}
-      onError={(e) => {
-        console.error('Erro ao carregar logo:', e);
-        // Em caso de erro, tentar recarregar a imagem padrão com timestamp
-        (e.target as HTMLImageElement).src = `/images/logo.png?t=${Date.now()}`;
-      }}
-      onLoad={() => {
-        console.log(`Logo carregado com sucesso na iteração ${counter}`);
-      }}
     />
   );
 };
@@ -165,49 +114,24 @@ const Header = () => {
     };
   }, []);
   
-  // Buscar configurações do site para o logo - versão super anti-cache
+  // Buscamos as configurações do site de forma simplificada
   const { data: siteSettings } = useQuery({
-    queryKey: ['/api/site-settings', location, Date.now(), settingsRefreshCounter], // Forçar revalidação quando qualquer destas chaves mudar
+    queryKey: ['/api/site-settings'],
     queryFn: async () => {
       try {
-        const timestamp = Date.now();
-        const uniqueId = Math.random().toString(36).substring(2, 15);
-        const res = await fetch(`/api/site-settings?t=${timestamp}&r=${uniqueId}&c=${settingsRefreshCounter}`, {
-          method: 'GET',
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
-            'Pragma': 'no-cache',
-            'Expires': '0',
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-Cache-Bust': uniqueId
-          },
-          cache: 'no-store'
-        });
-        
-        if (!res.ok) return { logoUrl: `/images/logo.png?t=${timestamp}` };
-        
-        const data = await res.json();
-        
-        // Adicionar timestamp para evitar cache
-        if (data.logoUrl) {
-          const separator = data.logoUrl.includes('?') ? '&' : '?';
-          data.logoUrl = `${data.logoUrl}${separator}t=${timestamp}`;
-          data.logoUpdatedAt = timestamp; // Adicionar timestamp para ajudar componentes a saberem quando há atualização
-        }
-        
-        console.log("Configurações carregadas:", data);
-        return data;
+        const res = await fetch('/api/site-settings');
+        if (!res.ok) return { logoUrl: '/images/logo.png' };
+        return await res.json();
       } catch (error) {
         console.error("Erro ao carregar configurações:", error);
-        return { logoUrl: `/images/logo.png?t=${Date.now()}` };
+        return { logoUrl: '/images/logo.png' };
       }
     },
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
     refetchOnMount: true,
-    refetchInterval: 3000, // Recarregar a cada 3 segundos
-    staleTime: 0, // Considerar os dados sempre obsoletos
-    gcTime: 0, // Não fazer cache (em v5, gcTime substitui cacheTime)
-    networkMode: 'always' // Sempre fazer requisição de rede, nunca usar cache
+    refetchInterval: false,
+    staleTime: 1000 * 60, // 1 minuto
+    gcTime: 1000 * 60 * 5 // 5 minutos
   });
 
   const navLinks = [
