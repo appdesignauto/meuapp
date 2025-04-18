@@ -5,9 +5,10 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, RefreshCw, Check, AlertCircle, Loader2 } from 'lucide-react';
+import { Upload, AlertCircle, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
+// Definição da interface para o tipo de dados SiteSettings
 interface SiteSettings {
   id: number;
   logoUrl: string;
@@ -21,7 +22,8 @@ interface SiteSettings {
   updatedBy: number;
 }
 
-const SiteSettings = () => {
+// Componente LogoUploader - criado para simplificar o código
+const LogoUploader = () => {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -30,36 +32,39 @@ const SiteSettings = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   
-  // Buscar configurações ao montar o componente
-  useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        setIsLoading(true);
-        // Adicionar parâmetro de timestamp para evitar cache
-        const response = await fetch(`/api/site-settings?t=${Date.now()}`);
-        
-        if (!response.ok) {
-          throw new Error('Falha ao carregar configurações do site');
-        }
-        
-        const data = await response.json();
-        setSettings(data);
-        setError(null);
-      } catch (err: any) {
-        console.error('Erro ao carregar configurações:', err);
-        setError(err);
-      } finally {
-        setIsLoading(false);
+  // Função para carregar as configurações do site
+  const loadSettings = async () => {
+    try {
+      setIsLoading(true);
+      // Adicionar parâmetro de timestamp para evitar cache
+      const timestamp = Date.now();
+      const response = await fetch(`/api/site-settings?t=${timestamp}`);
+      
+      if (!response.ok) {
+        throw new Error('Falha ao carregar configurações do site');
       }
-    };
-    
-    fetchSettings();
+      
+      const data = await response.json();
+      console.log('Configurações carregadas:', data);
+      setSettings(data);
+      setError(null);
+    } catch (err: any) {
+      console.error('Erro ao carregar configurações:', err);
+      setError(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Carregar configurações ao montar o componente
+  useEffect(() => {
+    loadSettings();
   }, []);
 
+  // Manipulador para o preview da imagem quando selecionada
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Criar preview da imagem
       const reader = new FileReader();
       reader.onloadend = () => {
         setLogoPreview(reader.result as string);
@@ -68,6 +73,7 @@ const SiteSettings = () => {
     }
   };
 
+  // Função para fazer upload do logo
   const handleLogoUpload = async () => {
     if (!fileInputRef.current?.files?.length) {
       toast({
@@ -84,17 +90,19 @@ const SiteSettings = () => {
       const file = fileInputRef.current.files[0];
       const formData = new FormData();
       formData.append('logo', file);
-      formData.append('nocache', Date.now().toString());
+      formData.append('timestamp', Date.now().toString());
       
-      // Fazer upload diretamente sem usar mutation (para evitar problemas de cache)
-      const response = await fetch('/api/site-settings?t=' + Date.now(), {
+      // Fazer upload diretamente
+      const response = await fetch(`/api/site-settings?t=${Date.now()}`, {
         method: 'PUT',
         body: formData,
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
           'Pragma': 'no-cache',
           'Expires': '0'
-        }
+        },
+        // Evitar que o navegador use cache de requisições anteriores
+        cache: 'no-store'
       });
       
       if (!response.ok) {
@@ -106,14 +114,14 @@ const SiteSettings = () => {
       
       toast({
         title: 'Logo atualizado',
-        description: 'O logo foi atualizado com sucesso!',
+        description: 'O logo foi atualizado com sucesso! A página será recarregada.',
         variant: 'default',
       });
       
-      // Forçar recarregamento completo da página para aplicar as mudanças
+      // Recarregar completamente a página para aplicar as mudanças em todos os componentes
       setTimeout(() => {
-        window.location.href = '/admin?t=' + Date.now();
-      }, 1000);
+        window.location.href = `/admin?reload=true&t=${Date.now()}`;
+      }, 1500);
       
     } catch (error: any) {
       console.error('Erro ao fazer upload do logo:', error);
@@ -142,7 +150,7 @@ const SiteSettings = () => {
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>Erro</AlertTitle>
         <AlertDescription>
-          Falha ao carregar as configurações do site. Por favor, tente novamente.
+          Falha ao carregar as configurações do site. Tente novamente mais tarde.
         </AlertDescription>
       </Alert>
     );
@@ -162,7 +170,7 @@ const SiteSettings = () => {
         
         <TabsContent value="appearance">
           <div className="grid gap-6 md:grid-cols-2">
-            {/* Logo Upload Card */}
+            {/* Card para upload do logo */}
             <Card>
               <CardHeader>
                 <CardTitle>Logo do Site</CardTitle>
@@ -177,22 +185,22 @@ const SiteSettings = () => {
                       <div className="h-32 flex items-center justify-center">
                         <img 
                           src={logoPreview} 
-                          alt="Logo Preview" 
+                          alt="Preview do Logo" 
                           className="h-full max-w-full object-contain" 
                         />
                       </div>
                     ) : settings?.logoUrl ? (
                       <div className="h-32 flex items-center justify-center">
                         <img 
-                          src={`${settings.logoUrl}?v=${Math.random().toString(36).substring(2, 15)}`}
-                          alt="Current Logo" 
-                          key={`logo-settings-${Math.random()}`}
+                          src={`${settings.logoUrl}?v=${Date.now()}`}
+                          alt="Logo Atual" 
+                          key={`logo-preview-${Date.now()}`}
                           className="h-full max-w-full object-contain" 
                           onError={(e) => {
                             console.error('Erro ao carregar logo:', e);
                             const target = e.target as HTMLImageElement;
                             target.src = "/images/logo.png";
-                            target.onerror = null; // Evita loop infinito
+                            target.onerror = null;
                           }}
                         />
                       </div>
@@ -332,6 +340,11 @@ const SiteSettings = () => {
       </Tabs>
     </div>
   );
+};
+
+// Componente principal SiteSettings que apenas envolve o LogoUploader
+const SiteSettings = () => {
+  return <LogoUploader />;
 };
 
 export default SiteSettings;
