@@ -352,21 +352,24 @@ const Header = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Link href="/auth">
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md">
-                  Entrar
-                </Button>
-              </Link>
+              <div className="flex items-center space-x-2">
+                <Link href="/auth">
+                  <Button 
+                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3.5 h-9 rounded-full shadow-sm"
+                  >
+                    Entrar
+                  </Button>
+                </Link>
+                <Link href="/register" className="hidden sm:block">
+                  <Button 
+                    variant="ghost" 
+                    className="text-xs px-3 h-9 rounded-full text-neutral-700 hover:text-blue-600 hover:bg-blue-50"
+                  >
+                    Cadastre-se
+                  </Button>
+                </Link>
+              </div>
             )}
-            
-            <button
-              type="button"
-              className="md:hidden text-blue-600 hover:text-blue-500 transition-colors duration-200"
-              onClick={toggleMobileMenu}
-              aria-label="Toggle menu"
-            >
-              <Menu className="h-6 w-6" />
-            </button>
           </div>
         </div>
       </div>
