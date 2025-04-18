@@ -227,20 +227,12 @@ const Header = () => {
     <header className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm backdrop-blur-sm bg-white/95">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 sm:h-[4.5rem] md:h-20">
-          {/* Logo */}
+          {/* Logo removido conforme solicitado */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center">
-              {siteSettings?.logoUrl ? (
-                <div className="h-10 sm:h-11 md:h-12 flex items-center">
-                  <LogoImage siteSettings={siteSettings} />
-                </div>
-              ) : (
-                <img 
-                  src="/images/logo.png" 
-                  alt="DesignAuto App" 
-                  className="h-10 sm:h-11 md:h-12 mr-3 transition-transform duration-200 hover:scale-105" 
-                />
-              )}
+              <div className="h-10 sm:h-11 md:h-12 w-[180px] flex items-center">
+                {/* Espaço vazio no lugar do logo */}
+              </div>
             </Link>
           </div>
 
