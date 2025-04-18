@@ -152,7 +152,7 @@ const LogoUploader = () => {
     }
   };
 
-  // NOVO: Versão simplificada para upload direto de logo
+  // Versão aprimorada para upload direto de logo com eventos customizados
   const handleLogoUpload = async () => {
     if (!fileInputRef.current?.files?.length) {
       toast({
@@ -240,19 +240,38 @@ const LogoUploader = () => {
         variant: 'default',
       });
       
-      // Salvar no localStorage com várias informações para maximizar a chance de atualização
-      localStorage.removeItem('newLogoUrl'); // Limpar primeiro
+      // Limpar todos os caches possíveis
+      // 1. Limpar localStorage para sistemas legados
+      localStorage.removeItem('newLogoUrl');
       localStorage.removeItem('logoUpdatedAt');
+      
+      // 2. Limpar caches por várias estratégias
+      if ('caches' in window) {
+        const cacheNames = ['logo-cache', 'image-cache', 'site-settings'];
+        cacheNames.forEach(cacheName => {
+          caches.delete(cacheName).catch(() => {});
+        });
+      }
+      
+      // 3. Limpar cache do TanStack Query
+      window.sessionStorage.removeItem('tanstack-query-cache');
+      
+      // 4. Disparar evento customizado para notificar outros componentes
+      const logoUpdatedEvent = new CustomEvent('logo_updated', {
+        detail: {
+          logoUrl: finalLogoUrl,
+          timestamp: timestamp
+        }
+      });
+      window.dispatchEvent(logoUpdatedEvent);
       
       // Pequeno atraso para garantir a limpeza
       setTimeout(() => {
+        // 5. Atualizar localStorage com novos valores
         localStorage.setItem('newLogoUrl', finalLogoUrl);
         localStorage.setItem('logoUpdatedAt', timestamp.toString());
         localStorage.setItem('logoRandomToken', randomPart);
-        localStorage.setItem('forceCacheRefresh', 'true');
-        
-        // Limpar também os caches de consulta TanStack
-        window.sessionStorage.removeItem('tanstack-query-cache');
+        localStorage.setItem('logo_just_updated', 'true');
         
         // Abordagem mais suave para melhorar a experiência do usuário
         console.log("Aplicando mudanças sem redirecionamento radical...");
@@ -262,13 +281,23 @@ const LogoUploader = () => {
           // Recarregar configurações para atualizar a visualização
           loadSettings();
           
-          // Após um tempo, recarregar a página
+          // 6. Ataque multimodal ao cache - também forçar recarregamento de favicon
+          const favicon = document.querySelector('link[rel="icon"]');
+          if (favicon) {
+            favicon.href = favicon.href.split('?')[0] + '?v=' + Date.now();
+          }
+          
+          // 7. Forçar um recarregamento completo do documento com BYPASS de cache
           setTimeout(() => {
-            console.log("Recarregando configurações...");
-            window.location.reload();
+            console.log("Recarregando completamente para aplicar mudanças...");
+            
+            // Forçar recarregamento completo com bypass de cache
+            window.location.href = window.location.href.split('#')[0] 
+              + (window.location.href.includes('?') ? '&' : '?') 
+              + '_t=' + Date.now();
           }, 1500);
-        }, 250);
-      }, 100);
+        }, 500);
+      }, 250);
       
     } catch (error: any) {
       console.error('Erro ao fazer upload do logo:', error);
