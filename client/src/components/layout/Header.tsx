@@ -185,12 +185,17 @@ const Header = () => {
                     </div>
                   </div>
                   
-                  {/* Menu de opções - Versão minimalista */}
+                  {/* Menu de opções - Versão híbrida com "Minha conta" destacada */}
                   <div className="py-1">
                     <Link href="/painel/perfil">
-                      <DropdownMenuItem className="cursor-pointer py-2 px-3 hover:bg-gray-50">
-                        <User className="w-4 h-4 text-gray-500 mr-3" />
-                        <span>Minha conta</span>
+                      <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-blue-50 mr-3">
+                          <User className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-medium">Minha conta</span>
+                          <span className="text-xs text-gray-500">Perfil, privacidade e dados</span>
+                        </div>
                       </DropdownMenuItem>
                     </Link>
                     
@@ -248,17 +253,23 @@ const Header = () => {
                   {/* Separador */}
                   <div className="border-t my-1"></div>
                   
-                  {/* Suporte e Logout - Versão minimalista */}
+                  {/* Seção de Suporte - Versão híbrida */}
                   <div className="py-1">
                     <Link href="https://wa.me/5527999999999" target="_blank" rel="noopener noreferrer">
-                      <DropdownMenuItem className="cursor-pointer py-2 px-3 hover:bg-gray-50">
-                        <svg className="w-4 h-4 text-green-500 mr-3" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M17.6 6.32c-1.44-1.52-3.4-2.32-5.55-2.32-4.48 0-8.13 3.75-8.13 8.35 0 1.62.46 3.2 1.33 4.55L4.17 20.8l4.05-1.06c1.28.7 2.7 1.07 4.06 1.07 4.48 0 8.12-3.76 8.12-8.35s-2.14-6.14-2.8-6.14z" />
-                        </svg>
-                        <span>Suporte</span>
+                      <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-green-50 mr-3">
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="#25D366" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M17.6 6.32c-1.44-1.52-3.4-2.32-5.55-2.32-4.48 0-8.13 3.75-8.13 8.35 0 1.62.46 3.2 1.33 4.55L4.17 20.8l4.05-1.06c1.28.7 2.7 1.07 4.06 1.07 4.48 0 8.12-3.76 8.12-8.35s-2.14-6.14-2.8-6.14z" />
+                          </svg>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-medium">Suporte por WhatsApp</span>
+                          <span className="text-xs text-gray-500">Dúvidas e perguntas</span>
+                        </div>
                       </DropdownMenuItem>
                     </Link>
                     
+                    {/* Logout - Versão minimalista */}
                     <DropdownMenuItem 
                       className="cursor-pointer py-2 px-3 text-red-600 hover:bg-red-50"
                       onClick={() => logoutMutation.mutate()}
