@@ -413,6 +413,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Favorites API
+  app.get("/api/favorites", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const favorites = await storage.getFavoritesByUserId(userId);
+      
+      // Enriquece os favoritos com informações da arte
+      const enrichedFavorites = await Promise.all(
+        favorites.map(async (favorite) => {
+          try {
+            const art = await storage.getArtById(favorite.artId);
+            return {
+              ...favorite,
+              art
+            };
+          } catch (error) {
+            console.error(`Erro ao buscar arte ${favorite.artId} para favorito:`, error);
+            return favorite;
+          }
+        })
+      );
+      
+      res.json({ favorites: enrichedFavorites, totalCount: favorites.length });
+    } catch (error) {
+      console.error("Erro ao buscar favoritos:", error);
+      res.status(500).json({ message: "Erro ao buscar favoritos" });
+    }
+  });
+
+  // Check if art is favorited
+  app.get("/api/favorites/check/:artId", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const artId = parseInt(req.params.artId);
+      const favorite = await storage.getFavorite(userId, artId);
+      res.json({ isFavorited: !!favorite });
+    } catch (error) {
+      console.error("Erro ao verificar favorito:", error);
+      res.status(500).json({ message: "Erro ao verificar favorito" });
+    }
+  });
+
+  // Add favorite
+  app.post("/api/favorites", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const { artId } = req.body;
+      
+      // Verificar se já existe o favorito
+      const existingFavorite = await storage.getFavorite(userId, artId);
+      if (existingFavorite) {
+        return res.status(400).json({ message: "Arte já favoritada" });
+      }
+      
+      const favorite = await storage.createFavorite({ userId, artId });
+      res.status(201).json(favorite);
+    } catch (error) {
+      console.error("Erro ao adicionar favorito:", error);
+      res.status(500).json({ message: "Erro ao adicionar favorito" });
+    }
+  });
+
+  // Remove favorite
+  app.delete("/api/favorites/:artId", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const artId = parseInt(req.params.artId);
+      
+      const removed = await storage.deleteFavorite(userId, artId);
+      
+      if (!removed) {
+        return res.status(404).json({ message: "Favorito não encontrado" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Erro ao remover favorito:", error);
+      res.status(500).json({ message: "Erro ao remover favorito" });
+    }
+  });
+
   // Admin API - Create Art
   app.post("/api/admin/arts", isAdmin, async (req, res) => {
     try {
