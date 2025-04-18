@@ -488,6 +488,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/users/stats", isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
+      console.log("Buscando estatísticas para o usuário:", userId);
       
       // Contar favoritos
       const favoritesQuery = `
@@ -496,8 +497,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         WHERE "userId" = ${userId}
       `;
       
+      console.log("Executando query de favoritos:", favoritesQuery);
       const favoritesResult = await db.execute(sql.raw(favoritesQuery));
+      console.log("Resultado da query de favoritos:", favoritesResult.rows);
       const totalFavorites = parseInt(favoritesResult.rows[0].count) || 0;
+      console.log("Total de favoritos:", totalFavorites);
       
       // Contar downloads
       const downloadsQuery = `
@@ -506,8 +510,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         WHERE "userId" = ${userId}
       `;
       
+      console.log("Executando query de downloads:", downloadsQuery);
       const downloadsResult = await db.execute(sql.raw(downloadsQuery));
+      console.log("Resultado da query de downloads:", downloadsResult.rows);
       const totalDownloads = parseInt(downloadsResult.rows[0].count) || 0;
+      console.log("Total de downloads:", totalDownloads);
       
       // Contar visualizações
       const viewsQuery = `
@@ -516,15 +523,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         WHERE "userId" = ${userId}
       `;
       
+      console.log("Executando query de views:", viewsQuery);
       const viewsResult = await db.execute(sql.raw(viewsQuery));
+      console.log("Resultado da query de views:", viewsResult.rows);
       const totalViews = parseInt(viewsResult.rows[0].count) || 0;
+      console.log("Total de views:", totalViews);
       
-      // Retornar estatísticas
-      res.json({
+      // Estatísticas para retornar
+      const stats = {
         totalFavorites,
         totalDownloads,
         totalViews
-      });
+      };
+      
+      console.log("Retornando estatísticas:", stats);
+      
+      // Retornar estatísticas
+      res.json(stats);
     } catch (error) {
       console.error("Erro ao buscar estatísticas do usuário:", error);
       res.status(500).json({ message: "Erro ao buscar estatísticas do usuário" });
