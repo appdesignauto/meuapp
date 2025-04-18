@@ -610,8 +610,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Registrar o download
       const download = await storage.createDownload({ 
         userId, 
-        artId: Number(artId),
-        downloadDate: new Date() 
+        artId: Number(artId)
+        // A data é adicionada automaticamente pelo campo defaultNow()
       });
       
       res.status(201).json(download);

@@ -151,6 +151,23 @@ export default function ArtDetail() {
     setLocation('/');
   };
 
+  // Mutação para registrar download
+  const registerDownloadMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/downloads", { artId: Number(id) });
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/downloads'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users/stats'] });
+      // Não precisamos invalidar a query da arte atual, já que o contador é calculado no backend
+    },
+    onError: (error) => {
+      console.error("Erro ao registrar download:", error);
+      // Silenciar erro para o usuário - não deve afetar a experiência
+    },
+  });
+  
   const handleOpenEdit = () => {
     // Para conteúdo premium bloqueado, mostrar mensagem de upgrade
     if (art.isPremiumLocked) {
@@ -171,8 +188,17 @@ export default function ArtDetail() {
       });
       return;
     }
+    
+    // Registrar download antes de abrir a URL
+    registerDownloadMutation.mutate();
+    
+    // Feedback para o usuário (opcional)
+    toast({
+      title: "Redirecionando para o editor",
+      description: "Abrindo o editor em uma nova janela...",
+    });
 
-    // Otherwise, open the edit URL in a new tab
+    // Abrir a URL do editor em uma nova aba
     window.open(art.editUrl, '_blank');
   };
 
