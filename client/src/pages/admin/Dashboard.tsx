@@ -12,7 +12,8 @@ import {
   Plus,
   Search,
   Home,
-  LogOut
+  LogOut,
+  Sliders
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ArtsList from '@/components/admin/ArtsList';
 import CategoriesList from '@/components/admin/CategoriesList';
 import UserManagement from '@/components/admin/UserManagement';
+import SiteSettings from '@/components/admin/SiteSettings';
 import { useToast } from '@/hooks/use-toast';
 import R2TestUpload from '@/components/admin/R2TestUpload';
 import SupabaseTestUpload from '@/components/admin/SupabaseTestUpload';
@@ -221,23 +223,40 @@ const AdminDashboard = () => {
             
             <TabsContent value="settings" className="mt-0">
               <div className="bg-white p-6 rounded-lg shadow-sm">
-                <h2 className="text-xl font-semibold mb-4">Configurações</h2>
-                
-                <div className="mb-6">
-                  <h3 className="text-lg font-medium mb-2">Teste de Upload (Supabase)</h3>
-                  <p className="text-gray-500 mb-4">Teste o upload de imagens para o armazenamento em nuvem Supabase.</p>
-                  <SupabaseTestUpload />
-                </div>
-                
-                <div className="mb-6 border-t pt-6">
-                  <h3 className="text-lg font-medium mb-2">Teste de Upload (R2)</h3>
-                  <p className="text-gray-500 mb-4">Teste o upload de imagens para o armazenamento em nuvem Cloudflare R2.</p>
-                  <R2TestUpload />
-                </div>
-                
-                <div className="border-t pt-4">
-                  <p className="text-gray-500">Outras configurações do sistema em desenvolvimento.</p>
-                </div>
+                <Tabs defaultValue="site">
+                  <TabsList>
+                    <TabsTrigger value="site">Configurações do Site</TabsTrigger>
+                    <TabsTrigger value="storage">Armazenamento</TabsTrigger>
+                    <TabsTrigger value="advanced">Avançado</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="site" className="mt-6">
+                    <SiteSettings />
+                  </TabsContent>
+                  
+                  <TabsContent value="storage" className="mt-6">
+                    <div className="space-y-6">
+                      <div>
+                        <h3 className="text-lg font-medium mb-2">Teste de Upload (Supabase)</h3>
+                        <p className="text-gray-500 mb-4">Teste o upload de imagens para o armazenamento em nuvem Supabase.</p>
+                        <SupabaseTestUpload />
+                      </div>
+                      
+                      <div className="border-t pt-6">
+                        <h3 className="text-lg font-medium mb-2">Teste de Upload (R2)</h3>
+                        <p className="text-gray-500 mb-4">Teste o upload de imagens para o armazenamento em nuvem Cloudflare R2.</p>
+                        <R2TestUpload />
+                      </div>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="advanced" className="mt-6">
+                    <div className="space-y-6">
+                      <h3 className="text-lg font-medium">Configurações Avançadas</h3>
+                      <p className="text-gray-500">Configurações avançadas do sistema em desenvolvimento.</p>
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </div>
             </TabsContent>
           </Tabs>
