@@ -281,11 +281,10 @@ export default function PainelPerfil() {
       <h1 className="text-3xl font-bold tracking-tight">Meu Perfil</h1>
       
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="profile">Perfil</TabsTrigger>
           <TabsTrigger value="details">Detalhes</TabsTrigger>
           <TabsTrigger value="account">Segurança</TabsTrigger>
-          <TabsTrigger value="subscription">Assinatura</TabsTrigger>
         </TabsList>
         
         {/* Aba de Perfil */}

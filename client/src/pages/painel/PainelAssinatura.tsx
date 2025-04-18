@@ -31,9 +31,11 @@ export default function PainelAssinatura() {
     planType,
     isLifetime,
     subscriptionOrigin,
-    subscriptionDate,
     expirationDate,
   } = subscription;
+  
+  // Obter a data da assinatura diretamente do usuário
+  const subscriptionDate = user?.dataassinatura || null;
 
   // Buscar estatísticas do usuário
   const { data: userStats, isLoading: isLoadingStats } = useQuery({
