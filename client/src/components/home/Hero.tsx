@@ -44,27 +44,20 @@ const Hero = () => {
           
           {/* Search Bar */}
           <form onSubmit={handleSearch} className="max-w-2xl mx-auto relative mb-8 sm:mb-10 px-3">
-            <div className="flex flex-col md:flex-row shadow-lg rounded-xl overflow-hidden">
-              <div className="relative flex-1">
-                <Input
-                  type="text"
-                  placeholder="Busque por artes, modelos, campanhas..."
-                  className="w-full pl-3 sm:pl-5 pr-10 py-5 sm:py-7 rounded-t-xl md:rounded-tr-none md:rounded-l-xl border-0 focus-visible:ring-1 focus-visible:ring-secondary/50 text-sm"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-neutral-400">
-                  <Search className="h-4 w-4 sm:h-5 sm:w-5" />
-                </div>
-              </div>
-              <div>
-                <Button 
-                  type="submit" 
-                  className="w-full md:w-auto bg-blue-500 hover:bg-blue-600 text-white px-4 sm:px-8 py-5 sm:py-7 font-medium rounded-b-xl md:rounded-bl-none md:rounded-r-xl transition-colors duration-200 text-sm sm:text-base"
-                >
-                  Pesquisar
-                </Button>
-              </div>
+            <div className="relative shadow-lg rounded-xl overflow-hidden">
+              <Input
+                type="text"
+                placeholder="Busque por artes, modelos, campanhas..."
+                className="w-full pl-3 sm:pl-5 pr-12 py-5 sm:py-7 rounded-xl border-0 focus-visible:ring-1 focus-visible:ring-secondary/50 text-sm"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <button 
+                type="submit" 
+                className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer text-blue-500 hover:text-blue-600 transition-colors"
+              >
+                <Search className="h-5 w-5 sm:h-6 sm:w-6" />
+              </button>
             </div>
           </form>
           
