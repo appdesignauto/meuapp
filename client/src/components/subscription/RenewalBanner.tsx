@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 
 interface RenewalBannerProps {
   showBanner: boolean;
-  daysLeft?: number;
+  daysLeft?: number | null;
   customMessage?: string;
 }
 

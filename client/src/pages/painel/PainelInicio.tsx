@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { RenewalBanner } from "@/components/subscription/RenewalBanner";
 
 export default function PainelInicio() {
   const { user } = useAuth();
@@ -73,11 +74,25 @@ export default function PainelInicio() {
   }, [userStats, recentArtsData]);
 
   // Obter informações de assinatura do usuário com o hook personalizado
-  const { isPremium, isExpired, expirationDate, planType, isLifetime } = useSubscription(user);
+  const { isPremium, isExpired, expirationDate, planType, isLifetime, daysLeft } = useSubscription(user);
 
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold tracking-tight">Bem-vindo{user?.name ? `, ${user.name.split(' ')[0]}` : ''}</h1>
+      
+      {/* Banner de renovação localizado - será exibido mesmo se o site já tiver um banner principal */}
+      {isPremium && !isLifetime && daysLeft !== null && daysLeft <= 15 && daysLeft > 0 && (
+        <div className="mb-6">
+          <RenewalBanner 
+            showBanner={true} 
+            daysLeft={daysLeft} 
+            customMessage={daysLeft <= 3 ? 
+              `Atenção! Sua assinatura ${planType} expira em apenas ${daysLeft} ${daysLeft === 1 ? 'dia' : 'dias'}. Renove agora para evitar a perda de acesso.` :
+              undefined
+            }
+          />
+        </div>
+      )}
       
       {/* Cartões de estatísticas */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

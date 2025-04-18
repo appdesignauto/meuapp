@@ -70,7 +70,7 @@ export default function PainelLayout({ children }: PainelLayoutProps) {
 
   // Utilizar o hook de assinatura para obter status do usuário
   const subscription = useSubscription(user);
-  const { isPremium, isExpired } = subscription;
+  const { isPremium, isExpired, daysLeft } = subscription;
 
   const menuItems = [
     {
@@ -145,7 +145,10 @@ export default function PainelLayout({ children }: PainelLayoutProps) {
       </header>
 
       {/* Banner de renovação para assinaturas expiradas */}
-      <RenewalBanner showBanner={isExpired} />
+      <RenewalBanner 
+        showBanner={isExpired || (daysLeft !== null && daysLeft <= 7)} 
+        daysLeft={daysLeft}
+      />
       
       <div className="flex flex-1">
         {/* Sidebar para Desktop */}

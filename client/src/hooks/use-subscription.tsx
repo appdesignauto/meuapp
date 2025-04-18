@@ -18,7 +18,8 @@ export function useSubscription(user: User | null): SubscriptionStatus {
       expirationDate: null,
       planType: null,
       isLifetime: false,
-      subscriptionOrigin: null
+      subscriptionOrigin: null,
+      daysLeft: null
     };
   }
 
@@ -48,6 +49,20 @@ export function useSubscription(user: User | null): SubscriptionStatus {
     expirationDate !== null && 
     expirationDate < new Date()
   );
+  
+  // Calcular dias restantes de assinatura
+  let daysLeft: number | null = null;
+  if (isPremium && !isLifetime && expirationDate) {
+    const today = new Date();
+    const diffTime = expirationDate.getTime() - today.getTime();
+    // Se não estiver expirado, calcular os dias restantes
+    if (diffTime > 0) {
+      daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    } else {
+      // Se estiver expirado, definir como 0
+      daysLeft = 0;
+    }
+  }
 
   // Retornar os valores já tipados
   return {
@@ -56,6 +71,7 @@ export function useSubscription(user: User | null): SubscriptionStatus {
     expirationDate,
     planType: user.tipoplano || null,
     isLifetime,
-    subscriptionOrigin: user.origemassinatura || null
+    subscriptionOrigin: user.origemassinatura || null,
+    daysLeft
   };
 }
