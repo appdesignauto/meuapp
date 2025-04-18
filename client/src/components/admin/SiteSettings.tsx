@@ -118,10 +118,12 @@ const LogoUploader = () => {
         variant: 'default',
       });
       
-      // Recarregar completamente a página para aplicar as mudanças em todos os componentes
+      // Forçar atualização do navegador para limpar completamente o cache
       setTimeout(() => {
-        window.location.href = `/admin?reload=true&t=${Date.now()}`;
-      }, 1500);
+        console.log("Redirecionando para página admin com parâmetros anti-cache...");
+        // Método mais agressivo para limpar cache
+        window.location.href = `/admin?reloaded=true&forceUpdate=true&t=${Date.now()}`;
+      }, 2500); // Espera mais tempo para garantir que a imagem foi enviada
       
     } catch (error: any) {
       console.error('Erro ao fazer upload do logo:', error);

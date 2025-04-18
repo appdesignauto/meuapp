@@ -58,22 +58,37 @@ const Header = () => {
     enabled: !!user, // Só executa se o usuário estiver logado
   });
   
-  // Buscar configurações do site para o logo
+  // Buscar configurações do site para o logo - versão anti-cache
   const { data: siteSettings } = useQuery({
-    queryKey: ['/api/site-settings'],
+    queryKey: ['/api/site-settings', location, Date.now()], // Forçar revalidação quando qualquer destas chaves mudar
     queryFn: async () => {
       try {
-        const res = await fetch('/api/site-settings');
+        const timestamp = Date.now();
+        const res = await fetch(`/api/site-settings?t=${timestamp}`, {
+          method: 'GET',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          },
+          cache: 'no-store'
+        });
+        
         if (!res.ok) return { logoUrl: '/images/logo.png' };
-        return res.json();
+        
+        const data = await res.json();
+        console.log("Carregando logo com timestamp:", timestamp, data.logoUrl);
+        return data;
       } catch (error) {
         console.error("Erro ao carregar configurações:", error);
         return { logoUrl: '/images/logo.png' };
       }
     },
     refetchOnWindowFocus: true,
-    refetchInterval: 60000, // Recarregar a cada 60 segundos
-    staleTime: 30000 // Considerar os dados obsoletos após 30 segundos
+    refetchOnMount: true,
+    refetchInterval: 10000, // Recarregar a cada 10 segundos
+    staleTime: 0, // Considerar os dados sempre obsoletos
+    gcTime: 0 // Não fazer cache (em v5, gcTime substitui cacheTime)
   });
 
   const navLinks = [
