@@ -147,12 +147,20 @@ const Header = () => {
                     <ChevronDown className="w-4 h-4 text-gray-500 ml-1" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-64 mr-2 mt-1 p-0 rounded-lg shadow-md" align="end">
-                  {/* Informações do usuário - Visual simplificado */}
-                  <div className="p-4 border-b">
-                    <div className="flex items-center">
-                      {/* Avatar menor */}
-                      <div className="w-12 h-12 mr-3 rounded-full overflow-hidden border border-gray-200 bg-white">
+                <DropdownMenuContent className="w-72 mr-2 mt-1 p-0 rounded-xl shadow-xl" align="end">
+                  {/* Informações do usuário com banner de status incorporado */}
+                  <div className="relative">
+                    {/* Banner colorido no fundo que depende do tipo de conta */}
+                    <div className={`absolute top-0 left-0 right-0 h-20 rounded-t-xl ${
+                      user.nivelacesso === 'usuario' || !user.tipoplano 
+                        ? 'bg-gradient-to-r from-blue-500 to-blue-600' 
+                        : 'bg-gradient-to-r from-green-500 to-green-600'
+                    }`}></div>
+                  
+                    {/* Container do perfil com espaçamento para ficar sobre o banner */}
+                    <div className="relative z-10 px-4 pt-4 pb-3">
+                      {/* Avatar grande */}
+                      <div className="w-20 h-20 mb-3 mx-auto rounded-full overflow-hidden border-4 border-white bg-white shadow-md">
                         {user.profileimageurl ? (
                           <img 
                             src={user.profileimageurl} 
@@ -160,33 +168,33 @@ const Header = () => {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-blue-100 text-blue-600 font-medium text-xl">
+                          <div className="w-full h-full flex items-center justify-center bg-blue-100 text-blue-600 font-medium text-3xl">
                             {(user.name?.[0] || user.username[0]).toUpperCase()}
                           </div>
                         )}
                       </div>
                       
-                      {/* Dados do usuário alinhados à esquerda */}
-                      <div>
-                        <h3 className="font-medium text-base leading-tight">{user.name || user.username}</h3>
-                        <p className="text-xs text-gray-500 mb-1">{user.email}</p>
+                      {/* Dados do usuário centralizados */}
+                      <div className="text-center">
+                        <h3 className="font-medium text-lg">{user.name || user.username}</h3>
+                        <p className="text-sm text-gray-500 mb-2">{user.email}</p>
                         
                         {/* Badge de tipo de conta */}
-                        <div className={`inline-block px-2 py-0.5 rounded text-xs ${
+                        <div className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
                           user.nivelacesso === 'usuario' || !user.tipoplano 
-                            ? 'bg-gray-100 text-gray-700' 
+                            ? 'bg-blue-100 text-blue-700' 
                             : 'bg-green-100 text-green-700'
                         }`}>
                           {user.nivelacesso === 'usuario' || !user.tipoplano 
-                            ? 'Conta Free' 
-                            : `${user.tipoplano}`}
+                            ? 'CONTA GRÁTIS' 
+                            : `CONTA ${user.tipoplano?.toUpperCase()}`}
                         </div>
                       </div>
                     </div>
                   </div>
                   
-                  {/* Menu de opções - Versão híbrida com "Minha conta" destacada */}
-                  <div className="py-1">
+                  {/* Menu de opções */}
+                  <div className="py-2">
                     <Link href="/painel/perfil">
                       <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
                         <div className="w-10 h-10 rounded-full flex items-center justify-center bg-blue-50 mr-3">
@@ -201,26 +209,41 @@ const Header = () => {
                     
                     {user.nivelacesso === 'usuario' || !user.tipoplano ? (
                       <Link href="/pricing">
-                        <DropdownMenuItem className="cursor-pointer py-2 px-3 hover:bg-gray-50 flex items-center">
-                          <CreditCard className="w-4 h-4 text-gray-500 mr-3" />
-                          <span className="flex-1">Assinatura</span>
+                        <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center bg-green-50 mr-3">
+                            <CreditCard className="w-5 h-5 text-green-600" />
+                          </div>
+                          <div className="flex flex-col flex-1">
+                            <span className="font-medium">Cobrança</span>
+                            <span className="text-xs text-gray-500">Assinar premium</span>
+                          </div>
                           <Badge variant="outline" className="bg-green-100 border-green-200 text-green-700 text-xs">UPGRADE</Badge>
                         </DropdownMenuItem>
                       </Link>
                     ) : (
                       <Link href="/painel/assinatura">
-                        <DropdownMenuItem className="cursor-pointer py-2 px-3 hover:bg-gray-50">
-                          <CreditCard className="w-4 h-4 text-gray-500 mr-3" />
-                          <span>Assinatura</span>
+                        <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center bg-blue-50 mr-3">
+                            <CreditCard className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-medium">Assinatura</span>
+                            <span className="text-xs text-gray-500">Gerenciar sua assinatura</span>
+                          </div>
                         </DropdownMenuItem>
                       </Link>
                     )}
                     
                     <Link href="/painel/downloads">
-                      <DropdownMenuItem className="cursor-pointer py-2 px-3 hover:bg-gray-50 flex items-center">
-                        <Download className="w-4 h-4 text-gray-500 mr-3" />
-                        <span className="flex-1">Downloads</span>
-                        <span className="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-700">
+                      <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-purple-50 mr-3">
+                          <Download className="w-5 h-5 text-purple-600" />
+                        </div>
+                        <div className="flex flex-col flex-1">
+                          <span className="font-medium">Downloads</span>
+                          <span className="text-xs text-gray-500">Histórico de downloads</span>
+                        </div>
+                        <span className="text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-700 font-medium">
                           {user.nivelacesso === 'premium' || user.tipoplano 
                             ? '∞' 
                             : `${userStats?.totalDownloads || 0}/10`}
@@ -229,32 +252,44 @@ const Header = () => {
                     </Link>
                     
                     <Link href="/painel/favoritas">
-                      <DropdownMenuItem className="cursor-pointer py-2 px-3 hover:bg-gray-50">
-                        <Heart className="w-4 h-4 text-gray-500 mr-3" />
-                        <span>Favoritos</span>
+                      <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-red-50 mr-3">
+                          <Heart className="w-5 h-5 text-red-600" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-medium">Curtidas</span>
+                          <span className="text-xs text-gray-500">Seus itens favoritos</span>
+                        </div>
                       </DropdownMenuItem>
                     </Link>
                     
                     <Link href="/painel/salvos">
-                      <DropdownMenuItem className="cursor-pointer py-2 px-3 hover:bg-gray-50">
-                        <Bookmark className="w-4 h-4 text-gray-500 mr-3" />
-                        <span>Salvos</span>
+                      <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-yellow-50 mr-3">
+                          <Bookmark className="w-5 h-5 text-yellow-600" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-medium">Salvos</span>
+                          <span className="text-xs text-gray-500">Artes para usar depois</span>
+                        </div>
                       </DropdownMenuItem>
                     </Link>
                     
                     <Link href="/painel/seguindo">
-                      <DropdownMenuItem className="cursor-pointer py-2 px-3 hover:bg-gray-50">
-                        <Users className="w-4 h-4 text-gray-500 mr-3" />
-                        <span>Seguindo</span>
+                      <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-indigo-50 mr-3">
+                          <Users className="w-5 h-5 text-indigo-600" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-medium">Seguindo</span>
+                          <span className="text-xs text-gray-500">Designers que você segue</span>
+                        </div>
                       </DropdownMenuItem>
                     </Link>
                   </div>
                   
-                  {/* Separador */}
-                  <div className="border-t my-1"></div>
-                  
-                  {/* Seção de Suporte - Versão híbrida */}
-                  <div className="py-1">
+                  {/* Seção de Suporte */}
+                  <div className="border-t pt-2 pb-2">
                     <Link href="https://wa.me/5527999999999" target="_blank" rel="noopener noreferrer">
                       <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
                         <div className="w-10 h-10 rounded-full flex items-center justify-center bg-green-50 mr-3">
@@ -268,14 +303,21 @@ const Header = () => {
                         </div>
                       </DropdownMenuItem>
                     </Link>
-                    
-                    {/* Logout - Versão minimalista */}
+                  </div>
+                  
+                  {/* Logout */}
+                  <div className="border-t pt-2 pb-2">
                     <DropdownMenuItem 
-                      className="cursor-pointer py-2 px-3 text-red-600 hover:bg-red-50"
+                      className="cursor-pointer py-4 px-4 hover:bg-red-50"
                       onClick={() => logoutMutation.mutate()}
                     >
-                      <LogOut className="w-4 h-4 mr-3" />
-                      <span>Sair</span>
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-red-50 mr-3">
+                        <LogOut className="w-5 h-5 text-red-600" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-medium text-red-600">Sair da conta</span>
+                        <span className="text-xs text-gray-500">Encerrar sessão atual</span>
+                      </div>
                     </DropdownMenuItem>
                   </div>
                 </DropdownMenuContent>
