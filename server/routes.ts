@@ -484,21 +484,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Favorites API
-  // Estatísticas do usuário - versão corrigida
+  // Estatísticas do usuário - versão revisada
   app.get("/api/users/stats", isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
-      console.log("Buscando estatísticas para o usuário:", userId);
+      console.log("[GET /api/users/stats] Buscando estatísticas para o usuário:", userId);
       
-      // Usar Drizzle ORM direto para minimizar erros de SQL
+      // Usar Drizzle ORM direto para minimizar erros de SQL com diagnóstico detalhado
+      // Contar favoritos com diagnóstico detalhado
+      try {
+        // Verificar a tabela de favoritos
+        const allFavorites = await db.select().from(favorites);
+        console.log("[DEBUG] Todos os favoritos na tabela:", allFavorites);
+        
+        // Contar favoritos
+        const favoritesQuery = db.select({ count: sql<number>`count(*)` })
+          .from(favorites)
+          .where(eq(favorites.userId, userId));
+          
+        const favoritesResult = await favoritesQuery;
+        const totalFavorites = Number(favoritesResult[0]?.count) || 0;
+        console.log("[GET /api/users/stats] Total de favoritos:", totalFavorites, "Tipo:", typeof totalFavorites);
+        
+        // Verificar IDs no frontend vs. backend
+        console.log("[DEBUG] Verificação de IDs - Atual userId:", userId, "Tipo:", typeof userId);
+        console.log("[DEBUG] Favoritos do usuário:", await db.select().from(favorites).where(eq(favorites.userId, userId)));
+      } catch (e) {
+        console.error("[GET /api/users/stats] Erro ao contar favoritos:", e);
+      }
+      
       // Contar favoritos
       const favoritesQuery = db.select({ count: sql<number>`count(*)` })
         .from(favorites)
         .where(eq(favorites.userId, userId));
         
       const favoritesResult = await favoritesQuery;
-      const totalFavorites = favoritesResult[0]?.count || 0;
-      console.log("Total de favoritos:", totalFavorites);
+      const totalFavorites = Number(favoritesResult[0]?.count) || 0;
       
       // Contar downloads
       const downloadsQuery = db.select({ count: sql<number>`count(*)` })
@@ -506,8 +527,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(eq(downloads.userId, userId));
         
       const downloadsResult = await downloadsQuery;
-      const totalDownloads = downloadsResult[0]?.count || 0;
-      console.log("Total de downloads:", totalDownloads);
+      const totalDownloads = Number(downloadsResult[0]?.count) || 0;
+      console.log("[GET /api/users/stats] Total de downloads:", totalDownloads, "Tipo:", typeof totalDownloads);
       
       // Contar visualizações
       const viewsQuery = db.select({ count: sql<number>`count(*)` })
@@ -515,22 +536,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(eq(views.userId, userId));
         
       const viewsResult = await viewsQuery;
-      const totalViews = viewsResult[0]?.count || 0;
-      console.log("Total de views:", totalViews);
+      const totalViews = Number(viewsResult[0]?.count) || 0;
+      console.log("[GET /api/users/stats] Total de views:", totalViews, "Tipo:", typeof totalViews);
       
-      // Estatísticas para retornar
+      // Estatísticas para retornar com valores forçados como Number
       const stats = {
-        totalFavorites,
-        totalDownloads,
-        totalViews
+        totalFavorites: Number(totalFavorites),
+        totalDownloads: Number(totalDownloads),
+        totalViews: Number(totalViews)
       };
       
-      console.log("Retornando estatísticas:", stats);
+      console.log("[GET /api/users/stats] Retornando estatísticas:", stats);
       
       // Retornar estatísticas
       res.json(stats);
     } catch (error) {
-      console.error("Erro ao buscar estatísticas do usuário:", error);
+      console.error("[GET /api/users/stats] Erro ao buscar estatísticas do usuário:", error);
       res.status(500).json({ message: "Erro ao buscar estatísticas do usuário" });
     }
   });
