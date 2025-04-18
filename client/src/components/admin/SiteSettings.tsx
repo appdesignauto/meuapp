@@ -156,11 +156,19 @@ const SiteSettings = () => {
                         className="max-h-24 max-w-full object-contain" 
                       />
                     ) : settings?.logoUrl ? (
-                      <img 
-                        src={settings.logoUrl} 
-                        alt="Current Logo" 
-                        className="max-h-24 max-w-full object-contain" 
-                      />
+                      <div className="h-24 flex items-center justify-center">
+                        <img 
+                          src={settings.logoUrl + '?v=' + new Date().getTime()} 
+                          alt="Current Logo" 
+                          className="h-full max-w-full object-contain" 
+                          onError={(e) => {
+                            console.error('Erro ao carregar logo:', e);
+                            const target = e.target as HTMLImageElement;
+                            target.src = "/images/logo.png";
+                            target.onerror = null; // Evita loop infinito
+                          }}
+                        />
+                      </div>
                     ) : (
                       <div className="text-gray-400 text-center">
                         <Upload className="mx-auto h-12 w-12 mb-2" />
