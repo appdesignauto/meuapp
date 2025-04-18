@@ -2336,6 +2336,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log(`[TESTE] ${message}`);
     res.status(200).json({ message: `Log registrado: ${message}` });
   });
+  
+  // Rota de diagnóstico para execução de SQL - apenas para desenvolvimento
+  app.get("/api/execute-sql", isAuthenticated, async (req, res) => {
+    try {
+      // Forçar permissão para testes de diagnóstico
+      const query = req.query.query as string;
+      if (!query) {
+        return res.status(400).json({ message: "Query inválida" });
+      }
+      
+      // Por segurança, só permitir SELECT COUNT(*) para diagnóstico
+      if (!query.toLowerCase().includes("select count(*)")) {
+        return res.status(403).json({ message: "Apenas consultas SELECT COUNT(*) são permitidas" });
+      }
+      
+      const result = await db.execute(sql.raw(query));
+      res.json(result.rows);
+    } catch (error) {
+      console.error("Erro ao executar SQL:", error);
+      res.status(500).json({ message: "Erro ao executar SQL" });
+    }
+  });
 
   const httpServer = createServer(app);
   

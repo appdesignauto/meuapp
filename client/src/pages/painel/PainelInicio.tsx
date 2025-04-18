@@ -42,8 +42,23 @@ export default function PainelInicio() {
   useEffect(() => {
     if (userStats) {
       console.log("Stats dados recebidos:", userStats);
+      
+      // Debug de estatísticas
+      fetch('/api/favorites')
+        .then(res => res.json())
+        .then(data => console.log("Total de favoritos pela API /api/favorites:", data.totalCount))
+        .catch(err => console.error("Erro ao buscar favoritos:", err));
+      
+      const userId = user?.id;
+      if (userId) {
+        // Debug direto via SQL
+        fetch(`/api/execute-sql?query=SELECT COUNT(*) FROM favorites WHERE "userId" = ${userId}`)
+          .then(res => res.json())
+          .then(data => console.log("Total de favoritos via SQL:", data))
+          .catch(err => console.error("Erro ao executar SQL de favoritos:", err));
+      }
     }
-  }, [userStats]);
+  }, [userStats, user?.id]);
 
   // Buscar artes recentes
   const { data: recentArtsData, isLoading: artsLoading } = useQuery({
@@ -89,13 +104,38 @@ export default function PainelInicio() {
 
   // Atualizar estatísticas quando os dados estiverem disponíveis
   useEffect(() => {
+    console.log("Atualizando contadores com dados:", {
+      userStats,
+      favoritesData, 
+      downloadsData
+    });
+    
     if (userStats) {
       const typedStats = userStats as UserStatsData;
+      console.log("Atualizando estatísticas a partir da API:", typedStats);
+      
       setStats(prev => ({
         ...prev,
         favoriteCount: typedStats.totalFavorites ?? 0,
         downloadCount: typedStats.totalDownloads ?? 0,
         viewCount: typedStats.totalViews ?? 0,
+      }));
+    }
+    
+    // Como alternativa, também usar contagens das APIs específicas
+    if (favoritesData && favoritesData.totalCount !== undefined) {
+      console.log("Atualizando contagem de favoritos da API /favorites:", favoritesData.totalCount);
+      setStats(prev => ({
+        ...prev,
+        favoriteCount: favoritesData.totalCount || 0,
+      }));
+    }
+    
+    if (downloadsData && downloadsData.totalCount !== undefined) {
+      console.log("Atualizando contagem de downloads da API /downloads:", downloadsData.totalCount);
+      setStats(prev => ({
+        ...prev,
+        downloadCount: downloadsData.totalCount || 0,
       }));
     }
     
@@ -108,23 +148,19 @@ export default function PainelInicio() {
     }
     
     // Processar favoritos
-    if (favoritesData) {
-      if (favoritesData.favorites && Array.isArray(favoritesData.favorites)) {
-        setStats(prev => ({
-          ...prev,
-          recentFavorites: favoritesData.favorites.slice(0, 3) || [],
-        }));
-      }
+    if (favoritesData && Array.isArray(favoritesData.favorites)) {
+      setStats(prev => ({
+        ...prev,
+        recentFavorites: favoritesData.favorites.slice(0, 3) || [],
+      }));
     }
     
     // Processar downloads
-    if (downloadsData) {
-      if (downloadsData.downloads && Array.isArray(downloadsData.downloads)) {
-        setStats(prev => ({
-          ...prev,
-          recentDownloads: downloadsData.downloads.slice(0, 3) || [],
-        }));
-      }
+    if (downloadsData && Array.isArray(downloadsData.downloads)) {
+      setStats(prev => ({
+        ...prev,
+        recentDownloads: downloadsData.downloads.slice(0, 3) || [],
+      }));
     }
   }, [userStats, recentArtsData, favoritesData, downloadsData]);
 
