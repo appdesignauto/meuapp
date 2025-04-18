@@ -41,24 +41,29 @@ import {
 import MobileMenu from './MobileMenu';
 import { useQuery } from '@tanstack/react-query';
 
-// Componente dedicado para o logo com cache simplificado
+// Componente para exibir o logo do site com base nas configurações
 type LogoImageProps = { 
   siteSettings: any 
 };
 
 const LogoImage = ({ siteSettings }: LogoImageProps) => {
-  // O logo agora é muito mais simples e usa diretamente o caminho padrão
-  // sem toda a complexidade anti-cache excessiva
+  // Usar o logo das configurações do site ou o padrão se não existir
+  const logoUrl = siteSettings?.logoUrl || '/images/logo.png';
   
-  // Caso não haja configurações do site, usar logo padrão
-  const logoUrl = '/images/logo.png';
+  // Adicionar um pequeno timestamp ao final para evitar cache excessivo
+  const finalLogoUrl = `${logoUrl}${logoUrl.includes('?') ? '&' : '?'}t=${new Date().getTime()}`;
   
   return (
     <img 
-      src={logoUrl}
+      src={finalLogoUrl}
       alt="DesignAuto App" 
       className="h-full w-auto max-w-[180px] sm:max-w-[200px] object-contain mr-3 transition-transform duration-200 hover:scale-105 pr-1"
       loading="eager"
+      onError={(e) => {
+        // Em caso de erro, carregar o logo padrão
+        console.error('Erro ao carregar logo, usando padrão');
+        (e.target as HTMLImageElement).src = '/images/logo.png';
+      }}
     />
   );
 };
@@ -114,9 +119,9 @@ const Header = () => {
     };
   }, []);
   
-  // Buscamos as configurações do site de forma simplificada
-  const { data: siteSettings } = useQuery({
-    queryKey: ['/api/site-settings'],
+  // Buscamos as configurações do site com um mecanismo para atualização do logo
+  const { data: siteSettings, refetch: refetchSettings } = useQuery({
+    queryKey: ['/api/site-settings', settingsRefreshCounter],
     queryFn: async () => {
       try {
         const res = await fetch('/api/site-settings');
@@ -127,12 +132,35 @@ const Header = () => {
         return { logoUrl: '/images/logo.png' };
       }
     },
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
     refetchOnMount: true,
-    refetchInterval: false,
-    staleTime: 1000 * 60, // 1 minuto
-    gcTime: 1000 * 60 * 5 // 5 minutos
+    staleTime: 0 // Sempre buscar dados frescos
   });
+  
+  // Adicionar um listener global para a API de atualização de logo
+  useEffect(() => {
+    // Função para forçar recarregamento das configurações
+    const forceRefreshSettings = () => {
+      console.log("Detectada mudança no logo, recarregando configurações...");
+      refetchSettings();
+      setSettingsRefreshCounter(prev => prev + 1);
+    };
+    
+    // Adicionar listener de evento global
+    window.addEventListener('logo-updated', forceRefreshSettings);
+    window.addEventListener('logo-removed', forceRefreshSettings);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        forceRefreshSettings();
+      }
+    });
+    
+    return () => {
+      window.removeEventListener('logo-updated', forceRefreshSettings);
+      window.removeEventListener('logo-removed', forceRefreshSettings);
+      document.removeEventListener('visibilitychange', forceRefreshSettings);
+    };
+  }, [refetchSettings]);
 
   const navLinks = [
     { name: 'Início', path: '/' },

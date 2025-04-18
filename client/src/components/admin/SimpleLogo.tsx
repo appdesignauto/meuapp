@@ -1,34 +1,47 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Upload, Trash } from 'lucide-react';
+import { Loader2, Upload, Trash, RefreshCw } from 'lucide-react';
 
 /**
- * Componente simples e direto para o upload de logo
- * Focado em uma única responsabilidade sem complicações
+ * Componente melhorado para o upload e gerenciamento do logo
+ * Garante comunicação eficiente com outros componentes e evita problemas de cache
  */
 const SimpleLogo = () => {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [currentLogo, setCurrentLogo] = useState<string | null>(null);
 
-  // Carregar o logo atual
-  useState(() => {
-    fetch('/api/site-settings')
+  // Função para carregar o logo atual
+  const loadCurrentLogo = () => {
+    setIsLoading(true);
+    fetch(`/api/site-settings?t=${Date.now()}`) // Usar timestamp para evitar cache
       .then(res => res.json())
       .then(data => {
         if (data.logoUrl) {
           // Adicionar parâmetro para evitar cache
           setCurrentLogo(`${data.logoUrl}?t=${Date.now()}`);
+        } else {
+          setCurrentLogo('/images/logo.png');
         }
       })
       .catch(error => {
         console.error('Erro ao carregar logo atual:', error);
+        setCurrentLogo('/images/logo.png');
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
-  });
+  };
+  
+  // Carregar o logo atual quando o componente montar
+  useEffect(() => {
+    loadCurrentLogo();
+  }, []);
   
   // Função para visualizar o logo selecionado
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,7 +51,7 @@ const SimpleLogo = () => {
     }
   };
 
-  // Função para remover completamente o logo do sistema
+  // Função para remover completamente o logo do sistema e notificar todos os componentes
   const handleRemoveLogo = async () => {
     if (!currentLogo || currentLogo.includes('/images/logo.png')) {
       toast({
@@ -78,7 +91,7 @@ const SimpleLogo = () => {
         variant: 'default',
       });
       
-      // Atualizar o estado local para mostrar o logo padrão ou nenhum logo
+      // Atualizar o estado local para mostrar o logo padrão
       setCurrentLogo(`${data.logoUrl}?t=${Date.now()}`);
       setLogoPreview(null);
       
@@ -87,11 +100,24 @@ const SimpleLogo = () => {
         fileInputRef.current.value = '';
       }
       
-      // Criar e disparar um evento personalizado para notificar outros componentes
-      const logoEvent = new CustomEvent('logo-updated', {
+      // Criar e disparar um evento de remoção do logo
+      const logoRemovedEvent = new CustomEvent('logo-removed', {
         detail: { logoUrl: data.logoUrl, timestamp: Date.now() }
       });
-      window.dispatchEvent(logoEvent);
+      window.dispatchEvent(logoRemovedEvent);
+      
+      // Também disparar o evento de atualização para manter compatibilidade
+      const logoUpdatedEvent = new CustomEvent('logo-updated', {
+        detail: { logoUrl: data.logoUrl, timestamp: Date.now() }
+      });
+      window.dispatchEvent(logoUpdatedEvent);
+      
+      // Forçar recarregamento da página após um breve intervalo
+      // Isso garante que todos os componentes vejam a mudança
+      setTimeout(() => {
+        loadCurrentLogo();
+      }, 500);
+      
     } catch (error) {
       console.error('Erro ao remover logo:', error);
       toast({
@@ -104,7 +130,7 @@ const SimpleLogo = () => {
     }
   };
 
-  // Função simples para fazer upload do logo
+  // Função aprimorada para fazer upload do logo e notificar todos os componentes
   const handleUpload = async () => {
     if (!fileInputRef.current?.files?.length) {
       toast({
@@ -117,9 +143,19 @@ const SimpleLogo = () => {
 
     const file = fileInputRef.current.files[0];
     
+    // Verificar tamanho do arquivo (máximo 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: 'Arquivo muito grande',
+        description: 'O tamanho máximo permitido é 2MB. Por favor, selecione uma imagem menor.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     setIsUploading(true);
     
-    // Criar um FormData simples
+    // Criar um FormData para o upload
     const formData = new FormData();
     formData.append('logo', file);
     
@@ -127,6 +163,7 @@ const SimpleLogo = () => {
       const response = await fetch('/api/upload-logo', {
         method: 'POST',
         body: formData,
+        credentials: 'include', // Importante para a autenticação
       });
       
       if (!response.ok) {
@@ -141,14 +178,26 @@ const SimpleLogo = () => {
         variant: 'default',
       });
       
-      // Atualizar o estado local para mostrar o novo logo
+      // Atualizar o estado local para mostrar o novo logo com timestamp para evitar cache
       setCurrentLogo(`${data.logoUrl}?t=${Date.now()}`);
+      setLogoPreview(null);
       
-      // Criar e disparar um evento personalizado para notificar outros componentes
-      const logoEvent = new CustomEvent('logo-updated', {
+      // Limpar o campo de arquivo para permitir novo upload
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      
+      // Criar e disparar eventos personalizados para notificar todos os componentes
+      const logoUpdatedEvent = new CustomEvent('logo-updated', {
         detail: { logoUrl: data.logoUrl, timestamp: Date.now() }
       });
-      window.dispatchEvent(logoEvent);
+      window.dispatchEvent(logoUpdatedEvent);
+      
+      // Forçar recarregamento após um breve intervalo
+      setTimeout(() => {
+        loadCurrentLogo();
+      }, 500);
+      
     } catch (error) {
       console.error('Erro ao fazer upload:', error);
       toast({
@@ -171,25 +220,47 @@ const SimpleLogo = () => {
       </CardHeader>
       <CardContent>
         <div className="mb-4 flex justify-center">
-          <div className="border rounded-lg p-4 w-full max-w-sm h-32 flex items-center justify-center bg-gray-50">
-            {logoPreview ? (
+          <div className="border rounded-lg p-4 w-full max-w-sm h-32 flex flex-col items-center justify-center bg-gray-50 relative">
+            {isLoading ? (
+              <div className="flex flex-col items-center">
+                <Loader2 className="h-10 w-10 animate-spin text-blue-500 mb-2" />
+                <p className="text-sm text-gray-500">Carregando logo...</p>
+              </div>
+            ) : logoPreview ? (
               <img 
                 src={logoPreview} 
                 alt="Preview do Logo" 
                 className="h-full max-w-full object-contain" 
               />
             ) : currentLogo ? (
-              <img 
-                src={currentLogo} 
-                alt="Logo Atual" 
-                className="h-full max-w-full object-contain" 
-              />
+              <>
+                <img 
+                  src={currentLogo} 
+                  alt="Logo Atual" 
+                  className="h-full max-w-full object-contain" 
+                />
+                <span className="absolute bottom-1 right-1 text-xs text-gray-400">
+                  {currentLogo.includes('/images/logo.png') ? 'Logo padrão' : 'Logo personalizado'}
+                </span>
+              </>
             ) : (
               <div className="text-gray-400 text-center">
                 <Upload className="mx-auto h-12 w-12 mb-2" />
                 <p>Nenhum logo configurado</p>
               </div>
             )}
+            
+            {/* Botão para recarregar o logo atual */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="absolute top-1 right-1 h-6 w-6 rounded-full hover:bg-gray-200"
+              onClick={loadCurrentLogo}
+              disabled={isLoading}
+              title="Recarregar logo"
+            >
+              <RefreshCw className="h-3 w-3" />
+            </Button>
           </div>
         </div>
         
