@@ -28,6 +28,7 @@ import PainelArtes from "@/pages/painel/PainelArtes";
 import PainelFavoritas from "@/pages/painel/PainelFavoritas";
 import PainelSeguindo from "@/pages/painel/PainelSeguindo";
 import PainelDownloads from "@/pages/painel/PainelDownloads";
+import PainelAssinatura from "@/pages/painel/PainelAssinatura";
 import PainelPerfil from "@/pages/painel/PainelPerfil";
 
 // Componente para decidir se mostra o layout padrão
@@ -69,6 +70,7 @@ function AppRoutes() {
       <ProtectedPainelRoute path="/painel/favoritas" component={PainelFavoritas} />
       <ProtectedPainelRoute path="/painel/seguindo" component={PainelSeguindo} />
       <ProtectedPainelRoute path="/painel/downloads" component={PainelDownloads} />
+      <ProtectedPainelRoute path="/painel/assinatura" component={PainelAssinatura} />
       <ProtectedPainelRoute path="/painel/perfil" component={PainelPerfil} />
       
       {/* Redirecionamento da raiz do painel para /painel/inicio */}

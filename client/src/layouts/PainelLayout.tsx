@@ -14,7 +14,8 @@ import {
   Crown,
   ChevronRight,
   Infinity,
-  Users
+  Users,
+  CreditCard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -110,6 +111,12 @@ export default function PainelLayout({ children }: PainelLayoutProps) {
       label: "Downloads",
       path: "/painel/downloads",
       icon: <Download className="h-5 w-5" />,
+      access: "all",
+    },
+    {
+      label: "Assinatura",
+      path: "/painel/assinatura",
+      icon: <CreditCard className="h-5 w-5" />,
       access: "all",
     },
     {
