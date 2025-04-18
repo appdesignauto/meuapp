@@ -865,6 +865,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Endpoint para atualizar configurações do site (requer admin)
   app.put("/api/site-settings", isAdmin, upload.single('logo'), async (req, res) => {
     try {
+      console.log("Solicitação de atualização de logo recebida");
+      
       // Definir cabeçalhos para evitar cache
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.setHeader('Pragma', 'no-cache');
@@ -875,6 +877,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Se um arquivo de logo foi enviado, processar e salvar
       if (req.file) {
+        console.log("Arquivo de logo recebido:", req.file.originalname, "tipo:", req.file.mimetype, "tamanho:", req.file.size, "bytes");
         try {
           // Importar o serviço de storage do Supabase
           const { supabaseStorageService } = await import('./services/supabase-storage');

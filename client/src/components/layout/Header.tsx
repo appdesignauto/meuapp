@@ -99,10 +99,11 @@ const Header = () => {
               {siteSettings?.logoUrl ? (
                 <div className="h-10 sm:h-11 md:h-12 flex items-center">
                   <img 
-                    src={`${siteSettings.logoUrl}?v=${Math.random().toString(36).substring(2, 15)}`} 
+                    src={`${siteSettings.logoUrl}?t=${Date.now()}`} 
                     alt="DesignAuto App" 
-                    key={`logo-${Math.random()}`}
-                    className="h-full w-auto max-w-[180px] sm:max-w-[200px] object-contain mr-3 transition-transform duration-200 hover:scale-105 pr-1" 
+                    className="h-full w-auto max-w-[180px] sm:max-w-[200px] object-contain mr-3 transition-transform duration-200 hover:scale-105 pr-1"
+                    key={`logo-header-${Date.now()}`}
+                    loading="eager"
                     onError={(e) => {
                       console.error('Erro ao carregar logo:', e);
                       (e.target as HTMLImageElement).src = "/images/logo.png";

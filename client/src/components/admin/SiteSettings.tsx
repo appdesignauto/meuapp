@@ -1,12 +1,10 @@
-import { useState, useRef } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
 import { Upload, RefreshCw, Check, AlertCircle, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
@@ -25,76 +23,38 @@ interface SiteSettings {
 
 const SiteSettings = () => {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
-
-  // Buscar configurações atuais do site
-  const { data: settings, isLoading, error } = useQuery<SiteSettings>({
-    queryKey: ['/api/site-settings'],
-    queryFn: async () => {
-      const res = await fetch('/api/site-settings');
-      if (!res.ok) throw new Error('Falha ao carregar configurações do site');
-      return res.json();
-    },
-  });
-
-  // Mutation para atualizar configurações
-  const updateSettingsMutation = useMutation({
-    mutationFn: async (data: FormData) => {
-      // Adiciona um timestamp à requisição para evitar cache
-      data.append('timestamp', Date.now().toString());
-      
-      const res = await fetch('/api/site-settings?nocache=' + Math.random(), {
-        method: 'PUT',
-        body: data,
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  
+  // Buscar configurações ao montar o componente
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        setIsLoading(true);
+        // Adicionar parâmetro de timestamp para evitar cache
+        const response = await fetch(`/api/site-settings?t=${Date.now()}`);
+        
+        if (!response.ok) {
+          throw new Error('Falha ao carregar configurações do site');
         }
-      });
-      
-      if (!res.ok) {
-        throw new Error('Falha ao atualizar as configurações');
+        
+        const data = await response.json();
+        setSettings(data);
+        setError(null);
+      } catch (err: any) {
+        console.error('Erro ao carregar configurações:', err);
+        setError(err);
+      } finally {
+        setIsLoading(false);
       }
-      
-      return res.json();
-    },
-    onSuccess: (data) => {
-      toast({
-        title: 'Configurações atualizadas',
-        description: 'As configurações do site foram atualizadas com sucesso.',
-        variant: 'default',
-      });
-      
-      console.log('Logo atualizado com sucesso:', data);
-      
-      // Invalidar todas as queries que usam as configurações do site com opções de cache
-      queryClient.invalidateQueries({ 
-        queryKey: ['/api/site-settings'],
-        refetchType: 'all'
-      });
-      
-      // Forçar a atualização da página após um pequeno delay
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
-      
-      setLogoPreview(null);
-      setUploadingLogo(false);
-    },
-    onError: (error) => {
-      console.error('Erro ao atualizar logo:', error);
-      toast({
-        title: 'Erro ao atualizar',
-        description: error.message,
-        variant: 'destructive',
-      });
-      setUploadingLogo(false);
-    },
-  });
+    };
+    
+    fetchSettings();
+  }, []);
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -109,19 +69,61 @@ const SiteSettings = () => {
   };
 
   const handleLogoUpload = async () => {
-    if (fileInputRef.current?.files?.length) {
-      setUploadingLogo(true);
-      
-      const formData = new FormData();
-      formData.append('logo', fileInputRef.current.files[0]);
-      
-      updateSettingsMutation.mutate(formData);
-    } else {
+    if (!fileInputRef.current?.files?.length) {
       toast({
         title: 'Nenhum arquivo selecionado',
         description: 'Por favor, selecione uma imagem para o logo.',
         variant: 'destructive',
       });
+      return;
+    }
+    
+    try {
+      setUploadingLogo(true);
+      
+      const file = fileInputRef.current.files[0];
+      const formData = new FormData();
+      formData.append('logo', file);
+      formData.append('nocache', Date.now().toString());
+      
+      // Fazer upload diretamente sem usar mutation (para evitar problemas de cache)
+      const response = await fetch('/api/site-settings?t=' + Date.now(), {
+        method: 'PUT',
+        body: formData,
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Falha ao enviar o logo. Por favor, tente novamente.');
+      }
+      
+      const data = await response.json();
+      console.log('Logo atualizado com sucesso:', data);
+      
+      toast({
+        title: 'Logo atualizado',
+        description: 'O logo foi atualizado com sucesso!',
+        variant: 'default',
+      });
+      
+      // Forçar recarregamento completo da página para aplicar as mudanças
+      setTimeout(() => {
+        window.location.href = '/admin?t=' + Date.now();
+      }, 1000);
+      
+    } catch (error: any) {
+      console.error('Erro ao fazer upload do logo:', error);
+      toast({
+        title: 'Erro ao atualizar',
+        description: error.message || 'Ocorreu um erro ao atualizar o logo.',
+        variant: 'destructive',
+      });
+    } finally {
+      setUploadingLogo(false);
     }
   };
 
@@ -226,9 +228,9 @@ const SiteSettings = () => {
               <CardFooter>
                 <Button 
                   onClick={handleLogoUpload}
-                  disabled={uploadingLogo || updateSettingsMutation.isPending}
+                  disabled={uploadingLogo}
                 >
-                  {(uploadingLogo || updateSettingsMutation.isPending) ? (
+                  {uploadingLogo ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Enviando...
