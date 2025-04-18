@@ -484,6 +484,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Favorites API
+  // Downloads API
+  app.get("/api/downloads", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const userDownloads = await storage.getDownloadsByUserId(userId);
+      
+      // Enriquece os downloads com informações da arte
+      const enrichedDownloads = await Promise.all(
+        userDownloads.map(async (download) => {
+          try {
+            // Garantir que artId seja um número
+            const artId = Number(download.artId);
+            if (isNaN(artId)) {
+              console.error(`ID de arte inválido: ${download.artId}`);
+              return download;
+            }
+            
+            const art = await storage.getArtById(artId);
+            return {
+              ...download,
+              art
+            };
+          } catch (error) {
+            console.error(`Erro ao buscar arte ${download.artId} para download:`, error);
+            return download;
+          }
+        })
+      );
+      
+      // Filtrar downloads que não têm arte válida
+      const validDownloads = enrichedDownloads.filter(download => download.art);
+      
+      res.json({ downloads: validDownloads, totalCount: validDownloads.length });
+    } catch (error) {
+      console.error("Erro ao buscar downloads:", error);
+      res.status(500).json({ message: "Erro ao buscar downloads" });
+    }
+  });
+  
+  // Download specific art
+  app.post("/api/downloads", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const { artId } = req.body;
+      
+      // Verificar se a arte existe
+      const art = await storage.getArtById(Number(artId));
+      if (!art) {
+        return res.status(404).json({ message: "Arte não encontrada" });
+      }
+      
+      // Registrar o download
+      const download = await storage.createDownload({ 
+        userId, 
+        artId: Number(artId),
+        downloadDate: new Date() 
+      });
+      
+      res.status(201).json(download);
+    } catch (error) {
+      console.error("Erro ao registrar download:", error);
+      res.status(500).json({ message: "Erro ao registrar download" });
+    }
+  });
+  
   app.get("/api/favorites", isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
