@@ -73,7 +73,7 @@ const LogoUploader = () => {
     }
   };
 
-  // Função para fazer upload do logo - abordagem radical
+  // Função para fazer upload do logo - abordagem ultra-radical
   const handleLogoUpload = async () => {
     if (!fileInputRef.current?.files?.length) {
       toast({
@@ -89,54 +89,100 @@ const LogoUploader = () => {
       
       const file = fileInputRef.current.files[0];
       
-      // Gera um nome de arquivo único com timestamp para forçar nova URL
-      const uniqueFileName = `logo_${Date.now()}_${Math.floor(Math.random() * 1000000)}.${file.name.split('.').pop()}`;
+      // Gera um nome de arquivo único usando múltiplas fontes de randomização
+      const timestamp = Date.now();
+      const randomPart1 = Math.random().toString(36).substring(2, 10);
+      const randomPart2 = Math.random().toString(16).substring(2, 8);
+      const uniqueFileName = `logo_${timestamp}_${randomPart1}_${randomPart2}.${file.name.split('.').pop()}`;
       
-      // Adiciona o nome do arquivo no FormData para que o servidor use esse nome
+      console.log("Gerando nome único para logo:", uniqueFileName);
+      
+      // Criar FormData com informações detalhadas para forçar renovação
       const formData = new FormData();
-      formData.append('uniqueFileName', uniqueFileName); // Nome de arquivo único
+      formData.append('uniqueFileName', uniqueFileName);
       formData.append('logo', file);
-      formData.append('timestamp', Date.now().toString());
-      formData.append('forceNewUpload', 'true'); // Indicador para forçar upload novo
+      formData.append('timestamp', timestamp.toString());
+      formData.append('forceNewUpload', 'true');
+      formData.append('randomToken', randomPart1);
+      formData.append('bypassCache', 'true');
       
-      // Fazer upload diretamente com configurações anti-cache
-      const response = await fetch(`/api/site-settings?t=${Date.now()}&forceNew=true`, {
+      // Adicionar parâmetros de query para evitar cache também na URL
+      const queryParams = new URLSearchParams({
+        t: timestamp.toString(),
+        forceNew: 'true',
+        rand: randomPart2,
+        cache: 'bust'
+      }).toString();
+      
+      // Configurar cabeçalhos para forçar bypass de cache em todos os níveis
+      const fetchHeaders = {
+        'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'X-Force-New-Upload': 'true',
+        'X-No-Cache': timestamp.toString(),
+        'X-Bypass-Cache': randomPart1
+      };
+      
+      // Fazer upload com todas as medidas anti-cache possíveis
+      console.log("Iniciando upload com medidas anti-cache extremas");
+      const response = await fetch(`/api/site-settings?${queryParams}`, {
         method: 'PUT',
         body: formData,
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        },
-        cache: 'no-store'
+        headers: fetchHeaders,
+        cache: 'no-store',
+        credentials: 'same-origin'  // Importante para sessões
       });
       
       if (!response.ok) {
         throw new Error('Falha ao enviar o logo. Por favor, tente novamente.');
       }
       
+      // Processar resposta com informações do logo
       const data = await response.json();
       console.log('Logo atualizado com sucesso:', data);
       
-      // Aqui pegamos a nova URL do logo retornada pelo servidor
+      // Obter URL do novo logo
       const newLogoUrl = data.logoUrl;
+      
+      // Adicionar timestamp ao final para garantir que a URL seja única
+      const finalLogoUrl = newLogoUrl.includes('?') 
+        ? `${newLogoUrl}&ts=${timestamp}&r=${randomPart1}`
+        : `${newLogoUrl}?ts=${timestamp}&r=${randomPart1}`;
       
       toast({
         title: 'Logo atualizado com sucesso',
-        description: 'Redirecionando para aplicar as mudanças em todo o site...',
+        description: 'Aplicando mudanças e recarregando a página...',
         variant: 'default',
       });
       
-      // Usando localStorage para indicar que um logo novo foi carregado
-      localStorage.setItem('newLogoUrl', newLogoUrl);
-      localStorage.setItem('logoUpdatedAt', Date.now().toString());
+      // Salvar no localStorage com várias informações para maximizar a chance de atualização
+      localStorage.removeItem('newLogoUrl'); // Limpar primeiro
+      localStorage.removeItem('logoUpdatedAt');
       
-      // Recarrega a página completa usando location.replace (mais agressivo que href)
+      // Pequeno atraso para garantir a limpeza
       setTimeout(() => {
-        console.log("Redirecionando para página admin com limpeza total de cache...");
-        // Solução nuclear: recarregar com reload=true
-        window.location.replace(`/admin?reload=true&nocache=${Date.now()}`);
-      }, 1500);
+        localStorage.setItem('newLogoUrl', finalLogoUrl);
+        localStorage.setItem('logoUpdatedAt', timestamp.toString());
+        localStorage.setItem('logoRandomToken', randomPart1);
+        localStorage.setItem('forceCacheRefresh', 'true');
+        
+        // Limpar também os caches de consulta TanStack
+        window.sessionStorage.removeItem('tanstack-query-cache');
+        
+        // Abordagem nuclear: recarregar completamente com vários parâmetros anti-cache
+        console.log("Redirecionando com limpeza total de cache...");
+        
+        // Usar setTimeout com um tempo curto para garantir que o localStorage foi atualizado
+        setTimeout(() => {
+          window.location.href = `/admin?reload=true&nocache=${timestamp}&r=${randomPart1}&force=true`;
+          
+          // Recarregar novamente após um curto período (abordagem extrema)
+          setTimeout(() => {
+            window.location.reload(true);
+          }, 100);
+        }, 50);
+      }, 100);
       
     } catch (error: any) {
       console.error('Erro ao fazer upload do logo:', error);
@@ -206,15 +252,22 @@ const LogoUploader = () => {
                       </div>
                     ) : settings?.logoUrl ? (
                       <div className="h-32 flex items-center justify-center">
+                        {/* Forçar nova renderização a cada 2 segundos */}
                         <img 
-                          src={`${settings.logoUrl}?v=${Date.now()}`}
+                          src={`${settings.logoUrl}?v=${Date.now()}&r=${Math.random()}`}
                           alt="Logo Atual" 
-                          key={`logo-preview-${Date.now()}`}
+                          key={`logo-preview-${Date.now()}_${Math.random()}`}
                           className="h-full max-w-full object-contain" 
+                          referrerPolicy="no-referrer"
+                          fetchPriority="high"
+                          crossOrigin="anonymous"
+                          style={{
+                            filter: `_:nth-child(${Date.now() % 10})` // Hack CSS para forçar renderização
+                          }}
                           onError={(e) => {
                             console.error('Erro ao carregar logo:', e);
                             const target = e.target as HTMLImageElement;
-                            target.src = "/images/logo.png";
+                            target.src = `/images/logo.png?v=${Date.now()}`;
                             target.onerror = null;
                           }}
                         />

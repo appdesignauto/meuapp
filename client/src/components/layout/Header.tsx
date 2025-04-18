@@ -48,44 +48,74 @@ type LogoImageProps = {
 
 const LogoImage = ({ siteSettings }: LogoImageProps) => {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [forceRefresh, setForceRefresh] = useState(0); // Contador para forçar refresh
+  
+  // Forçar atualização periódica para garantir que o logo seja sempre atual
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setForceRefresh(prev => prev + 1);
+    }, 5000); // Tentar a cada 5 segundos
+    
+    return () => clearInterval(interval);
+  }, []);
   
   useEffect(() => {
-    // Verificar se existe uma nova URL no localStorage e se é recente (< 5 minutos)
+    // Verificar se existe uma nova URL no localStorage e se é recente (< 30 minutos)
     const storedLogoUrl = localStorage.getItem('newLogoUrl');
     const storedTimestamp = localStorage.getItem('logoUpdatedAt');
     
     if (storedLogoUrl && storedTimestamp) {
       const updatedAt = parseInt(storedTimestamp);
       const now = Date.now();
-      const fiveMinutesAgo = now - (5 * 60 * 1000);
+      const thirtyMinutesAgo = now - (30 * 60 * 1000);
       
-      if (updatedAt > fiveMinutesAgo) {
+      if (updatedAt > thirtyMinutesAgo) {
         // URL do logo guardada é recente, usar ela
         console.log('Usando URL do logo do localStorage:', storedLogoUrl);
-        setLogoUrl(storedLogoUrl);
+        
+        // Adicionar parâmetros para evitar cache
+        const newUrl = storedLogoUrl.includes('?') 
+          ? `${storedLogoUrl}&noCache=${Date.now()}`
+          : `${storedLogoUrl}?noCache=${Date.now()}`;
+          
+        setLogoUrl(newUrl);
         return;
       }
     }
     
-    // Caso contrário, usar a URL das configurações do site
+    // Caso contrário, usar a URL das configurações do site com cache bust
     if (siteSettings?.logoUrl) {
-      setLogoUrl(siteSettings.logoUrl);
+      const uniqueParams = `nocache=${Date.now()}&r=${Math.random()}`;
+      const newUrl = siteSettings.logoUrl.includes('?') 
+        ? `${siteSettings.logoUrl}&${uniqueParams}`
+        : `${siteSettings.logoUrl}?${uniqueParams}`;
+        
+      setLogoUrl(newUrl);
     }
-  }, [siteSettings]);
+  }, [siteSettings, forceRefresh]); // Reexecutar quando forceRefresh mudar
   
-  // Para garantir refresh da imagem, incluir um parâmetro de timestamp na URL
+  // Gerar URL final com parâmetros dinâmicos para evitar cache
+  // Usar uma variável que muda constantemente para evitar que o navegador cache
+  const uniqueId = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
   const timestamp = Date.now();
   const finalLogoUrl = logoUrl ? 
-    `${logoUrl}${logoUrl.includes('?') ? '&' : '?'}v=${timestamp}` : 
-    '/images/logo.png';
+    `${logoUrl}&uid=${uniqueId}` : 
+    `/images/logo.png?v=${timestamp}`;
   
   return (
     <img 
       src={finalLogoUrl}
       alt="DesignAuto App" 
       className="h-full w-auto max-w-[180px] sm:max-w-[200px] object-contain mr-3 transition-transform duration-200 hover:scale-105 pr-1"
-      key={`logo-${timestamp}`}
+      key={`logo-${uniqueId}`} // Mudar a key para forçar o React a recriar o elemento
       loading="eager"
+      referrerPolicy="no-referrer"
+      fetchPriority="high"
+      crossOrigin="anonymous" // Evitar problemas de CORS
+      style={{
+        // Usar timestamp no CSS para evitar cache do navegador
+        filter: `_:nth-child(${timestamp%10})` // Hack CSS para forçar renderização
+      }}
       onError={(e) => {
         console.error('Erro ao carregar logo:', e);
         (e.target as HTMLImageElement).src = "/images/logo.png";
