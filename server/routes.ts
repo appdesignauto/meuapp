@@ -24,8 +24,9 @@ import uploadMemory from "./middlewares/upload";
 // Versão promisificada do scrypt
 const scryptAsync = promisify(scrypt);
 
-// Importar nosso router de upload de logo
-import logoUploadRouter from './routes/logo-upload';
+// Importar nossas rotas relacionadas ao logo
+import logoUploadRouter from './routes/logo-upload'
+import removeLogoRouter from './routes/remove-logo';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Rota de debug para testar getUserByUsername
@@ -54,8 +55,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication middleware and routes
   const { isAuthenticated, isPremium, isAdmin, isDesigner, hasRole } = setupAuth(app);
   
-  // Registrar a rota simplificada para upload de logo
+  // Registrar as rotas relacionadas ao logo
   app.use('/api/upload-logo', logoUploadRouter);
+  app.use('/api/remove-logo', removeLogoRouter);
   
   // Configurar o multer para upload de arquivos
   const uploadDir = path.join(process.cwd(), 'uploads');

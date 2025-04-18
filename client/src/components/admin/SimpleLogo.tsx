@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Upload } from 'lucide-react';
+import { Loader2, Upload, Trash } from 'lucide-react';
 
 /**
  * Componente simples e direto para o upload de logo
@@ -35,6 +35,67 @@ const SimpleLogo = () => {
     const file = e.target.files?.[0];
     if (file) {
       setLogoPreview(URL.createObjectURL(file));
+    }
+  };
+
+  // Função para remover o logo
+  const handleRemoveLogo = async () => {
+    if (!currentLogo) {
+      toast({
+        title: 'Sem logo para remover',
+        description: 'Não há logo configurado para remover.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    // Confirmar com o usuário
+    if (!confirm('Tem certeza que deseja remover o logo atual?')) {
+      return;
+    }
+    
+    setIsUploading(true);
+    
+    try {
+      const response = await fetch('/api/remove-logo', {
+        method: 'POST',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Falha ao remover o logo. Tente novamente.');
+      }
+      
+      const data = await response.json();
+      
+      toast({
+        title: 'Logo removido com sucesso',
+        description: 'O logo foi removido e substituído pelo padrão.',
+        variant: 'default',
+      });
+      
+      // Atualizar o estado local para mostrar o novo logo
+      setCurrentLogo(`${data.logoUrl}?t=${Date.now()}`);
+      setLogoPreview(null);
+      
+      // Limpar o campo de arquivo
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      
+      // Criar e disparar um evento personalizado para notificar outros componentes
+      const logoEvent = new CustomEvent('logo-updated', {
+        detail: { logoUrl: data.logoUrl, timestamp: Date.now() }
+      });
+      window.dispatchEvent(logoEvent);
+    } catch (error) {
+      console.error('Erro ao remover logo:', error);
+      toast({
+        title: 'Erro na remoção',
+        description: 'Não foi possível remover o logo. Tente novamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -140,7 +201,7 @@ const SimpleLogo = () => {
           </small>
         </div>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="flex flex-col gap-3">
         <Button 
           onClick={handleUpload}
           disabled={isUploading}
@@ -158,6 +219,27 @@ const SimpleLogo = () => {
             </>
           )}
         </Button>
+
+        {currentLogo && (
+          <Button
+            onClick={handleRemoveLogo}
+            disabled={isUploading}
+            variant="destructive"
+            className="w-full"
+          >
+            {isUploading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Removendo...
+              </>
+            ) : (
+              <>
+                <Trash className="mr-2 h-4 w-4" />
+                Remover Logo Atual
+              </>
+            )}
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );
