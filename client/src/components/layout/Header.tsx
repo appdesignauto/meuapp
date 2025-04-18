@@ -57,7 +57,7 @@ const LogoImage = ({ siteSettings }: LogoImageProps) => {
     <img 
       src={finalLogoUrl}
       alt="DesignAuto App" 
-      className="h-full w-auto max-w-[180px] sm:max-w-[200px] object-contain mr-3 transition-transform duration-200 hover:scale-105 pr-1"
+      className="h-12 w-auto max-w-[200px] sm:max-w-[230px] object-contain mr-3 transition-transform duration-200 hover:scale-105 pr-1"
       loading="eager"
       onError={(e) => {
         // Em caso de erro, carregar o logo padrão
@@ -182,7 +182,7 @@ const Header = () => {
           {/* Logo restaurado conforme solicitado */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center">
-              <div className="h-10 sm:h-11 md:h-12 w-[180px] flex items-center">
+              <div className="h-11 sm:h-12 md:h-14 w-[200px] sm:w-[220px] flex items-center">
                 {/* Exibir logo utilizando o componente dedicado */}
                 <LogoImage siteSettings={siteSettings} />
               </div>
