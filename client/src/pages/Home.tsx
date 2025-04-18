@@ -61,7 +61,8 @@ const Home = () => {
         <ArtGallery 
           categoryId={selectedCategory} 
           formatId={selectedFormat} 
-          fileTypeId={selectedFileType} 
+          fileTypeId={selectedFileType}
+          onCategorySelect={handleCategoryChange}
         />
       </div>
       <FeatureStats />

@@ -6,14 +6,16 @@ import { Button } from '@/components/ui/button';
 import ArtCard from '@/components/ui/ArtCard';
 import { useAuth } from '@/hooks/use-auth';
 import { queryClient } from '@/lib/queryClient';
+import MinimalCategoryFilters from './MinimalCategoryFilters';
 
 interface ArtGalleryProps {
   categoryId: number | null;
   formatId: number | null;
   fileTypeId: number | null;
+  onCategorySelect?: (categoryId: number | null) => void;
 }
 
-const ArtGallery = ({ categoryId, formatId, fileTypeId }: ArtGalleryProps) => {
+const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtGalleryProps) => {
   const [page, setPage] = useState(1);
   const [, setLocation] = useLocation();
   const limit = 8; // Items per page
@@ -71,19 +73,29 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId }: ArtGalleryProps) => {
   };
 
   return (
-    <section className="py-16 bg-gradient-to-b from-blue-50/50 to-white">
+    <section className="py-8 md:py-10 bg-gradient-to-b from-blue-50/50 to-white">
       <div className="container mx-auto px-4">
-        <div className="flex flex-wrap items-center justify-between mb-8">
-          <div>
-            <h2 className="text-2xl md:text-3xl font-bold text-blue-700 mb-2">Artes em Destaque</h2>
-            <p className="text-neutral-600 max-w-2xl">Designs profissionais prontos para impulsionar suas vendas</p>
+        <div className="flex flex-wrap items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <h2 className="text-sm font-medium text-neutral-800">Artes em Destaque</h2>
+            {categoryId && (
+              <div className="bg-blue-600 text-white text-xs px-3 py-1 rounded-md">
+                Filtrado por categoria
+              </div>
+            )}
+            {onCategorySelect && (
+              <MinimalCategoryFilters
+                selectedCategory={categoryId}
+                onCategorySelect={onCategorySelect}
+              />
+            )}
           </div>
           <Link 
             href="/arts" 
-            className="text-blue-600 hover:text-blue-500 font-medium text-sm flex items-center border border-blue-200 rounded-full px-4 py-2 transition-all hover:bg-blue-50"
+            className="text-blue-600 hover:text-blue-500 font-medium text-xs flex items-center px-2 py-1 transition-all"
           >
-            Ver todos os designs
-            <ArrowRight className="ml-1 h-4 w-4" />
+            Ver todos
+            <ArrowRight className="ml-1 h-3 w-3" />
           </Link>
         </div>
         
