@@ -835,7 +835,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Se não for admin, limitar quais campos podem ser atualizados
       if (user.nivelacesso !== "admin" && user.nivelacesso !== "designer_adm") {
         // Usuários regulares só podem editar seus próprios dados básicos
-        const { name, bio, profileimageurl } = req.body;
+        const { name, bio, profileimageurl, website, location } = req.body;
         
         await db
           .update(users)
@@ -843,6 +843,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             name: name || null,
             bio: bio || null,
             profileimageurl: profileimageurl || null,
+            website: website || null,
+            location: location || null,
             // Ajustar para horário de Brasília (UTC-3)
             atualizadoem: new Date(new Date().getTime() - 3 * 60 * 60 * 1000)
           })
@@ -1007,6 +1009,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(updatedUser);
     } catch (error: any) {
       console.error("Erro ao atualizar usuário:", error);
+      res.status(500).json({ message: "Erro ao atualizar usuário" });
+    }
+  });
+
+  // Rota para atualizar um usuário existente via PATCH
+  app.patch("/api/users/:id", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const userId = parseInt(req.params.id);
+      
+      console.log(`[UserUpdate PATCH] Atualizando usuário ${userId}. Requisição feita por: ${user.username} (ID: ${user.id}, Nível: ${user.nivelacesso})`);
+      console.log(`[UserUpdate PATCH] Dados recebidos:`, req.body);
+      
+      // Verificar se o usuário tem permissão de administrador ou é o próprio usuário
+      if (user.nivelacesso !== "admin" && user.nivelacesso !== "designer_adm" && user.id !== userId) {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+      
+      // Se não for admin, limitar quais campos podem ser atualizados
+      if (user.nivelacesso !== "admin" && user.nivelacesso !== "designer_adm") {
+        // Usuários regulares só podem editar seus próprios dados básicos
+        const { name, bio, profileimageurl, website, location } = req.body;
+        
+        const updateData: Record<string, any> = {
+          atualizadoem: new Date()
+        };
+        
+        if (name !== undefined) updateData.name = name || null;
+        if (bio !== undefined) updateData.bio = bio || null;
+        if (profileimageurl !== undefined) updateData.profileimageurl = profileimageurl || null;
+        if (website !== undefined) updateData.website = website || null;
+        if (location !== undefined) updateData.location = location || null;
+        
+        await db
+          .update(users)
+          .set(updateData)
+          .where(eq(users.id, userId));
+      } else {
+        // Admins podem editar tudo (mesma lógica do PUT)
+        const { username, email, password, name, nivelacesso, isactive, bio, origemassinatura, tipoplano, dataassinatura, dataexpiracao, acessovitalicio, observacaoadmin, website, location } = req.body;
+        
+        // Verificar se usuário existe
+        const [existingUser] = await db
+          .select()
+          .from(users)
+          .where(eq(users.id, userId));
+          
+        if (!existingUser) {
+          return res.status(404).json({ message: "Usuário não encontrado" });
+        }
+        
+        // Preparar objeto de atualização
+        const updateData: Record<string, any> = {
+          atualizadoem: new Date()
+        };
+        
+        if (username) updateData.username = username;
+        if (email) updateData.email = email;
+        if (name !== undefined) updateData.name = name || null;
+        if (bio !== undefined) updateData.bio = bio || null;
+        if (website !== undefined) updateData.website = website || null;
+        if (location !== undefined) updateData.location = location || null;
+        if (nivelacesso) {
+          updateData.nivelacesso = nivelacesso;
+          updateData.role = nivelacesso;
+        }
+        if (isactive !== undefined) updateData.isactive = isactive;
+        if (origemassinatura !== undefined) updateData.origemassinatura = origemassinatura || null;
+        if (tipoplano !== undefined) updateData.tipoplano = tipoplano || null;
+        if (dataassinatura !== undefined) updateData.dataassinatura = dataassinatura ? new Date(dataassinatura) : null;
+        if (dataexpiracao !== undefined) updateData.dataexpiracao = dataexpiracao ? new Date(dataexpiracao) : null;
+        if (acessovitalicio !== undefined) updateData.acessovitalicio = acessovitalicio;
+        if (observacaoadmin !== undefined) updateData.observacaoadmin = observacaoadmin || null;
+        
+        // Atualizar usuário
+        await db
+          .update(users)
+          .set(updateData)
+          .where(eq(users.id, userId));
+      }
+      
+      // Retornar usuário atualizado
+      const [updatedUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId));
+      
+      res.json(updatedUser);
+    } catch (error: any) {
+      console.error("Erro ao atualizar usuário (PATCH):", error);
       res.status(500).json({ message: "Erro ao atualizar usuário" });
     }
   });
