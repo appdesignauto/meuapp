@@ -36,6 +36,8 @@ export default function PainelInicio() {
   const { data: userStats, isLoading: statsLoading } = useQuery({
     queryKey: ["/api/users/stats"],
     enabled: !!user?.id,
+    onSuccess: (data) => console.log("Stats dados recebidos:", data),
+    onError: (error) => console.error("Erro ao buscar estatísticas:", error),
   });
 
   // Buscar artes recentes
