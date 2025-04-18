@@ -29,6 +29,10 @@ export const users = pgTable("users", {
   criadoem: timestamp("criadoem").notNull().defaultNow(),
   atualizadoem: timestamp("atualizadoem").notNull().defaultNow(),
   
+  // Campos para informações de perfil adicional
+  website: text("website"),
+  location: text("location"),
+  
   // Campo para compatibilidade com o código existente - será descontinuado gradualmente
   role: text("role"),
 });
