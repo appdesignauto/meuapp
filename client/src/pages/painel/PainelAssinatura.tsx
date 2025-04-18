@@ -17,6 +17,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from "@/components/ui/tooltip";
 
 export default function PainelAssinatura() {
   const { user } = useAuth();
@@ -97,6 +103,17 @@ export default function PainelAssinatura() {
     if (daysLeft === null) return "N/A";
     
     return `${daysLeft} ${daysLeft === 1 ? "dia" : "dias"} restante${daysLeft === 1 ? "" : "s"}`;
+  };
+
+  // Cálculo da data de reset dos limites (dia 1 do próximo mês)
+  const getNextResetDate = () => {
+    const today = new Date();
+    const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+    return nextMonth.toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
   };
 
   // Consumo de recursos
@@ -283,8 +300,16 @@ export default function PainelAssinatura() {
                         </CardHeader>
                         <CardContent>
                           <p className="text-lg font-medium">
-                            {formatDate(subscriptionDate)}
+                            {isPremium 
+                              ? formatDate(subscriptionDate) 
+                              : formatDate(user?.criadoem) /* Data de cadastro para usuários gratuitos */
+                            }
                           </p>
+                          {!isPremium && (
+                            <p className="text-xs text-muted-foreground">
+                              Data do seu cadastro no sistema
+                            </p>
+                          )}
                         </CardContent>
                       </Card>
 
@@ -360,9 +385,18 @@ export default function PainelAssinatura() {
                                 {resource.icon}
                                 <span className="ml-2 font-medium">{resource.name}</span>
                               </div>
-                              <span className="text-sm">
-                                {resource.used} / {resource.limit}
-                              </span>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="text-sm cursor-help">
+                                      {resource.used} / {resource.limit}
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Você pode realizar até {resource.limit} {resource.name.toLowerCase()} por mês no plano gratuito</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             </div>
                             
                             {!isPremium && (
@@ -382,6 +416,15 @@ export default function PainelAssinatura() {
                             )}
                           </div>
                         ))}
+                        
+                        {!isPremium && (
+                          <div className="mt-4 p-3 bg-blue-50 rounded-md border border-blue-100">
+                            <p className="text-xs text-blue-700 flex items-center">
+                              <CalendarClock className="h-3.5 w-3.5 mr-1.5 text-blue-500" />
+                              Seus limites serão renovados em: <span className="font-medium ml-1">{getNextResetDate()}</span>
+                            </p>
+                          </div>
+                        )}
                       </>
                     )}
                   </CardContent>
@@ -417,26 +460,70 @@ export default function PainelAssinatura() {
                       <Separator className="col-span-3 my-2" />
                       
                       <div className="col-span-1">Downloads</div>
-                      <div className="col-span-1 text-center">10 / mês</div>
-                      <div className="col-span-1 text-center text-blue-600">Ilimitado</div>
+                      <div className="col-span-1 text-center text-amber-600">
+                        <div className="inline-flex items-center justify-center">
+                          <span className="text-xs">10 / mês</span>
+                        </div>
+                      </div>
+                      <div className="col-span-1 text-center text-green-600">
+                        <div className="inline-flex items-center justify-center">
+                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          <span className="text-xs ml-1">Ilimitado</span>
+                        </div>
+                      </div>
                       
                       <Separator className="col-span-3 my-2" />
                       
                       <div className="col-span-1">Favoritos</div>
-                      <div className="col-span-1 text-center">20</div>
-                      <div className="col-span-1 text-center text-blue-600">Ilimitado</div>
+                      <div className="col-span-1 text-center text-amber-600">
+                        <div className="inline-flex items-center justify-center">
+                          <span className="text-xs">20 máximo</span>
+                        </div>
+                      </div>
+                      <div className="col-span-1 text-center text-green-600">
+                        <div className="inline-flex items-center justify-center">
+                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          <span className="text-xs ml-1">Ilimitado</span>
+                        </div>
+                      </div>
                       
                       <Separator className="col-span-3 my-2" />
                       
                       <div className="col-span-1">Artes Premium</div>
-                      <div className="col-span-1 text-center">❌</div>
-                      <div className="col-span-1 text-center text-blue-600">✓</div>
+                      <div className="col-span-1 text-center text-red-500">
+                        <div className="inline-flex items-center">
+                          <span className="text-xs">Não disponível</span>
+                        </div>
+                      </div>
+                      <div className="col-span-1 text-center text-green-600">
+                        <div className="inline-flex items-center justify-center">
+                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          <span className="text-xs ml-1">Acesso completo</span>
+                        </div>
+                      </div>
                       
                       <Separator className="col-span-3 my-2" />
                       
                       <div className="col-span-1">Suporte Prioritário</div>
-                      <div className="col-span-1 text-center">❌</div>
-                      <div className="col-span-1 text-center text-blue-600">✓</div>
+                      <div className="col-span-1 text-center text-red-500">
+                        <div className="inline-flex items-center">
+                          <span className="text-xs">Não disponível</span>
+                        </div>
+                      </div>
+                      <div className="col-span-1 text-center text-green-600">
+                        <div className="inline-flex items-center justify-center">
+                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          <span className="text-xs ml-1">Acesso completo</span>
+                        </div>
+                      </div>
                     </div>
                   </CardContent>
                   {!isPremium && (
