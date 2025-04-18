@@ -121,13 +121,141 @@ const Header = () => {
             )}
             
             {user ? (
-              <Button 
-                onClick={() => logoutMutation.mutate()} 
-                variant="outline"
-                className="border-blue-400 text-blue-600 hover:bg-blue-50 font-medium rounded-md"
-              >
-                Sair
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    className="border-blue-100 hover:border-blue-200 hover:bg-blue-50 rounded-full p-0 w-10 h-10 overflow-hidden"
+                  >
+                    {user.profileimageurl ? (
+                      <img 
+                        src={user.profileimageurl} 
+                        alt={user.name || user.username} 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-blue-50 text-blue-600 font-medium">
+                        {(user.name?.[0] || user.username[0]).toUpperCase()}
+                      </div>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56 mr-2 mt-1" align="end">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="font-medium text-sm">{user.name || user.username}</p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  
+                  <DropdownMenuGroup>
+                    <TooltipProvider>
+                      {/* Assinatura - Diferente para free e premium */}
+                      {user.nivelacesso === 'usuario' || !user.tipoplano ? (
+                        <Link href="/pricing">
+                          <DropdownMenuItem className="cursor-pointer">
+                            <div className="flex items-center justify-between w-full">
+                              <div className="flex items-center">
+                                <Crown className="mr-2 h-4 w-4 text-blue-600" />
+                                <span className="font-medium text-blue-600">Assinatura (UPGRADE)</span>
+                              </div>
+                              <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200">Free</Badge>
+                            </div>
+                          </DropdownMenuItem>
+                        </Link>
+                      ) : (
+                        <Link href="/painel/assinatura">
+                          <DropdownMenuItem className="cursor-pointer">
+                            <div className="flex items-center justify-between w-full">
+                              <div className="flex items-center">
+                                <CreditCard className="mr-2 h-4 w-4" />
+                                <span>Assinatura (Gerenciar)</span>
+                              </div>
+                              <Badge className="bg-neutral-100 text-neutral-700 hover:bg-neutral-200">{user.tipoplano}</Badge>
+                            </div>
+                          </DropdownMenuItem>
+                        </Link>
+                      )}
+                      
+                      {/* Downloads com limite visual */}
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Link href="/painel/downloads">
+                            <DropdownMenuItem className="cursor-pointer">
+                              <div className="flex items-center justify-between w-full">
+                                <div className="flex items-center">
+                                  <Download className="mr-2 h-4 w-4" />
+                                  <span>Downloads</span>
+                                </div>
+                                {user.nivelacesso === 'premium' || user.tipoplano ? (
+                                  <div className="flex items-center text-blue-600">
+                                    <Infinity className="h-4 w-4" />
+                                  </div>
+                                ) : (
+                                  <span className="text-sm text-muted-foreground">{userStats?.totalDownloads || 0}/10</span>
+                                )}
+                              </div>
+                            </DropdownMenuItem>
+                          </Link>
+                        </TooltipTrigger>
+                        {user.nivelacesso === 'usuario' || !user.tipoplano ? (
+                          <TooltipContent>
+                            <p>Limite de downloads para contas Free: 10/mês</p>
+                          </TooltipContent>
+                        ) : null}
+                      </Tooltip>
+                      
+                      {/* Favoritos */}
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Link href="/painel/favoritas">
+                            <DropdownMenuItem className="cursor-pointer">
+                              <div className="flex items-center justify-between w-full">
+                                <div className="flex items-center">
+                                  <Heart className="mr-2 h-4 w-4" />
+                                  <span>Favoritos</span>
+                                </div>
+                                {user.nivelacesso === 'premium' || user.tipoplano ? (
+                                  <div className="flex items-center text-blue-600">
+                                    <Infinity className="h-4 w-4" />
+                                  </div>
+                                ) : (
+                                  <span className="text-sm text-muted-foreground">{userStats?.totalFavorites || 0}/20</span>
+                                )}
+                              </div>
+                            </DropdownMenuItem>
+                          </Link>
+                        </TooltipTrigger>
+                        {user.nivelacesso === 'usuario' || !user.tipoplano ? (
+                          <TooltipContent>
+                            <p>Limite de favoritos para contas Free: 20</p>
+                          </TooltipContent>
+                        ) : null}
+                      </Tooltip>
+                      
+                      {/* Configurações */}
+                      <Link href="/painel/perfil">
+                        <DropdownMenuItem className="cursor-pointer">
+                          <Settings className="mr-2 h-4 w-4" />
+                          <span>Meu Perfil</span>
+                        </DropdownMenuItem>
+                      </Link>
+                    </TooltipProvider>
+                  </DropdownMenuGroup>
+                  
+                  <DropdownMenuSeparator />
+                  
+                  {/* Logout */}
+                  <DropdownMenuItem 
+                    className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
+                    onClick={() => logoutMutation.mutate()}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Sair</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <Link href="/auth">
                 <Button className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md">
