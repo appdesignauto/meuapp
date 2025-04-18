@@ -79,9 +79,9 @@ const Header = () => {
           <div className="flex items-center">
             <Link href="/" className="flex items-center">
               <img 
-                src="/assets/LOGO DESIGNAUTO.png" 
+                src="/images/logo.png" 
                 alt="DesignAuto App" 
-                className="h-10 sm:h-11 mr-2 transition-transform duration-200 hover:scale-105" 
+                className="h-8 sm:h-9 mr-2 transition-transform duration-200 hover:scale-105" 
               />
             </Link>
           </div>
