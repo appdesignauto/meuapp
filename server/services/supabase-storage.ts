@@ -385,6 +385,70 @@ export class SupabaseStorageService {
   /**
    * Nova solução para upload de logos que corrige os problemas de arquivos vazios
    */
+  /**
+   * Otimiza uma imagem de logo
+   * - Redimensiona para dimensões ideais para header (máximo 300px altura, mantendo proporção)
+   * - Converte para WebP para melhor compressão, exceto SVGs
+   * - Ajusta qualidade para tamanho web otimizado
+   */
+  async optimizeLogo(
+    buffer: Buffer,
+    mimeType: string
+  ): Promise<{ buffer: Buffer, extension: string, mimeType: string }> {
+    // Verificar se é SVG - não otimizamos SVGs, apenas retornamos como está
+    if (mimeType === 'image/svg+xml') {
+      console.log("Logo é SVG, não necessita otimização");
+      return { 
+        buffer: buffer,
+        extension: '.svg',
+        mimeType: 'image/svg+xml'
+      };
+    }
+    
+    try {
+      console.log("Iniciando otimização do logo...");
+      
+      // Obter informações da imagem original
+      const metadata = await sharp(buffer).metadata();
+      console.log(`Dimensões originais: ${metadata.width || 'unknown'}x${metadata.height || 'unknown'}`);
+      console.log(`Formato original: ${metadata.format || 'unknown'}`);
+      
+      // Configurar o processamento com sharp
+      let sharpInstance = sharp(buffer);
+      
+      // Redimensionar para altura máxima de 300px mantendo proporção
+      sharpInstance = sharpInstance.resize({
+        height: 300,
+        fit: "inside",
+        withoutEnlargement: true,
+      });
+      
+      // Converter para WebP com qualidade de 85%
+      const optimizedBuffer = await sharpInstance.webp({ quality: 85 }).toBuffer();
+      
+      console.log(`Logo otimizado: ${buffer.length} bytes -> ${optimizedBuffer.length} bytes`);
+      console.log(`Taxa de compressão: ${((1 - optimizedBuffer.length / buffer.length) * 100).toFixed(2)}%`);
+      
+      return {
+        buffer: optimizedBuffer,
+        extension: '.webp',
+        mimeType: 'image/webp'
+      };
+    } catch (error) {
+      console.error("Erro ao otimizar logo, usando original:", error);
+      // Em caso de erro, retornamos o buffer original
+      const extension = mimeType.includes('png') ? '.png' : 
+                        mimeType.includes('svg') ? '.svg' : 
+                        mimeType.includes('jp') ? '.jpg' : '.png';
+      
+      return { 
+        buffer: buffer,
+        extension: extension,
+        mimeType: mimeType
+      };
+    }
+  }
+  
   async uploadLogoWithCustomFilename(
     file: Express.Multer.File, 
     customFilename?: string
@@ -433,42 +497,49 @@ export class SupabaseStorageService {
       console.error("Erro ao criar diretório local de logos:", err);
     }
     
-    // Preparar nome de arquivo e caminhos
+    // Determinar o tipo de conteúdo adequado do arquivo original
+    let contentType = file.mimetype;
+    const originalExtension = path.extname(file.originalname) || '.png';
+    
+    if (!contentType || contentType === 'application/octet-stream') {
+      if (originalExtension.toLowerCase() === '.png') contentType = 'image/png';
+      else if (['.jpg', '.jpeg'].includes(originalExtension.toLowerCase())) contentType = 'image/jpeg';
+      else if (originalExtension.toLowerCase() === '.svg') contentType = 'image/svg+xml';
+      else contentType = 'image/png';
+    }
+    
+    // Otimizar o logo antes de salvar
+    console.log("Iniciando processo de otimização do logo...");
+    const { buffer: optimizedBuffer, extension, mimeType: finalMimeType } = 
+      await this.optimizeLogo(file.buffer, contentType);
+    
+    // Preparar nome de arquivo com a extensão correta após otimização
     const timestamp = Date.now();
     const randomId = Math.random().toString(36).substring(2, 8);
-    const extension = path.extname(file.originalname) || '.png';
     
     // Nome do arquivo padronizado para evitar problemas
     const safeFilename = `logo_${timestamp}_${randomId}${extension}`
       .replace(/[^a-zA-Z0-9_.-]/g, '_')
       .toLowerCase();
     
-    // Caminho no Supabase (usando original para manter padrão)
-    const supabasePath = `original/${safeFilename}`;
+    // Caminho no Supabase (pasta 'logos' para separação clara)
+    const supabasePath = `logos/${safeFilename}`;
     
     // Caminho local (fallback)
     const localPath = path.join(logosDir, safeFilename);
     
-    // Determinar o tipo de conteúdo adequado
-    let contentType = file.mimetype;
-    if (!contentType || contentType === 'application/octet-stream') {
-      if (extension.toLowerCase() === '.png') contentType = 'image/png';
-      else if (['.jpg', '.jpeg'].includes(extension.toLowerCase())) contentType = 'image/jpeg';
-      else if (extension.toLowerCase() === '.svg') contentType = 'image/svg+xml';
-      else contentType = 'image/png';
-    }
-    
     console.log(`Processando upload com nome: ${safeFilename}`);
-    console.log(`Tipo de conteúdo: ${contentType}`);
+    console.log(`Tipo de conteúdo final: ${finalMimeType}`);
+    console.log(`Tamanho do logo otimizado: ${optimizedBuffer.length} bytes`);
     
-    // Primeiro: tentar upload para supabase
+    // Primeiro: tentar upload para supabase com o buffer otimizado
     try {
-      console.log("Tentando upload para Supabase...");
+      console.log("Tentando upload do logo otimizado para Supabase...");
       
       const { error } = await supabase.storage
         .from(BUCKET_NAME)
-        .upload(supabasePath, file.buffer, {
-          contentType: contentType,
+        .upload(supabasePath, optimizedBuffer, {
+          contentType: finalMimeType,
           upsert: true
         });
 
@@ -508,8 +579,8 @@ export class SupabaseStorageService {
       
       // Fallback: armazenamento local
       try {
-        // Escrever arquivo localmente
-        fs.writeFileSync(localPath, file.buffer);
+        // Escrever arquivo localmente usando o buffer otimizado
+        fs.writeFileSync(localPath, optimizedBuffer);
         
         const localUrl = `/images/logos/${safeFilename}`;
         console.log(`Upload local concluído: ${localUrl}`);
