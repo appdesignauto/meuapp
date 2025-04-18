@@ -13,12 +13,15 @@ import {
   Menu,
   X,
   Crown,
-  ChevronRight
+  ChevronRight,
+  Infinity
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Card, CardContent } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
@@ -70,7 +73,19 @@ export default function PainelLayout({ children }: PainelLayoutProps) {
 
   // Utilizar o hook de assinatura para obter status do usuário
   const subscription = useSubscription(user);
-  const { isPremium, isExpired, daysLeft } = subscription;
+  const { isPremium, isExpired, daysLeft, planType, isLifetime, subscriptionOrigin, expirationDate } = subscription;
+  
+  // Buscar estatísticas do usuário
+  const { data: userStats } = useQuery({
+    queryKey: ['/api/users/stats'],
+    queryFn: async () => {
+      if (!user) return null;
+      const res = await fetch('/api/users/stats');
+      if (!res.ok) return { totalFavorites: 0, totalDownloads: 0, totalViews: 0 };
+      return res.json();
+    },
+    enabled: !!user, // Só executa se o usuário estiver logado
+  });
 
   const menuItems = [
     {
@@ -177,7 +192,103 @@ export default function PainelLayout({ children }: PainelLayoutProps) {
             ))}
           </nav>
           
-          <div className="mt-auto pt-4 border-t">
+          <div className="mt-auto pt-4 border-t space-y-3">
+            {/* Card de Informações da Assinatura */}
+            <Card className="overflow-hidden">
+              <CardContent className="p-3">
+                <div className="flex flex-col space-y-3">
+                  {/* Status da Assinatura */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <Crown className="h-4 w-4 mr-2 text-blue-600" />
+                      <span className="text-sm font-medium">Status</span>
+                    </div>
+                    
+                    {isPremium ? (
+                      <div>
+                        <Badge variant="premium" className="flex items-center gap-1">
+                          {isLifetime ? "Vitalício" : planType || "Premium"}
+                        </Badge>
+                      </div>
+                    ) : (
+                      <Link href="/pricing">
+                        <Badge 
+                          variant="outline" 
+                          className="bg-blue-50 text-blue-700 hover:bg-blue-100 cursor-pointer"
+                        >
+                          Upgrade
+                        </Badge>
+                      </Link>
+                    )}
+                  </div>
+                  
+                  {/* Data de Expiração - Só exibe se for premium não-vitalício */}
+                  {isPremium && !isLifetime && expirationDate && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Expira em</span>
+                      <span className="text-xs font-medium">
+                        {new Date(expirationDate).toLocaleDateString('pt-BR')}
+                        {daysLeft !== null && daysLeft >= 0 && (
+                          <span className="text-xs ml-1">
+                            ({daysLeft} {daysLeft === 1 ? 'dia' : 'dias'})
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {/* Downloads */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <Download className="h-4 w-4 mr-2" />
+                      <span className="text-sm">Downloads</span>
+                    </div>
+                    <span className="text-xs">
+                      {isPremium ? (
+                        <span className="flex items-center text-blue-600 font-medium">
+                          <span className="mr-1">{userStats?.totalDownloads || 0}</span> / <span className="text-lg mx-0.5">∞</span>
+                        </span>
+                      ) : (
+                        <span>{userStats?.totalDownloads || 0} / 10</span>
+                      )}
+                    </span>
+                  </div>
+                  
+                  {/* Favoritos */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <Heart className="h-4 w-4 mr-2" />
+                      <span className="text-sm">Favoritos</span>
+                    </div>
+                    <span className="text-xs">
+                      {isPremium ? (
+                        <span className="flex items-center text-blue-600 font-medium">
+                          <span className="mr-1">{userStats?.totalFavorites || 0}</span> / <span className="text-lg mx-0.5">∞</span>
+                        </span>
+                      ) : (
+                        <span>{userStats?.totalFavorites || 0} / 20</span>
+                      )}
+                    </span>
+                  </div>
+                  
+                  {/* Botão de Upgrade para usuários free */}
+                  {!isPremium && (
+                    <Link href="/pricing">
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="w-full mt-2 bg-blue-600 hover:bg-blue-700"
+                      >
+                        <Crown className="h-3.5 w-3.5 mr-1.5" />
+                        Assinar Premium
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* Botão de Logout */}
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -224,7 +335,103 @@ export default function PainelLayout({ children }: PainelLayoutProps) {
                   </Link>
                 ))}
               </nav>
-              <div className="mt-auto pt-4 border-t">
+              <div className="mt-auto pt-4 border-t space-y-3">
+                {/* Card de Informações da Assinatura para Mobile */}
+                <Card className="overflow-hidden">
+                  <CardContent className="p-3">
+                    <div className="flex flex-col space-y-3">
+                      {/* Status da Assinatura */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <Crown className="h-4 w-4 mr-2 text-blue-600" />
+                          <span className="text-sm font-medium">Status</span>
+                        </div>
+                        
+                        {isPremium ? (
+                          <div>
+                            <Badge variant="premium" className="flex items-center gap-1">
+                              {isLifetime ? "Vitalício" : planType || "Premium"}
+                            </Badge>
+                          </div>
+                        ) : (
+                          <Link href="/pricing">
+                            <Badge 
+                              variant="outline" 
+                              className="bg-blue-50 text-blue-700 hover:bg-blue-100 cursor-pointer"
+                            >
+                              Upgrade
+                            </Badge>
+                          </Link>
+                        )}
+                      </div>
+                      
+                      {/* Data de Expiração - Só exibe se for premium não-vitalício */}
+                      {isPremium && !isLifetime && expirationDate && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground">Expira em</span>
+                          <span className="text-xs font-medium">
+                            {new Date(expirationDate).toLocaleDateString('pt-BR')}
+                            {daysLeft !== null && daysLeft >= 0 && (
+                              <span className="text-xs ml-1">
+                                ({daysLeft} {daysLeft === 1 ? 'dia' : 'dias'})
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {/* Downloads */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <Download className="h-4 w-4 mr-2" />
+                          <span className="text-sm">Downloads</span>
+                        </div>
+                        <span className="text-xs">
+                          {isPremium ? (
+                            <span className="flex items-center text-blue-600 font-medium">
+                              <span className="mr-1">{userStats?.totalDownloads || 0}</span> / <span className="text-lg mx-0.5">∞</span>
+                            </span>
+                          ) : (
+                            <span>{userStats?.totalDownloads || 0} / 10</span>
+                          )}
+                        </span>
+                      </div>
+                      
+                      {/* Favoritos */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <Heart className="h-4 w-4 mr-2" />
+                          <span className="text-sm">Favoritos</span>
+                        </div>
+                        <span className="text-xs">
+                          {isPremium ? (
+                            <span className="flex items-center text-blue-600 font-medium">
+                              <span className="mr-1">{userStats?.totalFavorites || 0}</span> / <span className="text-lg mx-0.5">∞</span>
+                            </span>
+                          ) : (
+                            <span>{userStats?.totalFavorites || 0} / 20</span>
+                          )}
+                        </span>
+                      </div>
+                      
+                      {/* Botão de Upgrade para usuários free */}
+                      {!isPremium && (
+                        <Link href="/pricing" onClick={() => setSidebarOpen(false)}>
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="w-full mt-2 bg-blue-600 hover:bg-blue-700"
+                          >
+                            <Crown className="h-3.5 w-3.5 mr-1.5" />
+                            Assinar Premium
+                          </Button>
+                        </Link>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Botão de Logout para Mobile */}
                 <Button
                   variant="outline"
                   className="w-full justify-start"
