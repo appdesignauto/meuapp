@@ -1,7 +1,7 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useSubscription } from "@/hooks/use-subscription";
 import { useQuery } from "@tanstack/react-query";
-import { Download, Eye, Clock, Star, Activity, ImageIcon, Crown } from "lucide-react";
+import { Download, Eye, Clock, Star, Activity, ImageIcon, Crown, AlertCircle, CalendarClock, RefreshCw, Heart, CheckCircle2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
@@ -232,33 +232,59 @@ export default function PainelInicio() {
             loading={statsLoading}
           />
         </Link>
-        <Card>
+        <Card className={`${
+          isExpired ? "border-red-400" :
+          isLifetime ? "border-amber-400" :
+          isPremium ? "border-green-400" :
+          "border-blue-200"
+        }`}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Acesso</CardTitle>
-            {isPremium ? 
-              <Star className="h-4 w-4 text-amber-500" /> : 
-              <Clock className="h-4 w-4 text-gray-500" />
-            }
+            {isLifetime ? (
+              <Crown className="h-4 w-4 text-amber-500" />
+            ) : isPremium ? (
+              <Star className="h-4 w-4 text-green-500" /> 
+            ) : isExpired ? (
+              <AlertCircle className="h-4 w-4 text-red-500" />
+            ) : (
+              <Clock className="h-4 w-4 text-blue-500" />
+            )}
           </CardHeader>
           <CardContent>
             {statsLoading ? (
               <Skeleton className="h-7 w-1/2" />
             ) : (
-              <div className="space-y-1">
-                <div className="text-xl font-bold">
-                  {isPremium ? "Premium" : "Básico"}
+              <div className="space-y-3">
+                <div className={`text-xl font-bold ${
+                  isExpired ? "text-red-600" :
+                  isLifetime ? "text-amber-600" :
+                  isPremium ? "text-green-600" : 
+                  "text-blue-600"
+                }`}>
+                  {isLifetime ? "Premium Vitalício" :
+                   isPremium ? `Premium ${planType ? planType.charAt(0).toUpperCase() + planType.slice(1) : ""}` :
+                   isExpired ? "Expirado" : 
+                   "Básico"}
                 </div>
-                {isPremium && (
+                
+                {isPremium && !isLifetime && !isExpired && expirationDate && daysLeft !== null && (
                   <div className="text-xs text-muted-foreground flex items-center">
-                    <span className="capitalize">{planType || ""}</span>
-                    {isLifetime ? (
-                      <Badge variant="outline" className="ml-2 text-[10px]">Vitalício</Badge>
-                    ) : expirationDate ? (
-                      <span className="ml-2">
-                        Expira: {expirationDate.toLocaleDateString()}
-                      </span>
-                    ) : null}
+                    <CalendarClock className="h-3 w-3 mr-1" />
+                    <span>{daysLeft} {daysLeft === 1 ? 'dia restante' : 'dias restantes'}</span>
                   </div>
+                )}
+                
+                {isLifetime && (
+                  <div className="text-xs flex items-center">
+                    <Badge variant="outline" className="bg-amber-50 text-amber-700 hover:bg-amber-100">Acesso vitalício</Badge>
+                  </div>
+                )}
+                
+                {isExpired && (
+                  <Button size="sm" variant="destructive" className="w-full mt-2 text-xs">
+                    <RefreshCw className="h-3 w-3 mr-1" />
+                    Renovar agora
+                  </Button>
                 )}
               </div>
             )}
@@ -268,21 +294,62 @@ export default function PainelInicio() {
 
       {/* Informações específicas com base no tipo de acesso */}
       {!isPremium && (
-        <Card>
+        <Card className="relative overflow-hidden">
+          {/* Badge de Desconto */}
+          <div className="absolute -right-8 top-6 rotate-45 bg-red-600 text-white text-xs font-bold py-1 px-10 shadow-md z-10">
+            30% OFF
+          </div>
           <CardHeader>
             <CardTitle>Atualize para Premium</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Tenha acesso ilimitado a todas as artes e recursos exclusivos. 
+            <p className="text-sm text-muted-foreground mb-4">
+              Tenha acesso ilimitado a todas as artes e recursos exclusivos.
               Aproveite nossas ofertas e impulsione seu negócio com designs profissionais.
             </p>
+            
+            {/* Lista de benefícios */}
+            <div className="space-y-2 my-4">
+              <div className="flex items-start">
+                <div className="bg-blue-100 p-1 rounded mr-2 mt-0.5">
+                  <CheckCircle2 className="h-4 w-4 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Acesso a mais de 3.000 artes exclusivas</p>
+                  <p className="text-xs text-muted-foreground">Baixe sem limites designs profissionais para seu negócio</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start">
+                <div className="bg-green-100 p-1 rounded mr-2 mt-0.5">
+                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Download em alta resolução</p>
+                  <p className="text-xs text-muted-foreground">Artes em qualidade profissional para impressão e divulgação</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start">
+                <div className="bg-purple-100 p-1 rounded mr-2 mt-0.5">
+                  <CheckCircle2 className="h-4 w-4 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Novas artes toda semana</p>
+                  <p className="text-xs text-muted-foreground">Acesso prioritário a novos lançamentos e temas sazonais</p>
+                </div>
+              </div>
+            </div>
+            
             <div className="mt-4">
               <Link href="/planos">
-                <a className="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium">
-                  Ver Planos
-                </a>
+                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                  Ver Planos Premium
+                </Button>
               </Link>
+              <p className="text-xs text-center text-muted-foreground mt-2">
+                Plano anual com 30% de desconto - oferta por tempo limitado
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -341,40 +408,76 @@ export default function PainelInicio() {
           <CardTitle>Atividades Recentes</CardTitle>
         </CardHeader>
         <CardContent>
-          {artsLoading ? (
+          {(artsLoading || favoritesLoading || downloadsLoading) ? (
             <div className="space-y-2">
               <Skeleton className="h-12 w-full" />
               <Skeleton className="h-12 w-full" />
               <Skeleton className="h-12 w-full" />
-            </div>
-          ) : stats.recentArts.length > 0 ? (
-            <div className="space-y-2">
-              {stats.recentArts.map((art: any) => (
-                <div key={art.id} className="flex items-center justify-between p-2 rounded-md hover:bg-muted">
-                  <div className="flex items-center space-x-2">
-                    <div className="h-10 w-10 overflow-hidden rounded">
-                      <img src={art.imageUrl} alt={art.title} className="h-full w-full object-cover" />
-                    </div>
-                    <div>
-                      <p className="font-medium">{art.title}</p>
-                      <p className="text-xs text-muted-foreground">{new Date(art.createdAt).toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                    <span className="flex items-center">
-                      <Eye className="mr-1 h-3 w-3" />
-                      {art.viewcount || 0}
-                    </span>
-                    <span className="flex items-center">
-                      <Download className="mr-1 h-3 w-3" />
-                      {art.downloadCount || 0}
-                    </span>
-                  </div>
-                </div>
-              ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">Nenhuma atividade recente.</p>
+            <div className="space-y-2">
+              {/* Mostrar favoritos recentes */}
+              {stats.recentFavorites && stats.recentFavorites.length > 0 && (
+                stats.recentFavorites.map((fav: any) => (
+                  <div key={`fav-${fav.id}`} className="flex items-center p-2 rounded-md hover:bg-muted">
+                    <div className="bg-amber-100 p-2 rounded-full mr-3">
+                      <Heart className="h-4 w-4 text-amber-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium">
+                        Você favoritou "{fav.art?.title || 'Arte'}"
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(fav.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+              
+              {/* Mostrar downloads recentes */}
+              {stats.recentDownloads && stats.recentDownloads.length > 0 && (
+                stats.recentDownloads.map((download: any) => (
+                  <div key={`dl-${download.id}`} className="flex items-center p-2 rounded-md hover:bg-muted">
+                    <div className="bg-green-100 p-2 rounded-full mr-3">
+                      <Download className="h-4 w-4 text-green-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium">
+                        Você baixou "{download.art?.title || 'Arte'}"
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(download.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+              
+              {/* Mostrar visualizações recentes */}
+              {stats.recentArts && stats.recentArts.length > 0 && (
+                stats.recentArts.slice(0, 2).map((art: any) => (
+                  <div key={`view-${art.id}`} className="flex items-center p-2 rounded-md hover:bg-muted">
+                    <div className="bg-blue-100 p-2 rounded-full mr-3">
+                      <Eye className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium">
+                        Você visualizou "{art.title || 'Arte'}"
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(art.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+              
+              {/* Mensagem se não houver atividades */}
+              {!stats.recentFavorites?.length && !stats.recentDownloads?.length && !stats.recentArts?.length && (
+                <p className="text-sm text-muted-foreground py-2">Nenhuma atividade recente registrada.</p>
+              )}
+            </div>
           )}
         </CardContent>
       </Card>
