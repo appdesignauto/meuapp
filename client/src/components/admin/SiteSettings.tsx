@@ -109,16 +109,18 @@ const LogoUploader = () => {
           variant: 'default',
         });
         
-        // Recarregar a página
+        // Abordagem mais suave de recarregamento
         setTimeout(() => {
-          console.log("Redirecionando para aplicar mudanças em profundidade...");
-          window.location.href = `/admin?refresh=${Date.now()}`;
+          console.log("Aplicando mudanças sem redirecionamento...");
+          // Recarregar as configurações atual sem recarregar toda a página
+          loadSettings();
           
-          // Extra reload para garantir
+          // Atrasar um pouco o reload completo para que o usuário veja a notificação
           setTimeout(() => {
-            window.location.reload(true);
-          }, 100);
-        }, 1500);
+            console.log("Recarregando configurações...");
+            window.location.reload();
+          }, 2000);
+        }, 1000);
       }, 500);
       
     } catch (error: any) {
@@ -247,18 +249,20 @@ const LogoUploader = () => {
         // Limpar também os caches de consulta TanStack
         window.sessionStorage.removeItem('tanstack-query-cache');
         
-        // Abordagem nuclear: recarregar completamente com vários parâmetros anti-cache
-        console.log("Redirecionando com limpeza total de cache...");
+        // Abordagem mais suave para melhorar a experiência do usuário
+        console.log("Aplicando mudanças sem redirecionamento radical...");
         
-        // Usar setTimeout com um tempo curto para garantir que o localStorage foi atualizado
+        // Usar setTimeout maior para garantir que a notificação seja lida
         setTimeout(() => {
-          window.location.href = `/admin?reload=true&nocache=${timestamp}&r=${randomPart1}&force=true`;
+          // Recarregar configurações para atualizar a visualização
+          loadSettings();
           
-          // Recarregar novamente após um curto período (abordagem extrema)
+          // Após um tempo, recarregar a página
           setTimeout(() => {
-            window.location.reload(true);
-          }, 100);
-        }, 50);
+            console.log("Recarregando configurações...");
+            window.location.reload();
+          }, 1500);
+        }, 250);
       }, 100);
       
     } catch (error: any) {
@@ -336,10 +340,9 @@ const LogoUploader = () => {
                           key={`logo-preview-${Date.now()}_${Math.random()}`}
                           className="h-full max-w-full object-contain" 
                           referrerPolicy="no-referrer"
-                          fetchPriority="high"
                           crossOrigin="anonymous"
                           style={{
-                            filter: `_:nth-child(${Date.now() % 10})` // Hack CSS para forçar renderização
+                            transform: `translateZ(0)` // Hack CSS para forçar renderização que é mais compatível
                           }}
                           onError={(e) => {
                             console.error('Erro ao carregar logo:', e);
