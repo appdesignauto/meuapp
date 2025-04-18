@@ -1,4 +1,6 @@
-export type UserRole = 'visitor' | 'free' | 'premium' | 'designer' | 'designer_adm' | 'support' | 'admin';
+export type UserRole = 'visitante' | 'usuario' | 'premium' | 'designer' | 'designer_adm' | 'suporte' | 'admin';
+export type OrigemAssinatura = 'hotmart' | 'manual' | 'nenhuma';
+export type TipoPlano = 'mensal' | 'anual' | 'personalizado' | 'vitalicio';
 
 export interface User {
   id: number;
@@ -6,12 +8,23 @@ export interface User {
   email: string;
   name: string | null;
   role: string;
-  profileImageUrl: string | null;
+  nivelacesso?: string;
+  profileimageurl?: string | null;
   bio: string | null;
-  isActive: boolean;
-  lastLogin: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
+  
+  // Campos para gerenciamento de assinatura
+  origemassinatura?: OrigemAssinatura;
+  tipoplano?: TipoPlano;
+  dataassinatura?: Date | null;
+  dataexpiracao?: Date | null;
+  acessovitalicio?: boolean;
+  
+  // Campos administrativos e de controle
+  observacaoadmin?: string | null;
+  isactive: boolean;
+  ultimologin?: Date | null;
+  criadoem?: Date;
+  atualizadoem?: Date;
 }
 
 export interface Category {
