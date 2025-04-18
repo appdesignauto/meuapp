@@ -5,7 +5,7 @@ import { Download, Eye, Clock, Star, Activity, ImageIcon, Crown, AlertCircle, Ca
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
@@ -38,8 +38,8 @@ export default function PainelInicio() {
     enabled: !!user?.id,
   });
   
-  // Adicionar log fora da query para evitar erros LSP
-  React.useEffect(() => {
+  // Log para depuração de estatísticas
+  useEffect(() => {
     if (userStats) {
       console.log("Stats dados recebidos:", userStats);
     }
