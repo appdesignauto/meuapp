@@ -31,6 +31,7 @@ import {
   CreditCard,
   Settings,
   Infinity,
+  ChevronDown,
 } from 'lucide-react';
 import MobileMenu from './MobileMenu';
 import { useQuery } from '@tanstack/react-query';
@@ -119,16 +120,18 @@ const Header = () => {
                 <DropdownMenuTrigger asChild>
                   <Button 
                     variant="outline" 
-                    className="border-blue-100 hover:border-blue-200 hover:bg-blue-50 rounded-full p-0 w-10 h-10 overflow-hidden"
+                    className="border-blue-100 hover:border-blue-200 hover:bg-blue-50 rounded-full p-0 flex items-center bg-[#0f1729] text-white pl-3 pr-2 h-10 overflow-hidden"
                   >
+                    <span className="mr-2 whitespace-nowrap font-medium">Meu Perfil</span>
+                    <ChevronDown className="w-4 h-4 mr-2" />
                     {user.profileimageurl ? (
                       <img 
                         src={user.profileimageurl} 
                         alt={user.name || user.username} 
-                        className="w-full h-full object-cover"
+                        className="w-8 h-8 rounded-full object-cover border-2 border-white"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-blue-50 text-blue-600 font-medium">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-300 text-[#0f1729] font-medium border-2 border-white">
                         {(user.name?.[0] || user.username[0]).toUpperCase()}
                       </div>
                     )}
