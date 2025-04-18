@@ -836,10 +836,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Endpoints para gerenciar configurações do site
   app.get("/api/site-settings", async (req, res) => {
     try {
-      // Definir cabeçalhos para evitar cache
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      // Configurar cabeçalhos anti-cache extremamente agressivos
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
+      res.setHeader('Surrogate-Control', 'no-store');
+      res.setHeader('X-Accel-Expires', '0'); // Para Nginx
+      res.setHeader('Vary', '*'); // Força validação para todas as condições
+      
+      // Acrescentar timestamp no cabeçalho para verificação client-side
+      res.setHeader('X-Last-Updated', Date.now().toString());
       
       // Buscar as configurações do site (sempre retorna a única linha ou cria uma nova)
       const settings = await db.select().from(siteSettings).limit(1);
@@ -850,9 +856,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json(newSettings);
       }
       
-      // Adiciona um parâmetro de versão na URL do logo para evitar cache
+      // Adiciona um parâmetro de timestamp para invalidação de cache na URL
+      const timestamp = Date.now();
+      
       if (settings[0].logoUrl) {
-        settings[0].logoUrl = `${settings[0].logoUrl}`;
+        // Verificar se a URL já tem parâmetros de query
+        const hasQueryParams = settings[0].logoUrl.includes('?');
+        // Adicionar novo parâmetro de query com timestamp atual
+        settings[0].logoUrl = `${settings[0].logoUrl}${hasQueryParams ? '&' : '?'}t=${timestamp}`;
+        
+        // Adicionar informação de timestamp para rastreamento no frontend
+        settings[0].logoUpdatedAt = timestamp;
       }
       
       return res.json(settings[0]);
@@ -867,10 +881,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Solicitação de atualização de logo recebida");
       
-      // Definir cabeçalhos para evitar cache
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      // Definir cabeçalhos anti-cache agressivos
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
+      res.setHeader('Surrogate-Control', 'no-store');
+      res.setHeader('X-Accel-Expires', '0'); // Para Nginx
+      res.setHeader('Vary', '*'); // Força validação para todas as condições
+      res.setHeader('X-Last-Updated', Date.now().toString());
       
       // Validar os dados recebidos
       let updateData = req.body;
@@ -878,22 +896,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Se um arquivo de logo foi enviado, processar e salvar
       if (req.file) {
         console.log("Arquivo de logo recebido:", req.file.originalname, "tipo:", req.file.mimetype, "tamanho:", req.file.size, "bytes");
+        
         try {
           // Importar o serviço de storage do Supabase
           const { supabaseStorageService } = await import('./services/supabase-storage');
           
-          // Processar a imagem e fazer upload para o Supabase
-          // Este método já otimiza a imagem para web
-          const uploadResult = await supabaseStorageService.uploadDirectWithoutOptimization(req.file);
+          // Obter o nome de arquivo personalizado da requisição (se existir)
+          const customFilename = req.body.uniqueFileName || `logo-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+          console.log("Nome personalizado para o logo:", customFilename);
           
-          if (uploadResult.imageUrl) {
+          // Usar o método especializado para upload de logo
+          const uploadResult = await supabaseStorageService.uploadLogoWithCustomFilename(
+            req.file, 
+            customFilename
+          );
+          
+          if (uploadResult && uploadResult.logoUrl) {
             // Adicionar logoUrl aos dados de atualização
             updateData = {
               ...updateData,
-              logoUrl: uploadResult.imageUrl
+              logoUrl: uploadResult.logoUrl
             };
             
-            console.log(`Logo enviado com sucesso para ${uploadResult.storageType}: ${uploadResult.imageUrl}`);
+            console.log(`Logo enviado com sucesso para ${uploadResult.storageType}: ${uploadResult.logoUrl}`);
           } else {
             console.error("Falha ao fazer upload do logo, URL não retornada");
             return res.status(500).json({ message: "Falha ao fazer upload do logo" });
@@ -901,30 +926,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } catch (uploadError) {
           console.error("Erro ao processar upload do logo:", uploadError);
           
-          // Fallback para o método local caso o upload para o Supabase falhe
-          // Definir o caminho público para a imagem
-          const logoUrl = `/images/${path.basename(req.file.path)}`;
-          
-          // Mover o arquivo para o diretório público de imagens
-          const publicImagesDir = path.join(process.cwd(), 'public/images');
-          if (!fs.existsSync(publicImagesDir)) {
-            fs.mkdirSync(publicImagesDir, { recursive: true });
+          // Fallback para método local caso todas as tentativas anteriores falhem
+          try {
+            // Definir o caminho público para a imagem
+            const publicImagesDir = path.join(process.cwd(), 'public/images/logos');
+            if (!fs.existsSync(publicImagesDir)) {
+              fs.mkdirSync(publicImagesDir, { recursive: true });
+            }
+            
+            // Nome de arquivo único com hash adicional para evitar colisões
+            const timestamp = Date.now();
+            const randomString = Math.random().toString(36).substring(2, 8);
+            const logoFileName = `logo-${timestamp}-${randomString}${path.extname(req.file.originalname)}`;
+            const logoPath = path.join(publicImagesDir, logoFileName);
+            
+            // Salvar o arquivo diretamente
+            fs.writeFileSync(logoPath, req.file.buffer);
+            
+            // Adicionar logoUrl aos dados de atualização
+            updateData = {
+              ...updateData,
+              logoUrl: `/images/logos/${logoFileName}`
+            };
+            
+            console.log("Fallback final: Logo salvo localmente com sucesso:", logoFileName);
+          } catch (finalError) {
+            console.error("Erro crítico no fallback final do logo:", finalError);
+            return res.status(500).json({ message: "Falha completa no processamento do logo" });
           }
-          
-          // Nome do arquivo baseado no timestamp para evitar cache de navegador
-          const logoFileName = `logo-${Date.now()}${path.extname(req.file.originalname)}`;
-          const logoDestination = path.join(publicImagesDir, logoFileName);
-          
-          // Copiar o arquivo do upload para o diretório público
-          fs.copyFileSync(req.file.path, logoDestination);
-          
-          // Adicionar logoUrl aos dados de atualização
-          updateData = {
-            ...updateData,
-            logoUrl: `/images/${logoFileName}`
-          };
-          
-          console.log("Usando fallback local para upload do logo após falha no Supabase");
         }
       }
       
