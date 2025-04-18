@@ -860,27 +860,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Se um arquivo de logo foi enviado, processar e salvar
       if (req.file) {
-        // Definir o caminho público para a imagem
-        const logoUrl = `/images/${path.basename(req.file.path)}`;
-        
-        // Mover o arquivo para o diretório público de imagens
-        const publicImagesDir = path.join(process.cwd(), 'public/images');
-        if (!fs.existsSync(publicImagesDir)) {
-          fs.mkdirSync(publicImagesDir, { recursive: true });
+        try {
+          // Importar o serviço de storage do Supabase
+          const { supabaseStorageService } = await import('./services/supabase-storage');
+          
+          // Processar a imagem e fazer upload para o Supabase
+          // Este método já otimiza a imagem para web
+          const uploadResult = await supabaseStorageService.uploadDirectWithoutOptimization(req.file);
+          
+          if (uploadResult.imageUrl) {
+            // Adicionar logoUrl aos dados de atualização
+            updateData = {
+              ...updateData,
+              logoUrl: uploadResult.imageUrl
+            };
+            
+            console.log(`Logo enviado com sucesso para ${uploadResult.storageType}: ${uploadResult.imageUrl}`);
+          } else {
+            console.error("Falha ao fazer upload do logo, URL não retornada");
+            return res.status(500).json({ message: "Falha ao fazer upload do logo" });
+          }
+        } catch (uploadError) {
+          console.error("Erro ao processar upload do logo:", uploadError);
+          
+          // Fallback para o método local caso o upload para o Supabase falhe
+          // Definir o caminho público para a imagem
+          const logoUrl = `/images/${path.basename(req.file.path)}`;
+          
+          // Mover o arquivo para o diretório público de imagens
+          const publicImagesDir = path.join(process.cwd(), 'public/images');
+          if (!fs.existsSync(publicImagesDir)) {
+            fs.mkdirSync(publicImagesDir, { recursive: true });
+          }
+          
+          // Nome do arquivo baseado no timestamp para evitar cache de navegador
+          const logoFileName = `logo-${Date.now()}${path.extname(req.file.originalname)}`;
+          const logoDestination = path.join(publicImagesDir, logoFileName);
+          
+          // Copiar o arquivo do upload para o diretório público
+          fs.copyFileSync(req.file.path, logoDestination);
+          
+          // Adicionar logoUrl aos dados de atualização
+          updateData = {
+            ...updateData,
+            logoUrl: `/images/${logoFileName}`
+          };
+          
+          console.log("Usando fallback local para upload do logo após falha no Supabase");
         }
-        
-        // Nome do arquivo baseado no timestamp para evitar cache de navegador
-        const logoFileName = `logo-${Date.now()}${path.extname(req.file.originalname)}`;
-        const logoDestination = path.join(publicImagesDir, logoFileName);
-        
-        // Copiar o arquivo do upload para o diretório público
-        fs.copyFileSync(req.file.path, logoDestination);
-        
-        // Adicionar logoUrl aos dados de atualização
-        updateData = {
-          ...updateData,
-          logoUrl: `/images/${logoFileName}`
-        };
       }
       
       // Buscar a configuração existente (ou criar uma nova)
