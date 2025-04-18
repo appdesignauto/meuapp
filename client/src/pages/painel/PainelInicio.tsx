@@ -19,6 +19,8 @@ export default function PainelInicio() {
     downloadCount: number;
     viewCount: number;
     recentArts: any[];
+    recentFavorites: any[];
+    recentDownloads: any[];
   }
   
   const [stats, setStats] = useState<Stats>({
@@ -26,6 +28,8 @@ export default function PainelInicio() {
     downloadCount: 0,
     viewCount: 0,
     recentArts: [],
+    recentFavorites: [],
+    recentDownloads: [],
   });
 
   // Buscar estatísticas do usuário
@@ -39,6 +43,18 @@ export default function PainelInicio() {
     queryKey: ["/api/arts/recent"],
     enabled: !!user?.id,
   });
+  
+  // Buscar favoritos recentes
+  const { data: favoritesData, isLoading: favoritesLoading } = useQuery<FavoritesData>({
+    queryKey: ["/api/favorites"],
+    enabled: !!user?.id,
+  });
+  
+  // Buscar downloads recentes
+  const { data: downloadsData, isLoading: downloadsLoading } = useQuery<DownloadsData>({
+    queryKey: ["/api/downloads"],
+    enabled: !!user?.id,
+  });
 
   // Interface para tipar os dados de estatísticas
   interface UserStatsData {
@@ -50,6 +66,18 @@ export default function PainelInicio() {
   // Interface para tipar os dados de artes recentes
   interface RecentArtsData {
     arts?: any[];
+  }
+  
+  // Interface para tipar os dados de favoritos
+  interface FavoritesData {
+    favorites?: any[];
+    totalCount?: number;
+  }
+  
+  // Interface para tipar os dados de downloads
+  interface DownloadsData {
+    downloads?: any[];
+    totalCount?: number;
   }
 
   // Atualizar estatísticas quando os dados estiverem disponíveis
@@ -71,14 +99,56 @@ export default function PainelInicio() {
         recentArts: Array.isArray(typedArtsData.arts) ? typedArtsData.arts : [],
       }));
     }
-  }, [userStats, recentArtsData]);
+    
+    // Processar favoritos
+    if (favoritesData) {
+      if (favoritesData.favorites && Array.isArray(favoritesData.favorites)) {
+        setStats(prev => ({
+          ...prev,
+          recentFavorites: favoritesData.favorites.slice(0, 3) || [],
+        }));
+      }
+    }
+    
+    // Processar downloads
+    if (downloadsData) {
+      if (downloadsData.downloads && Array.isArray(downloadsData.downloads)) {
+        setStats(prev => ({
+          ...prev,
+          recentDownloads: downloadsData.downloads.slice(0, 3) || [],
+        }));
+      }
+    }
+  }, [userStats, recentArtsData, favoritesData, downloadsData]);
 
   // Obter informações de assinatura do usuário com o hook personalizado
   const { isPremium, isExpired, expirationDate, planType, isLifetime, daysLeft } = useSubscription(user);
 
+  // Formatar data do último acesso se disponível
+  const formatUltimoAcesso = () => {
+    if (!user?.ultimologin) return null;
+    
+    try {
+      const ultimoLogin = new Date(user.ultimologin);
+      return `${ultimoLogin.toLocaleDateString()} às ${ultimoLogin.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+    } catch (e) {
+      console.error("Erro ao formatar data de último acesso:", e);
+      return null;
+    }
+  };
+
+  const ultimoAcessoFormatado = formatUltimoAcesso();
+
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Bem-vindo{user?.name ? `, ${user.name.split(' ')[0]}` : ''}</h1>
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Bem-vindo{user?.name ? `, ${user.name.split(' ')[0]}` : ''}</h1>
+        {ultimoAcessoFormatado && (
+          <p className="text-sm text-muted-foreground mt-1">
+            Último acesso em {ultimoAcessoFormatado}
+          </p>
+        )}
+      </div>
       
       {/* Banner de renovação localizado - será exibido mesmo se o site já tiver um banner principal */}
       {isPremium && !isLifetime && daysLeft !== null && daysLeft <= 15 && daysLeft > 0 && (
@@ -101,7 +171,28 @@ export default function PainelInicio() {
             title="Artes Favoritas" 
             value={stats.favoriteCount} 
             icon={<Star className="h-4 w-4 text-yellow-500" />}
-            loading={statsLoading}
+            loading={statsLoading || favoritesLoading}
+            tooltip={
+              stats.recentFavorites && stats.recentFavorites.length > 0 ? (
+                <div className="space-y-2">
+                  <h3 className="text-sm font-semibold mb-2">Últimas favoritas</h3>
+                  {stats.recentFavorites.map((fav: any) => (
+                    <div key={fav.id} className="flex items-center space-x-2 py-1 border-b border-border last:border-0">
+                      <div className="h-10 w-10 overflow-hidden rounded">
+                        <img src={fav.art?.imageUrl} alt={fav.art?.title} className="h-full w-full object-cover" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{fav.art?.title}</p>
+                        <p className="text-xs text-muted-foreground">{new Date(fav.createdAt).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="text-center mt-2">
+                    <p className="text-xs text-blue-600 hover:underline">Ver todas</p>
+                  </div>
+                </div>
+              ) : undefined
+            }
           />
         </Link>
         <Link href="/painel/downloads" className="cursor-pointer transition-transform hover:scale-105 duration-200">
@@ -109,7 +200,28 @@ export default function PainelInicio() {
             title="Downloads" 
             value={stats.downloadCount} 
             icon={<Download className="h-4 w-4 text-green-500" />}
-            loading={statsLoading}
+            loading={statsLoading || downloadsLoading}
+            tooltip={
+              stats.recentDownloads && stats.recentDownloads.length > 0 ? (
+                <div className="space-y-2">
+                  <h3 className="text-sm font-semibold mb-2">Últimos downloads</h3>
+                  {stats.recentDownloads.map((download: any) => (
+                    <div key={download.id} className="flex items-center space-x-2 py-1 border-b border-border last:border-0">
+                      <div className="h-10 w-10 overflow-hidden rounded">
+                        <img src={download.art?.imageUrl} alt={download.art?.title} className="h-full w-full object-cover" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{download.art?.title}</p>
+                        <p className="text-xs text-muted-foreground">{new Date(download.createdAt).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="text-center mt-2">
+                    <p className="text-xs text-blue-600 hover:underline">Ver todos</p>
+                  </div>
+                </div>
+              ) : undefined
+            }
           />
         </Link>
         <Link href="/painel/artes" className="cursor-pointer transition-transform hover:scale-105 duration-200">
@@ -270,6 +382,14 @@ export default function PainelInicio() {
   );
 }
 
+// Importar componentes para tooltip
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
 // Componente de Cartão de Estatísticas
 interface StatCardProps {
   title: string;
@@ -277,24 +397,56 @@ interface StatCardProps {
   icon: React.ReactNode;
   loading?: boolean;
   isText?: boolean;
+  tooltip?: React.ReactNode;
 }
 
-function StatCard({ title, value, icon, loading = false, isText = false }: StatCardProps) {
+function StatCard({ title, value, icon, loading = false, isText = false, tooltip }: StatCardProps) {
+  if (!tooltip) {
+    return (
+      <Card className="h-full">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">{title}</CardTitle>
+          {icon}
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <Skeleton className="h-7 w-1/2" />
+          ) : (
+            <div className={`${isText ? "text-xl" : "text-2xl"} font-bold`}>
+              {value}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+  
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        {icon}
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <Skeleton className="h-7 w-1/2" />
-        ) : (
-          <div className={`${isText ? "text-xl" : "text-2xl"} font-bold`}>
-            {value}
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Card className="h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{title}</CardTitle>
+              {icon}
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <Skeleton className="h-7 w-1/2" />
+              ) : (
+                <div className={`${isText ? "text-xl" : "text-2xl"} font-bold`}>
+                  {value}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TooltipTrigger>
+        <TooltipContent className="p-0 overflow-hidden rounded-lg border" side="bottom">
+          <div className="p-3 min-w-[250px] max-w-[350px]">
+            {tooltip}
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
