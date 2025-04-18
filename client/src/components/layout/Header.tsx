@@ -57,6 +57,21 @@ const Header = () => {
     },
     enabled: !!user, // Só executa se o usuário estiver logado
   });
+  
+  // Buscar configurações do site para o logo
+  const { data: siteSettings } = useQuery({
+    queryKey: ['/api/site-settings'],
+    queryFn: async () => {
+      try {
+        const res = await fetch('/api/site-settings');
+        if (!res.ok) return { logoUrl: '/images/logo.png' };
+        return res.json();
+      } catch (error) {
+        console.error("Erro ao carregar configurações:", error);
+        return { logoUrl: '/images/logo.png' };
+      }
+    }
+  });
 
   const navLinks = [
     { name: 'Início', path: '/' },
@@ -79,7 +94,7 @@ const Header = () => {
           <div className="flex items-center">
             <Link href="/" className="flex items-center">
               <img 
-                src="/images/logo.png" 
+                src={siteSettings?.logoUrl || "/images/logo.png"} 
                 alt="DesignAuto App" 
                 className="h-8 sm:h-9 mr-2 transition-transform duration-200 hover:scale-105" 
               />
