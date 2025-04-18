@@ -8,6 +8,7 @@ import ArtGallery from '@/components/home/ArtGallery';
 import PremiumFeatures from '@/components/home/PremiumFeatures';
 import Testimonials from '@/components/home/Testimonials';
 import CallToAction from '@/components/home/CallToAction';
+import FeatureStats from '@/components/home/FeatureStats';
 
 const Home = () => {
   // Garantir rolagem para o topo ao navegar para esta página
@@ -70,6 +71,7 @@ const Home = () => {
           fileTypeId={selectedFileType} 
         />
       </div>
+      <FeatureStats />
       <PremiumFeatures />
       <Testimonials />
       <CallToAction />

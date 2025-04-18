@@ -77,34 +77,6 @@ const Hero = () => {
               Ver Demonstração
             </Button>
           </div>
-          
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 rounded-xl bg-white shadow-md p-6 max-w-4xl mx-auto">
-            <div className="flex flex-col items-center text-center p-3">
-              <div className="bg-blue-100 p-2 rounded-full mb-3">
-                <Images className="text-blue-600 h-6 w-6" />
-              </div>
-              <span className="text-neutral-700 font-medium text-sm">+3.000 Artes Editáveis</span>
-            </div>
-            <div className="flex flex-col items-center text-center p-3">
-              <div className="bg-blue-100 p-2 rounded-full mb-3">
-                <FileText className="text-blue-600 h-6 w-6" />
-              </div>
-              <span className="text-neutral-700 font-medium text-sm">Múltiplos Formatos</span>
-            </div>
-            <div className="flex flex-col items-center text-center p-3">
-              <div className="bg-blue-100 p-2 rounded-full mb-3">
-                <Laptop className="text-blue-600 h-6 w-6" />
-              </div>
-              <span className="text-neutral-700 font-medium text-sm">Edição Online</span>
-            </div>
-            <div className="flex flex-col items-center text-center p-3">
-              <div className="bg-blue-100 p-2 rounded-full mb-3">
-                <RefreshCw className="text-blue-600 h-6 w-6" />
-              </div>
-              <span className="text-neutral-700 font-medium text-sm">Atualizações Constantes</span>
-            </div>
-          </div>
         </div>
       </div>
     </section>
