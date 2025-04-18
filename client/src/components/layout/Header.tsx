@@ -2,6 +2,22 @@ import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   Car,
   Crown,
@@ -9,13 +25,32 @@ import {
   Search,
   LayoutDashboard,
   User,
+  Heart,
+  Download,
+  LogOut,
+  CreditCard,
+  Settings,
+  Infinity,
 } from 'lucide-react';
 import MobileMenu from './MobileMenu';
+import { useQuery } from '@tanstack/react-query';
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, logoutMutation } = useAuth();
   const [location] = useLocation();
+  
+  // Buscar estatísticas do usuário para exibir no dropdown
+  const { data: userStats } = useQuery({
+    queryKey: ['/api/users/stats'],
+    queryFn: async () => {
+      if (!user) return null;
+      const res = await fetch('/api/users/stats');
+      if (!res.ok) return { totalFavorites: 0, totalDownloads: 0, totalViews: 0 };
+      return res.json();
+    },
+    enabled: !!user, // Só executa se o usuário estiver logado
+  });
 
   const navLinks = [
     { name: 'Início', path: '/' },
