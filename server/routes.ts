@@ -423,7 +423,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const enrichedFavorites = await Promise.all(
         favorites.map(async (favorite) => {
           try {
-            const art = await storage.getArtById(favorite.artId);
+            // Garantir que artId seja um número
+            const artId = Number(favorite.artId);
+            if (isNaN(artId)) {
+              console.error(`ID de arte inválido: ${favorite.artId}`);
+              return favorite;
+            }
+            
+            const art = await storage.getArtById(artId);
             return {
               ...favorite,
               art
@@ -435,7 +442,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
       );
       
-      res.json({ favorites: enrichedFavorites, totalCount: favorites.length });
+      // Filtrar favoritos que não têm arte válida
+      const validFavorites = enrichedFavorites.filter(favorite => favorite.art);
+      
+      res.json({ favorites: validFavorites, totalCount: validFavorites.length });
     } catch (error) {
       console.error("Erro ao buscar favoritos:", error);
       res.status(500).json({ message: "Erro ao buscar favoritos" });
