@@ -79,7 +79,7 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId }: ArtGalleryProps) => {
             <p className="text-neutral-600 max-w-2xl">Designs profissionais prontos para impulsionar suas vendas</p>
           </div>
           <Link 
-            href="/painel/artes" 
+            href="/arts" 
             className="text-blue-600 hover:text-blue-500 font-medium text-sm flex items-center border border-blue-200 rounded-full px-4 py-2 transition-all hover:bg-blue-50"
           >
             Ver todos os designs

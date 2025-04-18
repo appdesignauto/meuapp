@@ -14,6 +14,7 @@ import Register from "@/pages/Register";
 import Collections from "@/pages/Collections";
 import Categories from "@/pages/Categories";
 import CategoryPage from "@/pages/CategoryPage";
+import ArtsPage from "@/pages/ArtsPage";
 import ArtDetail from "@/pages/ArtDetail";
 import Designers from "@/pages/Designers";
 import DesignerProfile from "@/pages/DesignerProfile";
@@ -60,6 +61,7 @@ function AppRoutes() {
       <Route path="/collections" component={Collections} />
       <Route path="/categories" component={Categories} />
       <Route path="/categories/:slug" component={CategoryPage} />
+      <Route path="/arts" component={ArtsPage} />
       <Route path="/arts/:id" component={ArtDetail} />
       <Route path="/designers" component={Designers} />
       <Route path="/designers/:username" component={DesignerProfile} />
