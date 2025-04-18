@@ -17,14 +17,14 @@ const MinimalCategoryFilters = ({
   });
 
   return (
-    <div className="flex overflow-x-auto pb-2 hide-scrollbar">
+    <div className="overflow-x-auto hide-scrollbar mb-1">
       <div className="flex space-x-1.5 items-center">
         <button
           className={cn(
-            "whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-all",
+            "whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-medium transition-all",
             selectedCategory === null 
-              ? "bg-blue-600 text-white shadow-md" 
-              : "bg-white border border-neutral-200 text-neutral-700 hover:bg-blue-50"
+              ? "bg-blue-600 text-white" 
+              : "bg-gray-100 text-neutral-700 hover:bg-gray-200"
           )}
           onClick={() => onCategorySelect(null)}
         >
@@ -35,10 +35,10 @@ const MinimalCategoryFilters = ({
           <button
             key={category.id}
             className={cn(
-              "whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-all",
+              "whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-medium transition-all",
               selectedCategory === category.id 
-                ? "bg-blue-600 text-white shadow-md" 
-                : "bg-white border border-neutral-200 text-neutral-700 hover:bg-blue-50"
+                ? "bg-blue-600 text-white" 
+                : "bg-gray-100 text-neutral-700 hover:bg-gray-200"
             )}
             onClick={() => onCategorySelect(category.id)}
           >

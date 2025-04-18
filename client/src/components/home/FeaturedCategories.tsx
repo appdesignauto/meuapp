@@ -92,25 +92,23 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
   };
 
   return (
-    <section className="py-12 md:py-16">
+    <section className="py-8 md:py-10">
       <div className="container mx-auto px-4">
-        <div className="flex flex-wrap items-center justify-between mb-6">
-          <h2 className="text-xl font-medium text-neutral-800">Categorias</h2>
+        <div className="flex flex-wrap items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <h2 className="text-base font-medium text-neutral-800">Categorias</h2>
+            <MinimalCategoryFilters 
+              selectedCategory={selectedCategory} 
+              onCategorySelect={handleCategorySelect} 
+            />
+          </div>
           <Link 
             href="/arts" 
-            className="text-blue-600 hover:text-blue-500 font-medium text-xs flex items-center rounded-full px-3 py-1.5 transition-all hover:bg-blue-50"
+            className="text-blue-600 hover:text-blue-500 font-medium text-xs flex items-center px-2 py-1 transition-all"
           >
             Ver todos
             <ArrowRight className="ml-1 h-3 w-3" />
           </Link>
-        </div>
-        
-        {/* Filtros Minimalistas */}
-        <div className="mb-6">
-          <MinimalCategoryFilters 
-            selectedCategory={selectedCategory} 
-            onCategorySelect={handleCategorySelect} 
-          />
         </div>
         
         <div className="relative overflow-hidden">
@@ -212,10 +210,10 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
                       </div>
                       
                       {/* Nome da categoria com estilo especial */}
-                      <div className="relative px-4 py-3 text-center">
-                        {/* Badge de categoria com gradiente */}
-                        <div className={`absolute -top-[18px] left-1/2 transform -translate-x-1/2 rounded-full bg-gradient-to-r ${categoryColor} px-4 py-1 shadow-md`}>
-                          <h3 className="text-sm font-medium text-white">{category.name}</h3>
+                      <div className="relative px-3 py-2 text-center">
+                        {/* Badge de categoria com estilo minimalista */}
+                        <div className={`absolute -top-[18px] left-1/2 transform -translate-x-1/2 rounded-md bg-gradient-to-r ${categoryColor} px-3 py-1`}>
+                          <h3 className="text-xs font-medium text-white">{category.name}</h3>
                         </div>
                         
                         {/* Espaço para o nome da categoria */}
