@@ -72,28 +72,28 @@ const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-blue-100 shadow-md">
+    <header className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm backdrop-blur-sm bg-white/95">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-16 sm:h-18">
           {/* Logo */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center">
               <img 
                 src="/assets/LOGO DESIGNAUTO.png" 
                 alt="DesignAuto App" 
-                className="h-12 mr-2" 
+                className="h-10 sm:h-11 mr-2 transition-transform duration-200 hover:scale-105" 
               />
             </Link>
           </div>
 
           {/* Navigation - Desktop */}
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden md:flex items-center space-x-1">
             {navLinks.map((link) => (
               <Link
                 key={link.path}
                 href={link.path}
-                className={`text-neutral-700 hover:text-blue-600 font-medium text-sm uppercase tracking-wider transition-colors duration-200 ${
-                  location === link.path ? 'text-blue-600 border-b-2 border-blue-500 pb-1' : ''
+                className={`text-neutral-600 hover:text-blue-600 font-medium text-[13px] px-3 py-2 rounded-md transition-all duration-200 hover:bg-blue-50 ${
+                  location === link.path ? 'text-blue-600 bg-blue-50/80' : ''
                 }`}
               >
                 {link.name}
@@ -102,19 +102,38 @@ const Header = () => {
           </nav>
 
           {/* User Actions */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3">
+            {/* Icone de Busca - Visível apenas em telas médias e maiores */}
+            <Button 
+              variant="ghost" 
+              className="hidden md:flex w-9 h-9 rounded-full items-center justify-center p-0 text-neutral-600 hover:text-blue-600 hover:bg-blue-50"
+              onClick={() => window.location.href = '/search'}
+            >
+              <Search className="h-[18px] w-[18px]" />
+            </Button>
+
             {user && user.role !== 'premium' && (
-              <Link href="/pricing" className="text-neutral-700 hover:text-blue-600 hidden sm:inline-flex items-center transition-colors duration-200">
-                <Crown className="h-4 w-4 text-blue-500 mr-1" />
-                <span className="text-sm font-medium">Assinar Premium</span>
+              <Link href="/pricing">
+                <Button 
+                  variant="ghost" 
+                  className="hidden md:flex h-9 items-center rounded-full px-3 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-600 hover:text-blue-700 hover:from-blue-100 hover:to-blue-200 border border-blue-200"
+                >
+                  <Crown className="h-3.5 w-3.5 mr-1.5" />
+                  <span className="text-xs font-medium">Upgrade</span>
+                </Button>
               </Link>
             )}
             
             {/* Link para painel administrativo - mostrado apenas para admin */}
             {user && (user.role === 'admin' || user.role === 'designer_adm') && (
-              <Link href="/admin" className="text-neutral-700 hover:text-blue-600 hidden sm:inline-flex items-center transition-colors duration-200">
-                <LayoutDashboard className="h-4 w-4 text-blue-500 mr-1" />
-                <span className="text-sm font-medium">Painel Admin</span>
+              <Link href="/admin">
+                <Button 
+                  variant="ghost" 
+                  className="hidden md:flex h-9 items-center rounded-full px-3 bg-amber-50 text-amber-600 hover:bg-amber-100 border border-amber-200"
+                >
+                  <LayoutDashboard className="h-3.5 w-3.5 mr-1.5" />
+                  <span className="text-xs font-medium">Admin</span>
+                </Button>
               </Link>
             )}
             
@@ -122,29 +141,29 @@ const Header = () => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button 
-                    variant="outline" 
-                    className="border-none hover:bg-gray-100 rounded-full p-0 flex items-center pl-2 pr-2 h-12 space-x-2 overflow-hidden shadow-sm transition-all duration-200"
+                    variant="ghost" 
+                    className="p-0 h-9 flex items-center rounded-full pl-1.5 pr-2 space-x-1.5 bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 shadow-sm"
                   >
                     {user.profileimageurl ? (
                       <img 
                         src={user.profileimageurl} 
                         alt={user.name || user.username} 
-                        className="w-9 h-9 rounded-full object-cover border-[3px] border-blue-100"
+                        className="w-7 h-7 rounded-full object-cover border border-blue-100"
                       />
                     ) : (
-                      <div className="w-9 h-9 rounded-full flex items-center justify-center bg-blue-100 text-blue-600 font-medium">
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center bg-blue-100 text-blue-600 font-medium">
                         {(user.name?.[0] || user.username[0]).toUpperCase()}
                       </div>
                     )}
-                    <div className="flex flex-col items-start leading-none">
-                      <span className="text-sm font-medium text-gray-800">{user.name || user.username}</span>
-                      <span className="text-xs text-gray-500 mt-0.5">
+                    <div className="hidden sm:flex flex-col items-start leading-none">
+                      <span className="text-xs font-medium text-gray-800">{user.name || user.username}</span>
+                      <span className="text-[10px] text-gray-500 mt-0.5">
                         {user.nivelacesso === 'usuario' || !user.tipoplano 
                           ? 'Conta Free' 
                           : `Conta ${user.tipoplano}`}
                       </span>
                     </div>
-                    <ChevronDown className="w-4 h-4 text-gray-500 ml-1" />
+                    <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-72 mr-2 mt-1 p-0 rounded-xl shadow-xl" align="end">
