@@ -56,13 +56,13 @@ const Home = () => {
   return (
     <>
       <Hero />
+      <FeaturedCategories selectedCategory={selectedCategory} onCategorySelect={handleCategoryChange} />
       <CategoryFilters 
         selectedCategory={selectedCategory}
         onCategoryChange={handleCategoryChange}
         onFormatChange={setSelectedFormat}
         onFileTypeChange={setSelectedFileType}
       />
-      <FeaturedCategories selectedCategory={selectedCategory} onCategorySelect={handleCategoryChange} />
       <div id="art-gallery">
         <ArtGallery 
           categoryId={selectedCategory} 
