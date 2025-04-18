@@ -555,7 +555,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(eq(users.id, userId));
         
       const userResult = await userQuery;
-      const lastLogin = userResult[0]?.ultimologin || null;
+      const lastLogin = userResult[0]?.lastLogin || null;
+      
+      console.log("Dados do último login:", {
+        user: userResult[0],
+        lastLoginValue: lastLogin
+      });
       
       // Estatísticas para retornar com valores forçados como Number e último login
       const stats = {
