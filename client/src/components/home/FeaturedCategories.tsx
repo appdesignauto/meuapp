@@ -92,20 +92,16 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
   };
 
   return (
-    <section className="py-12 md:py-16 bg-gradient-to-b from-white to-blue-50/30">
+    <section className="py-12 md:py-16">
       <div className="container mx-auto px-4">
-        <div className="flex flex-wrap items-center justify-between mb-8">
-          <div className="relative">
-            <div className="absolute -left-3 top-0 w-1 h-8 bg-blue-600 rounded-full"></div>
-            <h2 className="text-2xl md:text-3xl font-bold text-blue-700 mb-2 pl-1">Designs em Destaque</h2>
-            <p className="text-neutral-600 max-w-2xl">Encontre artes profissionais prontas para seu negócio</p>
-          </div>
+        <div className="flex flex-wrap items-center justify-between mb-6">
+          <h2 className="text-xl font-medium text-neutral-800">Categorias</h2>
           <Link 
             href="/arts" 
-            className="text-blue-600 hover:text-blue-500 font-medium text-sm flex items-center border border-blue-200 rounded-full px-4 py-2 transition-all hover:bg-blue-50 hover:shadow-md"
+            className="text-blue-600 hover:text-blue-500 font-medium text-xs flex items-center rounded-full px-3 py-1.5 transition-all hover:bg-blue-50"
           >
-            Ver todos os designs
-            <ArrowRight className="ml-1 h-4 w-4" />
+            Ver todos
+            <ArrowRight className="ml-1 h-3 w-3" />
           </Link>
         </div>
         
