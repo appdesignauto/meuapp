@@ -32,6 +32,11 @@ import {
   Settings,
   Infinity,
   ChevronDown,
+  Bookmark,
+  Moon,
+  Users,
+  HelpCircle,
+  Link as LinkIcon,
 } from 'lucide-react';
 import MobileMenu from './MobileMenu';
 import { useQuery } from '@tanstack/react-query';
@@ -105,8 +110,6 @@ const Header = () => {
               </Link>
             )}
             
-            {/* Link para painel do usuário - removido */}
-            
             {/* Link para painel administrativo - mostrado apenas para admin */}
             {user && (user.role === 'admin' || user.role === 'designer_adm') && (
               <Link href="/admin" className="text-neutral-700 hover:text-blue-600 hidden sm:inline-flex items-center transition-colors duration-200">
@@ -137,120 +140,142 @@ const Header = () => {
                     )}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 mr-2 mt-1" align="end">
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                      <p className="font-medium text-sm">{user.name || user.username}</p>
-                      <p className="text-xs text-muted-foreground">{user.email}</p>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
+                <DropdownMenuContent className="w-72 mr-2 mt-1 p-0 rounded-xl shadow-xl" align="end">
+                  {/* Banner de status de membro no topo */}
+                  <div className="w-full bg-green-100 py-2 px-4 text-center rounded-t-xl">
+                    <p className="text-green-700 font-medium">
+                      {user.nivelacesso === 'usuario' || !user.tipoplano ? 'MEMBRO GRÁTIS' : `MEMBRO ${user.tipoplano?.toUpperCase()}`}
+                    </p>
+                  </div>
                   
-                  <DropdownMenuGroup>
-                    <TooltipProvider>
-                      {/* Assinatura - Diferente para free e premium */}
-                      {user.nivelacesso === 'usuario' || !user.tipoplano ? (
-                        <Link href="/pricing">
-                          <DropdownMenuItem className="cursor-pointer">
-                            <div className="flex items-center justify-between w-full">
-                              <div className="flex items-center">
-                                <Crown className="mr-2 h-4 w-4 text-blue-600" />
-                                <span className="font-medium text-blue-600">Assinatura (UPGRADE)</span>
-                              </div>
-                              <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200">Free</Badge>
-                            </div>
-                          </DropdownMenuItem>
-                        </Link>
+                  {/* Informações do usuário */}
+                  <div className="flex items-center p-4 border-b">
+                    <div className="w-14 h-14 mr-3 rounded-full overflow-hidden bg-gray-200">
+                      {user.profileimageurl ? (
+                        <img 
+                          src={user.profileimageurl} 
+                          alt={user.name || user.username} 
+                          className="w-full h-full object-cover"
+                        />
                       ) : (
-                        <Link href="/painel/assinatura">
-                          <DropdownMenuItem className="cursor-pointer">
-                            <div className="flex items-center justify-between w-full">
-                              <div className="flex items-center">
-                                <CreditCard className="mr-2 h-4 w-4" />
-                                <span>Assinatura (Gerenciar)</span>
-                              </div>
-                              <Badge className="bg-neutral-100 text-neutral-700 hover:bg-neutral-200">{user.tipoplano}</Badge>
-                            </div>
-                          </DropdownMenuItem>
-                        </Link>
+                        <div className="w-full h-full flex items-center justify-center bg-gray-300 text-gray-600 font-medium">
+                          {(user.name?.[0] || user.username[0]).toUpperCase()}
+                        </div>
                       )}
-                      
-                      {/* Downloads com limite visual */}
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Link href="/painel/downloads">
-                            <DropdownMenuItem className="cursor-pointer">
-                              <div className="flex items-center justify-between w-full">
-                                <div className="flex items-center">
-                                  <Download className="mr-2 h-4 w-4" />
-                                  <span>Downloads</span>
-                                </div>
-                                {user.nivelacesso === 'premium' || user.tipoplano ? (
-                                  <div className="flex items-center text-blue-600">
-                                    <Infinity className="h-4 w-4" />
-                                  </div>
-                                ) : (
-                                  <span className="text-sm text-muted-foreground">{userStats?.totalDownloads || 0}/10</span>
-                                )}
-                              </div>
-                            </DropdownMenuItem>
-                          </Link>
-                        </TooltipTrigger>
-                        {user.nivelacesso === 'usuario' || !user.tipoplano ? (
-                          <TooltipContent>
-                            <p>Limite de downloads para contas Free: 10/mês</p>
-                          </TooltipContent>
-                        ) : null}
-                      </Tooltip>
-                      
-                      {/* Favoritos */}
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Link href="/painel/favoritas">
-                            <DropdownMenuItem className="cursor-pointer">
-                              <div className="flex items-center justify-between w-full">
-                                <div className="flex items-center">
-                                  <Heart className="mr-2 h-4 w-4" />
-                                  <span>Favoritos</span>
-                                </div>
-                                {user.nivelacesso === 'premium' || user.tipoplano ? (
-                                  <div className="flex items-center text-blue-600">
-                                    <Infinity className="h-4 w-4" />
-                                  </div>
-                                ) : (
-                                  <span className="text-sm text-muted-foreground">{userStats?.totalFavorites || 0}/20</span>
-                                )}
-                              </div>
-                            </DropdownMenuItem>
-                          </Link>
-                        </TooltipTrigger>
-                        {user.nivelacesso === 'usuario' || !user.tipoplano ? (
-                          <TooltipContent>
-                            <p>Limite de favoritos para contas Free: 20</p>
-                          </TooltipContent>
-                        ) : null}
-                      </Tooltip>
-                      
-                      {/* Configurações */}
-                      <Link href="/painel/perfil">
-                        <DropdownMenuItem className="cursor-pointer">
-                          <Settings className="mr-2 h-4 w-4" />
-                          <span>Meu Perfil</span>
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-base">{user.name || user.username}</h3>
+                      <p className="text-sm text-gray-500">{user.email}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Opção de tema escuro - Como na referência */}
+                  <div className="flex items-center justify-between p-4 border-b">
+                    <div className="flex items-center">
+                      <Moon className="w-5 h-5 mr-3 text-gray-600" />
+                      <span>Modo escuro</span>
+                    </div>
+                    <div className="w-12 h-6 bg-gray-200 rounded-full relative">
+                      {/* Botão apenas para visual, sem funcionalidade real ainda */}
+                      <div className="w-5 h-5 bg-white rounded-full absolute left-0.5 top-0.5"></div>
+                    </div>
+                  </div>
+                  
+                  {/* Menu de opções */}
+                  <div className="py-2">
+                    <Link href="/painel/perfil">
+                      <DropdownMenuItem className="cursor-pointer py-3 px-4">
+                        <User className="w-5 h-5 mr-3 text-gray-600" />
+                        <span>Minha conta</span>
+                      </DropdownMenuItem>
+                    </Link>
+                    
+                    {user.nivelacesso === 'usuario' || !user.tipoplano ? (
+                      <Link href="/pricing">
+                        <DropdownMenuItem className="cursor-pointer py-3 px-4">
+                          <CreditCard className="w-5 h-5 mr-3 text-gray-600" />
+                          <span className="flex-1">Cobrança</span>
+                          <Badge variant="outline" className="bg-green-100 border-green-200 text-green-700 text-xs">UPGRADE</Badge>
                         </DropdownMenuItem>
                       </Link>
-                    </TooltipProvider>
-                  </DropdownMenuGroup>
+                    ) : (
+                      <Link href="/painel/assinatura">
+                        <DropdownMenuItem className="cursor-pointer py-3 px-4">
+                          <CreditCard className="w-5 h-5 mr-3 text-gray-600" />
+                          <span>Assinatura</span>
+                        </DropdownMenuItem>
+                      </Link>
+                    )}
+                    
+                    <Link href="/painel/downloads">
+                      <DropdownMenuItem className="cursor-pointer py-3 px-4">
+                        <Download className="w-5 h-5 mr-3 text-gray-600" />
+                        <span className="flex-1">Downloads</span>
+                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                          {user.nivelacesso === 'premium' || user.tipoplano 
+                            ? '∞' 
+                            : `${userStats?.totalDownloads || 0}/10 DIA`}
+                        </span>
+                      </DropdownMenuItem>
+                    </Link>
+                    
+                    <Link href="/painel/favoritas">
+                      <DropdownMenuItem className="cursor-pointer py-3 px-4">
+                        <Heart className="w-5 h-5 mr-3 text-gray-600" />
+                        <span>Curtidas</span>
+                      </DropdownMenuItem>
+                    </Link>
+                    
+                    <Link href="/painel/salvos">
+                      <DropdownMenuItem className="cursor-pointer py-3 px-4">
+                        <Bookmark className="w-5 h-5 mr-3 text-gray-600" />
+                        <span>Salvos</span>
+                      </DropdownMenuItem>
+                    </Link>
+                    
+                    <Link href="/painel/seguindo">
+                      <DropdownMenuItem className="cursor-pointer py-3 px-4">
+                        <Users className="w-5 h-5 mr-3 text-gray-600" />
+                        <span>Seguindo</span>
+                      </DropdownMenuItem>
+                    </Link>
+                    
+                    {/* Link para o programa de afiliados */}
+                    <Link href="/painel/afiliados">
+                      <DropdownMenuItem className="cursor-pointer py-3 px-4">
+                        <LinkIcon className="w-5 h-5 mr-3 text-gray-600" />
+                        <span>Afiliado</span>
+                      </DropdownMenuItem>
+                    </Link>
+                  </div>
                   
-                  <DropdownMenuSeparator />
+                  {/* Seção de Suporte */}
+                  <div className="border-t">
+                    <Link href="https://wa.me/5527999999999" target="_blank" rel="noopener noreferrer">
+                      <DropdownMenuItem className="cursor-pointer py-3 px-4 flex items-center">
+                        <div className="w-5 h-5 mr-3 text-green-500 flex-shrink-0">
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M17.6 6.32c-1.44-1.52-3.4-2.32-5.55-2.32-4.48 0-8.13 3.75-8.13 8.35 0 1.62.46 3.2 1.33 4.55L4.17 20.8l4.05-1.06c1.28.7 2.7 1.07 4.06 1.07 4.48 0 8.12-3.76 8.12-8.35s-2.14-6.14-2.8-6.14z" />
+                          </svg>
+                        </div>
+                        <div className="flex flex-col">
+                          <span>Suporte por WhatsApp</span>
+                          <span className="text-xs text-gray-500">Dúvidas e perguntas</span>
+                        </div>
+                      </DropdownMenuItem>
+                    </Link>
+                  </div>
                   
                   {/* Logout */}
-                  <DropdownMenuItem 
-                    className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
-                    onClick={() => logoutMutation.mutate()}
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Sair</span>
-                  </DropdownMenuItem>
+                  <div className="border-t">
+                    <DropdownMenuItem 
+                      className="cursor-pointer py-3 px-4 text-red-600 hover:text-red-700 hover:bg-red-50"
+                      onClick={() => logoutMutation.mutate()}
+                    >
+                      <LogOut className="w-5 h-5 mr-3" />
+                      <span>Sair</span>
+                    </DropdownMenuItem>
+                  </div>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
