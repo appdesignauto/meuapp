@@ -298,19 +298,6 @@ const Header = () => {
                         </div>
                       </DropdownMenuItem>
                     </Link>
-                    
-                    {/* Link para o programa de afiliados */}
-                    <Link href="/painel/afiliados">
-                      <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-teal-50 mr-3">
-                          <LinkIcon className="w-5 h-5 text-teal-600" />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="font-medium">Afiliado</span>
-                          <span className="text-xs text-gray-500">Programa de indicação</span>
-                        </div>
-                      </DropdownMenuItem>
-                    </Link>
                   </div>
                   
                   {/* Seção de Suporte */}
