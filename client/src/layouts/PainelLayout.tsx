@@ -148,6 +148,10 @@ export default function PainelLayout({ children }: PainelLayoutProps) {
       <RenewalBanner 
         showBanner={isExpired || (daysLeft !== null && daysLeft <= 7)} 
         daysLeft={daysLeft}
+        customMessage={isExpired ? 
+          `Sua assinatura Premium expirou. Renove agora para restaurar seu acesso.` : 
+          undefined
+        }
       />
       
       <div className="flex flex-1">
