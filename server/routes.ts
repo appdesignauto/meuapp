@@ -521,63 +521,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req.user as any).id;
       console.log("[GET /api/users/stats] Buscando estatísticas para o usuário:", userId);
       
-      // Usar Drizzle ORM direto para minimizar erros de SQL com diagnóstico detalhado
-      // Contar favoritos com diagnóstico detalhado
-      try {
-        // Verificar a tabela de favoritos
-        const allFavorites = await db.select().from(favorites);
-        console.log("[DEBUG] Todos os favoritos na tabela:", allFavorites);
-        
-        // Contar favoritos
-        const favoritesQuery = db.select({ count: sql<number>`count(*)` })
-          .from(favorites)
-          .where(eq(favorites.userId, userId));
-          
-        const favoritesResult = await favoritesQuery;
-        const totalFavorites = Number(favoritesResult[0]?.count) || 0;
-        console.log("[GET /api/users/stats] Total de favoritos:", totalFavorites, "Tipo:", typeof totalFavorites);
-        
-        // Verificar IDs no frontend vs. backend
-        console.log("[DEBUG] Verificação de IDs - Atual userId:", userId, "Tipo:", typeof userId);
-        console.log("[DEBUG] Favoritos do usuário:", await db.select().from(favorites).where(eq(favorites.userId, userId)));
-      } catch (e) {
-        console.error("[GET /api/users/stats] Erro ao contar favoritos:", e);
-      }
+      // Usar SQL bruto para evitar problemas com maiúsculas/minúsculas nos nomes das colunas
+      // Consultar favoritos diretamente
+      const favoritesQuery = `
+        SELECT COUNT(*) as count 
+        FROM favorites 
+        WHERE "userId" = $1
+      `;
+      const favoritesResult = await db.execute(sql.raw(favoritesQuery, [userId]));
+      const totalFavorites = Number(favoritesResult.rows[0]?.count) || 0;
+      console.log("[GET /api/users/stats] Total de favoritos:", totalFavorites);
       
-      // Contar favoritos
-      const favoritesQuery = db.select({ count: sql<number>`count(*)` })
-        .from(favorites)
-        .where(eq(favorites.userId, userId));
-        
-      const favoritesResult = await favoritesQuery;
-      const totalFavorites = Number(favoritesResult[0]?.count) || 0;
+      // Consultar downloads diretamente
+      const downloadsQuery = `
+        SELECT COUNT(*) as count 
+        FROM downloads 
+        WHERE "userId" = $1
+      `;
+      const downloadsResult = await db.execute(sql.raw(downloadsQuery, [userId]));
+      const totalDownloads = Number(downloadsResult.rows[0]?.count) || 0;
+      console.log("[GET /api/users/stats] Total de downloads:", totalDownloads);
       
-      // Contar downloads
-      const downloadsQuery = db.select({ count: sql<number>`count(*)` })
-        .from(downloads)
-        .where(eq(downloads.userId, userId));
-        
-      const downloadsResult = await downloadsQuery;
-      const totalDownloads = Number(downloadsResult[0]?.count) || 0;
-      console.log("[GET /api/users/stats] Total de downloads:", totalDownloads, "Tipo:", typeof totalDownloads);
+      // Consultar visualizações diretamente
+      const viewsQuery = `
+        SELECT COUNT(*) as count 
+        FROM views 
+        WHERE "userId" = $1
+      `;
+      const viewsResult = await db.execute(sql.raw(viewsQuery, [userId]));
+      const totalViews = Number(viewsResult.rows[0]?.count) || 0;
+      console.log("[GET /api/users/stats] Total de views:", totalViews);
       
-      // Contar visualizações
-      const viewsQuery = db.select({ count: sql<number>`count(*)` })
-        .from(views)
-        .where(eq(views.userId, userId));
-        
-      const viewsResult = await viewsQuery;
-      const totalViews = Number(viewsResult[0]?.count) || 0;
-      console.log("[GET /api/users/stats] Total de views:", totalViews, "Tipo:", typeof totalViews);
+      // Consultar último acesso
+      const lastLoginQuery = `
+        SELECT lastlogin
+        FROM users
+        WHERE id = $1
+      `;
+      const lastLoginResult = await db.execute(sql.raw(lastLoginQuery, [userId]));
+      const lastLogin = lastLoginResult.rows[0]?.lastlogin || null;
       
-      // Estatísticas para retornar com valores forçados como Number
+      // Estatísticas para retornar com valores forçados como Number e último login
       const stats = {
         totalFavorites: Number(totalFavorites),
         totalDownloads: Number(totalDownloads),
-        totalViews: Number(totalViews)
+        totalViews: Number(totalViews),
+        lastLogin: lastLogin
       };
       
-      console.log("[GET /api/users/stats] Retornando estatísticas:", stats);
+      console.log("[GET /api/users/stats] Retornando estatísticas atualizadas:", stats);
       
       // Retornar estatísticas
       res.json(stats);
