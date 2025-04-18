@@ -56,13 +56,7 @@ const Home = () => {
   return (
     <>
       <Hero />
-      <CategoryFilters 
-        selectedCategory={selectedCategory}
-        onCategoryChange={handleCategoryChange}
-        onFormatChange={setSelectedFormat}
-        onFileTypeChange={setSelectedFileType}
-      />
-      <FeaturedCategories selectedCategory={selectedCategory} onCategorySelect={handleCategoryChange} />
+      {/* Movemos a galeria de artes para cima para impactar o usuário mais rapidamente */}
       <div id="art-gallery">
         <ArtGallery 
           categoryId={selectedCategory} 
@@ -70,6 +64,13 @@ const Home = () => {
           fileTypeId={selectedFileType} 
         />
       </div>
+      <CategoryFilters 
+        selectedCategory={selectedCategory}
+        onCategoryChange={handleCategoryChange}
+        onFormatChange={setSelectedFormat}
+        onFileTypeChange={setSelectedFileType}
+      />
+      <FeaturedCategories selectedCategory={selectedCategory} onCategorySelect={handleCategoryChange} />
       <PremiumFeatures />
       <Testimonials />
       <CallToAction />
