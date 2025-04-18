@@ -844,7 +844,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             bio: bio || null,
             profileimageurl: profileimageurl || null,
             // Ajustar para horário de Brasília (UTC-3)
-            updatedat: new Date(new Date().getTime() - 3 * 60 * 60 * 1000)
+            atualizadoem: new Date(new Date().getTime() - 3 * 60 * 60 * 1000)
           })
           .where(eq(users.id, userId));
       } else {
@@ -889,7 +889,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Preparar objeto de atualização
         const updateData: Record<string, any> = {
-          updatedat: new Date()
+          atualizadoem: new Date()
         };
         
         if (username) updateData.username = username;
@@ -1623,7 +1623,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await db.update(users)
         .set({
           profileimageurl: imageUrl,
-          updatedat: new Date()
+          atualizadoem: new Date() // Usando o campo correto conforme o schema
         })
         .where(eq(users.id, userId));
       
@@ -1724,7 +1724,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await db.update(users)
         .set({
           profileimageurl: imageUrl,
-          updatedat: new Date()
+          atualizadoem: new Date() // Usando o campo correto conforme o schema
         })
         .where(eq(users.id, userId));
       
