@@ -834,6 +834,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupFollowRoutes(app, isAuthenticated);
   
   // Endpoints para gerenciar configurações do site
+  
+  // Endpoint especial para forçar refresh completo do logo
+  app.post("/api/site-settings/force-logo-refresh", isAdmin, async (req, res) => {
+    try {
+      // Definir cabeçalhos anti-cache extremos
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      res.setHeader('Surrogate-Control', 'no-store');
+      res.setHeader('X-Accel-Expires', '0');
+      res.setHeader('Vary', '*');
+      
+      // Buscar as configurações atuais
+      const settings = await db.select().from(siteSettings).limit(1);
+      if (settings.length === 0) {
+        return res.status(404).json({ message: "Configurações não encontradas" });
+      }
+      
+      const currentSettings = settings[0];
+      const currentLogoUrl = currentSettings.logoUrl;
+      
+      if (!currentLogoUrl) {
+        return res.status(400).json({ message: "Não há logo configurado" });
+      }
+      
+      try {
+        // Gerar uma nova URL para forçar refresh no navegador
+        // Remove todos os parâmetros de query existentes
+        const baseUrl = currentLogoUrl.split('?')[0];
+        
+        // Adiciona um novo timestamp e randomização
+        const timestamp = Date.now();
+        const randomPart = Math.random().toString(36).substring(2, 10);
+        const newLogoUrl = `${baseUrl}?t=${timestamp}&r=${randomPart}&force=true`;
+        
+        // Atualizar no banco de dados
+        await db.update(siteSettings)
+          .set({
+            logoUrl: newLogoUrl,
+            updatedAt: new Date(),
+            updatedBy: (req.user as any).id
+          })
+          .where(eq(siteSettings.id, currentSettings.id));
+        
+        // Retornar a nova URL para o cliente
+        return res.json({
+          success: true,
+          previousLogoUrl: currentLogoUrl,
+          newLogoUrl: newLogoUrl,
+          timestamp: timestamp,
+          message: "URL do logo atualizada com sucesso para forçar refresh"
+        });
+        
+      } catch (error) {
+        console.error("Erro ao gerar nova URL para o logo:", error);
+        return res.status(500).json({ message: "Erro ao atualizar URL do logo" });
+      }
+    } catch (error) {
+      console.error("Erro na operação de force-logo-refresh:", error);
+      return res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+  
   app.get("/api/site-settings", async (req, res) => {
     try {
       // Configurar cabeçalhos anti-cache extremamente agressivos

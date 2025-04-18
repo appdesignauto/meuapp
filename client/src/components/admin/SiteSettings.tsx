@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, AlertCircle, Loader2 } from 'lucide-react';
+import { Upload, AlertCircle, Loader2, RefreshCw } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 // Definição da interface para o tipo de dados SiteSettings
@@ -28,6 +28,7 @@ const LogoUploader = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [refreshingLogo, setRefreshingLogo] = useState(false);
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -38,7 +39,14 @@ const LogoUploader = () => {
       setIsLoading(true);
       // Adicionar parâmetro de timestamp para evitar cache
       const timestamp = Date.now();
-      const response = await fetch(`/api/site-settings?t=${timestamp}`);
+      const response = await fetch(`/api/site-settings?t=${timestamp}`, {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        cache: 'no-store'
+      });
       
       if (!response.ok) {
         throw new Error('Falha ao carregar configurações do site');
@@ -53,6 +61,75 @@ const LogoUploader = () => {
       setError(err);
     } finally {
       setIsLoading(false);
+    }
+  };
+  
+  // Função nuclear para forçar refresh do logo
+  const handleForceLogoRefresh = async () => {
+    try {
+      setRefreshingLogo(true);
+      
+      // Exibir toast para informar o usuário
+      toast({
+        title: 'Processando...',
+        description: 'Forçando atualização do logo em todos os níveis...',
+        variant: 'default',
+      });
+      
+      // Chamar o endpoint especial que limpa completamente o cache
+      const response = await fetch('/api/site-settings/force-logo-refresh', {
+        method: 'POST',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        cache: 'no-store'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Falha ao forçar atualização do logo');
+      }
+      
+      const data = await response.json();
+      console.log('Refresh de logo executado:', data);
+      
+      // Atualizar no localStorage
+      localStorage.removeItem('newLogoUrl');
+      localStorage.removeItem('logoUpdatedAt');
+      
+      setTimeout(() => {
+        localStorage.setItem('newLogoUrl', data.newLogoUrl);
+        localStorage.setItem('logoUpdatedAt', data.timestamp.toString());
+        localStorage.setItem('forceCacheRefresh', 'true');
+        
+        toast({
+          title: 'Processo concluído',
+          description: 'A atualização radical do logo foi concluída. Recarregando página...',
+          variant: 'default',
+        });
+        
+        // Recarregar a página
+        setTimeout(() => {
+          console.log("Redirecionando para aplicar mudanças em profundidade...");
+          window.location.href = `/admin?refresh=${Date.now()}`;
+          
+          // Extra reload para garantir
+          setTimeout(() => {
+            window.location.reload(true);
+          }, 100);
+        }, 1500);
+      }, 500);
+      
+    } catch (error: any) {
+      console.error('Erro ao forçar refresh do logo:', error);
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao forçar atualização do logo',
+        variant: 'destructive',
+      });
+    } finally {
+      setRefreshingLogo(false);
     }
   };
   
@@ -301,10 +378,11 @@ const LogoUploader = () => {
                   </div>
                 </div>
               </CardContent>
-              <CardFooter>
+              <CardFooter className="flex flex-col md:flex-row gap-2">
                 <Button 
                   onClick={handleLogoUpload}
-                  disabled={uploadingLogo}
+                  disabled={uploadingLogo || refreshingLogo}
+                  className="w-full md:w-auto"
                 >
                   {uploadingLogo ? (
                     <>
@@ -318,6 +396,28 @@ const LogoUploader = () => {
                     </>
                   )}
                 </Button>
+                
+                {/* Botão para forçar refresh extremo do logo atual */}
+                {settings?.logoUrl && (
+                  <Button 
+                    onClick={handleForceLogoRefresh}
+                    disabled={refreshingLogo || uploadingLogo}
+                    variant="outline"
+                    className="w-full md:w-auto"
+                  >
+                    {refreshingLogo ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processando...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Forçar Atualização do Logo
+                      </>
+                    )}
+                  </Button>
+                )}
               </CardFooter>
             </Card>
             
