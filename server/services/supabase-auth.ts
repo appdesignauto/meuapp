@@ -1,7 +1,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { db } from '../db';
 import { users, type User } from '@shared/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 /**
  * Serviço de autenticação usando Supabase Auth
@@ -298,12 +298,13 @@ export class SupabaseAuthService {
       
       // Finalmente: Atualizar flag no banco local (isso pelo menos permitirá fazer login pelo método convencional)
       const updatedTime = new Date();
-      await db.execute(sql`
-        UPDATE users 
-        SET emailconfirmed = true, 
-            atualizadoem = ${updatedTime}
-        WHERE id = ${user.id}
-      `);
+      // Atualizando diretamente sem usar sql template literals para evitar erros de tipagem
+      await db.update(users)
+        .set({
+          emailconfirmed: true,
+          atualizadoem: updatedTime
+        } as any)
+        .where(eq(users.id, user.id));
       
       console.log("Status de confirmação de email atualizado no banco local");
       
