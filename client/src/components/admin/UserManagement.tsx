@@ -1407,6 +1407,35 @@ const UserManagement = () => {
           </HoverCardContent>
         </HoverCard>
       );
+    } else if (user.origemassinatura === 'auto') {
+      return (
+        <HoverCard>
+          <HoverCardTrigger asChild>
+            <Badge variant="outline" className="bg-gradient-to-r from-green-100 to-teal-100 text-green-800 border-green-200 shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-center px-2 py-1 cursor-pointer">
+              <UserPlusIcon className="w-3 h-3 mr-1.5" />
+              <span>Auto Cadastro</span>
+            </Badge>
+          </HoverCardTrigger>
+          <HoverCardContent className="w-72 p-3 shadow-lg rounded-lg border border-green-200 bg-gradient-to-br from-green-50 to-teal-50 backdrop-blur-sm">
+            <div className="flex flex-col gap-2">
+              <h4 className="text-sm font-semibold text-green-900 flex items-center">
+                <UserPlusIcon className="w-4 h-4 mr-1.5" />
+                Auto Cadastro
+              </h4>
+              <p className="text-xs text-green-800">
+                Usuário registrado diretamente pelo site. Criou sua própria conta através do formulário de cadastro.
+              </p>
+              <div className="text-xs text-green-700 mt-1 flex items-center">
+                <CalendarIcon className="w-3 h-3 mr-1" />
+                <span>Registrado em: </span>
+                <span className="ml-1 font-medium">
+                  {user.criadoem ? new Date(user.criadoem).toLocaleDateString('pt-BR') : 'Data não informada'}
+                </span>
+              </div>
+            </div>
+          </HoverCardContent>
+        </HoverCard>
+      );
     } else {
       return (
         <span className="text-xs text-muted-foreground px-2 py-1 rounded-md bg-gray-100 inline-block capitalize">

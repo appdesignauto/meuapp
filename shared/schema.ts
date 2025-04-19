@@ -17,7 +17,7 @@ export const users = pgTable("users", {
   nivelacesso: text("nivelacesso").notNull().default("usuario"),
   
   // Campos para gerenciamento de assinatura
-  origemassinatura: text("origemassinatura"), // 'hotmart', 'manual', 'nenhuma'
+  origemassinatura: text("origemassinatura"), // 'hotmart', 'manual', 'auto', 'nenhuma'
   tipoplano: text("tipoplano"), // 'mensal', 'anual', 'personalizado', 'vitalicio'
   dataassinatura: timestamp("dataassinatura"),
   dataexpiracao: timestamp("dataexpiracao"),
@@ -166,7 +166,7 @@ export const insertUserStatsSchema = createInsertSchema(userStats).omit({
 
 // Types
 export type NivelAcesso = 'visitante' | 'usuario' | 'premium' | 'designer' | 'designer_adm' | 'suporte' | 'admin';
-export type OrigemAssinatura = 'hotmart' | 'manual' | 'nenhuma';
+export type OrigemAssinatura = 'hotmart' | 'manual' | 'auto' | 'nenhuma';
 export type TipoPlano = 'mensal' | 'anual' | 'personalizado' | 'vitalicio';
 
 export type User = typeof users.$inferSelect;
