@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { randomUUID } from "crypto";
-import * as sharp from "sharp";
+import sharp from "sharp"; // Importando corretamente o sharp
 import * as path from "path";
 import * as fs from "fs";
 import { storageService } from './storage';
@@ -205,33 +205,39 @@ export class SupabaseStorageService {
     buffer: Buffer,
     options: ImageOptimizationOptions = {}
   ): Promise<Buffer> {
-    const {
-      width,
-      height,
-      quality = 80,
-      format = "webp",
-    } = options;
-
-    // Configura o processamento com sharp
-    let sharpInstance = sharp.default(buffer);
-    
-    // Redimensiona se width ou height forem fornecidos
-    if (width || height) {
-      sharpInstance = sharpInstance.resize({
+    try {
+      const {
         width,
         height,
-        fit: "inside",
-        withoutEnlargement: true,
-      });
-    }
+        quality = 80,
+        format = "webp",
+      } = options;
 
-    // Converte e otimiza para webp
-    if (format === "webp") {
-      return await sharpInstance.webp({ quality }).toBuffer();
-    } else if (format === "jpeg") {
-      return await sharpInstance.jpeg({ quality }).toBuffer();
-    } else {
-      return await sharpInstance.png({ quality }).toBuffer();
+      // Configura o processamento com sharp
+      let sharpInstance = sharp(buffer);
+      
+      // Redimensiona se width ou height forem fornecidos
+      if (width || height) {
+        sharpInstance = sharpInstance.resize({
+          width,
+          height,
+          fit: "inside",
+          withoutEnlargement: true,
+        });
+      }
+
+      // Converte e otimiza para webp
+      if (format === "webp") {
+        return await sharpInstance.webp({ quality }).toBuffer();
+      } else if (format === "jpeg") {
+        return await sharpInstance.jpeg({ quality }).toBuffer();
+      } else {
+        return await sharpInstance.png({ quality }).toBuffer();
+      }
+    } catch (error) {
+      console.error('Falha ao otimizar imagem com sharp:', error);
+      // Em caso de falha, retornamos o buffer original
+      return buffer;
     }
   }
 
@@ -1148,7 +1154,7 @@ export class SupabaseStorageService {
       console.log("Iniciando otimização do logo...");
       
       // Obter informações da imagem original
-      const metadata = await sharp.default(buffer).metadata();
+      const metadata = await sharp(buffer).metadata();
       console.log(`Dimensões originais: ${metadata.width || 'unknown'}x${metadata.height || 'unknown'}`);
       console.log(`Formato original: ${metadata.format || 'unknown'}`);
       
