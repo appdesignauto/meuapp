@@ -45,72 +45,34 @@ export class SupabaseStorageService {
     try {
       console.log("Iniciando conexão com Supabase Storage...");
       
-      // Verifica a conexão com o Supabase
-      const { data: buckets, error } = await supabase.storage.listBuckets();
+      // Assumimos que o bucket já existe conforme confirmado pelo usuário
+      console.log(`Usando o bucket existente '${BUCKET_NAME}' no Supabase.`);
       
-      if (error) {
-        console.error("Erro ao conectar com Supabase Storage:", error.message);
-        throw error;
-      }
-      
-      // Lista todos os buckets disponíveis para depuração
-      console.log("Buckets disponíveis no Supabase:", buckets?.map(b => b.name).join(', ') || 'Nenhum bucket encontrado');
-      
-      // Verifica se o bucket existe
-      const bucketExists = buckets?.some(bucket => bucket.name === BUCKET_NAME);
-
-      if (!bucketExists) {
-        console.log(`Aviso: O bucket '${BUCKET_NAME}' não existe no Supabase. Tentando criar...`);
+      // Apenas verificamos a conexão sem tentar criar o bucket
+      try {
+        const { data: buckets, error } = await supabase.storage.listBuckets();
         
-        try {
-          // Tenta criar o bucket com configurações corretas
-          const { data, error: createError } = await supabase.storage.createBucket(BUCKET_NAME, {
-            public: true,
-            fileSizeLimit: 5 * 1024 * 1024, // 5MB em bytes
-          });
-          
-          if (createError) {
-            console.error("Erro ao criar bucket no Supabase:", createError.message);
-            console.log("Uploads serão direcionados para o armazenamento local como fallback.");
-          } else {
-            console.log(`Bucket '${BUCKET_NAME}' criado com sucesso no Supabase!`);
-            
-            // Definir políticas públicas para o bucket
-            const { error: policyError } = await supabase.storage.from(BUCKET_NAME).getPublicUrl('dummy');
-            
-            if (policyError) {
-              console.warn("Aviso: O bucket foi criado, mas pode ser necessário configurar permissões públicas no painel do Supabase.");
-            } else {
-              console.log("Políticas de acesso público configuradas com sucesso.");
-            }
-          }
-        } catch (createBucketError) {
-          console.error("Erro ao tentar criar bucket no Supabase:", createBucketError);
-          console.log("Uploads serão direcionados para o armazenamento local como fallback.");
+        if (error) {
+          console.error("Erro ao listar buckets do Supabase:", error.message);
+          throw error;
         }
-      } else {
-        console.log(`Bucket '${BUCKET_NAME}' encontrado no Supabase.`);
         
-        // Testar se o bucket está acessível
-        try {
-          const testFile = new Uint8Array([0, 1, 2, 3, 4]);
-          const testPath = `test-${Date.now()}.bin`;
+        // Lista os buckets disponíveis para depuração
+        if (buckets && buckets.length > 0) {
+          console.log("Buckets disponíveis no Supabase:", buckets.map(b => b.name).join(', '));
           
-          const { error: uploadError } = await supabase.storage
-            .from(BUCKET_NAME)
-            .upload(testPath, testFile, { upsert: true });
-          
-          if (uploadError) {
-            console.warn(`Aviso: Bucket encontrado mas teste de upload falhou: ${uploadError.message}`);
+          // Verifica se o bucket designauto-images está na lista
+          const found = buckets.some(bucket => bucket.name === BUCKET_NAME);
+          if (found) {
+            console.log(`Bucket '${BUCKET_NAME}' confirmado no Supabase.`);
           } else {
-            console.log("Teste de upload para o bucket realizado com sucesso.");
-            
-            // Remover arquivo de teste
-            await supabase.storage.from(BUCKET_NAME).remove([testPath]);
+            console.log(`Bucket '${BUCKET_NAME}' não está na lista retornada, mas sabemos que existe.`);
           }
-        } catch (testError) {
-          console.warn("Aviso: Erro ao testar acesso ao bucket:", testError);
+        } else {
+          console.log("Nenhum bucket listado na resposta do Supabase.");
         }
+      } catch (listError) {
+        console.error("Erro ao tentar listar buckets:", listError);
       }
 
       this.initialized = true;

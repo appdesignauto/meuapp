@@ -2238,78 +2238,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         format: 'webp' as const
       };
       
-      // Tentar fazer upload usando Supabase (prioridade)
+      // Devido aos problemas persistentes com o Supabase, vamos usar diretamente o armazenamento local
+      // que tem se mostrado mais confiável para imagens de perfil
       let imageUrl = null;
       let uploadSuccess = false;
-      let errorMessages = [];
       
-      // Usando Supabase como primeira opção (prioritária)
-      if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
-        try {
-          console.log("Tentando upload de imagem de perfil para Supabase...");
-          
-          const uploadResult = await supabaseStorageService.uploadImage(req.file, options);
-          imageUrl = uploadResult.imageUrl;
-          uploadSuccess = true;
-          
-          console.log("Upload para Supabase concluído com sucesso:", imageUrl);
-        } catch (supabaseError: any) {
-          console.error("Erro no upload para Supabase:", supabaseError);
-          errorMessages.push(`Erro Supabase: ${supabaseError.message || "Erro desconhecido"}`);
-          // Se falhar, continua para próximo método (R2)
-        }
-      } else {
-        console.log("Credenciais do Supabase não configuradas, pulando...");
-      }
-      
-      // Fallback para R2 se Supabase falhar
-      if (!uploadSuccess && process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY) {
-        try {
-          console.log("Tentando upload de imagem de perfil para R2 (fallback)...");
-          
-          const r2Result = await storageService.uploadImage(req.file, options);
-          imageUrl = r2Result.imageUrl;
-          uploadSuccess = true;
-          
-          console.log("Upload para R2 concluído com sucesso:", imageUrl);
-        } catch (r2Error: any) {
-          console.error("Erro no upload para R2:", r2Error);
-          errorMessages.push(`Erro R2: ${r2Error.message || "Erro desconhecido"}`);
-          // Se falhar, continua para o último método
-        }
-      } else if (!uploadSuccess) {
-        console.log("Credenciais do R2 não configuradas ou Supabase já bem-sucedido");
-      }
-      
-      // Último recurso: armazenamento local
-      if (!uploadSuccess) {
-        try {
-          console.log("Usando armazenamento local para imagem de perfil...");
-          
-          // Se estamos usando o storage em disco do multer, pegamos o caminho do arquivo
-          if (req.file.path) {
-            imageUrl = '/uploads/' + path.basename(req.file.path);
-            uploadSuccess = true;
-            console.log("Caminho da imagem local:", imageUrl);
-          } else {
-            // Caso contrário, usamos o método localUpload do serviço
-            const localResult = await storageService.localUpload(req.file, options);
-            imageUrl = localResult.imageUrl;
-            uploadSuccess = true;
-            console.log("Upload local concluído:", imageUrl);
-          }
-        } catch (localError: any) {
-          console.error("Erro no armazenamento local:", localError);
-          errorMessages.push(`Erro local: ${localError.message || "Erro desconhecido"}`);
-        }
+      try {
+        console.log("Usando armazenamento local para imagem de perfil...");
+        
+        // Usamos diretamente o método localUpload do serviço de armazenamento
+        const localResult = await storageService.localUpload(req.file, options);
+        imageUrl = localResult.imageUrl;
+        uploadSuccess = true;
+        
+        console.log("Upload local concluído com sucesso:", imageUrl);
+      } catch (localError: any) {
+        console.error("Erro no armazenamento local:", localError);
+        return res.status(500).json({ 
+          message: "Não foi possível processar o upload da imagem. Tente novamente.",
+          details: localError.message || "Erro desconhecido"
+        });
       }
       
       // Verificar se o upload foi bem-sucedido
       if (!uploadSuccess || !imageUrl) {
-        console.error(`FALHA TOTAL no upload da imagem de perfil: ${errorMessages.join(', ')}`);
+        console.error("FALHA TOTAL no upload da imagem de perfil");
         return res.status(500).json({ 
-          message: "Não foi possível processar o upload da imagem. Tente novamente.",
-          details: errorMessages
+          message: "Não foi possível processar o upload da imagem. Tente novamente."
         });
       }
       
@@ -2397,78 +2352,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         format: 'webp' as const
       };
       
-      // Tentar fazer upload usando Supabase (prioridade)
+      // Devido aos problemas persistentes com o Supabase, vamos usar diretamente o armazenamento local
+      // que tem se mostrado mais confiável para imagens de perfil
       let imageUrl = null;
       let uploadSuccess = false;
-      let errorMessages = [];
       
-      // Usando Supabase como primeira opção (prioritária)
-      if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
-        try {
-          console.log("Tentando upload de imagem de perfil para Supabase...");
-          
-          const uploadResult = await supabaseStorageService.uploadImage(req.file, options);
-          imageUrl = uploadResult.imageUrl;
-          uploadSuccess = true;
-          
-          console.log("Upload para Supabase concluído com sucesso:", imageUrl);
-        } catch (supabaseError: any) {
-          console.error("Erro no upload para Supabase:", supabaseError);
-          errorMessages.push(`Erro Supabase: ${supabaseError.message || "Erro desconhecido"}`);
-          // Se falhar, continua para próximo método (R2)
-        }
-      } else {
-        console.log("Credenciais do Supabase não configuradas, pulando...");
-      }
-      
-      // Fallback para R2 se Supabase falhar
-      if (!uploadSuccess && process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY) {
-        try {
-          console.log("Tentando upload de imagem de perfil para R2 (fallback)...");
-          
-          const r2Result = await storageService.uploadImage(req.file, options);
-          imageUrl = r2Result.imageUrl;
-          uploadSuccess = true;
-          
-          console.log("Upload para R2 concluído com sucesso:", imageUrl);
-        } catch (r2Error: any) {
-          console.error("Erro no upload para R2:", r2Error);
-          errorMessages.push(`Erro R2: ${r2Error.message || "Erro desconhecido"}`);
-          // Se falhar, continua para o último método
-        }
-      } else if (!uploadSuccess) {
-        console.log("Credenciais do R2 não configuradas ou Supabase já bem-sucedido");
-      }
-      
-      // Último recurso: armazenamento local
-      if (!uploadSuccess) {
-        try {
-          console.log("Usando armazenamento local para imagem de perfil...");
-          
-          // Se estamos usando o storage em disco do multer, pegamos o caminho do arquivo
-          if (req.file.path) {
-            imageUrl = '/uploads/' + path.basename(req.file.path);
-            uploadSuccess = true;
-            console.log("Caminho da imagem local:", imageUrl);
-          } else {
-            // Caso contrário, usamos o método localUpload do serviço
-            const localResult = await storageService.localUpload(req.file, options);
-            imageUrl = localResult.imageUrl;
-            uploadSuccess = true;
-            console.log("Upload local concluído:", imageUrl);
-          }
-        } catch (localError: any) {
-          console.error("Erro no armazenamento local:", localError);
-          errorMessages.push(`Erro local: ${localError.message || "Erro desconhecido"}`);
-        }
+      try {
+        console.log("Usando armazenamento local para imagem de perfil de designer...");
+        
+        // Usamos diretamente o método localUpload do serviço de armazenamento
+        const localResult = await storageService.localUpload(req.file, options);
+        imageUrl = localResult.imageUrl;
+        uploadSuccess = true;
+        
+        console.log("Upload local concluído com sucesso:", imageUrl);
+      } catch (localError: any) {
+        console.error("Erro no armazenamento local:", localError);
+        return res.status(500).json({ 
+          message: "Não foi possível processar o upload da imagem. Tente novamente.",
+          details: localError.message || "Erro desconhecido"
+        });
       }
       
       // Verificar se o upload foi bem-sucedido
       if (!uploadSuccess || !imageUrl) {
-        console.error(`FALHA TOTAL no upload da imagem de perfil do designer: ${errorMessages.join(', ')}`);
+        console.error("FALHA TOTAL no upload da imagem de perfil do designer");
         return res.status(500).json({ 
-          message: "Não foi possível processar o upload da imagem. Tente novamente.",
-          details: errorMessages
+          message: "Não foi possível processar o upload da imagem. Tente novamente."
         });
       }
       
