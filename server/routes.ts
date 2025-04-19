@@ -549,16 +549,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const totalViews = Number(viewsResult[0]?.count) || 0;
       console.log("[GET /api/users/stats] Total de views:", totalViews);
       
-      // Buscar dados do usuário para obter o último login
-      const userQuery = db.select()
-        .from(users)
-        .where(eq(users.id, userId));
-        
-      const userResult = await userQuery;
-      const lastLogin = userResult[0]?.lastLogin || null;
+      // Buscar dados do usuário para obter o último login usando SQL bruto
+      const userResult = await db.execute(sql`
+        SELECT lastlogin, ultimologin FROM users WHERE id = ${userId}
+      `);
+      
+      // Usar lastlogin ou ultimologin, o que estiver disponível
+      const lastLogin = userResult.rows[0]?.lastlogin || userResult.rows[0]?.ultimologin || null;
       
       console.log("Dados do último login:", {
-        user: userResult[0],
+        userData: userResult.rows[0],
         lastLoginValue: lastLogin
       });
       
