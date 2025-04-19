@@ -413,7 +413,7 @@ export function setupAuth(app: Express) {
   // Login com Supabase
   app.post("/api/auth/supabase/login", async (req, res) => {
     try {
-      const { email, password } = req.body;
+      const { email, password, rememberMe } = req.body;
       
       if (!email || !password) {
         return res.status(400).json({ 
@@ -423,7 +423,7 @@ export function setupAuth(app: Express) {
       }
       
       // Realizar login usando serviço Supabase
-      const result = await supabaseAuthService.login(email, password);
+      const result = await supabaseAuthService.login(email, password, rememberMe);
       
       if (result.error) {
         console.error("Erro ao fazer login no Supabase:", result.error);

@@ -101,14 +101,20 @@ export class SupabaseAuthService {
   async login(email: string, password: string, rememberMe: boolean = false): Promise<{ user: User | null; error: any; session: any }> {
     try {
       // 1. Autenticar usuário no Supabase
+      // Primeiro, fazemos login com as credenciais
       const { data: authData, error: authError } = await this.supabase.auth.signInWithPassword({
         email,
-        password,
-        options: {
-          // Se rememberMe for true, extender o tempo da sessão (30 dias), senão padrão (1 hora)
-          expiresIn: rememberMe ? 60 * 60 * 24 * 30 : undefined
-        }
+        password
       });
+
+      // Se o login foi bem-sucedido e rememberMe está ativado, alteramos o tempo de sessão
+      if (!authError && rememberMe && authData.session) {
+        // Atualizar a sessão para durar mais tempo (30 dias)
+        await this.supabase.auth.setSession({
+          access_token: authData.session.access_token,
+          refresh_token: authData.session.refresh_token
+        });
+      }
 
       if (authError) {
         console.error('Erro ao autenticar usuário no Supabase:', authError);

@@ -106,11 +106,11 @@ export function SupabaseLoginForm() {
             <input
               type="checkbox"
               id="remember-me"
-              className="rounded border-gray-300 text-primary focus:ring-primary"
+              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
             />
-            <Label htmlFor="remember-me" className="text-sm font-normal">
+            <Label htmlFor="remember-me" className="text-sm font-normal cursor-pointer">
               Lembrar-me
             </Label>
           </div>
