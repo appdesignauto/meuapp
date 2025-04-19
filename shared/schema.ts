@@ -39,6 +39,9 @@ export const users = pgTable("users", {
   
   // ID do usuário no Supabase Auth
   supabaseId: text("supabaseId").unique(),
+  
+  // Campo para controlar status de confirmação de email
+  emailconfirmed: boolean("emailconfirmed").default(false),
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({
