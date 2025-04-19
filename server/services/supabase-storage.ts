@@ -30,6 +30,25 @@ interface ImageOptimizationOptions {
 export class SupabaseStorageService {
   private initialized = false;
   private emergencyUploadAttempts: { [userId: string]: number } = {};
+  private logs: string[] = [];
+  
+  // Adicionar logs ao array e console
+  private log(message: string) {
+    const timestamp = new Date().toISOString();
+    const logMessage = `${timestamp} - ${message}`;
+    this.logs.push(logMessage);
+    console.log(`[Supabase] ${message}`);
+  }
+
+  // Obter todos os logs armazenados
+  public getLogs(): string[] {
+    return [...this.logs];
+  }
+
+  // Limpar logs
+  public clearLogs() {
+    this.logs = [];
+  }
 
   constructor() {
     this.initBucket().catch(err => {
@@ -1181,6 +1200,327 @@ export class SupabaseStorageService {
       imageUrl: `https://placehold.co/400x400/555588/ffffff?text=${userText}&date=${timestamp}`,
       storageType: 'placeholder'
     };
+  }
+  
+  /**
+   * Verificar conexão com o Supabase Storage
+   * Retorna informações sobre o status da conexão
+   */
+  async checkConnection(): Promise<{ connected: boolean, message: string, logs: string[] }> {
+    this.clearLogs();
+    this.log('Verificando conexão com Supabase Storage...');
+    
+    // Verificar se as credenciais estão configuradas
+    if (!supabaseUrl || !supabaseKey) {
+      this.log('Erro: Credenciais do Supabase não estão configuradas');
+      return {
+        connected: false,
+        message: 'Credenciais do Supabase (URL e chave) não estão configuradas',
+        logs: this.getLogs()
+      };
+    }
+
+    this.log(`URL do Supabase: ${supabaseUrl}`);
+    this.log('Chave anônima configurada: ' + (supabaseKey ? 'Sim' : 'Não'));
+    
+    try {
+      // Reset do estado
+      this.initialized = false;
+      
+      // Tentar inicializar o cliente
+      await this.initBucket();
+      
+      // Verificar acesso ao bucket principal
+      this.log('Verificando acesso ao bucket principal...');
+      const { data: mainFiles, error: mainError } = await supabase.storage
+        .from(BUCKET_NAME)
+        .list();
+      
+      if (mainError) {
+        this.log(`Erro ao acessar bucket principal '${BUCKET_NAME}': ${mainError.message}`);
+        return {
+          connected: false,
+          message: `Falha no acesso ao bucket principal: ${mainError.message}`,
+          logs: this.getLogs()
+        };
+      }
+      
+      this.log(`✓ Bucket principal '${BUCKET_NAME}' está acessível. Arquivos encontrados: ${mainFiles?.length || 0}`);
+      
+      // Verificar acesso ao bucket de avatares
+      this.log('Verificando acesso ao bucket de avatares...');
+      const { data: avatarFiles, error: avatarError } = await supabase.storage
+        .from(AVATARS_BUCKET)
+        .list();
+      
+      if (avatarError) {
+        this.log(`Erro ao acessar bucket de avatares '${AVATARS_BUCKET}': ${avatarError.message}`);
+        this.log('Atenção: Problemas com o bucket de avatares podem afetar o upload de imagens de perfil');
+        return {
+          connected: true, // Consideramos conectado se pelo menos o bucket principal estiver acessível
+          message: `Bucket principal OK, mas falha no bucket de avatares: ${avatarError.message}`,
+          logs: this.getLogs()
+        };
+      }
+      
+      this.log(`✓ Bucket de avatares '${AVATARS_BUCKET}' está acessível. Arquivos encontrados: ${avatarFiles?.length || 0}`);
+      
+      // Se chegou aqui, tudo está OK
+      this.log('✅ Conexão com Supabase Storage estabelecida com sucesso!');
+      return {
+        connected: true,
+        message: `Conexão estabelecida. Buckets acessíveis: ${BUCKET_NAME}, ${AVATARS_BUCKET}`,
+        logs: this.getLogs()
+      };
+    } catch (error: any) {
+      this.log(`❌ Erro ao verificar conexão com Supabase: ${error.message || 'Erro desconhecido'}`);
+      return {
+        connected: false,
+        message: `Falha na conexão: ${error.message || 'Erro desconhecido'}`,
+        logs: this.getLogs()
+      };
+    }
+  }
+  
+  /**
+   * Método de teste para realizar upload para o Supabase
+   * Retorna detalhes do processo de upload para diagnóstico
+   */
+  async testUpload(
+    file: Express.Multer.File,
+    options: ImageOptimizationOptions = {}
+  ): Promise<{ 
+    success: boolean; 
+    imageUrl?: string; 
+    error?: string; 
+    storageType?: string;
+    bucket?: string; 
+    logs: string[]
+  }> {
+    this.clearLogs();
+    this.log('Iniciando teste de upload para Supabase...');
+    
+    if (!file) {
+      this.log('Erro: Nenhum arquivo fornecido');
+      return { success: false, error: 'Nenhum arquivo fornecido', logs: this.getLogs() };
+    }
+    
+    if (!supabaseUrl || !supabaseKey) {
+      this.log('Erro: Credenciais do Supabase não estão configuradas');
+      return { 
+        success: false, 
+        error: 'Credenciais do Supabase (URL e chave) não estão configuradas', 
+        logs: this.getLogs() 
+      };
+    }
+    
+    try {
+      // Verificar se está inicializado
+      if (!this.initialized) {
+        this.log('Cliente Supabase não inicializado, tentando inicializar...');
+        await this.initBucket();
+      }
+      
+      this.log(`Processando arquivo: ${file.originalname} (${file.size} bytes)`);
+      this.log(`Tipo MIME: ${file.mimetype}`);
+      
+      // Testar tentando diferentes abordagens
+      
+      // 1. Primeiro, tentar upload para o bucket de avatares
+      this.log('TESTE 1: Upload para bucket de avatares...');
+      try {
+        // Otimizar imagem para dimensões médias
+        const optimizedBuffer = await this.optimizeImage(file.buffer, {
+          ...options,
+          width: options.width || 500,
+          quality: options.quality || 80,
+        });
+        
+        this.log(`Imagem otimizada: ${optimizedBuffer.length} bytes (${Math.round(optimizedBuffer.length/1024)}KB)`);
+        
+        // Nome de arquivo único
+        const uniqueId = randomUUID();
+        const filename = `test_${uniqueId}.webp`;
+        
+        this.log(`Enviando para bucket '${AVATARS_BUCKET}' com nome '${filename}'...`);
+        
+        const { data, error } = await supabase.storage
+          .from(AVATARS_BUCKET)
+          .upload(filename, optimizedBuffer, {
+            contentType: 'image/webp',
+            upsert: true
+          });
+          
+        if (error) {
+          this.log(`❌ Erro no upload para bucket de avatares: ${error.message}`);
+          throw new Error(`Erro no upload para bucket de avatares: ${error.message}`);
+        }
+        
+        // Obter URL pública
+        const { data: urlData } = supabase.storage
+          .from(AVATARS_BUCKET)
+          .getPublicUrl(filename);
+          
+        this.log(`✅ Upload para bucket de avatares bem-sucedido!`);
+        this.log(`URL da imagem: ${urlData.publicUrl}`);
+        
+        // Verificar acesso à URL
+        try {
+          this.log('Verificando acesso à URL pública...');
+          const response = await fetch(urlData.publicUrl, { method: 'HEAD' });
+          
+          if (response.ok) {
+            this.log(`✓ URL pública acessível (status ${response.status})`);
+          } else {
+            this.log(`⚠️ URL pública retornou status ${response.status}`);
+          }
+        } catch (verifyError: any) {
+          this.log(`⚠️ Não foi possível verificar acesso à URL: ${verifyError.message}`);
+        }
+        
+        return {
+          success: true,
+          imageUrl: urlData.publicUrl,
+          storageType: 'supabase',
+          bucket: AVATARS_BUCKET,
+          logs: this.getLogs()
+        };
+      } catch (avatarError: any) {
+        this.log(`Falha no teste 1: ${avatarError.message}`);
+        
+        // 2. Se falhar, tentar upload para o bucket principal
+        this.log('TESTE 2: Upload para bucket principal...');
+        try {
+          // Usar buffer original neste teste
+          const optimizedBuffer = await this.optimizeImage(file.buffer, {
+            ...options,
+            width: options.width || 500,
+            quality: options.quality || 80,
+          });
+          
+          // Nome de arquivo diferente
+          const uniqueId = randomUUID();
+          const filename = `test_uploads/${uniqueId}.webp`;
+          
+          this.log(`Enviando para bucket '${BUCKET_NAME}' com nome '${filename}'...`);
+          
+          const { data, error } = await supabase.storage
+            .from(BUCKET_NAME)
+            .upload(filename, optimizedBuffer, {
+              contentType: 'image/webp',
+              upsert: true
+            });
+            
+          if (error) {
+            this.log(`❌ Erro no upload para bucket principal: ${error.message}`);
+            throw new Error(`Erro no upload para bucket principal: ${error.message}`);
+          }
+          
+          // Obter URL pública
+          const { data: urlData } = supabase.storage
+            .from(BUCKET_NAME)
+            .getPublicUrl(filename);
+            
+          this.log(`✅ Upload para bucket principal bem-sucedido!`);
+          this.log(`URL da imagem: ${urlData.publicUrl}`);
+          
+          return {
+            success: true,
+            imageUrl: urlData.publicUrl,
+            storageType: 'supabase',
+            bucket: BUCKET_NAME,
+            logs: this.getLogs()
+          };
+        } catch (mainError: any) {
+          this.log(`Falha no teste 2: ${mainError.message}`);
+          
+          // 3. Como último recurso, tentar com upsert e arquivo sem processamento
+          this.log('TESTE 3: Upload direto sem processamento...');
+          try {
+            const uniqueId = randomUUID();
+            const extension = path.extname(file.originalname) || '.png';
+            const filename = `test_direct/${uniqueId}${extension}`;
+            
+            this.log(`Enviando arquivo original para bucket '${BUCKET_NAME}' com nome '${filename}'...`);
+            
+            const { data, error } = await supabase.storage
+              .from(BUCKET_NAME)
+              .upload(filename, file.buffer, {
+                contentType: file.mimetype,
+                upsert: true
+              });
+              
+            if (error) {
+              this.log(`❌ Erro no upload direto: ${error.message}`);
+              throw new Error(`Erro no upload direto: ${error.message}`);
+            }
+            
+            // Obter URL pública
+            const { data: urlData } = supabase.storage
+              .from(BUCKET_NAME)
+              .getPublicUrl(filename);
+              
+            this.log(`✅ Upload direto bem-sucedido!`);
+            this.log(`URL da imagem: ${urlData.publicUrl}`);
+            
+            return {
+              success: true,
+              imageUrl: urlData.publicUrl,
+              storageType: 'supabase_direct',
+              bucket: BUCKET_NAME,
+              logs: this.getLogs()
+            };
+          } catch (directError: any) {
+            this.log(`Falha no teste 3: ${directError.message}`);
+            
+            // Todas as tentativas falharam
+            this.log(`❌ Todas as tentativas de upload para Supabase falharam`);
+            
+            // Incluir explicação do possível problema
+            this.log("\nDIAGNÓSTICO DO PROBLEMA:");
+            
+            // Verificar tipo de erro comum (violação de política)
+            const errorMessage = avatarError.message || mainError.message || directError.message;
+            
+            if (errorMessage.includes('violates row-level security policy')) {
+              this.log("🔒 ERRO DE POLÍTICA DE SEGURANÇA DETECTADO");
+              this.log("O Supabase usa políticas de segurança (RLS) para controlar o acesso aos recursos.");
+              this.log("Será necessário configurar uma política no painel do Supabase que permita:");
+              this.log("- Operações de INSERT no bucket");
+              this.log("- Uploads de arquivos por usuários autenticados ou chave de API adequada");
+              this.log("- Operações no tipo de recurso específico (storage)");
+            } else if (errorMessage.includes('not found') || errorMessage.includes('does not exist')) {
+              this.log("📦 ERRO DE BUCKET INEXISTENTE");
+              this.log(`Os buckets '${AVATARS_BUCKET}' e/ou '${BUCKET_NAME}' não existem.`);
+              this.log("É necessário criar os buckets no painel do Supabase.");
+            } else if (errorMessage.includes('not authorized') || errorMessage.includes('unauthorized')) {
+              this.log("🔑 ERRO DE AUTORIZAÇÃO");
+              this.log("As credenciais fornecidas não têm permissão para realizar operações de upload.");
+              this.log("Verifique se a chave anônima tem as permissões necessárias ou use uma chave de serviço.");
+            } else {
+              this.log("⚠️ ERRO DESCONHECIDO");
+              this.log("O Supabase retornou um erro que não corresponde aos padrões comuns.");
+              this.log("Verifique as credenciais, buckets e políticas no painel do Supabase.");
+            }
+            
+            return {
+              success: false,
+              error: `Falha em todos os métodos de upload: ${errorMessage}`,
+              logs: this.getLogs()
+            };
+          }
+        }
+      }
+    } catch (error: any) {
+      const errorMessage = `Erro geral no teste do Supabase: ${error.message || 'Erro desconhecido'}`;
+      this.log(`❌ ${errorMessage}`);
+      
+      return {
+        success: false,
+        error: errorMessage,
+        logs: this.getLogs()
+      };
+    }
   }
   
   async uploadLogoWithCustomFilename(
