@@ -1438,6 +1438,50 @@ export class DatabaseStorage implements IStorage {
       return undefined;
     }
   }
+  
+  async updateUserSupabaseId(userId: number, supabaseId: string | null): Promise<User> {
+    try {
+      const now = new Date();
+      const result = await db.execute(sql`
+        UPDATE users 
+        SET supabaseId = ${supabaseId}, atualizadoem = ${now}
+        WHERE id = ${userId}
+        RETURNING *
+      `);
+      
+      if (result.rows.length === 0) {
+        throw new Error(`Usuário com ID ${userId} não encontrado`);
+      }
+      
+      console.log("Usuário atualizado com Supabase ID:", result.rows[0]);
+      return result.rows[0] as User;
+    } catch (error) {
+      console.error("Erro em updateUserSupabaseId:", error);
+      throw error;
+    }
+  }
+  
+  async updateUserEmailConfirmed(userId: number, confirmed: boolean): Promise<User> {
+    try {
+      const now = new Date();
+      const result = await db.execute(sql`
+        UPDATE users 
+        SET emailconfirmed = ${confirmed}, atualizadoem = ${now}
+        WHERE id = ${userId}
+        RETURNING *
+      `);
+      
+      if (result.rows.length === 0) {
+        throw new Error(`Usuário com ID ${userId} não encontrado`);
+      }
+      
+      console.log("Status de confirmação de email atualizado:", result.rows[0]);
+      return result.rows[0] as User;
+    } catch (error) {
+      console.error("Erro em updateUserEmailConfirmed:", error);
+      throw error;
+    }
+  }
 
   async deleteUser(id: number): Promise<boolean> {
     try {
