@@ -1196,13 +1196,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             totalViews = parseInt(viewsResult.rows[0].count) || 0;
           }
           
-          // Converter para formato CamelCase para o frontend
+          // Converter para formato CamelCase para o frontend mas preservar campos originais
           return {
             id: user.id,
             username: user.username,
             email: user.email,
             name: user.name,
-            profileImageUrl: user.profileimageurl,
+            profileimageurl: user.profileimageurl, // Mantido o nome original
+            profileImageUrl: user.profileimageurl, // Adicionado formato camelCase
             bio: user.bio,
             role: user.role,
             nivelacesso: user.nivelacesso,
@@ -1212,8 +1213,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             dataexpiracao: user.dataexpiracao,
             acessovitalicio: user.acessovitalicio,
             isactive: user.isactive,
-            lastLogin: user.ultimologin,
-            createdAt: user.criadoem,
+            ultimologin: user.ultimologin, // Mantido o nome original
+            lastLogin: user.ultimologin, // Adicionado formato camelCase
+            criadoem: user.criadoem, // Mantido o nome original
+            createdAt: user.criadoem, // Adicionado formato camelCase
             followersCount,
             followingCount,
             totalDownloads,
