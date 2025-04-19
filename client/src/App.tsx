@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { ScrollToTop } from "@/hooks/useScrollTop";
+import { ThemeProvider } from "@/components/theme-provider";
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -18,6 +19,7 @@ import ArtsPage from "@/pages/ArtsPage";
 import ArtDetail from "@/pages/ArtDetail";
 import Designers from "@/pages/Designers";
 import DesignerProfile from "@/pages/DesignerProfile";
+import PlanosPage from "@/pages/PlanosPage";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import LogoUploadPage from "@/pages/admin/LogoUploadPage";
 import StorageTestPage from "@/pages/admin/StorageTestPage";
@@ -68,6 +70,7 @@ function AppRoutes() {
       <Route path="/arts/:id" component={ArtDetail} />
       <Route path="/designers" component={Designers} />
       <Route path="/designers/:username" component={DesignerProfile} />
+      <Route path="/planos" component={PlanosPage} />
       
       {/* Rotas do Painel do Usuário */}
       <ProtectedPainelRoute path="/painel/inicio" component={PainelInicio} />
@@ -123,15 +126,17 @@ function AppRoutes() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Router>
-          <ScrollToTop />
-          <AppLayout>
-            <AppRoutes />
-          </AppLayout>
-        </Router>
-        <Toaster />
-      </AuthProvider>
+      <ThemeProvider defaultTheme="light">
+        <AuthProvider>
+          <Router>
+            <ScrollToTop />
+            <AppLayout>
+              <AppRoutes />
+            </AppLayout>
+          </Router>
+          <Toaster />
+        </AuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
