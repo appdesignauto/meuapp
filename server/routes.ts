@@ -53,9 +53,239 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ success: false, error: String(error) });
     }
   });
+  
   // Setup authentication middleware and routes
   const { isAuthenticated, isPremium, isAdmin, isDesigner, hasRole } = setupAuth(app);
   
+  // Rota específica para testar solução de emergência para o usuário problemático (simulação)
+  app.get('/api/debug/test-emergency-avatar-simulation/:username', isAdmin, async (req, res) => {
+    try {
+      const username = req.params.username;
+      console.log(`\n==== TESTE DE EMERGÊNCIA PARA USUÁRIO ${username} ====\n`);
+      
+      // Verificar se o usuário existe
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(404).json({ 
+          success: false, 
+          message: 'Usuário não encontrado' 
+        });
+      }
+      
+      // Verificar se é o usuário problemático conhecido
+      const isProblematicUser = username === 'fernandosim20188718';
+      console.log(`Usuário encontrado: ID ${user.id}, problematico: ${isProblematicUser ? 'SIM ⚠️' : 'não'}`);
+      
+      // Verificar acesso aos buckets
+      console.log("\n== VERIFICANDO ACESSO AOS BUCKETS ==");
+      const bucketResults: Record<string, any> = {};
+      
+      // Bucket de avatares
+      try {
+        console.log("Verificando acesso ao bucket 'avatars'...");
+        const { data: avatarFiles } = await supabaseStorageService.getBucket('avatars');
+        bucketResults['avatars'] = {
+          accessible: true,
+          files: avatarFiles?.length || 0
+        };
+        console.log(`✓ Bucket 'avatars' acessível. ${avatarFiles?.length || 0} arquivos encontrados.`);
+      } catch (avatarError) {
+        console.error('✗ Erro ao acessar bucket avatars:', avatarError);
+        bucketResults['avatars'] = {
+          accessible: false,
+          error: String(avatarError)
+        };
+      }
+      
+      // Bucket principal
+      try {
+        console.log("Verificando acesso ao bucket principal 'designauto-images'...");
+        const { data: mainFiles } = await supabaseStorageService.getBucket('designauto-images');
+        bucketResults['designauto-images'] = {
+          accessible: true,
+          files: mainFiles?.length || 0
+        };
+        console.log(`✓ Bucket principal 'designauto-images' acessível. ${mainFiles?.length || 0} arquivos encontrados.`);
+      } catch (mainError) {
+        console.error('✗ Erro ao acessar bucket principal:', mainError);
+        bucketResults['designauto-images'] = {
+          accessible: false,
+          error: String(mainError)
+        };
+      }
+      
+      // Verificar estado dos diretórios
+      console.log("\n== VERIFICANDO DIRETÓRIOS LOCAIS ==");
+      const dirResults = {};
+      const dirsToCheck = [
+        'public',
+        'public/uploads',
+        'public/uploads/avatars',
+        'public/uploads/emergency'
+      ];
+      
+      for (const dir of dirsToCheck) {
+        try {
+          console.log(`Verificando diretório '${dir}'...`);
+          const exists = fs.existsSync(dir);
+          
+          if (exists) {
+            // Verificar permissões de escrita
+            const testFile = path.join(dir, '.write_test');
+            try {
+              fs.writeFileSync(testFile, 'test');
+              fs.unlinkSync(testFile);
+              
+              // Listar arquivos
+              const files = fs.readdirSync(dir);
+              
+              dirResults[dir] = {
+                exists: true,
+                writable: true,
+                files: files.length
+              };
+              
+              console.log(`✓ Diretório '${dir}' acessível e com permissão de escrita. ${files.length} arquivos.`);
+            } catch (writeError) {
+              dirResults[dir] = {
+                exists: true,
+                writable: false,
+                error: String(writeError)
+              };
+              console.log(`✓ Diretório '${dir}' existe, mas sem permissão de escrita.`);
+            }
+          } else {
+            dirResults[dir] = {
+              exists,
+              files: 0,
+              writable: false
+            };
+            console.log(`✗ Diretório '${dir}' não existe.`);
+          }
+        } catch (dirError) {
+          dirResults[dir] = {
+            exists: false,
+            error: String(dirError)
+          };
+          console.error(`✗ Erro ao verificar diretório '${dir}':`, dirError);
+        }
+      }
+      
+      // Simular upload de emergência (sem realmente fazer upload de arquivo)
+      console.log("\n== TESTANDO SIMULAÇÃO DE ESTRATÉGIAS DE UPLOAD ==");
+      
+      const mockFile = {
+        originalname: 'test-avatar.jpg',
+        mimetype: 'image/jpeg',
+        buffer: Buffer.from('test image data'),
+        size: 1024
+      } as Express.Multer.File;
+      
+      // Apenas para o usuário problemático, realizar uma simulação completa
+      let emergencySimulation = null;
+      
+      if (isProblematicUser) {
+        console.log("Realizando simulação de estratégias para usuário problemático...");
+        
+        try {
+          // Lista de estratégias disponíveis (sem fazer upload real)
+          const strategies = [
+            { name: 'avatar_bucket', description: 'Upload para bucket específico de avatares' },
+            { name: 'main_bucket_avatar_path', description: 'Upload para pasta /avatars no bucket principal' },
+            { name: 'main_bucket_root', description: 'Upload direto para raiz do bucket principal' },
+            { name: 'local_emergency', description: 'Upload para sistema de arquivos local' }
+          ];
+          
+          // Verificar viabilidade de cada estratégia
+          const strategyResults = [];
+          
+          for (const strategy of strategies) {
+            try {
+              console.log(`Avaliando estratégia: ${strategy.name}`);
+              
+              let viable = false;
+              let reason = '';
+              
+              if (strategy.name === 'avatar_bucket') {
+                viable = bucketResults['avatars']?.accessible || false;
+                reason = viable ? 'Bucket acessível' : 'Bucket não acessível';
+              }
+              else if (strategy.name === 'main_bucket_avatar_path' || strategy.name === 'main_bucket_root') {
+                viable = bucketResults['designauto-images']?.accessible || false;
+                reason = viable ? 'Bucket principal acessível' : 'Bucket principal não acessível';
+              }
+              else if (strategy.name === 'local_emergency') {
+                viable = dirResults['public/uploads/emergency']?.writable || false;
+                reason = viable ? 'Diretório acessível e gravável' : 'Diretório não acessível ou não gravável';
+              }
+              
+              strategyResults.push({
+                ...strategy,
+                viable,
+                reason
+              });
+              
+              console.log(`- ${strategy.name}: ${viable ? 'VIÁVEL ✓' : 'NÃO VIÁVEL ✗'} (${reason})`);
+            } catch (stratError) {
+              console.error(`Erro ao avaliar estratégia ${strategy.name}:`, stratError);
+              strategyResults.push({
+                ...strategy,
+                viable: false,
+                reason: String(stratError)
+              });
+            }
+          }
+          
+          // Determinar melhor estratégia
+          const viableStrategies = strategyResults.filter(s => s.viable);
+          const bestStrategy = viableStrategies.length > 0 ? viableStrategies[0] : null;
+          
+          emergencySimulation = {
+            allStrategies: strategyResults,
+            viableStrategies: viableStrategies.map(s => s.name),
+            recommendedStrategy: bestStrategy?.name || 'placeholder',
+            fallbackGuaranteed: true
+          };
+          
+          console.log(`Simulação completa! ${viableStrategies.length} estratégias viáveis.`);
+          if (bestStrategy) {
+            console.log(`Estratégia recomendada: ${bestStrategy.name} - ${bestStrategy.description}`);
+          } else {
+            console.log("Nenhuma estratégia viável encontrada, seria usado placeholder como fallback.");
+          }
+        } catch (simError) {
+          console.error("Erro na simulação:", simError);
+          emergencySimulation = {
+            error: String(simError),
+            fallbackGuaranteed: true
+          };
+        }
+      }
+      
+      return res.json({
+        success: true,
+        timestamp: new Date().toISOString(),
+        user: {
+          id: user.id,
+          username: user.username,
+          status: isProblematicUser ? 'PROBLEMATIC' : 'NORMAL',
+          profileImageUrl: user.profileimageurl
+        },
+        buckets: bucketResults,
+        directories: dirResults,
+        emergencySimulation,
+        recommendations: isProblematicUser
+          ? "Este usuário está marcado para tratamento especial de upload. As estratégias de upload em cascata serão utilizadas."
+          : "Usuário normal, fluxo padrão de upload será aplicado."
+      });
+    } catch (error) {
+      console.error('Erro no teste de avatar de emergência:', error);
+      return res.status(500).json({
+        success: false,
+        error: String(error)
+      });
+    }
+  });
   // Rota para especificamente testar todas as soluções em cascata para o usuário problemático
   app.get('/api/debug/test-emergency-avatar/:username', isAdmin, async (req, res) => {
     try {
@@ -2505,11 +2735,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Username: ${username}`);
       console.log(`Timestamp: ${new Date().toISOString()}`);
       
+      // Log detalhado para todos os usuários
+      console.log(`[DIAGNÓSTICO DETALHADO] Usuário ${username} (ID: ${userId}) tentando upload de avatar`);
+      console.log(`Detalhes do arquivo: ${req.file.originalname} (${req.file.size} bytes) - Tipo: ${req.file.mimetype}`);
+      
       // Log extra para usuário específico com problemas
       const isProblematicUser = username === 'fernandosim20188718';
       if (isProblematicUser) {
-        console.log("⚠️ USUÁRIO COM PROBLEMAS CONHECIDOS DETECTADO! Utilizando fluxo alternativo de upload.");
+        console.log("");
+        console.log("⚠️ ==============================================");
+        console.log("⚠️ USUÁRIO COM PROBLEMAS CONHECIDOS DETECTADO!");
+        console.log("⚠️ ==============================================");
         console.log("🔍 Iniciando processo especializado de diagnóstico e upload para este usuário.");
+        console.log(`🔍 Username: ${username}`);
+        console.log(`🔍 ID: ${userId}`);
+        console.log(`🔍 Arquivo: ${req.file.originalname}`);
+        console.log(`🔍 Tamanho: ${req.file.size} bytes`);
+        console.log(`🔍 Tipo MIME: ${req.file.mimetype}`);
+        console.log(`🔍 Buffer válido: ${!!req.file.buffer}`);
+        console.log(`🔍 Tamanho do buffer: ${req.file.buffer ? req.file.buffer.length : 0} bytes`);
+        console.log("⚠️ ==============================================");
+        console.log("");
       }
       
       // Verificar se o arquivo foi enviado
