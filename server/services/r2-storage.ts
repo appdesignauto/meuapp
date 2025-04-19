@@ -8,7 +8,13 @@ import { v4 as uuidv4 } from 'uuid';
 // Configurações para Cloudflare R2
 const BUCKET_NAME = process.env.R2_BUCKET_NAME || 'designauto-images';
 const PUBLIC_URL = process.env.R2_PUBLIC_URL || 'https://pub-a063592364ea4478870d95c9c4115c4a.r2.dev';
-const R2_ENDPOINT = process.env.R2_ENDPOINT || 'https://32b65e21b65af0345c36f5c43fa32c54.r2.dev';
+
+// Certifique-se de que o endpoint esteja no formato correto
+let R2_ENDPOINT = process.env.R2_ENDPOINT || '0f7a409b79bd29f7cf3970f077da05ee';
+// Adiciona o prefixo https:// se não estiver presente
+if (!R2_ENDPOINT.startsWith('https://')) {
+  R2_ENDPOINT = `https://${R2_ENDPOINT}.r2.dev`;
+}
 
 // Formato do nome de conta extraído do endpoint
 const ACCOUNT_ID = R2_ENDPOINT.includes('https://') 
