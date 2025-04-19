@@ -310,8 +310,11 @@ export default function AvatarTestPage() {
                     <div>
                       <p className="font-semibold">Upload bem-sucedido:</p>
                       <p>Rota: {uploadResult.route}</p>
-                      <p>URL: {uploadResult.data?.imageUrl || "N/A"}</p>
+                      <p>URL: {uploadResult.data?.imageUrl || uploadResult.data?.url || "N/A"}</p>
                       <p>Tipo de armazenamento: {uploadResult.data?.storageType || "N/A"}</p>
+                      {uploadResult.data?.strategy && (
+                        <p>Estratégia: {uploadResult.data.strategy}</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -364,7 +367,14 @@ export default function AvatarTestPage() {
                 {user.username === "fernandosim20188718" && (
                   <div className="p-3 bg-yellow-500/10 text-yellow-600 rounded-md text-xs">
                     <p className="font-semibold">⚠️ Usuário especial detectado</p>
-                    <p>Este usuário está marcado para tratamento especial de upload de avatar com fallbacks automáticos.</p>
+                    <p>Este usuário está marcado para tratamento especial de upload de avatar usando múltiplas estratégias e fallbacks automáticos.</p>
+                    <p className="mt-1">O sistema aplicará as seguintes estratégias em sequência até que uma tenha sucesso:</p>
+                    <ol className="list-decimal pl-4 mt-1 space-y-0.5">
+                      <li>Upload direto sem otimização para bucket de avatars</li>
+                      <li>Upload para bucket principal com otimização moderada</li>
+                      <li>Upload usando nome de arquivo ultra-simplificado</li>
+                      <li>Armazenamento local com configurações mínimas</li>
+                    </ol>
                   </div>
                 )}
               </div>
