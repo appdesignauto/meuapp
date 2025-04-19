@@ -417,7 +417,10 @@ export function setupAuth(app: Express) {
         return res.status(401).json({ 
           success: false, 
           message: "Credenciais inválidas", 
-          error: result.error 
+          error: {
+            code: result.error.__isAuthError ? result.error.code : 'unknown_error',
+            message: result.error.message
+          }
         });
       }
       

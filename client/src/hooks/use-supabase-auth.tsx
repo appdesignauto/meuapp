@@ -61,7 +61,16 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       const data = await response.json();
 
       if (!data.success) {
-        throw new Error(data.message || 'Falha ao fazer login');
+        // Criando mensagem de erro específica baseada no tipo de erro
+        let errorMessage = data.message || 'Falha ao fazer login';
+        
+        if (data.error?.code === 'invalid_credentials') {
+          errorMessage = 'Email ou senha incorretos. Se você ainda não tem uma conta, faça o cadastro primeiro.';
+        } else if (data.error?.code === 'user_not_found') {
+          errorMessage = 'Usuário não encontrado. Por favor, registre-se primeiro.';
+        }
+        
+        throw new Error(errorMessage);
       }
 
       // Armazenar a sessão

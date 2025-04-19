@@ -40,8 +40,14 @@ export function SupabaseLoginForm() {
       
       // A navegação e feedback será gerenciado pelo hook useSupabaseAuth
     } catch (error: any) {
-      // Erro já tratado pelo hook
+      // O erro já foi tratado pelo hook, mas podemos adicionar mais feedback aqui
       console.error("Erro de login:", error);
+      
+      toast({
+        variant: "destructive",
+        title: "Erro de autenticação",
+        description: "Usuário ainda não está registrado no Supabase. Por favor, use o formulário de registro primeiro.",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -119,15 +125,41 @@ export function SupabaseRegisterForm() {
       return;
     }
     
+    if (password.length < 6) {
+      toast({
+        variant: "destructive",
+        title: "Senha muito curta",
+        description: "A senha deve ter pelo menos 6 caracteres.",
+      });
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
-      await registerWithSupabase(email, password, name, username);
+      const result = await registerWithSupabase(email, password, name, username);
+      
+      // Se o registro foi bem-sucedido, mostrar mensagem adicional
+      if (result?.success) {
+        toast({
+          title: "Registro concluído com sucesso",
+          description: "Agora você pode fazer login com suas credenciais.",
+          variant: "default",
+        });
+      }
       
       // A navegação e feedback será gerenciado pelo hook useSupabaseAuth
     } catch (error: any) {
-      // Erro já tratado pelo hook
+      // Adicionar feedback específico além do tratado pelo hook
       console.error("Erro de registro:", error);
+      
+      if (error.message?.includes("already registered")) {
+        toast({
+          variant: "destructive",
+          title: "Usuário já existe",
+          description: "Este email já está registrado. Tente fazer login.",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
