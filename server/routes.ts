@@ -2238,32 +2238,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         format: 'webp' as const
       };
       
-      // Tentar fazer upload usando R2 (prioridade)
+      // Tentar fazer upload usando Supabase (prioridade)
       let imageUrl = null;
       let uploadSuccess = false;
       let errorMessages = [];
       
-      // Usando R2 como primeira opção
-      if (process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY) {
-        try {
-          console.log("Tentando upload de imagem de perfil para R2...");
-          
-          const r2Result = await storageService.uploadImage(req.file, options);
-          imageUrl = r2Result.imageUrl;
-          uploadSuccess = true;
-          
-          console.log("Upload para R2 concluído com sucesso:", imageUrl);
-        } catch (r2Error: any) {
-          console.error("Erro no upload para R2:", r2Error);
-          errorMessages.push(`Erro R2: ${r2Error.message || "Erro desconhecido"}`);
-          // Se falhar, continua para próximo método
-        }
-      } else {
-        console.log("Credenciais do R2 não configuradas, pulando...");
-      }
-      
-      // Fallback para Supabase se R2 falhar
-      if (!uploadSuccess && process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
+      // Usando Supabase como primeira opção (prioritária)
+      if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
         try {
           console.log("Tentando upload de imagem de perfil para Supabase...");
           
@@ -2275,10 +2256,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } catch (supabaseError: any) {
           console.error("Erro no upload para Supabase:", supabaseError);
           errorMessages.push(`Erro Supabase: ${supabaseError.message || "Erro desconhecido"}`);
+          // Se falhar, continua para próximo método (R2)
+        }
+      } else {
+        console.log("Credenciais do Supabase não configuradas, pulando...");
+      }
+      
+      // Fallback para R2 se Supabase falhar
+      if (!uploadSuccess && process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY) {
+        try {
+          console.log("Tentando upload de imagem de perfil para R2 (fallback)...");
+          
+          const r2Result = await storageService.uploadImage(req.file, options);
+          imageUrl = r2Result.imageUrl;
+          uploadSuccess = true;
+          
+          console.log("Upload para R2 concluído com sucesso:", imageUrl);
+        } catch (r2Error: any) {
+          console.error("Erro no upload para R2:", r2Error);
+          errorMessages.push(`Erro R2: ${r2Error.message || "Erro desconhecido"}`);
           // Se falhar, continua para o último método
         }
       } else if (!uploadSuccess) {
-        console.log("Credenciais do Supabase não configuradas ou R2 já bem-sucedido");
+        console.log("Credenciais do R2 não configuradas ou Supabase já bem-sucedido");
       }
       
       // Último recurso: armazenamento local
@@ -2402,27 +2402,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let uploadSuccess = false;
       let errorMessages = [];
       
-      // Usando R2 como primeira opção (já que o Supabase parece não estar configurado)
-      if (process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY) {
-        try {
-          console.log("Tentando upload de imagem de perfil para R2...");
-          
-          const r2Result = await storageService.uploadImage(req.file, options);
-          imageUrl = r2Result.imageUrl;
-          uploadSuccess = true;
-          
-          console.log("Upload para R2 concluído com sucesso:", imageUrl);
-        } catch (r2Error: any) {
-          console.error("Erro no upload para R2:", r2Error);
-          errorMessages.push(`Erro R2: ${r2Error.message || "Erro desconhecido"}`);
-          // Se falhar, continua para o próximo método
-        }
-      } else {
-        console.log("Credenciais do R2 não configuradas, pulando...");
-      }
-      
-      // Tentar Supabase como segunda opção
-      if (!uploadSuccess && process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
+      // Usando Supabase como primeira opção (prioritária)
+      if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
         try {
           console.log("Tentando upload de imagem de perfil para Supabase...");
           
@@ -2434,10 +2415,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } catch (supabaseError: any) {
           console.error("Erro no upload para Supabase:", supabaseError);
           errorMessages.push(`Erro Supabase: ${supabaseError.message || "Erro desconhecido"}`);
-          // Se falhar, continua para a próxima opção
+          // Se falhar, continua para próximo método (R2)
+        }
+      } else {
+        console.log("Credenciais do Supabase não configuradas, pulando...");
+      }
+      
+      // Fallback para R2 se Supabase falhar
+      if (!uploadSuccess && process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY) {
+        try {
+          console.log("Tentando upload de imagem de perfil para R2 (fallback)...");
+          
+          const r2Result = await storageService.uploadImage(req.file, options);
+          imageUrl = r2Result.imageUrl;
+          uploadSuccess = true;
+          
+          console.log("Upload para R2 concluído com sucesso:", imageUrl);
+        } catch (r2Error: any) {
+          console.error("Erro no upload para R2:", r2Error);
+          errorMessages.push(`Erro R2: ${r2Error.message || "Erro desconhecido"}`);
+          // Se falhar, continua para o último método
         }
       } else if (!uploadSuccess) {
-        console.log("Credenciais do Supabase não configuradas ou R2 já bem-sucedido");
+        console.log("Credenciais do R2 não configuradas ou Supabase já bem-sucedido");
       }
       
       // Último recurso: armazenamento local

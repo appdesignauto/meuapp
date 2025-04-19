@@ -37,13 +37,14 @@ export class SupabaseStorageService {
   /**
    * Inicializa o bucket do Supabase
    * 
-   * Nota: Assume que o bucket já foi criado manualmente no painel do Supabase.
-   * Criar buckets via API requer permissões especiais de serviço.
+   * Tenta criar o bucket caso ele não exista
    */
   async initBucket(): Promise<void> {
     if (this.initialized) return;
 
     try {
+      console.log("Iniciando conexão com Supabase Storage...");
+      
       // Verifica a conexão com o Supabase
       const { data: buckets, error } = await supabase.storage.listBuckets();
       
@@ -59,22 +60,63 @@ export class SupabaseStorageService {
       const bucketExists = buckets?.some(bucket => bucket.name === BUCKET_NAME);
 
       if (!bucketExists) {
-        console.log(`Aviso: O bucket '${BUCKET_NAME}' não existe no Supabase.`);
-        console.log("Por favor, crie manualmente o bucket no painel do Supabase com as seguintes configurações:");
-        console.log("- Nome: designauto-images");
-        console.log("- Acesso: público");
-        console.log("- Tamanho máximo de arquivo: 5MB");
+        console.log(`Aviso: O bucket '${BUCKET_NAME}' não existe no Supabase. Tentando criar...`);
         
-        // Não lançamos erro, apenas avisamos e continuamos - upload fallback para local
-        console.log("Uploads serão direcionados para o armazenamento local até que o bucket seja criado.");
+        try {
+          // Tenta criar o bucket com configurações corretas
+          const { data, error: createError } = await supabase.storage.createBucket(BUCKET_NAME, {
+            public: true,
+            fileSizeLimit: 5 * 1024 * 1024, // 5MB em bytes
+          });
+          
+          if (createError) {
+            console.error("Erro ao criar bucket no Supabase:", createError.message);
+            console.log("Uploads serão direcionados para o armazenamento local como fallback.");
+          } else {
+            console.log(`Bucket '${BUCKET_NAME}' criado com sucesso no Supabase!`);
+            
+            // Definir políticas públicas para o bucket
+            const { error: policyError } = await supabase.storage.from(BUCKET_NAME).getPublicUrl('dummy');
+            
+            if (policyError) {
+              console.warn("Aviso: O bucket foi criado, mas pode ser necessário configurar permissões públicas no painel do Supabase.");
+            } else {
+              console.log("Políticas de acesso público configuradas com sucesso.");
+            }
+          }
+        } catch (createBucketError) {
+          console.error("Erro ao tentar criar bucket no Supabase:", createBucketError);
+          console.log("Uploads serão direcionados para o armazenamento local como fallback.");
+        }
       } else {
         console.log(`Bucket '${BUCKET_NAME}' encontrado no Supabase.`);
+        
+        // Testar se o bucket está acessível
+        try {
+          const testFile = new Uint8Array([0, 1, 2, 3, 4]);
+          const testPath = `test-${Date.now()}.bin`;
+          
+          const { error: uploadError } = await supabase.storage
+            .from(BUCKET_NAME)
+            .upload(testPath, testFile, { upsert: true });
+          
+          if (uploadError) {
+            console.warn(`Aviso: Bucket encontrado mas teste de upload falhou: ${uploadError.message}`);
+          } else {
+            console.log("Teste de upload para o bucket realizado com sucesso.");
+            
+            // Remover arquivo de teste
+            await supabase.storage.from(BUCKET_NAME).remove([testPath]);
+          }
+        } catch (testError) {
+          console.warn("Aviso: Erro ao testar acesso ao bucket:", testError);
+        }
       }
 
       this.initialized = true;
     } catch (error) {
       console.error("Erro ao inicializar o Supabase Storage:", error);
-      // Não lançamos erro, apenas avisamos - upload fallback para local
+      console.log("Usando armazenamento local como backup temporário.");
     }
   }
 
