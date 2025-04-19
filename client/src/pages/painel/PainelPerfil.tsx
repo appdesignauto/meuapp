@@ -221,20 +221,38 @@ export default function PainelPerfil() {
   // Mutação para upload de imagem de perfil
   const uploadImageMutation = useMutation({
     mutationFn: async (file: File) => {
+      // Verificar o tipo e tamanho do arquivo
+      if (!file.type.startsWith('image/')) {
+        throw new Error('O arquivo enviado não é uma imagem válida');
+      }
+      
+      if (file.size > 5 * 1024 * 1024) { // 5MB em bytes
+        throw new Error('A imagem deve ter no máximo 5MB');
+      }
+      
+      // Criar FormData para envio
       const formData = new FormData();
       formData.append('image', file);
       
-      const response = await fetch('/api/users/profile-image', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
-      });
+      console.log('Enviando imagem:', file.name, file.type, `${(file.size / 1024).toFixed(2)}KB`);
       
-      if (!response.ok) {
-        throw new Error('Falha ao fazer upload da imagem');
+      try {
+        const response = await fetch('/api/users/profile-image', {
+          method: 'POST',
+          body: formData,
+          credentials: 'include',
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || 'Falha ao fazer upload da imagem');
+        }
+        
+        return await response.json();
+      } catch (err) {
+        console.error('Erro na requisição de upload:', err);
+        throw err;
       }
-      
-      return response.json();
     },
     onSuccess: (data) => {
       // Invalidar query do usuário para atualizar a imagem do perfil
@@ -244,15 +262,25 @@ export default function PainelPerfil() {
         description: 'Sua imagem de perfil foi atualizada com sucesso',
       });
       setUploading(false);
+      
+      // Limpar campo de arquivo para permitir selecionar o mesmo arquivo novamente
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Erro ao fazer upload:', error);
       toast({
         title: 'Erro',
-        description: 'Não foi possível atualizar a imagem. Tente novamente.',
+        description: error.message || 'Não foi possível atualizar a imagem. Tente novamente.',
         variant: 'destructive',
       });
       setUploading(false);
+      
+      // Limpar campo de arquivo para permitir tentar novamente
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     },
   });
   

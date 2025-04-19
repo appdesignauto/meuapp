@@ -2191,9 +2191,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = (req.user as any).id;
       
+      // Logging completo para debug
+      console.log("=== INÍCIO DO UPLOAD DE IMAGEM DE PERFIL ===");
+      console.log(`Usuário ID: ${userId}`);
+      
       // Verificar se o arquivo foi enviado
       if (!req.file) {
+        console.error("ERRO: Nenhum arquivo recebido no upload de imagem de perfil");
         return res.status(400).json({ message: "Nenhuma imagem enviada" });
+      }
+      
+      // Verificar tamanho e tipo de arquivo
+      console.log(`Arquivo: ${req.file.originalname} (${req.file.size} bytes), MIME: ${req.file.mimetype}`);
+      
+      if (req.file.size > 5 * 1024 * 1024) { // 5MB
+        console.error("ERRO: Arquivo muito grande para imagem de perfil");
+        return res.status(400).json({ message: "A imagem deve ter no máximo 5MB" });
+      }
+      
+      if (!req.file.mimetype.startsWith('image/')) {
+        console.error(`ERRO: Tipo de arquivo inválido: ${req.file.mimetype}`);
+        return res.status(400).json({ message: "O arquivo enviado não é uma imagem válida" });
       }
       
       // Verificar se o usuário existe
@@ -2202,7 +2220,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(eq(users.id, userId));
       
       if (!user) {
+        console.error(`ERRO: Usuário ID ${userId} não encontrado para upload de imagem`);
         return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+      
+      // Verificar se o buffer tem conteúdo
+      if (!req.file.buffer || req.file.buffer.length === 0) {
+        console.error("ERRO: Buffer do arquivo vazio ou inválido");
+        return res.status(400).json({ message: "Dados da imagem inválidos ou corrompidos" });
       }
       
       // Opções para o processamento da imagem
@@ -2214,59 +2239,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       
       // Tentar fazer upload usando Supabase (prioridade)
-      let imageUrl;
+      let imageUrl = null;
+      let uploadSuccess = false;
+      let errorMessages = [];
       
       // Usando Supabase Storage (prioridade)
       if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
         try {
           console.log("Tentando upload de imagem de perfil para Supabase...");
           
-          // Verificar se temos um arquivo para processar
-          if (req.file) {
-            const uploadResult = await supabaseStorageService.uploadImage(req.file, options);
-            imageUrl = uploadResult.imageUrl;
-          }
+          const uploadResult = await supabaseStorageService.uploadImage(req.file, options);
+          imageUrl = uploadResult.imageUrl;
+          uploadSuccess = true;
           
           console.log("Upload para Supabase concluído com sucesso:", imageUrl);
-        } catch (supabaseError) {
+        } catch (supabaseError: any) {
           console.error("Erro no upload para Supabase:", supabaseError);
+          errorMessages.push(`Erro Supabase: ${supabaseError.message || "Erro desconhecido"}`);
           // Se falhar, continua para próximo método
         }
+      } else {
+        console.log("Credenciais do Supabase não configuradas, pulando...");
       }
       
       // Fallback para R2 se Supabase falhar
-      if (!imageUrl && process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY) {
+      if (!uploadSuccess && process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY) {
         try {
           console.log("Tentando upload de imagem de perfil para R2...");
           
-          if (req.file) {
-            const r2Result = await storageService.uploadImage(req.file, options);
-            imageUrl = r2Result.imageUrl;
-          }
+          const r2Result = await storageService.uploadImage(req.file, options);
+          imageUrl = r2Result.imageUrl;
+          uploadSuccess = true;
           
           console.log("Upload para R2 concluído com sucesso:", imageUrl);
-        } catch (r2Error) {
+        } catch (r2Error: any) {
           console.error("Erro no upload para R2:", r2Error);
+          errorMessages.push(`Erro R2: ${r2Error.message || "Erro desconhecido"}`);
           // Se falhar, continua para o último método
         }
+      } else if (!uploadSuccess) {
+        console.log("Credenciais do R2 não configuradas, pulando...");
       }
       
       // Último recurso: armazenamento local
-      if (!imageUrl && req.file) {
-        console.log("Usando armazenamento local para imagem de perfil...");
-        
-        // Se estamos usando o storage em disco do multer, pegamos o caminho do arquivo
-        if (req.file.path) {
-          imageUrl = '/uploads/' + path.basename(req.file.path);
-          console.log("Caminho da imagem local:", imageUrl);
-        } else {
-          // Caso contrário, usamos o método localUpload do serviço
-          const localResult = await storageService.localUpload(req.file, options);
-          imageUrl = localResult.imageUrl;
+      if (!uploadSuccess) {
+        try {
+          console.log("Usando armazenamento local para imagem de perfil...");
+          
+          // Se estamos usando o storage em disco do multer, pegamos o caminho do arquivo
+          if (req.file.path) {
+            imageUrl = '/uploads/' + path.basename(req.file.path);
+            uploadSuccess = true;
+            console.log("Caminho da imagem local:", imageUrl);
+          } else {
+            // Caso contrário, usamos o método localUpload do serviço
+            const localResult = await storageService.localUpload(req.file, options);
+            imageUrl = localResult.imageUrl;
+            uploadSuccess = true;
+            console.log("Upload local concluído:", imageUrl);
+          }
+        } catch (localError: any) {
+          console.error("Erro no armazenamento local:", localError);
+          errorMessages.push(`Erro local: ${localError.message || "Erro desconhecido"}`);
         }
       }
       
-      // Atualizar perfil do usuário com nova imagem
+      // Verificar se o upload foi bem-sucedido
+      if (!uploadSuccess || !imageUrl) {
+        console.error(`FALHA TOTAL no upload da imagem de perfil: ${errorMessages.join(', ')}`);
+        return res.status(500).json({ 
+          message: "Não foi possível processar o upload da imagem. Tente novamente.",
+          details: errorMessages
+        });
+      }
+      
+      // Atualizar perfil do usuário com nova imagem (com URL válida)
+      console.log(`Atualizando perfil do usuário ${userId} com nova imagem: ${imageUrl}`);
+      
       await db.update(users)
         .set({
           profileimageurl: imageUrl,
@@ -2274,11 +2323,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
         .where(eq(users.id, userId));
       
+      console.log("Perfil atualizado com sucesso!");
+      
       // Retornar URL da imagem para uso no frontend
-      return res.json({ imageUrl });
-    } catch (error) {
-      console.error("Erro ao processar upload de imagem de perfil:", error);
-      return res.status(500).json({ message: "Erro ao processar imagem de perfil" });
+      return res.json({ 
+        imageUrl,
+        message: "Imagem de perfil atualizada com sucesso"
+      });
+    } catch (error: any) {
+      console.error("Erro crítico ao processar upload de imagem de perfil:", error);
+      return res.status(500).json({ 
+        message: "Erro ao processar imagem de perfil",
+        details: error.message || "Erro interno do servidor"
+      });
     }
   });
   
