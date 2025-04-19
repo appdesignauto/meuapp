@@ -27,9 +27,10 @@ type RegisterData = {
   email: string;
   password: string;
   name: string;
-  role: "user" | "designer" | "admin" | "designer_adm" | "support";
-  plan: "free" | "premium" | "enterprise";
-  periodType: "mensal" | "anual" | "vitalicio";
+  nivelacesso?: "usuario" | "premium" | "designer" | "designer_adm" | "suporte" | "admin";
+  role?: "usuario" | "premium" | "designer" | "designer_adm" | "suporte" | "admin";
+  plan?: "free" | "premium" | "enterprise";
+  periodType?: "mensal" | "anual" | "vitalicio";
 };
 
 export const AuthContext = createContext<AuthContextType | null>(null);

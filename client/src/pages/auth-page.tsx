@@ -109,10 +109,12 @@ const AuthPage = () => {
       // Adicionar username gerado a partir do email
       const username = values.email.split('@')[0];
       // Adicionar valores padrão para manter API compatível
+      // Não precisamos definir origemassinatura aqui, pois o backend já define automaticamente como "auto"
       await registerMutation.mutateAsync({ 
         ...registerData, 
         username,
-        role: "user", // Definir papel como usuário comum
+        nivelacesso: "usuario", // Definir nível de acesso como "usuario" (gratuito)
+        role: "usuario", // Manter compatibilidade com campo legacy
         plan: "free", // Plano gratuito por padrão
         periodType: "mensal" // Período mensal por padrão
       });
