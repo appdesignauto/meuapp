@@ -2728,6 +2728,138 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Erro ao executar SQL" });
     }
   });
+  
+  // Rota para diagnóstico do Supabase (temporariamente sem autenticação para testes)
+  app.get("/api/supabase-test", async (req, res) => {
+    try {
+      console.log("=== INÍCIO TESTE SUPABASE ===");
+      
+      if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
+        return res.status(500).json({ 
+          success: false,
+          message: "Credenciais do Supabase não configuradas",
+          env: {
+            supabaseUrl: process.env.SUPABASE_URL ? "Configurado" : "Não configurado",
+            supabaseKey: process.env.SUPABASE_ANON_KEY ? "Configurado" : "Não configurado"
+          }
+        });
+      }
+      
+      // Cria cliente do Supabase para testes
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+      
+      // Lista buckets
+      console.log("Tentando listar buckets do Supabase...");
+      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+      
+      if (bucketsError) {
+        console.error("Erro ao listar buckets:", bucketsError);
+        return res.status(500).json({
+          success: false,
+          message: "Erro ao listar buckets",
+          error: bucketsError.message
+        });
+      }
+      
+      console.log("Buckets encontrados:", buckets);
+      
+      // Testa criar bucket de teste se não existir
+      if (!buckets.some(b => b.name === 'designauto-images')) {
+        console.log("Tentando criar bucket 'designauto-images'...");
+        
+        try {
+          const { data, error } = await supabase.storage.createBucket('designauto-images', {
+            public: true,
+            fileSizeLimit: 5 * 1024 * 1024
+          });
+          
+          if (error) {
+            console.error("Erro ao criar bucket:", error);
+            return res.status(500).json({
+              success: false,
+              message: "Erro ao criar bucket",
+              error: error.message
+            });
+          }
+          
+          console.log("Bucket criado com sucesso!");
+          
+          // Lista buckets novamente para confirmar
+          const { data: updatedBuckets, error: listError } = await supabase.storage.listBuckets();
+          
+          if (listError) {
+            console.error("Erro ao listar buckets após criar:", listError);
+          } else {
+            console.log("Buckets após criar:", updatedBuckets);
+          }
+          
+          return res.json({
+            success: true,
+            message: "Bucket criado com sucesso",
+            buckets: updatedBuckets || []
+          });
+        } catch (createError: any) {
+          console.error("Erro ao criar bucket (catch):", createError);
+          return res.status(500).json({
+            success: false,
+            message: "Erro ao criar bucket",
+            error: createError.message || String(createError)
+          });
+        }
+      }
+      
+      // Testa upload de arquivo
+      console.log("Tentando fazer upload de arquivo de teste...");
+      
+      try {
+        const testData = new Uint8Array([0, 1, 2, 3, 4, 5]);
+        const testPath = `test-${Date.now()}.bin`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('designauto-images')
+          .upload(testPath, testData);
+        
+        if (uploadError) {
+          console.error("Erro ao fazer upload de teste:", uploadError);
+          return res.status(500).json({
+            success: false,
+            message: "Erro ao fazer upload de teste",
+            error: uploadError.message
+          });
+        }
+        
+        console.log("Upload de teste bem-sucedido:", uploadData);
+        
+        // Limpa arquivo de teste
+        await supabase.storage
+          .from('designauto-images')
+          .remove([testPath]);
+          
+        console.log("Arquivo de teste removido com sucesso");
+      } catch (uploadError: any) {
+        console.error("Erro no upload de teste (catch):", uploadError);
+      }
+      
+      // Retorna informações de diagnóstico
+      res.json({
+        success: true,
+        message: "Supabase funcionando corretamente",
+        buckets: buckets || [],
+        credentials: {
+          url: process.env.SUPABASE_URL ? `${process.env.SUPABASE_URL.substring(0, 10)}...` : null,
+          key: process.env.SUPABASE_ANON_KEY ? `${process.env.SUPABASE_ANON_KEY.substring(0, 5)}...` : null
+        }
+      });
+    } catch (error: any) {
+      console.error("Erro crítico no teste do Supabase:", error);
+      res.status(500).json({
+        success: false,
+        message: "Erro no teste do Supabase",
+        error: error.message || String(error)
+      });
+    }
+  });
 
   const httpServer = createServer(app);
   
