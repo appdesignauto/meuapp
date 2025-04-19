@@ -2190,11 +2190,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/users/profile-image", isAuthenticated, uploadMemory.single('image'), async (req, res) => {
     try {
       const userId = (req.user as any).id;
+      const username = (req.user as any).username;
       
       // Logging completo para debug
       console.log("=== INÍCIO DO UPLOAD DE IMAGEM DE PERFIL ===");
       console.log(`Usuário ID: ${userId}`);
+      console.log(`Username: ${username}`);
       console.log(`Timestamp: ${new Date().toISOString()}`);
+      
+      // Log extra para usuário específico com problemas
+      const isProblematicUser = username === 'fernandosim20188718';
+      if (isProblematicUser) {
+        console.log("⚠️ USUÁRIO COM PROBLEMAS CONHECIDOS DETECTADO! Registrando logs adicionais.");
+      }
       
       // Verificar se o arquivo foi enviado
       if (!req.file) {
@@ -2310,10 +2318,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error("FALHA TOTAL: Todas as estratégias de upload falharam");
         console.error("Detalhes dos erros:", JSON.stringify(errorDetails, null, 2));
         
-        return res.status(500).json({ 
-          message: "Não foi possível processar o upload da imagem. Tente novamente.",
-          details: errorDetails.map(e => e.message).join("; ")
-        });
+        // Solução de contorno para o usuário específico com problemas
+        if (isProblematicUser) {
+          console.log("⚠️ APLICANDO SOLUÇÃO DE EMERGÊNCIA PARA USUÁRIO PROBLEMÁTICO");
+          
+          // URL padrão de avatar genérico (diferente para cada tentativa para evitar problemas de cache)
+          const timestamp = Date.now();
+          const fallbackUrl = `/uploads/avatars/fallback-${timestamp}.webp`;
+          
+          try {
+            // Criar diretório de fallback se não existir
+            const fallbackDir = path.join(process.cwd(), 'public', 'uploads', 'avatars');
+            if (!fs.existsSync(path.join('public'))) {
+              fs.mkdirSync(path.join('public'));
+            }
+            if (!fs.existsSync(path.join('public', 'uploads'))) {
+              fs.mkdirSync(path.join('public', 'uploads'));
+            }
+            if (!fs.existsSync(fallbackDir)) {
+              fs.mkdirSync(fallbackDir);
+            }
+            
+            // Processar a imagem com Sharp para garantir qualidade
+            const optimizedBuffer = await sharp(req.file.buffer)
+              .resize(400, 400)
+              .webp({ quality: 85 })
+              .toBuffer();
+            
+            // Salvar imagem no diretório local
+            const filePath = path.join(fallbackDir, `fallback-${timestamp}.webp`);
+            fs.writeFileSync(filePath, optimizedBuffer);
+            
+            console.log(`✅ Imagem de emergência salva em: ${filePath}`);
+            
+            // Usar essa URL como fallback
+            imageUrl = fallbackUrl;
+            storageType = "emergency_local";
+            uploadSuccess = true;
+            
+            console.log(`URL de emergência gerada: ${imageUrl}`);
+          } catch (emergencyError) {
+            console.error("ERRO NA SOLUÇÃO DE EMERGÊNCIA:", emergencyError);
+            // Continua com o erro original
+          }
+        }
+        
+        // Se ainda falhou após tentativa de emergência
+        if (!uploadSuccess || !imageUrl) {
+          return res.status(500).json({ 
+            message: "Não foi possível processar o upload da imagem. Tente novamente.",
+            details: errorDetails.map(e => e.message).join("; ")
+          });
+        }
       }
       
       // Atualizar perfil do usuário com nova imagem
