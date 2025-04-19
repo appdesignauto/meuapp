@@ -703,6 +703,240 @@ export class SupabaseStorageService {
   }
   
   /**
+   * Método de upload de emergência para usuários com problemas persistentes
+   * Tenta múltiplas estratégias e oferece um fallback local garantido
+   */
+  async emergencyAvatarUpload(
+    file: Express.Multer.File,
+    username: string,
+    options: ImageOptimizationOptions = {}
+  ): Promise<{ imageUrl: string; storageType: string; strategy: string }> {
+    if (!file) {
+      throw new Error("Nenhum arquivo foi fornecido para upload de emergência");
+    }
+
+    console.log("🚨 INICIANDO PROTOCOLO DE UPLOAD DE EMERGÊNCIA 🚨");
+    console.log(`Usuário: ${username}`);
+    console.log(`Arquivo: ${file.originalname} (${file.size} bytes)`);
+    console.log("Tentando estratégias alternativas de upload...");
+    
+    const strategies = [
+      { name: 'avatar_bucket', description: 'Upload para bucket específico de avatares' },
+      { name: 'main_bucket_avatar_path', description: 'Upload para pasta /avatars no bucket principal' },
+      { name: 'main_bucket_root', description: 'Upload direto para raiz do bucket principal' },
+      { name: 'local_emergency', description: 'Upload para sistema de arquivos local' }
+    ];
+    
+    // Tentar cada estratégia em ordem
+    for (const strategy of strategies) {
+      try {
+        console.log(`\n>> TENTANDO ESTRATÉGIA: ${strategy.name} - ${strategy.description}`);
+        
+        let result;
+        
+        if (strategy.name === 'avatar_bucket') {
+          // Estratégia 1: Bucket de avatares específico
+          console.log("Preparando upload para bucket de avatares...");
+          
+          // Verificar se temos acesso ao bucket
+          try {
+            const { data } = await this.getBucket(AVATARS_BUCKET);
+            console.log(`Acesso ao bucket '${AVATARS_BUCKET}' confirmado.`);
+          } catch (accessError) {
+            console.error(`Sem acesso ao bucket de avatares:`, accessError);
+            throw new Error("Sem acesso ao bucket de avatares");
+          }
+          
+          // Processar imagem
+          const optimizedBuffer = await this.optimizeImage(file.buffer, {
+            width: options.width || 400,
+            height: options.height || 400,
+            quality: options.quality || 85,
+            format: "webp"
+          });
+          
+          // Gerar nome único
+          const uniqueId = randomUUID();
+          const avatarPath = `emergency_${username}_${uniqueId}.webp`;
+          
+          // Fazer upload
+          const { data, error } = await supabase.storage
+            .from(AVATARS_BUCKET)
+            .upload(avatarPath, optimizedBuffer, {
+              contentType: 'image/webp',
+              upsert: true
+            });
+            
+          if (error) throw error;
+          
+          // Obter URL pública
+          const { data: urlData } = supabase.storage
+            .from(AVATARS_BUCKET)
+            .getPublicUrl(avatarPath);
+            
+          result = {
+            imageUrl: urlData.publicUrl,
+            storageType: 'supabase_avatar_emergency',
+            strategy: 'avatar_bucket'
+          };
+        } 
+        else if (strategy.name === 'main_bucket_avatar_path') {
+          // Estratégia 2: Pasta avatars no bucket principal
+          console.log("Preparando upload para pasta avatars no bucket principal...");
+          
+          // Verificar acesso
+          try {
+            const { data } = await this.getBucket(BUCKET_NAME);
+            console.log(`Acesso ao bucket principal '${BUCKET_NAME}' confirmado.`);
+          } catch (accessError) {
+            console.error(`Sem acesso ao bucket principal:`, accessError);
+            throw new Error("Sem acesso ao bucket principal");
+          }
+          
+          // Processar imagem
+          const optimizedBuffer = await this.optimizeImage(file.buffer, {
+            width: options.width || 400,
+            height: options.height || 400,
+            quality: options.quality || 85,
+            format: "webp"
+          });
+          
+          // Gerar nome único
+          const uniqueId = randomUUID();
+          const avatarPath = `avatars/emergency_${username}_${uniqueId}.webp`;
+          
+          // Fazer upload
+          const { data, error } = await supabase.storage
+            .from(BUCKET_NAME)
+            .upload(avatarPath, optimizedBuffer, {
+              contentType: 'image/webp',
+              upsert: true
+            });
+            
+          if (error) throw error;
+          
+          // Obter URL pública
+          const { data: urlData } = supabase.storage
+            .from(BUCKET_NAME)
+            .getPublicUrl(avatarPath);
+            
+          result = {
+            imageUrl: urlData.publicUrl,
+            storageType: 'supabase_main_bucket_avatars_path',
+            strategy: 'main_bucket_avatar_path'
+          };
+        }
+        else if (strategy.name === 'main_bucket_root') {
+          // Estratégia 3: Raiz do bucket principal
+          console.log("Preparando upload direto para raiz do bucket principal...");
+          
+          // Usar upload direto sem otimização
+          // Apenas formatar o nome do arquivo
+          const uniqueId = randomUUID();
+          const filePath = `emergency_avatar_root_${username}_${uniqueId}`;
+          
+          // Fazer upload
+          const { data, error } = await supabase.storage
+            .from(BUCKET_NAME)
+            .upload(filePath, file.buffer, {
+              contentType: file.mimetype,
+              upsert: true
+            });
+            
+          if (error) throw error;
+          
+          // Obter URL pública
+          const { data: urlData } = supabase.storage
+            .from(BUCKET_NAME)
+            .getPublicUrl(filePath);
+            
+          result = {
+            imageUrl: urlData.publicUrl,
+            storageType: 'supabase_main_bucket_root',
+            strategy: 'main_bucket_root'
+          };
+        }
+        else {
+          // Estratégia 4: Armazenamento local (fallback garantido)
+          console.log("Usando armazenamento local emergencial...");
+          
+          // Diretório específico para emergências
+          const emergencyDir = path.join(process.cwd(), 'public', 'uploads', 'emergency');
+          
+          // Garantir que os diretórios existem
+          try {
+            if (!fs.existsSync('public')) {
+              fs.mkdirSync('public', { recursive: true });
+            }
+            if (!fs.existsSync(path.join('public', 'uploads'))) {
+              fs.mkdirSync(path.join('public', 'uploads'), { recursive: true });
+            }
+            if (!fs.existsSync(emergencyDir)) {
+              fs.mkdirSync(emergencyDir, { recursive: true });
+            }
+          } catch (dirError) {
+            console.error("Erro ao criar diretórios:", dirError);
+            throw new Error("Não foi possível criar diretórios para armazenamento local");
+          }
+          
+          // Processar imagem localmente
+          let processedBuffer;
+          try {
+            processedBuffer = await sharp(file.buffer)
+              .resize({
+                width: options.width || 400,
+                height: options.height || 400,
+                fit: 'cover'
+              })
+              .webp({ quality: options.quality || 85 })
+              .toBuffer();
+          } catch (sharpError) {
+            console.error("Erro ao processar imagem com sharp:", sharpError);
+            // Usar buffer original se falhar o processamento
+            processedBuffer = file.buffer;
+          }
+          
+          // Gerar nome de arquivo único
+          const timestamp = Date.now();
+          const filename = `emergency_${username}_${timestamp}.webp`;
+          const filePath = path.join(emergencyDir, filename);
+          
+          // Salvar arquivo
+          fs.writeFileSync(filePath, processedBuffer);
+          
+          // URL relativa para acesso
+          const publicUrl = `/uploads/emergency/${filename}`;
+          
+          result = {
+            imageUrl: publicUrl,
+            storageType: 'local_emergency',
+            strategy: 'local_emergency'
+          };
+        }
+        
+        console.log(`✓ UPLOAD BEM-SUCEDIDO COM ESTRATÉGIA: ${strategy.name}`);
+        console.log(`URL gerada: ${result.imageUrl}`);
+        console.log(`Tipo de armazenamento: ${result.storageType}`);
+        
+        return result;
+      } catch (error) {
+        console.error(`❌ FALHA NA ESTRATÉGIA ${strategy.name}:`, error);
+      }
+    }
+    
+    // Se todas as estratégias falharem, retornar um avatar padrão como último recurso
+    console.error("⚠️ TODAS AS ESTRATÉGIAS DE UPLOAD FALHARAM!");
+    
+    // Usar um avatar padrão com timestamp para evitar problemas de cache
+    const timestamp = Date.now();
+    return {
+      imageUrl: `https://placehold.co/400x400/555588/ffffff?text=U:${username}&date=${timestamp}`,
+      storageType: 'external_fallback',
+      strategy: 'placeholder'
+    };
+  }
+
+  /**
    * Nova solução para upload de logos que corrige os problemas de arquivos vazios
    */
   /**
