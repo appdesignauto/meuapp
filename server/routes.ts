@@ -3313,6 +3313,163 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // =============================================
+  // DIAGNÓSTICO DE ARMAZENAMENTO - ROTAS
+  // =============================================
+  
+  // Verificação de conexão com o serviço de armazenamento
+  app.get("/api/admin/storage/check-connection", isAdmin, async (req, res) => {
+    try {
+      const service = req.query.service as string;
+      if (!service || (service !== 'supabase' && service !== 'r2')) {
+        return res.status(400).json({ 
+          connected: false,
+          message: "Serviço inválido. Use 'supabase' ou 'r2'.",
+          logs: []
+        });
+      }
+      
+      let result;
+      
+      if (service === 'supabase') {
+        // Limpar logs anteriores
+        supabaseStorageService.clearLogs();
+        
+        // Testar conexão com Supabase
+        const mainBucketCheck = await supabaseStorageService.checkBucketExists('designauto-images');
+        const avatarsBucketCheck = await supabaseStorageService.checkBucketExists('avatars');
+        
+        // Obter logs do serviço
+        const logs = supabaseStorageService.getLogs();
+        
+        result = {
+          connected: mainBucketCheck && avatarsBucketCheck,
+          message: mainBucketCheck && avatarsBucketCheck 
+            ? "Conexão com Supabase Storage estabelecida com sucesso. Todos os buckets estão acessíveis." 
+            : "Falha na conexão com Supabase Storage. Verifique as credenciais e a disponibilidade do serviço.",
+          logs
+        };
+      } else {
+        // Limpar logs anteriores
+        r2StorageService.clearLogs();
+        
+        // Testar conexão com R2
+        const bucketExists = await r2StorageService.checkBucketExists();
+        
+        // Obter logs do serviço
+        const logs = r2StorageService.getLogs();
+        
+        result = {
+          connected: bucketExists,
+          message: bucketExists 
+            ? "Conexão com Cloudflare R2 estabelecida com sucesso. Bucket principal está acessível." 
+            : "Falha na conexão com Cloudflare R2. Verifique as credenciais e a disponibilidade do serviço.",
+          logs
+        };
+      }
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Erro ao verificar conexão com serviço de armazenamento:", error);
+      res.status(500).json({ 
+        connected: false,
+        message: `Erro ao verificar conexão: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        logs: ["Erro interno no servidor ao tentar verificar conexão"]
+      });
+    }
+  });
+  
+  // Teste de upload de imagem
+  app.post("/api/admin/storage/test-upload", isAdmin, uploadMemory.single('image'), async (req, res) => {
+    try {
+      const service = req.query.service as string;
+      
+      if (!service || (service !== 'supabase' && service !== 'r2')) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Serviço inválido. Use 'supabase' ou 'r2'."
+        });
+      }
+      
+      if (!req.file) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Nenhum arquivo enviado."
+        });
+      }
+      
+      // Obter o arquivo enviado
+      const imageFile = {
+        buffer: req.file.buffer,
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype
+      };
+      
+      // Preparar opções de otimização
+      const optimizationOptions = {
+        width: 1200,
+        height: undefined,
+        quality: 80,
+        format: 'webp' as const
+      };
+      
+      // Registrar tempo inicial
+      const startTime = Date.now();
+      
+      // Realizar upload conforme o serviço selecionado
+      if (service === 'supabase') {
+        // Limpar logs para nova operação
+        supabaseStorageService.clearLogs();
+        
+        // Realizar upload para Supabase
+        const uploadResult = await supabaseStorageService.testUpload(
+          imageFile,
+          'test-uploads', // pasta específica para testes
+          optimizationOptions
+        );
+        
+        // Calcular tempo total
+        const totalTime = Date.now() - startTime;
+        
+        // Retornar resultado
+        return res.json({
+          ...uploadResult,
+          timings: {
+            ...uploadResult.timings,
+            total: totalTime
+          }
+        });
+      } else {
+        // Limpar logs para nova operação
+        r2StorageService.clearLogs();
+        
+        // Realizar upload para R2
+        const uploadResult = await r2StorageService.testUpload(
+          imageFile,
+          optimizationOptions
+        );
+        
+        // Calcular tempo total
+        const totalTime = Date.now() - startTime;
+        
+        // Retornar resultado
+        return res.json({
+          ...uploadResult,
+          timings: {
+            ...uploadResult.timings,
+            total: totalTime
+          }
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao testar upload:", error);
+      res.status(500).json({ 
+        success: false,
+        message: `Erro ao testar upload: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
+      });
+    }
+  });
+  
+  // =============================================
   // SISTEMA DE ASSINATURAS - ROTAS
   // =============================================
   

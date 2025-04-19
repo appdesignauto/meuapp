@@ -353,20 +353,24 @@ export default function StorageTestPage() {
               
               {/* Conteúdo da Aba de Conexão */}
               <TabsContent value="connection" className="space-y-4">
-                <Alert variant={
-                  connectionStatus 
-                    ? (connectionStatus.connected ? "default" : "destructive")
-                    : "outline"
-                }>
+                <Alert
+                  className={`${
+                    connectionStatus
+                      ? connectionStatus.connected
+                        ? "bg-green-50 border-green-200 text-green-800"
+                        : "bg-red-50 border-red-200 text-red-800"
+                      : "bg-blue-50 border-blue-200 text-blue-800"
+                  }`}
+                >
                   <div className="flex items-start">
                     {connectionStatus ? (
                       connectionStatus.connected ? (
                         <CheckCircle2 className="h-5 w-5 mr-2 text-green-500" />
                       ) : (
-                        <XCircle className="h-5 w-5 mr-2 text-destructive" />
+                        <XCircle className="h-5 w-5 mr-2 text-red-500" />
                       )
                     ) : (
-                      <Info className="h-5 w-5 mr-2" />
+                      <Info className="h-5 w-5 mr-2 text-blue-500" />
                     )}
                     <div>
                       <AlertTitle>
@@ -423,8 +427,8 @@ export default function StorageTestPage() {
               
               {/* Conteúdo da Aba de Upload */}
               <TabsContent value="upload" className="space-y-4">
-                <Alert variant="outline">
-                  <Info className="h-5 w-5 mr-2" />
+                <Alert className="bg-blue-50 border-blue-200 text-blue-800">
+                  <Info className="h-5 w-5 mr-2 text-blue-500" />
                   <AlertTitle>Teste de Upload de Imagem</AlertTitle>
                   <AlertDescription>
                     Faça upload de uma imagem para testar o serviço {selectedService === "supabase" ? "Supabase Storage" : "Cloudflare R2"}.
@@ -494,11 +498,11 @@ export default function StorageTestPage() {
                 
                 {uploadResult && (
                   <div className="mt-6">
-                    <Alert variant={uploadResult.success ? "default" : "destructive"}>
+                    <Alert className={uploadResult.success ? "bg-green-50 border-green-200 text-green-800" : "bg-red-50 border-red-200 text-red-800"}>
                       {uploadResult.success ? (
                         <CheckCircle2 className="h-5 w-5 mr-2 text-green-500" />
                       ) : (
-                        <AlertCircle className="h-5 w-5 mr-2" />
+                        <AlertCircle className="h-5 w-5 mr-2 text-red-500" />
                       )}
                       <AlertTitle>{uploadResult.message}</AlertTitle>
                       <AlertDescription>
