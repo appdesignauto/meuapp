@@ -279,8 +279,8 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
   });
   
   // Funções wrapper para expor na API do hook
-  const loginWithEmailPassword = useCallback(async (email: string, password: string) => {
-    await loginMutation.mutateAsync({ email, password });
+  const loginWithEmailPassword = useCallback(async (email: string, password: string, rememberMe = false) => {
+    await loginMutation.mutateAsync({ email, password, rememberMe });
   }, [loginMutation]);
   
   const registerWithEmailPassword = useCallback(async (email: string, password: string, userData: RegisterUserData) => {

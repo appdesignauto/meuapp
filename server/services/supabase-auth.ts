@@ -98,12 +98,16 @@ export class SupabaseAuthService {
   /**
    * Realiza login do usuário usando Supabase Auth
    */
-  async login(email: string, password: string): Promise<{ user: User | null; error: any; session: any }> {
+  async login(email: string, password: string, rememberMe: boolean = false): Promise<{ user: User | null; error: any; session: any }> {
     try {
       // 1. Autenticar usuário no Supabase
       const { data: authData, error: authError } = await this.supabase.auth.signInWithPassword({
         email,
-        password
+        password,
+        options: {
+          // Se rememberMe for true, extender o tempo da sessão (30 dias), senão padrão (1 hora)
+          expiresIn: rememberMe ? 60 * 60 * 24 * 30 : undefined
+        }
       });
 
       if (authError) {
