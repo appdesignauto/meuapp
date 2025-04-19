@@ -1,4 +1,6 @@
 import { Switch, Route, Router, useLocation } from "wouter";
+import { Suspense, lazy } from "react";
+import { Loader2 } from "lucide-react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
@@ -65,7 +67,16 @@ function AppRoutes() {
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
       <Route path="/auth" component={AuthPage} />
-      <Route path="/auth/supabase" component={() => import("@/pages/supabase-auth-page").then(mod => <mod.default />)} />
+      <Route path="/auth/supabase">
+        {() => {
+          const SupabaseAuthPage = lazy(() => import("@/pages/supabase-auth-page"));
+          return (
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+              <SupabaseAuthPage />
+            </Suspense>
+          );
+        }}
+      </Route>
       <Route path="/collections" component={Collections} />
       <Route path="/categories" component={Categories} />
       <Route path="/categories/:slug" component={CategoryPage} />
