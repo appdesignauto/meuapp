@@ -1669,6 +1669,151 @@ export class SupabaseStorageService {
       }
     }
   }
+  /**
+   * Verifica se um bucket existe e está acessível
+   */
+  async checkBucketExists(bucketName: string): Promise<boolean> {
+    try {
+      this.log(`Verificando acesso de leitura ao bucket '${bucketName}'...`);
+      
+      // Tenta listar arquivos no bucket para verificar acesso
+      const { data, error } = await supabase.storage
+        .from(bucketName)
+        .list();
+      
+      if (error) {
+        this.log(`❌ Erro ao verificar bucket '${bucketName}': ${error.message}`);
+        return false;
+      }
+      
+      this.log(`✓ Bucket '${bucketName}' está acessível. Arquivos encontrados: ${data?.length || 0}`);
+      return true;
+    } catch (error) {
+      this.log(`❌ Erro ao verificar bucket '${bucketName}': ${error instanceof Error ? error.message : String(error)}`);
+      return false;
+    }
+  }
+  
+  /**
+   * Verifica a conexão com o Supabase Storage
+   */
+  async checkConnection(): Promise<{ connected: boolean, message: string, logs: string[] }> {
+    try {
+      this.log('Verificando acesso de leitura ao bucket principal...');
+      const mainBucketExists = await this.checkBucketExists('designauto-images');
+      
+      this.log('Verificando acesso de leitura ao bucket de avatares...');
+      const avatarsBucketExists = await this.checkBucketExists('avatars');
+      
+      const connected = mainBucketExists && avatarsBucketExists;
+      
+      const message = connected
+        ? `Conexão com Supabase Storage estabelecida com sucesso. Todos os buckets estão acessíveis.`
+        : `Falha na conexão com Supabase Storage. ${!mainBucketExists ? 'Bucket principal inacessível. ' : ''}${!avatarsBucketExists ? 'Bucket de avatares inacessível.' : ''}`;
+      
+      return {
+        connected,
+        message,
+        logs: this.getLogs()
+      };
+    } catch (error) {
+      this.log(`❌ Erro ao verificar conexão com Supabase: ${error instanceof Error ? error.message : String(error)}`);
+      
+      return {
+        connected: false,
+        message: `Erro ao verificar conexão: ${error instanceof Error ? error.message : String(error)}`,
+        logs: this.getLogs()
+      };
+    }
+  }
+  
+  /**
+   * Método de teste para realizar upload para Supabase Storage
+   */
+  async testUpload(
+    file: Express.Multer.File | { buffer: Buffer; originalname: string; mimetype: string },
+    folder: string = 'test-uploads',
+    options: ImageOptimizationOptions = {}
+  ): Promise<any> {
+    try {
+      const startTime = Date.now();
+      this.log(`Iniciando teste de upload para Supabase. Arquivo: ${file.originalname}`);
+      
+      // Primeiro passo: otimizar a imagem
+      const optimizationStartTime = Date.now();
+      const optimized = await this.optimizeImage(file.buffer, options);
+      const optimizationEndTime = Date.now();
+      const optimizationTime = optimizationEndTime - optimizationStartTime;
+      
+      this.log(`Imagem otimizada em ${optimizationTime}ms. Redução: ${((file.buffer.length - optimized.length) / file.buffer.length * 100).toFixed(2)}%`);
+      
+      // Segundo passo: fazer upload para o Supabase
+      const uploadStartTime = Date.now();
+      const filename = `${folder}/${Date.now()}_${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      
+      const { error: uploadError, data } = await supabase.storage
+        .from('designauto-images')
+        .upload(filename, optimized, {
+          contentType: `image/webp`,
+          upsert: false
+        });
+      
+      if (uploadError) {
+        throw new Error(`Erro no upload: ${uploadError.message}`);
+      }
+      
+      const uploadEndTime = Date.now();
+      const uploadTime = uploadEndTime - uploadStartTime;
+      
+      // Obter URL pública
+      const { data: urlData } = supabase.storage
+        .from('designauto-images')
+        .getPublicUrl(filename);
+      
+      const imageUrl = urlData.publicUrl;
+      
+      const endTime = Date.now();
+      const totalTime = endTime - startTime;
+      
+      this.log(`✅ Teste de upload concluído em ${totalTime}ms. URL: ${imageUrl}`);
+      
+      // Analisar imagem para retornar dimensões
+      const metadata = await sharp(optimized).metadata();
+      
+      return {
+        success: true,
+        message: "Upload realizado com sucesso",
+        imageUrl,
+        storageType: "supabase",
+        bucket: 'designauto-images',
+        optimizedSummary: {
+          originalSize: file.buffer.length,
+          optimizedSize: optimized.length,
+          reduction: ((file.buffer.length - optimized.length) / file.buffer.length * 100),
+          format: 'webp',
+          width: metadata.width || 0,
+          height: metadata.height || 0
+        },
+        timings: {
+          total: totalTime,
+          optimization: optimizationTime,
+          upload: uploadTime
+        },
+        logs: this.getLogs()
+      };
+    } catch (error) {
+      this.log(`❌ Erro no teste de upload: ${error instanceof Error ? error.message : String(error)}`);
+      
+      return {
+        success: false,
+        message: "Falha no upload para Supabase",
+        error: error instanceof Error ? error.message : String(error),
+        storageType: "supabase",
+        bucket: 'designauto-images',
+        logs: this.getLogs()
+      };
+    }
+  }
 }
 
 export const supabaseStorageService = new SupabaseStorageService();
