@@ -194,7 +194,7 @@ export function setupAuth(app: Express) {
     
     try {
       // Autenticação manual para debugging
-      const { username, password } = req.body;
+      const { username, password, rememberMe } = req.body;
       
       if (!username || !password) {
         return res.status(400).json({ message: "Email e senha são obrigatórios" });
@@ -214,6 +214,17 @@ export function setupAuth(app: Express) {
       if (!passwordMatch) {
         console.log("Senha incorreta para usuário:", username);
         return res.status(401).json({ message: "Senha incorreta" });
+      }
+      
+      // Configurar período de expiração da sessão baseado na opção "Lembrar-me"
+      if (rememberMe) {
+        // Se "Lembrar-me" estiver ativado, definir a sessão para durar 30 dias
+        req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 dias em milissegundos
+        console.log("Opção 'Lembrar-me' ativada. Sessão definida para 30 dias.");
+      } else {
+        // Caso contrário, usar o padrão que geralmente é até o fechamento do navegador
+        req.session.cookie.maxAge = 24 * 60 * 60 * 1000; // 24 horas (um dia)
+        console.log("Opção 'Lembrar-me' desativada. Sessão definida para 24 horas.");
       }
       
       // Login manual
