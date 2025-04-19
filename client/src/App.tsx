@@ -22,6 +22,7 @@ import AdminDashboard from "@/pages/admin/Dashboard";
 import LogoUploadPage from "@/pages/admin/LogoUploadPage";
 import AuthPage from "@/pages/auth-page";
 import NotFound from "@/pages/not-found";
+import AvatarTestPage from "@/pages/AvatarTestPage";
 
 // Páginas do Painel do Usuário
 import { ProtectedPainelRoute } from "@/components/painel/ProtectedPainelRoute";
@@ -83,6 +84,12 @@ function AppRoutes() {
           return null;
         }}
       </Route>
+      
+      {/* Página de teste de upload de avatar */}
+      <ProtectedRoute
+        path="/avatar-test"
+        component={AvatarTestPage}
+      />
       
       {/* Rotas Administrativas */}
       <ProtectedRoute 

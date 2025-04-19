@@ -2974,6 +2974,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Endpoint de teste para debug de upload de avatar
+  app.post("/api/debug/test-avatar-upload", isAuthenticated, uploadMemory.single('image'), async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const username = (req.user as any).username;
+      
+      console.log("=== INÍCIO DO TESTE DE UPLOAD DE AVATAR ===");
+      console.log(`Usuário: ${username} (ID: ${userId})`);
+      
+      if (!req.file) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Nenhum arquivo enviado" 
+        });
+      }
+      
+      console.log(`Arquivo recebido: ${req.file.originalname} (${req.file.size} bytes)`);
+      console.log(`Tipo MIME: ${req.file.mimetype}`);
+      console.log(`Buffer válido: ${!!req.file.buffer} (${req.file.buffer?.length || 0} bytes)`);
+      
+      // Tentar upload direto para o bucket 'avatars'
+      try {
+        console.log("Tentando upload direto para bucket 'avatars'...");
+        
+        const uploadOptions = {
+          width: 200,   // Menor para teste
+          height: 200,  // Menor para teste
+          quality: 80,
+        };
+        
+        const result = await supabaseStorageService.uploadAvatar(req.file, uploadOptions, username);
+        
+        console.log("✅ Upload de avatar bem-sucedido:");
+        console.log(`- URL: ${result.imageUrl}`);
+        console.log(`- Tipo de armazenamento: ${result.storageType}`);
+        
+        return res.json({
+          success: true,
+          url: result.imageUrl,
+          storageType: result.storageType,
+          message: "Upload de teste realizado com sucesso"
+        });
+      } catch (error) {
+        console.error("Erro no teste de upload de avatar:", error);
+        return res.status(500).json({
+          success: false,
+          error: String(error)
+        });
+      }
+    } catch (error) {
+      console.error("Erro geral no teste de avatar:", error);
+      return res.status(500).json({
+        success: false,
+        error: String(error)
+      });
+    }
+  });
+  
   // Endpoint específico para designers (mantido para compatibilidade)
   app.post("/api/designers/profile-image", isAuthenticated, uploadMemory.single('image'), async (req, res) => {
     try {

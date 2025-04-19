@@ -29,6 +29,7 @@ interface ImageOptimizationOptions {
 
 export class SupabaseStorageService {
   private initialized = false;
+  private emergencyUploadAttempts: { [userId: string]: number } = {};
 
   constructor() {
     this.initBucket().catch(err => {
