@@ -20,6 +20,7 @@ type AuthContextType = {
 type LoginData = {
   username: string;
   password: string;
+  rememberMe?: boolean;
 };
 
 type RegisterData = {

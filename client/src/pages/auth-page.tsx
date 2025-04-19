@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
@@ -30,6 +31,7 @@ import { useToast } from "@/hooks/use-toast";
 const loginSchema = z.object({
   email: z.string().email("Digite um email válido"),
   password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
+  rememberMe: z.boolean().default(false),
 });
 
 const registerSchema = z.object({
@@ -68,6 +70,7 @@ const AuthPage = () => {
     defaultValues: {
       email: "",
       password: "",
+      rememberMe: false,
     },
   });
 
@@ -101,6 +104,7 @@ const AuthPage = () => {
       const loginData = {
         username: values.email, // O backend espera o campo 'username' mas vai tratar como email
         password: values.password,
+        rememberMe: values.rememberMe,
       };
       
       console.log("Enviando credenciais de login:", loginData);
@@ -199,6 +203,25 @@ const AuthPage = () => {
                               </Button>
                             </div>
                             <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={loginForm.control}
+                        name="rememberMe"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel className="cursor-pointer">
+                                Lembrar-me
+                              </FormLabel>
+                            </div>
                           </FormItem>
                         )}
                       />
