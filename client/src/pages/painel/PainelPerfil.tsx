@@ -240,6 +240,10 @@ export default function PainelPerfil() {
       
       try {
         console.log('Iniciando upload de imagem...');
+        
+        // Simula progresso a 50% enquanto o servidor processa
+        setUploadProgress(50);
+        
         const response = await fetch('/api/users/profile-image', {
           method: 'POST',
           body: formData,
@@ -248,25 +252,38 @@ export default function PainelPerfil() {
         
         console.log('Resposta recebida:', response.status, response.statusText);
         
-        let errorData = {};
+        // Progresso a 80% quando recebemos resposta
+        setUploadProgress(80);
+        
+        let responseData = {};
         try {
-          // Tenta extrair os dados JSON mesmo em caso de erro
-          errorData = await response.json();
-          console.log('Dados da resposta:', errorData);
+          // Tenta extrair os dados JSON
+          responseData = await response.json();
+          console.log('Dados da resposta:', responseData);
+          
+          // Captura o tipo de armazenamento usado (se disponível)
+          if (responseData && typeof responseData === 'object') {
+            if ('storageType' in responseData) {
+              setUploadStorageType(responseData.storageType as string);
+            }
+          }
         } catch (jsonError) {
           console.error('Não foi possível extrair JSON da resposta:', jsonError);
         }
         
+        // Finaliza o progresso
+        setUploadProgress(100);
+        
         if (!response.ok) {
-          console.error('Erro no upload:', response.status, errorData);
+          console.error('Erro no upload:', response.status, responseData);
           throw new Error(
-            errorData.message || 
-            errorData.details || 
+            (responseData as any).message || 
+            (responseData as any).details || 
             `Falha ao fazer upload da imagem (${response.status}: ${response.statusText})`
           );
         }
         
-        return errorData;
+        return responseData;
       } catch (err) {
         console.error('Erro na requisição de upload:', err);
         throw err;
@@ -275,11 +292,26 @@ export default function PainelPerfil() {
     onSuccess: (data) => {
       // Invalidar query do usuário para atualizar a imagem do perfil
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+      
+      let successMessage = 'Sua imagem de perfil foi atualizada com sucesso';
+      if (uploadStorageType) {
+        const storageTypeMap: Record<string, string> = {
+          'supabase-avatars': 'Supabase (bucket avatars)',
+          'supabase-designauto': 'Supabase (bucket designauto-images)',
+          'local': 'Armazenamento local',
+        };
+        
+        const storageTypeDisplay = storageTypeMap[uploadStorageType] || uploadStorageType;
+        successMessage += ` (${storageTypeDisplay})`;
+      }
+      
       toast({
         title: 'Imagem atualizada',
-        description: 'Sua imagem de perfil foi atualizada com sucesso',
+        description: successMessage,
       });
+      
       setUploading(false);
+      setUploadProgress(null);
       
       // Limpar campo de arquivo para permitir selecionar o mesmo arquivo novamente
       if (fileInputRef.current) {
@@ -294,6 +326,8 @@ export default function PainelPerfil() {
         variant: 'destructive',
       });
       setUploading(false);
+      setUploadProgress(null);
+      setUploadStorageType(null);
       
       // Limpar campo de arquivo para permitir tentar novamente
       if (fileInputRef.current) {
@@ -420,12 +454,30 @@ export default function PainelPerfil() {
                     />
                     <AvatarFallback className="text-2xl">{getInitials()}</AvatarFallback>
                     <div 
-                      className={`absolute inset-0 bg-black/40 flex items-center justify-center rounded-full transition-opacity ${
+                      className={`absolute inset-0 bg-black/40 flex flex-col items-center justify-center rounded-full transition-opacity ${
                         uploading ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
                       }`}
                     >
                       {uploading ? (
-                        <Loader2 className="h-8 w-8 text-white animate-spin" />
+                        <>
+                          <Loader2 className="h-8 w-8 text-white animate-spin mb-1" />
+                          {uploadProgress !== null && (
+                            <div className="w-16 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-white transition-all duration-300 ease-out"
+                                style={{ width: `${uploadProgress}%` }}
+                              />
+                            </div>
+                          )}
+                          {uploadStorageType && (
+                            <div className="mt-1 text-[9px] text-white/80 text-center px-1 max-w-[90%]">
+                              {uploadStorageType === 'supabase-avatars' ? 'Supabase' : 
+                               uploadStorageType === 'supabase-designauto' ? 'DesignAuto' : 
+                               uploadStorageType === 'local' ? 'Local' : 
+                               uploadStorageType}
+                            </div>
+                          )}
+                        </>
                       ) : (
                         <Camera className="h-8 w-8 text-white" />
                       )}
@@ -438,24 +490,33 @@ export default function PainelPerfil() {
                     accept="image/*"
                     onChange={handleFileChange}
                   />
-                  <Button 
-                    onClick={handleImageUploadClick}
-                    disabled={uploading}
-                    variant="outline"
-                    className="w-full"
-                  >
+                  <div className="w-full">
                     {uploading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Enviando...
-                      </>
+                      <div className="w-full rounded-md border border-input px-4 py-2 text-sm text-center relative overflow-hidden">
+                        <div className="relative z-10 flex items-center justify-center">
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          <span>
+                            {uploadProgress !== null ? `Enviando... ${uploadProgress}%` : 'Enviando...'}
+                          </span>
+                        </div>
+                        {uploadProgress !== null && (
+                          <div 
+                            className="absolute inset-0 bg-primary/10 transition-all duration-300 ease-out" 
+                            style={{ width: `${uploadProgress}%` }}
+                          />
+                        )}
+                      </div>
                     ) : (
-                      <>
+                      <Button 
+                        onClick={handleImageUploadClick}
+                        variant="outline"
+                        className="w-full"
+                      >
                         <Upload className="mr-2 h-4 w-4" />
                         Alterar foto de perfil
-                      </>
+                      </Button>
                     )}
-                  </Button>
+                  </div>
                 </div>
                 
                 <div className="flex-1">
