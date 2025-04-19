@@ -1117,7 +1117,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Acesso negado" });
       }
       
-      // Utilizando SQL para evitar problemas de coluna (lastLogin vs lastlogin)
+      // Utilizando SQL para evitar problemas de coluna e garantir valores corretos
       const usersQuery = `
         SELECT 
           id, 
@@ -1134,11 +1134,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           dataexpiracao,
           acessovitalicio, 
           isactive, 
-          lastlogin, 
-          "createdAt", 
-          updatedat
+          ultimologin, 
+          criadoem, 
+          atualizadoem
         FROM users
-        ORDER BY "createdAt" DESC
+        ORDER BY criadoem DESC
       `;
       
       const result = await db.execute(sql.raw(usersQuery));
@@ -1212,8 +1212,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             dataexpiracao: user.dataexpiracao,
             acessovitalicio: user.acessovitalicio,
             isactive: user.isactive,
-            lastLogin: lastLogin,
-            createdAt: user.createdat || user["createdAt"],
+            lastLogin: user.ultimologin,
+            createdAt: user.criadoem,
             followersCount,
             followingCount,
             totalDownloads,
