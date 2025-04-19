@@ -30,7 +30,7 @@ type SupabaseAuthContextType = {
   registerError: string | null;
   resetPasswordError: string | null;
   clearErrors: () => void;
-  loginWithEmailPassword: (email: string, password: string) => Promise<void>;
+  loginWithEmailPassword: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
   registerWithEmailPassword: (email: string, password: string, userData: RegisterUserData) => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -84,9 +84,9 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
   // Login com email e senha via Supabase
   const loginMutation = useMutation({
-    mutationFn: async ({ email, password }: { email: string; password: string }) => {
+    mutationFn: async ({ email, password, rememberMe = false }: { email: string; password: string; rememberMe?: boolean }) => {
       clearErrors();
-      const res = await apiRequest("POST", "/api/auth/supabase/login", { email, password });
+      const res = await apiRequest("POST", "/api/auth/supabase/login", { email, password, rememberMe });
       
       if (!res.ok) {
         const errorData = await res.json();

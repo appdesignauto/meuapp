@@ -18,6 +18,7 @@ export function SupabaseLoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   
   const { loginWithEmailPassword, isLoading, loginError } = useSupabaseAuth();
   const { toast } = useToast();
@@ -35,7 +36,7 @@ export function SupabaseLoginForm() {
     }
     
     try {
-      await loginWithEmailPassword(email, password);
+      await loginWithEmailPassword(email, password, rememberMe);
       // O hook useSupabaseAuth já gerencia o toast e a navegação
     } catch (error: any) {
       // Erros já tratados pelo hook, mas podemos adicionar mais feedback aqui se necessário
@@ -99,6 +100,19 @@ export function SupabaseLoginForm() {
                 </span>
               </Button>
             </div>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="remember-me"
+              className="rounded border-gray-300 text-primary focus:ring-primary"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+            />
+            <Label htmlFor="remember-me" className="text-sm font-normal">
+              Lembrar-me
+            </Label>
           </div>
           
           {loginError && loginError !== "Email não verificado." && (
