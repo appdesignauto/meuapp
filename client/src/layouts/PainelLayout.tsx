@@ -485,7 +485,7 @@ export default function PainelLayout({ children }: PainelLayoutProps) {
                       
                       {/* Botão de Upgrade para usuários free */}
                       {!isPremium && (
-                        <Link href="/pricing" onClick={() => setSidebarOpen(false)}>
+                        <Link href="/planos" onClick={() => setSidebarOpen(false)}>
                           <Button
                             variant="default"
                             size="sm"
