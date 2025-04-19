@@ -56,7 +56,7 @@ const Footer = () => {
             <h3 className="font-semibold text-neutral-800 mb-4">Informações</h3>
             <ul className="space-y-2">
               <li><Link href="/about" className="text-neutral-600 hover:text-primary">Sobre nós</Link></li>
-              <li><Link href="/pricing" className="text-neutral-600 hover:text-primary">Preços</Link></li>
+              <li><Link href="/planos" className="text-neutral-600 hover:text-primary">Planos</Link></li>
               <li><Link href="/faq" className="text-neutral-600 hover:text-primary">FAQ</Link></li>
               <li><Link href="/terms" className="text-neutral-600 hover:text-primary">Termos de Uso</Link></li>
               <li><Link href="/privacy" className="text-neutral-600 hover:text-primary">Política de Privacidade</Link></li>

@@ -335,7 +335,7 @@ export default function PainelLayout({ children }: PainelLayoutProps) {
                   
                   {/* Botão de Upgrade para usuários free */}
                   {!isPremium && (
-                    <Link href="/pricing">
+                    <Link href="/planos">
                       <Button
                         variant="default"
                         size="sm"
@@ -423,7 +423,7 @@ export default function PainelLayout({ children }: PainelLayoutProps) {
                             </Badge>
                           </div>
                         ) : (
-                          <Link href="/pricing">
+                          <Link href="/planos">
                             <Badge 
                               variant="outline" 
                               className="bg-blue-50 text-blue-700 hover:bg-blue-100 cursor-pointer"

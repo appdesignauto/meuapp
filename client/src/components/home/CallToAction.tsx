@@ -54,7 +54,7 @@ const CallToAction = () => {
                 <span className="text-3xl font-bold">R$47</span>
                 <span className="text-neutral-400">/mês</span>
               </div>
-              <Link href="/pricing">
+              <Link href="/planos">
                 <Button className="bg-secondary-500 hover:bg-secondary-500/90 text-white w-full px-6 py-3">
                   Assinar Premium
                 </Button>

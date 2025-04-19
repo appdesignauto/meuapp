@@ -86,7 +86,7 @@ const MobileMenu = ({ isOpen, onClose, navLinks, userRole }: MobileMenuProps) =>
               {/* Assinatura */}
               {user.nivelacesso === 'usuario' || !user.tipoplano ? (
                 <Link
-                  href="/pricing"
+                  href="/planos"
                   className="flex items-center justify-between w-full py-2 px-3 bg-blue-50 rounded-md"
                   onClick={onClose}
                 >
