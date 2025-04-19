@@ -146,6 +146,7 @@ export default function StorageTestPage() {
     }
   };
 
+  // Método para fazer upload com processamento de imagem (usando sharp)
   const handleUpload = async () => {
     if (!uploadFile) {
       toast({
@@ -164,7 +165,12 @@ export default function StorageTestPage() {
       const formData = new FormData();
       formData.append('image', uploadFile);
       
-      const response = await fetch(`/api/admin/storage/test-upload?service=${selectedService}`, {
+      // Define o endpoint com base no modo selecionado (direto ou com processamento)
+      const endpoint = isDirect 
+        ? `/api/admin/storage/test-upload-direct?service=${selectedService}` 
+        : `/api/admin/storage/test-upload?service=${selectedService}`;
+      
+      const response = await fetch(endpoint, {
         method: 'POST',
         body: formData
       });
@@ -433,11 +439,40 @@ export default function StorageTestPage() {
                   <AlertTitle>Teste de Upload de Imagem</AlertTitle>
                   <AlertDescription>
                     Faça upload de uma imagem para testar o serviço {selectedService === "supabase" ? "Supabase Storage" : "Cloudflare R2"}.
-                    As imagens são enviadas para uma pasta de teste e otimizadas automaticamente.
+                    {isDirect 
+                      ? "Upload direto sem processamento de imagem (sem usar Sharp)."
+                      : "As imagens são enviadas para uma pasta de teste e otimizadas automaticamente."}
                   </AlertDescription>
                 </Alert>
                 
                 <div className="grid gap-4">
+                  <div className="flex items-center justify-between mb-4 bg-gray-50 p-3 rounded-md border">
+                    <div className="space-y-0.5">
+                      <div className="font-medium">Modo de upload</div>
+                      <div className="text-sm text-muted-foreground">
+                        {isDirect 
+                          ? "Upload direto sem processamento (para diagnóstico)" 
+                          : "Com otimização de imagem (usando Sharp)"}
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-muted-foreground">Normal</span>
+                      <div 
+                        onClick={() => setIsDirect(!isDirect)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                          isDirect ? 'bg-primary' : 'bg-input'
+                        } cursor-pointer`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform ${
+                            isDirect ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </div>
+                      <span className="text-sm text-muted-foreground">Direto</span>
+                    </div>
+                  </div>
+                  
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="file-upload">Selecione uma imagem (máx. 5MB)</Label>
                     <div className="grid gap-2">

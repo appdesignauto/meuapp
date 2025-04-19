@@ -3460,6 +3460,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Teste de upload direto (sem processamento de imagem)
+  app.post("/api/admin/storage/test-upload-direct", isAdmin, uploadMemory.single('image'), async (req, res) => {
+    try {
+      const service = req.query.service as string;
+      
+      if (!service || (service !== 'supabase' && service !== 'r2')) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Serviço inválido. Use 'supabase' ou 'r2'."
+        });
+      }
+      
+      if (!req.file) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Nenhum arquivo enviado."
+        });
+      }
+      
+      // Registrar tempo inicial
+      const startTime = Date.now();
+      
+      if (service === 'supabase') {
+        // Limpar logs para nova operação
+        supabaseStorageService.clearLogs();
+        
+        // Realizar upload direto para Supabase (sem processamento)
+        const uploadResult = await supabaseStorageService.testUploadDirectNoSharp(req.file);
+        
+        // Calcular tempo total
+        const totalTime = Date.now() - startTime;
+        
+        return res.json({
+          success: uploadResult.success,
+          imageUrl: uploadResult.imageUrl,
+          message: uploadResult.success ? "Upload direto realizado com sucesso" : "Falha no upload direto",
+          error: uploadResult.error,
+          storageType: uploadResult.storageType || "supabase_direct",
+          timings: {
+            total: totalTime,
+            upload: totalTime
+          },
+          logs: uploadResult.logs
+        });
+      } else {
+        // Para R2, usamos o método normal por enquanto
+        // No futuro, podemos adicionar um método direto também para R2
+        r2StorageService.clearLogs();
+        
+        const uploadResult = await r2StorageService.testUpload(
+          {
+            buffer: req.file.buffer,
+            originalname: req.file.originalname,
+            mimetype: req.file.mimetype
+          },
+          {
+            width: undefined, // sem redimensionamento
+            quality: 100, // qualidade máxima
+            format: undefined // manter formato original
+          }
+        );
+        
+        // Calcular tempo total
+        const totalTime = Date.now() - startTime;
+        
+        return res.json({
+          ...uploadResult,
+          message: uploadResult.success ? "Upload direto para R2 realizado com sucesso" : "Falha no upload direto para R2",
+          timings: {
+            ...uploadResult.timings,
+            total: totalTime
+          }
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao realizar upload direto:", error);
+      res.status(500).json({ 
+        success: false,
+        message: `Erro ao realizar upload direto: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
+      });
+    }
+  });
+
   // =============================================
   // SISTEMA DE ASSINATURAS - ROTAS
   // =============================================
