@@ -1342,7 +1342,7 @@ const UserManagement = () => {
   // Função para renderizar a origem da assinatura
   const renderSubscriptionSource = (user: UserWithStats) => {
     if (user.nivelacesso !== 'premium') {
-      return <span className="text-muted-foreground text-xs italic">-</span>;
+      return <span className="text-muted-foreground text-xs italic">N/A</span>;
     }
     
     if (!user.origemassinatura) {
