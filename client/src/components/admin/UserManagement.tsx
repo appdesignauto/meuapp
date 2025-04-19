@@ -2849,7 +2849,9 @@ const UserTable = ({
                 <TableCell>{renderStatusBadge(user.isactive)}</TableCell>
                 <TableCell>
                   <div className="text-sm">
-                    {formatFullDate(user.criadoem)}
+                    {user.criadoem ? formatFullDate(user.criadoem) : (
+                      <span className="text-muted-foreground text-xs">Não disponível</span>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell>
