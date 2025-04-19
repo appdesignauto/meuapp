@@ -264,13 +264,18 @@ export function setupAuth(app: Express) {
       const hashedPassword = await hashPassword(req.body.password);
       
       // Create user
-      const nivelAcesso = req.body.nivelacesso || "free"; // Valor padrão é "free"
+      const nivelAcesso = req.body.nivelacesso || "usuario"; // Valor padrão é "usuario"
+      
+      // Definir origem como "auto" para usuários que se cadastram diretamente no site
+      const origemAssinatura = "auto";
+      
       const newUser = await storage.createUser({
         ...req.body,
         password: hashedPassword,
         nivelacesso: nivelAcesso, // Usar nivelacesso
         role: nivelAcesso, // Manter role para compatibilidade
         isactive: true,
+        origemassinatura: origemAssinatura, // Define origem como "auto"
       });
       
       // Login the user

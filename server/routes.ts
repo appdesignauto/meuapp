@@ -1505,6 +1505,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Determinar se tem acesso vitalício (novo valor ou o existente)
             const hasLifetimeAccess = acessovitalicio !== undefined ? acessovitalicio : existingUser.acessovitalicio;
             
+            // Se origem da assinatura não for definida explicitamente, mantenha a anterior
+            // Isso garante que a origem "auto" não seja perdida ao atualizar para premium
+            if (!origemassinatura && existingUser.origemassinatura) {
+              updateData.origemassinatura = existingUser.origemassinatura;
+            }
+            
             if (hasLifetimeAccess) {
               // Usuário com acesso vitalício não tem data de expiração
               endDate = null;
