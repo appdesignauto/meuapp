@@ -142,16 +142,38 @@ export class SupabaseStorageService {
         }
       }
       
-      // Define as políticas de acesso para o bucket de avatares
+      // Marcamos como inicializado mesmo com os erros, pois os buckets provavelmente já existem
+      // mas não temos permissão para criá-los via API
+      this.initialized = true;
+      
+      // Verificamos se conseguimos acessar os buckets mesmo sem permissão para criá-los
       try {
-        console.log("Configurando políticas de acesso para o bucket de avatares...");
-        await supabase.storage.from(AVATARS_BUCKET).getPublicUrl('test.txt');
-        console.log("Políticas de acesso para o bucket de avatares configuradas.");
-      } catch (policyError) {
-        console.error("Erro ao configurar políticas de acesso:", policyError);
+        console.log("Verificando acesso de leitura ao bucket principal...");
+        const { data: files } = await supabase.storage
+          .from(BUCKET_NAME)
+          .list();
+        
+        if (files) {
+          console.log(`✓ Bucket principal '${BUCKET_NAME}' está acessível. Arquivos encontrados: ${files.length}`);
+        }
+      } catch (accessError) {
+        console.error("Erro ao acessar bucket principal:", accessError);
       }
       
-      this.initialized = true;
+      // Verificamos o acesso ao bucket de avatares
+      try {
+        console.log("Verificando acesso de leitura ao bucket de avatares...");
+        const { data: avatarFiles } = await supabase.storage
+          .from(AVATARS_BUCKET)
+          .list();
+        
+        if (avatarFiles) {
+          console.log(`✓ Bucket de avatares '${AVATARS_BUCKET}' está acessível. Arquivos encontrados: ${avatarFiles.length}`);
+        }
+      } catch (avatarAccessError) {
+        console.error("Erro ao acessar bucket de avatares:", avatarAccessError);
+      }
+      
       console.log("✅ Inicialização do Supabase Storage concluída");
     } catch (error) {
       console.error("ERRO AO INICIALIZAR SUPABASE STORAGE:", error);
@@ -486,21 +508,23 @@ export class SupabaseStorageService {
       console.log(`Tipo MIME: ${file.mimetype}`);
       console.log(`Tamanho: ${file.size} bytes`);
 
-      // Lista os buckets para debug
+      // Verificamos primeiro se podemos acessar o bucket 'avatars'
+      // Mesmo sem poder listá-lo na API
+      let canAccessAvatarsBucket = true;
       try {
-        const { data: buckets, error: listError } = await supabase.storage.listBuckets();
-        if (listError) {
-          console.error("Erro ao listar buckets para debug:", listError);
+        const { data } = await supabase.storage
+          .from(AVATARS_BUCKET)
+          .list();
+        
+        if (data) {
+          console.log(`✓ Bucket '${AVATARS_BUCKET}' acessível. Arquivos encontrados: ${data.length}`);
         } else {
-          console.log("Buckets disponíveis:", buckets.map(b => b.name).join(", "));
-          if (buckets.some(b => b.name === AVATARS_BUCKET)) {
-            console.log(`✓ Bucket '${AVATARS_BUCKET}' encontrado na lista!`);
-          } else {
-            console.warn(`⚠️ Bucket '${AVATARS_BUCKET}' NÃO encontrado na lista de buckets!`);
-          }
+          console.log(`Bucket '${AVATARS_BUCKET}' acessível, mas nenhum arquivo encontrado.`);
         }
-      } catch (bucketError) {
-        console.error("Erro ao listar buckets:", bucketError);
+      } catch (accessError: any) {
+        console.error(`Erro ao acessar bucket '${AVATARS_BUCKET}':`, accessError.message);
+        console.log(`Tentando upload no bucket principal '${BUCKET_NAME}' como fallback...`);
+        canAccessAvatarsBucket = false;
       }
 
       // Otimização da imagem para avatar (quadrado, tamanho específico)
@@ -516,37 +540,90 @@ export class SupabaseStorageService {
       // Gera nome de arquivo único
       const uuid = randomUUID();
       const avatarPath = `${uuid}.webp`;
+      const mainBucketPath = `avatars/${uuid}.webp`; // Caminho para o bucket principal
       console.log(`Nome de arquivo para upload: ${avatarPath}`);
 
-      // Upload do avatar para o bucket específico do Supabase
-      console.log(`Tentando upload para bucket '${AVATARS_BUCKET}'...`);
-      const uploadResult = await supabase.storage
-        .from(AVATARS_BUCKET)
-        .upload(avatarPath, optimizedBuffer, {
-          contentType: 'image/webp',
-          upsert: true  // Sobrescreve se necessário
-        });
-        
-      console.log("Resultado do upload:", JSON.stringify(uploadResult));
+      let uploadSuccess = false;
+      let publicUrl = '';
       
-      if (uploadResult.error) {
-        console.error(`ERRO NO UPLOAD DO AVATAR: ${uploadResult.error.message}`);
-        console.error("Detalhes:", uploadResult.error);
-        throw new Error(`Erro no upload do avatar: ${uploadResult.error.message}`);
+      // Primeiro tenta no bucket 'avatars' se conseguir acessá-lo
+      if (canAccessAvatarsBucket) {
+        console.log(`Tentando upload para bucket de avatares '${AVATARS_BUCKET}'...`);
+        
+        try {
+          const uploadResult = await supabase.storage
+            .from(AVATARS_BUCKET)
+            .upload(avatarPath, optimizedBuffer, {
+              contentType: 'image/webp',
+              upsert: true  // Sobrescreve se necessário
+            });
+            
+          console.log("Resultado do upload no bucket de avatares:", JSON.stringify(uploadResult));
+          
+          if (uploadResult.error) {
+            console.error(`Erro no upload para bucket de avatares: ${uploadResult.error.message}`);
+            // Vamos continuar e tentar o bucket principal
+          } else {
+            console.log("✓ Upload para bucket de avatares concluído com sucesso!");
+            
+            // Obtém URL pública para acesso
+            const { data: urlData } = supabase.storage
+              .from(AVATARS_BUCKET)
+              .getPublicUrl(avatarPath);
+              
+            publicUrl = urlData.publicUrl;
+            uploadSuccess = true;
+            
+            console.log(`URL pública gerada (bucket avatars): ${publicUrl}`);
+          }
+        } catch (avatarUploadError: any) {
+          console.error("Erro no upload para bucket de avatares:", avatarUploadError.message);
+          // Vamos continuar e tentar o bucket principal 
+        }
+      }
+      
+      // Se não conseguiu upload no bucket de avatares, tenta no bucket principal
+      if (!uploadSuccess) {
+        console.log(`Tentando upload para bucket principal '${BUCKET_NAME}' na pasta 'avatars/'...`);
+        
+        try {
+          const mainBucketResult = await supabase.storage
+            .from(BUCKET_NAME)
+            .upload(mainBucketPath, optimizedBuffer, {
+              contentType: 'image/webp',
+              upsert: true
+            });
+            
+          console.log("Resultado do upload no bucket principal:", JSON.stringify(mainBucketResult));
+          
+          if (mainBucketResult.error) {
+            console.error(`Erro no upload para bucket principal: ${mainBucketResult.error.message}`);
+            throw mainBucketResult.error;
+          }
+          
+          console.log("✓ Upload para bucket principal concluído com sucesso!");
+          
+          // Obtém URL pública para acesso
+          const { data: mainUrlData } = supabase.storage
+            .from(BUCKET_NAME)
+            .getPublicUrl(mainBucketPath);
+            
+          publicUrl = mainUrlData.publicUrl;
+          uploadSuccess = true;
+          
+          console.log(`URL pública gerada (bucket principal): ${publicUrl}`);
+        } catch (mainBucketError: any) {
+          console.error("Erro no upload para bucket principal:", mainBucketError.message);
+          throw new Error(`Falha nos uploads para ambos os buckets: ${mainBucketError.message}`);
+        }
+      }
+      
+      if (!uploadSuccess || !publicUrl) {
+        throw new Error("Upload de avatar falhou em todos os buckets tentados");
       }
 
-      console.log("✓ Upload para bucket de avatars concluído com sucesso!");
-
-      // Obtém URL pública para acesso
-      console.log("Obtendo URL pública...");
-      const { data: urlData } = supabase.storage
-        .from(AVATARS_BUCKET)
-        .getPublicUrl(avatarPath);
-        
-      console.log(`URL pública gerada: ${urlData.publicUrl}`);
-
       return {
-        imageUrl: urlData.publicUrl,
+        imageUrl: publicUrl,
         storageType: "supabase_avatar"
       };
     } catch (error) {
