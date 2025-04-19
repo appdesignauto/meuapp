@@ -68,6 +68,8 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
           errorMessage = 'Email ou senha incorretos. Se você ainda não tem uma conta, faça o cadastro primeiro.';
         } else if (data.error?.code === 'user_not_found') {
           errorMessage = 'Usuário não encontrado. Por favor, registre-se primeiro.';
+        } else if (data.error?.code === 'email_not_confirmed') {
+          errorMessage = 'Email não confirmado. Por favor, verifique sua caixa de entrada e confirme seu email antes de fazer login.';
         }
         
         throw new Error(errorMessage);
@@ -122,7 +124,9 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
       toast({
         title: 'Registro realizado com sucesso',
-        description: 'Sua conta foi criada com sucesso',
+        description: data.needEmailConfirmation 
+          ? 'Sua conta foi criada. Por favor, verifique seu email para confirmar o cadastro antes de fazer login.' 
+          : 'Sua conta foi criada com sucesso. Você já pode fazer login.',
         variant: 'default',
       });
 
