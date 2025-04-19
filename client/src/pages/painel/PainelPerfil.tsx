@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { User as UserIcon, Eye, EyeOff, Save, Crown, Loader2, CalendarClock, Download, Heart, Upload, Camera, ShieldCheck } from "lucide-react";
+import { User as UserIcon, Eye, EyeOff, Save, Crown, Loader2, CalendarClock, Download, Heart, Upload, Camera, ShieldCheck, X, RefreshCcw } from "lucide-react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -96,6 +96,7 @@ export default function PainelPerfil() {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [uploadStorageType, setUploadStorageType] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Buscar estatísticas do usuário
@@ -320,14 +321,18 @@ export default function PainelPerfil() {
     },
     onError: (error: any) => {
       console.error('Erro ao fazer upload:', error);
+      const errorMessage = error.message || 'Não foi possível atualizar a imagem. Tente novamente.';
+      
       toast({
         title: 'Erro',
-        description: error.message || 'Não foi possível atualizar a imagem. Tente novamente.',
+        description: errorMessage,
         variant: 'destructive',
       });
+      
       setUploading(false);
       setUploadProgress(null);
       setUploadStorageType(null);
+      setUploadError(errorMessage);
       
       // Limpar campo de arquivo para permitir tentar novamente
       if (fileInputRef.current) {
@@ -378,6 +383,7 @@ export default function PainelPerfil() {
       setUploading(true);
       setUploadProgress(0);
       setUploadStorageType(null);
+      setUploadError(null);
       
       // Simula um progresso inicial enquanto o upload começa
       const progressInterval = setInterval(() => {
@@ -490,7 +496,7 @@ export default function PainelPerfil() {
                     accept="image/*"
                     onChange={handleFileChange}
                   />
-                  <div className="w-full">
+                  <div className="w-full space-y-2">
                     {uploading ? (
                       <div className="w-full rounded-md border border-input px-4 py-2 text-sm text-center relative overflow-hidden">
                         <div className="relative z-10 flex items-center justify-center">
@@ -515,6 +521,32 @@ export default function PainelPerfil() {
                         <Upload className="mr-2 h-4 w-4" />
                         Alterar foto de perfil
                       </Button>
+                    )}
+                    
+                    {uploadError && (
+                      <div className="space-y-2">
+                        <div className="text-xs text-destructive bg-destructive/10 p-2 rounded border border-destructive/20 relative pr-8">
+                          <span className="font-medium">Erro: </span>
+                          {uploadError}
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-5 w-5 absolute right-1 top-1 text-destructive hover:bg-destructive/20"
+                            onClick={() => setUploadError(null)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full text-xs h-7"
+                          onClick={handleImageUploadClick}
+                        >
+                          <RefreshCcw className="h-3 w-3 mr-1" />
+                          Tentar novamente
+                        </Button>
+                      </div>
                     )}
                   </div>
                 </div>
