@@ -3335,19 +3335,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         supabaseStorageService.clearLogs();
         
         // Testar conexão com Supabase
-        const mainBucketCheck = await supabaseStorageService.checkBucketExists('designauto-images');
-        const avatarsBucketCheck = await supabaseStorageService.checkBucketExists('avatars');
+        const connectionStatus = await supabaseStorageService.checkConnection();
         
-        // Obter logs do serviço
-        const logs = supabaseStorageService.getLogs();
-        
-        result = {
-          connected: mainBucketCheck && avatarsBucketCheck,
-          message: mainBucketCheck && avatarsBucketCheck 
-            ? "Conexão com Supabase Storage estabelecida com sucesso. Todos os buckets estão acessíveis." 
-            : "Falha na conexão com Supabase Storage. Verifique as credenciais e a disponibilidade do serviço.",
-          logs
-        };
+        // Utilizamos diretamente o resultado do checkConnection
+        result = connectionStatus;
       } else {
         // Limpar logs anteriores
         r2StorageService.clearLogs();
