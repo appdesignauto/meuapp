@@ -94,6 +94,8 @@ export default function PainelPerfil() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [uploadStorageType, setUploadStorageType] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Buscar estatísticas do usuário
@@ -309,8 +311,55 @@ export default function PainelPerfil() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      // Verificações de segurança
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Formato inválido",
+          description: "Por favor, selecione apenas arquivos de imagem",
+          variant: "destructive",
+        });
+        
+        // Limpa o input de arquivo
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        return;
+      }
+      
+      if (file.size > 5 * 1024 * 1024) { // 5MB
+        toast({
+          title: "Arquivo muito grande",
+          description: "A imagem deve ter no máximo 5MB",
+          variant: "destructive",
+        });
+        
+        // Limpa o input de arquivo
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        return;
+      }
+      
+      // Inicia o processo
       setUploading(true);
-      uploadImageMutation.mutate(file);
+      setUploadProgress(0);
+      setUploadStorageType(null);
+      
+      // Simula um progresso inicial enquanto o upload começa
+      const progressInterval = setInterval(() => {
+        setUploadProgress((prev) => {
+          if (prev === null) return 5;
+          if (prev < 30) return prev + 5;
+          return prev;
+        });
+      }, 300);
+      
+      // Inicia o upload e depois limpa o intervalo
+      uploadImageMutation.mutate(file, {
+        onSettled: () => {
+          clearInterval(progressInterval);
+        }
+      });
     }
   };
 
