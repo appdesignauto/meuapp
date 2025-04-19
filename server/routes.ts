@@ -29,6 +29,7 @@ const scryptAsync = promisify(scrypt);
 // Importar nossas rotas relacionadas ao logo
 import logoUploadRouter from './routes/logo-upload'
 import removeLogoRouter from './routes/remove-logo';
+import supabaseRegisterTestRouter from './routes/supabase-register-test';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Rota de debug para testar getUserByUsername
@@ -3841,6 +3842,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // Registrar rotas de teste do Supabase
+  app.use(supabaseRegisterTestRouter);
 
   const httpServer = createServer(app);
   

@@ -7,6 +7,7 @@ const router = Router();
 // Rota para registrar um usuário diretamente no Supabase
 router.post("/api/auth/supabase/register-test", async (req, res) => {
   try {
+    console.log("Requisição de registro recebida:", req.body);
     const { email, password } = req.body;
     
     if (!email || !password) {
@@ -18,6 +19,7 @@ router.post("/api/auth/supabase/register-test", async (req, res) => {
     
     // Verifica se o usuário já existe no banco de dados local
     const existingUser = await storage.getUserByEmail(email);
+    console.log("Usuário existente:", existingUser ? "Sim" : "Não");
     
     // Registrar no Supabase usando o serviço
     const { user, error } = await supabaseAuthService.register(email, password, {
@@ -80,6 +82,7 @@ router.post("/api/auth/supabase/register-test", async (req, res) => {
 // Rota para confirmar email manualmente (para testes)
 router.post("/api/auth/supabase/confirm-email-test", async (req, res) => {
   try {
+    console.log("Requisição de confirmação de email recebida:", req.body);
     const { email } = req.body;
     
     if (!email) {
@@ -91,12 +94,19 @@ router.post("/api/auth/supabase/confirm-email-test", async (req, res) => {
     
     // Buscar usuário por email
     const user = await storage.getUserByEmail(email);
+    console.log("Usuário encontrado para confirmação:", user?.id);
     
     if (!user) {
       return res.status(404).json({
         success: false,
         message: "Usuário não encontrado"
       });
+    }
+    
+    if (user.supabaseId) {
+      // Tentar confirmar o email no Supabase também
+      const { success, error } = await supabaseAuthService.confirmEmail(user.supabaseId);
+      console.log("Resultado da confirmação no Supabase:", { success, error });
     }
     
     // Atualizar o campo emailconfirmed
@@ -112,6 +122,51 @@ router.post("/api/auth/supabase/confirm-email-test", async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message || "Erro ao confirmar email"
+    });
+  }
+});
+
+// Rota para teste de verificação do status do Supabase Auth
+router.get("/api/auth/supabase/status-test", async (req, res) => {
+  try {
+    const isInitialized = supabaseAuthService.isInitialized();
+    
+    // Verificar sessão atual
+    const { session, error: sessionError } = await supabaseAuthService.getSession();
+    
+    // Verificar usuário atual
+    const { user, error: userError } = await supabaseAuthService.getCurrentUser();
+    
+    return res.json({
+      success: true,
+      status: {
+        initialized: isInitialized,
+        session: {
+          exists: !!session,
+          error: sessionError ? String(sessionError) : null,
+          details: session ? {
+            userId: session.user?.id,
+            email: session.user?.email,
+            expiresAt: session.expires_at
+          } : null
+        },
+        currentUser: {
+          exists: !!user,
+          error: userError ? String(userError) : null,
+          details: user ? {
+            id: user.id,
+            email: user.email,
+            emailConfirmed: user.email_confirmed_at ? true : false,
+            metadata: user.user_metadata
+          } : null
+        }
+      }
+    });
+  } catch (error: any) {
+    console.error("Erro ao verificar status do Supabase Auth:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Erro ao verificar status do Supabase Auth"
     });
   }
 });
