@@ -47,6 +47,7 @@ export default function StorageTestPage() {
   const [connectionStatus, setConnectionStatus] = useState<StorageConnectionStatus | null>(null);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDirect, setIsDirect] = useState(false); // Controla se está usando upload direto (sem sharp)
   const [uploadResult, setUploadResult] = useState<UploadTestResult | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
 

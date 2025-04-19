@@ -1291,7 +1291,152 @@ export class SupabaseStorageService {
   /**
    * Método de teste para realizar upload para o Supabase
    * Retorna detalhes do processo de upload para diagnóstico
+   * Implementa fallback em caso de erro com sharp ou processamento de imagem
    */
+  /**
+   * Método de teste de upload direto sem usar sharp 
+   * Usado quando há erros relacionados ao processamento de imagem
+   */
+  async testUploadDirectNoSharp(
+    file: Express.Multer.File
+  ): Promise<{ 
+    success: boolean; 
+    imageUrl?: string; 
+    error?: string; 
+    storageType?: string;
+    bucket?: string; 
+    logs: string[]
+  }> {
+    this.clearLogs();
+    this.log('⚠️ Iniciando teste de upload DIRETO para Supabase (sem processamento de imagem)...');
+    
+    if (!file) {
+      this.log('Erro: Nenhum arquivo fornecido');
+      return { success: false, error: 'Nenhum arquivo fornecido', logs: this.getLogs() };
+    }
+    
+    if (!supabaseUrl || !supabaseKey) {
+      this.log('Erro: Credenciais do Supabase não estão configuradas');
+      return { 
+        success: false, 
+        error: 'Credenciais do Supabase (URL e chave) não estão configuradas', 
+        logs: this.getLogs() 
+      };
+    }
+    
+    try {
+      // Verificar se está inicializado
+      if (!this.initialized) {
+        this.log('Cliente Supabase não inicializado, tentando inicializar...');
+        await this.initBucket();
+      }
+      
+      this.log(`Arquivo: ${file.originalname} (${file.size} bytes)`);
+      this.log(`Tipo MIME: ${file.mimetype}`);
+      
+      // TESTE 1: Upload direto
+      this.log('TESTE 1: Upload direto sem processamento de imagem...');
+      try {
+        // Nome de arquivo único
+        const uniqueId = randomUUID();
+        const extension = path.extname(file.originalname) || '.png';
+        const filename = `test-direct/${uniqueId}${extension}`;
+        
+        this.log(`Enviando arquivo original para bucket '${BUCKET_NAME}' com nome '${filename}'...`);
+        
+        const { data, error } = await supabase.storage
+          .from(BUCKET_NAME)
+          .upload(filename, file.buffer, {
+            contentType: file.mimetype,
+            upsert: true
+          });
+          
+        if (error) {
+          this.log(`❌ Erro no upload direto: ${error.message}`);
+          throw new Error(`Erro no upload direto: ${error.message}`);
+        }
+        
+        // Obter URL pública
+        const { data: urlData } = supabase.storage
+          .from(BUCKET_NAME)
+          .getPublicUrl(filename);
+          
+        this.log(`✅ Upload direto bem-sucedido!`);
+        this.log(`URL da imagem: ${urlData.publicUrl}`);
+        
+        return {
+          success: true,
+          imageUrl: urlData.publicUrl,
+          storageType: 'supabase_direct',
+          bucket: BUCKET_NAME,
+          logs: this.getLogs()
+        };
+      } catch (directError: any) {
+        this.log(`❌ Falha no teste direto: ${directError.message}`);
+        
+        // TESTE 2: Fallback para armazenamento local
+        this.log('TESTE 2: Fallback para armazenamento local...');
+        try {
+          // Criar diretório para upload de testes
+          const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'tests');
+          
+          try {
+            if (!fs.existsSync('public')) {
+              fs.mkdirSync('public');
+            }
+            if (!fs.existsSync(path.join('public', 'uploads'))) {
+              fs.mkdirSync(path.join('public', 'uploads'));
+            }
+            if (!fs.existsSync(uploadsDir)) {
+              fs.mkdirSync(uploadsDir);
+            }
+          } catch (mkdirError) {
+            this.log(`⚠️ Aviso ao criar diretórios de upload: ${mkdirError}`);
+          }
+          
+          // Gerar nome único
+          const uniqueId = randomUUID();
+          const extension = path.extname(file.originalname) || '.jpg';
+          const fileName = `test_${uniqueId}${extension}`;
+          const filePath = path.join(uploadsDir, fileName);
+          
+          // Salvar arquivo no sistema de arquivos
+          fs.writeFileSync(filePath, file.buffer);
+          
+          this.log(`✅ Upload local bem-sucedido: ${filePath}`);
+          
+          // URL relativa que será acessível via servidor web
+          const relativeUrl = `/uploads/tests/${fileName}`;
+          this.log(`URL da imagem: ${relativeUrl}`);
+          
+          return {
+            success: true,
+            imageUrl: relativeUrl,
+            storageType: 'local',
+            logs: this.getLogs()
+          };
+        } catch (localError: any) {
+          this.log(`❌ Falha no upload local: ${localError.message}`);
+          
+          // Não implementamos placeholder aqui porque queremos que falhe em caso de problema real
+          this.log(`❌ Falha em todos os métodos de upload. Erro: ${directError.message}`);
+          return {
+            success: false,
+            error: `Falha em todos os métodos de upload: ${directError.message}`,
+            logs: this.getLogs()
+          };
+        }
+      }
+    } catch (error: any) {
+      this.log(`❌ Erro fatal no teste de upload direto: ${error.message}`);
+      return {
+        success: false,
+        error: error.message,
+        logs: this.getLogs()
+      };
+    }
+  }
+
   async testUpload(
     file: Express.Multer.File,
     options: ImageOptimizationOptions = {}
