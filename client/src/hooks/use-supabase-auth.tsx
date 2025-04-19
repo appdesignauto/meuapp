@@ -1,256 +1,328 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
-import { useToast } from '@/hooks/use-toast';
+import { createContext, ReactNode, useContext, useState, useCallback, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "../lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
-type SupabaseSession = {
-  access_token: string;
-  refresh_token: string;
-  expires_at: number;
+type User = {
+  id: number;
+  username: string;
+  email: string;
+  name: string | null;
+  profileimageurl: string | null;
+  nivelacesso: string;
+  role: string;
+  [key: string]: any;
+};
+
+type RegisterUserData = {
+  username: string;
+  name: string;
+  role?: string;
+  nivelacesso?: string;
+  origemassinatura?: string;
+  [key: string]: any;
 };
 
 type SupabaseAuthContextType = {
-  session: SupabaseSession | null;
+  user: User | null;
   isLoading: boolean;
-  error: Error | null;
-  loginWithSupabase: (email: string, password: string) => Promise<any>;
-  registerWithSupabase: (email: string, password: string, name?: string, username?: string) => Promise<any>;
-  resetPasswordWithSupabase: (email: string) => Promise<any>;
-  logoutWithSupabase: () => Promise<any>;
-  updatePasswordWithSupabase: (password: string) => Promise<any>;
+  loginError: string | null;
+  registerError: string | null;
+  resetPasswordError: string | null;
+  clearErrors: () => void;
+  loginWithEmailPassword: (email: string, password: string) => Promise<void>;
+  registerWithEmailPassword: (email: string, password: string, userData: RegisterUserData) => Promise<void>;
+  logout: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  updatePassword: (newPassword: string) => Promise<void>;
+  getSession: () => Promise<any>;
+  confirmEmail: (userId: string) => Promise<void>;
 };
 
-const SupabaseAuthContext = createContext<SupabaseAuthContextType | null>(null);
+// Contexto para autenticação do Supabase
+export const SupabaseAuthContext = createContext<SupabaseAuthContextType | null>(null);
 
+// Provider para autenticação do Supabase
 export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [session, setSession] = useState<SupabaseSession | null>(null);
-
-  // Verificar se existe uma sessão do Supabase
-  const { data: sessionData, isLoading, error } = useQuery({
-    queryKey: ['/api/auth/supabase/session'],
+  
+  // Estados para erros específicos
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [registerError, setRegisterError] = useState<string | null>(null);
+  const [resetPasswordError, setResetPasswordError] = useState<string | null>(null);
+  
+  // Limpar todos os erros
+  const clearErrors = useCallback(() => {
+    setLoginError(null);
+    setRegisterError(null);
+    setResetPasswordError(null);
+  }, []);
+  
+  // Buscar dados do usuário atual
+  const {
+    data: user,
+    isLoading: isUserLoading,
+    error,
+    refetch: refetchUser
+  } = useQuery({
+    queryKey: ["/api/user"],
     queryFn: async () => {
       try {
-        const response = await fetch('/api/auth/supabase/session');
-        if (!response.ok) {
-          console.log("Sem sessão ativa do Supabase");
+        const res = await apiRequest("GET", "/api/user");
+        if (res.status === 401) {
           return null;
         }
-        const data = await response.json();
-        return data.success && data.session ? data.session : null;
-      } catch (error) {
-        console.log("Erro ao verificar sessão do Supabase:", error);
+        return await res.json();
+      } catch (err) {
         return null;
       }
     },
-    retry: false
+    retry: false,
+    refetchOnWindowFocus: false
   });
 
-  // Atualizar o estado da sessão quando os dados mudarem
-  useEffect(() => {
-    if (sessionData) {
-      setSession(sessionData);
-    }
-  }, [sessionData]);
-
-  // Login com Supabase
-  const loginWithSupabase = async (email: string, password: string) => {
-    try {
-      const response = await apiRequest('POST', '/api/auth/supabase/login', { email, password });
-      const data = await response.json();
-
-      if (!data.success) {
-        // Criando mensagem de erro específica baseada no tipo de erro
-        let errorMessage = data.message || 'Falha ao fazer login';
-        
-        if (data.error?.code === 'invalid_credentials') {
-          errorMessage = 'Email ou senha incorretos. Se você ainda não tem uma conta, faça o cadastro primeiro.';
-        } else if (data.error?.code === 'user_not_found') {
-          errorMessage = 'Usuário não encontrado. Por favor, registre-se primeiro.';
-        } else if (data.error?.code === 'email_not_confirmed') {
-          errorMessage = 'Email não confirmado. Por favor, verifique sua caixa de entrada e confirme seu email antes de fazer login.';
+  // Login com email e senha via Supabase
+  const loginMutation = useMutation({
+    mutationFn: async ({ email, password }: { email: string; password: string }) => {
+      clearErrors();
+      const res = await apiRequest("POST", "/api/auth/supabase/login", { email, password });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        // Tratamento específico para email não confirmado
+        if (errorData.error?.code === 'email_not_confirmed') {
+          throw new Error("Email não verificado.");
         }
-        
-        throw new Error(errorMessage);
+        throw new Error(errorData.message || "Erro ao fazer login");
       }
-
-      // Armazenar a sessão
-      if (data.session) {
-        setSession(data.session);
+      
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      toast({
+        title: "Login realizado com sucesso!",
+        variant: "default",
+      });
+    },
+    onError: (error: Error) => {
+      setLoginError(error.message);
+      toast({
+        title: "Falha no login",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Registro com email e senha via Supabase
+  const registerMutation = useMutation({
+    mutationFn: async ({ email, password, userData }: { email: string; password: string; userData: RegisterUserData }) => {
+      clearErrors();
+      const res = await apiRequest("POST", "/api/auth/supabase/register", {
+        email,
+        password,
+        ...userData
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Erro ao registrar usuário");
       }
-
-      // Atualizar os dados do usuário
-      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
-
+      
+      return await res.json();
+    },
+    onSuccess: () => {
       toast({
-        title: 'Login realizado com sucesso',
-        description: 'Bem-vindo de volta!',
-        variant: 'default',
+        title: "Registro realizado com sucesso!",
+        description: "Verifique seu email para confirmar sua conta.",
+        variant: "default",
       });
-
-      return data;
-    } catch (error: any) {
-      console.error('Erro no login com Supabase:', error);
-      
+    },
+    onError: (error: Error) => {
+      setRegisterError(error.message);
       toast({
-        title: 'Erro ao fazer login',
-        description: error.message || 'Verifique suas credenciais e tente novamente',
-        variant: 'destructive',
+        title: "Falha no registro",
+        description: error.message,
+        variant: "destructive",
       });
+    },
+  });
+  
+  // Logout via Supabase
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/auth/supabase/logout");
       
-      throw error;
-    }
-  };
-
-  // Registro com Supabase
-  const registerWithSupabase = async (email: string, password: string, name?: string, username?: string) => {
-    try {
-      const response = await apiRequest('POST', '/api/auth/supabase/register', { 
-        email, 
-        password, 
-        name, 
-        username 
-      });
-      
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.message || 'Falha ao registrar usuário');
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Erro ao fazer logout");
       }
-
-      // Atualizar os dados do usuário
-      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
-
-      toast({
-        title: 'Registro realizado com sucesso',
-        description: data.needEmailConfirmation 
-          ? 'Sua conta foi criada. Por favor, verifique seu email para confirmar o cadastro antes de fazer login.' 
-          : 'Sua conta foi criada com sucesso. Você já pode fazer login.',
-        variant: 'default',
-      });
-
-      return data;
-    } catch (error: any) {
-      console.error('Erro no registro com Supabase:', error);
       
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      queryClient.setQueryData(["/api/user"], null);
       toast({
-        title: 'Erro ao registrar usuário',
-        description: error.message || 'Verifique os dados informados e tente novamente',
-        variant: 'destructive',
+        title: "Logout realizado com sucesso!",
+        variant: "default",
       });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Falha no logout",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Recuperação de senha via Supabase
+  const resetPasswordMutation = useMutation({
+    mutationFn: async (email: string) => {
+      clearErrors();
+      const res = await apiRequest("POST", "/api/auth/supabase/reset-password", { email });
       
-      throw error;
-    }
-  };
-
-  // Resetar senha
-  const resetPasswordWithSupabase = async (email: string) => {
-    try {
-      const response = await apiRequest('POST', '/api/auth/supabase/reset-password', { email });
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.message || 'Falha ao enviar email de recuperação');
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Erro ao enviar email de recuperação");
       }
-
-      toast({
-        title: 'Email enviado',
-        description: 'Se o email estiver cadastrado, você receberá instruções para redefinir sua senha',
-        variant: 'default',
-      });
-
-      return data;
-    } catch (error: any) {
-      console.error('Erro ao resetar senha com Supabase:', error);
       
+      return await res.json();
+    },
+    onSuccess: () => {
       toast({
-        title: 'Erro ao enviar email',
-        description: error.message || 'Não foi possível processar sua solicitação',
-        variant: 'destructive',
+        title: "Email de recuperação enviado!",
+        description: "Verifique sua caixa de entrada.",
+        variant: "default",
       });
+    },
+    onError: (error: Error) => {
+      setResetPasswordError(error.message);
+      toast({
+        title: "Falha ao enviar email",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Atualização de senha via Supabase
+  const updatePasswordMutation = useMutation({
+    mutationFn: async (newPassword: string) => {
+      const res = await apiRequest("POST", "/api/auth/supabase/update-password", { password: newPassword });
       
-      throw error;
-    }
-  };
-
-  // Logout
-  const logoutWithSupabase = async () => {
-    try {
-      const response = await apiRequest('POST', '/api/auth/supabase/logout');
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.message || 'Falha ao fazer logout');
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Erro ao atualizar senha");
       }
-
-      // Limpar a sessão
-      setSession(null);
-
-      // Invalidar queries relevantes
-      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
-
-      toast({
-        title: 'Logout realizado',
-        description: 'Você saiu da sua conta com sucesso',
-        variant: 'default',
-      });
-
-      return data;
-    } catch (error: any) {
-      console.error('Erro no logout com Supabase:', error);
       
+      return await res.json();
+    },
+    onSuccess: () => {
       toast({
-        title: 'Erro ao fazer logout',
-        description: error.message || 'Não foi possível completar o logout',
-        variant: 'destructive',
+        title: "Senha atualizada com sucesso!",
+        variant: "default",
       });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Falha ao atualizar senha",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Confirmação de email (para testes) via Supabase
+  const confirmEmailMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const res = await apiRequest("POST", "/api/auth/supabase/confirm-email", { userId });
       
-      throw error;
-    }
-  };
-
-  // Atualizar senha
-  const updatePasswordWithSupabase = async (password: string) => {
-    try {
-      const response = await apiRequest('POST', '/api/auth/supabase/update-password', { password });
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.message || 'Falha ao atualizar senha');
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Erro ao confirmar email");
       }
-
-      toast({
-        title: 'Senha atualizada',
-        description: 'Sua senha foi atualizada com sucesso',
-        variant: 'default',
-      });
-
-      return data;
-    } catch (error: any) {
-      console.error('Erro ao atualizar senha com Supabase:', error);
       
+      return await res.json();
+    },
+    onSuccess: () => {
       toast({
-        title: 'Erro ao atualizar senha',
-        description: error.message || 'Não foi possível atualizar sua senha',
-        variant: 'destructive',
+        title: "Email confirmado com sucesso!",
+        description: "Agora você pode fazer login.",
+        variant: "default",
       });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Falha ao confirmar email",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Obter sessão atual do Supabase
+  const getSessionMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("GET", "/api/auth/supabase/session");
       
-      throw error;
-    }
-  };
-
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Erro ao obter sessão");
+      }
+      
+      return await res.json();
+    },
+  });
+  
+  // Funções wrapper para expor na API do hook
+  const loginWithEmailPassword = useCallback(async (email: string, password: string) => {
+    await loginMutation.mutateAsync({ email, password });
+  }, [loginMutation]);
+  
+  const registerWithEmailPassword = useCallback(async (email: string, password: string, userData: RegisterUserData) => {
+    await registerMutation.mutateAsync({ email, password, userData });
+  }, [registerMutation]);
+  
+  const logout = useCallback(async () => {
+    await logoutMutation.mutateAsync();
+  }, [logoutMutation]);
+  
+  const resetPassword = useCallback(async (email: string) => {
+    await resetPasswordMutation.mutateAsync(email);
+  }, [resetPasswordMutation]);
+  
+  const updatePassword = useCallback(async (newPassword: string) => {
+    await updatePasswordMutation.mutateAsync(newPassword);
+  }, [updatePasswordMutation]);
+  
+  const getSession = useCallback(async () => {
+    return await getSessionMutation.mutateAsync();
+  }, [getSessionMutation]);
+  
+  const confirmEmail = useCallback(async (userId: string) => {
+    await confirmEmailMutation.mutateAsync(userId);
+  }, [confirmEmailMutation]);
+  
   return (
     <SupabaseAuthContext.Provider
       value={{
-        session,
-        isLoading,
-        error,
-        loginWithSupabase,
-        registerWithSupabase,
-        resetPasswordWithSupabase,
-        logoutWithSupabase,
-        updatePasswordWithSupabase,
+        user,
+        isLoading: isUserLoading || loginMutation.isPending || registerMutation.isPending || logoutMutation.isPending,
+        loginError,
+        registerError,
+        resetPasswordError,
+        clearErrors,
+        loginWithEmailPassword,
+        registerWithEmailPassword,
+        logout,
+        resetPassword,
+        updatePassword,
+        getSession,
+        confirmEmail,
       }}
     >
       {children}
@@ -258,10 +330,11 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// Hook para usar a autenticação do Supabase
 export function useSupabaseAuth() {
   const context = useContext(SupabaseAuthContext);
   if (!context) {
-    throw new Error('useSupabaseAuth deve ser usado dentro de um SupabaseAuthProvider');
+    throw new Error("useSupabaseAuth deve ser usado dentro de um SupabaseAuthProvider");
   }
   return context;
 }

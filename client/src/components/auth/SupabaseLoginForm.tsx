@@ -17,8 +17,7 @@ import {
 export function SupabaseLoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const { loginWithSupabase } = useSupabaseAuth();
+  const { loginWithEmailPassword, isLoading, loginError } = useSupabaseAuth();
   const { toast } = useToast();
 
   async function handleSubmit(e: React.FormEvent) {
@@ -33,23 +32,12 @@ export function SupabaseLoginForm() {
       return;
     }
     
-    setIsLoading(true);
-    
     try {
-      await loginWithSupabase(email, password);
-      
-      // A navegação e feedback será gerenciado pelo hook useSupabaseAuth
+      await loginWithEmailPassword(email, password);
+      // O hook useSupabaseAuth já gerencia o toast e a navegação
     } catch (error: any) {
-      // O erro já foi tratado pelo hook, mas podemos adicionar mais feedback aqui
+      // Erros já tratados pelo hook, mas podemos adicionar mais feedback aqui se necessário
       console.error("Erro de login:", error);
-      
-      toast({
-        variant: "destructive",
-        title: "Erro de autenticação",
-        description: "Usuário ainda não está registrado no Supabase. Por favor, use o formulário de registro primeiro.",
-      });
-    } finally {
-      setIsLoading(false);
     }
   }
 

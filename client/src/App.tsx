@@ -65,6 +65,7 @@ function AppRoutes() {
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/auth/supabase" component={() => import("@/pages/supabase-auth-page").then(mod => <mod.default />)} />
       <Route path="/collections" component={Collections} />
       <Route path="/categories" component={Categories} />
       <Route path="/categories/:slug" component={CategoryPage} />
