@@ -20,6 +20,7 @@ import { supabaseStorageService } from "./services/supabase-storage";
 import { SubscriptionService } from "./services/subscription-service";
 import { HotmartService } from "./services/hotmart-service";
 import uploadMemory from "./middlewares/upload";
+import sharp from "sharp";
 
 // Versão promisificada do scrypt
 const scryptAsync = promisify(scrypt);
@@ -54,6 +55,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   // Setup authentication middleware and routes
   const { isAuthenticated, isPremium, isAdmin, isDesigner, hasRole } = setupAuth(app);
+  
+  // Rota para testar o status de upload do avatar de um usuário específico
+  app.get('/api/debug/test-avatar-upload/:username', isAdmin, async (req, res) => {
+    try {
+      console.log('Testando capacidade de upload de avatar para usuário:', req.params.username);
+      
+      // Verificar se o usuário existe
+      const user = await storage.getUserByUsername(req.params.username);
+      if (!user) {
+        return res.status(404).json({ 
+          success: false, 
+          message: 'Usuário não encontrado' 
+        });
+      }
+      
+      // Verificar acesso ao bucket de avatares
+      console.log("Verificando acesso ao bucket 'avatars'...");
+      let avatarBucketAccess = false;
+      try {
+        const { data: avatarFiles } = await supabaseStorageService.getBucket('avatars');
+        avatarBucketAccess = true;
+        console.log(`Bucket 'avatars' acessível. ${avatarFiles?.length || 0} arquivos encontrados.`);
+      } catch (avatarError) {
+        console.error('Erro ao acessar bucket avatars:', avatarError);
+        avatarBucketAccess = false;
+      }
+      
+      // Verificar acesso ao bucket principal
+      console.log("Verificando acesso ao bucket principal...");
+      let mainBucketAccess = false;
+      try {
+        const { data: mainFiles } = await supabaseStorageService.getBucket('designauto-images');
+        mainBucketAccess = true;
+        console.log(`Bucket principal acessível. ${mainFiles?.length || 0} arquivos encontrados.`);
+      } catch (mainError) {
+        console.error('Erro ao acessar bucket principal:', mainError);
+        mainBucketAccess = false;
+      }
+      
+      // Verificar permissões de diretório local
+      console.log("Verificando acesso a diretórios locais...");
+      const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'avatars');
+      let localDirAccess = false;
+      try {
+        // Tentar criar diretório se não existir
+        if (!fs.existsSync('public')) {
+          fs.mkdirSync('public');
+        }
+        if (!fs.existsSync(path.join('public', 'uploads'))) {
+          fs.mkdirSync(path.join('public', 'uploads'));
+        }
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir);
+        }
+        
+        // Testar gravação
+        const testFile = path.join(uploadsDir, 'test-write.txt');
+        fs.writeFileSync(testFile, 'Test write');
+        fs.unlinkSync(testFile); // Remover após teste
+        
+        localDirAccess = true;
+        console.log('Acesso de gravação local está funcionando.');
+      } catch (localError) {
+        console.error('Erro ao acessar diretório local:', localError);
+        localDirAccess = false;
+      }
+      
+      // Verificar se o usuário tem solução de emergência habilitada
+      const isProblematicUser = user.username === 'fernandosim20188718';
+      
+      return res.json({
+        success: true,
+        user: {
+          id: user.id,
+          username: user.username,
+          profileImageUrl: user.profileimageurl
+        },
+        storageStatus: {
+          avatarBucketAccess,
+          mainBucketAccess,
+          localDirAccess,
+          isProblematicUser,
+          hasFallbackSolution: isProblematicUser
+        },
+        recommendations: isProblematicUser 
+          ? 'Este usuário tem suporte de emergência habilitado para uploads de avatar.'
+          : 'Usuário normal sem tratamento especial.'
+      });
+    } catch (error) {
+      console.error('Erro no teste de upload de avatar:', error);
+      return res.status(500).json({ 
+        success: false, 
+        error: String(error) 
+      });
+    }
+  });
   
   // Registrar as rotas relacionadas ao logo
   app.use('/api/upload-logo', logoUploadRouter);

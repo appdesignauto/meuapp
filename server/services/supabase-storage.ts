@@ -39,7 +39,8 @@ export class SupabaseStorageService {
   /**
    * Inicializa o bucket do Supabase
    * 
-   * Tenta criar o bucket caso ele não exista
+   * Verifica se os buckets existem e são acessíveis,
+   * tenta criar apenas se não conseguir acesso
    */
   async initBucket(): Promise<void> {
     if (this.initialized) return;
@@ -47,98 +48,92 @@ export class SupabaseStorageService {
     try {
       console.log("=== INICIALIZANDO SUPABASE STORAGE ===");
       
-      // Tenta novamente se falhar na primeira tentativa
-      let buckets = [];
-      let listError = null;
+      // Variáveis para controle de acesso aos buckets
+      let canAccessMainBucket = false;
+      let canAccessAvatarsBucket = false;
       
-      // Primeira tentativa
-      const listResult = await supabase.storage.listBuckets();
-      buckets = listResult.data || [];
-      listError = listResult.error;
-      
-      // Segunda tentativa se a primeira falhar
-      if (listError) {
-        console.log("Primeira tentativa de listar buckets falhou, tentando novamente...");
+      // Verificar se conseguimos acessar o bucket principal - isso é melhor do que listar todos os buckets
+      console.log("Verificando acesso de leitura ao bucket principal...");
+      try {
+        const { data } = await supabase.storage
+          .from(BUCKET_NAME)
+          .list();
         
-        // Espera 1 segundo
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        const retryResult = await supabase.storage.listBuckets();
-        buckets = retryResult.data || [];
-        listError = retryResult.error;
+        if (data !== null) {
+          console.log(`✓ Bucket principal '${BUCKET_NAME}' está acessível. Arquivos encontrados: ${data.length}`);
+          canAccessMainBucket = true;
+        }
+      } catch (accessError: any) {
+        console.error(`Erro ao acessar bucket principal '${BUCKET_NAME}':`, accessError.message);
+        canAccessMainBucket = false;
       }
       
-      if (listError) {
-        console.error("ERRO AO LISTAR BUCKETS DO SUPABASE:", listError);
-        console.error("Detalhes do erro:", JSON.stringify(listError, null, 2));
+      // Verificar se conseguimos acessar o bucket de avatares
+      console.log("Verificando acesso de leitura ao bucket de avatares...");
+      try {
+        const { data } = await supabase.storage
+          .from(AVATARS_BUCKET)
+          .list();
+        
+        if (data !== null) {
+          console.log(`✓ Bucket de avatares '${AVATARS_BUCKET}' está acessível. Arquivos encontrados: ${data.length}`);
+          canAccessAvatarsBucket = true;
+        }
+      } catch (accessError: any) {
+        console.error(`Erro ao acessar bucket de avatares '${AVATARS_BUCKET}':`, accessError.message);
+        canAccessAvatarsBucket = false;
       }
       
-      console.log(`Total de buckets encontrados: ${buckets.length}`);
+      // Tentar criar os buckets apenas se não conseguimos acessá-los
+      // Isso evita erros desnecessários de violação de políticas quando o bucket já existe
       
-      if (!buckets || buckets.length === 0) {
-        console.log("⚠️ ALERTA: Nenhum bucket encontrado na resposta do Supabase.");
-        
-        // Tenta criar os buckets necessários
-        console.log("Tentando criar os buckets necessários...");
-        
-        // Tenta criar o bucket principal
-        const createMainResult = await supabase.storage.createBucket(BUCKET_NAME, {
-          public: true
-        });
-        
-        if (createMainResult.error) {
-          console.error(`Erro ao criar o bucket principal '${BUCKET_NAME}':`, createMainResult.error);
-        } else {
-          console.log(`✅ Bucket principal '${BUCKET_NAME}' criado com sucesso!`);
-        }
-        
-        // Tenta criar o bucket de avatares
-        const createAvatarsResult = await supabase.storage.createBucket(AVATARS_BUCKET, {
-          public: true
-        });
-        
-        if (createAvatarsResult.error) {
-          console.error(`Erro ao criar o bucket de avatares '${AVATARS_BUCKET}':`, createAvatarsResult.error);
-        } else {
-          console.log(`✅ Bucket de avatares '${AVATARS_BUCKET}' criado com sucesso!`);
-        }
-      } else {
-        console.log(`Buckets disponíveis: ${buckets.map(b => b.name).join(', ')}`);
-        
-        // Verifica se o bucket principal existe
-        const mainBucketExists = buckets.some(bucket => bucket.name === BUCKET_NAME);
-        
-        if (mainBucketExists) {
-          console.log(`✓ Bucket principal '${BUCKET_NAME}' já existe.`);
-        } else {
-          console.log(`Bucket principal '${BUCKET_NAME}' não encontrado. Tentando criar...`);
-          const { error: createError } = await supabase.storage.createBucket(BUCKET_NAME, {
+      // Bucket principal
+      if (!canAccessMainBucket) {
+        console.log(`Bucket principal '${BUCKET_NAME}' não está acessível. Tentando criar...`);
+        try {
+          const createMainResult = await supabase.storage.createBucket(BUCKET_NAME, {
             public: true
           });
           
-          if (createError) {
-            console.error(`Erro ao criar o bucket principal:`, createError);
+          if (createMainResult.error) {
+            // Verificar se é erro de política ou se o bucket já existe
+            if (createMainResult.error.message.includes('violates row-level security policy')) {
+              console.log(`Aviso: O bucket '${BUCKET_NAME}' provavelmente já existe mas você não tem permissão para criá-lo.`);
+              console.log(`Tentando usar mesmo assim, pois as permissões de upload podem ser diferentes.`);
+            } else {
+              console.error(`Erro ao criar o bucket principal '${BUCKET_NAME}':`, createMainResult.error);
+            }
           } else {
             console.log(`✅ Bucket principal '${BUCKET_NAME}' criado com sucesso!`);
+            canAccessMainBucket = true;
           }
+        } catch (createError) {
+          console.error(`Exceção ao criar bucket principal:`, createError);
         }
-        
-        // Verifica se o bucket de avatares existe
-        const avatarsBucketExists = buckets.some(bucket => bucket.name === AVATARS_BUCKET);
-        
-        if (avatarsBucketExists) {
-          console.log(`✓ Bucket de avatares '${AVATARS_BUCKET}' já existe.`);
-        } else {
-          console.log(`Bucket de avatares '${AVATARS_BUCKET}' não encontrado. Tentando criar...`);
-          const { error: createError } = await supabase.storage.createBucket(AVATARS_BUCKET, {
+      }
+      
+      // Bucket de avatares
+      if (!canAccessAvatarsBucket) {
+        console.log(`Bucket de avatares '${AVATARS_BUCKET}' não está acessível. Tentando criar...`);
+        try {
+          const createAvatarsResult = await supabase.storage.createBucket(AVATARS_BUCKET, {
             public: true
           });
           
-          if (createError) {
-            console.error(`Erro ao criar o bucket de avatares:`, createError);
+          if (createAvatarsResult.error) {
+            // Verificar se é erro de política ou se o bucket já existe
+            if (createAvatarsResult.error.message.includes('violates row-level security policy')) {
+              console.log(`Aviso: O bucket '${AVATARS_BUCKET}' provavelmente já existe mas você não tem permissão para criá-lo.`);
+              console.log(`Tentando usar mesmo assim, pois as permissões de upload podem ser diferentes.`);
+            } else {
+              console.error(`Erro ao criar o bucket de avatares '${AVATARS_BUCKET}':`, createAvatarsResult.error);
+            }
           } else {
             console.log(`✅ Bucket de avatares '${AVATARS_BUCKET}' criado com sucesso!`);
+            canAccessAvatarsBucket = true;
           }
+        } catch (createError) {
+          console.error(`Exceção ao criar bucket de avatares:`, createError);
         }
       }
       
@@ -419,6 +414,27 @@ export class SupabaseStorageService {
     }
   }
 
+  /**
+   * Obtém os arquivos de um bucket específico
+   * Útil para diagnósticos e testes de acesso
+   */
+  async getBucket(bucketName: string): Promise<{ data: any[] | null, error: any }> {
+    try {
+      // Inicializar o supabase primeiro se necessário
+      if (!this.initialized) {
+        await this.initBucket();
+      }
+      
+      // Verificar se tem acesso listando os arquivos
+      return await supabase.storage
+        .from(bucketName)
+        .list();
+    } catch (error) {
+      console.error(`Erro ao acessar bucket ${bucketName}:`, error);
+      return { data: null, error };
+    }
+  }
+  
   /**
    * Remove uma imagem do Supabase Storage
    */
