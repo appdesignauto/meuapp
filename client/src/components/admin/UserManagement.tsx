@@ -2513,21 +2513,27 @@ const UserTable = ({
         return "Data inválida";
       }
       
-      // Verificar se a data é futura (tolerância de 5 minutos para evitar problemas de sincronização)
+      // Tolerância de 3 horas (10800000 ms) para diferenças de fuso horário
+      // Isso é necessário porque os timestamps vêm do banco com UTC e
+      // podem parecer estar no futuro quando comparados ao horário local
       const now = new Date();
-      const fiveMinutes = 5 * 60 * 1000; // 5 minutos em milissegundos
-      if (date.getTime() > now.getTime() + fiveMinutes) {
-        console.error("Data futura detectada:", dateValue, "Data:", date, "Agora:", now);
+      const threeHours = 3 * 60 * 60 * 1000; // 3 horas em milissegundos
+      
+      // Se a data estiver mais de 3 horas no futuro (tolerância acima do normal),
+      // então algo está realmente errado - nesse caso usamos a data atual
+      if (date.getTime() > now.getTime() + threeHours) {
+        // Registrar problema para debug
+        console.log("Ajustando data com problema de fuso:", dateValue);
         
-        // Correção automática: se a data for futura, usar a data atual
-        console.log("Corrigindo data para a data atual");
-        return new Date().toLocaleDateString("pt-BR", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit"
-        }) + " (BRT)";
+        // Formatar no padrão brasileiro usando o formatter com timezone correto
+        return new Intl.DateTimeFormat('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: 'America/Sao_Paulo' // Usando timezone de Brasília
+        }).format(now) + " (BRT)*"; // Adicionar asterisco para indicar ajuste
       }
       
       // Formatar no padrão brasileiro
@@ -2551,18 +2557,39 @@ const UserTable = ({
       ? user.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
       : user.username.substring(0, 2).toUpperCase();
       
+    // Verificar se a URL da imagem é válida
+    // Nota: Adicionado tratamento para URLs de perfil inválidas ou quebradas
     const profileUrl = user.profileimageurl;
+    const isValidUrl = profileUrl && 
+      (profileUrl.startsWith('http://') || 
+       profileUrl.startsWith('https://') || 
+       profileUrl.startsWith('/'));
     
     return (
       <HoverCard>
         <HoverCardTrigger asChild>
           <div className="flex items-center">
             <div className="relative h-9 w-9 mr-3">
-              {profileUrl ? (
+              {isValidUrl ? (
                 <img 
                   src={profileUrl} 
                   alt={user.username}
                   className="rounded-full object-cover h-9 w-9 shadow-sm border border-gray-100" 
+                  onError={(e) => {
+                    // Se a imagem falhar ao carregar, remover o src para mostrar o fallback
+                    (e.target as HTMLImageElement).src = '';
+                    (e.target as HTMLImageElement).style.display = 'none';
+                    // Mostrar iniciais como fallback
+                    const parent = (e.target as HTMLImageElement).parentElement;
+                    if (parent) {
+                      const fallback = document.createElement('div');
+                      fallback.className = `rounded-full h-9 w-9 flex items-center justify-center text-xs text-white font-medium shadow-sm ${
+                        userRoles.find(r => r.value === user.nivelacesso)?.color || "bg-gray-500"
+                      }`;
+                      fallback.textContent = initials;
+                      parent.appendChild(fallback);
+                    }
+                  }}
                 />
               ) : (
                 <div className={`rounded-full h-9 w-9 flex items-center justify-center text-xs text-white font-medium shadow-sm ${
@@ -2584,11 +2611,26 @@ const UserTable = ({
         <HoverCardContent className="w-80">
           <div className="flex space-x-4">
             <div className="relative h-16 w-16">
-              {profileUrl ? (
+              {isValidUrl ? (
                 <img 
                   src={profileUrl} 
                   alt={user.username}
                   className="rounded-full object-cover h-16 w-16 shadow-sm border border-gray-100" 
+                  onError={(e) => {
+                    // Se a imagem falhar ao carregar, remover o src para mostrar o fallback
+                    (e.target as HTMLImageElement).src = '';
+                    (e.target as HTMLImageElement).style.display = 'none';
+                    // Mostrar iniciais como fallback
+                    const parent = (e.target as HTMLImageElement).parentElement;
+                    if (parent) {
+                      const fallback = document.createElement('div');
+                      fallback.className = `rounded-full h-16 w-16 flex items-center justify-center text-xl text-white font-medium shadow-sm ${
+                        userRoles.find(r => r.value === user.nivelacesso)?.color || "bg-gray-500"
+                      }`;
+                      fallback.textContent = initials;
+                      parent.appendChild(fallback);
+                    }
+                  }}
                 />
               ) : (
                 <div className={`rounded-full h-16 w-16 flex items-center justify-center text-xl text-white font-medium shadow-sm ${
