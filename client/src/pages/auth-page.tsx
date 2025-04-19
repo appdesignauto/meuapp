@@ -46,7 +46,15 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 const AuthPage = () => {
-  const [activeTab, setActiveTab] = useState<string>("login");
+  // Obter o parâmetro tab da URL, se existir
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    // Verificar se estamos no navegador (client-side)
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('tab') || "login";
+    }
+    return "login";
+  });
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -129,7 +137,7 @@ const AuthPage = () => {
       {/* Formulário */}
       <div className="flex-1 flex items-center justify-center p-6 bg-white">
         <div className="max-w-md w-full">
-          <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-8">
               <TabsTrigger value="login">Login</TabsTrigger>
               <TabsTrigger value="register">Cadastro</TabsTrigger>

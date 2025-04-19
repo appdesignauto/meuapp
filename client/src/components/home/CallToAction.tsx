@@ -13,7 +13,7 @@ const CallToAction = () => {
               Junte-se a milhares de vendedores que já melhoraram seus resultados com o DesignAuto App.
             </p>
             <div className="flex flex-wrap gap-3">
-              <Link href="/register">
+              <Link href="/auth?tab=register">
                 <Button className="bg-primary hover:bg-primary/90 text-white px-6 py-3">
                   Começar agora
                 </Button>

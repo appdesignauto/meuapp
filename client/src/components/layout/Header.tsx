@@ -463,7 +463,7 @@ const Header = () => {
                     Entrar
                   </Button>
                 </Link>
-                <Link href="/register" className="hidden sm:block">
+                <Link href="/auth?tab=register" className="hidden sm:block">
                   <Button 
                     variant="ghost" 
                     className="text-xs px-3 h-9 rounded-full text-neutral-700 hover:text-blue-600 hover:bg-blue-50"

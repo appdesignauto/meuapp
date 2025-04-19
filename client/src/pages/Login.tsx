@@ -128,7 +128,7 @@ const Login = () => {
             </div>
             <div className="text-sm text-center">
               Não tem uma conta?{' '}
-              <Link href="/register" className="text-primary hover:underline">
+              <Link href="/auth?tab=register" className="text-primary hover:underline">
                 Registre-se
               </Link>
             </div>
