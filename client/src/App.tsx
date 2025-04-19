@@ -98,15 +98,15 @@ function AppRoutes() {
         component={AdminDashboard} 
         roles={['admin', 'designer_adm']} 
       />
+      <ProtectedRoute
+        path="/admin/storage-test"
+        component={StorageTestPage}
+        roles={['admin']}
+      />
       <ProtectedRoute 
         path="/admin/logo-upload" 
         component={LogoUploadPage}
         roles={['admin', 'designer_adm']} 
-      />
-      <ProtectedRoute 
-        path="/admin/storage-test" 
-        component={StorageTestPage}
-        roles={['admin']} 
       />
       <ProtectedRoute 
         path="/admin/:page" 

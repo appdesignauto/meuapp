@@ -148,7 +148,7 @@ const AdminDashboard = () => {
               </Link>
               <Link href="/admin/storage-test">
                 <Button variant="ghost" className="w-full justify-start text-gray-600 mb-2">
-                  <Database className="w-5 h-5 mr-3" />
+                  <HardDrive className="w-5 h-5 mr-3" />
                   Testar Armazenamento
                 </Button>
               </Link>

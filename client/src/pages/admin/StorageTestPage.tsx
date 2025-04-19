@@ -1,36 +1,16 @@
-import { useState, useRef } from 'react';
-import { useLocation, Link } from 'wouter';
-import { 
-  ArrowLeft, 
-  Database, 
-  HardDrive, 
-  CheckCircle, 
-  AlertCircle, 
-  Upload, 
-  RefreshCw,
-  Info
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Progress } from '@/components/ui/progress';
-import { useAuth } from '@/hooks/use-auth';
-import { useToast } from '@/hooks/use-toast';
-import { Separator } from '@/components/ui/separator';
-import { 
-  Table, 
-  TableBody, 
-  TableCaption, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import {
-  ScrollArea,
-  ScrollBar,
-} from '@/components/ui/scroll-area';
+import { useState, useRef, useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle, CheckCircle2, Upload, HardDrive, XCircle, Info, ArrowLeft, ExternalLink, Loader2 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { Link } from "wouter";
 
 interface StorageConnectionStatus {
   connected: boolean;
@@ -58,566 +38,570 @@ interface UploadTestResult {
   error?: string;
 }
 
-const StorageTestPage = () => {
-  const { user } = useAuth();
-  const [, setLocation] = useLocation();
+export default function StorageTestPage() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [activeTab, setActiveTab] = useState('supabase');
+  const [activeTab, setActiveTab] = useState("connection");
+  const [selectedService, setSelectedService] = useState<"supabase" | "r2">("supabase");
   const [isCheckingConnection, setIsCheckingConnection] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<StorageConnectionStatus | null>(null);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState<UploadTestResult | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
-  // Verificar se o usuário é admin
-  if (user?.role !== 'admin') {
-    toast({
-      title: "Acesso negado",
-      description: "Apenas administradores podem acessar esta página",
-      variant: "destructive",
-    });
-    setLocation('/admin');
-    return null;
-  }
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      setSelectedFile(files[0]);
-      // Limpar resultados anteriores
-      setUploadResult(null);
-    }
-  };
-
-  const triggerFileInput = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
-
-  const checkConnection = async () => {
-    try {
-      setIsCheckingConnection(true);
-      setConnectionStatus(null);
-      
-      const response = await fetch(`/api/admin/storage/check-connection?service=${activeTab}`);
-      const data = await response.json();
-      
-      setConnectionStatus({
-        connected: data.connected,
-        message: data.message,
-        logs: data.logs || []
+  // Efeito visual para progresso de upload
+  const simulateProgress = useCallback(() => {
+    setUploadProgress(0);
+    const interval = setInterval(() => {
+      setUploadProgress((prev) => {
+        const next = prev + Math.random() * 15;
+        if (next >= 95) {
+          clearInterval(interval);
+          return 95;
+        }
+        return next;
       });
+    }, 300);
 
-      if (data.connected) {
-        toast({
-          title: "Conexão estabelecida",
-          description: `Conectado com sucesso ao serviço ${activeTab === 'supabase' ? 'Supabase Storage' : 'Cloudflare R2'}`,
-        });
-      } else {
-        toast({
-          title: "Falha na conexão",
-          description: data.message,
-          variant: "destructive",
-        });
+    return () => clearInterval(interval);
+  }, []);
+
+  const checkConnection = async (service: "supabase" | "r2") => {
+    setIsCheckingConnection(true);
+    setConnectionStatus(null);
+    
+    try {
+      const response = await fetch(`/api/admin/storage/check-connection?service=${service}`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Falha na resposta da API: ${errorText}`);
       }
-    } catch (error) {
-      console.error('Erro ao verificar conexão:', error);
+      
+      const result = await response.json();
+      
       setConnectionStatus({
-        connected: false,
-        message: `Erro ao verificar conexão: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
-        logs: []
+        connected: result.connected,
+        message: result.message,
+        logs: result.logs || []
       });
       
       toast({
-        title: "Erro",
-        description: "Não foi possível verificar a conexão com o serviço",
-        variant: "destructive",
+        title: result.connected ? "Conexão estabelecida" : "Falha na conexão",
+        description: result.message,
+        variant: result.connected ? "default" : "destructive"
+      });
+    } catch (error) {
+      console.error("Erro ao verificar conexão:", error);
+      setConnectionStatus({
+        connected: false,
+        message: `Erro ao verificar conexão: ${error instanceof Error ? error.message : String(error)}`,
+        logs: ["Erro no cliente ao tentar conectar com o serviço"]
+      });
+      
+      toast({
+        title: "Erro ao verificar conexão",
+        description: error instanceof Error ? error.message : String(error),
+        variant: "destructive"
       });
     } finally {
       setIsCheckingConnection(false);
     }
   };
 
-  const testUpload = async () => {
-    if (!selectedFile) {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const selectedFile = files[0];
+      
+      // Verificar se é uma imagem
+      if (!selectedFile.type.startsWith('image/')) {
+        toast({
+          title: "Arquivo inválido",
+          description: "Por favor, selecione apenas arquivos de imagem.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Verificar tamanho (limitar a 5MB)
+      if (selectedFile.size > 5 * 1024 * 1024) {
+        toast({
+          title: "Arquivo muito grande",
+          description: "O tamanho máximo permitido é 5MB.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      setUploadFile(selectedFile);
+      setUploadResult(null);
+      
       toast({
-        title: "Selecione um arquivo",
-        description: "É necessário selecionar uma imagem para testar o upload",
-        variant: "destructive",
+        title: "Arquivo selecionado",
+        description: `${selectedFile.name} (${(selectedFile.size / 1024).toFixed(2)} KB)`,
+      });
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!uploadFile) {
+      toast({
+        title: "Nenhum arquivo selecionado",
+        description: "Por favor, selecione um arquivo para upload.",
+        variant: "destructive"
       });
       return;
     }
     
+    setIsUploading(true);
+    setUploadResult(null);
+    const cleanup = simulateProgress();
+    
     try {
-      setIsUploading(true);
-      setUploadResult(null);
-      
       const formData = new FormData();
-      formData.append('image', selectedFile);
+      formData.append('image', uploadFile);
       
-      const response = await fetch(`/api/admin/storage/test-upload?service=${activeTab}`, {
+      const response = await fetch(`/api/admin/storage/test-upload?service=${selectedService}`, {
         method: 'POST',
-        body: formData,
+        body: formData
       });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Falha na resposta da API: ${errorText}`);
+      }
       
       const result = await response.json();
       
-      setUploadResult({
-        success: result.success,
-        message: result.message,
-        imageUrl: result.imageUrl,
-        optimizedSummary: result.optimizedSummary,
-        timings: result.timings,
-        error: result.error
-      });
+      setUploadProgress(100);
       
-      if (result.success) {
-        toast({
-          title: "Upload concluído",
-          description: `A imagem foi enviada com sucesso para ${activeTab === 'supabase' ? 'Supabase Storage' : 'Cloudflare R2'}`,
-        });
-      } else {
-        toast({
-          title: "Falha no upload",
-          description: result.message,
-          variant: "destructive",
-        });
-      }
+      setTimeout(() => {
+        setUploadResult(result);
+      }, 500);
+      
+      toast({
+        title: result.success ? "Upload realizado com sucesso" : "Falha no upload",
+        description: result.message,
+        variant: result.success ? "default" : "destructive"
+      });
     } catch (error) {
-      console.error('Erro no teste de upload:', error);
+      console.error("Erro ao fazer upload:", error);
+      
       setUploadResult({
         success: false,
-        message: `Erro no teste de upload: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        message: `Erro ao fazer upload: ${error instanceof Error ? error.message : String(error)}`,
+        error: error instanceof Error ? error.message : String(error)
       });
       
       toast({
-        title: "Erro",
-        description: "Não foi possível realizar o teste de upload",
-        variant: "destructive",
+        title: "Erro ao fazer upload",
+        description: error instanceof Error ? error.message : String(error),
+        variant: "destructive"
       });
     } finally {
       setIsUploading(false);
+      cleanup();
     }
   };
 
-  // Renderizar logs formatados
-  const renderLogs = (logs: string[]) => {
-    if (!logs || logs.length === 0) return <p className="text-gray-500 italic">Nenhum log disponível</p>;
-    
-    return (
-      <ScrollArea className="h-[200px] w-full rounded-md border">
-        <div className="p-4">
-          {logs.map((log, index) => (
-            <div key={index} className="py-1 border-b border-gray-100 last:border-0">
-              <span className="text-sm font-mono">{log}</span>
-            </div>
-          ))}
-        </div>
-        <ScrollBar orientation="vertical" />
-      </ScrollArea>
-    );
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 pb-10">
-      <div className="max-w-5xl mx-auto px-4">
-        {/* Header com navegação de volta */}
-        <header className="py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <Link href="/admin">
-                <Button variant="ghost" size="sm" className="h-8 mr-2">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Voltar
-                </Button>
-              </Link>
-              <h1 className="text-2xl font-bold">Teste de Armazenamento</h1>
-            </div>
-          </div>
-          <p className="text-gray-500 mt-1">
-            Ferramenta para diagnóstico dos serviços de armazenamento (Supabase Storage e Cloudflare R2)
-          </p>
-        </header>
-
-        {/* Conteúdo principal */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <div className="flex justify-between items-center">
-            <TabsList>
-              <TabsTrigger value="supabase" className="flex items-center">
-                <Database className="h-4 w-4 mr-2" />
-                Supabase Storage
-              </TabsTrigger>
-              <TabsTrigger value="r2" className="flex items-center">
-                <HardDrive className="h-4 w-4 mr-2" />
-                Cloudflare R2
-              </TabsTrigger>
-            </TabsList>
-          </div>
-
-          {/* Tab de Supabase Storage */}
-          <TabsContent value="supabase">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Database className="h-5 w-5 mr-2" /> 
-                    Supabase Storage
-                  </CardTitle>
-                  <CardDescription>
-                    Verificar conexão com o Supabase Storage e testar upload de arquivos
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="text-sm font-medium mb-2">Status da Conexão</h3>
-                      {connectionStatus && activeTab === 'supabase' ? (
-                        <div className="flex items-center">
-                          {connectionStatus.connected ? (
-                            <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                          ) : (
-                            <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
-                          )}
-                          <span>{connectionStatus.message}</span>
-                        </div>
-                      ) : (
-                        <div className="text-gray-500 italic">Clique em "Verificar Conexão" para testar</div>
-                      )}
-                    </div>
-                    
-                    <Separator />
-                    
-                    <div>
-                      <h3 className="text-sm font-medium mb-2">Teste de Upload</h3>
-                      <div className="flex flex-col space-y-2">
-                        <input 
-                          ref={fileInputRef}
-                          type="file" 
-                          className="hidden"
-                          accept="image/*"
-                          onChange={handleFileSelect}
-                        />
-                        {selectedFile ? (
-                          <div className="rounded-md border p-2 bg-gray-50 flex justify-between items-center">
-                            <div>
-                              <p className="font-medium text-sm">{selectedFile.name}</p>
-                              <p className="text-xs text-gray-500">
-                                {(selectedFile.size / 1024).toFixed(2)} KB
-                              </p>
-                            </div>
-                            <Button size="sm" variant="ghost" onClick={triggerFileInput}>
-                              Trocar
-                            </Button>
-                          </div>
-                        ) : (
-                          <Button onClick={triggerFileInput} className="w-full">
-                            <Upload className="h-4 w-4 mr-2" />
-                            Selecionar Imagem
-                          </Button>
-                        )}
-                        
-                        {uploadResult && activeTab === 'supabase' && (
-                          <div className={`mt-4 p-3 rounded-md ${uploadResult.success ? 'bg-green-50 border border-green-100' : 'bg-red-50 border border-red-100'}`}>
-                            <div className="flex items-start">
-                              {uploadResult.success ? (
-                                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-2 flex-shrink-0" />
-                              ) : (
-                                <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 mr-2 flex-shrink-0" />
-                              )}
-                              <div>
-                                <p className="font-medium">{uploadResult.message}</p>
-                                {uploadResult.error && (
-                                  <p className="text-sm text-red-600 mt-1">{uploadResult.error}</p>
-                                )}
-                                
-                                {uploadResult.success && uploadResult.optimizedSummary && (
-                                  <div className="mt-2 text-sm">
-                                    <p>Tamanho Original: {(uploadResult.optimizedSummary.originalSize / 1024).toFixed(2)} KB</p>
-                                    <p>Tamanho Otimizado: {(uploadResult.optimizedSummary.optimizedSize / 1024).toFixed(2)} KB</p>
-                                    <p>Redução: {uploadResult.optimizedSummary.reduction.toFixed(2)}%</p>
-                                    <p>Dimensões: {uploadResult.optimizedSummary.width}x{uploadResult.optimizedSummary.height}</p>
-                                  </div>
-                                )}
-                                
-                                {uploadResult.success && uploadResult.imageUrl && (
-                                  <div className="mt-3">
-                                    <a
-                                      href={uploadResult.imageUrl}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-blue-600 hover:underline text-sm flex items-center"
-                                    >
-                                      Ver imagem <Info className="h-3 w-3 ml-1" />
-                                    </a>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        )}
+    <div className="container py-8">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center space-x-4">
+          <Link href="/admin">
+            <Button variant="outline" size="icon">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <h1 className="text-3xl font-bold">Teste de Armazenamento</h1>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Painel de Seleção de Serviço */}
+        <Card className="col-span-1">
+          <CardHeader>
+            <CardTitle>Selecione o Serviço</CardTitle>
+            <CardDescription>
+              Escolha o serviço de armazenamento para testar
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-3">
+                <div
+                  className={`relative p-4 border rounded-md cursor-pointer transition-all ${
+                    selectedService === "supabase"
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50"
+                  }`}
+                  onClick={() => setSelectedService("supabase")}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="bg-indigo-100 p-2 rounded-md">
+                        <svg
+                          className="w-6 h-6 text-indigo-600"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M21.602 14.714c-.3 0-.503.117-.803.117-1.804.2-2.105.784-2.105 1.567 0 .784.402 1.351 2.005 1.252 1.402-.1 1.503-1.252.903-2.936zM13.292 7.028c0-.784.1-1.468.2-2.035-4.612-.1-5.615.784-5.615 3.503v7.007c0 1.568-.502 2.035-1.304 2.035H5.37c-.802 0-1.304-.467-1.304-2.035V3.525c0-.784.402-1.351.803-1.568-1.403.2-3.208 1.068-3.208 3.736v10.644c0 1.568.502 2.919 2.606 2.919h2.306c2.005 0 2.606-1.351 2.606-2.919v-3.736c0-3.220.702-4.104 4.11-4.104v-1.468zM20.297 10.08c1.203-.2 3.409-.784 3.409-3.602 0-3.503-2.406-4.121-5.414-4.121h-5.816l-.1 17.484h4.11V4.643h1.102c1.704 0 2.206.668 2.206 2.152 0 1.568-.502 2.152-1.704 2.152h-.701c1.203.784 1.905 3.62 2.807 5.788.601 1.468.802 1.902 1.905 1.902 1.002 0 2.005-.668 2.005-1.902-.1-.784-.802-2.686-1.804-4.654z"
+                          />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="font-medium">Supabase Storage</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Armazenamento atual do DesignAuto
+                        </p>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="justify-between space-x-2">
-                  <Button 
-                    onClick={checkConnection} 
-                    disabled={isCheckingConnection}
-                    variant="outline"
-                  >
-                    {isCheckingConnection && <RefreshCw className="h-4 w-4 mr-2 animate-spin" />}
-                    {!isCheckingConnection && <Database className="h-4 w-4 mr-2" />}
-                    Verificar Conexão
-                  </Button>
-                  
-                  <Button 
-                    onClick={testUpload} 
-                    disabled={isUploading || !selectedFile}
-                    variant="default"
-                  >
-                    {isUploading && <RefreshCw className="h-4 w-4 mr-2 animate-spin" />}
-                    {!isUploading && <Upload className="h-4 w-4 mr-2" />}
-                    Testar Upload
-                  </Button>
-                </CardFooter>
-              </Card>
-              
-              {/* Exibição de logs */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Logs de Diagnóstico</CardTitle>
-                  <CardDescription>
-                    Informações detalhadas sobre a conexão e tentativas de upload
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {connectionStatus && activeTab === 'supabase' ? (
-                    renderLogs(connectionStatus.logs)
-                  ) : (
-                    <div className="text-gray-500 italic">Realize uma verificação de conexão para ver os logs</div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* Tab de Cloudflare R2 */}
-          <TabsContent value="r2">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <HardDrive className="h-5 w-5 mr-2" /> 
-                    Cloudflare R2
-                  </CardTitle>
-                  <CardDescription>
-                    Verificar conexão com o Cloudflare R2 e testar upload de arquivos
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="text-sm font-medium mb-2">Status da Conexão</h3>
-                      {connectionStatus && activeTab === 'r2' ? (
-                        <div className="flex items-center">
-                          {connectionStatus.connected ? (
-                            <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                          ) : (
-                            <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
-                          )}
-                          <span>{connectionStatus.message}</span>
-                        </div>
-                      ) : (
-                        <div className="text-gray-500 italic">Clique em "Verificar Conexão" para testar</div>
+                    <div
+                      className={`w-5 h-5 rounded-full border-2 ${
+                        selectedService === "supabase"
+                          ? "border-primary"
+                          : "border-muted"
+                      }`}
+                    >
+                      {selectedService === "supabase" && (
+                        <div className="w-3 h-3 bg-primary rounded-full m-[3px]" />
                       )}
                     </div>
-                    
-                    <Separator />
-                    
-                    <div>
-                      <h3 className="text-sm font-medium mb-2">Teste de Upload</h3>
-                      <div className="flex flex-col space-y-2">
-                        <input 
-                          type="file" 
-                          className="hidden"
-                          accept="image/*"
-                          onChange={handleFileSelect}
-                        />
-                        {selectedFile ? (
-                          <div className="rounded-md border p-2 bg-gray-50 flex justify-between items-center">
-                            <div>
-                              <p className="font-medium text-sm">{selectedFile.name}</p>
-                              <p className="text-xs text-gray-500">
-                                {(selectedFile.size / 1024).toFixed(2)} KB
-                              </p>
-                            </div>
-                            <Button size="sm" variant="ghost" onClick={triggerFileInput}>
-                              Trocar
-                            </Button>
-                          </div>
-                        ) : (
-                          <Button onClick={triggerFileInput} className="w-full">
-                            <Upload className="h-4 w-4 mr-2" />
-                            Selecionar Imagem
-                          </Button>
-                        )}
-                        
-                        {uploadResult && activeTab === 'r2' && (
-                          <div className={`mt-4 p-3 rounded-md ${uploadResult.success ? 'bg-green-50 border border-green-100' : 'bg-red-50 border border-red-100'}`}>
-                            <div className="flex items-start">
-                              {uploadResult.success ? (
-                                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-2 flex-shrink-0" />
-                              ) : (
-                                <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 mr-2 flex-shrink-0" />
-                              )}
-                              <div>
-                                <p className="font-medium">{uploadResult.message}</p>
-                                {uploadResult.error && (
-                                  <p className="text-sm text-red-600 mt-1">{uploadResult.error}</p>
-                                )}
-                                
-                                {uploadResult.success && uploadResult.optimizedSummary && (
-                                  <div className="mt-2 text-sm">
-                                    <p>Tamanho Original: {(uploadResult.optimizedSummary.originalSize / 1024).toFixed(2)} KB</p>
-                                    <p>Tamanho Otimizado: {(uploadResult.optimizedSummary.optimizedSize / 1024).toFixed(2)} KB</p>
-                                    <p>Redução: {uploadResult.optimizedSummary.reduction.toFixed(2)}%</p>
-                                    <p>Dimensões: {uploadResult.optimizedSummary.width}x{uploadResult.optimizedSummary.height}</p>
-                                  </div>
-                                )}
-                                
-                                {uploadResult.success && uploadResult.imageUrl && (
-                                  <div className="mt-3">
-                                    <a
-                                      href={uploadResult.imageUrl}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-blue-600 hover:underline text-sm flex items-center"
-                                    >
-                                      Ver imagem <Info className="h-3 w-3 ml-1" />
-                                    </a>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
                   </div>
-                </CardContent>
-                <CardFooter className="justify-between space-x-2">
-                  <Button 
-                    onClick={checkConnection} 
-                    disabled={isCheckingConnection}
-                    variant="outline"
-                  >
-                    {isCheckingConnection && <RefreshCw className="h-4 w-4 mr-2 animate-spin" />}
-                    {!isCheckingConnection && <HardDrive className="h-4 w-4 mr-2" />}
-                    Verificar Conexão
-                  </Button>
-                  
-                  <Button 
-                    onClick={testUpload} 
-                    disabled={isUploading || !selectedFile}
-                    variant="default"
-                  >
-                    {isUploading && <RefreshCw className="h-4 w-4 mr-2 animate-spin" />}
-                    {!isUploading && <Upload className="h-4 w-4 mr-2" />}
-                    Testar Upload
-                  </Button>
-                </CardFooter>
-              </Card>
-              
-              {/* Exibição de logs */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Logs de Diagnóstico</CardTitle>
-                  <CardDescription>
-                    Informações detalhadas sobre a conexão e tentativas de upload
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {connectionStatus && activeTab === 'r2' ? (
-                    renderLogs(connectionStatus.logs)
-                  ) : (
-                    <div className="text-gray-500 italic">Realize uma verificação de conexão para ver os logs</div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
-
-        {/* Guia e informações adicionais */}
-        <div className="mt-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Sobre os Serviços de Armazenamento</CardTitle>
-              <CardDescription>
-                Informações sobre as opções de armazenamento e como elas funcionam no sistema
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <Alert>
-                  <Info className="h-4 w-4" />
-                  <AlertTitle>Armazenamento Principal</AlertTitle>
-                  <AlertDescription>
-                    O DesignAuto utiliza o Supabase Storage como serviço principal para armazenamento de 
-                    imagens, com o Cloudflare R2 configurado como alternativa para upload.
-                  </AlertDescription>
-                </Alert>
+                </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                  <div>
-                    <h3 className="text-md font-medium mb-2 flex items-center">
-                      <Database className="h-4 w-4 mr-2" /> Supabase Storage
-                    </h3>
-                    <ul className="space-y-2 text-sm">
-                      <li className="flex items-start">
-                        <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 mr-2 flex-shrink-0" />
-                        <span>Serviço principal para armazenamento de imagens</span>
-                      </li>
-                      <li className="flex items-start">
-                        <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 mr-2 flex-shrink-0" />
-                        <span>Armazenamento separado para avatares e imagens de artes</span>
-                      </li>
-                      <li className="flex items-start">
-                        <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 mr-2 flex-shrink-0" />
-                        <span>Integração com as políticas de segurança do Supabase (RLS)</span>
-                      </li>
-                    </ul>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-md font-medium mb-2 flex items-center">
-                      <HardDrive className="h-4 w-4 mr-2" /> Cloudflare R2
-                    </h3>
-                    <ul className="space-y-2 text-sm">
-                      <li className="flex items-start">
-                        <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 mr-2 flex-shrink-0" />
-                        <span>Serviço secundário para casos de falha no Supabase</span>
-                      </li>
-                      <li className="flex items-start">
-                        <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 mr-2 flex-shrink-0" />
-                        <span>Funcionamento baseado na API S3 da AWS</span>
-                      </li>
-                      <li className="flex items-start">
-                        <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 mr-2 flex-shrink-0" />
-                        <span>Configurado para funcionar como fallback automático</span>
-                      </li>
-                    </ul>
+                <div
+                  className={`relative p-4 border rounded-md cursor-pointer transition-all ${
+                    selectedService === "r2"
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50"
+                  }`}
+                  onClick={() => setSelectedService("r2")}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="bg-orange-100 p-2 rounded-md">
+                        <svg
+                          className="w-6 h-6 text-orange-600"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M9.85 16.896c.149-.75.224-1.522.224-2.297 0-.788-.075-1.561-.224-2.311.839-.326 1.7-1.025 1.7-2.237 0-1.136-.923-2.386-2.57-2.386-.326 0-.615.05-.866.149.14.062.309.099.474.099.712 0 1.36-.59 1.36-1.374 0-.696-.473-1.76-1.945-1.76-2.022 0-3.995 1.885-3.995 5.03 0 .388.022.766.083 1.136-.44.3-.786.873-.786 1.56 0 .924.583 1.586 1.337 1.884-.149.749-.224 1.523-.224 2.312 0 .774.075 1.546.224 2.297-.902.325-1.436 1.123-1.436 2.06 0 1.188.806 2.27 2.445 2.27.44 0 .811-.073 1.119-.224-.188-.075-.35-.136-.5-.261-.4-.313-.599-.811-.599-1.287 0-.726.485-1.35 1.262-1.35.326 0 .636.1.839.2.224-.736.326-1.434.326-2.12 0-.674-.102-1.371-.326-2.082-.19.074-.5.173-.827.173-.8 0-1.262-.598-1.262-1.337 0-.463.213-.975.63-1.274zm8.147-.21v-.001c0-2.248-1.264-3.53-3.378-3.666.328-.414.501-.912.501-1.457 0-1.375-.976-2.227-2.38-2.227-.926 0-1.731.414-2.244 1.1.513-.101 1.05-.151 1.636-.151 1.66 0 2.91.752 2.91 2.17 0 .538-.207 1.015-.515 1.427 2.246.025 3.47 1.238 3.47 3.543 0 3.36-2.86 5.93-7.378 5.93-5.27 0-8.354-3.384-8.354-8.316 0-4.945 3.097-8.315 8.354-8.315 2.256 0 4.05.49 5.415 1.474 1.175.85 1.876 2.074 1.876 3.53a3.63 3.63 0 01-.739 2.273c.514.614.826 1.39.826 2.286 0 2.562-2.12 4.312-5.502 4.312-2.683 0-4.614-1.15-5.303-2.912-.14.375-.27.775-.372 1.19.816 1.511 2.607 2.46 5.113 2.46 3.946 0 5.89-1.888 5.89-3.98 0-.689-.201-1.326-.502-1.864.388-.55.576-1.213.576-1.988z"
+                          />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="font-medium">Cloudflare R2</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Alternativa para armazenamento
+                        </p>
+                      </div>
+                    </div>
+                    <div
+                      className={`w-5 h-5 rounded-full border-2 ${
+                        selectedService === "r2"
+                          ? "border-primary"
+                          : "border-muted"
+                      }`}
+                    >
+                      {selectedService === "r2" && (
+                        <div className="w-3 h-3 bg-primary rounded-full m-[3px]" />
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setConnectionStatus(null);
+                setUploadResult(null);
+                setUploadFile(null);
+                if (fileInputRef.current) {
+                  fileInputRef.current.value = '';
+                }
+              }}
+            >
+              Limpar Resultados
+            </Button>
+          </CardFooter>
+        </Card>
+        
+        {/* Painel de Testes */}
+        <Card className="col-span-1 lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Testes de Armazenamento</CardTitle>
+            <CardDescription>
+              Verifique a conexão e realize testes de upload
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="connection" value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="connection">Teste de Conexão</TabsTrigger>
+                <TabsTrigger value="upload">Teste de Upload</TabsTrigger>
+              </TabsList>
+              
+              {/* Conteúdo da Aba de Conexão */}
+              <TabsContent value="connection" className="space-y-4">
+                <Alert variant={
+                  connectionStatus 
+                    ? (connectionStatus.connected ? "default" : "destructive")
+                    : "outline"
+                }>
+                  <div className="flex items-start">
+                    {connectionStatus ? (
+                      connectionStatus.connected ? (
+                        <CheckCircle2 className="h-5 w-5 mr-2 text-green-500" />
+                      ) : (
+                        <XCircle className="h-5 w-5 mr-2 text-destructive" />
+                      )
+                    ) : (
+                      <Info className="h-5 w-5 mr-2" />
+                    )}
+                    <div>
+                      <AlertTitle>
+                        {connectionStatus 
+                          ? (connectionStatus.connected 
+                            ? "Conexão estabelecida com sucesso" 
+                            : "Falha na conexão")
+                          : "Clique em 'Verificar Conexão' para testar"}
+                      </AlertTitle>
+                      <AlertDescription>
+                        {connectionStatus 
+                          ? connectionStatus.message
+                          : `O teste irá verificar se o serviço ${selectedService === "supabase" ? "Supabase Storage" : "Cloudflare R2"} está acessível e configurado corretamente.`}
+                      </AlertDescription>
+                    </div>
+                  </div>
+                </Alert>
+                
+                {connectionStatus && connectionStatus.logs.length > 0 && (
+                  <div className="mt-4">
+                    <h3 className="text-sm font-medium mb-2">Logs de Conexão</h3>
+                    <ScrollArea className="h-48 w-full rounded-md border">
+                      <div className="p-4">
+                        {connectionStatus.logs.map((log, index) => (
+                          <div key={index} className="text-xs font-mono mb-1">
+                            {log}
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                )}
+                
+                <div className="flex justify-center mt-6">
+                  <Button 
+                    onClick={() => checkConnection(selectedService)} 
+                    disabled={isCheckingConnection}
+                    className="w-full sm:w-auto"
+                  >
+                    {isCheckingConnection ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Verificando...
+                      </>
+                    ) : (
+                      <>
+                        <HardDrive className="mr-2 h-4 w-4" />
+                        Verificar Conexão com {selectedService === "supabase" ? "Supabase" : "R2"}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </TabsContent>
+              
+              {/* Conteúdo da Aba de Upload */}
+              <TabsContent value="upload" className="space-y-4">
+                <Alert variant="outline">
+                  <Info className="h-5 w-5 mr-2" />
+                  <AlertTitle>Teste de Upload de Imagem</AlertTitle>
+                  <AlertDescription>
+                    Faça upload de uma imagem para testar o serviço {selectedService === "supabase" ? "Supabase Storage" : "Cloudflare R2"}.
+                    As imagens são enviadas para uma pasta de teste e otimizadas automaticamente.
+                  </AlertDescription>
+                </Alert>
+                
+                <div className="grid gap-4">
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="file-upload">Selecione uma imagem (máx. 5MB)</Label>
+                    <div className="grid gap-2">
+                      <input
+                        ref={fileInputRef}
+                        id="file-upload"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+                      <div className="flex flex-col gap-2">
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="w-full"
+                          >
+                            <Upload className="mr-2 h-4 w-4" />
+                            Selecionar Arquivo
+                          </Button>
+                          <Button
+                            onClick={handleUpload}
+                            disabled={!uploadFile || isUploading}
+                            className="w-full"
+                          >
+                            {isUploading ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Enviando...
+                              </>
+                            ) : (
+                              <>
+                                <HardDrive className="mr-2 h-4 w-4" />
+                                Fazer Upload
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                        
+                        {uploadFile && (
+                          <div className="text-sm">
+                            Arquivo selecionado: <Badge variant="outline">{uploadFile.name}</Badge> ({(uploadFile.size / 1024).toFixed(2)} KB)
+                          </div>
+                        )}
+                        
+                        {isUploading && (
+                          <div className="w-full mt-2">
+                            <Progress value={uploadProgress} className="h-2 w-full" />
+                            <div className="text-xs text-muted-foreground mt-1 text-right">
+                              {uploadProgress.toFixed(0)}%
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {uploadResult && (
+                  <div className="mt-6">
+                    <Alert variant={uploadResult.success ? "default" : "destructive"}>
+                      {uploadResult.success ? (
+                        <CheckCircle2 className="h-5 w-5 mr-2 text-green-500" />
+                      ) : (
+                        <AlertCircle className="h-5 w-5 mr-2" />
+                      )}
+                      <AlertTitle>{uploadResult.message}</AlertTitle>
+                      <AlertDescription>
+                        {uploadResult.success 
+                          ? "O upload foi concluído com sucesso. Veja os detalhes abaixo."
+                          : `Ocorreu um erro: ${uploadResult.error || "Erro desconhecido"}`}
+                      </AlertDescription>
+                    </Alert>
+                    
+                    {uploadResult.success && uploadResult.imageUrl && (
+                      <div className="mt-4 space-y-4">
+                        <div className="rounded-lg overflow-hidden border">
+                          <div className="relative aspect-video bg-muted">
+                            <img
+                              src={uploadResult.imageUrl}
+                              alt="Imagem enviada"
+                              className="object-contain w-full h-full"
+                            />
+                          </div>
+                          <div className="p-2 bg-muted/30 flex justify-between items-center">
+                            <span className="text-xs truncate">
+                              {uploadResult.imageUrl}
+                            </span>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => window.open(uploadResult.imageUrl, '_blank')}
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        {uploadResult.optimizedSummary && (
+                          <div className="space-y-2">
+                            <h4 className="text-sm font-medium">Resumo da Otimização</h4>
+                            <Table>
+                              <TableBody>
+                                <TableRow>
+                                  <TableCell className="font-medium">Tamanho Original</TableCell>
+                                  <TableCell>{(uploadResult.optimizedSummary.originalSize / 1024).toFixed(2)} KB</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell className="font-medium">Tamanho Otimizado</TableCell>
+                                  <TableCell>{(uploadResult.optimizedSummary.optimizedSize / 1024).toFixed(2)} KB</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell className="font-medium">Redução</TableCell>
+                                  <TableCell>{uploadResult.optimizedSummary.reduction.toFixed(2)}%</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell className="font-medium">Formato</TableCell>
+                                  <TableCell>{uploadResult.optimizedSummary.format}</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell className="font-medium">Dimensões</TableCell>
+                                  <TableCell>{uploadResult.optimizedSummary.width} x {uploadResult.optimizedSummary.height}</TableCell>
+                                </TableRow>
+                              </TableBody>
+                            </Table>
+                          </div>
+                        )}
+                        
+                        {uploadResult.timings && (
+                          <div className="space-y-2">
+                            <h4 className="text-sm font-medium">Tempos de Processamento</h4>
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Etapa</TableHead>
+                                  <TableHead>Tempo</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {uploadResult.timings.optimization !== undefined && (
+                                  <TableRow>
+                                    <TableCell>Otimização</TableCell>
+                                    <TableCell>{uploadResult.timings.optimization} ms</TableCell>
+                                  </TableRow>
+                                )}
+                                {uploadResult.timings.upload !== undefined && (
+                                  <TableRow>
+                                    <TableCell>Upload</TableCell>
+                                    <TableCell>{uploadResult.timings.upload} ms</TableCell>
+                                  </TableRow>
+                                )}
+                                <TableRow>
+                                  <TableCell className="font-medium">Total</TableCell>
+                                  <TableCell>{uploadResult.timings.total} ms</TableCell>
+                                </TableRow>
+                              </TableBody>
+                            </Table>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
-};
-
-export default StorageTestPage;
+}
