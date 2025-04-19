@@ -344,14 +344,26 @@ export default function PainelPerfil() {
             <CardContent>
               <div className="flex flex-col md:flex-row gap-6">
                 <div className="flex flex-col items-center gap-4">
-                  <Avatar className="h-24 w-24 relative group">
+                  <Avatar 
+                    className="h-24 w-24 relative group cursor-pointer" 
+                    onClick={handleImageUploadClick}
+                  >
                     <AvatarImage
                       src={user?.profileimageurl || ""}
                       alt={user?.name || "Usuário"}
+                      className="object-cover"
                     />
                     <AvatarFallback className="text-2xl">{getInitials()}</AvatarFallback>
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Camera className="h-6 w-6 text-white" />
+                    <div 
+                      className={`absolute inset-0 bg-black/40 flex items-center justify-center rounded-full transition-opacity ${
+                        uploading ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                      }`}
+                    >
+                      {uploading ? (
+                        <Loader2 className="h-8 w-8 text-white animate-spin" />
+                      ) : (
+                        <Camera className="h-8 w-8 text-white" />
+                      )}
                     </div>
                   </Avatar>
                   <input 
@@ -364,6 +376,7 @@ export default function PainelPerfil() {
                   <Button 
                     onClick={handleImageUploadClick}
                     disabled={uploading}
+                    variant="outline"
                     className="w-full"
                   >
                     {uploading ? (
@@ -374,7 +387,7 @@ export default function PainelPerfil() {
                     ) : (
                       <>
                         <Upload className="mr-2 h-4 w-4" />
-                        Alterar imagem
+                        Alterar foto de perfil
                       </>
                     )}
                   </Button>
