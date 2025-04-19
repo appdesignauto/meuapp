@@ -2553,41 +2553,43 @@ const UserTable = ({
   
   // Função para renderizar avatar do usuário
   const renderUserAvatar = (user: UserWithStats) => {
+    // Gerar iniciais a partir do nome ou username
     const initials = user.name 
       ? user.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
       : user.username.substring(0, 2).toUpperCase();
       
-    // Verificar se a URL da imagem é válida
-    // Nota: Adicionado tratamento para URLs de perfil inválidas ou quebradas
+    // Verificar se o usuário tem uma URL de imagem de perfil
     const profileUrl = user.profileimageurl;
-    const isValidUrl = profileUrl && 
-      (profileUrl.startsWith('http://') || 
-       profileUrl.startsWith('https://') || 
-       profileUrl.startsWith('/'));
     
     return (
       <HoverCard>
         <HoverCardTrigger asChild>
           <div className="flex items-center">
             <div className="relative h-9 w-9 mr-3">
-              {isValidUrl ? (
+              {profileUrl ? (
                 <img 
                   src={profileUrl} 
                   alt={user.username}
                   className="rounded-full object-cover h-9 w-9 shadow-sm border border-gray-100" 
                   onError={(e) => {
-                    // Se a imagem falhar ao carregar, remover o src para mostrar o fallback
-                    (e.target as HTMLImageElement).src = '';
-                    (e.target as HTMLImageElement).style.display = 'none';
-                    // Mostrar iniciais como fallback
-                    const parent = (e.target as HTMLImageElement).parentElement;
+                    // Se a imagem falhar ao carregar, mostrar as iniciais
+                    const target = e.target as HTMLImageElement;
+                    const parent = target.parentElement;
+                    
+                    // Criar um elemento de fallback com as iniciais
                     if (parent) {
-                      const fallback = document.createElement('div');
-                      fallback.className = `rounded-full h-9 w-9 flex items-center justify-center text-xs text-white font-medium shadow-sm ${
-                        userRoles.find(r => r.value === user.nivelacesso)?.color || "bg-gray-500"
-                      }`;
-                      fallback.textContent = initials;
-                      parent.appendChild(fallback);
+                      // Esconder a imagem que falhou
+                      target.style.display = 'none';
+                      
+                      // Criar elemento de fallback apenas se ainda não existe
+                      if (!parent.querySelector('.avatar-fallback')) {
+                        const fallback = document.createElement('div');
+                        fallback.className = `avatar-fallback rounded-full h-9 w-9 flex items-center justify-center text-xs text-white font-medium shadow-sm ${
+                          userRoles.find(r => r.value === user.nivelacesso)?.color || "bg-gray-500"
+                        }`;
+                        fallback.textContent = initials;
+                        parent.appendChild(fallback);
+                      }
                     }
                   }}
                 />
@@ -2611,24 +2613,30 @@ const UserTable = ({
         <HoverCardContent className="w-80">
           <div className="flex space-x-4">
             <div className="relative h-16 w-16">
-              {isValidUrl ? (
+              {profileUrl ? (
                 <img 
                   src={profileUrl} 
                   alt={user.username}
                   className="rounded-full object-cover h-16 w-16 shadow-sm border border-gray-100" 
                   onError={(e) => {
-                    // Se a imagem falhar ao carregar, remover o src para mostrar o fallback
-                    (e.target as HTMLImageElement).src = '';
-                    (e.target as HTMLImageElement).style.display = 'none';
-                    // Mostrar iniciais como fallback
-                    const parent = (e.target as HTMLImageElement).parentElement;
+                    // Se a imagem falhar ao carregar, mostrar as iniciais
+                    const target = e.target as HTMLImageElement;
+                    const parent = target.parentElement;
+                    
+                    // Criar um elemento de fallback com as iniciais
                     if (parent) {
-                      const fallback = document.createElement('div');
-                      fallback.className = `rounded-full h-16 w-16 flex items-center justify-center text-xl text-white font-medium shadow-sm ${
-                        userRoles.find(r => r.value === user.nivelacesso)?.color || "bg-gray-500"
-                      }`;
-                      fallback.textContent = initials;
-                      parent.appendChild(fallback);
+                      // Esconder a imagem que falhou
+                      target.style.display = 'none';
+                      
+                      // Criar elemento de fallback apenas se ainda não existe
+                      if (!parent.querySelector('.avatar-fallback')) {
+                        const fallback = document.createElement('div');
+                        fallback.className = `avatar-fallback rounded-full h-16 w-16 flex items-center justify-center text-xl text-white font-medium shadow-sm ${
+                          userRoles.find(r => r.value === user.nivelacesso)?.color || "bg-gray-500"
+                        }`;
+                        fallback.textContent = initials;
+                        parent.appendChild(fallback);
+                      }
                     }
                   }}
                 />
