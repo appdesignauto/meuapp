@@ -27,6 +27,7 @@ import StorageTestPage from "@/pages/admin/StorageTestPage";
 import AuthPage from "@/pages/auth-page";
 import NotFound from "@/pages/not-found";
 import AvatarTestPage from "@/pages/AvatarTestPage";
+import SupabaseAuthTestPage from "@/pages/SupabaseAuthTestPage";
 
 // Páginas do Painel do Usuário
 import { ProtectedPainelRoute } from "@/components/painel/ProtectedPainelRoute";
@@ -89,6 +90,12 @@ function AppRoutes() {
           return null;
         }}
       </Route>
+      
+      {/* Página de teste de autenticação Supabase */}
+      <Route
+        path="/supabase-auth-test"
+        component={SupabaseAuthTestPage}
+      />
       
       {/* Página de teste de upload de avatar */}
       <ProtectedRoute
