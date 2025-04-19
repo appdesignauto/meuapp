@@ -216,7 +216,7 @@ const Header = () => {
             </Button>
 
             {user && user.role !== 'premium' && (
-              <Link href="/pricing">
+              <Link href="/planos">
                 <Button 
                   variant="ghost" 
                   className="hidden md:flex h-9 items-center rounded-full px-3 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-600 hover:text-blue-700 hover:from-blue-100 hover:to-blue-200 border border-blue-200"
@@ -340,14 +340,14 @@ const Header = () => {
                     </Link>
                     
                     {user.nivelacesso === 'usuario' || !user.tipoplano ? (
-                      <Link href="/pricing">
+                      <Link href="/planos">
                         <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
                           <div className="w-10 h-10 rounded-full flex items-center justify-center bg-green-50 mr-3">
                             <CreditCard className="w-5 h-5 text-green-600" />
                           </div>
                           <div className="flex flex-col flex-1">
-                            <span className="font-medium">Cobrança</span>
-                            <span className="text-xs text-gray-500">Assinar premium</span>
+                            <span className="font-medium">Assinatura</span>
+                            <span className="text-xs text-gray-500">Fazer upgrade</span>
                           </div>
                           <Badge variant="outline" className="bg-green-100 border-green-200 text-green-700 text-xs">UPGRADE</Badge>
                         </DropdownMenuItem>
