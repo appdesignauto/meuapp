@@ -2238,26 +2238,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         format: 'webp' as const
       };
       
-      // Devido aos problemas persistentes com o Supabase, vamos usar diretamente o armazenamento local
-      // que tem se mostrado mais confiável para imagens de perfil
+      // Usar o bucket "avatars" dedicado para avatares de usuários
       let imageUrl = null;
       let uploadSuccess = false;
       
       try {
-        console.log("Usando armazenamento local para imagem de perfil...");
+        console.log("Tentando upload para bucket 'avatars' do Supabase...");
         
-        // Usamos diretamente o método localUpload do serviço de armazenamento
-        const localResult = await storageService.localUpload(req.file, options);
-        imageUrl = localResult.imageUrl;
+        // Usar o método especializado para avatares
+        const result = await supabaseStorageService.uploadAvatar(req.file, options);
+        imageUrl = result.imageUrl;
         uploadSuccess = true;
         
-        console.log("Upload local concluído com sucesso:", imageUrl);
-      } catch (localError: any) {
-        console.error("Erro no armazenamento local:", localError);
-        return res.status(500).json({ 
-          message: "Não foi possível processar o upload da imagem. Tente novamente.",
-          details: localError.message || "Erro desconhecido"
-        });
+        console.log("Upload de avatar concluído com sucesso:", imageUrl);
+      } catch (uploadError: any) {
+        console.error("Erro no upload para bucket de avatars:", uploadError);
+        
+        // Fallback para armazenamento local
+        try {
+          console.log("Usando armazenamento local como fallback para imagem de perfil...");
+          
+          const localResult = await storageService.localUpload(req.file, options);
+          imageUrl = localResult.imageUrl;
+          uploadSuccess = true;
+          
+          console.log("Upload local concluído com sucesso:", imageUrl);
+        } catch (localError: any) {
+          console.error("Erro no armazenamento local:", localError);
+          return res.status(500).json({ 
+            message: "Não foi possível processar o upload da imagem. Tente novamente.",
+            details: localError.message || "Erro desconhecido"
+          });
+        }
       }
       
       // Verificar se o upload foi bem-sucedido
@@ -2352,26 +2364,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         format: 'webp' as const
       };
       
-      // Devido aos problemas persistentes com o Supabase, vamos usar diretamente o armazenamento local
-      // que tem se mostrado mais confiável para imagens de perfil
+      // Usar o mesmo método de uploadAvatar do endpoint de usuários comuns
       let imageUrl = null;
       let uploadSuccess = false;
       
       try {
-        console.log("Usando armazenamento local para imagem de perfil de designer...");
+        console.log("Tentando upload para bucket 'avatars' do Supabase...");
         
-        // Usamos diretamente o método localUpload do serviço de armazenamento
-        const localResult = await storageService.localUpload(req.file, options);
-        imageUrl = localResult.imageUrl;
+        // Usar o método especializado para avatares
+        const result = await supabaseStorageService.uploadAvatar(req.file, options);
+        imageUrl = result.imageUrl;
         uploadSuccess = true;
         
-        console.log("Upload local concluído com sucesso:", imageUrl);
-      } catch (localError: any) {
-        console.error("Erro no armazenamento local:", localError);
-        return res.status(500).json({ 
-          message: "Não foi possível processar o upload da imagem. Tente novamente.",
-          details: localError.message || "Erro desconhecido"
-        });
+        console.log("Upload de avatar concluído com sucesso:", imageUrl);
+      } catch (uploadError: any) {
+        console.error("Erro no upload para bucket de avatars:", uploadError);
+        
+        // Fallback para armazenamento local
+        try {
+          console.log("Usando armazenamento local como fallback para imagem de perfil de designer...");
+          
+          const localResult = await storageService.localUpload(req.file, options);
+          imageUrl = localResult.imageUrl;
+          uploadSuccess = true;
+          
+          console.log("Upload local concluído com sucesso:", imageUrl);
+        } catch (localError: any) {
+          console.error("Erro no armazenamento local:", localError);
+          return res.status(500).json({ 
+            message: "Não foi possível processar o upload da imagem. Tente novamente.",
+            details: localError.message || "Erro desconhecido"
+          });
+        }
       }
       
       // Verificar se o upload foi bem-sucedido

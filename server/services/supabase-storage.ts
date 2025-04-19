@@ -16,7 +16,9 @@ if (!supabaseUrl || !supabaseKey) {
 const supabase = createClient(supabaseUrl!, supabaseKey!);
 
 // Nome do bucket para armazenar as imagens
-const BUCKET_NAME = 'designauto-images';
+// Nome dos buckets para armazenamento de imagens
+const BUCKET_NAME = 'designauto-images'; // Bucket para artes e imagens do sistema
+const AVATARS_BUCKET = 'avatars'; // Bucket específico para avatares de usuários
 
 interface ImageOptimizationOptions {
   width?: number;
@@ -364,7 +366,7 @@ export class SupabaseStorageService {
   /**
    * Extrai o caminho do arquivo da URL pública do Supabase
    */
-  private extractPathFromUrl(url: string): string | null {
+  private extractPathFromUrl(url: string, bucketName = BUCKET_NAME): string | null {
     try {
       // Padrão de URL do Supabase Storage: 
       // https://{instance}.supabase.co/storage/v1/object/public/{bucket}/{path}
@@ -372,9 +374,9 @@ export class SupabaseStorageService {
       const parts = urlObj.pathname.split('/');
       
       // Encontra o índice do bucket name
-      const bucketIndex = parts.indexOf(BUCKET_NAME);
+      const bucketIndex = parts.indexOf(bucketName);
       if (bucketIndex === -1) {
-        console.warn("Bucket não encontrado na URL:", url);
+        console.warn(`Bucket '${bucketName}' não encontrado na URL:`, url);
         return null;
       }
       
@@ -383,6 +385,122 @@ export class SupabaseStorageService {
     } catch (error) {
       console.error("Erro ao extrair caminho da URL:", error);
       return null;
+    }
+  }
+  
+  /**
+   * Método específico para upload de avatares usando o bucket 'avatars'
+   * Otimiza e redimensiona a imagem para uso como avatar de perfil
+   */
+  async uploadAvatar(
+    file: Express.Multer.File,
+    options: ImageOptimizationOptions = {}
+  ): Promise<{ imageUrl: string; storageType?: string }> {
+    if (!file) {
+      throw new Error("Nenhum arquivo foi fornecido");
+    }
+
+    // Certifica-se de que temos conexão com o Supabase
+    await this.initBucket();
+
+    try {
+      console.log("Tentando upload de avatar para bucket 'avatars' no Supabase...");
+      console.log(`Nome original: ${file.originalname}`);
+      console.log(`Tipo MIME: ${file.mimetype}`);
+      console.log(`Tamanho: ${file.size} bytes`);
+
+      // Otimização da imagem para avatar (quadrado, tamanho específico)
+      const optimizedBuffer = await this.optimizeImage(file.buffer, {
+        width: options.width || 400,   // Tamanho específico para avatar
+        height: options.height || 400, // Avatar quadrado por padrão
+        quality: options.quality || 85, // Qualidade boa para detalhes faciais
+        format: "webp"                 // Formato moderno e comprimido
+      });
+
+      // Gera nome de arquivo único
+      const uuid = randomUUID();
+      const avatarPath = `${uuid}.webp`;
+
+      // Upload do avatar para o bucket específico do Supabase
+      const { error, data } = await supabase.storage
+        .from(AVATARS_BUCKET)
+        .upload(avatarPath, optimizedBuffer, {
+          contentType: 'image/webp',
+          upsert: true  // Sobrescreve se necessário
+        });
+
+      if (error) {
+        throw new Error(`Erro no upload do avatar: ${error.message}`);
+      }
+
+      console.log("Upload de avatar para Supabase concluído com sucesso!");
+
+      // Obtém URL pública para acesso
+      const { data: urlData } = supabase.storage
+        .from(AVATARS_BUCKET)
+        .getPublicUrl(avatarPath);
+
+      return {
+        imageUrl: urlData.publicUrl,
+        storageType: "supabase_avatar"
+      };
+    } catch (error) {
+      console.error("Erro no upload de avatar para Supabase:", error);
+      
+      // Tenta usar o fallback local em caso de erro
+      console.log("Tentando fallback local para avatar após erro no Supabase...");
+      
+      // Usamos o mesmo serviço de storage local, mas com pasta específica para avatares
+      try {
+        // Diretório para avatares
+        const avatarsDir = path.join(process.cwd(), 'public', 'uploads', 'avatars');
+        
+        try {
+          if (!fs.existsSync('public')) {
+            fs.mkdirSync('public');
+          }
+          if (!fs.existsSync(path.join('public', 'uploads'))) {
+            fs.mkdirSync(path.join('public', 'uploads'));
+          }
+          if (!fs.existsSync(avatarsDir)) {
+            fs.mkdirSync(avatarsDir);
+          }
+        } catch (err) {
+          console.error("Erro ao criar diretórios para avatares:", err);
+        }
+        
+        // Otimização da imagem (mesma lógica do caso de sucesso)
+        const optimizedBuffer = await this.optimizeImage(file.buffer, {
+          width: options.width || 400,
+          height: options.height || 400,
+          quality: options.quality || 85,
+          format: "webp"
+        });
+        
+        // Gera um nome único para o arquivo
+        const uniqueId = randomUUID();
+        const fileName = `${uniqueId}.webp`;
+        
+        // Caminho completo do arquivo
+        const filePath = path.join(avatarsDir, fileName);
+        
+        // Salva o arquivo otimizado
+        fs.writeFileSync(filePath, optimizedBuffer);
+        
+        console.log("Upload local de avatar concluído com sucesso!");
+        
+        // Retorna a URL relativa
+        return {
+          imageUrl: `/uploads/avatars/${fileName}`,
+          storageType: "local_avatar"
+        };
+      } catch (fallbackError) {
+        console.error("Erro no fallback local para avatar:", fallbackError);
+        return {
+          imageUrl: "https://placehold.co/400x400?text=Avatar+Indisponível",
+          storageType: "error"
+        };
+      }
     }
   }
   
