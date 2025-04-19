@@ -2194,6 +2194,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Logging completo para debug
       console.log("=== INÍCIO DO UPLOAD DE IMAGEM DE PERFIL ===");
       console.log(`Usuário ID: ${userId}`);
+      console.log(`Timestamp: ${new Date().toISOString()}`);
       
       // Verificar se o arquivo foi enviado
       if (!req.file) {
@@ -2214,6 +2215,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "O arquivo enviado não é uma imagem válida" });
       }
       
+      // Verificar se o buffer tem conteúdo
+      if (!req.file.buffer || req.file.buffer.length === 0) {
+        console.error("ERRO: Buffer do arquivo vazio ou inválido");
+        return res.status(400).json({ message: "Dados da imagem inválidos ou corrompidos" });
+      }
+      
       // Verificar se o usuário existe
       const [user] = await db.select()
         .from(users)
@@ -2224,11 +2231,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Usuário não encontrado" });
       }
       
-      // Verificar se o buffer tem conteúdo
-      if (!req.file.buffer || req.file.buffer.length === 0) {
-        console.error("ERRO: Buffer do arquivo vazio ou inválido");
-        return res.status(400).json({ message: "Dados da imagem inválidos ou corrompidos" });
-      }
+      console.log("Informações do usuário para upload:", {
+        userId: user.id,
+        username: user.username,
+        nivelacesso: user.nivelacesso,
+        profileImageAtual: !!user.profileimageurl ? 'Existe' : 'Não existe'
+      });
       
       // Opções para o processamento da imagem
       const options = {
@@ -2238,69 +2246,121 @@ export async function registerRoutes(app: Express): Promise<Server> {
         format: 'webp' as const
       };
       
-      // Usar o bucket "avatars" dedicado para avatares de usuários
+      // Estratégia de upload em cascata: tenta Supabase primeiro, depois fallback para local
+      console.log("INICIANDO ESTRATÉGIA DE UPLOAD EM CASCATA");
+      
       let imageUrl = null;
       let uploadSuccess = false;
+      let storageType = "";
+      let errorDetails = [];
       
+      // ETAPA 1: Tentar upload para Supabase (bucket avatars)
       try {
-        console.log("Tentando upload para bucket 'avatars' do Supabase...");
+        console.log("ETAPA 1: Tentando upload para bucket 'avatars' do Supabase...");
         
-        // Usar o método especializado para avatares
         const result = await supabaseStorageService.uploadAvatar(req.file, options);
         imageUrl = result.imageUrl;
+        storageType = result.storageType || "supabase_avatar";
         uploadSuccess = true;
         
-        console.log("Upload de avatar concluído com sucesso:", imageUrl);
-      } catch (uploadError: any) {
-        console.error("Erro no upload para bucket de avatars:", uploadError);
+        console.log("✅ ETAPA 1: Upload para Supabase concluído com sucesso");
+        console.log(`URL da imagem: ${imageUrl}`);
+        console.log(`Tipo de armazenamento: ${storageType}`);
+      } catch (supabaseError: any) {
+        console.error("❌ ETAPA 1: Erro no upload para Supabase:", supabaseError);
+        errorDetails.push({
+          stage: "supabase_upload",
+          message: supabaseError.message,
+          stack: supabaseError.stack
+        });
         
-        // Fallback para armazenamento local
+        // Continua para a próxima etapa (fallback local)
+      }
+      
+      // ETAPA 2: Fallback para armazenamento local (se Supabase falhou)
+      if (!uploadSuccess) {
         try {
-          console.log("Usando armazenamento local como fallback para imagem de perfil...");
+          console.log("ETAPA 2: Tentando upload para armazenamento local...");
           
-          const localResult = await storageService.localUpload(req.file, options);
+          const localResult = await storageService.localUpload(req.file, {
+            ...options,
+            targetFolder: 'avatars' // Pasta específica para avatares
+          });
+          
           imageUrl = localResult.imageUrl;
+          storageType = "local_avatar";
           uploadSuccess = true;
           
-          console.log("Upload local concluído com sucesso:", imageUrl);
+          console.log("✅ ETAPA 2: Upload local concluído com sucesso");
+          console.log(`URL da imagem: ${imageUrl}`);
         } catch (localError: any) {
-          console.error("Erro no armazenamento local:", localError);
-          return res.status(500).json({ 
-            message: "Não foi possível processar o upload da imagem. Tente novamente.",
-            details: localError.message || "Erro desconhecido"
+          console.error("❌ ETAPA 2: Erro no armazenamento local:", localError);
+          errorDetails.push({
+            stage: "local_upload",
+            message: localError.message,
+            stack: localError.stack
           });
+          
+          // Tentou todas as opções e falhou
         }
       }
       
-      // Verificar se o upload foi bem-sucedido
+      // Verificar se alguma das estratégias foi bem-sucedida
       if (!uploadSuccess || !imageUrl) {
-        console.error("FALHA TOTAL no upload da imagem de perfil");
+        console.error("FALHA TOTAL: Todas as estratégias de upload falharam");
+        console.error("Detalhes dos erros:", JSON.stringify(errorDetails, null, 2));
+        
         return res.status(500).json({ 
-          message: "Não foi possível processar o upload da imagem. Tente novamente."
+          message: "Não foi possível processar o upload da imagem. Tente novamente.",
+          details: errorDetails.map(e => e.message).join("; ")
         });
       }
       
-      // Atualizar perfil do usuário com nova imagem (com URL válida)
-      console.log(`Atualizando perfil do usuário ${userId} com nova imagem: ${imageUrl}`);
+      // Atualizar perfil do usuário com nova imagem
+      console.log("Atualizando perfil do usuário com nova imagem...");
+      console.log(`- Usuário ID: ${userId}`);
+      console.log(`- Nova imagem URL: ${imageUrl}`);
+      console.log(`- Armazenamento: ${storageType}`);
       
-      await db.update(users)
-        .set({
-          profileimageurl: imageUrl,
-          atualizadoem: new Date() // Usando o campo correto conforme o schema
-        })
-        .where(eq(users.id, userId));
-      
-      console.log("Perfil atualizado com sucesso!");
-      
-      // Retornar URL da imagem para uso no frontend
-      return res.json({ 
-        imageUrl,
-        message: "Imagem de perfil atualizada com sucesso"
-      });
+      try {
+        console.log("Executando atualização no banco de dados...");
+        
+        const updateResult = await db.update(users)
+          .set({
+            profileimageurl: imageUrl,
+            atualizadoem: new Date()
+          })
+          .where(eq(users.id, userId))
+          .returning();
+          
+        console.log("Resultado da atualização:", updateResult);
+        console.log("Perfil atualizado com sucesso no banco de dados!");
+        
+        // Retornar URL da imagem para uso no frontend
+        return res.json({ 
+          imageUrl,
+          message: "Imagem de perfil atualizada com sucesso",
+          storageType
+        });
+      } catch (dbError: any) {
+        console.error("ERRO NA ATUALIZAÇÃO DO BANCO DE DADOS:", dbError);
+        
+        // Mesmo com erro no banco, retornamos sucesso parcial com a URL
+        // O cliente ainda pode exibir a imagem mesmo que não tenha sido salva no perfil
+        return res.status(206).json({
+          imageUrl,
+          message: "Imagem foi processada, mas houve um erro ao salvá-la no seu perfil. A imagem pode não persistir após logout.",
+          error: dbError.message,
+          storageType
+        });
+      }
     } catch (error: any) {
-      console.error("Erro crítico ao processar upload de imagem de perfil:", error);
+      console.error("ERRO CRÍTICO no processamento de imagem de perfil:", error);
+      console.error("Stack trace:", error.stack);
+      
+      // Erro genérico que escapou dos tratamentos específicos
       return res.status(500).json({ 
-        message: "Erro ao processar imagem de perfil",
+        message: "Erro ao processar imagem de perfil. Tente novamente mais tarde.",
         details: error.message || "Erro interno do servidor"
       });
     }

@@ -237,18 +237,34 @@ export default function PainelPerfil() {
       console.log('Enviando imagem:', file.name, file.type, `${(file.size / 1024).toFixed(2)}KB`);
       
       try {
+        console.log('Iniciando upload de imagem...');
         const response = await fetch('/api/users/profile-image', {
           method: 'POST',
           body: formData,
           credentials: 'include',
         });
         
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || 'Falha ao fazer upload da imagem');
+        console.log('Resposta recebida:', response.status, response.statusText);
+        
+        let errorData = {};
+        try {
+          // Tenta extrair os dados JSON mesmo em caso de erro
+          errorData = await response.json();
+          console.log('Dados da resposta:', errorData);
+        } catch (jsonError) {
+          console.error('Não foi possível extrair JSON da resposta:', jsonError);
         }
         
-        return await response.json();
+        if (!response.ok) {
+          console.error('Erro no upload:', response.status, errorData);
+          throw new Error(
+            errorData.message || 
+            errorData.details || 
+            `Falha ao fazer upload da imagem (${response.status}: ${response.statusText})`
+          );
+        }
+        
+        return errorData;
       } catch (err) {
         console.error('Erro na requisição de upload:', err);
         throw err;
