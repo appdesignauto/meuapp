@@ -58,7 +58,8 @@ export function SupabaseLoginForm() {
       <CardHeader>
         <CardTitle>Login com Supabase</CardTitle>
         <CardDescription>
-          Faça login com sua conta do Supabase
+          Faça login com sua conta do Supabase. 
+          Se você acabou de se registrar, verifique seu email para confirmação primeiro.
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
@@ -170,7 +171,9 @@ export function SupabaseRegisterForm() {
       <CardHeader>
         <CardTitle>Cadastro com Supabase</CardTitle>
         <CardDescription>
-          Crie uma nova conta usando Supabase
+          Crie uma nova conta usando Supabase. Após o cadastro, você 
+          receberá um email de confirmação e depois poderá fazer login.
+          (Durante o teste, a confirmação será feita automaticamente)
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>

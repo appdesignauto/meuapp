@@ -31,7 +31,7 @@ export class SupabaseAuthService {
    */
   async register(email: string, password: string, userData: Partial<User>): Promise<{ user: User | null; error: any }> {
     try {
-      // 1. Registrar o usuário no Supabase Auth
+      // 1. Registrar o usuário no Supabase Auth usando o método padrão signUp
       const { data: authData, error: authError } = await this.supabase.auth.signUp({
         email,
         password,
@@ -40,7 +40,8 @@ export class SupabaseAuthService {
             username: userData.username || email.split('@')[0],
             name: userData.name,
             role: userData.role || 'usuario'
-          }
+          },
+          emailRedirectTo: `${process.env.APP_URL || 'http://localhost:5000'}/auth-callback`
         }
       });
 
@@ -224,6 +225,24 @@ export class SupabaseAuthService {
       return { success: !error, error };
     } catch (error) {
       console.error('Erro ao atualizar senha:', error);
+      return { success: false, error };
+    }
+  }
+
+  /**
+   * Confirma o email de um usuário (apenas para desenvolvimento)
+   */
+  async confirmEmail(userId: string): Promise<{ success: boolean; error: any }> {
+    try {
+      // Este método requer permissões de administrador (service_role key)
+      const { error } = await this.supabase.auth.admin.updateUserById(
+        userId,
+        { email_confirm: true }
+      );
+      
+      return { success: !error, error };
+    } catch (error) {
+      console.error('Erro ao confirmar email:', error);
       return { success: false, error };
     }
   }

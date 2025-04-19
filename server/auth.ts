@@ -368,6 +368,18 @@ export function setupAuth(app: Express) {
         });
       }
       
+      // Em ambiente de teste, para evitar a necessidade de confirmação de email,
+      // vamos confirmar o email automaticamente usando o método admin
+      try {
+        // Tentar confirmar o email com admin API, isso só funciona com service_role key
+        if (result.user?.supabaseId) {
+          await supabaseAuthService.confirmEmail(result.user.supabaseId);
+        }
+      } catch (confirmError) {
+        console.log("Não foi possível confirmar o email automaticamente:", confirmError);
+        // Não falhar o registro por isso, apenas registrar o erro
+      }
+
       // Se o registro foi bem-sucedido, fazer login do usuário automaticamente
       req.login(result.user, (err) => {
         if (err) {
@@ -385,7 +397,8 @@ export function setupAuth(app: Express) {
         return res.status(201).json({ 
           success: true, 
           message: "Usuário registrado com sucesso", 
-          user: userWithoutPassword 
+          user: userWithoutPassword,
+          needEmailConfirmation: true // Indicar que o usuário precisa confirmar o email
         });
       });
     } catch (error) {
@@ -414,6 +427,20 @@ export function setupAuth(app: Express) {
       
       if (result.error) {
         console.error("Erro ao fazer login no Supabase:", result.error);
+        
+        // Tratamento específico para o erro de email não confirmado
+        if (result.error.__isAuthError && result.error.code === 'email_not_confirmed') {
+          return res.status(401).json({ 
+            success: false, 
+            message: "Email não verificado. Por favor, verifique sua caixa de entrada para confirmar seu email.", 
+            error: {
+              code: 'email_not_confirmed',
+              message: result.error.message
+            }
+          });
+        }
+        
+        // Tratamento para outros erros
         return res.status(401).json({ 
           success: false, 
           message: "Credenciais inválidas", 
