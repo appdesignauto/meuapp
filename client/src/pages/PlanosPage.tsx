@@ -41,15 +41,12 @@ export default function PlanosPage() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
   const { theme } = useTheme();
-  const [faturamentoAnual, setFaturamentoAnual] = useState(true);
   const [tabAtiva, setTabAtiva] = useState<"todos" | "populares">("todos");
 
   // Constantes de preços
-  const precoMensal = 29.90;
-  const precoAnual = 239.90;
-  const precoAnualMensal = 19.99;
+  const precoMensal = 47;
+  const precoAnual = 197;
   const precoVitalicio = 997;
-  const precoPersonalizado = 1997;
 
   // Lista de planos
   const planos: Plano[] = [
@@ -75,7 +72,7 @@ export default function PlanosPage() {
         { nome: "Modelos premium", incluido: false },
         { nome: "Novos designs semanais", incluido: false },
         { nome: "Suporte prioritário", incluido: false },
-        { nome: "Modelos personalizados", incluido: false }
+        { nome: "Acesso vitalício", incluido: false }
       ],
       maxDownloads: 5,
       limitado: true
@@ -85,8 +82,7 @@ export default function PlanosPage() {
       nome: "Premium Mensal",
       slug: "premium-mensal",
       tipo: "mensal",
-      preco: faturamentoAnual ? precoAnualMensal : precoMensal,
-      precoOriginal: precoMensal,
+      preco: precoMensal,
       recursosPrincipais: [
         "Downloads ilimitados",
         "Acesso a todas categorias",
@@ -102,10 +98,10 @@ export default function PlanosPage() {
         { nome: "Suporte prioritário", incluido: true },
         { nome: "Modelos básicos", incluido: true },
         { nome: "Suporte via e-mail", incluido: true },
-        { nome: "Modelos personalizados", incluido: false },
-        { nome: "Criação sob demanda", incluido: false }
+        { nome: "Acesso vitalício", incluido: false },
+        { nome: "Todas atualizações futuras", incluido: false }
       ],
-      badgeText: faturamentoAnual ? "Economize 20%" : undefined
+      cor: "bg-gradient-to-br from-blue-500 to-purple-500"
     },
     {
       id: "anual",
@@ -119,7 +115,7 @@ export default function PlanosPage() {
         "Acesso a todas categorias",
         "Novos designs semanais",
         "Suporte prioritário",
-        "Economize 33% vs mensal"
+        "Economize vs mensal"
       ],
       recursos: [
         { nome: "Downloads ilimitados", incluido: true, destaque: true },
@@ -130,11 +126,12 @@ export default function PlanosPage() {
         { nome: "Suporte prioritário", incluido: true },
         { nome: "Modelos básicos", incluido: true },
         { nome: "Suporte via e-mail", incluido: true },
-        { nome: "Modelos personalizados", incluido: false },
-        { nome: "Criação sob demanda", incluido: false }
+        { nome: "Acesso vitalício", incluido: false },
+        { nome: "Todas atualizações futuras", incluido: false }
       ],
       destaque: true,
-      badgeText: "Mais popular"
+      badgeText: "Mais popular",
+      cor: "bg-gradient-to-br from-amber-500 to-orange-600"
     },
     {
       id: "vitalicio",
@@ -159,38 +156,10 @@ export default function PlanosPage() {
         { nome: "Suporte prioritário", incluido: true },
         { nome: "Modelos básicos", incluido: true },
         { nome: "Suporte via e-mail", incluido: true },
-        { nome: "Modelos personalizados", incluido: false },
-        { nome: "Criação sob demanda", incluido: false }
+        { nome: "Todas atualizações futuras", incluido: true, destaque: true }
       ],
-      badgeText: "Melhor custo-benefício"
-    },
-    {
-      id: "personalizado",
-      nome: "Personalizado",
-      slug: "personalizado",
-      tipo: "personalizado",
-      preco: precoPersonalizado,
-      recursosPrincipais: [
-        "Tudo do plano Vitalício",
-        "Designs personalizados",
-        "Banco de imagens exclusivo",
-        "Suporte dedicado",
-        "Criação sob demanda"
-      ],
-      recursos: [
-        { nome: "Acesso vitalício", incluido: true },
-        { nome: "Downloads ilimitados", incluido: true },
-        { nome: "Acesso a todas categorias", incluido: true },
-        { nome: "Sem marca d'água", incluido: true },
-        { nome: "Novos designs semanais", incluido: true },
-        { nome: "Modelos premium", incluido: true },
-        { nome: "Suporte prioritário", incluido: true },
-        { nome: "Modelos básicos", incluido: true },
-        { nome: "Suporte via e-mail", incluido: true },
-        { nome: "Modelos personalizados", incluido: true, destaque: true },
-        { nome: "Criação sob demanda", incluido: true, destaque: true }
-      ],
-      badgeText: "Ultimate"
+      badgeText: "Melhor custo-benefício",
+      cor: "bg-gradient-to-br from-emerald-500 to-green-600"
     }
   ];
 
@@ -224,22 +193,6 @@ export default function PlanosPage() {
               <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
                 Escolha o plano ideal para suas necessidades e comece a criar designs profissionais hoje mesmo.
               </p>
-            </div>
-            <div className="flex items-center space-x-2 mt-6">
-              <span className={cn("text-sm", !faturamentoAnual && "font-medium text-foreground")}>Mensal</span>
-              <Switch 
-                checked={faturamentoAnual} 
-                onCheckedChange={setFaturamentoAnual}
-                className="data-[state=checked]:bg-primary"
-              />
-              <div className="flex items-center">
-                <span className={cn("text-sm", faturamentoAnual && "font-medium text-foreground")}>Anual</span>
-                {faturamentoAnual && (
-                  <Badge variant="outline" className="ml-2 bg-primary/10 text-primary text-xs font-medium">
-                    Economize 33%
-                  </Badge>
-                )}
-              </div>
             </div>
           </div>
         </div>
