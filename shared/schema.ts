@@ -36,6 +36,9 @@ export const users = pgTable("users", {
   
   // Campo para compatibilidade com o código existente - será descontinuado gradualmente
   role: text("role"),
+  
+  // ID do usuário no Supabase Auth
+  supabaseId: text("supabaseId").unique(),
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({

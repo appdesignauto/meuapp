@@ -8,6 +8,7 @@ import { User as SelectUser, users } from "@shared/schema";
 import connectPg from "connect-pg-simple";
 import { db, pool } from "./db";
 import { eq } from "drizzle-orm";
+import { supabaseAuthService } from "./services/supabase-auth";
 
 declare global {
   namespace Express {
@@ -331,6 +332,346 @@ export function setupAuth(app: Express) {
     } catch (error) {
       console.error("Erro ao obter detalhes do usuário:", error);
       res.status(500).json({ message: "Erro ao obter detalhes do usuário" });
+    }
+  });
+  
+  // =============================================
+  // SISTEMA DE AUTENTICAÇÃO SUPABASE - ROTAS
+  // =============================================
+  
+  // Registrar usuário com Supabase
+  app.post("/api/auth/supabase/register", async (req, res) => {
+    try {
+      const { email, password, name, username } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Email e senha são obrigatórios" 
+        });
+      }
+      
+      // Registrar usuário usando serviço Supabase
+      const result = await supabaseAuthService.register(email, password, { 
+        name, 
+        username: username || email.split('@')[0],
+        role: 'usuario',
+        nivelacesso: 'usuario'
+      });
+      
+      if (result.error) {
+        console.error("Erro ao registrar usuário no Supabase:", result.error);
+        return res.status(400).json({ 
+          success: false, 
+          message: "Erro ao registrar usuário", 
+          error: result.error 
+        });
+      }
+      
+      // Se o registro foi bem-sucedido, fazer login do usuário automaticamente
+      req.login(result.user, (err) => {
+        if (err) {
+          console.error("Erro ao fazer login após registro:", err);
+          return res.status(500).json({ 
+            success: false, 
+            message: "Usuário registrado, mas não foi possível fazer login automaticamente" 
+          });
+        }
+        
+        // Retornar dados do usuário (sem a senha)
+        const userWithoutPassword = { ...result.user };
+        delete userWithoutPassword.password;
+        
+        return res.status(201).json({ 
+          success: true, 
+          message: "Usuário registrado com sucesso", 
+          user: userWithoutPassword 
+        });
+      });
+    } catch (error) {
+      console.error("Erro ao registrar usuário com Supabase:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: `Erro ao registrar usuário: ${error instanceof Error ? error.message : 'Erro desconhecido'}` 
+      });
+    }
+  });
+  
+  // Login com Supabase
+  app.post("/api/auth/supabase/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Email e senha são obrigatórios" 
+        });
+      }
+      
+      // Realizar login usando serviço Supabase
+      const result = await supabaseAuthService.login(email, password);
+      
+      if (result.error) {
+        console.error("Erro ao fazer login no Supabase:", result.error);
+        return res.status(401).json({ 
+          success: false, 
+          message: "Credenciais inválidas", 
+          error: result.error 
+        });
+      }
+      
+      // Se o login foi bem-sucedido, fazer login do usuário no sistema local também
+      req.login(result.user, (err) => {
+        if (err) {
+          console.error("Erro ao fazer login local após autenticação Supabase:", err);
+          return res.status(500).json({ 
+            success: false, 
+            message: "Autenticado no Supabase, mas não foi possível fazer login no sistema local" 
+          });
+        }
+        
+        // Registrar último login
+        db.update(users)
+          .set({ 
+            ultimologin: new Date(), 
+            atualizadoem: new Date() 
+          })
+          .where(eq(users.id, result.user.id))
+          .execute()
+          .catch(err => {
+            console.error("Erro ao atualizar último login:", err);
+          });
+        
+        // Retornar dados do usuário (sem a senha)
+        const userWithoutPassword = { ...result.user };
+        delete userWithoutPassword.password;
+        
+        // Incluir token da sessão Supabase para uso no cliente
+        return res.status(200).json({ 
+          success: true, 
+          message: "Login realizado com sucesso", 
+          user: userWithoutPassword,
+          session: result.session
+        });
+      });
+    } catch (error) {
+      console.error("Erro ao fazer login com Supabase:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: `Erro ao fazer login: ${error instanceof Error ? error.message : 'Erro desconhecido'}` 
+      });
+    }
+  });
+  
+  // Logout com Supabase
+  app.post("/api/auth/supabase/logout", (req, res) => {
+    try {
+      // Realizar logout no Supabase
+      supabaseAuthService.logout()
+        .then(({ error }) => {
+          if (error) {
+            console.warn("Erro ao fazer logout do Supabase:", error);
+          }
+          
+          // Fazer logout local independentemente do resultado do Supabase
+          req.logout((err) => {
+            if (err) {
+              console.error("Erro ao fazer logout local:", err);
+              return res.status(500).json({ 
+                success: false, 
+                message: "Erro ao finalizar sessão local" 
+              });
+            }
+            
+            res.status(200).json({ 
+              success: true, 
+              message: "Logout realizado com sucesso" 
+            });
+          });
+        });
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: `Erro ao fazer logout: ${error instanceof Error ? error.message : 'Erro desconhecido'}` 
+      });
+    }
+  });
+  
+  // Recuperação de senha
+  app.post("/api/auth/supabase/reset-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Email é obrigatório" 
+        });
+      }
+      
+      // Verificar se o email existe em nosso sistema
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email));
+      
+      if (!user) {
+        // Por segurança, não revelamos se o email existe ou não
+        return res.status(200).json({ 
+          success: true, 
+          message: "Se o email estiver cadastrado, você receberá instruções para redefinir sua senha." 
+        });
+      }
+      
+      // Enviar email de recuperação de senha pelo Supabase
+      const result = await supabaseAuthService.resetPassword(email);
+      
+      if (result.error) {
+        console.error("Erro ao enviar email de recuperação de senha:", result.error);
+        return res.status(500).json({ 
+          success: false, 
+          message: "Erro ao enviar email de recuperação de senha", 
+          error: result.error 
+        });
+      }
+      
+      res.status(200).json({ 
+        success: true, 
+        message: "Se o email estiver cadastrado, você receberá instruções para redefinir sua senha." 
+      });
+    } catch (error) {
+      console.error("Erro ao processar recuperação de senha:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: `Erro ao processar recuperação de senha: ${error instanceof Error ? error.message : 'Erro desconhecido'}` 
+      });
+    }
+  });
+  
+  // Atualizar senha após recuperação
+  app.post("/api/auth/supabase/update-password", isAuthenticated, async (req, res) => {
+    try {
+      const { password } = req.body;
+      
+      if (!password) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Nova senha é obrigatória" 
+        });
+      }
+      
+      // Atualizar senha no Supabase
+      const result = await supabaseAuthService.updatePassword(password);
+      
+      if (result.error) {
+        console.error("Erro ao atualizar senha no Supabase:", result.error);
+        return res.status(500).json({ 
+          success: false, 
+          message: "Erro ao atualizar senha", 
+          error: result.error 
+        });
+      }
+      
+      // Atualizar senha no banco local também
+      const hashedPassword = await hashPassword(password);
+      
+      await db
+        .update(users)
+        .set({ 
+          password: hashedPassword,
+          atualizadoem: new Date()
+        })
+        .where(eq(users.id, req.user.id));
+      
+      res.status(200).json({ 
+        success: true, 
+        message: "Senha atualizada com sucesso" 
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar senha:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: `Erro ao atualizar senha: ${error instanceof Error ? error.message : 'Erro desconhecido'}` 
+      });
+    }
+  });
+  
+  // Verificar sessão do Supabase
+  app.get("/api/auth/supabase/session", async (req, res) => {
+    try {
+      const { session, error } = await supabaseAuthService.getSession();
+      
+      if (error) {
+        console.error("Erro ao verificar sessão no Supabase:", error);
+        return res.status(500).json({ 
+          success: false, 
+          message: "Erro ao verificar sessão", 
+          error 
+        });
+      }
+      
+      res.status(200).json({ 
+        success: true, 
+        session 
+      });
+    } catch (error) {
+      console.error("Erro ao verificar sessão:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: `Erro ao verificar sessão: ${error instanceof Error ? error.message : 'Erro desconhecido'}` 
+      });
+    }
+  });
+  
+  // Sincronizar usuário existente com Supabase
+  app.post("/api/auth/supabase/sync-user", isAdmin, async (req, res) => {
+    try {
+      const { userId, password } = req.body;
+      
+      if (!userId || !password) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "ID do usuário e senha são obrigatórios" 
+        });
+      }
+      
+      // Buscar usuário no banco local
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId));
+      
+      if (!user) {
+        return res.status(404).json({ 
+          success: false, 
+          message: "Usuário não encontrado" 
+        });
+      }
+      
+      // Sincronizar usuário com Supabase
+      const result = await supabaseAuthService.syncUserWithSupabase(userId, user.email, password);
+      
+      if (result.error) {
+        console.error("Erro ao sincronizar usuário com Supabase:", result.error);
+        return res.status(500).json({ 
+          success: false, 
+          message: "Erro ao sincronizar usuário", 
+          error: result.error 
+        });
+      }
+      
+      res.status(200).json({ 
+        success: true, 
+        message: "Usuário sincronizado com sucesso" 
+      });
+    } catch (error) {
+      console.error("Erro ao sincronizar usuário:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: `Erro ao sincronizar usuário: ${error instanceof Error ? error.message : 'Erro desconhecido'}` 
+      });
     }
   });
 
