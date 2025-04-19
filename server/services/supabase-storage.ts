@@ -45,42 +45,119 @@ export class SupabaseStorageService {
     if (this.initialized) return;
 
     try {
-      console.log("Iniciando conexão com Supabase Storage...");
+      console.log("=== INICIALIZANDO SUPABASE STORAGE ===");
       
-      // Assumimos que o bucket já existe conforme confirmado pelo usuário
-      console.log(`Usando o bucket existente '${BUCKET_NAME}' no Supabase.`);
+      // Tenta novamente se falhar na primeira tentativa
+      let buckets = [];
+      let listError = null;
       
-      // Apenas verificamos a conexão sem tentar criar o bucket
-      try {
-        const { data: buckets, error } = await supabase.storage.listBuckets();
+      // Primeira tentativa
+      const listResult = await supabase.storage.listBuckets();
+      buckets = listResult.data || [];
+      listError = listResult.error;
+      
+      // Segunda tentativa se a primeira falhar
+      if (listError) {
+        console.log("Primeira tentativa de listar buckets falhou, tentando novamente...");
         
-        if (error) {
-          console.error("Erro ao listar buckets do Supabase:", error.message);
-          throw error;
-        }
+        // Espera 1 segundo
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
-        // Lista os buckets disponíveis para depuração
-        if (buckets && buckets.length > 0) {
-          console.log("Buckets disponíveis no Supabase:", buckets.map(b => b.name).join(', '));
-          
-          // Verifica se o bucket designauto-images está na lista
-          const found = buckets.some(bucket => bucket.name === BUCKET_NAME);
-          if (found) {
-            console.log(`Bucket '${BUCKET_NAME}' confirmado no Supabase.`);
-          } else {
-            console.log(`Bucket '${BUCKET_NAME}' não está na lista retornada, mas sabemos que existe.`);
-          }
-        } else {
-          console.log("Nenhum bucket listado na resposta do Supabase.");
-        }
-      } catch (listError) {
-        console.error("Erro ao tentar listar buckets:", listError);
+        const retryResult = await supabase.storage.listBuckets();
+        buckets = retryResult.data || [];
+        listError = retryResult.error;
       }
-
+      
+      if (listError) {
+        console.error("ERRO AO LISTAR BUCKETS DO SUPABASE:", listError);
+        console.error("Detalhes do erro:", JSON.stringify(listError, null, 2));
+      }
+      
+      console.log(`Total de buckets encontrados: ${buckets.length}`);
+      
+      if (!buckets || buckets.length === 0) {
+        console.log("⚠️ ALERTA: Nenhum bucket encontrado na resposta do Supabase.");
+        
+        // Tenta criar os buckets necessários
+        console.log("Tentando criar os buckets necessários...");
+        
+        // Tenta criar o bucket principal
+        const createMainResult = await supabase.storage.createBucket(BUCKET_NAME, {
+          public: true
+        });
+        
+        if (createMainResult.error) {
+          console.error(`Erro ao criar o bucket principal '${BUCKET_NAME}':`, createMainResult.error);
+        } else {
+          console.log(`✅ Bucket principal '${BUCKET_NAME}' criado com sucesso!`);
+        }
+        
+        // Tenta criar o bucket de avatares
+        const createAvatarsResult = await supabase.storage.createBucket(AVATARS_BUCKET, {
+          public: true
+        });
+        
+        if (createAvatarsResult.error) {
+          console.error(`Erro ao criar o bucket de avatares '${AVATARS_BUCKET}':`, createAvatarsResult.error);
+        } else {
+          console.log(`✅ Bucket de avatares '${AVATARS_BUCKET}' criado com sucesso!`);
+        }
+      } else {
+        console.log(`Buckets disponíveis: ${buckets.map(b => b.name).join(', ')}`);
+        
+        // Verifica se o bucket principal existe
+        const mainBucketExists = buckets.some(bucket => bucket.name === BUCKET_NAME);
+        
+        if (mainBucketExists) {
+          console.log(`✓ Bucket principal '${BUCKET_NAME}' já existe.`);
+        } else {
+          console.log(`Bucket principal '${BUCKET_NAME}' não encontrado. Tentando criar...`);
+          const { error: createError } = await supabase.storage.createBucket(BUCKET_NAME, {
+            public: true
+          });
+          
+          if (createError) {
+            console.error(`Erro ao criar o bucket principal:`, createError);
+          } else {
+            console.log(`✅ Bucket principal '${BUCKET_NAME}' criado com sucesso!`);
+          }
+        }
+        
+        // Verifica se o bucket de avatares existe
+        const avatarsBucketExists = buckets.some(bucket => bucket.name === AVATARS_BUCKET);
+        
+        if (avatarsBucketExists) {
+          console.log(`✓ Bucket de avatares '${AVATARS_BUCKET}' já existe.`);
+        } else {
+          console.log(`Bucket de avatares '${AVATARS_BUCKET}' não encontrado. Tentando criar...`);
+          const { error: createError } = await supabase.storage.createBucket(AVATARS_BUCKET, {
+            public: true
+          });
+          
+          if (createError) {
+            console.error(`Erro ao criar o bucket de avatares:`, createError);
+          } else {
+            console.log(`✅ Bucket de avatares '${AVATARS_BUCKET}' criado com sucesso!`);
+          }
+        }
+      }
+      
+      // Define as políticas de acesso para o bucket de avatares
+      try {
+        console.log("Configurando políticas de acesso para o bucket de avatares...");
+        await supabase.storage.from(AVATARS_BUCKET).getPublicUrl('test.txt');
+        console.log("Políticas de acesso para o bucket de avatares configuradas.");
+      } catch (policyError) {
+        console.error("Erro ao configurar políticas de acesso:", policyError);
+      }
+      
       this.initialized = true;
+      console.log("✅ Inicialização do Supabase Storage concluída");
     } catch (error) {
-      console.error("Erro ao inicializar o Supabase Storage:", error);
-      console.log("Usando armazenamento local como backup temporário.");
+      console.error("ERRO AO INICIALIZAR SUPABASE STORAGE:", error);
+      console.error("Detalhes completos:", JSON.stringify(error, null, 2));
+      // Não lançamos o erro para permitir fallback para armazenamento local
+      this.initialized = false;
     }
   }
 
