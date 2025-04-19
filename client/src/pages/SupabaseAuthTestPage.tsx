@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SupabaseLoginForm, SupabaseRegisterForm, SupabasePasswordResetForm } from "@/components/auth/SupabaseLoginForm";
+import { SupabaseLoginForm, SupabaseRegisterForm, SupabasePasswordResetForm } from "@/components/auth/SupabaseAuthComponents";
 import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +11,8 @@ import { Loader2 } from "lucide-react";
 
 export default function SupabaseAuthTestPage() {
   const [activeTab, setActiveTab] = useState("login");
-  const { session, logoutWithSupabase } = useSupabaseAuth();
+  const { user, logout, getSession } = useSupabaseAuth();
+  const [sessionData, setSessionData] = useState<any>(null);
   const { toast } = useToast();
   const [confirmEmail, setConfirmEmail] = useState("");
   const [isConfirming, setIsConfirming] = useState(false);
@@ -75,18 +76,55 @@ export default function SupabaseAuthTestPage() {
           </p>
         </div>
 
-        {session ? (
+        {user ? (
           <div className="bg-card p-6 rounded-lg border mb-8">
             <h2 className="text-xl font-semibold mb-4">Usuário Autenticado</h2>
             <div className="space-y-4">
               <div className="p-4 bg-muted rounded-md overflow-auto">
                 <pre className="text-sm">
-                  {JSON.stringify(session, null, 2)}
+                  {JSON.stringify(user, null, 2)}
                 </pre>
               </div>
-              <Button variant="destructive" onClick={logoutWithSupabase}>
-                Sair
-              </Button>
+              <div className="flex space-x-2">
+                <Button 
+                  variant="destructive" 
+                  onClick={async () => {
+                    try {
+                      await logout();
+                      setSessionData(null);
+                    } catch (err) {
+                      console.error("Erro ao fazer logout:", err);
+                    }
+                  }}
+                >
+                  Sair
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  onClick={async () => {
+                    try {
+                      const { session } = await getSession();
+                      setSessionData(session);
+                    } catch (err) {
+                      console.error("Erro ao obter sessão:", err);
+                    }
+                  }}
+                >
+                  Verificar Sessão Supabase
+                </Button>
+              </div>
+              
+              {sessionData && (
+                <div>
+                  <h3 className="text-lg font-medium mb-2">Dados da Sessão Supabase:</h3>
+                  <div className="p-4 bg-muted rounded-md overflow-auto">
+                    <pre className="text-sm">
+                      {JSON.stringify(sessionData, null, 2)}
+                    </pre>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         ) : (
@@ -154,7 +192,7 @@ export default function SupabaseAuthTestPage() {
           <div className="space-y-2">
             <p className="text-sm">
               <span className="font-medium">Status da Sessão:</span>{" "}
-              {session ? "Autenticado" : "Não Autenticado"}
+              {user ? "Autenticado" : "Não Autenticado"}
             </p>
             <p className="text-sm">
               <span className="font-medium">Implementação:</span> Autenticação híbrida usando Supabase Auth + autenticação local
