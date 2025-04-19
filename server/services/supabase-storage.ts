@@ -404,41 +404,69 @@ export class SupabaseStorageService {
     await this.initBucket();
 
     try {
-      console.log("Tentando upload de avatar para bucket 'avatars' no Supabase...");
+      console.log("==== UPLOAD DE AVATAR PARA BUCKET 'avatars' ====");
       console.log(`Nome original: ${file.originalname}`);
       console.log(`Tipo MIME: ${file.mimetype}`);
       console.log(`Tamanho: ${file.size} bytes`);
 
+      // Lista os buckets para debug
+      try {
+        const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+        if (listError) {
+          console.error("Erro ao listar buckets para debug:", listError);
+        } else {
+          console.log("Buckets disponíveis:", buckets.map(b => b.name).join(", "));
+          if (buckets.some(b => b.name === AVATARS_BUCKET)) {
+            console.log(`✓ Bucket '${AVATARS_BUCKET}' encontrado na lista!`);
+          } else {
+            console.warn(`⚠️ Bucket '${AVATARS_BUCKET}' NÃO encontrado na lista de buckets!`);
+          }
+        }
+      } catch (bucketError) {
+        console.error("Erro ao listar buckets:", bucketError);
+      }
+
       // Otimização da imagem para avatar (quadrado, tamanho específico)
+      console.log("Iniciando otimização da imagem...");
       const optimizedBuffer = await this.optimizeImage(file.buffer, {
         width: options.width || 400,   // Tamanho específico para avatar
         height: options.height || 400, // Avatar quadrado por padrão
         quality: options.quality || 85, // Qualidade boa para detalhes faciais
         format: "webp"                 // Formato moderno e comprimido
       });
+      console.log(`Imagem otimizada: ${optimizedBuffer.length} bytes (${Math.round(optimizedBuffer.length/1024)}KB)`);
 
       // Gera nome de arquivo único
       const uuid = randomUUID();
       const avatarPath = `${uuid}.webp`;
+      console.log(`Nome de arquivo para upload: ${avatarPath}`);
 
       // Upload do avatar para o bucket específico do Supabase
-      const { error, data } = await supabase.storage
+      console.log(`Tentando upload para bucket '${AVATARS_BUCKET}'...`);
+      const uploadResult = await supabase.storage
         .from(AVATARS_BUCKET)
         .upload(avatarPath, optimizedBuffer, {
           contentType: 'image/webp',
           upsert: true  // Sobrescreve se necessário
         });
-
-      if (error) {
-        throw new Error(`Erro no upload do avatar: ${error.message}`);
+        
+      console.log("Resultado do upload:", JSON.stringify(uploadResult));
+      
+      if (uploadResult.error) {
+        console.error(`ERRO NO UPLOAD DO AVATAR: ${uploadResult.error.message}`);
+        console.error("Detalhes:", uploadResult.error);
+        throw new Error(`Erro no upload do avatar: ${uploadResult.error.message}`);
       }
 
-      console.log("Upload de avatar para Supabase concluído com sucesso!");
+      console.log("✓ Upload para bucket de avatars concluído com sucesso!");
 
       // Obtém URL pública para acesso
+      console.log("Obtendo URL pública...");
       const { data: urlData } = supabase.storage
         .from(AVATARS_BUCKET)
         .getPublicUrl(avatarPath);
+        
+      console.log(`URL pública gerada: ${urlData.publicUrl}`);
 
       return {
         imageUrl: urlData.publicUrl,
