@@ -3,10 +3,67 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SupabaseLoginForm, SupabaseRegisterForm, SupabasePasswordResetForm } from "@/components/auth/SupabaseLoginForm";
 import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 export default function SupabaseAuthTestPage() {
   const [activeTab, setActiveTab] = useState("login");
   const { session, logoutWithSupabase } = useSupabaseAuth();
+  const { toast } = useToast();
+  const [confirmEmail, setConfirmEmail] = useState("");
+  const [isConfirming, setIsConfirming] = useState(false);
+  
+  const handleConfirmEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!confirmEmail) {
+      toast({
+        variant: "destructive",
+        title: "Email obrigatório",
+        description: "Por favor, informe o email que deseja confirmar."
+      });
+      return;
+    }
+    
+    setIsConfirming(true);
+    
+    try {
+      const response = await fetch("/api/auth/supabase/confirm-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: confirmEmail }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || "Não foi possível confirmar o email");
+      }
+      
+      toast({
+        title: "Email confirmado",
+        description: "Email confirmado com sucesso! Agora você pode fazer login.",
+        variant: "default"
+      });
+      
+      // Limpar o campo após o sucesso
+      setConfirmEmail("");
+    } catch (error: any) {
+      console.error("Erro ao confirmar email:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro na confirmação",
+        description: error.message || "Ocorreu um erro ao tentar confirmar o email"
+      });
+    } finally {
+      setIsConfirming(false);
+    }
+  };
 
   return (
     <div className="container py-10">
@@ -50,6 +107,47 @@ export default function SupabaseAuthTestPage() {
             </TabsContent>
           </Tabs>
         )}
+        
+        {/* Ferramenta de confirmação de email */}
+        <div className="mt-8 border-t pt-6">
+          <h2 className="text-xl font-semibold mb-4">Ferramenta de Confirmação de Email</h2>
+          <Card>
+            <CardHeader>
+              <CardTitle>Confirmar Email Manualmente</CardTitle>
+              <CardDescription>
+                Use essa ferramenta para confirmar manualmente o email de um usuário durante os testes.
+                Isso permite fazer login mesmo sem ter acesso à caixa de entrada.
+              </CardDescription>
+            </CardHeader>
+            <form onSubmit={handleConfirmEmail}>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-email">Email para confirmar</Label>
+                  <Input
+                    id="confirm-email"
+                    type="email"
+                    placeholder="email@exemplo.com"
+                    value={confirmEmail}
+                    onChange={(e) => setConfirmEmail(e.target.value)}
+                    disabled={isConfirming}
+                    required
+                  />
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button type="submit" className="w-full" disabled={isConfirming}>
+                  {isConfirming ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Confirmando...
+                    </>
+                  ) : (
+                    "Confirmar Email"
+                  )}
+                </Button>
+              </CardFooter>
+            </form>
+          </Card>
+        </div>
         
         <div className="mt-8 border-t pt-6">
           <h2 className="text-xl font-semibold mb-4">Informações Técnicas</h2>

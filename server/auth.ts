@@ -655,6 +655,56 @@ export function setupAuth(app: Express) {
     }
   });
   
+  // Confirmar email de um usuário (somente para testes)
+  app.post("/api/auth/supabase/confirm-email", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Email é obrigatório" 
+        });
+      }
+      
+      // Buscar usuário no banco de dados pelo email
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email));
+        
+      if (!user || !user.supabaseId) {
+        return res.status(404).json({ 
+          success: false, 
+          message: "Usuário não encontrado ou não possui ID do Supabase" 
+        });
+      }
+      
+      // Tentar confirmar o email do usuário no Supabase
+      const result = await supabaseAuthService.confirmEmail(user.supabaseId);
+      
+      if (result.error) {
+        console.error("Erro ao confirmar email:", result.error);
+        return res.status(500).json({ 
+          success: false, 
+          message: "Não foi possível confirmar o email", 
+          error: result.error 
+        });
+      }
+      
+      return res.status(200).json({ 
+        success: true, 
+        message: "Email confirmado com sucesso. Agora você pode fazer login." 
+      });
+    } catch (error) {
+      console.error("Erro ao confirmar email:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: `Erro ao confirmar email: ${error instanceof Error ? error.message : 'Erro desconhecido'}` 
+      });
+    }
+  });
+
   // Sincronizar usuário existente com Supabase
   app.post("/api/auth/supabase/sync-user", isAdmin, async (req, res) => {
     try {
