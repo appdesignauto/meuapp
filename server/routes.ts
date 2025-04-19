@@ -17,6 +17,7 @@ import path from "path";
 import fs from "fs";
 import { storageService } from "./services/storage";
 import { supabaseStorageService } from "./services/supabase-storage";
+import { r2StorageService } from "./services/r2-storage";
 import { SubscriptionService } from "./services/subscription-service";
 import { HotmartService } from "./services/hotmart-service";
 import uploadMemory from "./middlewares/upload";
@@ -1611,6 +1612,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erro ao atualizar configurações do site:", error);
       res.status(500).json({ message: "Erro ao atualizar configurações do site" });
+    }
+  });
+
+  /**
+   * Rotas para teste de armazenamento (diagnóstico administrativo)
+   */
+  // Verificar conexão com serviços de armazenamento
+  app.get("/api/admin/storage/check-connection", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const service = req.query.service as string;
+      
+      if (!service) {
+        return res.status(400).json({
+          success: false,
+          message: "Parâmetro 'service' é obrigatório"
+        });
+      }
+      
+      if (service === "supabase") {
+        // Verificar conexão com Supabase
+        const result = await supabaseStorageService.checkConnection();
+        return res.json(result);
+      } 
+      else if (service === "r2") {
+        // Verificar conexão com R2
+        const result = await r2StorageService.checkConnection();
+        return res.json(result);
+      }
+      else {
+        return res.status(400).json({
+          success: false,
+          message: "Serviço inválido. Use 'supabase' ou 'r2'"
+        });
+      }
+    } catch (error: any) {
+      console.error(`Erro ao verificar conexão:`, error);
+      return res.status(500).json({
+        success: false,
+        message: `Erro ao verificar conexão: ${error.message || "Erro desconhecido"}`,
+        error: error.message
+      });
+    }
+  });
+  
+  // Testar upload para serviços de armazenamento
+  app.post("/api/admin/storage/test-upload", isAuthenticated, isAdmin, uploadMemory.single("image"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          message: "Nenhum arquivo fornecido"
+        });
+      }
+      
+      const service = req.query.service as string;
+      
+      if (!service) {
+        return res.status(400).json({
+          success: false,
+          message: "Parâmetro 'service' é obrigatório"
+        });
+      }
+      
+      if (service === "supabase") {
+        // Testar upload para Supabase
+        const result = await supabaseStorageService.testUpload(req.file);
+        return res.json(result);
+      } 
+      else if (service === "r2") {
+        // Testar upload para R2
+        const result = await r2StorageService.testUpload(req.file);
+        return res.json(result);
+      }
+      else {
+        return res.status(400).json({
+          success: false,
+          message: "Serviço inválido. Use 'supabase' ou 'r2'"
+        });
+      }
+    } catch (error: any) {
+      console.error(`Erro ao testar upload:`, error);
+      return res.status(500).json({
+        success: false,
+        message: `Erro ao testar upload: ${error.message || "Erro desconhecido"}`,
+        error: error.message
+      });
     }
   });
 

@@ -1,16 +1,50 @@
-import { S3Client, PutObjectCommand, HeadBucketCommand, ListObjectsCommand } from '@aws-sdk/client-s3';
-import { randomUUID } from 'crypto';
-import * as sharp from 'sharp';
+import { S3Client, ListBucketsCommand, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import * as fs from 'fs';
 import * as path from 'path';
+import sharp from 'sharp';
+import { v4 as uuidv4 } from 'uuid';
 
-const REGION = 'auto';
-const BUCKET_NAME = process.env.R2_BUCKET_NAME || 'designauto';
-const PUBLIC_URL = process.env.R2_PUBLIC_URL || '';
-const ENDPOINT = process.env.R2_ENDPOINT || '';
-const ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID || '';
-const SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY || '';
+// Configurações para Cloudflare R2
+const BUCKET_NAME = process.env.R2_BUCKET_NAME || 'designauto-images';
+const PUBLIC_URL = process.env.R2_PUBLIC_URL || 'https://pub-a063592364ea4478870d95c9c4115c4a.r2.dev';
+const R2_ENDPOINT = process.env.R2_ENDPOINT || 'https://32b65e21b65af0345c36f5c43fa32c54.r2.dev';
 
-// Interface para opções de otimização de imagem
+// Formato do nome de conta extraído do endpoint
+const ACCOUNT_ID = R2_ENDPOINT.includes('https://') 
+  ? R2_ENDPOINT.split('https://')[1].split('.')[0]
+  : R2_ENDPOINT;
+
+// Log de inicialização para verificar credenciais
+console.log("Detalhes das credenciais do R2:");
+console.log(`- R2_ACCESS_KEY_ID: ${process.env.R2_ACCESS_KEY_ID?.length} caracteres`);
+console.log(`- R2_SECRET_ACCESS_KEY: ${process.env.R2_SECRET_ACCESS_KEY?.length} caracteres`);
+console.log(`- R2_ENDPOINT: ${ACCOUNT_ID}`);
+console.log(`- R2_BUCKET_NAME: ${BUCKET_NAME}`);
+console.log(`- R2_PUBLIC_URL: ${PUBLIC_URL}`);
+
+console.log("Iniciando upload para R2...");
+console.log(`Usando endpoint fixo do R2: ${R2_ENDPOINT}`);
+console.log(`Account ID do R2: ${ACCOUNT_ID}`);
+
+// Inicializar o cliente S3 para R2
+const R2_CLIENT = new S3Client({
+  region: 'auto',
+  endpoint: R2_ENDPOINT,
+  credentials: {
+    accessKeyId: process.env.R2_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
+  },
+});
+
+// Log para confirmar as credenciais processadas
+console.log("Credenciais R2 processadas:");
+console.log(`- Access Key: ${process.env.R2_ACCESS_KEY_ID?.substring(0, 4)}...${process.env.R2_ACCESS_KEY_ID?.substring(process.env.R2_ACCESS_KEY_ID.length - 4)} (length: ${process.env.R2_ACCESS_KEY_ID?.length})`);
+console.log(`- Secret Key: ${process.env.R2_SECRET_ACCESS_KEY?.substring(0, 4)}...${process.env.R2_SECRET_ACCESS_KEY?.substring(process.env.R2_SECRET_ACCESS_KEY.length - 4)} (length: ${process.env.R2_SECRET_ACCESS_KEY?.length})`);
+console.log(`- Endpoint: ${R2_ENDPOINT}`);
+console.log(`- Bucket: ${BUCKET_NAME}`);
+console.log(`- URL Pública: ${PUBLIC_URL}`);
+
 interface ImageOptimizationOptions {
   width?: number;
   height?: number;
@@ -18,288 +52,391 @@ interface ImageOptimizationOptions {
   format?: "webp" | "jpeg" | "png";
 }
 
-export class R2StorageService {
-  private client: S3Client | null = null;
-  private connected: boolean = false;
-  private connectionError: string | null = null;
+class R2StorageService {
+  private initialized = false;
   private logs: string[] = [];
 
-  constructor() {
-    this.initializeClient();
+  private log(message: string): void {
+    console.log(`[R2Storage] ${message}`);
+    this.logs.push(`[${new Date().toISOString()}] ${message}`);
+    
+    // Limitar tamanho do log
+    if (this.logs.length > 100) {
+      this.logs.shift();
+    }
   }
 
-  private log(message: string) {
-    const timestamp = new Date().toISOString();
-    const logMessage = `${timestamp} - ${message}`;
-    this.logs.push(logMessage);
-    console.log(`[R2] ${message}`);
-  }
-
-  // Obter todos os logs armazenados
   public getLogs(): string[] {
     return [...this.logs];
   }
 
-  // Limpar logs
-  public clearLogs() {
+  public clearLogs(): void {
     this.logs = [];
   }
 
-  // Inicializar o cliente R2
-  private async initializeClient() {
+  constructor() {
+    this.log('Serviço R2 inicializado');
+  }
+
+  /**
+   * Verifica se o bucket existe e está acessível
+   */
+  async checkBucketExists(bucketName = BUCKET_NAME): Promise<boolean> {
     try {
-      this.log('Inicializando cliente R2...');
-
-      // Validar credenciais
-      if (!ACCESS_KEY_ID || !SECRET_ACCESS_KEY) {
-        this.connectionError = 'Credenciais R2 não configuradas (R2_ACCESS_KEY_ID e/ou R2_SECRET_ACCESS_KEY)';
-        this.log(`Erro: ${this.connectionError}`);
-        this.connected = false;
-        return;
-      }
-
-      if (!ENDPOINT) {
-        this.connectionError = 'Endpoint R2 não configurado (R2_ENDPOINT)';
-        this.log(`Erro: ${this.connectionError}`);
-        this.connected = false;
-        return;
-      }
-
-      // Criando o cliente R2
-      const endpointUrl = ENDPOINT.startsWith('http') 
-        ? ENDPOINT 
-        : `https://${ENDPOINT}`;
-
-      this.client = new S3Client({
-        region: REGION,
-        endpoint: endpointUrl,
-        credentials: {
-          accessKeyId: ACCESS_KEY_ID,
-          secretAccessKey: SECRET_ACCESS_KEY,
-        },
-      });
-
-      this.log(`Cliente R2 configurado com endpoint: ${endpointUrl}`);
-      this.log(`Bucket configurado: ${BUCKET_NAME}`);
+      this.log(`Verificando existência do bucket: ${bucketName}`);
       
-      // Verificar se o bucket existe
-      try {
-        this.log('Verificando acesso ao bucket...');
-        const command = new HeadBucketCommand({ Bucket: BUCKET_NAME });
-        await this.client.send(command);
-        
-        this.log('✓ Bucket existe e está acessível');
-        this.connected = true;
-        this.connectionError = null;
-      } catch (error: any) {
-        this.connectionError = `Erro ao acessar bucket: ${error.message || 'Erro desconhecido'}`;
-        this.log(`Erro: ${this.connectionError}`);
-        this.connected = false;
+      // Verificar a existência do bucket usando ListBucketsCommand
+      const { Buckets } = await R2_CLIENT.send(new ListBucketsCommand({}));
+      
+      const bucketExists = Buckets?.some(bucket => bucket.Name === bucketName) || false;
+      
+      if (bucketExists) {
+        this.log(`✅ Bucket '${bucketName}' encontrado`);
+      } else {
+        this.log(`❌ Bucket '${bucketName}' não encontrado`);
       }
-    } catch (error: any) {
-      this.connectionError = `Erro ao inicializar cliente R2: ${error.message || 'Erro desconhecido'}`;
-      this.log(`Erro: ${this.connectionError}`);
-      this.connected = false;
+      
+      return bucketExists;
+    } catch (error) {
+      this.log(`❌ Erro ao verificar bucket: ${error instanceof Error ? error.message : String(error)}`);
+      return false;
     }
   }
 
-  // Verificar conexão com o R2
-  public async checkConnection(): Promise<{ connected: boolean, message: string, logs: string[] }> {
-    this.clearLogs();
-    this.log('Verificando conexão com Cloudflare R2...');
-
-    if (!this.client) {
-      await this.initializeClient();
-    }
-
-    if (!this.connected) {
-      this.log(`Conexão com R2 falhou: ${this.connectionError || 'Erro desconhecido'}`);
-      return { 
-        connected: false, 
-        message: this.connectionError || 'Não foi possível estabelecer conexão com o R2', 
-        logs: this.getLogs() 
-      };
-    }
-
+  /**
+   * Lista os objetos em um bucket
+   */
+  async listObjects(bucketName = BUCKET_NAME, prefix = ''): Promise<{ success: boolean, objects?: any[], error?: string }> {
     try {
-      // Listar objetos para testar conexão
-      this.log('Testando conexão listando objetos...');
-      const command = new ListObjectsCommand({ 
-        Bucket: BUCKET_NAME,
-        MaxKeys: 1
+      this.log(`Listando objetos no bucket: ${bucketName}, prefix: ${prefix || 'raiz'}`);
+      
+      const command = new ListObjectsV2Command({
+        Bucket: bucketName,
+        Prefix: prefix
       });
       
-      const response = await this.client.send(command);
+      const response = await R2_CLIENT.send(command);
       
-      const count = response.Contents?.length || 0;
-      this.log(`✓ Conexão com R2 estabelecida com sucesso! Objetos encontrados: ${count}`);
+      this.log(`✅ Listagem concluída, encontrados ${response.Contents?.length || 0} objetos`);
       
-      return { 
-        connected: true, 
-        message: `Conexão estabelecida. Objetos no bucket: ${count}`, 
-        logs: this.getLogs() 
+      return {
+        success: true,
+        objects: response.Contents
       };
-    } catch (error: any) {
-      const errorMessage = `Erro ao listar objetos no bucket: ${error.message || 'Erro desconhecido'}`;
-      this.log(`Erro: ${errorMessage}`);
-      
-      return { 
-        connected: false, 
-        message: errorMessage, 
-        logs: this.getLogs() 
+    } catch (error) {
+      this.log(`❌ Erro ao listar objetos: ${error instanceof Error ? error.message : String(error)}`);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error)
       };
     }
   }
 
-  // Otimiza uma imagem antes de fazer upload
-  private async optimizeImage(
+  /**
+   * Otimiza uma imagem para upload
+   */
+  async optimizeImage(
     buffer: Buffer,
     options: ImageOptimizationOptions = {}
-  ): Promise<Buffer> {
-    const {
-      width,
-      height,
-      quality = 80,
-      format = "webp",
-    } = options;
-
-    this.log(`Otimizando imagem... ${width ? `Width: ${width}px, ` : ''}${height ? `Height: ${height}px, ` : ''}Quality: ${quality}, Format: ${format}`);
-
-    // Configura o processamento com sharp
-    let sharpInstance = sharp.default(buffer);
+  ): Promise<{ buffer: Buffer, width: number, height: number, format: string, originalSize: number, optimizedSize: number }> {
+    const startTime = Date.now();
+    this.log(`Iniciando otimização de imagem (${buffer.length} bytes)`);
     
-    // Redimensiona se width ou height forem fornecidos
-    if (width || height) {
-      sharpInstance = sharpInstance.resize({
-        width,
-        height,
-        fit: "inside",
-        withoutEnlargement: true,
-      });
+    // Analisar informações da imagem original
+    const originalSize = buffer.length;
+    const metadata = await sharp(buffer).metadata();
+    
+    // Configurações padrão de otimização
+    const width = options.width || metadata.width;
+    const height = options.height || metadata.height;
+    const format = options.format || 'webp';
+    const quality = options.quality || 80;
+    
+    this.log(`Configurações de otimização: ${width}x${height}, formato: ${format}, qualidade: ${quality}`);
+    
+    // Processar a imagem
+    let optimizedBuffer: Buffer;
+    
+    if (format === 'webp') {
+      optimizedBuffer = await sharp(buffer)
+        .resize(width, height)
+        .webp({ quality })
+        .toBuffer();
+    } else if (format === 'jpeg') {
+      optimizedBuffer = await sharp(buffer)
+        .resize(width, height)
+        .jpeg({ quality })
+        .toBuffer();
+    } else {
+      optimizedBuffer = await sharp(buffer)
+        .resize(width, height)
+        .png({ quality })
+        .toBuffer();
     }
-
-    // Converte e otimiza para o formato selecionado
-    try {
-      let outputBuffer: Buffer;
-      
-      if (format === "webp") {
-        outputBuffer = await sharpInstance.webp({ quality }).toBuffer();
-      } else if (format === "jpeg") {
-        outputBuffer = await sharpInstance.jpeg({ quality }).toBuffer();
-      } else {
-        outputBuffer = await sharpInstance.png({ quality }).toBuffer();
-      }
-      
-      this.log(`Imagem otimizada: ${buffer.length} bytes -> ${outputBuffer.length} bytes (${(outputBuffer.length / 1024).toFixed(2)} KB)`);
-      return outputBuffer;
-    } catch (error: any) {
-      this.log(`Erro ao otimizar imagem: ${error.message}`);
-      throw error;
-    }
+    
+    const optimizedSize = optimizedBuffer.length;
+    const reduction = ((originalSize - optimizedSize) / originalSize) * 100;
+    
+    const endTime = Date.now();
+    this.log(`✅ Otimização concluída em ${endTime - startTime}ms. Redução: ${reduction.toFixed(2)}%`);
+    
+    return {
+      buffer: optimizedBuffer,
+      width: width || metadata.width || 0,
+      height: height || metadata.height || 0,
+      format,
+      originalSize,
+      optimizedSize
+    };
   }
 
-  // Testar upload para o R2
-  public async testUpload(
-    file: Express.Multer.File,
+  /**
+   * Gera um nome de arquivo único
+   */
+  private generateFilename(originalFilename: string, isThumb = false): string {
+    const uuid = uuidv4();
+    const extension = path.extname(originalFilename) || '.jpg';
+    const prefix = isThumb ? 'thumb_' : '';
+    return `${prefix}${uuid}${extension}`;
+  }
+
+  /**
+   * Faz upload de uma imagem para o R2
+   */
+  async uploadImage(
+    file: Express.Multer.File | { buffer: Buffer; originalname: string; mimetype: string },
+    folder = 'images',
     options: ImageOptimizationOptions = {}
-  ): Promise<{ 
-    success: boolean; 
-    imageUrl?: string; 
-    error?: string; 
-    storageType?: string;
-    bucket?: string; 
-    logs: string[] 
-  }> {
-    this.clearLogs();
-    this.log('Iniciando teste de upload para Cloudflare R2...');
-    
-    if (!file) {
-      this.log('Erro: Nenhum arquivo fornecido');
-      return { success: false, error: 'Nenhum arquivo fornecido', logs: this.getLogs() };
-    }
-    
-    if (!this.client || !this.connected) {
-      await this.initializeClient();
+  ): Promise<{ success: boolean; imageUrl?: string; error?: string; timing?: number }> {
+    const startTime = Date.now();
+    try {
+      this.log(`Iniciando upload para R2 - Arquivo: ${file.originalname}, Tamanho: ${file.buffer.length} bytes`);
       
-      if (!this.connected) {
-        this.log(`Erro: Cliente R2 não inicializado: ${this.connectionError}`);
-        return { 
-          success: false, 
-          error: this.connectionError || 'Não foi possível estabelecer conexão com o R2', 
-          logs: this.getLogs() 
+      // Verificar se o bucket existe
+      const bucketExists = await this.checkBucketExists();
+      if (!bucketExists) {
+        this.log('❌ Bucket não existe ou não está acessível');
+        return {
+          success: false,
+          error: 'Bucket não existe ou não está acessível',
+          timing: Date.now() - startTime
         };
       }
-    }
-    
-    try {
-      this.log(`Processando arquivo: ${file.originalname} (${file.size} bytes)`);
-      this.log(`Tipo MIME: ${file.mimetype}`);
       
       // Otimizar a imagem
-      const optimizedBuffer = await this.optimizeImage(file.buffer, {
-        ...options,
-        width: options.width || 800,
-        quality: options.quality || 80,
-      });
+      const optimizationStartTime = Date.now();
+      const optimized = await this.optimizeImage(file.buffer, options);
+      const optimizationTime = Date.now() - optimizationStartTime;
       
       // Gerar nome de arquivo único
-      const uniqueId = randomUUID();
-      const extension = options.format === 'webp' ? '.webp' : 
-                        options.format === 'jpeg' ? '.jpg' : 
-                        options.format === 'png' ? '.png' : 
-                        path.extname(file.originalname) || '.jpg';
-                        
-      const filename = `test_uploads/${uniqueId}${extension}`;
+      const filename = this.generateFilename(file.originalname);
+      const key = folder ? `${folder}/${filename}` : filename;
       
-      // Determinar o tipo de conteúdo
-      const contentType = options.format === 'webp' ? 'image/webp' : 
-                          options.format === 'jpeg' ? 'image/jpeg' : 
-                          options.format === 'png' ? 'image/png' : 
-                          file.mimetype;
-      
-      this.log(`Enviando arquivo para R2 com nome: ${filename}`);
-      this.log(`Tipo de conteúdo: ${contentType}`);
-      
-      // Enviar para o R2
+      // Upload para R2
+      const uploadStartTime = Date.now();
       const command = new PutObjectCommand({
         Bucket: BUCKET_NAME,
-        Key: filename,
-        Body: optimizedBuffer,
-        ContentType: contentType,
+        Key: key,
+        Body: optimized.buffer,
+        ContentType: `image/${optimized.format}`
       });
       
-      await this.client.send(command);
+      await R2_CLIENT.send(command);
+      const uploadTime = Date.now() - uploadStartTime;
       
       // Construir URL pública
-      let imageUrl: string;
+      const imageUrl = `${PUBLIC_URL}/${key}`;
       
-      if (PUBLIC_URL) {
-        // Usando a URL pública configurada
-        const baseUrl = PUBLIC_URL.endsWith('/') ? PUBLIC_URL : `${PUBLIC_URL}/`;
-        imageUrl = `${baseUrl}${filename}`;
-      } else {
-        // URL direta do R2 (provavelmente precisará de autenticação)
-        imageUrl = `https://${BUCKET_NAME}.${ENDPOINT}/${filename}`;
-      }
-      
-      this.log(`✓ Upload para R2 bem-sucedido!`);
-      this.log(`URL da imagem: ${imageUrl}`);
+      const endTime = Date.now();
+      this.log(`✅ Upload concluído em ${endTime - startTime}ms: ${imageUrl}`);
       
       return {
         success: true,
         imageUrl,
-        storageType: 'r2',
-        bucket: BUCKET_NAME,
-        logs: this.getLogs()
+        timing: endTime - startTime
       };
-    } catch (error: any) {
-      const errorMessage = `Erro no upload para R2: ${error.message || 'Erro desconhecido'}`;
-      this.log(`Erro: ${errorMessage}`);
+    } catch (error) {
+      const endTime = Date.now();
+      this.log(`❌ Erro no upload: ${error instanceof Error ? error.message : String(error)}`);
       
       return {
         success: false,
-        error: errorMessage,
+        error: error instanceof Error ? error.message : String(error),
+        timing: endTime - startTime
+      };
+    }
+  }
+
+  /**
+   * Exclui uma imagem do R2
+   */
+  async deleteImage(url: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      this.log(`Iniciando exclusão de imagem: ${url}`);
+      
+      // Extrair a chave do objeto da URL
+      const key = url.replace(`${PUBLIC_URL}/`, '');
+      
+      if (!key || key === url) {
+        this.log('❌ URL inválida, não foi possível extrair a chave do objeto');
+        return {
+          success: false,
+          error: 'URL inválida, não foi possível extrair a chave do objeto'
+        };
+      }
+      
+      // Excluir o objeto
+      const command = new DeleteObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: key
+      });
+      
+      await R2_CLIENT.send(command);
+      
+      this.log(`✅ Imagem excluída com sucesso: ${key}`);
+      
+      return {
+        success: true
+      };
+    } catch (error) {
+      this.log(`❌ Erro ao excluir imagem: ${error instanceof Error ? error.message : String(error)}`);
+      
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error)
+      };
+    }
+  }
+
+  /**
+   * Verifica a conexão com o R2
+   */
+  async checkConnection(): Promise<{ connected: boolean; message: string; logs: string[] }> {
+    try {
+      this.log('Iniciando verificação de conexão com R2');
+      
+      // Verificar credenciais
+      if (!process.env.R2_ACCESS_KEY_ID || !process.env.R2_SECRET_ACCESS_KEY) {
+        this.log('❌ Credenciais R2 não configuradas');
+        return {
+          connected: false,
+          message: 'Credenciais R2 não configuradas',
+          logs: this.getLogs()
+        };
+      }
+      
+      // Verificar bucket
+      const bucketExists = await this.checkBucketExists();
+      
+      if (!bucketExists) {
+        this.log('❌ Bucket não existe ou não está acessível');
+        return {
+          connected: false,
+          message: 'Bucket não existe ou não está acessível',
+          logs: this.getLogs()
+        };
+      }
+      
+      // Listar objetos para verificar acesso
+      const { success, objects, error } = await this.listObjects(BUCKET_NAME);
+      
+      if (!success) {
+        this.log(`❌ Erro ao listar objetos: ${error}`);
+        return {
+          connected: false,
+          message: `Erro ao listar objetos: ${error}`,
+          logs: this.getLogs()
+        };
+      }
+      
+      this.log(`✅ Conexão R2 estabelecida com sucesso. ${objects?.length || 0} objetos encontrados.`);
+      
+      return {
+        connected: true,
+        message: `Conexão estabelecida com sucesso. ${objects?.length || 0} objetos encontrados.`,
         logs: this.getLogs()
+      };
+    } catch (error) {
+      this.log(`❌ Erro ao verificar conexão R2: ${error instanceof Error ? error.message : String(error)}`);
+      
+      return {
+        connected: false,
+        message: `Erro ao verificar conexão R2: ${error instanceof Error ? error.message : String(error)}`,
+        logs: this.getLogs()
+      };
+    }
+  }
+
+  /**
+   * Método de teste para realizar upload para R2
+   */
+  async testUpload(
+    file: Express.Multer.File,
+    options: ImageOptimizationOptions = {}
+  ): Promise<any> {
+    try {
+      const startTime = Date.now();
+      this.log(`Iniciando teste de upload. Arquivo: ${file.originalname}, Tamanho: ${file.size} bytes`);
+      
+      // Primeiro passo: otimizar a imagem
+      const optimizationStartTime = Date.now();
+      const optimized = await this.optimizeImage(file.buffer, options);
+      const optimizationEndTime = Date.now();
+      const optimizationTime = optimizationEndTime - optimizationStartTime;
+      
+      this.log(`Imagem otimizada em ${optimizationTime}ms. Original: ${optimized.originalSize} bytes, Otimizado: ${optimized.optimizedSize} bytes`);
+      
+      // Segundo passo: fazer upload para o R2
+      const uploadStartTime = Date.now();
+      const filename = this.generateFilename(file.originalname);
+      const key = `test/${filename}`;
+      
+      const command = new PutObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: key,
+        Body: optimized.buffer,
+        ContentType: `image/${optimized.format}`
+      });
+      
+      await R2_CLIENT.send(command);
+      const uploadEndTime = Date.now();
+      const uploadTime = uploadEndTime - uploadStartTime;
+      
+      this.log(`Upload realizado em ${uploadTime}ms. Arquivo: ${key}`);
+      
+      // Construir URL pública
+      const imageUrl = `${PUBLIC_URL}/${key}`;
+      
+      const endTime = Date.now();
+      const totalTime = endTime - startTime;
+      
+      this.log(`✅ Teste de upload concluído em ${totalTime}ms. URL: ${imageUrl}`);
+      
+      return {
+        success: true,
+        message: "Upload realizado com sucesso",
+        imageUrl,
+        optimizedSummary: {
+          originalSize: optimized.originalSize,
+          optimizedSize: optimized.optimizedSize,
+          reduction: ((optimized.originalSize - optimized.optimizedSize) / optimized.originalSize) * 100,
+          format: optimized.format,
+          width: optimized.width,
+          height: optimized.height
+        },
+        timings: {
+          total: totalTime,
+          optimization: optimizationTime,
+          upload: uploadTime
+        }
+      };
+    } catch (error) {
+      this.log(`❌ Erro no teste de upload: ${error instanceof Error ? error.message : String(error)}`);
+      
+      return {
+        success: false,
+        message: "Falha no upload",
+        error: error instanceof Error ? error.message : String(error)
       };
     }
   }

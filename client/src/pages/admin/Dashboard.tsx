@@ -13,7 +13,9 @@ import {
   Search,
   Home,
   LogOut,
-  Sliders
+  Sliders,
+  Database,
+  HardDrive
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -134,6 +136,26 @@ const AdminDashboard = () => {
           </nav>
         </div>
         <div className="mt-auto p-4 border-t">
+          {/* Ferramentas específicas de administração */}
+          {user?.role === 'admin' && (
+            <>
+              <h3 className="text-sm uppercase font-semibold text-gray-500 mb-2">Ferramentas Avançadas</h3>
+              <Link href="/admin/logo-upload">
+                <Button variant="ghost" className="w-full justify-start text-gray-600 mb-2">
+                  <Image className="w-5 h-5 mr-3" />
+                  Gerenciar Logo
+                </Button>
+              </Link>
+              <Link href="/admin/storage-test">
+                <Button variant="ghost" className="w-full justify-start text-gray-600 mb-2">
+                  <Database className="w-5 h-5 mr-3" />
+                  Testar Armazenamento
+                </Button>
+              </Link>
+              <div className="border-t my-2"></div>
+            </>
+          )}
+          
           <Link href="/">
             <Button variant="ghost" className="w-full justify-start text-gray-600 mb-2">
               <Home className="w-5 h-5 mr-3" />
