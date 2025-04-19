@@ -420,31 +420,60 @@ export class StorageService {
   /**
    * Fallback para caso não esteja configurado o R2
    * Salva a imagem localmente e retorna URLs baseadas no sistema de arquivos local
+   * Suporta pasta específica (ex: avatars) para organizar os arquivos
    */
   async localUpload(
     file: Express.Multer.File,
-    options: ImageOptimizationOptions = {}
-  ): Promise<{ imageUrl: string; thumbnailUrl: string }> {
+    options: ImageOptimizationOptions & { targetFolder?: string } = {}
+  ): Promise<{ imageUrl: string; thumbnailUrl: string; storageType?: string }> {
     try {
-      // Certifica-se de que o diretório public/uploads existe
-      const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
-      const thumbnailsDir = path.join(uploadsDir, 'thumbnails');
+      const { targetFolder } = options;
       
+      console.log("Iniciando upload local", targetFolder ? `na pasta '${targetFolder}'` : "na pasta padrão");
+      
+      // Diretório base para uploads
+      const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+      
+      // Se tiver uma pasta específica (ex: avatars), usar essa estrutura
+      const targetDir = targetFolder 
+        ? path.join(uploadsDir, targetFolder) 
+        : uploadsDir;
+        
+      const thumbnailsDir = targetFolder 
+        ? path.join(uploadsDir, targetFolder, 'thumbnails')
+        : path.join(uploadsDir, 'thumbnails');
+      
+      console.log("Diretórios de destino:");
+      console.log(`- Imagem principal: ${targetDir}`);
+      console.log(`- Thumbnails: ${thumbnailsDir}`);
+      
+      // Cria os diretórios necessários
       try {
         if (!fs.existsSync('public')) {
+          console.log("Criando diretório 'public'");
           fs.mkdirSync('public');
         }
+        
         if (!fs.existsSync(uploadsDir)) {
+          console.log("Criando diretório 'uploads'");
           fs.mkdirSync(uploadsDir);
         }
+        
+        if (targetFolder && !fs.existsSync(targetDir)) {
+          console.log(`Criando diretório '${targetFolder}'`);
+          fs.mkdirSync(targetDir, { recursive: true });
+        }
+        
         if (!fs.existsSync(thumbnailsDir)) {
-          fs.mkdirSync(thumbnailsDir);
+          console.log("Criando diretório de thumbnails");
+          fs.mkdirSync(thumbnailsDir, { recursive: true });
         }
       } catch (err) {
-        console.error("Erro ao criar diretórios:", err);
+        console.error("Erro ao criar estrutura de diretórios:", err);
       }
       
       // Otimização da imagem principal
+      console.log("Processando imagem para upload local...");
       const optimizedBuffer = await this.optimizeImage(file.buffer, {
         ...options,
         width: options.width || 1200,
@@ -458,25 +487,42 @@ export class StorageService {
       });
       
       // Gera nomes únicos para os arquivos
-      const imageId = randomUUID();
-      const thumbnailId = randomUUID();
-      const imageName = `${imageId}.webp`;
-      const thumbnailName = `${thumbnailId}.webp`;
+      const uuid = randomUUID();
+      const fileFormat = options.format || 'webp';
+      const fileName = `${uuid}.${fileFormat}`;
+      const thumbnailName = `${uuid}_thumb.${fileFormat}`;
       
       // Caminhos completos dos arquivos
-      const imagePath = path.join(uploadsDir, imageName);
+      const imagePath = path.join(targetDir, fileName);
       const thumbnailPath = path.join(thumbnailsDir, thumbnailName);
+      
+      console.log("Salvando arquivos:");
+      console.log(`- Imagem principal: ${imagePath}`);
+      console.log(`- Thumbnail: ${thumbnailPath}`);
       
       // Salva os arquivos
       fs.writeFileSync(imagePath, optimizedBuffer);
       fs.writeFileSync(thumbnailPath, thumbnailBuffer);
       
-      console.log("Upload local bem-sucedido!");
+      console.log("✅ Upload local bem-sucedido!");
       
-      // Retorna URLs relativas
+      // Gera URLs relativas com base no diretório usado
+      const imageUrl = targetFolder 
+        ? `/uploads/${targetFolder}/${fileName}`
+        : `/uploads/${fileName}`;
+        
+      const thumbnailUrl = targetFolder
+        ? `/uploads/${targetFolder}/thumbnails/${thumbnailName}`
+        : `/uploads/thumbnails/${thumbnailName}`;
+      
+      console.log("URLs geradas:");
+      console.log(`- Imagem: ${imageUrl}`);
+      console.log(`- Thumbnail: ${thumbnailUrl}`);
+      
       return {
-        imageUrl: `/uploads/${imageName}`,
-        thumbnailUrl: `/uploads/thumbnails/${thumbnailName}`,
+        imageUrl,
+        thumbnailUrl,
+        storageType: targetFolder ? `local_${targetFolder}` : 'local'
       };
     } catch (error) {
       console.error("Erro no fallback local:", error);
