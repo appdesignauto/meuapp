@@ -3004,16 +3004,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           quality: 80,
         };
         
-        const result = await supabaseStorageService.uploadAvatar(req.file, uploadOptions, username);
+        // Usar o método de emergência para upload de avatar
+        const result = await supabaseStorageService.emergencyAvatarUpload(req.file, username, uploadOptions);
         
         console.log("✅ Upload de avatar bem-sucedido:");
         console.log(`- URL: ${result.imageUrl}`);
         console.log(`- Tipo de armazenamento: ${result.storageType}`);
+        console.log(`- Estratégia: ${result.strategy}`);
         
         return res.json({
           success: true,
           url: result.imageUrl,
           storageType: result.storageType,
+          strategy: result.strategy,
           message: "Upload de teste realizado com sucesso"
         });
       } catch (error) {

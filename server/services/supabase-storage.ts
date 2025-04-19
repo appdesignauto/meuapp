@@ -874,6 +874,236 @@ export class SupabaseStorageService {
       storageType: 'placeholder'
     };
   }
+  
+  /**
+   * Método de emergência para upload de avatar, usando múltiplas estratégias
+   * Este método é especificamente projetado para a página de testes de avatares
+   * e para casos especiais onde os métodos normais falham
+   */
+  async emergencyAvatarUpload(
+    file: Express.Multer.File,
+    username: string,
+    options: ImageOptimizationOptions = {}
+  ): Promise<{ 
+    imageUrl: string;
+    storageType: string;
+    strategy: string;
+  }> {
+    // Registrar tentativa para este usuário
+    if (!this.emergencyUploadAttempts[username]) {
+      this.emergencyUploadAttempts[username] = 0;
+    }
+    this.emergencyUploadAttempts[username]++;
+    
+    const attemptCount = this.emergencyUploadAttempts[username];
+    
+    console.log(`🚨 EMERGÊNCIA: Usando upload especializado para usuário '${username}' (tentativa #${attemptCount})`);
+    
+    if (!file) {
+      throw new Error("Nenhum arquivo foi fornecido para upload de emergência");
+    }
+    
+    // Garantir que o bucket existe
+    await this.initBucket();
+    
+    try {
+      // Escolher estratégia com base no número de tentativas anteriores
+      // Isso permite tentar diferentes abordagens em uploads subsequentes
+      
+      // ESTRATÉGIA 1: Upload direto sem otimização para bucket avatars
+      if (attemptCount % 4 === 1) {
+        try {
+          console.log("📝 ESTRATÉGIA 1: Upload direto sem otimização para bucket avatars");
+          
+          // Gerar nome de arquivo específico para o usuário
+          const extension = path.extname(file.originalname) || '.jpg';
+          const timestamp = Date.now();
+          const filePath = `${username.replace(/[^a-z0-9]/gi, '_')}_${timestamp}${extension}`;
+          
+          console.log(`- Enviando para: ${AVATARS_BUCKET}/${filePath}`);
+          console.log(`- Tipo: ${file.mimetype}`);
+          console.log(`- Tamanho: ${file.size} bytes`);
+          
+          // Upload direto sem processamento
+          const { error, data } = await supabase.storage
+            .from(AVATARS_BUCKET)
+            .upload(filePath, file.buffer, {
+              contentType: file.mimetype,
+              upsert: true // Sobrescrever se existir
+            });
+            
+          if (error) {
+            console.error(`❌ ESTRATÉGIA 1 falhou: ${error.message}`);
+            throw error;
+          }
+          
+          // Obter URL pública
+          const { data: urlData } = supabase.storage
+            .from(AVATARS_BUCKET)
+            .getPublicUrl(filePath);
+            
+          console.log(`✅ ESTRATÉGIA 1 sucesso! URL: ${urlData.publicUrl}`);
+          
+          return {
+            imageUrl: urlData.publicUrl,
+            storageType: "supabase_avatar_direct",
+            strategy: "direct_upload_avatars"
+          };
+        } catch (error) {
+          console.error("❌ ESTRATÉGIA 1 falhou completamente:", error);
+          // Continua para a próxima estratégia
+        }
+      }
+      
+      // ESTRATÉGIA 2: Upload para bucket principal designauto-images
+      if (attemptCount % 4 === 2) {
+        try {
+          console.log("📝 ESTRATÉGIA 2: Upload para bucket principal designauto-images");
+          
+          // Gerar nome de arquivo para o usuário no bucket principal
+          const extension = ".webp";
+          const timestamp = Date.now();
+          const safeName = username.replace(/[^a-z0-9]/gi, '_');
+          const filePath = `avatars/${safeName}_${timestamp}${extension}`;
+          
+          // Otimizar imagem para tamanho menor e qualidade mais baixa
+          const optimizedBuffer = await this.optimizeImage(file.buffer, {
+            width: options.width || 300,
+            height: options.height || 300,
+            quality: options.quality || 70,
+            format: "webp"
+          });
+          
+          console.log(`- Enviando para: ${BUCKET_NAME}/${filePath}`);
+          console.log(`- Tamanho otimizado: ${optimizedBuffer.length} bytes`);
+          
+          // Upload para bucket principal
+          const { error } = await supabase.storage
+            .from(BUCKET_NAME)
+            .upload(filePath, optimizedBuffer, {
+              contentType: 'image/webp',
+              upsert: true
+            });
+            
+          if (error) {
+            console.error(`❌ ESTRATÉGIA 2 falhou: ${error.message}`);
+            throw error;
+          }
+          
+          // Obter URL pública
+          const { data: urlData } = supabase.storage
+            .from(BUCKET_NAME)
+            .getPublicUrl(filePath);
+            
+          console.log(`✅ ESTRATÉGIA 2 sucesso! URL: ${urlData.publicUrl}`);
+          
+          return {
+            imageUrl: urlData.publicUrl,
+            storageType: "supabase_main_bucket",
+            strategy: "main_bucket_upload"
+          };
+        } catch (error) {
+          console.error("❌ ESTRATÉGIA 2 falhou completamente:", error);
+          // Continua para a próxima estratégia
+        }
+      }
+      
+      // ESTRATÉGIA 3: Upload com nome ultra-simplificado
+      if (attemptCount % 4 === 3) {
+        try {
+          console.log("📝 ESTRATÉGIA 3: Upload com nome ultra-simplificado");
+          
+          // Usar nome de arquivo extremamente simples
+          const filePath = `user_${Date.now()}.webp`;
+          
+          // Otimizar imagem com configurações mínimas
+          const optimizedBuffer = await this.optimizeImage(file.buffer, {
+            width: 200, // Menor para evitar problemas
+            height: 200,
+            quality: 60, // Qualidade reduzida para menor tamanho
+            format: "webp"
+          });
+          
+          console.log(`- Enviando para: ${AVATARS_BUCKET}/${filePath}`);
+          console.log(`- Tamanho otimizado: ${optimizedBuffer.length} bytes`);
+          
+          // Upload para bucket de avatares com nome simples
+          const { error } = await supabase.storage
+            .from(AVATARS_BUCKET)
+            .upload(filePath, optimizedBuffer, {
+              contentType: 'image/webp',
+              upsert: true
+            });
+            
+          if (error) {
+            console.error(`❌ ESTRATÉGIA 3 falhou: ${error.message}`);
+            throw error;
+          }
+          
+          // Obter URL pública
+          const { data: urlData } = supabase.storage
+            .from(AVATARS_BUCKET)
+            .getPublicUrl(filePath);
+            
+          console.log(`✅ ESTRATÉGIA 3 sucesso! URL: ${urlData.publicUrl}`);
+          
+          return {
+            imageUrl: urlData.publicUrl,
+            storageType: "supabase_simple_name",
+            strategy: "simple_filename"
+          };
+        } catch (error) {
+          console.error("❌ ESTRATÉGIA 3 falhou completamente:", error);
+          // Continua para a última estratégia
+        }
+      }
+      
+      // ESTRATÉGIA 4: Upload local com configurações mínimas
+      try {
+        console.log("📝 ESTRATÉGIA 4: Upload local com configurações mínimas");
+        
+        // Usar serviço de armazenamento local com configurações específicas
+        const result = await storageService.localUpload(file, {
+          width: 200,
+          height: 200,
+          quality: 60,
+          targetFolder: 'avatars'
+        });
+        
+        console.log(`✅ ESTRATÉGIA 4 sucesso! URL: ${result.imageUrl}`);
+        
+        return {
+          imageUrl: result.imageUrl,
+          storageType: "local_emergency",
+          strategy: "local_minimal"
+        };
+      } catch (error) {
+        console.error("❌ ESTRATÉGIA 4 falhou:", error);
+        
+        // Se absolutamente todas as estratégias falharem, usamos um placeholder
+        console.log("🔴 TODAS AS ESTRATÉGIAS FALHARAM. Usando placeholder como último recurso");
+        
+        const placeholder = this.generatePlaceholderAvatar(username);
+        
+        return {
+          imageUrl: placeholder.imageUrl,
+          storageType: placeholder.storageType,
+          strategy: "placeholder_fallback"
+        };
+      }
+    } catch (error) {
+      console.error("🔴 ERRO CRÍTICO no upload de emergência:", error);
+      
+      // Usar placeholder como fallback para qualquer erro não tratado
+      const placeholder = this.generatePlaceholderAvatar(username);
+      
+      return {
+        imageUrl: placeholder.imageUrl,
+        storageType: placeholder.storageType,
+        strategy: "placeholder_error_fallback"
+      };
+    }
+  }
 
   /**
    * Otimiza uma imagem de logo
@@ -937,6 +1167,20 @@ export class SupabaseStorageService {
         mimeType: mimeType
       };
     }
+  }
+  
+  /**
+   * Gera uma URL de avatar placeholder com informações do usuário
+   * Para uso como última alternativa quando todas as outras falham
+   */
+  private generatePlaceholderAvatar(username: string = 'Unknown'): { imageUrl: string; storageType: string } {
+    const timestamp = Date.now();
+    const userText = username ? `U:${username}` : 'Avatar';
+    
+    return {
+      imageUrl: `https://placehold.co/400x400/555588/ffffff?text=${userText}&date=${timestamp}`,
+      storageType: 'placeholder'
+    };
   }
   
   async uploadLogoWithCustomFilename(
