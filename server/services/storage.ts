@@ -1,9 +1,9 @@
 import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import sharp from "sharp";
+import * as sharp from "sharp";
 import { randomUUID } from "crypto";
-import fs from "fs";
-import path from "path";
+import * as fs from "fs";
+import * as path from "path";
 
 // ATENÇÃO: Usando valores fixos diretamente do script para garantir a conexão com o R2
 // Verificando valores dos logs do upload
