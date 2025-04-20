@@ -34,7 +34,10 @@ router.post(
       if (storageService === 'supabase') {
         if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
           try {
-            console.log("Usando Supabase Storage para upload...");
+            console.log("Usando Supabase Storage para upload de arte...");
+            console.log(`Nome original: ${req.file.originalname}`);
+            console.log(`Tipo MIME: ${req.file.mimetype}`);
+            console.log(`Tamanho: ${req.file.size} bytes`);
             
             if (skipOptimization) {
               console.log(">>> TESTE: Fazendo upload direto para Supabase, sem otimização");
@@ -42,9 +45,13 @@ router.post(
               console.log("Upload direto para Supabase concluído:", urls);
               return res.status(200).json({...urls, uploadType: "direct"});
             } else {
+              console.log("Iniciando otimização da imagem da arte...");
               const urls = await supabaseStorageService.uploadImage(req.file, options);
-              console.log("Upload para Supabase concluído com sucesso:", urls);
-              return res.status(200).json(urls);
+              console.log("Upload da arte para Supabase concluído com sucesso:", urls);
+              return res.status(200).json({
+                ...urls,
+                storageType: "supabase_art"
+              });
             }
           } catch (error: any) {
             console.error("Erro no upload para Supabase:", error);
