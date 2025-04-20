@@ -187,6 +187,9 @@ export interface IStorage {
   getFollowingCount(userId: number): Promise<number>;
   updateFollowerCount(userId: number, count: number): Promise<boolean>;
   updateFollowingCount(userId: number, count: number): Promise<boolean>;
+  
+  // Email verification methods
+  updateUserEmailConfirmed(userId: number, confirmed: boolean): Promise<User>;
 }
 
 interface ArtFilters {
@@ -1194,6 +1197,28 @@ export class MemStorage implements IStorage {
 
 export class DatabaseStorage implements IStorage {
   private users = schema.users;
+  
+  // Email verification methods
+  async updateUserEmailConfirmation(userId: number, confirmed: boolean): Promise<boolean> {
+    try {
+      console.log(`[DatabaseStorage] Atualizando confirmação de email para o usuário ${userId} para ${confirmed}`);
+      
+      const result = await db
+        .update(schema.users)
+        .set({ 
+          emailconfirmed: confirmed,
+          atualizadoem: new Date() 
+        })
+        .where(eq(schema.users.id, userId))
+        .returning();
+      
+      console.log(`[DatabaseStorage] Resultado da atualização de email confirmado:`, result);
+      return result.length > 0;
+    } catch (error) {
+      console.error(`[DatabaseStorage] Erro ao atualizar confirmação de email:`, error);
+      return false;
+    }
+  }
   // User methods
   async getUser(id: number): Promise<User | undefined> {
     try {

@@ -78,7 +78,7 @@ router.post("/verify", isAuthenticated, async (req: Request, res: Response) => {
     
     if (result.success) {
       // Se o código for válido, marca o email como confirmado
-      await storage.updateUserEmailConfirmation(userId, true);
+      await storage.updateUserEmailConfirmed(userId, true);
     }
     
     return res.json(result);
