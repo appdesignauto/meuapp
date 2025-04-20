@@ -398,3 +398,30 @@ export const insertSiteSettingsSchema = createInsertSchema(siteSettings).omit({
 
 export type SiteSettings = typeof siteSettings.$inferSelect;
 export type InsertSiteSettings = z.infer<typeof insertSiteSettingsSchema>;
+
+// Tabela para armazenar códigos de verificação de e-mail
+export const emailVerificationCodes = pgTable("emailVerificationCodes", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().references(() => users.id),
+  email: text("email").notNull(),
+  code: text("code").notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  usedAt: timestamp("usedAt"),
+  isUsed: boolean("isUsed").notNull().default(false),
+});
+
+export const emailVerificationCodesRelations = relations(emailVerificationCodes, ({ one }) => ({
+  user: one(users, {
+    fields: [emailVerificationCodes.userId],
+    references: [users.id],
+  }),
+}));
+
+export const insertEmailVerificationCodeSchema = createInsertSchema(emailVerificationCodes).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type EmailVerificationCode = typeof emailVerificationCodes.$inferSelect;
+export type InsertEmailVerificationCode = z.infer<typeof insertEmailVerificationCodeSchema>;
