@@ -76,6 +76,11 @@ class EmailService {
 
       const { to, subject, htmlContent, textContent } = params;
 
+      // Gerar uma versão em texto simples do HTML se não for fornecida
+      const plainText = textContent || htmlContent.replace(/<[^>]*>/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      
       const payload = {
         sender: {
           name: SENDER_NAME,
@@ -84,7 +89,7 @@ class EmailService {
         to,
         subject,
         htmlContent,
-        textContent: textContent || ''
+        textContent: plainText
       };
 
       const response = await fetch(`${BREVO_API_URL}/smtp/email`, {
