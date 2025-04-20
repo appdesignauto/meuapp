@@ -71,36 +71,40 @@ class EmailService {
   }
 
   /**
-   * Método para enviar e-mail usando a API do Brevo diretamente
+   * Método utilitário para enviar e-mail - usado internamente por outros métodos especializados
+   * @param sender O remetente do e-mail (suporte ou contato)
+   * @param to Array com destinatários (email e nome)
+   * @param subject Assunto do e-mail
+   * @param htmlContent Conteúdo HTML do e-mail
+   * @returns Promise<{success: boolean, messageId?: string}>
+   * @private
    */
-  private async sendEmail(params: {
-    to: Array<{ email: string; name?: string }>;
-    subject: string;
-    htmlContent: string;
-    textContent?: string;
-  }): Promise<boolean> {
+  private async sendBrevoEmail(
+    sender: typeof SENDERS.suporte | typeof SENDERS.contato,
+    to: Array<{ email: string; name?: string }>,
+    subject: string,
+    htmlContent: string
+  ): Promise<{success: boolean, messageId?: string}> {
     try {
       if (!this.initialized) {
         this.log('❌ Serviço não inicializado');
-        return false;
+        return { success: false };
       }
 
-      const { to, subject, htmlContent, textContent } = params;
-
-      // Gerar uma versão em texto simples do HTML se não for fornecida
-      const plainText = textContent || htmlContent.replace(/<[^>]*>/g, '')
+      // Converter HTML para texto simples para clientes sem suporte a HTML
+      const textContent = htmlContent.replace(/<[^>]*>/g, '')
         .replace(/\s+/g, ' ')
         .trim();
       
       const payload = {
         sender: {
-          name: DEFAULT_SENDER.name,
-          email: DEFAULT_SENDER.email
+          name: sender.name,
+          email: sender.email
         },
         to,
         subject,
         htmlContent,
-        textContent: plainText
+        textContent
       };
 
       const response = await fetch(`${BREVO_API_URL}/smtp/email`, {
@@ -119,11 +123,10 @@ class EmailService {
       }
 
       const data = await response.json();
-      this.log(`✅ E-mail enviado com sucesso: ${data.messageId}`);
-      return true;
+      return { success: true, messageId: data.messageId };
     } catch (error) {
       this.log(`❌ Erro ao enviar e-mail: ${error instanceof Error ? error.message : String(error)}`);
-      return false;
+      return { success: false };
     }
   }
 
@@ -136,7 +139,7 @@ class EmailService {
    */
   public async sendVerificationEmail(email: string, name: string, verificationCode: string): Promise<boolean> {
     try {
-      this.log(`📧 Preparando e-mail de verificação para ${email}`);
+      this.log(`📧 Preparando e-mail de verificação para ${email} usando remetente de suporte`);
       
       const htmlContent = `
         <html>
@@ -152,19 +155,24 @@ class EmailService {
         </html>
       `;
       
-      const success = await this.sendEmail({
-        to: [{ email, name }],
-        subject: 'Verifique seu e-mail - Design Auto',
-        htmlContent
-      });
+      // Usar explicitamente o remetente de suporte para verificação
+      const supportSender = SENDERS.suporte;
+      const subject = 'Verifique seu e-mail - Design Auto';
       
-      if (success) {
-        this.log(`✅ E-mail de verificação enviado com sucesso para ${email}`);
+      const result = await this.sendBrevoEmail(
+        supportSender, 
+        [{ email, name }], 
+        subject, 
+        htmlContent
+      );
+      
+      if (result.success) {
+        this.log(`✅ E-mail de verificação enviado com sucesso de ${supportSender.email}: ${result.messageId}`);
       } else {
         this.log(`❌ Falha ao enviar e-mail de verificação para ${email}`);
       }
       
-      return success;
+      return result.success;
     } catch (error) {
       this.log(`❌ Erro ao enviar e-mail de verificação para ${email}: ${error instanceof Error ? error.message : String(error)}`);
       return false;
@@ -179,7 +187,7 @@ class EmailService {
    */
   public async sendWelcomeEmail(email: string, name: string): Promise<boolean> {
     try {
-      this.log(`📧 Preparando e-mail de boas-vindas para ${email}`);
+      this.log(`📧 Preparando e-mail de boas-vindas para ${email} usando remetente de contato`);
       
       const htmlContent = `
         <html>
@@ -193,19 +201,24 @@ class EmailService {
         </html>
       `;
       
-      const success = await this.sendEmail({
-        to: [{ email, name }],
-        subject: 'Bem-vindo ao Design Auto!',
-        htmlContent
-      });
+      // Usar o remetente de contato para emails de boas-vindas
+      const contactSender = SENDERS.contato;
+      const subject = 'Bem-vindo ao Design Auto!';
       
-      if (success) {
-        this.log(`✅ E-mail de boas-vindas enviado com sucesso para ${email}`);
+      const result = await this.sendBrevoEmail(
+        contactSender, 
+        [{ email, name }], 
+        subject, 
+        htmlContent
+      );
+      
+      if (result.success) {
+        this.log(`✅ E-mail de boas-vindas enviado com sucesso de ${contactSender.email}: ${result.messageId}`);
       } else {
         this.log(`❌ Falha ao enviar e-mail de boas-vindas para ${email}`);
       }
       
-      return success;
+      return result.success;
     } catch (error) {
       this.log(`❌ Erro ao enviar e-mail de boas-vindas para ${email}: ${error instanceof Error ? error.message : String(error)}`);
       return false;
@@ -221,7 +234,7 @@ class EmailService {
    */
   public async sendPasswordResetEmail(email: string, name: string, resetToken: string): Promise<boolean> {
     try {
-      this.log(`📧 Preparando e-mail de redefinição de senha para ${email}`);
+      this.log(`📧 Preparando e-mail de redefinição de senha para ${email} usando remetente de suporte`);
       
       // URL para redefinição de senha
       const resetUrl = `https://designauto.com.br/reset-password?token=${resetToken}`;
@@ -240,19 +253,24 @@ class EmailService {
         </html>
       `;
       
-      const success = await this.sendEmail({
-        to: [{ email, name }],
-        subject: 'Redefinição de Senha - Design Auto',
-        htmlContent
-      });
+      // Usar explicitamente o remetente de suporte para senhas
+      const supportSender = SENDERS.suporte;
+      const subject = 'Redefinição de Senha - Design Auto';
       
-      if (success) {
-        this.log(`✅ E-mail de redefinição de senha enviado com sucesso para ${email}`);
+      const result = await this.sendBrevoEmail(
+        supportSender, 
+        [{ email, name }], 
+        subject, 
+        htmlContent
+      );
+      
+      if (result.success) {
+        this.log(`✅ E-mail de redefinição de senha enviado com sucesso de ${supportSender.email}: ${result.messageId}`);
       } else {
         this.log(`❌ Falha ao enviar e-mail de redefinição de senha para ${email}`);
       }
       
-      return success;
+      return result.success;
     } catch (error) {
       this.log(`❌ Erro ao enviar e-mail de redefinição de senha para ${email}: ${error instanceof Error ? error.message : String(error)}`);
       return false;
