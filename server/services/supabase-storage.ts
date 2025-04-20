@@ -596,11 +596,22 @@ export class SupabaseStorageService {
       });
       console.log(`Imagem otimizada: ${optimizedBuffer.length} bytes (${Math.round(optimizedBuffer.length/1024)}KB)`);
 
-      // Gera nome de arquivo único com prefixo de usuário se disponível
-      const uuid = randomUUID();
-      const userPrefix = userId ? `user_${userId}_` : ''; // Adiciona prefixo do usuário se tiver ID
-      const avatarPath = `${userPrefix}${uuid}.webp`;
-      const mainBucketPath = `avatars/${userPrefix}${uuid}.webp`; // Nova estrutura organizada
+      // Gera estrutura de pastas e nome de arquivo organizado por usuário
+      const timestamp = Date.now();
+      
+      // Determina o caminho do arquivo baseado no ID do usuário
+      let avatarPath;
+      if (userId) {
+        // Nova estrutura organizada em pastas por usuário
+        avatarPath = `user_${userId}/avatar_${timestamp}.webp`;
+        console.log(`Usando estrutura de pastas com ID de usuário: ${avatarPath}`);
+      } else {
+        // Fallback para usuários sem ID (compatibilidade)
+        const uuid = randomUUID();
+        avatarPath = `temp/avatar_${uuid}.webp`;
+        console.log(`Usuário sem ID, usando caminho temporário: ${avatarPath}`);
+      }
+      
       console.log(`Nome de arquivo para upload: ${avatarPath}`);
 
       let uploadSuccess = false;
@@ -647,6 +658,9 @@ export class SupabaseStorageService {
         console.log(`Tentando upload para bucket principal '${BUCKET_NAME}' na pasta 'avatars/'...`);
         
         try {
+          // Mesmo padrão de caminho para o bucket principal
+          const mainBucketPath = avatarPath;
+          
           const mainBucketResult = await supabase.storage
             .from(BUCKET_NAME)
             .upload(mainBucketPath, optimizedBuffer, {
