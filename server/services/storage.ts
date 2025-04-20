@@ -19,7 +19,7 @@ const accountId = '32b65e21b65af0345c36f5c43fa32c54';
 const endpoint = `https://${accountId}.r2.dev`;
 const accessKeyId = '21be81ed3af893e3ba85c2'; // ID da chave de acesso (22 caracteres)
 const secretAccessKey = 'c3e7cc28a2ffb45471cc57a2842735b5e524a7a0d2c5ff5a4cedb8145dbd1b4d'; // chave secreta (64 caracteres)
-const bucketName = "designauto"; // Nome do bucket R2 observado nas imagens 
+const bucketName = "designauto-images"; // Nome do bucket R2 consistente com outras partes do código
 const PUBLIC_BUCKET_URL = "https://pub-a063592364ea4478870d95c9c4115c4a.r2.dev"; // URL pública do bucket
 
 console.log("Iniciando upload para R2...");
