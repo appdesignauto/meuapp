@@ -66,6 +66,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, data: Partial<User>): Promise<User | undefined>;
   updateUserRole(id: number, role: string): Promise<User | undefined>;
   updateUserProfile(id: number, data: { name?: string; bio?: string; profileImageUrl?: string }): Promise<User | undefined>;
   updateUserPassword(id: number, newPassword: string): Promise<User | undefined>;
@@ -1355,6 +1356,58 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async updateUser(id: number, data: Partial<User>): Promise<User | undefined> {
+    try {
+      const now = new Date();
+      
+      // Construir dinamicamente as partes do SQL para campos atualizáveis
+      const sets: string[] = [];
+      const values: any[] = [];
+      
+      // Lista de campos que podem ser atualizados
+      const allowedFields: (keyof User)[] = ['name', 'bio', 'profileimageurl', 'website', 'location'];
+      
+      // Remover o campo 'id' se estiver presente
+      delete data.id;
+      
+      // Adicionar cada campo presente no objeto data
+      for (const key of allowedFields) {
+        if (data[key] !== undefined) {
+          sets.push(`${key} = $${sets.length + 1}`);
+          values.push(data[key]);
+        }
+      }
+      
+      // Adicionar a data de atualização
+      sets.push(`atualizadoem = $${sets.length + 1}`);
+      values.push(now);
+      
+      // Se não houver campos para atualizar, retorne o usuário atual
+      if (sets.length === 0) {
+        const user = await this.getUser(id);
+        return user;
+      }
+      
+      // Adicionar o ID como último parâmetro para a cláusula WHERE
+      values.push(id);
+      
+      // Construir a query SQL
+      const query = `
+        UPDATE users 
+        SET ${sets.join(', ')} 
+        WHERE id = $${values.length}
+        RETURNING *
+      `;
+      
+      const result = await db.execute(sql.raw(query, ...values));
+      
+      return result.rows[0] as User;
+    } catch (error) {
+      console.error("Erro em updateUser:", error);
+      return undefined;
+    }
+  }
+  
   async updateUserRole(id: number, role: string): Promise<User | undefined> {
     try {
       const now = new Date();
