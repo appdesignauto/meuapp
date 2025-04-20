@@ -242,11 +242,16 @@ export class SupabaseStorageService {
 
   /**
    * Gera um nome de arquivo único
+   * @param originalFilename Nome original do arquivo
+   * @param isThumb Se é uma miniatura
+   * @param categorySlug Slug da categoria para organização (opcional)
+   * @returns Caminho do arquivo no bucket
    */
-  private generateFilename(originalFilename: string, isThumb = false): string {
+  private generateFilename(originalFilename: string, isThumb = false, categorySlug?: string): string {
     const extension = '.webp'; // Sempre usamos WebP para otimização
     const uuid = randomUUID();
-    return `${isThumb ? 'thumbnails/' : ''}${uuid}${extension}`;
+    const categoryPrefix = categorySlug ? `${categorySlug}_` : '';
+    return `${isThumb ? 'thumbnails/' : ''}${categoryPrefix}${uuid}${extension}`;
   }
 
   /**
@@ -254,7 +259,8 @@ export class SupabaseStorageService {
    */
   async uploadImage(
     file: Express.Multer.File,
-    options: ImageOptimizationOptions = {}
+    options: ImageOptimizationOptions = {},
+    categorySlug?: string // Adicionando slug da categoria para organização
   ): Promise<{ imageUrl: string; thumbnailUrl: string; storageType?: string }> {
     if (!file) {
       throw new Error("Nenhum arquivo foi fornecido");
@@ -282,9 +288,10 @@ export class SupabaseStorageService {
         quality: 75,
       });
 
-      // Gera nomes de arquivos únicos
-      const imagePath = this.generateFilename(file.originalname);
-      const thumbnailPath = this.generateFilename(file.originalname, true);
+      // Gera nomes de arquivos únicos com prefixo de categoria (se informado)
+      console.log(`Categoria: ${categorySlug || 'não especificada'}`);
+      const imagePath = this.generateFilename(file.originalname, false, categorySlug);
+      const thumbnailPath = this.generateFilename(file.originalname, true, categorySlug);
 
       // Upload da imagem principal para o Supabase
       const { error: imageError, data: imageData } = await supabase.storage
