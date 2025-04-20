@@ -1,7 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { arts, insertUserSchema, users, userFollows, categories, collections, views, downloads, favorites, communityPosts, communityComments, formats, fileTypes, testimonials, designerStats, subscriptions, siteSettings, insertSiteSettingsSchema, type User } from "@shared/schema";
+import { arts, insertUserSchema, users, userFollows, categories, collections, views, downloads, favorites, communityPosts, communityComments, formats, fileTypes, testimonials, designerStats, subscriptions, siteSettings, insertSiteSettingsSchema, type User, emailVerificationCodes } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth } from "./auth";
@@ -2277,6 +2277,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Removendo referências em outras tabelas...");
       
       try {
+        // Remover códigos de verificação de e-mail
+        try {
+          await db.execute(sql.raw(`
+            DELETE FROM "emailVerificationCodes" 
+            WHERE "userId" = ${userId}
+          `));
+          console.log("- Códigos de verificação de e-mail removidos");
+        } catch (error) {
+          console.log("- Não foi possível remover códigos de verificação de e-mail:", error);
+        }
+        
         // Remover assinaturas
         try {
           await db.delete(subscriptions).where(eq(subscriptions.userId, userId));
