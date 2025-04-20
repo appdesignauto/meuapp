@@ -86,30 +86,42 @@ const ArtForm = ({ isOpen, onClose, editingArt }: ArtFormProps) => {
       setUploading(true);
       const formData = new FormData();
       formData.append('image', file);
-      // Permitimos o fallback para facilitar o uso enquanto debug
-      // formData.append('r2Only', 'true');
+      // Especificar o uso do Supabase Storage explicitamente
+      formData.append('storage', 'supabase');
+      
+      console.log("Enviando imagem:", file.name, file.type, Math.round(file.size/1024) + "KB");
+      console.log("Iniciando upload de imagem...");
       
       const response = await fetch('/api/admin/upload', {
         method: 'POST',
         body: formData,
       });
       
+      console.log("Resposta recebida:", response.status, response.statusText);
+      
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'Erro ao fazer upload da imagem');
       }
       
-      return response.json();
+      const data = await response.json();
+      console.log("Dados da resposta:", data);
+      return data;
     },
     onSuccess: (data) => {
       // A API retorna as URLs da imagem original e da thumbnail
       setValue('imageUrl', data.imageUrl);
+      
+      // Mostre informações adicionais sobre o armazenamento da imagem
+      const storageType = data.storageType || 'desconhecido';
+      
       toast({
-        title: 'Upload realizado',
-        description: 'Imagem enviada com sucesso',
+        title: 'Upload realizado com sucesso',
+        description: `Imagem enviada para o ${storageType === 'supabase_art' ? 'Supabase Storage' : storageType}`,
       });
     },
     onError: (error: any) => {
+      console.error("Erro no upload da imagem:", error);
       toast({
         title: 'Erro no upload',
         description: error.message || 'Não foi possível fazer o upload da imagem.',
