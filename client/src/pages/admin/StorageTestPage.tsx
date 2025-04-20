@@ -18,7 +18,7 @@ interface StorageConnectionStatus {
   logs: string[];
 }
 
-interface R2DirectTestResult {
+interface SupabaseTestResult {
   message: string;
   results: Array<{
     description: string;
@@ -66,7 +66,7 @@ export default function StorageTestPage() {
   const [isDirect, setIsDirect] = useState(false); // Controla se está usando upload direto (sem sharp)
   const [uploadResult, setUploadResult] = useState<UploadTestResult | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [supabaseTestResult, setSupabaseTestResult] = useState<R2DirectTestResult | null>(null);
+  const [supabaseTestResult, setSupabaseTestResult] = useState<SupabaseTestResult | null>(null);
   const [isTestingSupabase, setIsTestingSupabase] = useState(false);
 
   // Efeito visual para progresso de upload
@@ -466,21 +466,21 @@ export default function StorageTestPage() {
                   </div>
                 )}
                 
-                {/* Resultados do teste direto do R2 */}
-                {r2DirectTestResult && (
+                {/* Resultados do diagnóstico do Supabase */}
+                {supabaseTestResult && (
                   <div className="mt-6">
-                    <h3 className="text-sm font-medium mb-2">Diagnóstico Avançado do Armazenamento</h3>
+                    <h3 className="text-sm font-medium mb-2">Diagnóstico Avançado do Supabase Storage</h3>
                     
                     <Alert className="mb-4 bg-blue-50 border-blue-200 text-blue-800">
                       <Info className="h-5 w-5 mr-2 text-blue-500" />
                       <AlertTitle>Resultado do diagnóstico</AlertTitle>
                       <AlertDescription>
-                        {r2DirectTestResult.message}
+                        {supabaseTestResult.message}
                       </AlertDescription>
                     </Alert>
                     
                     <div className="space-y-4">
-                      {r2DirectTestResult.results.map((result, index) => (
+                      {supabaseTestResult.results.map((result, index) => (
                         <Card key={index} className={`border-l-4 ${result.success ? 'border-l-green-500' : 'border-l-red-500'}`}>
                           <CardHeader className="py-3">
                             <div className="flex items-start justify-between">
