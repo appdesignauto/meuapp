@@ -420,7 +420,7 @@ export class StorageService {
   /**
    * Fallback para caso não esteja configurado o R2
    * Salva a imagem localmente e retorna URLs baseadas no sistema de arquivos local
-   * Suporta pasta específica (ex: avatars) para organizar os arquivos
+   * Suporta pasta específica (ex: designautoimages) para organizar os arquivos
    */
   async localUpload(
     file: Express.Multer.File,
@@ -434,7 +434,7 @@ export class StorageService {
       // Diretório base para uploads
       const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
       
-      // Se tiver uma pasta específica (ex: avatars), usar essa estrutura
+      // Se tiver uma pasta específica (ex: designautoimages), usar essa estrutura
       const targetDir = targetFolder 
         ? path.join(uploadsDir, targetFolder) 
         : uploadsDir;

@@ -297,8 +297,8 @@ export default function PainelPerfil() {
       let successMessage = 'Sua imagem de perfil foi atualizada com sucesso';
       if (uploadStorageType) {
         const storageTypeMap: Record<string, string> = {
-          'supabase-avatars': 'Supabase (bucket avatars)',
-          'supabase-designauto': 'Supabase (bucket designauto-images)',
+          'supabase-designautoimages': 'Supabase (bucket designautoimages)',
+          'supabase-designauto': 'Supabase (bucket designautoimages)',
           'local': 'Armazenamento local',
         };
         
@@ -477,7 +477,7 @@ export default function PainelPerfil() {
                           )}
                           {uploadStorageType && (
                             <div className="mt-1 text-[9px] text-white/80 text-center px-1 max-w-[90%]">
-                              {uploadStorageType === 'supabase-avatars' ? 'Supabase' : 
+                              {uploadStorageType === 'supabase-designautoimages' ? 'Supabase' : 
                                uploadStorageType === 'supabase-designauto' ? 'DesignAuto' : 
                                uploadStorageType === 'local' ? 'Local' : 
                                uploadStorageType}

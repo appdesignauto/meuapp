@@ -37,7 +37,7 @@ const TestimonialCard = ({ testimonial }: { testimonial: Testimonial }) => {
             alt={`Foto de ${testimonial.name}`}
             className="w-full h-full object-cover"
             onError={(e) => {
-              (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(testimonial.name)}&background=random`;
+              (e.target as HTMLImageElement).src = `https://ui-designautoimages.com/api/?name=${encodeURIComponent(testimonial.name)}&background=random`;
             }} 
           />
         </div>

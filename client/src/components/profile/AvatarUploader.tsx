@@ -30,7 +30,7 @@ export default function AvatarUploader({ currentAvatarUrl, onSuccess }: AvatarUp
     const colorIndex = user.id % colors.length;
     const bgColor = colors[colorIndex];
     
-    return `https://ui-avatars.com/api/?name=${initial}&background=${bgColor}&color=fff&size=200`;
+    return `https://ui-designautoimages.com/api/?name=${initial}&background=${bgColor}&color=fff&size=200`;
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {

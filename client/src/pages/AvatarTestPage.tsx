@@ -370,7 +370,7 @@ export default function AvatarTestPage() {
                     <p>Este usuário está marcado para tratamento especial de upload de avatar usando múltiplas estratégias e fallbacks automáticos.</p>
                     <p className="mt-1">O sistema aplicará as seguintes estratégias em sequência até que uma tenha sucesso:</p>
                     <ol className="list-decimal pl-4 mt-1 space-y-0.5">
-                      <li>Upload direto sem otimização para bucket de avatars</li>
+                      <li>Upload direto sem otimização para bucket de designautoimages</li>
                       <li>Upload para bucket principal com otimização moderada</li>
                       <li>Upload usando nome de arquivo ultra-simplificado</li>
                       <li>Armazenamento local com configurações mínimas</li>

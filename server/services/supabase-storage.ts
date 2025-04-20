@@ -530,7 +530,7 @@ export class SupabaseStorageService {
   }
   
   /**
-   * Método específico para upload de avatares usando o bucket 'avatars'
+   * Método específico para upload de avatares usando o bucket 'designautoimages'
    * Otimiza e redimensiona a imagem para uso como avatar de perfil
    */
   async uploadAvatar(
@@ -556,12 +556,12 @@ export class SupabaseStorageService {
     await this.initBucket();
 
     try {
-      console.log("==== UPLOAD DE AVATAR PARA BUCKET 'avatars' ====");
+      console.log("==== UPLOAD DE AVATAR PARA BUCKET 'designautoimages' ====");
       console.log(`Nome original: ${file.originalname}`);
       console.log(`Tipo MIME: ${file.mimetype}`);
       console.log(`Tamanho: ${file.size} bytes`);
 
-      // Verificamos primeiro se podemos acessar o bucket 'avatars'
+      // Verificamos primeiro se podemos acessar o bucket 'designautoimages'
       // Mesmo sem poder listá-lo na API
       let canAccessAvatarsBucket = true;
       try {
@@ -593,13 +593,13 @@ export class SupabaseStorageService {
       // Gera nome de arquivo único
       const uuid = randomUUID();
       const avatarPath = `${uuid}.webp`;
-      const mainBucketPath = `avatars/${uuid}.webp`; // Caminho para o bucket principal
+      const mainBucketPath = `designautoimages/${uuid}.webp`; // Caminho para o bucket principal
       console.log(`Nome de arquivo para upload: ${avatarPath}`);
 
       let uploadSuccess = false;
       let publicUrl = '';
       
-      // Primeiro tenta no bucket 'avatars' se conseguir acessá-lo
+      // Primeiro tenta no bucket 'designautoimages' se conseguir acessá-lo
       if (canAccessAvatarsBucket) {
         console.log(`Tentando upload para bucket de avatares '${AVATARS_BUCKET}'...`);
         
@@ -627,7 +627,7 @@ export class SupabaseStorageService {
             publicUrl = urlData.publicUrl;
             uploadSuccess = true;
             
-            console.log(`URL pública gerada (bucket avatars): ${publicUrl}`);
+            console.log(`URL pública gerada (bucket designautoimages): ${publicUrl}`);
           }
         } catch (avatarUploadError: any) {
           console.error("Erro no upload para bucket de avatares:", avatarUploadError.message);
@@ -637,7 +637,7 @@ export class SupabaseStorageService {
       
       // Se não conseguiu upload no bucket de avatares, tenta no bucket principal
       if (!uploadSuccess) {
-        console.log(`Tentando upload para bucket principal '${BUCKET_NAME}' na pasta 'avatars/'...`);
+        console.log(`Tentando upload para bucket principal '${BUCKET_NAME}' na pasta 'designautoimages/'...`);
         
         try {
           const mainBucketResult = await supabase.storage
@@ -688,7 +688,7 @@ export class SupabaseStorageService {
       // Usamos o mesmo serviço de storage local, mas com pasta específica para avatares
       try {
         // Diretório para avatares
-        const avatarsDir = path.join(process.cwd(), 'public', 'uploads', 'avatars');
+        const designautoimagesDir = path.join(process.cwd(), 'public', 'uploads', 'designautoimages');
         
         try {
           if (!fs.existsSync('public')) {
@@ -697,8 +697,8 @@ export class SupabaseStorageService {
           if (!fs.existsSync(path.join('public', 'uploads'))) {
             fs.mkdirSync(path.join('public', 'uploads'));
           }
-          if (!fs.existsSync(avatarsDir)) {
-            fs.mkdirSync(avatarsDir);
+          if (!fs.existsSync(designautoimagesDir)) {
+            fs.mkdirSync(designautoimagesDir);
           }
         } catch (err) {
           console.error("Erro ao criar diretórios para avatares:", err);
@@ -717,7 +717,7 @@ export class SupabaseStorageService {
         const fileName = `${uniqueId}.webp`;
         
         // Caminho completo do arquivo
-        const filePath = path.join(avatarsDir, fileName);
+        const filePath = path.join(designautoimagesDir, fileName);
         
         // Salva o arquivo otimizado
         fs.writeFileSync(filePath, optimizedBuffer);
@@ -726,7 +726,7 @@ export class SupabaseStorageService {
         
         // Retorna a URL relativa
         return {
-          imageUrl: `/uploads/avatars/${fileName}`,
+          imageUrl: `/uploads/designautoimages/${fileName}`,
           storageType: "local_avatar"
         };
       } catch (fallbackError) {
@@ -792,8 +792,8 @@ export class SupabaseStorageService {
     const strategies = [
       { name: 'avatar_bucket', description: 'Upload para bucket específico de avatares', 
         path: filename, bucket: AVATARS_BUCKET },
-      { name: 'main_bucket_avatar_path', description: 'Upload para pasta /avatars no bucket principal',
-        path: `avatars/${filename}`, bucket: BUCKET_NAME },
+      { name: 'main_bucket_avatar_path', description: 'Upload para pasta /designautoimages no bucket principal',
+        path: `designautoimages/${filename}`, bucket: BUCKET_NAME },
       { name: 'main_bucket_root', description: 'Upload direto para raiz do bucket principal',
         path: filename, bucket: BUCKET_NAME },
       { name: 'local_emergency', description: 'Upload para sistema de arquivos local', 
@@ -935,10 +935,10 @@ export class SupabaseStorageService {
       // Escolher estratégia com base no número de tentativas anteriores
       // Isso permite tentar diferentes abordagens em uploads subsequentes
       
-      // ESTRATÉGIA 1: Upload direto sem otimização para bucket avatars
+      // ESTRATÉGIA 1: Upload direto sem otimização para bucket designautoimages
       if (attemptCount % 4 === 1) {
         try {
-          console.log("📝 ESTRATÉGIA 1: Upload direto sem otimização para bucket avatars");
+          console.log("📝 ESTRATÉGIA 1: Upload direto sem otimização para bucket designautoimages");
           
           // Gerar nome de arquivo específico para o usuário
           const extension = path.extname(file.originalname) || '.jpg';
@@ -972,7 +972,7 @@ export class SupabaseStorageService {
           return {
             imageUrl: urlData.publicUrl,
             storageType: "supabase_avatar_direct",
-            strategy: "direct_upload_avatars"
+            strategy: "direct_upload_designautoimages"
           };
         } catch (error) {
           console.error("❌ ESTRATÉGIA 1 falhou completamente:", error);
@@ -980,16 +980,16 @@ export class SupabaseStorageService {
         }
       }
       
-      // ESTRATÉGIA 2: Upload para bucket principal designauto-images
+      // ESTRATÉGIA 2: Upload para bucket principal designautoimages
       if (attemptCount % 4 === 2) {
         try {
-          console.log("📝 ESTRATÉGIA 2: Upload para bucket principal designauto-images");
+          console.log("📝 ESTRATÉGIA 2: Upload para bucket principal designautoimages");
           
           // Gerar nome de arquivo para o usuário no bucket principal
           const extension = ".webp";
           const timestamp = Date.now();
           const safeName = username.replace(/[^a-z0-9]/gi, '_');
-          const filePath = `avatars/${safeName}_${timestamp}${extension}`;
+          const filePath = `designautoimages/${safeName}_${timestamp}${extension}`;
           
           // Otimizar imagem para tamanho menor e qualidade mais baixa
           const optimizedBuffer = await this.optimizeImage(file.buffer, {
@@ -1092,7 +1092,7 @@ export class SupabaseStorageService {
           width: 200,
           height: 200,
           quality: 60,
-          targetFolder: 'avatars'
+          targetFolder: 'designautoimages'
         });
         
         console.log(`✅ ESTRATÉGIA 4 sucesso! URL: ${result.imageUrl}`);
@@ -1851,16 +1851,16 @@ export class SupabaseStorageService {
   async checkConnection(): Promise<{ connected: boolean, message: string, logs: string[] }> {
     try {
       this.log('Verificando acesso de leitura ao bucket principal...');
-      const mainBucketExists = await this.checkBucketExists('designauto-images');
+      const mainBucketExists = await this.checkBucketExists('designautoimages');
       
       this.log('Verificando acesso de leitura ao bucket de avatares...');
-      const avatarsBucketExists = await this.checkBucketExists('avatars');
+      const designautoimagesBucketExists = await this.checkBucketExists('designautoimages');
       
-      const connected = mainBucketExists && avatarsBucketExists;
+      const connected = mainBucketExists && designautoimagesBucketExists;
       
       const message = connected
         ? `Conexão com Supabase Storage estabelecida com sucesso. Todos os buckets estão acessíveis.`
-        : `Falha na conexão com Supabase Storage. ${!mainBucketExists ? 'Bucket principal inacessível. ' : ''}${!avatarsBucketExists ? 'Bucket de avatares inacessível.' : ''}`;
+        : `Falha na conexão com Supabase Storage. ${!mainBucketExists ? 'Bucket principal inacessível. ' : ''}${!designautoimagesBucketExists ? 'Bucket de avatares inacessível.' : ''}`;
       
       return {
         connected,
@@ -1903,7 +1903,7 @@ export class SupabaseStorageService {
       const filename = `${folder}/${Date.now()}_${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
       
       const { error: uploadError, data } = await supabase.storage
-        .from('designauto-images')
+        .from('designautoimages')
         .upload(filename, optimized, {
           contentType: `image/webp`,
           upsert: false
@@ -1918,7 +1918,7 @@ export class SupabaseStorageService {
       
       // Obter URL pública
       const { data: urlData } = supabase.storage
-        .from('designauto-images')
+        .from('designautoimages')
         .getPublicUrl(filename);
       
       const imageUrl = urlData.publicUrl;
@@ -1936,7 +1936,7 @@ export class SupabaseStorageService {
         message: "Upload realizado com sucesso",
         imageUrl,
         storageType: "supabase",
-        bucket: 'designauto-images',
+        bucket: 'designautoimages',
         optimizedSummary: {
           originalSize: file.buffer.length,
           optimizedSize: optimized.length,
@@ -1960,7 +1960,7 @@ export class SupabaseStorageService {
         message: "Falha no upload para Supabase",
         error: error instanceof Error ? error.message : String(error),
         storageType: "supabase",
-        bucket: 'designauto-images',
+        bucket: 'designautoimages',
         logs: this.getLogs()
       };
     }

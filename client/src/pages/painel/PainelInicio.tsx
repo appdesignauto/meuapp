@@ -455,7 +455,7 @@ export default function PainelInicio() {
                 <div className="pl-10 space-y-2 mt-1">
                   <div className="flex items-center space-x-2 py-1 border-b border-border/40">
                     <div className="h-7 w-7 rounded overflow-hidden flex-shrink-0">
-                      <img src="https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/arte_21.webp" alt="Arte popular" className="h-full w-full object-cover" />
+                      <img src="https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designautoimages/arte_21.webp" alt="Arte popular" className="h-full w-full object-cover" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium truncate">Banner Promoção de Fiat Strada</p>
@@ -465,7 +465,7 @@ export default function PainelInicio() {
                   
                   <div className="flex items-center space-x-2 py-1 border-b border-border/40">
                     <div className="h-7 w-7 rounded overflow-hidden flex-shrink-0">
-                      <img src="https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/arte_22.webp" alt="Arte popular" className="h-full w-full object-cover" />
+                      <img src="https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designautoimages/arte_22.webp" alt="Arte popular" className="h-full w-full object-cover" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium truncate">Stories Lavagem Completa</p>
@@ -475,7 +475,7 @@ export default function PainelInicio() {
                   
                   <div className="flex items-center space-x-2 py-1">
                     <div className="h-7 w-7 rounded overflow-hidden flex-shrink-0">
-                      <img src="https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/arte_23.webp" alt="Arte popular" className="h-full w-full object-cover" />
+                      <img src="https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designautoimages/arte_23.webp" alt="Arte popular" className="h-full w-full object-cover" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium truncate">Post Ofertas do Final de Semana</p>

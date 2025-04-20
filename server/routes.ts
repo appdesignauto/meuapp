@@ -86,16 +86,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Bucket de avatares
       try {
-        console.log("Verificando acesso ao bucket 'avatars'...");
-        const { data: avatarFiles } = await supabaseStorageService.getBucket('avatars');
-        bucketResults['avatars'] = {
+        console.log("Verificando acesso ao bucket 'designautoimages'...");
+        const { data: avatarFiles } = await supabaseStorageService.getBucket('designautoimages');
+        bucketResults['designautoimages'] = {
           accessible: true,
           files: avatarFiles?.length || 0
         };
-        console.log(`✓ Bucket 'avatars' acessível. ${avatarFiles?.length || 0} arquivos encontrados.`);
+        console.log(`✓ Bucket 'designautoimages' acessível. ${avatarFiles?.length || 0} arquivos encontrados.`);
       } catch (avatarError) {
-        console.error('✗ Erro ao acessar bucket avatars:', avatarError);
-        bucketResults['avatars'] = {
+        console.error('✗ Erro ao acessar bucket designautoimages:', avatarError);
+        bucketResults['designautoimages'] = {
           accessible: false,
           error: String(avatarError)
         };
@@ -124,7 +124,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const dirsToCheck = [
         'public',
         'public/uploads',
-        'public/uploads/avatars',
+        'public/uploads/designautoimages',
         'public/uploads/emergency'
       ];
       
@@ -195,7 +195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Lista de estratégias disponíveis (sem fazer upload real)
           const strategies = [
             { name: 'avatar_bucket', description: 'Upload para bucket específico de avatares' },
-            { name: 'main_bucket_avatar_path', description: 'Upload para pasta /avatars no bucket principal' },
+            { name: 'main_bucket_avatar_path', description: 'Upload para pasta /designautoimages no bucket principal' },
             { name: 'main_bucket_root', description: 'Upload direto para raiz do bucket principal' },
             { name: 'local_emergency', description: 'Upload para sistema de arquivos local' }
           ];
@@ -211,7 +211,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               let reason = '';
               
               if (strategy.name === 'avatar_bucket') {
-                viable = bucketResults['avatars']?.accessible || false;
+                viable = bucketResults['designautoimages']?.accessible || false;
                 reason = viable ? 'Bucket acessível' : 'Bucket não acessível';
               }
               else if (strategy.name === 'main_bucket_avatar_path' || strategy.name === 'main_bucket_root') {
@@ -316,37 +316,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let bucketResults = {};
       
       try {
-        const { data: avatarFiles } = await supabaseStorageService.getBucket('avatars');
-        bucketResults['avatars'] = {
+        const { data: avatarFiles } = await supabaseStorageService.getBucket('designautoimages');
+        bucketResults['designautoimages'] = {
           accessible: true,
           files: avatarFiles?.length || 0,
           error: null
         };
-        console.log(`✓ Bucket 'avatars' acessível! ${avatarFiles?.length || 0} arquivos encontrados.`);
+        console.log(`✓ Bucket 'designautoimages' acessível! ${avatarFiles?.length || 0} arquivos encontrados.`);
       } catch (avatarError) {
-        bucketResults['avatars'] = {
+        bucketResults['designautoimages'] = {
           accessible: false,
           files: 0,
           error: String(avatarError)
         };
-        console.error(`✗ Erro ao acessar bucket 'avatars':`, avatarError);
+        console.error(`✗ Erro ao acessar bucket 'designautoimages':`, avatarError);
       }
       
       try {
-        const { data: mainFiles } = await supabaseStorageService.getBucket('designauto-images');
-        bucketResults['designauto-images'] = {
+        const { data: mainFiles } = await supabaseStorageService.getBucket('designautoimages');
+        bucketResults['designautoimages'] = {
           accessible: true,
           files: mainFiles?.length || 0,
           error: null
         };
-        console.log(`✓ Bucket 'designauto-images' acessível! ${mainFiles?.length || 0} arquivos encontrados.`);
+        console.log(`✓ Bucket 'designautoimages' acessível! ${mainFiles?.length || 0} arquivos encontrados.`);
       } catch (mainError) {
-        bucketResults['designauto-images'] = {
+        bucketResults['designautoimages'] = {
           accessible: false,
           files: 0,
           error: String(mainError)
         };
-        console.error(`✗ Erro ao acessar bucket 'designauto-images':`, mainError);
+        console.error(`✗ Erro ao acessar bucket 'designautoimages':`, mainError);
       }
       
       // Verificar diretórios locais
@@ -356,7 +356,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const dirsToCheck = [
         'public',
         'public/uploads',
-        'public/uploads/avatars',
+        'public/uploads/designautoimages',
         'public/uploads/emergency'
       ];
       
@@ -420,7 +420,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Lista de estratégias disponíveis (sem fazer upload real)
           const strategies = [
             { name: 'avatar_bucket', description: 'Upload para bucket específico de avatares' },
-            { name: 'main_bucket_avatar_path', description: 'Upload para pasta /avatars no bucket principal' },
+            { name: 'main_bucket_avatar_path', description: 'Upload para pasta /designautoimages no bucket principal' },
             { name: 'main_bucket_root', description: 'Upload direto para raiz do bucket principal' },
             { name: 'local_emergency', description: 'Upload para sistema de arquivos local' }
           ];
@@ -430,7 +430,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             try {
               // Testar apenas a verificação, sem fazer upload
               if (strategy.name === 'avatar_bucket') {
-                await supabaseStorageService.getBucket('avatars');
+                await supabaseStorageService.getBucket('designautoimages');
                 return { ...strategy, viable: true };
               } 
               else if (strategy.name === 'main_bucket_avatar_path' || strategy.name === 'main_bucket_root') {
@@ -515,14 +515,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verificar acesso ao bucket de avatares
-      console.log("Verificando acesso ao bucket 'avatars'...");
+      console.log("Verificando acesso ao bucket 'designautoimages'...");
       let avatarBucketAccess = false;
       try {
-        const { data: avatarFiles } = await supabaseStorageService.getBucket('avatars');
+        const { data: avatarFiles } = await supabaseStorageService.getBucket('designautoimages');
         avatarBucketAccess = true;
-        console.log(`Bucket 'avatars' acessível. ${avatarFiles?.length || 0} arquivos encontrados.`);
+        console.log(`Bucket 'designautoimages' acessível. ${avatarFiles?.length || 0} arquivos encontrados.`);
       } catch (avatarError) {
-        console.error('Erro ao acessar bucket avatars:', avatarError);
+        console.error('Erro ao acessar bucket designautoimages:', avatarError);
         avatarBucketAccess = false;
       }
       
@@ -540,7 +540,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Verificar permissões de diretório local
       console.log("Verificando acesso a diretórios locais...");
-      const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'avatars');
+      const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'designautoimages');
       let localDirAccess = false;
       try {
         // Tentar criar diretório se não existir
@@ -2906,9 +2906,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let storageType = "";
       let errorDetails = [];
       
-      // ETAPA 1: Tentar upload para Supabase (bucket avatars)
+      // ETAPA 1: Tentar upload para Supabase (bucket designautoimages)
       try {
-        console.log("ETAPA 1: Tentando upload para bucket 'avatars' do Supabase...");
+        console.log("ETAPA 1: Tentando upload para bucket 'designautoimages' do Supabase...");
         
         const result = await supabaseStorageService.uploadAvatar(req.file, options);
         imageUrl = result.imageUrl;
@@ -2936,7 +2936,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           const localResult = await storageService.localUpload(req.file, {
             ...options,
-            targetFolder: 'avatars' // Pasta específica para avatares
+            targetFolder: 'designautoimages' // Pasta específica para avatares
           });
           
           imageUrl = localResult.imageUrl;
@@ -3084,9 +3084,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Tipo MIME: ${req.file.mimetype}`);
       console.log(`Buffer válido: ${!!req.file.buffer} (${req.file.buffer?.length || 0} bytes)`);
       
-      // Tentar upload direto para o bucket 'avatars'
+      // Tentar upload direto para o bucket 'designautoimages'
       try {
-        console.log("Tentando upload direto para bucket 'avatars'...");
+        console.log("Tentando upload direto para bucket 'designautoimages'...");
         
         const uploadOptions = {
           width: 200,   // Menor para teste
@@ -3188,7 +3188,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let uploadSuccess = false;
       
       try {
-        console.log("Tentando upload para bucket 'avatars' do Supabase...");
+        console.log("Tentando upload para bucket 'designautoimages' do Supabase...");
         
         // Usar o método especializado para avatares
         const result = await supabaseStorageService.uploadAvatar(req.file, options);
@@ -3197,7 +3197,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         console.log("Upload de avatar concluído com sucesso:", imageUrl);
       } catch (uploadError: any) {
-        console.error("Erro no upload para bucket de avatars:", uploadError);
+        console.error("Erro no upload para bucket de designautoimages:", uploadError);
         
         // Fallback para armazenamento local
         try {
@@ -3743,11 +3743,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Buckets encontrados:", buckets);
       
       // Testa criar bucket de teste se não existir
-      if (!buckets.some(b => b.name === 'designauto-images')) {
-        console.log("Tentando criar bucket 'designauto-images'...");
+      if (!buckets.some(b => b.name === 'designautoimages')) {
+        console.log("Tentando criar bucket 'designautoimages'...");
         
         try {
-          const { data, error } = await supabase.storage.createBucket('designauto-images', {
+          const { data, error } = await supabase.storage.createBucket('designautoimages', {
             public: true,
             fileSizeLimit: 5 * 1024 * 1024
           });
@@ -3795,7 +3795,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const testPath = `test-${Date.now()}.bin`;
         
         const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('designauto-images')
+          .from('designautoimages')
           .upload(testPath, testData);
         
         if (uploadError) {
@@ -3811,7 +3811,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Limpa arquivo de teste
         await supabase.storage
-          .from('designauto-images')
+          .from('designautoimages')
           .remove([testPath]);
           
         console.log("Arquivo de teste removido com sucesso");

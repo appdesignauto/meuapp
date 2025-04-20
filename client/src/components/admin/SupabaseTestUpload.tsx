@@ -98,7 +98,7 @@ export function SupabaseTestUpload() {
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Informação importante</AlertTitle>
               <AlertDescription>
-                Antes de usar o Supabase Storage, você precisa criar um bucket chamado <strong>designauto-images</strong> no 
+                Antes de usar o Supabase Storage, você precisa criar um bucket chamado <strong>designautoimages</strong> no 
                 painel do Supabase e configurar permissões RLS para permitir uploads.
                 <Dialog>
                   <DialogTrigger asChild>
@@ -120,7 +120,7 @@ export function SupabaseTestUpload() {
                           <li>Acesse o painel do Supabase</li>
                           <li>Navegue até a seção <strong>Storage</strong></li>
                           <li>Clique em <strong>New Bucket</strong></li>
-                          <li>Nomeie o bucket como <strong>designauto-images</strong></li>
+                          <li>Nomeie o bucket como <strong>designautoimages</strong></li>
                           <li>Marque a opção <strong>Public bucket</strong> para tornar as imagens publicamente acessíveis</li>
                           <li>Clique em <strong>Create bucket</strong></li>
                         </ol>
