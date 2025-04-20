@@ -57,7 +57,7 @@ export default function StorageTestPage() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState("connection");
-  const [selectedService, setSelectedService] = useState<"supabase" | "r2">("supabase");
+  const [selectedService, setSelectedService] = useState<"supabase">("supabase");
   const [isCheckingConnection, setIsCheckingConnection] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<StorageConnectionStatus | null>(null);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
@@ -85,7 +85,7 @@ export default function StorageTestPage() {
     return () => clearInterval(interval);
   }, []);
 
-  const checkConnection = async (service: "supabase" | "r2") => {
+  const checkConnection = async (service: "supabase") => {
     setIsCheckingConnection(true);
     setConnectionStatus(null);
     
@@ -560,12 +560,12 @@ export default function StorageTestPage() {
                     {isTestingR2Direct ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Diagnóstico de Armazenamento...
+                        Diagnóstico Detalhado do Supabase...
                       </>
                     ) : (
                       <>
                         <Info className="mr-2 h-4 w-4" />
-                        Diagnóstico de Armazenamento
+                        Diagnóstico Detalhado do Supabase
                       </>
                     )}
                   </Button>
@@ -586,7 +586,7 @@ export default function StorageTestPage() {
                           <AlertCircle className="h-5 w-5 mr-2 text-amber-500" />
                         )}
                         <div>
-                          <AlertTitle>Resultado do Diagnóstico de Armazenamento</AlertTitle>
+                          <AlertTitle>Resultado do Diagnóstico do Supabase Storage</AlertTitle>
                           <AlertDescription>
                             {r2DirectTestResult.message}
                           </AlertDescription>
