@@ -99,6 +99,18 @@ const ArtForm = ({ isOpen, onClose, editingArt }: ArtFormProps) => {
         }
       }
       
+      // Obter usuário atual para o ID do designer (se estiver autenticado)
+      // Isso permite organizar as imagens por designer
+      try {
+        const userData = queryClient.getQueryData<any>(['/api/user']);
+        if (userData && userData.id) {
+          console.log(`Usando ID do designer ${userData.id} para organização de pastas`);
+          formData.append('designerId', userData.id.toString());
+        }
+      } catch (error) {
+        console.warn("Não foi possível obter ID do usuário para organização de pastas");
+      }
+      
       console.log("Enviando imagem:", file.name, file.type, Math.round(file.size/1024) + "KB");
       console.log("Iniciando upload de imagem...");
       
