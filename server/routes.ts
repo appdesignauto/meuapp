@@ -3361,61 +3361,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // DIAGNÓSTICO DE ARMAZENAMENTO - ROTAS
   // =============================================
   
-  // Verificação de conexão com o serviço de armazenamento
-  app.get("/api/admin/storage/check-connection", isAdmin, async (req, res) => {
-    try {
-      const service = req.query.service as string;
-      if (!service || (service !== 'supabase' && service !== 'r2')) {
-        return res.status(400).json({ 
-          connected: false,
-          message: "Serviço inválido. Use 'supabase' ou 'r2'.",
-          logs: []
-        });
-      }
-      
-      let result;
-      
-      if (service === 'supabase') {
-        // Limpar logs anteriores
-        supabaseStorageService.clearLogs();
-        
-        // Testar conexão com Supabase
-        const connectionStatus = await supabaseStorageService.checkConnection();
-        
-        // Utilizamos diretamente o resultado do checkConnection
-        result = connectionStatus;
-      } else {
-        // Limpar logs anteriores
-        r2StorageService.clearLogs();
-        
-        // Testar conexão com R2
-        const bucketExists = await r2StorageService.checkBucketExists();
-        
-        // Obter logs do serviço
-        const logs = r2StorageService.getLogs();
-        
-        result = {
-          connected: bucketExists,
-          message: bucketExists 
-            ? "Conexão com Cloudflare R2 estabelecida com sucesso. Bucket principal está acessível." 
-            : "Falha na conexão com Cloudflare R2. Verifique as credenciais e a disponibilidade do serviço.",
-          logs
-        };
-      }
-      
-      res.json(result);
-    } catch (error) {
-      console.error("Erro ao verificar conexão com serviço de armazenamento:", error);
-      res.status(500).json({ 
-        connected: false,
-        message: `Erro ao verificar conexão: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
-        logs: ["Erro interno no servidor ao tentar verificar conexão"]
-      });
-    }
-  });
+  // Nota: A rota de verificação de conexão já está definida acima (/api/admin/storage/check-connection)
   
   // Teste de upload de imagem
-  app.post("/api/admin/storage/test-upload", isAdmin, uploadMemory.single('image'), async (req, res) => {
+  app.post("/api/admin/storage/test-upload", isAuthenticated, isAdmin, uploadMemory.single('image'), async (req, res) => {
     try {
       const service = req.query.service as string;
       
@@ -3506,7 +3455,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Teste de upload direto (sem processamento de imagem)
-  app.post("/api/admin/storage/test-upload-direct", isAdmin, uploadMemory.single('image'), async (req, res) => {
+  app.post("/api/admin/storage/test-upload-direct", isAuthenticated, isAdmin, uploadMemory.single('image'), async (req, res) => {
     try {
       const service = req.query.service as string;
       
