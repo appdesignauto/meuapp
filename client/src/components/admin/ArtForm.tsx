@@ -57,6 +57,7 @@ const ArtForm = ({ isOpen, onClose, editingArt }: ArtFormProps) => {
   const { toast } = useToast();
   const [isPremium, setIsPremium] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [categorySelected, setCategorySelected] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Fetch categories
@@ -274,32 +275,37 @@ const ArtForm = ({ isOpen, onClose, editingArt }: ArtFormProps) => {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 py-4">
           <div className="grid grid-cols-2 gap-4">
+            {/* Categoria é a primeira coisa a ser selecionada */}
             <div className="space-y-2 col-span-2">
-              <Label htmlFor="title">Título</Label>
-              <Input
-                id="title"
-                {...register('title')}
-                placeholder="Título da arte"
-              />
-              {errors.title && (
-                <p className="text-sm text-red-500">{errors.title.message}</p>
+              <Label htmlFor="categoryId">Categoria <span className="text-amber-600">*</span></Label>
+              <Select
+                value={watch('categoryId')}
+                onValueChange={(value) => setValue('categoryId', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories?.map((category) => (
+                    <SelectItem key={category.id} value={category.id.toString()}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.categoryId && (
+                <p className="text-sm text-red-500">{errors.categoryId.message}</p>
+              )}
+              {!watch('categoryId') && (
+                <p className="text-xs text-amber-600">
+                  Selecione uma categoria antes de fazer upload da imagem
+                </p>
               )}
             </div>
             
+            {/* Upload da imagem logo após a categoria */}
             <div className="space-y-2 col-span-2">
-              <Label htmlFor="description">Descrição</Label>
-              <Textarea
-                id="description"
-                {...register('description')}
-                placeholder="Descrição da arte"
-              />
-              {errors.description && (
-                <p className="text-sm text-red-500">{errors.description.message}</p>
-              )}
-            </div>
-            
-            <div className="space-y-2 col-span-2">
-              <Label>Upload de Imagem</Label>
+              <Label>Upload de Imagem <span className="text-amber-600">*</span></Label>
               <div className="flex items-center gap-4">
                 <input 
                   type="file" 
@@ -312,7 +318,7 @@ const ArtForm = ({ isOpen, onClose, editingArt }: ArtFormProps) => {
                   type="button" 
                   variant="outline" 
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
+                  disabled={uploading || !watch('categoryId')}
                   className="flex gap-2 items-center"
                 >
                   {uploading ? (
@@ -327,6 +333,11 @@ const ArtForm = ({ isOpen, onClose, editingArt }: ArtFormProps) => {
                     </>
                   )}
                 </Button>
+                {!watch('categoryId') && (
+                  <p className="text-sm text-amber-600">
+                    Selecione uma categoria antes de fazer upload
+                  </p>
+                )}
                 {uploading && (
                   <p className="text-sm text-muted-foreground">
                     Enviando e otimizando imagem...
@@ -341,6 +352,7 @@ const ArtForm = ({ isOpen, onClose, editingArt }: ArtFormProps) => {
                 id="imageUrl"
                 {...register('imageUrl')}
                 placeholder="https://exemplo.com/imagem.jpg"
+                readOnly
               />
               {errors.imageUrl && (
                 <p className="text-sm text-red-500">{errors.imageUrl.message}</p>
@@ -360,6 +372,30 @@ const ArtForm = ({ isOpen, onClose, editingArt }: ArtFormProps) => {
             </div>
             
             <div className="space-y-2 col-span-2">
+              <Label htmlFor="title">Título <span className="text-amber-600">*</span></Label>
+              <Input
+                id="title"
+                {...register('title')}
+                placeholder="Título da arte"
+              />
+              {errors.title && (
+                <p className="text-sm text-red-500">{errors.title.message}</p>
+              )}
+            </div>
+            
+            <div className="space-y-2 col-span-2">
+              <Label htmlFor="description">Descrição <span className="text-amber-600">*</span></Label>
+              <Textarea
+                id="description"
+                {...register('description')}
+                placeholder="Descrição da arte"
+              />
+              {errors.description && (
+                <p className="text-sm text-red-500">{errors.description.message}</p>
+              )}
+            </div>
+            
+            <div className="space-y-2 col-span-2">
               <Label htmlFor="editUrl">URL de Edição (opcional)</Label>
               <Input
                 id="editUrl"
@@ -368,28 +404,6 @@ const ArtForm = ({ isOpen, onClose, editingArt }: ArtFormProps) => {
               />
               {errors.editUrl && (
                 <p className="text-sm text-red-500">{errors.editUrl.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="categoryId">Categoria</Label>
-              <Select
-                value={watch('categoryId')}
-                onValueChange={(value) => setValue('categoryId', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione uma categoria" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories?.map((category) => (
-                    <SelectItem key={category.id} value={category.id.toString()}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.categoryId && (
-                <p className="text-sm text-red-500">{errors.categoryId.message}</p>
               )}
             </div>
             
