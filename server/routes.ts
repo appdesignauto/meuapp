@@ -2917,7 +2917,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           console.log("ETAPA 2: Tentando upload para bucket 'designautoimages' do Supabase...");
           
-          const result = await supabaseStorageService.uploadAvatar(req.file, options);
+          // Passar o ID do usuário para usar no nome do arquivo
+          const result = await supabaseStorageService.uploadAvatar(req.file, options, userId);
           imageUrl = result.imageUrl;
           storageType = result.storageType || "supabase_avatar";
           uploadSuccess = true;
@@ -3198,8 +3199,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         console.log("Tentando upload para bucket 'designautoimages' do Supabase...");
         
-        // Usar o método especializado para avatares
-        const result = await supabaseStorageService.uploadAvatar(req.file, options);
+        // Usar o método especializado para avatares, passando o ID do usuário
+        const result = await supabaseStorageService.uploadAvatar(req.file, options, userId);
         imageUrl = result.imageUrl;
         uploadSuccess = true;
         
