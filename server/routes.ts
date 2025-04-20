@@ -2898,7 +2898,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         format: 'webp' as const
       };
       
-      // Estratégia de upload em cascata: tenta Supabase primeiro, depois fallback para local
+      // Estratégia de upload em cascata: tenta R2 primeiro, depois Supabase, depois fallback para local
       console.log("INICIANDO ESTRATÉGIA DE UPLOAD EM CASCATA");
       
       let imageUrl = null;
@@ -2906,33 +2906,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let storageType = "";
       let errorDetails = [];
       
-      // ETAPA 1: Tentar upload para Supabase (bucket designautoimages)
+      // ETAPA 1: Tentar upload para R2 (bucket designautoimages)
       try {
-        console.log("ETAPA 1: Tentando upload para bucket 'designautoimages' do Supabase...");
+        console.log("ETAPA 1: Tentando upload para R2 Storage (bucket 'designautoimages')...");
         
-        const result = await supabaseStorageService.uploadAvatar(req.file, options);
-        imageUrl = result.imageUrl;
-        storageType = result.storageType || "supabase_avatar";
-        uploadSuccess = true;
+        // Ler o arquivo para um buffer
+        const fileBuffer = fs.readFileSync(req.file.path);
         
-        console.log("✅ ETAPA 1: Upload para Supabase concluído com sucesso");
-        console.log(`URL da imagem: ${imageUrl}`);
-        console.log(`Tipo de armazenamento: ${storageType}`);
-      } catch (supabaseError: any) {
-        console.error("❌ ETAPA 1: Erro no upload para Supabase:", supabaseError);
+        // Fazer upload via serviço R2
+        const r2Result = await r2StorageService.uploadAvatar(user.id, fileBuffer, req.file.mimetype);
+        
+        if (r2Result.success && r2Result.url) {
+          imageUrl = r2Result.url;
+          storageType = "r2_avatar";
+          uploadSuccess = true;
+          
+          console.log("✅ ETAPA 1: Upload para R2 concluído com sucesso");
+          console.log(`URL da imagem: ${imageUrl}`);
+          console.log(`Tipo de armazenamento: ${storageType}`);
+        } else {
+          throw new Error(r2Result.error || "Falha desconhecida no upload para R2");
+        }
+      } catch (r2Error: any) {
+        console.error("❌ ETAPA 1: Erro no upload para R2:", r2Error);
         errorDetails.push({
-          stage: "supabase_upload",
-          message: supabaseError.message,
-          stack: supabaseError.stack
+          stage: "r2_upload",
+          message: r2Error.message,
+          stack: r2Error.stack
         });
         
-        // Continua para a próxima etapa (fallback local)
+        // Continua para a próxima etapa (Supabase)
       }
       
-      // ETAPA 2: Fallback para armazenamento local (se Supabase falhou)
+      // ETAPA 2: Tentar upload para Supabase (bucket designautoimages) se R2 falhou
       if (!uploadSuccess) {
         try {
-          console.log("ETAPA 2: Tentando upload para armazenamento local...");
+          console.log("ETAPA 2: Tentando upload para bucket 'designautoimages' do Supabase...");
+          
+          const result = await supabaseStorageService.uploadAvatar(req.file, options);
+          imageUrl = result.imageUrl;
+          storageType = result.storageType || "supabase_avatar";
+          uploadSuccess = true;
+          
+          console.log("✅ ETAPA 2: Upload para Supabase concluído com sucesso");
+          console.log(`URL da imagem: ${imageUrl}`);
+          console.log(`Tipo de armazenamento: ${storageType}`);
+        } catch (supabaseError: any) {
+          console.error("❌ ETAPA 2: Erro no upload para Supabase:", supabaseError);
+          errorDetails.push({
+            stage: "supabase_upload",
+            message: supabaseError.message,
+            stack: supabaseError.stack
+          });
+          
+          // Continua para a próxima etapa (fallback local)
+        }
+      }
+      
+      // ETAPA 3: Fallback para armazenamento local (se R2 e Supabase falharam)
+      if (!uploadSuccess) {
+        try {
+          console.log("ETAPA 3: Tentando upload para armazenamento local...");
           
           const localResult = await storageService.localUpload(req.file, {
             ...options,
@@ -2943,10 +2977,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           storageType = "local_avatar";
           uploadSuccess = true;
           
-          console.log("✅ ETAPA 2: Upload local concluído com sucesso");
+          console.log("✅ ETAPA 3: Upload local concluído com sucesso");
           console.log(`URL da imagem: ${imageUrl}`);
         } catch (localError: any) {
-          console.error("❌ ETAPA 2: Erro no armazenamento local:", localError);
+          console.error("❌ ETAPA 3: Erro no armazenamento local:", localError);
           errorDetails.push({
             stage: "local_upload",
             message: localError.message,
