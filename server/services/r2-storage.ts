@@ -12,14 +12,18 @@ const AVATAR_BUCKET_NAME = 'designautoimages';
 const BUCKET_NAME = 'designautoimages'; // Nome fixo do bucket
 const PUBLIC_URL = process.env.R2_PUBLIC_URL || 'https://pub-484b1f980bd24bb893017d5185fbfa93.r2.dev';
 
-// Certifique-se de que o endpoint esteja no formato correto incluindo .r2.cloudflarestorage.com
-const accountId = process.env.R2_ENDPOINT || 'https://0f7a409b79bd29f7cf3970f077da05ee.r2.cloudflarestorage.com';
-const R2_ENDPOINT = accountId;
+// Certifique-se de que o endpoint esteja no formato correto para R2
+const accountId = process.env.R2_ENDPOINT || '0f7a409b79bd29f7cf3970f077da05ee';
+
+// Formatar o endpoint corretamente com https:// e .r2.dev
+const R2_ENDPOINT = accountId.includes('https://') 
+  ? accountId 
+  : `https://${accountId}.r2.dev`;
 
 // Formato do nome de conta extraído do endpoint
 const ACCOUNT_ID = R2_ENDPOINT.includes('https://') 
-  ? R2_ENDPOINT.split('https://')[1].split('.r2.cloudflarestorage.com')[0]
-  : R2_ENDPOINT;
+  ? R2_ENDPOINT.split('https://')[1].split('.r2.dev')[0]
+  : accountId;
 
 // Log de inicialização para verificar credenciais
 console.log("Detalhes das credenciais do R2:");
