@@ -15,10 +15,9 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient(supabaseUrl!, supabaseKey!);
 
-// Nome do bucket para armazenar as imagens
 // Nome dos buckets para armazenamento de imagens
-const BUCKET_NAME = 'designautoimages'; // Bucket para artes e imagens do sistema
-const AVATARS_BUCKET = 'designautoimages'; // Bucket específico para avatares de usuários (mesmo bucket principal)
+const BUCKET_NAME = 'designauto-images'; // Bucket para artes e imagens do sistema
+const AVATARS_BUCKET = 'avatars'; // Bucket específico para avatares de usuários
 
 interface ImageOptimizationOptions {
   width?: number;
@@ -627,7 +626,7 @@ export class SupabaseStorageService {
             publicUrl = urlData.publicUrl;
             uploadSuccess = true;
             
-            console.log(`URL pública gerada (bucket designautoimages): ${publicUrl}`);
+            console.log(`URL pública gerada (bucket ${AVATARS_BUCKET}): ${publicUrl}`);
           }
         } catch (avatarUploadError: any) {
           console.error("Erro no upload para bucket de avatares:", avatarUploadError.message);
@@ -637,7 +636,7 @@ export class SupabaseStorageService {
       
       // Se não conseguiu upload no bucket de avatares, tenta no bucket principal
       if (!uploadSuccess) {
-        console.log(`Tentando upload para bucket principal '${BUCKET_NAME}' na pasta 'designautoimages/'...`);
+        console.log(`Tentando upload para bucket principal '${BUCKET_NAME}' na pasta 'avatars/'...`);
         
         try {
           const mainBucketResult = await supabase.storage
@@ -792,8 +791,8 @@ export class SupabaseStorageService {
     const strategies = [
       { name: 'avatar_bucket', description: 'Upload para bucket específico de avatares', 
         path: filename, bucket: AVATARS_BUCKET },
-      { name: 'main_bucket_avatar_path', description: 'Upload para pasta /designautoimages no bucket principal',
-        path: `designautoimages/${filename}`, bucket: BUCKET_NAME },
+      { name: 'main_bucket_avatar_path', description: 'Upload para pasta /avatars no bucket principal',
+        path: `avatars/${filename}`, bucket: BUCKET_NAME },
       { name: 'main_bucket_root', description: 'Upload direto para raiz do bucket principal',
         path: filename, bucket: BUCKET_NAME },
       { name: 'local_emergency', description: 'Upload para sistema de arquivos local', 
@@ -989,7 +988,7 @@ export class SupabaseStorageService {
           const extension = ".webp";
           const timestamp = Date.now();
           const safeName = username.replace(/[^a-z0-9]/gi, '_');
-          const filePath = `designautoimages/${safeName}_${timestamp}${extension}`;
+          const filePath = `avatars/${safeName}_${timestamp}${extension}`;
           
           // Otimizar imagem para tamanho menor e qualidade mais baixa
           const optimizedBuffer = await this.optimizeImage(file.buffer, {
