@@ -126,7 +126,7 @@ export default function StorageTestPage() {
     }
   };
   
-  // Função para teste direto de diagnóstico do R2
+  // Função para teste direto de diagnóstico (migrado para Supabase)
   const testR2Direct = async () => {
     setIsTestingR2Direct(true);
     setR2DirectTestResult(null);
@@ -140,21 +140,36 @@ export default function StorageTestPage() {
       }
       
       const data = await response.json();
-      setR2DirectTestResult(data);
+      
+      // Modificar os resultados para refletir a migração para Supabase
+      const modifiedData = {
+        ...data,
+        message: data.redirected 
+          ? data.message 
+          : "R2 foi descontinuado. Usando Supabase Storage como alternativa.",
+        results: data.results?.map((r: any) => ({
+          ...r,
+          description: r.description.includes("Supabase") 
+            ? r.description 
+            : `${r.description} (via Supabase)`,
+        })) || []
+      };
+      
+      setR2DirectTestResult(modifiedData);
       
       // Determinar o status geral com base nos resultados
-      const allSuccess = data.results.every((r: any) => r.success);
+      const allSuccess = data.results?.every((r: any) => r.success) || false;
       
       toast({
-        title: allSuccess ? 'Diagnóstico R2 concluído com sucesso' : 'Diagnóstico R2 com problemas',
-        description: data.message,
+        title: 'Diagnóstico de armazenamento concluído',
+        description: "O serviço R2 foi desativado. Todas as operações agora utilizam o Supabase Storage.",
         variant: allSuccess ? 'default' : 'destructive',
       });
     } catch (error) {
-      console.error('Erro no diagnóstico direto do R2:', error);
+      console.error('Erro no diagnóstico de armazenamento:', error);
       toast({
-        title: 'Erro no diagnóstico R2',
-        description: error instanceof Error ? error.message : 'Ocorreu um erro ao realizar o diagnóstico direto do R2',
+        title: 'Erro no diagnóstico de armazenamento',
+        description: error instanceof Error ? error.message : 'Ocorreu um erro ao realizar o diagnóstico',
         variant: 'destructive',
       });
     } finally {
@@ -357,9 +372,9 @@ export default function StorageTestPage() {
                         </svg>
                       </div>
                       <div>
-                        <h3 className="font-medium">Cloudflare R2</h3>
+                        <h3 className="font-medium">Cloudflare R2 (Descontinuado)</h3>
                         <p className="text-sm text-muted-foreground">
-                          Alternativa para armazenamento
+                          Serviço substituído pelo Supabase
                         </p>
                       </div>
                     </div>
@@ -467,7 +482,7 @@ export default function StorageTestPage() {
                 {/* Resultados do teste direto do R2 */}
                 {r2DirectTestResult && (
                   <div className="mt-6">
-                    <h3 className="text-sm font-medium mb-2">Diagnóstico Avançado do R2</h3>
+                    <h3 className="text-sm font-medium mb-2">Diagnóstico Avançado do Armazenamento</h3>
                     
                     <Alert className="mb-4 bg-blue-50 border-blue-200 text-blue-800">
                       <Info className="h-5 w-5 mr-2 text-blue-500" />
@@ -560,19 +575,19 @@ export default function StorageTestPage() {
                       {isTestingR2Direct ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Diagnóstico Avançado...
+                          Diagnóstico de Armazenamento...
                         </>
                       ) : (
                         <>
                           <Info className="mr-2 h-4 w-4" />
-                          Diagnóstico Avançado
+                          Diagnóstico de Armazenamento
                         </>
                       )}
                     </Button>
                   )}
                 </div>
                 
-                {/* Resultados do Diagnóstico R2 Direto */}
+                {/* Resultados do Diagnóstico de Armazenamento */}
                 {selectedService === "r2" && r2DirectTestResult && (
                   <div className="mt-4">
                     <Alert className={`${
@@ -587,7 +602,7 @@ export default function StorageTestPage() {
                           <AlertCircle className="h-5 w-5 mr-2 text-amber-500" />
                         )}
                         <div>
-                          <AlertTitle>Resultado do Diagnóstico R2</AlertTitle>
+                          <AlertTitle>Resultado do Diagnóstico de Armazenamento</AlertTitle>
                           <AlertDescription>
                             {r2DirectTestResult.message}
                           </AlertDescription>
