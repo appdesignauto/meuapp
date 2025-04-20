@@ -6,10 +6,12 @@ export function ProtectedRoute({
   path,
   component: Component,
   roles = [],
+  requireEmailVerification = true,
 }: {
   path: string;
   component: () => React.JSX.Element | null;
   roles?: string[];
+  requireEmailVerification?: boolean;
 }) {
   const { user, isLoading } = useAuth();
 
@@ -27,6 +29,15 @@ export function ProtectedRoute({
     return (
       <Route path={path}>
         <Redirect to="/auth" />
+      </Route>
+    );
+  }
+
+  // Verificação de email confirmado
+  if (requireEmailVerification && user.emailconfirmed === false) {
+    return (
+      <Route path={path}>
+        <Redirect to="/email-verification" />
       </Route>
     );
   }

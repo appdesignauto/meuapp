@@ -25,6 +25,10 @@ export interface User {
   ultimologin?: Date | null;
   criadoem?: Date;
   atualizadoem?: Date;
+  
+  // Campos para integração e segurança
+  supabaseId?: string | null;
+  emailconfirmed?: boolean;
 }
 
 export interface Category {
