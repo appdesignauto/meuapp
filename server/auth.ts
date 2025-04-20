@@ -255,17 +255,26 @@ export function setupAuth(app: Express) {
       if (req.body.email) {
         const existingEmail = await storage.getUserByEmail(req.body.email);
         if (existingEmail) {
-          return res.status(400).json({ message: "Email já cadastrado" });
+          return res.status(400).json({ 
+            success: false,
+            message: "Email já cadastrado" 
+          });
         }
       } else {
-        return res.status(400).json({ message: "Email é obrigatório" });
+        return res.status(400).json({ 
+          success: false,
+          message: "Email é obrigatório" 
+        });
       }
       
       // Se username for fornecido, verifica se já existe
       if (req.body.username) {
         const existingUser = await storage.getUserByUsername(req.body.username);
         if (existingUser) {
-          return res.status(400).json({ message: "Nome de usuário já existe" });
+          return res.status(400).json({ 
+            success: false,
+            message: "Nome de usuário já existe" 
+          });
         }
       } else {
         // Se não for fornecido, gera com base no email
@@ -288,21 +297,56 @@ export function setupAuth(app: Express) {
         role: nivelAcesso, // Manter role para compatibilidade
         isactive: true,
         origemassinatura: origemAssinatura, // Define origem como "auto"
+        emailconfirmed: false, // Explicitamente definir como não confirmado
       });
+      
+      // Enviar email de verificação
+      try {
+        // Importar o serviço de verificação de email
+        const { emailVerificationService } = await import('./services/email-verification-service');
+        
+        // Enviar email de verificação
+        const sent = await emailVerificationService.sendVerificationEmail(
+          newUser.id, 
+          newUser.email,
+          newUser.name || 'Usuário'
+        );
+        
+        if (sent) {
+          console.log(`E-mail de verificação enviado para ${newUser.email}`);
+        } else {
+          console.warn(`Falha ao enviar e-mail de verificação para ${newUser.email}`);
+        }
+      } catch (emailError) {
+        console.error("Erro ao enviar e-mail de verificação:", emailError);
+        // Não interromper o fluxo se o envio de e-mail falhar - apenas logar o erro
+      }
       
       // Login the user
       req.login(newUser, (err) => {
         if (err) {
-          return res.status(500).json({ message: "Erro ao fazer login após registro" });
+          return res.status(500).json({ 
+            success: false,
+            message: "Erro ao fazer login após registro" 
+          });
         }
         
         // Remove password from response
         const { password, ...userWithoutPassword } = newUser;
-        return res.status(201).json(userWithoutPassword);
+        return res.status(201).json({
+          success: true,
+          user: userWithoutPassword,
+          verificationSent: true,
+          message: "Usuário criado com sucesso. Por favor, verifique seu e-mail para confirmar sua conta."
+        });
       });
     } catch (error) {
       console.error("Erro ao registrar usuário:", error);
-      return res.status(500).json({ message: "Erro ao registrar usuário" });
+      return res.status(500).json({ 
+        success: false, 
+        message: "Erro ao registrar usuário",
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 
