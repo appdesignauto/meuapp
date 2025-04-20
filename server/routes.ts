@@ -3506,33 +3506,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
           logs: uploadResult.logs
         });
       } else {
-        // Para R2, usamos o método normal por enquanto
-        // No futuro, podemos adicionar um método direto também para R2
+        // Limpar logs para nova operação
         r2StorageService.clearLogs();
         
-        const uploadResult = await r2StorageService.testUpload(
-          {
-            buffer: req.file.buffer,
-            originalname: req.file.originalname,
-            mimetype: req.file.mimetype
-          },
-          {
-            width: undefined, // sem redimensionamento
-            quality: 100, // qualidade máxima
-            format: undefined // manter formato original
-          }
-        );
+        // Agora usamos o novo método testUploadDirect para R2
+        const uploadResult = await r2StorageService.testUploadDirect(req.file);
         
         // Calcular tempo total
         const totalTime = Date.now() - startTime;
         
         return res.json({
-          ...uploadResult,
-          message: uploadResult.success ? "Upload direto para R2 realizado com sucesso" : "Falha no upload direto para R2",
+          success: uploadResult.success,
+          imageUrl: uploadResult.imageUrl,
+          message: uploadResult.message || (uploadResult.success ? "Upload direto para R2 realizado com sucesso" : "Falha no upload direto para R2"),
+          method: uploadResult.method || "r2_direct",
+          simulated: uploadResult.simulated || false,
+          warning: uploadResult.warning,
           timings: {
-            ...uploadResult.timings,
-            total: totalTime
-          }
+            total: totalTime,
+            upload: uploadResult.timings?.upload || totalTime
+          },
+          logs: uploadResult.logs || r2StorageService.getLogs()
         });
       }
     } catch (error) {

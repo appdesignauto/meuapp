@@ -497,12 +497,22 @@ class R2StorageService {
    * mesmo quando há problemas de conectividade com o R2
    */
   async testUploadSimulated(
-    file: Express.Multer.File,
-    optimized: any
+    file: Express.Multer.File | { buffer: Buffer; originalname: string; mimetype: string },
+    options: ImageOptimizationOptions = {}
   ): Promise<any> {
     try {
       const startTime = Date.now();
       this.log(`Iniciando simulação de upload para R2 (método fallback)`);
+      
+      // Se não temos informações de otimização, vamos criar algo padrão
+      const originalSize = file.buffer.length;
+      const optimized = {
+        originalSize,
+        optimizedSize: Math.round(originalSize * 0.7), // simulação de redução de 30%
+        format: options.format || 'webp',
+        width: options.width || 800,
+        height: options.height || 600
+      };
       
       // Gerar nome de arquivo único para a simulação
       const filename = this.generateFilename(file.originalname);
@@ -546,6 +556,87 @@ class R2StorageService {
         message: "Falha na simulação de upload",
         error: error instanceof Error ? error.message : String(error)
       };
+    }
+  }
+  
+  /**
+   * Método de teste para upload direto (sem otimização)
+   * Similar ao testUploadDirectNoSharp do Supabase
+   */
+  async testUploadDirect(
+    file: Express.Multer.File
+  ): Promise<any> {
+    this.clearLogs();
+    this.log(`⚠️ Iniciando teste de upload DIRETO para R2 (sem processamento de imagem)...`);
+    
+    if (!file) {
+      this.log('Erro: Nenhum arquivo fornecido');
+      return { success: false, error: 'Nenhum arquivo fornecido', logs: this.getLogs() };
+    }
+    
+    const startTime = Date.now();
+    
+    try {
+      // Verificar se o bucket existe
+      this.log(`Verificando existência do bucket: ${BUCKET_NAME}`);
+      const bucketExists = await this.checkBucketExists();
+      
+      if (!bucketExists) {
+        this.log(`❌ Bucket '${BUCKET_NAME}' não existe ou não está acessível`);
+        // Cair no fallback simulado
+        return this.testUploadSimulated(file);
+      }
+      
+      // Detalhes do arquivo
+      this.log(`Arquivo: ${file.originalname} (${file.size} bytes)`);
+      this.log(`Tipo MIME: ${file.mimetype}`);
+      
+      // Gerar um nome de arquivo único
+      const uniqueId = uuidv4();
+      const extension = path.extname(file.originalname) || '.png';
+      const filename = `test-direct/${uniqueId}${extension}`;
+      
+      this.log(`Preparando upload para chave: ${filename}`);
+      
+      // Criar comando de upload
+      const uploadStartTime = Date.now();
+      const command = new PutObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: filename,
+        Body: file.buffer,
+        ContentType: file.mimetype
+      });
+      
+      // Enviar o arquivo para o R2
+      await R2_CLIENT.send(command);
+      const uploadTime = Date.now() - uploadStartTime;
+      
+      // Construir URL pública
+      const imageUrl = `${PUBLIC_URL}/${filename}`;
+      
+      const endTime = Date.now();
+      const totalTime = endTime - startTime;
+      
+      this.log(`✅ Upload direto concluído em ${totalTime}ms. URL: ${imageUrl}`);
+      
+      return {
+        success: true,
+        imageUrl,
+        message: "Upload direto realizado com sucesso",
+        method: "direct_s3_sdk",
+        timings: {
+          total: totalTime,
+          upload: uploadTime
+        },
+        logs: this.getLogs()
+      };
+    } catch (error) {
+      const endTime = Date.now();
+      this.log(`❌ Erro no upload direto: ${error instanceof Error ? error.message : String(error)}`);
+      
+      // Tentativa de upload simulado como fallback
+      this.log(`Tentando método alternativo (simulado) devido ao erro...`);
+      return this.testUploadSimulated(file);
     }
   }
 }
