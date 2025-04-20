@@ -18,6 +18,19 @@ interface StorageConnectionStatus {
   logs: string[];
 }
 
+interface R2DirectTestResult {
+  message: string;
+  results: Array<{
+    description: string;
+    url: string;
+    status?: number;
+    success: boolean;
+    error?: string;
+    headers?: Record<string, string>;
+    config?: any;
+  }>;
+}
+
 interface UploadTestResult {
   success: boolean;
   message: string;
@@ -50,6 +63,8 @@ export default function StorageTestPage() {
   const [isDirect, setIsDirect] = useState(false); // Controla se está usando upload direto (sem sharp)
   const [uploadResult, setUploadResult] = useState<UploadTestResult | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [r2DirectTestResult, setR2DirectTestResult] = useState<R2DirectTestResult | null>(null);
+  const [isTestingR2Direct, setIsTestingR2Direct] = useState(false);
 
   // Efeito visual para progresso de upload
   const simulateProgress = useCallback(() => {
@@ -210,6 +225,40 @@ export default function StorageTestPage() {
     } finally {
       setIsUploading(false);
       cleanup();
+    }
+  };
+  
+  // Método para testar direto a conexão com o R2 com diagnóstico completo
+  const testR2Direct = async () => {
+    setIsTestingR2Direct(true);
+    setR2DirectTestResult(null);
+    
+    try {
+      const response = await fetch('/api/admin/storage/test-r2-direct');
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Falha na resposta da API: ${errorText}`);
+      }
+      
+      const result = await response.json();
+      setR2DirectTestResult(result);
+      
+      toast({
+        title: "Diagnóstico R2 Completo",
+        description: result.message,
+        variant: "default"
+      });
+    } catch (error) {
+      console.error("Erro ao testar R2 diretamente:", error);
+      
+      toast({
+        title: "Erro no diagnóstico R2",
+        description: error instanceof Error ? error.message : String(error),
+        variant: "destructive"
+      });
+    } finally {
+      setIsTestingR2Direct(false);
     }
   };
 
