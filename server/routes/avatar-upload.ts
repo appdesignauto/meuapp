@@ -2,8 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
-import { PutObjectCommand } from '@aws-sdk/client-s3';
-import { r2StorageService } from '../services/r2-storage';
+import { supabaseStorageService } from '../services/supabase-storage';
 import { db } from '../db';
 import { users } from '@shared/schema';
 import { eq } from 'drizzle-orm';
@@ -61,8 +60,22 @@ router.post('/api/user/avatar', isAuthenticated, upload.single('avatar'), async 
     // Ler o arquivo do sistema de arquivos temporário
     const fileContent = fs.readFileSync(file.path);
 
-    // Fazer upload via serviço R2
-    const uploadResult = await r2StorageService.uploadAvatar(userId, fileContent, file.mimetype);
+    // Fazer upload via serviço Supabase
+    const uploadOptions = {
+      width: 250,
+      height: 250,
+      quality: 90,
+      format: 'webp'
+    };
+    
+    const multerFile = {
+      buffer: fileContent,
+      originalname: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size
+    } as Express.Multer.File;
+    
+    const uploadResult = await supabaseStorageService.uploadAvatar(multerFile, uploadOptions);
 
     // Remover o arquivo temporário
     fs.unlinkSync(file.path);

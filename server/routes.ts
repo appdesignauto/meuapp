@@ -15,9 +15,8 @@ import { SQL } from "drizzle-orm/sql";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { storageService } from "./services/storage";
+// Usando apenas Supabase Storage para armazenamento de imagens
 import { supabaseStorageService } from "./services/supabase-storage";
-import { r2StorageService } from "./services/r2-storage";
 import { SubscriptionService } from "./services/subscription-service";
 import { HotmartService } from "./services/hotmart-service";
 import uploadMemory from "./middlewares/upload";
