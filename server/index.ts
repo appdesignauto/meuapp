@@ -5,6 +5,7 @@ import { setupVite, serveStatic, log } from "./vite";
 import { initializeDatabase } from "./init-data";
 import { createAdminUser } from "./init-admin";
 import { SubscriptionService } from "./services/subscription-service";
+import { validateR2Environment } from "./env-check";
 
 const app = express();
 app.use(express.json());
@@ -45,6 +46,9 @@ app.use((req, res, next) => {
 
 (async () => {
   try {
+    // Validar e corrigir as variáveis de ambiente do R2
+    validateR2Environment();
+    
     // Inicializar o banco de dados com dados
     await initializeDatabase();
     console.log("Banco de dados inicializado com sucesso");
