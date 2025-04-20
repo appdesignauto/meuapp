@@ -32,6 +32,7 @@ import removeLogoRouter from './routes/remove-logo';
 import supabaseRegisterTestRouter from './routes/supabase-register-test';
 import avatarUploadRouter from './routes/avatar-upload';
 import userProfileRouter from './routes/user-profile';
+import testR2DirectRouter from './routes/test-r2-direct';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Rota de debug para testar getUserByUsername
@@ -3838,6 +3839,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Registrar rotas para perfil de usuário
   app.use(userProfileRouter);
+  app.use(testR2DirectRouter);
 
   const httpServer = createServer(app);
   
