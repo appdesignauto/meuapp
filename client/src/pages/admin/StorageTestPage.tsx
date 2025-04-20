@@ -307,12 +307,7 @@ export default function StorageTestPage() {
             <div className="grid grid-cols-1 gap-4">
               <div className="space-y-3">
                 <div
-                  className={`relative p-4 border rounded-md cursor-pointer transition-all ${
-                    selectedService === "supabase"
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/50"
-                  }`}
-                  onClick={() => setSelectedService("supabase")}
+                  className="relative p-4 border rounded-md border-primary bg-primary/5"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
@@ -331,63 +326,52 @@ export default function StorageTestPage() {
                       <div>
                         <h3 className="font-medium">Supabase Storage</h3>
                         <p className="text-sm text-muted-foreground">
-                          Armazenamento atual do DesignAuto
+                          Sistema único de armazenamento do DesignAuto
                         </p>
                       </div>
                     </div>
                     <div
-                      className={`w-5 h-5 rounded-full border-2 ${
-                        selectedService === "supabase"
-                          ? "border-primary"
-                          : "border-muted"
-                      }`}
+                      className="w-5 h-5 rounded-full border-2 border-primary"
                     >
-                      {selectedService === "supabase" && (
-                        <div className="w-3 h-3 bg-primary rounded-full m-[3px]" />
-                      )}
+                      <div className="w-3 h-3 bg-primary rounded-full m-[3px]" />
                     </div>
                   </div>
                 </div>
                 
                 <div
-                  className={`relative p-4 border rounded-md cursor-pointer transition-all ${
-                    selectedService === "r2"
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/50"
-                  }`}
-                  onClick={() => setSelectedService("r2")}
+                  className="relative p-4 border rounded-md border-gray-200 bg-gray-50"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className="bg-orange-100 p-2 rounded-md">
+                      <div className="bg-gray-200 p-2 rounded-md">
                         <svg
-                          className="w-6 h-6 text-orange-600"
-                          fill="currentColor"
-                          viewBox="0 0 24 24"
                           xmlns="http://www.w3.org/2000/svg"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="w-6 h-6 text-gray-500"
                         >
-                          <path
-                            d="M9.85 16.896c.149-.75.224-1.522.224-2.297 0-.788-.075-1.561-.224-2.311.839-.326 1.7-1.025 1.7-2.237 0-1.136-.923-2.386-2.57-2.386-.326 0-.615.05-.866.149.14.062.309.099.474.099.712 0 1.36-.59 1.36-1.374 0-.696-.473-1.76-1.945-1.76-2.022 0-3.995 1.885-3.995 5.03 0 .388.022.766.083 1.136-.44.3-.786.873-.786 1.56 0 .924.583 1.586 1.337 1.884-.149.749-.224 1.523-.224 2.312 0 .774.075 1.546.224 2.297-.902.325-1.436 1.123-1.436 2.06 0 1.188.806 2.27 2.445 2.27.44 0 .811-.073 1.119-.224-.188-.075-.35-.136-.5-.261-.4-.313-.599-.811-.599-1.287 0-.726.485-1.35 1.262-1.35.326 0 .636.1.839.2.224-.736.326-1.434.326-2.12 0-.674-.102-1.371-.326-2.082-.19.074-.5.173-.827.173-.8 0-1.262-.598-1.262-1.337 0-.463.213-.975.63-1.274zm8.147-.21v-.001c0-2.248-1.264-3.53-3.378-3.666.328-.414.501-.912.501-1.457 0-1.375-.976-2.227-2.38-2.227-.926 0-1.731.414-2.244 1.1.513-.101 1.05-.151 1.636-.151 1.66 0 2.91.752 2.91 2.17 0 .538-.207 1.015-.515 1.427 2.246.025 3.47 1.238 3.47 3.543 0 3.36-2.86 5.93-7.378 5.93-5.27 0-8.354-3.384-8.354-8.316 0-4.945 3.097-8.315 8.354-8.315 2.256 0 4.05.49 5.415 1.474 1.175.85 1.876 2.074 1.876 3.53a3.63 3.63 0 01-.739 2.273c.514.614.826 1.39.826 2.286 0 2.562-2.12 4.312-5.502 4.312-2.683 0-4.614-1.15-5.303-2.912-.14.375-.27.775-.372 1.19.816 1.511 2.607 2.46 5.113 2.46 3.946 0 5.89-1.888 5.89-3.98 0-.689-.201-1.326-.502-1.864.388-.55.576-1.213.576-1.988z"
-                          />
+                          <path d="M18.36 6.64A9 9 0 0 1 20.77 15"></path>
+                          <path d="M6.16 6.16a9 9 0 1 0 12.68 12.68"></path>
+                          <path d="M12 2v4"></path>
+                          <path d="m2 2 20 20"></path>
                         </svg>
                       </div>
                       <div>
-                        <h3 className="font-medium">Cloudflare R2 (Descontinuado)</h3>
+                        <h3 className="font-medium text-gray-500">Cloudflare R2 (Removido)</h3>
                         <p className="text-sm text-muted-foreground">
-                          Serviço substituído pelo Supabase
+                          Serviço descontinuado definitivamente
                         </p>
                       </div>
                     </div>
                     <div
-                      className={`w-5 h-5 rounded-full border-2 ${
-                        selectedService === "r2"
-                          ? "border-primary"
-                          : "border-muted"
-                      }`}
+                      className="w-5 h-5 rounded-full border-2 border-gray-300"
                     >
-                      {selectedService === "r2" && (
-                        <div className="w-3 h-3 bg-primary rounded-full m-[3px]" />
-                      )}
                     </div>
                   </div>
                 </div>
