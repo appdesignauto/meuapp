@@ -9,7 +9,7 @@ export function validateR2Environment() {
   }
 
   // Validar e corrigir a URL pública
-  const correctPublicUrl = 'https://pub-a063592364ea4478870d95c9c4115c4a.r2.dev';
+  const correctPublicUrl = 'https://pub-484b1f980bd24bb893017d5185fbfa93.r2.dev';
   if (process.env.R2_PUBLIC_URL !== correctPublicUrl) {
     console.log(`[ENV] Corrigindo R2_PUBLIC_URL para o valor correto`);
     process.env.R2_PUBLIC_URL = correctPublicUrl;

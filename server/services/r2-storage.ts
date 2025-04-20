@@ -10,7 +10,7 @@ const AVATAR_BUCKET_NAME = 'designautoimages';
 
 // Configurações para Cloudflare R2
 const BUCKET_NAME = process.env.R2_BUCKET_NAME || 'designautoimages';
-const PUBLIC_URL = process.env.R2_PUBLIC_URL || 'https://pub-a063592364ea4478870d95c9c4115c4a.r2.dev';
+const PUBLIC_URL = process.env.R2_PUBLIC_URL || 'https://pub-484b1f980bd24bb893017d5185fbfa93.r2.dev';
 
 // Certifique-se de que o endpoint esteja no formato correto incluindo .r2.cloudflarestorage.com
 const accountId = process.env.R2_ENDPOINT || 'https://0f7a409b79bd29f7cf3970f077da05ee.r2.cloudflarestorage.com';
@@ -95,11 +95,19 @@ class R2StorageService {
    */
   async checkBucketExists(bucketName = BUCKET_NAME): Promise<boolean> {
     try {
-      this.log(`Verificando existência do bucket: ${bucketName}`);
+      this.log(`Iniciando verificação de conexão com R2`);
+      this.log(`Bucket configurado para verificação: '${bucketName}'`);
+      
+      // Verificar se o bucket fornecido é diferente do esperado
+      if (bucketName !== 'designautoimages') {
+        this.log(`⚠️ ATENÇÃO: O nome do bucket '${bucketName}' é diferente do padrão 'designautoimages'`);
+      }
       
       try {
         // Primeiro método: verificar com ListBucketsCommand
         const { Buckets } = await R2_CLIENT.send(new ListBucketsCommand({}));
+        
+        this.log(`Buckets disponíveis no R2: ${Buckets?.map(b => b.Name).join(', ') || 'Nenhum'}`);
         
         const bucketExists = Buckets?.some(bucket => bucket.Name === bucketName) || false;
         
