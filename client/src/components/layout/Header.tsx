@@ -265,7 +265,7 @@ const Header = () => {
                       />
                     ) : (
                       <div className="w-7 h-7 rounded-full flex items-center justify-center bg-blue-100 text-blue-600 font-medium">
-                        {(user.name?.[0] || user.username[0]).toUpperCase()}
+                        {(user.name?.[0] || user.username?.[0] || '?').toUpperCase()}
                       </div>
                     )}
                     <div className="hidden sm:flex flex-col items-start leading-none">
@@ -301,7 +301,7 @@ const Header = () => {
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-blue-100 text-blue-600 font-medium text-3xl">
-                            {(user.name?.[0] || user.username[0]).toUpperCase()}
+                            {(user.name?.[0] || user.username?.[0] || '?').toUpperCase()}
                           </div>
                         )}
                       </div>
