@@ -17,8 +17,8 @@ const supabase = createClient(supabaseUrl!, supabaseKey!);
 
 // Nome do bucket para armazenar as imagens
 // Nome dos buckets para armazenamento de imagens
-const BUCKET_NAME = 'designauto-images'; // Bucket para artes e imagens do sistema
-const AVATARS_BUCKET = 'avatars'; // Bucket específico para avatares de usuários
+const BUCKET_NAME = 'designautoimages'; // Bucket para artes e imagens do sistema
+const AVATARS_BUCKET = 'designautoimages'; // Bucket específico para avatares de usuários (mesmo bucket principal)
 
 interface ImageOptimizationOptions {
   width?: number;

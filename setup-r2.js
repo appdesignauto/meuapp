@@ -6,7 +6,7 @@ import path from 'path';
 const R2_ACCESS_KEY_ID = '21be81ed3af893e3ba85c2';
 const R2_SECRET_ACCESS_KEY = 'c3e7cc28a2ffb45471cc57a2842735b5e524a7a0d2c5ff5a4cedb8145dbd1b4d';
 const R2_ENDPOINT = '32b65e21b65af0345c36f5c43fa32c54';
-const R2_BUCKET_NAME = 'designauto-images';
+const R2_BUCKET_NAME = 'designautoimages';
 const R2_PUBLIC_URL = 'https://pub-a063592364ea4478870d95c9c4115c4a.r2.dev';
 
 // Preparar as variáveis no formato de linha de comando

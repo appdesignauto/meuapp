@@ -6,18 +6,20 @@ import sharp from 'sharp';
 import { v4 as uuidv4 } from 'uuid';
 
 // Avatar storage settings
-const AVATAR_BUCKET_NAME = 'avatars';
+const AVATAR_BUCKET_NAME = 'designautoimages';
 
 // Configurações para Cloudflare R2
-const BUCKET_NAME = process.env.R2_BUCKET_NAME || 'designauto-images';
+const BUCKET_NAME = process.env.R2_BUCKET_NAME || 'designautoimages';
 const PUBLIC_URL = process.env.R2_PUBLIC_URL || 'https://pub-a063592364ea4478870d95c9c4115c4a.r2.dev';
 
-// Certifique-se de que o endpoint esteja no formato correto
-const accountId = process.env.R2_ENDPOINT || '0f7a409b79bd29f7cf3970f077da05ee';
-const R2_ENDPOINT = `https://${accountId.replace('https://', '').replace('.r2.dev', '')}.r2.dev`;
+// Certifique-se de que o endpoint esteja no formato correto incluindo .r2.cloudflarestorage.com
+const accountId = process.env.R2_ENDPOINT || 'https://0f7a409b79bd29f7cf3970f077da05ee.r2.cloudflarestorage.com';
+const R2_ENDPOINT = accountId;
 
 // Formato do nome de conta extraído do endpoint
-const ACCOUNT_ID = R2_ENDPOINT.split('https://')[1].split('.r2.dev')[0];
+const ACCOUNT_ID = R2_ENDPOINT.includes('https://') 
+  ? R2_ENDPOINT.split('https://')[1].split('.r2.cloudflarestorage.com')[0]
+  : R2_ENDPOINT;
 
 // Log de inicialização para verificar credenciais
 console.log("Detalhes das credenciais do R2:");
