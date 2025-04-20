@@ -49,6 +49,8 @@ interface UploadTestResult {
     upload?: number;
   };
   error?: string;
+  logs?: string[]; // Adicionando suporte para logs detalhados
+  storageType?: string; // Indica qual serviço de armazenamento foi usado
 }
 
 export default function StorageTestPage() {
@@ -442,7 +444,7 @@ export default function StorageTestPage() {
                       <AlertDescription>
                         {connectionStatus 
                           ? connectionStatus.message
-                          : `O teste irá verificar se o serviço ${selectedService === "supabase" ? "Supabase Storage" : "Cloudflare R2"} está acessível e configurado corretamente.`}
+                          : "O teste irá verificar se o serviço Supabase Storage está acessível e configurado corretamente."}
                       </AlertDescription>
                     </div>
                   </div>
@@ -544,35 +546,33 @@ export default function StorageTestPage() {
                     ) : (
                       <>
                         <HardDrive className="mr-2 h-4 w-4" />
-                        Verificar Conexão com {selectedService === "supabase" ? "Supabase" : "R2"}
+                        Verificar Conexão com Supabase
                       </>
                     )}
                   </Button>
                   
-                  {selectedService === "r2" && (
-                    <Button
-                      onClick={testR2Direct}
-                      disabled={isTestingR2Direct}
-                      variant="secondary"
-                      className="ml-2"
-                    >
-                      {isTestingR2Direct ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Diagnóstico de Armazenamento...
-                        </>
-                      ) : (
-                        <>
-                          <Info className="mr-2 h-4 w-4" />
-                          Diagnóstico de Armazenamento
-                        </>
-                      )}
-                    </Button>
-                  )}
+                  <Button
+                    onClick={testR2Direct}
+                    disabled={isTestingR2Direct}
+                    variant="secondary"
+                    className="ml-2"
+                  >
+                    {isTestingR2Direct ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Diagnóstico de Armazenamento...
+                      </>
+                    ) : (
+                      <>
+                        <Info className="mr-2 h-4 w-4" />
+                        Diagnóstico de Armazenamento
+                      </>
+                    )}
+                  </Button>
                 </div>
                 
                 {/* Resultados do Diagnóstico de Armazenamento */}
-                {selectedService === "r2" && r2DirectTestResult && (
+                {r2DirectTestResult && (
                   <div className="mt-4">
                     <Alert className={`${
                       r2DirectTestResult.results.every(r => r.success)
@@ -652,7 +652,7 @@ export default function StorageTestPage() {
                   <Info className="h-5 w-5 mr-2 text-blue-500" />
                   <AlertTitle>Teste de Upload de Imagem</AlertTitle>
                   <AlertDescription>
-                    Faça upload de uma imagem para testar o serviço {selectedService === "supabase" ? "Supabase Storage" : "Cloudflare R2"}.
+                    Faça upload de uma imagem para testar o serviço Supabase Storage.
                     {isDirect 
                       ? "Upload direto sem processamento de imagem (sem usar Sharp)."
                       : "As imagens são enviadas para uma pasta de teste e otimizadas automaticamente."}
@@ -757,10 +757,34 @@ export default function StorageTestPage() {
                       <AlertTitle>{uploadResult.message}</AlertTitle>
                       <AlertDescription>
                         {uploadResult.success 
-                          ? "O upload foi concluído com sucesso. Veja os detalhes abaixo."
+                          ? "O upload foi concluído com sucesso. Veja os detalhes e logs abaixo."
                           : `Ocorreu um erro: ${uploadResult.error || "Erro desconhecido"}`}
                       </AlertDescription>
                     </Alert>
+                    
+                    {/* Log detalhado do processo de upload */}
+                    <div className="mt-4">
+                      <h3 className="text-sm font-medium mb-2">Logs do Processo de Upload</h3>
+                      <ScrollArea className="h-48 w-full rounded-md border">
+                        <div className="p-4 font-mono text-xs">
+                          {uploadResult.logs && uploadResult.logs.length > 0 ? (
+                            uploadResult.logs.map((log, index) => (
+                              <div key={index} className={`mb-1 ${
+                                log.includes("ERRO") || log.includes("Falha") ? "text-red-600" :
+                                log.includes("SUCESSO") || log.includes("concluído") ? "text-green-600" :
+                                "text-gray-700"
+                              }`}>
+                                {log}
+                              </div>
+                            ))
+                          ) : (
+                            <div className="text-muted-foreground italic">
+                              Nenhum log disponível para este upload.
+                            </div>
+                          )}
+                        </div>
+                      </ScrollArea>
+                    </div>
                     
                     {uploadResult.success && uploadResult.imageUrl && (
                       <div className="mt-4 space-y-4">
