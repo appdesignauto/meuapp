@@ -46,7 +46,7 @@ app.use((req, res, next) => {
 
 (async () => {
   try {
-    // Validar e corrigir as variáveis de ambiente do R2
+    // Verificar configuração de ambiente (migrado para Supabase Storage)
     validateR2Environment();
     
     // Inicializar o banco de dados com dados

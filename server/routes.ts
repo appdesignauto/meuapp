@@ -17,6 +17,7 @@ import path from "path";
 import fs from "fs";
 // Usando apenas Supabase Storage para armazenamento de imagens
 import { supabaseStorageService } from "./services/supabase-storage";
+import { r2StorageService } from "./services/r2-storage";
 import { SubscriptionService } from "./services/subscription-service";
 import { HotmartService } from "./services/hotmart-service";
 import uploadMemory from "./middlewares/upload";
@@ -1639,9 +1640,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json(result);
       } 
       else if (service === "r2") {
-        // Verificar conexão com R2
-        const result = await r2StorageService.checkConnection();
-        return res.json(result);
+        // Verificar conexão com R2 (agora redireciona para Supabase)
+        console.log("AVISO: Serviço R2 foi desativado. Redirecionando para Supabase Storage.");
+        const result = await supabaseStorageService.checkConnection();
+        return res.json({
+          ...result,
+          message: "R2 desativado. Usando Supabase Storage como alternativa.",
+          redirected: true
+        });
       }
       else {
         return res.status(400).json({
@@ -1684,9 +1690,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json(result);
       } 
       else if (service === "r2") {
-        // Testar upload para R2
-        const result = await r2StorageService.testUpload(req.file);
-        return res.json(result);
+        // R2 desativado, redirecionando para Supabase
+        console.log("AVISO: Serviço R2 foi desativado. Redirecionando teste de upload para Supabase.");
+        const result = await supabaseStorageService.testUpload(req.file);
+        return res.json({
+          ...result,
+          message: "R2 desativado. Usando Supabase Storage como alternativa para upload.",
+          redirected: true
+        });
       }
       else {
         return res.status(400).json({
