@@ -103,16 +103,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Bucket principal
       try {
-        console.log("Verificando acesso ao bucket principal 'designauto-images'...");
-        const { data: mainFiles } = await supabaseStorageService.getBucket('designauto-images');
-        bucketResults['designauto-images'] = {
+        console.log("Verificando acesso ao bucket principal 'designautoimages'...");
+        const { data: mainFiles } = await supabaseStorageService.getBucket('designautoimages');
+        bucketResults['designautoimages'] = {
           accessible: true,
           files: mainFiles?.length || 0
         };
-        console.log(`✓ Bucket principal 'designauto-images' acessível. ${mainFiles?.length || 0} arquivos encontrados.`);
+        console.log(`✓ Bucket principal 'designautoimages' acessível. ${mainFiles?.length || 0} arquivos encontrados.`);
       } catch (mainError) {
         console.error('✗ Erro ao acessar bucket principal:', mainError);
-        bucketResults['designauto-images'] = {
+        bucketResults['designautoimages'] = {
           accessible: false,
           error: String(mainError)
         };
@@ -215,7 +215,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 reason = viable ? 'Bucket acessível' : 'Bucket não acessível';
               }
               else if (strategy.name === 'main_bucket_avatar_path' || strategy.name === 'main_bucket_root') {
-                viable = bucketResults['designauto-images']?.accessible || false;
+                viable = bucketResults['designautoimages']?.accessible || false;
                 reason = viable ? 'Bucket principal acessível' : 'Bucket principal não acessível';
               }
               else if (strategy.name === 'local_emergency') {
@@ -434,7 +434,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 return { ...strategy, viable: true };
               } 
               else if (strategy.name === 'main_bucket_avatar_path' || strategy.name === 'main_bucket_root') {
-                await supabaseStorageService.getBucket('designauto-images');
+                await supabaseStorageService.getBucket('designautoimages');
                 return { ...strategy, viable: true };
               }
               else if (strategy.name === 'local_emergency') {
@@ -530,7 +530,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Verificando acesso ao bucket principal...");
       let mainBucketAccess = false;
       try {
-        const { data: mainFiles } = await supabaseStorageService.getBucket('designauto-images');
+        const { data: mainFiles } = await supabaseStorageService.getBucket('designautoimages');
         mainBucketAccess = true;
         console.log(`Bucket principal acessível. ${mainFiles?.length || 0} arquivos encontrados.`);
       } catch (mainError) {
