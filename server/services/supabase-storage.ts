@@ -535,14 +535,14 @@ export class SupabaseStorageService {
   async uploadAvatar(
     file: Express.Multer.File,
     options: ImageOptimizationOptions = {},
-    username?: string // Parâmetro opcional para identificar o usuário problemático
+    userId?: number | string // Agora usamos userId para identificar o dono do avatar
   ): Promise<{ imageUrl: string; storageType?: string }> {
     if (!file) {
       throw new Error("Nenhum arquivo foi fornecido");
     }
 
-    // Verificar se é o usuário problemático conhecido
-    const isProblematicUser = username === 'fernandosim20188718';
+    // Verificar se é o usuário problemático conhecido (mantemos por compatibilidade)
+    const isProblematicUser = userId === 'fernandosim20188718';
     
     if (isProblematicUser) {
       console.log("⚠️ DETECTADO USUÁRIO PROBLEMÁTICO: fernandosim20188718");
@@ -555,13 +555,13 @@ export class SupabaseStorageService {
     await this.initBucket();
 
     try {
-      console.log("==== UPLOAD DE AVATAR PARA BUCKET 'designautoimages' ====");
+      console.log("==== UPLOAD DE AVATAR PARA BUCKET 'avatars' ====");
       console.log(`Nome original: ${file.originalname}`);
       console.log(`Tipo MIME: ${file.mimetype}`);
       console.log(`Tamanho: ${file.size} bytes`);
+      console.log(`ID do usuário: ${userId || 'não especificado'}`);
 
-      // Verificamos primeiro se podemos acessar o bucket 'designautoimages'
-      // Mesmo sem poder listá-lo na API
+      // Verificamos primeiro se podemos acessar o bucket de avatares
       let canAccessAvatarsBucket = true;
       try {
         const { data } = await supabase.storage
@@ -589,10 +589,11 @@ export class SupabaseStorageService {
       });
       console.log(`Imagem otimizada: ${optimizedBuffer.length} bytes (${Math.round(optimizedBuffer.length/1024)}KB)`);
 
-      // Gera nome de arquivo único
+      // Gera nome de arquivo único com prefixo de usuário se disponível
       const uuid = randomUUID();
-      const avatarPath = `${uuid}.webp`;
-      const mainBucketPath = `designautoimages/${uuid}.webp`; // Caminho para o bucket principal
+      const userPrefix = userId ? `user_${userId}_` : ''; // Adiciona prefixo do usuário se tiver ID
+      const avatarPath = `${userPrefix}${uuid}.webp`;
+      const mainBucketPath = `avatars/${userPrefix}${uuid}.webp`; // Nova estrutura organizada
       console.log(`Nome de arquivo para upload: ${avatarPath}`);
 
       let uploadSuccess = false;
