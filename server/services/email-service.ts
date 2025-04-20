@@ -1,5 +1,4 @@
-import { TransactionalEmailsApi } from '@getbrevo/brevo/dist/api/transactionalEmailsApi';
-import { SendSmtpEmail } from '@getbrevo/brevo/dist/model/sendSmtpEmail';
+import fetch from 'node-fetch';
 
 // Chave da API do Brevo
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
@@ -8,16 +7,10 @@ const BREVO_API_KEY = process.env.BREVO_API_KEY;
 const SENDER_NAME = 'Design Auto';
 const SENDER_EMAIL = 'inovedigitalmarketing10@gmail.com';
 
-// Templates de E-mail (IDs do Brevo)
-// Você pode criar templates no painel do Brevo e usar os IDs aqui
-const EMAIL_TEMPLATES = {
-  VERIFICATION: 1, // Substitua pelo ID real do template de verificação
-  WELCOME: 2,      // Substitua pelo ID real do template de boas-vindas
-  PASSWORD_RESET: 3 // Substitua pelo ID real do template de redefinição de senha
-};
+// URL base da API do Brevo
+const BREVO_API_URL = 'https://api.brevo.com/v3';
 
 class EmailService {
-  private apiInstance: TransactionalEmailsApi;
   private initialized: boolean = false;
   private logs: string[] = [];
 
@@ -26,7 +19,7 @@ class EmailService {
   }
 
   /**
-   * Inicializa o cliente da API do Brevo
+   * Inicializa o serviço de e-mail do Brevo
    */
   private initialize(): void {
     try {
@@ -35,9 +28,6 @@ class EmailService {
         return;
       }
 
-      this.apiInstance = new TransactionalEmailsApi();
-      // Configurar a chave de API nos cabeçalhos
-      this.apiInstance.setApiKey('api-key', BREVO_API_KEY);
       this.initialized = true;
       this.log('✅ Serviço de e-mail Brevo inicializado com sucesso');
     } catch (error) {
@@ -70,6 +60,58 @@ class EmailService {
   }
 
   /**
+   * Método para enviar e-mail usando a API do Brevo diretamente
+   */
+  private async sendEmail(params: {
+    to: Array<{ email: string; name?: string }>;
+    subject: string;
+    htmlContent: string;
+    textContent?: string;
+  }): Promise<boolean> {
+    try {
+      if (!this.initialized) {
+        this.log('❌ Serviço não inicializado');
+        return false;
+      }
+
+      const { to, subject, htmlContent, textContent } = params;
+
+      const payload = {
+        sender: {
+          name: SENDER_NAME,
+          email: SENDER_EMAIL
+        },
+        to,
+        subject,
+        htmlContent,
+        textContent: textContent || ''
+      };
+
+      const response = await fetch(`${BREVO_API_URL}/smtp/email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'api-key': BREVO_API_KEY
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`API do Brevo retornou erro: ${JSON.stringify(errorData)}`);
+      }
+
+      const data = await response.json();
+      this.log(`✅ E-mail enviado com sucesso: ${data.messageId}`);
+      return true;
+    } catch (error) {
+      this.log(`❌ Erro ao enviar e-mail: ${error instanceof Error ? error.message : String(error)}`);
+      return false;
+    }
+  }
+
+  /**
    * Envia um e-mail de verificação com código
    * @param email Email do destinatário
    * @param name Nome do destinatário
@@ -78,19 +120,9 @@ class EmailService {
    */
   public async sendVerificationEmail(email: string, name: string, verificationCode: string): Promise<boolean> {
     try {
-      if (!this.initialized) {
-        this.initialize();
-        if (!this.initialized) {
-          this.log(`❌ Erro: Serviço não inicializado para envio para ${email}`);
-          return false;
-        }
-      }
-
-      const sendSmtpEmail = new SendSmtpEmail();
+      this.log(`📧 Preparando e-mail de verificação para ${email}`);
       
-      // Configuração do e-mail
-      sendSmtpEmail.subject = 'Verifique seu e-mail - Design Auto';
-      sendSmtpEmail.htmlContent = `
+      const htmlContent = `
         <html>
           <body>
             <h1>Olá ${name},</h1>
@@ -103,14 +135,20 @@ class EmailService {
           </body>
         </html>
       `;
-      sendSmtpEmail.sender = { name: SENDER_NAME, email: SENDER_EMAIL };
-      sendSmtpEmail.to = [{ email, name }];
       
-      // Envio do e-mail
-      this.log(`📧 Enviando e-mail de verificação para ${email}`);
-      await this.apiInstance.sendTransacEmail(sendSmtpEmail);
-      this.log(`✅ E-mail de verificação enviado com sucesso para ${email}`);
-      return true;
+      const success = await this.sendEmail({
+        to: [{ email, name }],
+        subject: 'Verifique seu e-mail - Design Auto',
+        htmlContent
+      });
+      
+      if (success) {
+        this.log(`✅ E-mail de verificação enviado com sucesso para ${email}`);
+      } else {
+        this.log(`❌ Falha ao enviar e-mail de verificação para ${email}`);
+      }
+      
+      return success;
     } catch (error) {
       this.log(`❌ Erro ao enviar e-mail de verificação para ${email}: ${error instanceof Error ? error.message : String(error)}`);
       return false;
@@ -125,19 +163,9 @@ class EmailService {
    */
   public async sendWelcomeEmail(email: string, name: string): Promise<boolean> {
     try {
-      if (!this.initialized) {
-        this.initialize();
-        if (!this.initialized) {
-          this.log(`❌ Erro: Serviço não inicializado para envio para ${email}`);
-          return false;
-        }
-      }
-
-      const sendSmtpEmail = new SendSmtpEmail();
+      this.log(`📧 Preparando e-mail de boas-vindas para ${email}`);
       
-      // Configuração do e-mail
-      sendSmtpEmail.subject = 'Bem-vindo ao Design Auto!';
-      sendSmtpEmail.htmlContent = `
+      const htmlContent = `
         <html>
           <body>
             <h1>Bem-vindo ao Design Auto, ${name}!</h1>
@@ -148,14 +176,20 @@ class EmailService {
           </body>
         </html>
       `;
-      sendSmtpEmail.sender = { name: SENDER_NAME, email: SENDER_EMAIL };
-      sendSmtpEmail.to = [{ email, name }];
       
-      // Envio do e-mail
-      this.log(`📧 Enviando e-mail de boas-vindas para ${email}`);
-      await this.apiInstance.sendTransacEmail(sendSmtpEmail);
-      this.log(`✅ E-mail de boas-vindas enviado com sucesso para ${email}`);
-      return true;
+      const success = await this.sendEmail({
+        to: [{ email, name }],
+        subject: 'Bem-vindo ao Design Auto!',
+        htmlContent
+      });
+      
+      if (success) {
+        this.log(`✅ E-mail de boas-vindas enviado com sucesso para ${email}`);
+      } else {
+        this.log(`❌ Falha ao enviar e-mail de boas-vindas para ${email}`);
+      }
+      
+      return success;
     } catch (error) {
       this.log(`❌ Erro ao enviar e-mail de boas-vindas para ${email}: ${error instanceof Error ? error.message : String(error)}`);
       return false;
@@ -171,22 +205,12 @@ class EmailService {
    */
   public async sendPasswordResetEmail(email: string, name: string, resetToken: string): Promise<boolean> {
     try {
-      if (!this.initialized) {
-        this.initialize();
-        if (!this.initialized) {
-          this.log(`❌ Erro: Serviço não inicializado para envio para ${email}`);
-          return false;
-        }
-      }
-
+      this.log(`📧 Preparando e-mail de redefinição de senha para ${email}`);
+      
       // URL para redefinição de senha
       const resetUrl = `https://designauto.com.br/reset-password?token=${resetToken}`;
-
-      const sendSmtpEmail = new SendSmtpEmail();
       
-      // Configuração do e-mail
-      sendSmtpEmail.subject = 'Redefinição de Senha - Design Auto';
-      sendSmtpEmail.htmlContent = `
+      const htmlContent = `
         <html>
           <body>
             <h1>Olá ${name},</h1>
@@ -199,14 +223,20 @@ class EmailService {
           </body>
         </html>
       `;
-      sendSmtpEmail.sender = { name: SENDER_NAME, email: SENDER_EMAIL };
-      sendSmtpEmail.to = [{ email, name }];
       
-      // Envio do e-mail
-      this.log(`📧 Enviando e-mail de redefinição de senha para ${email}`);
-      await this.apiInstance.sendTransacEmail(sendSmtpEmail);
-      this.log(`✅ E-mail de redefinição de senha enviado com sucesso para ${email}`);
-      return true;
+      const success = await this.sendEmail({
+        to: [{ email, name }],
+        subject: 'Redefinição de Senha - Design Auto',
+        htmlContent
+      });
+      
+      if (success) {
+        this.log(`✅ E-mail de redefinição de senha enviado com sucesso para ${email}`);
+      } else {
+        this.log(`❌ Falha ao enviar e-mail de redefinição de senha para ${email}`);
+      }
+      
+      return success;
     } catch (error) {
       this.log(`❌ Erro ao enviar e-mail de redefinição de senha para ${email}: ${error instanceof Error ? error.message : String(error)}`);
       return false;

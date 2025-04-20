@@ -33,6 +33,7 @@ import supabaseRegisterTestRouter from './routes/supabase-register-test';
 import avatarUploadRouter from './routes/avatar-upload';
 import userProfileRouter from './routes/user-profile';
 import emailVerificationRouter from './routes/email-verification';
+import emailTestRouter from './routes/email-test';
 import { setupTestR2DirectRoute } from './routes/test-r2-direct';
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -3817,6 +3818,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Registrar rotas para verificação de e-mail
   app.use('/api/email-verification', emailVerificationRouter);
+  
+  // Registrar rotas para teste de envio de e-mail
+  app.use('/api/email-test', emailTestRouter);
   
   // Configurar rota de diagnóstico direto do R2
   setupTestR2DirectRoute(app);
