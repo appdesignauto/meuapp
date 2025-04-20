@@ -6,11 +6,13 @@ import { Redirect, Route } from "wouter";
 interface ProtectedPainelRouteProps {
   path: string;
   component: React.ComponentType;
+  requireEmailVerification?: boolean;
 }
 
 export function ProtectedPainelRoute({
   path,
   component: Component,
+  requireEmailVerification = true,
 }: ProtectedPainelRouteProps) {
   const { user, isLoading } = useAuth();
 
@@ -28,6 +30,15 @@ export function ProtectedPainelRoute({
     return (
       <Route path={path}>
         <Redirect to="/auth" />
+      </Route>
+    );
+  }
+  
+  // Verificação de email confirmado
+  if (requireEmailVerification && user.emailconfirmed === false) {
+    return (
+      <Route path={path}>
+        <Redirect to="/email-verification" />
       </Route>
     );
   }

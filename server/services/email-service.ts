@@ -135,9 +135,11 @@ class EmailService {
    * @param email Email do destinatário
    * @param name Nome do destinatário
    * @param verificationCode Código de verificação
-   * @returns Promise<boolean> Indica se o envio foi bem-sucedido
+   * @returns Promise<{success: boolean}> Indica se o envio foi bem-sucedido
    */
-  public async sendVerificationEmail(email: string, name: string, verificationCode: string): Promise<boolean> {
+  public async sendEmailVerification(email: string, verificationCode: string): Promise<{success: boolean}> {
+    // Extrair nome do email para fallback
+    const name = email.split('@')[0];
     try {
       this.log(`📧 Preparando e-mail de verificação para ${email} usando remetente de suporte`);
       
@@ -172,10 +174,10 @@ class EmailService {
         this.log(`❌ Falha ao enviar e-mail de verificação para ${email}`);
       }
       
-      return result.success;
+      return { success: result.success };
     } catch (error) {
       this.log(`❌ Erro ao enviar e-mail de verificação para ${email}: ${error instanceof Error ? error.message : String(error)}`);
-      return false;
+      return { success: false };
     }
   }
 

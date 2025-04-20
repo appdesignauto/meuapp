@@ -1,126 +1,146 @@
-import { Router, Request, Response } from 'express';
-import { emailVerificationService } from '../services/email-verification-service';
-import { z } from 'zod';
+import { Request, Response, Router } from "express";
+import { EmailVerificationService } from "../services/email-verification-service";
+import { storage } from "../storage";
+import { z } from "zod";
 
-const router = Router();
+const emailVerificationRouter = Router();
+const emailVerificationService = new EmailVerificationService();
 
 // Middleware para verificar se o usuário está autenticado
 const isAuthenticated = (req: Request, res: Response, next: Function) => {
-  if (req.isAuthenticated()) {
-    return next();
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ success: false, message: "Não autenticado" });
   }
-  return res.status(401).json({ message: 'Não autenticado' });
+  next();
 };
 
-// Esquema de validação para verificação de código
-const verifyCodeSchema = z.object({
-  code: z.string().length(6, 'O código deve ter 6 dígitos'),
-});
-
-/**
- * Envia um e-mail de verificação para o usuário atualmente logado
- * POST /api/email-verification/send
- */
-router.post('/send', isAuthenticated, async (req: Request, res: Response) => {
+// Obter status da verificação
+emailVerificationRouter.get("/status", isAuthenticated, async (req, res) => {
   try {
-    const user = req.user!;
+    const userId = req.user!.id;
     
-    // Verifica se o email já está confirmado
-    if (user.emailconfirmed) {
-      return res.status(400).json({
-        success: false,
-        message: 'E-mail já verificado'
+    // Verificar se o usuário já tem seu e-mail confirmado
+    if (req.user!.emailconfirmed) {
+      return res.json({ 
+        success: true, 
+        verified: true,
+        message: "E-mail já verificado"
       });
     }
     
-    // Envia e-mail de verificação
-    const success = await emailVerificationService.sendVerificationEmail(
-      user.id,
-      user.email,
-      user.name || 'Usuário'
-    );
+    // Verificar se existe um código pendente
+    const hasPendingCode = await emailVerificationService.hasPendingVerificationCode(userId);
     
-    if (success) {
-      return res.json({
-        success: true,
-        message: 'E-mail de verificação enviado com sucesso'
-      });
-    } else {
-      return res.status(500).json({
-        success: false,
-        message: 'Falha ao enviar e-mail de verificação'
-      });
-    }
+    return res.json({
+      success: true,
+      verified: false,
+      sent: hasPendingCode,
+      message: hasPendingCode 
+        ? "Código de verificação já enviado" 
+        : "Nenhum código de verificação enviado"
+    });
   } catch (error) {
-    console.error('Erro ao enviar e-mail de verificação:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Erro interno ao processar solicitação'
+    console.error("[Email Verification] Erro ao verificar status:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Erro ao verificar status da verificação" 
     });
   }
 });
 
-/**
- * Verifica um código de verificação para o usuário atualmente logado
- * POST /api/email-verification/verify
- */
-router.post('/verify', isAuthenticated, async (req: Request, res: Response) => {
+// Enviar/reenviar código de verificação
+emailVerificationRouter.post("/resend", isAuthenticated, async (req, res) => {
   try {
-    // Validação do código
-    const result = verifyCodeSchema.safeParse(req.body);
-    if (!result.success) {
-      return res.status(400).json({
-        success: false,
-        message: 'Código inválido',
-        errors: result.error.errors
-      });
-    }
-    
-    const { code } = result.data;
     const user = req.user!;
     
-    // Verifica se o email já está confirmado
+    // Não reenviar se o e-mail já foi verificado
     if (user.emailconfirmed) {
-      return res.status(400).json({
-        success: false,
-        message: 'E-mail já verificado'
+      return res.json({ 
+        success: true, 
+        verified: true,
+        message: "E-mail já verificado" 
       });
     }
+
+    // Gerar e enviar código de verificação
+    const result = await emailVerificationService.sendVerificationCode(user.id, user.email);
     
-    // Verifica o código
-    const isValid = await emailVerificationService.verifyCode(user.id, code);
-    
-    if (isValid) {
-      return res.json({
-        success: true,
-        message: 'E-mail verificado com sucesso'
+    if (result.success) {
+      return res.json({ 
+        success: true, 
+        message: "Código de verificação enviado"
       });
     } else {
-      return res.status(400).json({
-        success: false,
-        message: 'Código inválido ou expirado'
+      return res.status(400).json({ 
+        success: false, 
+        message: result.message || "Erro ao enviar código de verificação" 
       });
     }
   } catch (error) {
-    console.error('Erro ao verificar código:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Erro interno ao processar solicitação'
+    console.error("[Email Verification] Erro ao reenviar código:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Erro ao enviar código de verificação" 
     });
   }
 });
 
-/**
- * Verifica o status de verificação do e-mail do usuário atual
- * GET /api/email-verification/status
- */
-router.get('/status', isAuthenticated, (req: Request, res: Response) => {
-  const user = req.user!;
-  
-  return res.json({
-    verified: user.emailconfirmed || false,
-    email: user.email
-  });
+// Verificar código
+emailVerificationRouter.post("/verify", isAuthenticated, async (req, res) => {
+  try {
+    const schema = z.object({
+      code: z.string().length(6)
+    });
+    
+    const parseResult = schema.safeParse(req.body);
+    if (!parseResult.success) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Código inválido. Deve ter 6 dígitos." 
+      });
+    }
+    
+    const { code } = parseResult.data;
+    const userId = req.user!.id;
+    
+    // Não verificar se o e-mail já foi verificado
+    if (req.user!.emailconfirmed) {
+      return res.json({ 
+        success: true, 
+        verified: true,
+        message: "E-mail já verificado" 
+      });
+    }
+    
+    // Verificar o código
+    const result = await emailVerificationService.verifyCode(userId, code);
+    
+    if (result.success) {
+      // Atualizar o usuário como verificado
+      await storage.updateUserEmailConfirmed(userId, true);
+      
+      // Atualizar os dados do usuário na sessão
+      if (req.user) {
+        req.user.emailconfirmed = true;
+      }
+      
+      return res.json({ 
+        success: true, 
+        message: "E-mail verificado com sucesso" 
+      });
+    } else {
+      return res.status(400).json({ 
+        success: false, 
+        message: result.message || "Código inválido ou expirado" 
+      });
+    }
+  } catch (error) {
+    console.error("[Email Verification] Erro ao verificar código:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Erro ao verificar código" 
+    });
+  }
 });
 
-export default router;
+export default emailVerificationRouter;

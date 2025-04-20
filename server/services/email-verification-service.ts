@@ -1,187 +1,129 @@
-import { db } from '../db';
-import { emailVerificationCodes, users } from '@shared/schema';
-import { eq, and, lt, or } from 'drizzle-orm';
-import { emailService } from './email-service';
+import { db } from "../db";
+import { sql } from "drizzle-orm";
+import { randomInt } from "crypto";
+import { emailService } from "./email-service";
+import { pgTable, serial, integer, text, timestamp, varchar } from "drizzle-orm/pg-core";
 
-const CODE_EXPIRATION_HOURS = 24; // Códigos expiram após 24 horas
+// Esquema da tabela de códigos de verificação
+export const emailVerificationCodes = pgTable("emailVerificationCodes", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull(),
+  code: varchar("code", { length: 6 }).notNull(),
+  email: text("email").notNull(),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  used: integer("used").notNull().default(0),
+});
 
-class EmailVerificationService {
+export class EmailVerificationService {
+  private CODE_EXPIRATION_HOURS = 24; // Código válido por 24 horas
+
   /**
-   * Gera um código aleatório de 6 dígitos para verificação de e-mail
+   * Verifica se existe um código de verificação pendente para o usuário
    */
-  private generateVerificationCode(): string {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-  }
-
-  /**
-   * Verifica se um código de verificação já existe para o usuário
-   * @param userId ID do usuário
-   * @returns Booleano indicando se existe código
-   */
-  private async hasExistingCode(userId: number): Promise<boolean> {
-    const existingCodes = await db
+  async hasPendingVerificationCode(userId: number): Promise<boolean> {
+    const now = new Date();
+    
+    // Buscar códigos válidos e não utilizados
+    const results = await db
       .select()
       .from(emailVerificationCodes)
-      .where(
-        and(
-          eq(emailVerificationCodes.userId, userId),
-          eq(emailVerificationCodes.isUsed, false),
-          lt(new Date(), emailVerificationCodes.expiresAt)
-        )
-      );
+      .where(sql`${emailVerificationCodes.userId} = ${userId} AND 
+               ${emailVerificationCodes.expiresAt} > ${now} AND 
+               ${emailVerificationCodes.used} = 0`);
     
-    return existingCodes.length > 0;
+    return results.length > 0;
   }
 
   /**
-   * Gera e armazena um novo código de verificação para o usuário
-   * @param userId ID do usuário
-   * @param email E-mail do usuário
-   * @returns O código gerado ou null em caso de erro
+   * Gera e envia um código de verificação para o e-mail do usuário
    */
-  public async createVerificationCode(userId: number, email: string): Promise<string | null> {
+  async sendVerificationCode(userId: number, email: string): Promise<{ success: boolean; message?: string }> {
     try {
-      // Verifica se já existe um código válido
-      const hasCode = await this.hasExistingCode(userId);
-      if (hasCode) {
-        console.log(`Usuário ${userId} já possui um código de verificação válido`);
-        const existingCode = await db
-          .select()
-          .from(emailVerificationCodes)
-          .where(
-            and(
-              eq(emailVerificationCodes.userId, userId),
-              eq(emailVerificationCodes.isUsed, false),
-              lt(new Date(), emailVerificationCodes.expiresAt)
-            )
-          )
-          .limit(1);
-        
-        if (existingCode.length > 0) {
-          return existingCode[0].code;
-        }
+      // Verificar se já existe um código pendente
+      const hasPending = await this.hasPendingVerificationCode(userId);
+      
+      // Se já existir, inative-o (marque como usado) antes de criar um novo
+      if (hasPending) {
+        await db
+          .update(emailVerificationCodes)
+          .set({ used: 1 })
+          .where(sql`${emailVerificationCodes.userId} = ${userId} AND ${emailVerificationCodes.used} = 0`);
       }
-
-      // Gera um novo código
-      const code = this.generateVerificationCode();
       
-      // Calcula data de expiração (24 horas a partir de agora)
+      // Gerar código de 6 dígitos
+      const code = randomInt(100000, 999999).toString();
+      
+      // Calcular data de expiração (24 horas a partir de agora)
       const expiresAt = new Date();
-      expiresAt.setHours(expiresAt.getHours() + CODE_EXPIRATION_HOURS);
+      expiresAt.setHours(expiresAt.getHours() + this.CODE_EXPIRATION_HOURS);
       
-      // Insere no banco de dados
+      // Salvar o código no banco de dados
       await db.insert(emailVerificationCodes).values({
         userId,
         email,
         code,
         expiresAt,
-        isUsed: false
+        createdAt: new Date(),
+        used: 0
       });
       
-      return code;
-    } catch (error) {
-      console.error(`Erro ao criar código de verificação: ${error instanceof Error ? error.message : String(error)}`);
-      return null;
-    }
-  }
-
-  /**
-   * Envia um e-mail com o código de verificação para o usuário
-   * @param userId ID do usuário
-   * @param email E-mail do usuário
-   * @param name Nome do usuário
-   * @returns Booleano indicando sucesso ou falha
-   */
-  public async sendVerificationEmail(userId: number, email: string, name: string): Promise<boolean> {
-    try {
-      // Gera um novo código de verificação
-      const code = await this.createVerificationCode(userId, email);
-      if (!code) {
-        return false;
+      // Enviar o e-mail de verificação com o código gerado
+      const result = await emailService.sendEmailVerification(email, code);
+      
+      if (!result.success) {
+        return { 
+          success: false, 
+          message: "Falha ao enviar e-mail de verificação. Tente novamente mais tarde." 
+        };
       }
       
-      // Envia o e-mail com o código
-      const success = await emailService.sendVerificationEmail(email, name || 'Usuário', code);
-      
-      return success;
+      return { success: true };
     } catch (error) {
-      console.error(`Erro ao enviar e-mail de verificação: ${error instanceof Error ? error.message : String(error)}`);
-      return false;
+      console.error("[EmailVerificationService] Erro ao enviar código:", error);
+      return { 
+        success: false, 
+        message: "Erro ao gerar código de verificação. Tente novamente mais tarde." 
+      };
     }
   }
 
   /**
-   * Verifica se o código fornecido é válido para o usuário
-   * @param userId ID do usuário
-   * @param code Código de verificação
-   * @returns Booleano indicando se o código é válido
+   * Verifica o código informado pelo usuário
    */
-  public async verifyCode(userId: number, code: string): Promise<boolean> {
-    try {
-      // Busca o código de verificação no banco de dados
-      const verificationCodes = await db
-        .select()
-        .from(emailVerificationCodes)
-        .where(
-          and(
-            eq(emailVerificationCodes.userId, userId),
-            eq(emailVerificationCodes.code, code),
-            eq(emailVerificationCodes.isUsed, false),
-            lt(new Date(), emailVerificationCodes.expiresAt)
-          )
-        );
-      
-      if (verificationCodes.length === 0) {
-        return false;
-      }
-      
-      const verificationCode = verificationCodes[0];
-      
-      // Marca o código como usado
-      await db
-        .update(emailVerificationCodes)
-        .set({
-          isUsed: true,
-          usedAt: new Date()
-        })
-        .where(eq(emailVerificationCodes.id, verificationCode.id));
-      
-      // Atualiza o status de e-mail verificado do usuário
-      await db
-        .update(users)
-        .set({ emailconfirmed: true })
-        .where(eq(users.id, userId));
-      
-      return true;
-    } catch (error) {
-      console.error(`Erro ao verificar código: ${error instanceof Error ? error.message : String(error)}`);
-      return false;
-    }
-  }
-
-  /**
-   * Limpa códigos de verificação expirados ou já utilizados
-   * @returns Número de registros removidos
-   */
-  public async cleanupExpiredCodes(): Promise<number> {
+  async verifyCode(userId: number, code: string): Promise<{ success: boolean; message?: string }> {
     try {
       const now = new Date();
-      const result = await db
-        .delete(emailVerificationCodes)
-        .where(
-          or(
-            lt(emailVerificationCodes.expiresAt, now),
-            eq(emailVerificationCodes.isUsed, true)
-          )
-        );
       
-      return result.rowCount || 0;
+      // Buscar o código de verificação do usuário que ainda é válido
+      const results = await db
+        .select()
+        .from(emailVerificationCodes)
+        .where(sql`${emailVerificationCodes.userId} = ${userId} AND 
+                 ${emailVerificationCodes.code} = ${code} AND 
+                 ${emailVerificationCodes.expiresAt} > ${now} AND 
+                 ${emailVerificationCodes.used} = 0`);
+      
+      if (results.length === 0) {
+        return { 
+          success: false, 
+          message: "Código inválido ou expirado. Verifique o código ou solicite um novo." 
+        };
+      }
+      
+      // Marcar o código como utilizado
+      await db
+        .update(emailVerificationCodes)
+        .set({ used: 1 })
+        .where(sql`${emailVerificationCodes.id} = ${results[0].id}`);
+      
+      return { success: true };
     } catch (error) {
-      console.error(`Erro ao limpar códigos expirados: ${error instanceof Error ? error.message : String(error)}`);
-      return 0;
+      console.error("[EmailVerificationService] Erro ao verificar código:", error);
+      return { 
+        success: false, 
+        message: "Erro ao verificar código. Tente novamente mais tarde." 
+      };
     }
   }
 }
-
-// Instância única para o serviço de verificação de e-mail
-export const emailVerificationService = new EmailVerificationService();
