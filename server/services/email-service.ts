@@ -3,6 +3,11 @@ import fetch from 'node-fetch';
 // Chave da API do Brevo
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
 
+// Modo de desenvolvimento (simulação de envio)
+// Definir como true para desenvolvimento/teste
+// Em produção, definir como false para usar o Brevo real
+const DEV_MODE = true; 
+
 // Configurações de remetentes disponíveis no Brevo
 const SENDERS = {
   suporte: {
@@ -21,9 +26,20 @@ const DEFAULT_SENDER = SENDERS.suporte;
 // URL base da API do Brevo
 const BREVO_API_URL = 'https://api.brevo.com/v3';
 
+// Armazenamento de emails simulados enviados (para desenvolvimento)
+interface SimulatedEmail {
+  to: string;
+  from: string;
+  subject: string;
+  html: string;
+  text: string;
+  sentAt: Date;
+}
+
 class EmailService {
   private initialized: boolean = false;
   private logs: string[] = [];
+  private simulatedEmails: SimulatedEmail[] = [];
 
   constructor() {
     this.initialize();
@@ -34,6 +50,12 @@ class EmailService {
    */
   private initialize(): void {
     try {
+      if (DEV_MODE) {
+        this.initialized = true;
+        this.log('✅ Serviço de e-mail inicializado em modo de desenvolvimento (simulação)');
+        return;
+      }
+      
       if (!BREVO_API_KEY) {
         this.log('❌ Erro: BREVO_API_KEY não foi configurada no ambiente');
         return;
@@ -107,6 +129,32 @@ class EmailService {
         textContent
       };
 
+      // Verifica se está em modo de desenvolvimento para simulação
+      if (DEV_MODE) {
+        // Simula um envio bem-sucedido
+        this.log(`🧪 [DEV MODE] Simulando envio de email de ${sender.email} para ${to.map(t => t.email).join(', ')}`);
+        this.log(`🧪 [DEV MODE] Assunto: ${subject}`);
+        
+        // Armazena o email simulado
+        const simulatedEmail: SimulatedEmail = {
+          from: sender.email,
+          to: to[0].email, // Simplifica para o primeiro destinatário
+          subject,
+          html: htmlContent,
+          text: textContent,
+          sentAt: new Date()
+        };
+        
+        this.simulatedEmails.push(simulatedEmail);
+        
+        // Gera um ID de mensagem simulado
+        const simulatedMessageId = `sim-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+        this.log(`🧪 [DEV MODE] Email simulado com sucesso! ID: ${simulatedMessageId}`);
+        
+        return { success: true, messageId: simulatedMessageId };
+      }
+      
+      // Em modo de produção, faz a chamada real para a API do Brevo
       const response = await fetch(`${BREVO_API_URL}/smtp/email`, {
         method: 'POST',
         headers: {
@@ -128,6 +176,30 @@ class EmailService {
       this.log(`❌ Erro ao enviar e-mail: ${error instanceof Error ? error.message : String(error)}`);
       return { success: false };
     }
+  }
+  
+  /**
+   * Retorna os emails simulados (apenas para modo de desenvolvimento)
+   * @returns Array<SimulatedEmail> Lista de emails simulados
+   */
+  public getSimulatedEmails(): SimulatedEmail[] {
+    if (!DEV_MODE) {
+      this.log('⚠️ getSimulatedEmails só está disponível em modo de desenvolvimento');
+      return [];
+    }
+    return [...this.simulatedEmails];
+  }
+  
+  /**
+   * Limpa os emails simulados (apenas para modo de desenvolvimento)
+   */
+  public clearSimulatedEmails(): void {
+    if (!DEV_MODE) {
+      this.log('⚠️ clearSimulatedEmails só está disponível em modo de desenvolvimento');
+      return;
+    }
+    this.simulatedEmails = [];
+    this.log('🧹 Emails simulados limpos com sucesso');
   }
 
   /**
