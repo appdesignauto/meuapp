@@ -1665,55 +1665,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Testar upload para serviços de armazenamento
-  app.post("/api/admin/storage/test-upload", isAuthenticated, isAdmin, uploadMemory.single("image"), async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({
-          success: false,
-          message: "Nenhum arquivo fornecido"
-        });
-      }
-      
-      const service = req.query.service as string;
-      
-      if (!service) {
-        return res.status(400).json({
-          success: false,
-          message: "Parâmetro 'service' é obrigatório"
-        });
-      }
-      
-      if (service === "supabase") {
-        // Testar upload para Supabase
-        const result = await supabaseStorageService.testUpload(req.file);
-        return res.json(result);
-      } 
-      else if (service === "r2") {
-        // R2 desativado, redirecionando para Supabase
-        console.log("AVISO: Serviço R2 foi desativado. Redirecionando teste de upload para Supabase.");
-        const result = await supabaseStorageService.testUpload(req.file);
-        return res.json({
-          ...result,
-          message: "R2 desativado. Usando Supabase Storage como alternativa para upload.",
-          redirected: true
-        });
-      }
-      else {
-        return res.status(400).json({
-          success: false,
-          message: "Serviço inválido. Use 'supabase' ou 'r2'"
-        });
-      }
-    } catch (error: any) {
-      console.error(`Erro ao testar upload:`, error);
-      return res.status(500).json({
-        success: false,
-        message: `Erro ao testar upload: ${error.message || "Erro desconhecido"}`,
-        error: error.message
-      });
-    }
-  });
+  // Rota de teste de upload removida daqui para evitar duplicação
+  // A implementação unificada está mais abaixo no arquivo (na seção "DIAGNÓSTICO DE ARMAZENAMENTO - ROTAS")
 
   // Rota administrativa para atualizar designerId de todas as artes
   app.post("/api/admin/update-designers", isAdmin, async (req, res) => {
@@ -3435,11 +3388,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         });
       } else {
-        // Limpar logs para nova operação
-        r2StorageService.clearLogs();
+        // R2 está desativado, redirecionando para Supabase
+        console.log("AVISO: R2 está desativado. Redirecionando para Supabase Storage.");
         
-        // Realizar upload para R2
-        const uploadResult = await r2StorageService.testUpload(
+        // Limpar logs para nova operação
+        supabaseStorageService.clearLogs();
+        supabaseStorageService.log("⚠️ O serviço R2 foi desativado. Todas as operações agora usam o Supabase Storage.");
+        
+        // Realizar upload para Supabase como alternativa
+        const uploadResult = await supabaseStorageService.testUpload(
           imageFile,
           optimizationOptions
         );
@@ -3447,9 +3404,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Calcular tempo total
         const totalTime = Date.now() - startTime;
         
-        // Retornar resultado
+        // Retornar resultado com indicação de redirecionamento
         return res.json({
           ...uploadResult,
+          message: "R2 desativado. Usando Supabase Storage como alternativa para upload.",
+          redirected: true,
+          storageType: "supabase",
           timings: {
             ...uploadResult.timings,
             total: totalTime
@@ -3510,27 +3470,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
           logs: uploadResult.logs
         });
       } else {
-        // Limpar logs para nova operação
-        r2StorageService.clearLogs();
+        // R2 está desativado, redirecionando para Supabase
+        console.log("AVISO: R2 está desativado. Redirecionando teste de upload direto para Supabase Storage.");
         
-        // Agora usamos o novo método testUploadDirect para R2
-        const uploadResult = await r2StorageService.testUploadDirect(req.file);
+        // Limpar logs para nova operação
+        supabaseStorageService.clearLogs();
+        supabaseStorageService.log("⚠️ O serviço R2 foi desativado. Todas as operações agora usam o Supabase Storage.");
+        
+        // Realizar upload direto para Supabase como alternativa
+        const uploadResult = await supabaseStorageService.testUploadDirectNoSharp(req.file);
         
         // Calcular tempo total
         const totalTime = Date.now() - startTime;
         
+        // Retornar resultado com indicação de redirecionamento
         return res.json({
           success: uploadResult.success,
           imageUrl: uploadResult.imageUrl,
-          message: uploadResult.message || (uploadResult.success ? "Upload direto para R2 realizado com sucesso" : "Falha no upload direto para R2"),
-          method: uploadResult.method || "r2_direct",
-          simulated: uploadResult.simulated || false,
-          warning: uploadResult.warning,
+          message: "R2 desativado. Usando Supabase Storage como alternativa para upload direto.",
+          redirected: true,
+          storageType: "supabase_direct",
           timings: {
             total: totalTime,
-            upload: uploadResult.timings?.upload || totalTime
+            upload: totalTime
           },
-          logs: uploadResult.logs || r2StorageService.getLogs()
+          logs: uploadResult.logs
         });
       }
     } catch (error) {
