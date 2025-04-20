@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { S3Client, ListBucketsCommand, HeadBucketCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
 import fetch from 'node-fetch';
+import { supabaseStorageService } from '../services/storage-redirector';
+import { createClient } from '@supabase/supabase-js';
 
 // Middleware para verificar autenticação
 const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
@@ -23,207 +24,134 @@ const isAdmin = (req: Request, res: Response, next: NextFunction) => {
   next();
 };
 
-// Endpoint para testar diretamente a conexão com o R2
+// Endpoint para testar conexão com Supabase Storage
+// Este endpoint substituiu a antiga rota do R2 Direct, mas manteve o nome por compatibilidade
 export const setupTestR2DirectRoute = (app: any) => {
   app.get('/api/admin/storage/test-r2-direct', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+    console.log('Endpoint legacy /api/admin/storage/test-r2-direct chamado, redirecionando para Supabase Storage');
+    
     const results = [];
     
     try {
-      // Extrai as credenciais do ambiente
-      let { R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_ENDPOINT, R2_BUCKET_NAME } = process.env;
+      // Verificar credenciais do Supabase
+      const { SUPABASE_URL, SUPABASE_ANON_KEY } = process.env;
       
-      // Verifica se as credenciais estão definidas
-      if (!R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_ENDPOINT || !R2_BUCKET_NAME) {
+      if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
         return res.status(400).json({
-          message: 'Credenciais R2 não configuradas corretamente',
+          message: 'Credenciais do Supabase não configuradas corretamente',
           results: [
             {
-              description: 'Verificação de variáveis de ambiente',
+              description: 'Verificação de variáveis de ambiente do Supabase',
               url: 'N/A',
               success: false,
-              error: 'Uma ou mais variáveis de ambiente R2 não estão definidas'
+              error: 'As variáveis de ambiente SUPABASE_URL e SUPABASE_ANON_KEY precisam estar configuradas'
             }
           ]
         });
       }
       
-      // Garantir que o endpoint comece com https://
-      if (!R2_ENDPOINT.startsWith('https://')) {
-        // Verifica se é possivelmente um account ID sem protocolo
-        if (!R2_ENDPOINT.includes('.')) {
-          R2_ENDPOINT = `https://${R2_ENDPOINT}.r2.dev`;
-        } else if (!R2_ENDPOINT.startsWith('http')) {
-          R2_ENDPOINT = `https://${R2_ENDPOINT}`;
-        }
-      }
-      
-      // Não podemos acessar o bucket diretamente via HTTP, então não adicione o nome do bucket ao URL para testes
-      const endpointUrl = R2_ENDPOINT;
-      
       // Adicionando resultado da verificação de variáveis
       results.push({
-        description: 'Verificação de variáveis de ambiente',
+        description: 'Verificação de variáveis de ambiente do Supabase',
         url: 'N/A',
         success: true,
         config: {
-          endpoint: R2_ENDPOINT,
-          bucket: R2_BUCKET_NAME,
-          keyLength: R2_ACCESS_KEY_ID.length,
-          secretLength: R2_SECRET_ACCESS_KEY.length
+          supabaseUrl: SUPABASE_URL,
+          keyConfigured: !!SUPABASE_ANON_KEY
         }
       });
       
-      // Teste 1: Verificação do domínio R2 utilizando fetch diretamente
+      // Teste 1: Verificação do domínio Supabase utilizando fetch diretamente
       try {
         // Testa primeiro se o endpoint responde via fetch
-        const endpointResponse = await fetch(`${R2_ENDPOINT}`, {
+        const endpointResponse = await fetch(`${SUPABASE_URL}`, {
           method: 'HEAD',
         });
         
         results.push({
-          description: 'Verificação do endpoint R2 (ping)',
-          url: R2_ENDPOINT,
+          description: 'Verificação do endpoint Supabase (ping)',
+          url: SUPABASE_URL,
           status: endpointResponse.status,
           success: endpointResponse.status < 500,  // Considera sucesso se não for erro 5xx
           headers: Object.fromEntries(endpointResponse.headers.entries())
         });
       } catch (error: any) {
         results.push({
-          description: 'Verificação do endpoint R2 (ping)',
-          url: R2_ENDPOINT,
+          description: 'Verificação do endpoint Supabase (ping)',
+          url: SUPABASE_URL,
           success: false,
           error: `Erro ao conectar: ${error.message}`
         });
       }
       
-      // Teste 2: Inicialização do cliente S3
-      let s3Client: S3Client;
+      // Teste 2: Inicialização do cliente Supabase
+      let supabase;
       try {
-        s3Client = new S3Client({
-          region: 'auto',
-          endpoint: R2_ENDPOINT,
-          credentials: {
-            accessKeyId: R2_ACCESS_KEY_ID,
-            secretAccessKey: R2_SECRET_ACCESS_KEY,
-          },
-          forcePathStyle: true // Importante para algumas implementações do S3
-        });
+        supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
         results.push({
-          description: 'Inicialização do cliente S3',
-          url: R2_ENDPOINT,
+          description: 'Inicialização do cliente Supabase',
+          url: SUPABASE_URL,
           success: true
         });
       } catch (error: any) {
         results.push({
-          description: 'Inicialização do cliente S3',
-          url: R2_ENDPOINT,
+          description: 'Inicialização do cliente Supabase',
+          url: SUPABASE_URL,
           success: false,
           error: `Erro na inicialização: ${error.message}`
         });
         
         // Se falhar na inicialização, retorna o resultado parcial
         return res.json({
-          message: 'Falha na inicialização do cliente S3',
+          message: 'Falha na inicialização do cliente Supabase',
           results
         });
       }
       
       // Teste 3: Listagem de buckets
       try {
-        // O problema "char 'I' is not expected" geralmente ocorre
-        // quando a resposta retorna HTML em vez de JSON/XML
-        // Vamos fazer um teste alternativo em caso de erro
+        const { data: buckets, error: bucketsError } = await supabase
+          .storage
+          .listBuckets();
         
-        let bucketsList: string[] = [];
-        let bucketError = null;
-        let bucketSuccess = false;
-        
-        try {
-          const listBucketsCommand = new ListBucketsCommand({});
-          const bucketsResponse = await s3Client.send(listBucketsCommand);
-          bucketsList = bucketsResponse.Buckets?.map(bucket => bucket.Name) || [];
-          bucketSuccess = true;
-        } catch (err: any) {
-          bucketError = err;
-          console.log('[TestR2Direct] Erro ListBuckets:', err.message);
-          
-          // Vamos tentar um método alternativo - tentando acessar diretamente o bucket
-          try {
-            // Verificando o bucket diretamente
-            const headBucketResponse = await s3Client.send(new HeadBucketCommand({
-              Bucket: R2_BUCKET_NAME
-            }));
-            bucketSuccess = true;
-            bucketsList = [R2_BUCKET_NAME]; // Assumimos que o bucket existe
-          } catch (bucketErr) {
-            // Se falhar aqui, realmente não temos acesso ao bucket
-            bucketSuccess = false;
-          }
-        }
+        const bucketsList = buckets?.map(bucket => bucket.name) || [];
         
         results.push({
-          description: 'Listagem de buckets R2',
-          url: `${R2_ENDPOINT}`,
-          success: bucketSuccess,
+          description: 'Listagem de buckets Supabase',
+          url: `${SUPABASE_URL}/storage/buckets`,
+          success: !bucketsError,
           buckets: bucketsList,
-          error: bucketError ? `${bucketError.message}` : undefined,
-          note: bucketError ? 'Método alternativo usado para verificação' : undefined
+          error: bucketsError ? bucketsError.message : undefined
         });
       } catch (error: any) {
         results.push({
-          description: 'Listagem de buckets R2',
-          url: `${R2_ENDPOINT}`,
+          description: 'Listagem de buckets Supabase',
+          url: `${SUPABASE_URL}/storage/buckets`,
           success: false,
           error: `Erro ao listar buckets: ${error.message}`
         });
       }
       
-      // Teste 4: Verificação específica do bucket
+      // Teste 4: Verificação do bucket designautoimages
       try {
-        let bucketVerifySuccess = false;
-        let bucketVerifyError = null;
-        
-        try {
-          const headBucketCommand = new HeadBucketCommand({
-            Bucket: R2_BUCKET_NAME
+        const { data, error } = await supabase
+          .storage
+          .from('designautoimages')
+          .list('', {
+            limit: 1
           });
-          
-          // Tentamos verificar o bucket diretamente
-          await s3Client.send(headBucketCommand);
-          bucketVerifySuccess = true;
-        } catch (error: any) {
-          bucketVerifyError = error;
-          console.log('[TestR2Direct] Erro HeadBucket:', error.message);
-          
-          // Se falhar na verificação direta, vamos tentar uma estratégia alternativa
-          // usando apenas a listagem informativa de objetos (sem realmente obter os objetos)
-          try {
-            const listCommand = new ListObjectsV2Command({
-              Bucket: R2_BUCKET_NAME,
-              MaxKeys: 0  // Não precisamos realmente listar objetos
-            });
-            
-            await s3Client.send(listCommand);
-            bucketVerifySuccess = true;
-          } catch (listErr: any) {
-            console.log('[TestR2Direct] Erro ListObjectsV2 alternativo:', listErr.message);
-            // Se falhou nas duas tentativas, realmente não conseguimos acessar o bucket
-            bucketVerifySuccess = false;
-          }
-        }
         
         results.push({
-          description: `Verificação do bucket "${R2_BUCKET_NAME}"`,
-          url: `${R2_ENDPOINT}/${R2_BUCKET_NAME}`,
-          success: bucketVerifySuccess,
-          error: bucketVerifyError && !bucketVerifySuccess ? `${bucketVerifyError.message}` : undefined,
-          note: bucketVerifyError && bucketVerifySuccess ? 'Bucket verificado usando método alternativo' : undefined
+          description: `Verificação do bucket "designautoimages"`,
+          url: `${SUPABASE_URL}/storage/buckets/designautoimages`,
+          success: !error,
+          error: error ? error.message : undefined
         });
       } catch (error: any) {
         results.push({
-          description: `Verificação do bucket "${R2_BUCKET_NAME}"`,
-          url: `${R2_ENDPOINT}/${R2_BUCKET_NAME}`,
+          description: `Verificação do bucket "designautoimages"`,
+          url: `${SUPABASE_URL}/storage/buckets/designautoimages`,
           success: false,
           error: `Erro ao verificar bucket: ${error.message}`
         });
@@ -231,61 +159,32 @@ export const setupTestR2DirectRoute = (app: any) => {
       
       // Teste 5: Listagem de objetos no bucket
       try {
-        let listSuccess = false;
-        let objectCount = 0;
-        let objectsPreview = [];
-        let listError = null;
-        
-        try {
-          // Tentamos o método padrão primeiro
-          const listCommand = new ListObjectsV2Command({
-            Bucket: R2_BUCKET_NAME,
-            MaxKeys: 5
+        const { data, error } = await supabase
+          .storage
+          .from('designautoimages')
+          .list('', {
+            limit: 5
           });
-          
-          try {
-            const listResponse = await s3Client.send(listCommand);
-            
-            listSuccess = true;
-            objectCount = listResponse.KeyCount || 0;
-            objectsPreview = listResponse.Contents?.slice(0, 3).map(item => ({
-              key: item.Key,
-              size: item.Size,
-              lastModified: item.LastModified
-            })) || [];
-          } catch (listErr: any) {
-            // Se houver erro na listagem de objetos, ainda podemos continuar
-            console.log('[TestR2Direct] Erro ListObjectsV2:', listErr.message);
-            listError = listErr;
-            
-            // Vamos assumir que o bucket existe se já passamos no teste anterior
-            // mesmo sem conseguir listar objetos - isso é comum em algumas configurações
-            // que permitem apenas operações básicas
-            if (results.some(r => r.description.includes('Verificação do bucket') && r.success)) {
-              listSuccess = true;
-              objectCount = 0;
-              objectsPreview = [];
-            }
-          }
-        } catch (error: any) {
-          // Se houver um erro mais grave, registramos aqui
-          listError = error;
-          console.log('[TestR2Direct] Erro grave na listagem:', error.message);
-        }
+        
+        const objectsCount = data?.length || 0;
+        const objectsPreview = data?.slice(0, 3).map(item => ({
+          name: item.name,
+          size: item.metadata?.size,
+          created: item.created_at
+        })) || [];
         
         results.push({
-          description: `Listagem de objetos no bucket "${R2_BUCKET_NAME}"`,
-          url: `${R2_ENDPOINT}/${R2_BUCKET_NAME}`,
-          success: listSuccess,
-          objectCount,
+          description: `Listagem de objetos no bucket "designautoimages"`,
+          url: `${SUPABASE_URL}/storage/buckets/designautoimages/objects`,
+          success: !error,
+          objectCount: objectsCount,
           objectsPreview,
-          error: listError ? `${listError.message}` : undefined,
-          note: listError && listSuccess ? 'Bucket detectado, mas listagem de objetos não disponível' : undefined
+          error: error ? error.message : undefined
         });
       } catch (error: any) {
         results.push({
-          description: `Listagem de objetos no bucket "${R2_BUCKET_NAME}"`,
-          url: `${R2_ENDPOINT}/${R2_BUCKET_NAME}`,
+          description: `Listagem de objetos no bucket "designautoimages"`,
+          url: `${SUPABASE_URL}/storage/buckets/designautoimages/objects`,
           success: false,
           error: `Erro ao listar objetos: ${error.message}`
         });
@@ -296,10 +195,10 @@ export const setupTestR2DirectRoute = (app: any) => {
       const anySuccess = results.some(r => r.success);
       
       const message = allSuccess
-        ? 'Conexão com R2 funcionando corretamente'
+        ? 'Conexão com Supabase Storage funcionando corretamente'
         : anySuccess
-          ? 'Conexão parcial com R2 - alguns testes falharam'
-          : 'Falha completa na conexão com R2';
+          ? 'Conexão parcial com Supabase Storage - alguns testes falharam'
+          : 'Falha completa na conexão com Supabase Storage';
       
       return res.json({
         message,
@@ -308,7 +207,7 @@ export const setupTestR2DirectRoute = (app: any) => {
       
     } catch (error: any) {
       return res.status(500).json({
-        message: 'Erro durante os testes R2',
+        message: 'Erro durante os testes Supabase',
         results: [
           ...results,
           {
