@@ -1,4 +1,5 @@
-import { ApiClient, TransactionalEmailsApi, SendSmtpEmail } from '@getbrevo/brevo';
+import { TransactionalEmailsApi } from '@getbrevo/brevo/dist/api/transactionalEmailsApi';
+import { SendSmtpEmail } from '@getbrevo/brevo/dist/model/sendSmtpEmail';
 
 // Chave da API do Brevo
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
@@ -16,7 +17,6 @@ const EMAIL_TEMPLATES = {
 };
 
 class EmailService {
-  private apiClient: ApiClient;
   private apiInstance: TransactionalEmailsApi;
   private initialized: boolean = false;
   private logs: string[] = [];
@@ -35,9 +35,9 @@ class EmailService {
         return;
       }
 
-      this.apiClient = new ApiClient();
-      this.apiClient.authentications['api-key'].apiKey = BREVO_API_KEY;
       this.apiInstance = new TransactionalEmailsApi();
+      // Configurar a chave de API nos cabeçalhos
+      this.apiInstance.setApiKey('api-key', BREVO_API_KEY);
       this.initialized = true;
       this.log('✅ Serviço de e-mail Brevo inicializado com sucesso');
     } catch (error) {
