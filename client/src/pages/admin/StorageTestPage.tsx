@@ -478,7 +478,102 @@ export default function StorageTestPage() {
                       </>
                     )}
                   </Button>
+                  
+                  {selectedService === "r2" && (
+                    <Button
+                      onClick={testR2Direct}
+                      disabled={isTestingR2Direct}
+                      variant="secondary"
+                      className="ml-2"
+                    >
+                      {isTestingR2Direct ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Diagnóstico Avançado...
+                        </>
+                      ) : (
+                        <>
+                          <Info className="mr-2 h-4 w-4" />
+                          Diagnóstico Avançado
+                        </>
+                      )}
+                    </Button>
+                  )}
                 </div>
+                
+                {/* Resultados do Diagnóstico R2 Direto */}
+                {selectedService === "r2" && r2DirectTestResult && (
+                  <div className="mt-4">
+                    <Alert className={`${
+                      r2DirectTestResult.results.every(r => r.success)
+                        ? "bg-green-50 border-green-200 text-green-800"
+                        : "bg-amber-50 border-amber-200 text-amber-800"
+                    }`}>
+                      <div className="flex items-start">
+                        {r2DirectTestResult.results.every(r => r.success) ? (
+                          <CheckCircle2 className="h-5 w-5 mr-2 text-green-500" />
+                        ) : (
+                          <AlertCircle className="h-5 w-5 mr-2 text-amber-500" />
+                        )}
+                        <div>
+                          <AlertTitle>Resultado do Diagnóstico R2</AlertTitle>
+                          <AlertDescription>
+                            {r2DirectTestResult.message}
+                          </AlertDescription>
+                        </div>
+                      </div>
+                    </Alert>
+                    
+                    <div className="mt-4">
+                      <h3 className="text-sm font-medium mb-2">Detalhes do Diagnóstico:</h3>
+                      <ScrollArea className="h-60 rounded-md border">
+                        <div className="p-4">
+                          {r2DirectTestResult.results.map((result, index) => (
+                            <div key={index} className={`mb-4 p-3 rounded-md ${
+                              result.success 
+                                ? "bg-green-50 border border-green-100" 
+                                : "bg-red-50 border border-red-100"
+                            }`}>
+                              <div className="flex items-center mb-1">
+                                {result.success ? (
+                                  <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
+                                ) : (
+                                  <XCircle className="h-4 w-4 mr-2 text-red-500" />
+                                )}
+                                <h4 className="font-medium text-sm">
+                                  {result.description}
+                                </h4>
+                              </div>
+                              
+                              <div className="ml-6 text-xs space-y-1">
+                                <p className="font-mono break-all bg-black bg-opacity-5 p-1 rounded">
+                                  URL: {result.url}
+                                </p>
+                                
+                                {result.status && (
+                                  <p>Status: {result.status}</p>
+                                )}
+                                
+                                {result.error && (
+                                  <p className="text-red-600 whitespace-pre-wrap break-words">{result.error}</p>
+                                )}
+                                
+                                {result.headers && Object.keys(result.headers).length > 0 && (
+                                  <div>
+                                    <p className="font-medium mt-1">Headers:</p>
+                                    <pre className="text-xs p-1 bg-black bg-opacity-5 rounded max-h-20 overflow-auto">
+                                      {JSON.stringify(result.headers, null, 2)}
+                                    </pre>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </div>
+                  </div>
+                )}
               </TabsContent>
               
               {/* Conteúdo da Aba de Upload */}
