@@ -3,9 +3,20 @@ import fetch from 'node-fetch';
 // Chave da API do Brevo
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
 
-// Nome do remetente e e-mail para envios
-const SENDER_NAME = 'Design Auto';
-const SENDER_EMAIL = 'inovedigitalmarketing10@gmail.com';
+// Configurações de remetentes disponíveis no Brevo
+const SENDERS = {
+  suporte: {
+    name: 'Suporte Design Auto',
+    email: 'suporte@designauto.com.br'
+  },
+  contato: {
+    name: 'Design Auto',
+    email: 'contato@designauto.com.br'
+  }
+};
+
+// Remetente padrão para emails
+const DEFAULT_SENDER = SENDERS.suporte;
 
 // URL base da API do Brevo
 const BREVO_API_URL = 'https://api.brevo.com/v3';
@@ -83,8 +94,8 @@ class EmailService {
       
       const payload = {
         sender: {
-          name: SENDER_NAME,
-          email: SENDER_EMAIL
+          name: DEFAULT_SENDER.name,
+          email: DEFAULT_SENDER.email
         },
         to,
         subject,
@@ -117,7 +128,7 @@ class EmailService {
   }
 
   /**
-   * Envia um e-mail de verificação com código
+   * Envia um e-mail de verificação com código usando o remetente de suporte
    * @param email Email do destinatário
    * @param name Nome do destinatário
    * @param verificationCode Código de verificação
@@ -161,7 +172,7 @@ class EmailService {
   }
 
   /**
-   * Envia um e-mail de boas-vindas após verificação
+   * Envia um e-mail de boas-vindas após verificação usando remetente do contato oficial
    * @param email Email do destinatário
    * @param name Nome do destinatário
    * @returns Promise<boolean> Indica se o envio foi bem-sucedido
@@ -202,7 +213,7 @@ class EmailService {
   }
 
   /**
-   * Envia um e-mail de redefinição de senha
+   * Envia um e-mail de redefinição de senha usando o remetente de suporte
    * @param email Email do destinatário
    * @param name Nome do destinatário
    * @param resetToken Token de redefinição de senha
