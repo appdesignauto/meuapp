@@ -26,10 +26,11 @@ import sharp from "sharp";
 // Versão promisificada do scrypt
 const scryptAsync = promisify(scrypt);
 
-// Importar nossas rotas relacionadas ao logo
-import logoUploadRouter from './routes/logo-upload'
+// Importar nossas rotas personalizadas
+import logoUploadRouter from './routes/logo-upload';
 import removeLogoRouter from './routes/remove-logo';
 import supabaseRegisterTestRouter from './routes/supabase-register-test';
+import avatarUploadRouter from './routes/avatar-upload';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Rota de debug para testar getUserByUsername

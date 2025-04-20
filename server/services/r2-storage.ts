@@ -5,6 +5,9 @@ import * as path from 'path';
 import sharp from 'sharp';
 import { v4 as uuidv4 } from 'uuid';
 
+// Avatar storage settings
+const AVATAR_BUCKET_NAME = 'avatars';
+
 // Configurações para Cloudflare R2
 const BUCKET_NAME = process.env.R2_BUCKET_NAME || 'designauto-images';
 const PUBLIC_URL = process.env.R2_PUBLIC_URL || 'https://pub-a063592364ea4478870d95c9c4115c4a.r2.dev';
@@ -305,6 +308,77 @@ class R2StorageService {
         success: false,
         error: error instanceof Error ? error.message : String(error),
         timing: endTime - startTime
+      };
+    }
+  }
+
+  /**
+   * Faz upload de um avatar de usuário para o R2
+   */
+  async uploadAvatar(
+    userId: number,
+    buffer: Buffer,
+    mimetype: string
+  ): Promise<{ success: boolean; url?: string; error?: string }> {
+    try {
+      this.log(`Iniciando upload de avatar para usuário ${userId}`);
+      
+      // Verificar se o bucket de avatares existe
+      const bucketExists = await this.checkBucketExists(AVATAR_BUCKET_NAME);
+      if (!bucketExists) {
+        this.log('❌ Bucket de avatares não existe ou não está acessível');
+        return {
+          success: false,
+          error: 'Bucket de avatares não existe ou não está acessível'
+        };
+      }
+      
+      // Processar a imagem para garantir tamanho adequado para avatar
+      let optimizedBuffer: Buffer;
+      try {
+        // Redimensionar para um tamanho adequado para avatar (200x200)
+        optimizedBuffer = await sharp(buffer)
+          .resize(200, 200, { fit: 'cover' })
+          .toFormat('webp')
+          .toBuffer();
+        
+        this.log(`Avatar processado: ${buffer.length} bytes -> ${optimizedBuffer.length} bytes`);
+      } catch (sharpError) {
+        this.log(`❌ Erro ao processar imagem de avatar: ${sharpError instanceof Error ? sharpError.message : String(sharpError)}`);
+        
+        // Em caso de erro no processamento, usar o buffer original
+        optimizedBuffer = buffer;
+        this.log('Usando imagem original sem processamento');
+      }
+      
+      // Definir nome de arquivo e chave no bucket
+      const key = `avatar-${userId}.webp`;
+      
+      // Upload para R2
+      const command = new PutObjectCommand({
+        Bucket: AVATAR_BUCKET_NAME,
+        Key: key,
+        Body: optimizedBuffer,
+        ContentType: 'image/webp'
+      });
+      
+      await R2_CLIENT.send(command);
+      
+      // Construir URL pública
+      const avatarUrl = `${PUBLIC_URL}/${AVATAR_BUCKET_NAME}/${key}`;
+      
+      this.log(`✅ Upload de avatar concluído: ${avatarUrl}`);
+      
+      return {
+        success: true,
+        url: avatarUrl
+      };
+    } catch (error) {
+      this.log(`❌ Erro no upload de avatar: ${error instanceof Error ? error.message : String(error)}`);
+      
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error)
       };
     }
   }
