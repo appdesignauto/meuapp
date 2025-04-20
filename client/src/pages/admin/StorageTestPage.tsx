@@ -57,7 +57,8 @@ export default function StorageTestPage() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState("connection");
-  const [selectedService, setSelectedService] = useState<"supabase">("supabase");
+  // Supabase é o único serviço de armazenamento usado
+  const selectedService = "supabase";
   const [isCheckingConnection, setIsCheckingConnection] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<StorageConnectionStatus | null>(null);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
@@ -65,8 +66,8 @@ export default function StorageTestPage() {
   const [isDirect, setIsDirect] = useState(false); // Controla se está usando upload direto (sem sharp)
   const [uploadResult, setUploadResult] = useState<UploadTestResult | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [r2DirectTestResult, setR2DirectTestResult] = useState<R2DirectTestResult | null>(null);
-  const [isTestingR2Direct, setIsTestingR2Direct] = useState(false);
+  const [supabaseTestResult, setSupabaseTestResult] = useState<R2DirectTestResult | null>(null);
+  const [isTestingSupabase, setIsTestingSupabase] = useState(false);
 
   // Efeito visual para progresso de upload
   const simulateProgress = useCallback(() => {
@@ -128,10 +129,10 @@ export default function StorageTestPage() {
     }
   };
   
-  // Função para teste direto de diagnóstico (migrado para Supabase)
-  const testR2Direct = async () => {
-    setIsTestingR2Direct(true);
-    setR2DirectTestResult(null);
+  // Função para teste detalhado do Supabase Storage
+  const testSupabaseStorage = async () => {
+    setIsTestingSupabase(true);
+    setSupabaseTestResult(null);
     
     try {
       const response = await fetch('/api/admin/storage/test-r2-direct');
@@ -143,39 +144,39 @@ export default function StorageTestPage() {
       
       const data = await response.json();
       
-      // Modificar os resultados para refletir a migração para Supabase
-      const modifiedData = {
+      // Formatar os resultados para o Supabase
+      const formattedData = {
         ...data,
-        message: data.redirected 
-          ? data.message 
-          : "R2 foi descontinuado. Usando Supabase Storage como alternativa.",
+        message: "Diagnóstico do Supabase Storage concluído com sucesso.",
         results: data.results?.map((r: any) => ({
           ...r,
           description: r.description.includes("Supabase") 
             ? r.description 
-            : `${r.description} (via Supabase)`,
+            : `Teste de ${r.description} (via Supabase Storage)`,
         })) || []
       };
       
-      setR2DirectTestResult(modifiedData);
+      setSupabaseTestResult(formattedData);
       
       // Determinar o status geral com base nos resultados
       const allSuccess = data.results?.every((r: any) => r.success) || false;
       
       toast({
-        title: 'Diagnóstico de armazenamento concluído',
-        description: "O serviço R2 foi desativado. Todas as operações agora utilizam o Supabase Storage.",
+        title: 'Diagnóstico do Supabase Storage concluído',
+        description: allSuccess 
+          ? "Todos os testes foram bem-sucedidos" 
+          : "Alguns testes apresentaram falhas. Verifique os detalhes.",
         variant: allSuccess ? 'default' : 'destructive',
       });
     } catch (error) {
-      console.error('Erro no diagnóstico de armazenamento:', error);
+      console.error('Erro no diagnóstico do Supabase Storage:', error);
       toast({
-        title: 'Erro no diagnóstico de armazenamento',
+        title: 'Erro no diagnóstico do Supabase Storage',
         description: error instanceof Error ? error.message : 'Ocorreu um erro ao realizar o diagnóstico',
         variant: 'destructive',
       });
     } finally {
-      setIsTestingR2Direct(false);
+      setIsTestingSupabase(false);
     }
   };
 
@@ -552,12 +553,12 @@ export default function StorageTestPage() {
                   </Button>
                   
                   <Button
-                    onClick={testR2Direct}
-                    disabled={isTestingR2Direct}
+                    onClick={testSupabaseStorage}
+                    disabled={isTestingSupabase}
                     variant="secondary"
                     className="ml-2"
                   >
-                    {isTestingR2Direct ? (
+                    {isTestingSupabase ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         Diagnóstico Detalhado do Supabase...
@@ -572,15 +573,15 @@ export default function StorageTestPage() {
                 </div>
                 
                 {/* Resultados do Diagnóstico de Armazenamento */}
-                {r2DirectTestResult && (
+                {supabaseTestResult && (
                   <div className="mt-4">
                     <Alert className={`${
-                      r2DirectTestResult.results.every(r => r.success)
+                      supabaseTestResult.results.every(r => r.success)
                         ? "bg-green-50 border-green-200 text-green-800"
                         : "bg-amber-50 border-amber-200 text-amber-800"
                     }`}>
                       <div className="flex items-start">
-                        {r2DirectTestResult.results.every(r => r.success) ? (
+                        {supabaseTestResult.results.every(r => r.success) ? (
                           <CheckCircle2 className="h-5 w-5 mr-2 text-green-500" />
                         ) : (
                           <AlertCircle className="h-5 w-5 mr-2 text-amber-500" />
@@ -588,7 +589,7 @@ export default function StorageTestPage() {
                         <div>
                           <AlertTitle>Resultado do Diagnóstico do Supabase Storage</AlertTitle>
                           <AlertDescription>
-                            {r2DirectTestResult.message}
+                            {supabaseTestResult.message}
                           </AlertDescription>
                         </div>
                       </div>
@@ -598,7 +599,7 @@ export default function StorageTestPage() {
                       <h3 className="text-sm font-medium mb-2">Detalhes do Diagnóstico:</h3>
                       <ScrollArea className="h-60 rounded-md border">
                         <div className="p-4">
-                          {r2DirectTestResult.results.map((result, index) => (
+                          {supabaseTestResult.results.map((result, index) => (
                             <div key={index} className={`mb-4 p-3 rounded-md ${
                               result.success 
                                 ? "bg-green-50 border border-green-100" 
