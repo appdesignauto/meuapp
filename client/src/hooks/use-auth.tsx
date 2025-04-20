@@ -36,6 +36,10 @@ type RegisterData = {
   periodType?: "mensal" | "anual" | "vitalicio";
 };
 
+type VerifyEmailData = {
+  code: string;
+};
+
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -44,6 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     data: user,
     error,
     isLoading,
+    refetch: refetchUser,
   } = useQuery<User | null, Error>({
     queryKey: ['/api/user'],
     queryFn: async () => {
@@ -99,12 +104,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       return await res.json();
     },
-    onSuccess: (user: User) => {
-      queryClient.setQueryData(['/api/user'], user);
-      toast({
-        title: "Registro realizado com sucesso",
-        description: `Bem-vindo, ${user.name || user.username}!`,
-      });
+    onSuccess: (response) => {
+      if (response.success) {
+        // Se tiver um usuário na resposta, atualize o estado
+        if (response.user) {
+          queryClient.setQueryData(['/api/user'], response.user);
+        }
+        
+        // Verifica se foi enviado um email para verificação
+        if (response.verificationSent) {
+          toast({
+            title: "Registro realizado com sucesso",
+            description: "Enviamos um código de verificação para seu e-mail. Por favor, verifique sua caixa de entrada.",
+          });
+        } else {
+          toast({
+            title: "Registro realizado com sucesso",
+            description: `Bem-vindo, ${response.user?.name || response.user?.username || 'novo usuário'}!`,
+          });
+        }
+      } else {
+        toast({
+          title: "Registro realizado, mas com problemas",
+          description: response.message || "Registro parcialmente concluído. Entre em contato com o suporte.",
+          variant: "destructive",
+        });
+      }
     },
     onError: (error: Error) => {
       toast({
@@ -134,6 +159,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     },
   });
+  
+  const verifyEmailMutation = useMutation({
+    mutationFn: async (data: VerifyEmailData) => {
+      const res = await apiRequest('POST', '/api/email-verification/verify', data);
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Falha ao verificar e-mail");
+      }
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+      toast({
+        title: "E-mail verificado com sucesso",
+        description: "Sua conta foi ativada e você já pode acessar todos os recursos.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Falha na verificação",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  const resendVerificationMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest('POST', '/api/email-verification/send');
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Falha ao reenviar código de verificação");
+      }
+      return await res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Código reenviado",
+        description: "Um novo código de verificação foi enviado para seu e-mail.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Falha ao reenviar código",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   return (
     <AuthContext.Provider
@@ -144,6 +218,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loginMutation,
         logoutMutation,
         registerMutation,
+        verifyEmailMutation,
+        resendVerificationMutation
       }}
     >
       {children}
