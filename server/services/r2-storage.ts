@@ -10,16 +10,11 @@ const BUCKET_NAME = process.env.R2_BUCKET_NAME || 'designauto-images';
 const PUBLIC_URL = process.env.R2_PUBLIC_URL || 'https://pub-a063592364ea4478870d95c9c4115c4a.r2.dev';
 
 // Certifique-se de que o endpoint esteja no formato correto
-let R2_ENDPOINT = process.env.R2_ENDPOINT || '0f7a409b79bd29f7cf3970f077da05ee';
-// Adiciona o prefixo https:// se não estiver presente
-if (!R2_ENDPOINT.startsWith('https://')) {
-  R2_ENDPOINT = `https://${R2_ENDPOINT}.r2.dev`;
-}
+const accountId = process.env.R2_ENDPOINT || '0f7a409b79bd29f7cf3970f077da05ee';
+const R2_ENDPOINT = `https://${accountId.replace('https://', '').replace('.r2.dev', '')}.r2.dev`;
 
 // Formato do nome de conta extraído do endpoint
-const ACCOUNT_ID = R2_ENDPOINT.includes('https://') 
-  ? R2_ENDPOINT.split('https://')[1].split('.')[0]
-  : R2_ENDPOINT;
+const ACCOUNT_ID = R2_ENDPOINT.split('https://')[1].split('.r2.dev')[0];
 
 // Log de inicialização para verificar credenciais
 console.log("Detalhes das credenciais do R2:");
