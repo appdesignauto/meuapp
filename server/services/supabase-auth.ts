@@ -82,6 +82,8 @@ export class SupabaseAuthService {
           supabaseId: authData.user?.id,
           nivelacesso: 'usuario',
           role: userData.role || 'usuario',
+          tipoplano: 'gratuito', // Definir explicitamente para usuários gratuitos
+          origemassinatura: 'auto', // Autocadastro
           isactive: true,
           criadoem: new Date(),
           atualizadoem: new Date()
@@ -140,6 +142,8 @@ export class SupabaseAuthService {
             supabaseId: authData.user.id,
             nivelacesso: 'usuario',
             role: authData.user.user_metadata.role || 'usuario',
+            tipoplano: 'gratuito', // Definir explicitamente para usuários gratuitos
+            origemassinatura: 'auto', // Autocadastro
             isactive: true,
             criadoem: new Date(),
             atualizadoem: new Date()
