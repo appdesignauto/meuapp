@@ -125,6 +125,42 @@ export default function StorageTestPage() {
       setIsCheckingConnection(false);
     }
   };
+  
+  // Função para teste direto de diagnóstico do R2
+  const testR2Direct = async () => {
+    setIsTestingR2Direct(true);
+    setR2DirectTestResult(null);
+    
+    try {
+      const response = await fetch('/api/admin/storage/test-r2-direct');
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Falha na resposta da API: ${errorText}`);
+      }
+      
+      const data = await response.json();
+      setR2DirectTestResult(data);
+      
+      // Determinar o status geral com base nos resultados
+      const allSuccess = data.results.every((r: any) => r.success);
+      
+      toast({
+        title: allSuccess ? 'Diagnóstico R2 concluído com sucesso' : 'Diagnóstico R2 com problemas',
+        description: data.message,
+        variant: allSuccess ? 'default' : 'destructive',
+      });
+    } catch (error) {
+      console.error('Erro no diagnóstico direto do R2:', error);
+      toast({
+        title: 'Erro no diagnóstico R2',
+        description: error instanceof Error ? error.message : 'Ocorreu um erro ao realizar o diagnóstico direto do R2',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsTestingR2Direct(false);
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -228,39 +264,7 @@ export default function StorageTestPage() {
     }
   };
   
-  // Método para testar direto a conexão com o R2 com diagnóstico completo
-  const testR2Direct = async () => {
-    setIsTestingR2Direct(true);
-    setR2DirectTestResult(null);
-    
-    try {
-      const response = await fetch('/api/admin/storage/test-r2-direct');
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Falha na resposta da API: ${errorText}`);
-      }
-      
-      const result = await response.json();
-      setR2DirectTestResult(result);
-      
-      toast({
-        title: "Diagnóstico R2 Completo",
-        description: result.message,
-        variant: "default"
-      });
-    } catch (error) {
-      console.error("Erro ao testar R2 diretamente:", error);
-      
-      toast({
-        title: "Erro no diagnóstico R2",
-        description: error instanceof Error ? error.message : String(error),
-        variant: "destructive"
-      });
-    } finally {
-      setIsTestingR2Direct(false);
-    }
-  };
+
 
   return (
     <div className="container py-8">
@@ -457,6 +461,73 @@ export default function StorageTestPage() {
                         ))}
                       </div>
                     </ScrollArea>
+                  </div>
+                )}
+                
+                {/* Resultados do teste direto do R2 */}
+                {r2DirectTestResult && (
+                  <div className="mt-6">
+                    <h3 className="text-sm font-medium mb-2">Diagnóstico Avançado do R2</h3>
+                    
+                    <Alert className="mb-4 bg-blue-50 border-blue-200 text-blue-800">
+                      <Info className="h-5 w-5 mr-2 text-blue-500" />
+                      <AlertTitle>Resultado do diagnóstico</AlertTitle>
+                      <AlertDescription>
+                        {r2DirectTestResult.message}
+                      </AlertDescription>
+                    </Alert>
+                    
+                    <div className="space-y-4">
+                      {r2DirectTestResult.results.map((result, index) => (
+                        <Card key={index} className={`border-l-4 ${result.success ? 'border-l-green-500' : 'border-l-red-500'}`}>
+                          <CardHeader className="py-3">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <CardTitle className="text-sm font-medium">
+                                  {result.success ? (
+                                    <CheckCircle2 className="h-4 w-4 inline mr-2 text-green-500" />
+                                  ) : (
+                                    <XCircle className="h-4 w-4 inline mr-2 text-red-500" />
+                                  )}
+                                  {result.description}
+                                </CardTitle>
+                                <CardDescription className="text-xs mt-1">
+                                  <span className="font-mono">{result.url}</span>
+                                </CardDescription>
+                              </div>
+                              {result.status && (
+                                <Badge variant={result.success ? "outline" : "destructive"} className="ml-2">
+                                  Status: {result.status}
+                                </Badge>
+                              )}
+                            </div>
+                          </CardHeader>
+                          
+                          {!result.success && result.error && (
+                            <CardContent className="py-2">
+                              <div className="text-xs font-mono text-red-600 p-2 bg-red-50 rounded-md">
+                                {result.error}
+                              </div>
+                            </CardContent>
+                          )}
+                          
+                          {result.success && result.headers && (
+                            <CardContent className="py-2">
+                              <details>
+                                <summary className="text-xs cursor-pointer">Ver cabeçalhos da resposta</summary>
+                                <div className="mt-2 text-xs font-mono bg-gray-50 p-2 rounded-md">
+                                  {Object.entries(result.headers).map(([key, value]) => (
+                                    <div key={key} className="mb-1">
+                                      <span className="font-semibold">{key}:</span> {value}
+                                    </div>
+                                  ))}
+                                </div>
+                              </details>
+                            </CardContent>
+                          )}
+                        </Card>
+                      ))}
+                    </div>
                   </div>
                 )}
                 
