@@ -87,6 +87,9 @@ function AppRoutes() {
       <Route path="/designers/:username" component={DesignerProfile} />
       <Route path="/planos" component={PlanosPage} />
       
+      {/* Rota de perfil do usuário */}
+      <ProtectedRoute path="/profile" component={ProfilePage} />
+      
       {/* Rotas do Painel do Usuário */}
       <ProtectedPainelRoute path="/painel/inicio" component={PainelInicio} />
       <ProtectedPainelRoute path="/painel/artes" component={PainelArtes} />
