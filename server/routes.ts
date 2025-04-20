@@ -3840,6 +3840,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Registrar rotas de teste do Supabase
   app.use(supabaseRegisterTestRouter);
+  
+  // Registrar rotas para upload de avatar
+  app.use(avatarUploadRouter);
 
   const httpServer = createServer(app);
   
