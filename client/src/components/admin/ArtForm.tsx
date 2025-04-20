@@ -89,6 +89,16 @@ const ArtForm = ({ isOpen, onClose, editingArt }: ArtFormProps) => {
       // Especificar o uso do Supabase Storage explicitamente
       formData.append('storage', 'supabase');
       
+      // Adicionar a categoria selecionada para organização de pastas
+      const categoryId = watch('categoryId');
+      if (categoryId) {
+        const selectedCategory = categories?.find(cat => cat.id.toString() === categoryId);
+        if (selectedCategory?.slug) {
+          console.log(`Usando categoria ${selectedCategory.name} (${selectedCategory.slug}) para organização`);
+          formData.append('categorySlug', selectedCategory.slug);
+        }
+      }
+      
       console.log("Enviando imagem:", file.name, file.type, Math.round(file.size/1024) + "KB");
       console.log("Iniciando upload de imagem...");
       

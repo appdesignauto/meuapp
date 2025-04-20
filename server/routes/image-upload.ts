@@ -46,7 +46,15 @@ router.post(
               return res.status(200).json({...urls, uploadType: "direct"});
             } else {
               console.log("Iniciando otimização da imagem da arte...");
-              const urls = await supabaseStorageService.uploadImage(req.file, options);
+              
+              // Obtém a categoria (se fornecida) para a estrutura de pastas
+              const categorySlug = req.body.categorySlug || req.query.categorySlug;
+              if (categorySlug) {
+                console.log(`Categoria fornecida para organização: ${categorySlug}`);
+              }
+              
+              // Passa a categoria para o método de upload
+              const urls = await supabaseStorageService.uploadImage(req.file, options, categorySlug as string);
               console.log("Upload da arte para Supabase concluído com sucesso:", urls);
               return res.status(200).json({
                 ...urls,
