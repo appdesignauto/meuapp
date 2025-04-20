@@ -53,8 +53,23 @@ router.post(
                 console.log(`Categoria fornecida para organização: ${categorySlug}`);
               }
               
-              // Passa a categoria para o método de upload
-              const urls = await supabaseStorageService.uploadImage(req.file, options, categorySlug as string);
+              // Obtém o ID do designer (se fornecido) para a estrutura de pastas
+              const designerId = req.body.designerId || req.query.designerId || 
+                                (req.user ? req.user.id : undefined);
+              
+              if (designerId) {
+                console.log(`Designer ID fornecido para organização: ${designerId}`);
+              } else {
+                console.log(`Nenhum ID de designer fornecido, usando estrutura padrão`);
+              }
+              
+              // Passa a categoria e o ID do designer para o método de upload
+              const urls = await supabaseStorageService.uploadImage(
+                req.file, 
+                options, 
+                categorySlug as string,
+                typeof designerId === 'string' ? parseInt(designerId) : designerId as number
+              );
               console.log("Upload da arte para Supabase concluído com sucesso:", urls);
               return res.status(200).json({
                 ...urls,

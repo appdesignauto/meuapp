@@ -241,17 +241,38 @@ export class SupabaseStorageService {
   }
 
   /**
-   * Gera um nome de arquivo único
+   * Gera um nome de arquivo único com estrutura de pastas hierárquica
    * @param originalFilename Nome original do arquivo
    * @param isThumb Se é uma miniatura
    * @param categorySlug Slug da categoria para organização (opcional)
+   * @param designerId ID do designer que está fazendo o upload (opcional)
    * @returns Caminho do arquivo no bucket
    */
-  private generateFilename(originalFilename: string, isThumb = false, categorySlug?: string): string {
+  private generateFilename(originalFilename: string, isThumb = false, categorySlug?: string, designerId?: number): string {
     const extension = '.webp'; // Sempre usamos WebP para otimização
     const uuid = randomUUID();
-    const categoryPrefix = categorySlug ? `${categorySlug}_` : '';
-    return `${isThumb ? 'thumbnails/' : ''}${categoryPrefix}${uuid}${extension}`;
+    const timestamp = Date.now();
+    
+    // Estrutura de pastas hierárquica
+    let basePath = '';
+    
+    // Se for thumbnail, começamos com a pasta thumbnails
+    if (isThumb) {
+      basePath = 'thumbnails/';
+    }
+    
+    // Se tivermos o ID do designer, criamos uma pasta específica para ele
+    if (designerId) {
+      basePath += `designer_${designerId}/`;
+    }
+    
+    // Se tivermos uma categoria, adicionamos como subpasta
+    if (categorySlug) {
+      basePath += `${categorySlug}/`;
+    }
+    
+    // Formato final: designer_[id]/[categoria]/[timestamp]_[uuid].webp
+    return `${basePath}${timestamp}_${uuid}${extension}`;
   }
 
   /**
@@ -260,7 +281,8 @@ export class SupabaseStorageService {
   async uploadImage(
     file: Express.Multer.File,
     options: ImageOptimizationOptions = {},
-    categorySlug?: string // Adicionando slug da categoria para organização
+    categorySlug?: string, // Slug da categoria para organização
+    designerId?: number // ID do designer para organização em pastas
   ): Promise<{ imageUrl: string; thumbnailUrl: string; storageType?: string }> {
     if (!file) {
       throw new Error("Nenhum arquivo foi fornecido");
@@ -288,10 +310,11 @@ export class SupabaseStorageService {
         quality: 75,
       });
 
-      // Gera nomes de arquivos únicos com prefixo de categoria (se informado)
+      // Gera nomes de arquivos únicos com estrutura de pastas hierárquica
       console.log(`Categoria: ${categorySlug || 'não especificada'}`);
-      const imagePath = this.generateFilename(file.originalname, false, categorySlug);
-      const thumbnailPath = this.generateFilename(file.originalname, true, categorySlug);
+      console.log(`Designer ID: ${designerId || 'não especificado'}`);
+      const imagePath = this.generateFilename(file.originalname, false, categorySlug, designerId);
+      const thumbnailPath = this.generateFilename(file.originalname, true, categorySlug, designerId);
 
       // Upload da imagem principal para o Supabase
       const { error: imageError, data: imageData } = await supabase.storage
