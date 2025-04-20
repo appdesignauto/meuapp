@@ -2910,8 +2910,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         console.log("ETAPA 1: Tentando upload para R2 Storage (bucket 'designautoimages')...");
         
-        // Ler o arquivo para um buffer
-        const fileBuffer = fs.readFileSync(req.file.path);
+        // Verificar se temos o arquivo e se o caminho é válido
+        if (!req.file || !req.file.buffer) {
+          console.error("❌ ETAPA 1: Arquivo inválido ou buffer não disponível para R2");
+          throw new Error("Arquivo inválido ou buffer não disponível");
+        }
+        
+        console.log(`Arquivo para R2: ${req.file.originalname}, tamanho: ${req.file.size}, tipo: ${req.file.mimetype}`);
+        
+        // Usar diretamente o buffer do arquivo (multer)
+        const fileBuffer = req.file.buffer;
         
         // Fazer upload via serviço R2
         const r2Result = await r2StorageService.uploadAvatar(user.id, fileBuffer, req.file.mimetype);
