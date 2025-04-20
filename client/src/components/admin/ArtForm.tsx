@@ -96,7 +96,13 @@ const ArtForm = ({ isOpen, onClose, editingArt }: ArtFormProps) => {
         if (selectedCategory?.slug) {
           console.log(`Usando categoria ${selectedCategory.name} (${selectedCategory.slug}) para organização`);
           formData.append('categorySlug', selectedCategory.slug);
+          // Log adicional para debugging
+          console.log(`Enviando categorySlug: ${selectedCategory.slug}`);
+        } else {
+          console.warn("Categoria selecionada não possui slug!");
         }
+      } else {
+        console.log("Nenhuma categoria selecionada para upload");
       }
       
       // Obter usuário atual para o ID do designer (se estiver autenticado)

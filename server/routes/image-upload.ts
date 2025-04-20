@@ -51,6 +51,8 @@ router.post(
               const categorySlug = req.body.categorySlug || req.query.categorySlug;
               if (categorySlug) {
                 console.log(`Categoria fornecida para organização: ${categorySlug}`);
+              } else {
+                console.log(`Nenhuma categoria fornecida para organização de pastas`);
               }
               
               // Obtém o ID do designer (se fornecido) para a estrutura de pastas
@@ -62,6 +64,13 @@ router.post(
               } else {
                 console.log(`Nenhum ID de designer fornecido, usando estrutura padrão`);
               }
+              
+              // Log para debugging do FormData
+              console.log('FormData enviado:', {
+                categorySlug: req.body.categorySlug,
+                designerId: req.body.designerId,
+                storage: req.body.storage
+              });
               
               // Passa a categoria e o ID do designer para o método de upload
               const urls = await supabaseStorageService.uploadImage(

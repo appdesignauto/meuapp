@@ -264,14 +264,21 @@ export class SupabaseStorageService {
     // Se tivermos o ID do designer, criamos uma pasta específica para ele
     if (designerId) {
       basePath += `designer_${designerId}/`;
-    }
-    
-    // Se tivermos uma categoria, adicionamos como subpasta
-    if (categorySlug) {
-      basePath += `${categorySlug}/`;
+      
+      // Se tivermos uma categoria, adicionamos como subpasta dentro da pasta do designer
+      if (categorySlug) {
+        basePath += `${categorySlug}/`;
+      }
+    } else {
+      // Se não tivermos designer mas tivermos categoria, criamos uma pasta de categoria na raiz
+      if (categorySlug) {
+        basePath += `category_${categorySlug}/`;
+      }
     }
     
     // Formato final: designer_[id]/[categoria]/[timestamp]_[uuid].webp
+    // ou thumbnails/designer_[id]/[categoria]/[timestamp]_[uuid].webp
+    console.log(`Gerando caminho para arquivo: ${basePath}${timestamp}_${uuid}${extension}`);
     return `${basePath}${timestamp}_${uuid}${extension}`;
   }
 
@@ -311,10 +318,16 @@ export class SupabaseStorageService {
       });
 
       // Gera nomes de arquivos únicos com estrutura de pastas hierárquica
-      console.log(`Categoria: ${categorySlug || 'não especificada'}`);
-      console.log(`Designer ID: ${designerId || 'não especificado'}`);
+      console.log(`Usando parâmetros para estrutura de pastas:`);
+      console.log(`- Categoria (slug): ${categorySlug || '(não especificada)'}`);
+      console.log(`- Designer ID: ${designerId || '(não especificado)'}`);
+      
       const imagePath = this.generateFilename(file.originalname, false, categorySlug, designerId);
       const thumbnailPath = this.generateFilename(file.originalname, true, categorySlug, designerId);
+      
+      console.log(`Estrutura de pastas gerada:`);
+      console.log(`- Imagem principal: ${imagePath}`);
+      console.log(`- Thumbnail: ${thumbnailPath}`);
 
       // Upload da imagem principal para o Supabase
       const { error: imageError, data: imageData } = await supabase.storage
