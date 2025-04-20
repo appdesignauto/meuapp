@@ -161,6 +161,7 @@ function App() {
               <AppLayout>
                 <AppRoutes />
               </AppLayout>
+              <EmailVerificationModal />
             </Router>
             <Toaster />
           </SupabaseAuthProvider>

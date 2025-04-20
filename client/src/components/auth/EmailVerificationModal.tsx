@@ -59,7 +59,7 @@ export function EmailVerificationModal() {
         toast({
           title: "Email verificado com sucesso!",
           description: "Agora você tem acesso completo à plataforma.",
-          variant: "success",
+          variant: "default",
         });
         
         // Recarregar a página para atualizar os dados do usuário
@@ -94,7 +94,7 @@ export function EmailVerificationModal() {
         toast({
           title: "Código reenviado!",
           description: "Um novo código de verificação foi enviado para seu e-mail.",
-          variant: "success",
+          variant: "default",
         });
         
         // Atualiza o status da verificação
