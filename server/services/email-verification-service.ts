@@ -2,18 +2,6 @@ import { db } from "../db";
 import { sql } from "drizzle-orm";
 import { randomInt } from "crypto";
 import { emailService } from "./email-service";
-import { pgTable, serial, integer, text, timestamp, varchar } from "drizzle-orm/pg-core";
-
-// Esquema da tabela de códigos de verificação
-export const emailVerificationCodes = pgTable("emailVerificationCodes", {
-  id: serial("id").primaryKey(),
-  userId: integer("userId").notNull(),
-  code: varchar("code", { length: 6 }).notNull(),
-  email: text("email").notNull(),
-  createdAt: timestamp("createdAt").notNull().defaultNow(),
-  expiresAt: timestamp("expiresAt").notNull(),
-  used: integer("used").notNull().default(0),
-});
 
 export class EmailVerificationService {
   private CODE_EXPIRATION_HOURS = 24; // Código válido por 24 horas
@@ -25,14 +13,14 @@ export class EmailVerificationService {
     const now = new Date();
     
     // Buscar códigos válidos e não utilizados
-    const results = await db
-      .select()
-      .from(emailVerificationCodes)
-      .where(sql`${emailVerificationCodes.userId} = ${userId} AND 
-               ${emailVerificationCodes.expiresAt} > ${now} AND 
-               ${emailVerificationCodes.used} = 0`);
+    const results = await db.execute(sql`
+      SELECT * FROM "emailVerificationCodes" 
+      WHERE "userId" = ${userId} 
+      AND "expiresAt" > ${now} 
+      AND "isUsed" = false
+    `);
     
-    return results.length > 0;
+    return results.rows.length > 0;
   }
 
   /**
@@ -43,12 +31,14 @@ export class EmailVerificationService {
       // Verificar se já existe um código pendente
       const hasPending = await this.hasPendingVerificationCode(userId);
       
-      // Se já existir, inative-o (marque como usado) antes de criar um novo
+      // Se já existir, inative-o antes de criar um novo
       if (hasPending) {
-        await db
-          .update(emailVerificationCodes)
-          .set({ used: 1 })
-          .where(sql`${emailVerificationCodes.userId} = ${userId} AND ${emailVerificationCodes.used} = 0`);
+        const now = new Date();
+        await db.execute(sql`
+          UPDATE "emailVerificationCodes"
+          SET "isUsed" = true, "usedAt" = ${now}
+          WHERE "userId" = ${userId} AND "isUsed" = false
+        `);
       }
       
       // Gerar código de 6 dígitos
@@ -57,16 +47,14 @@ export class EmailVerificationService {
       // Calcular data de expiração (24 horas a partir de agora)
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + this.CODE_EXPIRATION_HOURS);
+      const createdAt = new Date();
       
       // Salvar o código no banco de dados
-      await db.insert(emailVerificationCodes).values({
-        userId,
-        email,
-        code,
-        expiresAt,
-        createdAt: new Date(),
-        used: 0
-      });
+      await db.execute(sql`
+        INSERT INTO "emailVerificationCodes" 
+        ("userId", "email", "code", "expiresAt", "createdAt", "isUsed")
+        VALUES (${userId}, ${email}, ${code}, ${expiresAt}, ${createdAt}, false)
+      `);
       
       // Enviar o e-mail de verificação com o código gerado
       const result = await emailService.sendEmailVerification(email, code);
@@ -96,15 +84,15 @@ export class EmailVerificationService {
       const now = new Date();
       
       // Buscar o código de verificação do usuário que ainda é válido
-      const results = await db
-        .select()
-        .from(emailVerificationCodes)
-        .where(sql`${emailVerificationCodes.userId} = ${userId} AND 
-                 ${emailVerificationCodes.code} = ${code} AND 
-                 ${emailVerificationCodes.expiresAt} > ${now} AND 
-                 ${emailVerificationCodes.used} = 0`);
+      const results = await db.execute(sql`
+        SELECT * FROM "emailVerificationCodes"
+        WHERE "userId" = ${userId}
+        AND "code" = ${code}
+        AND "expiresAt" > ${now}
+        AND "isUsed" = false
+      `);
       
-      if (results.length === 0) {
+      if (results.rows.length === 0) {
         return { 
           success: false, 
           message: "Código inválido ou expirado. Verifique o código ou solicite um novo." 
@@ -112,10 +100,12 @@ export class EmailVerificationService {
       }
       
       // Marcar o código como utilizado
-      await db
-        .update(emailVerificationCodes)
-        .set({ used: 1 })
-        .where(sql`${emailVerificationCodes.id} = ${results[0].id}`);
+      const usedAt = new Date();
+      await db.execute(sql`
+        UPDATE "emailVerificationCodes"
+        SET "isUsed" = true, "usedAt" = ${usedAt}
+        WHERE "id" = ${results.rows[0].id}
+      `);
       
       return { success: true };
     } catch (error) {

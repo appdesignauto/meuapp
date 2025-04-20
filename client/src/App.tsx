@@ -9,6 +9,7 @@ import { SupabaseAuthProvider } from "@/hooks/use-supabase-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { ScrollToTop } from "@/hooks/useScrollTop";
 import { ThemeProvider } from "@/components/theme-provider";
+import { EmailVerificationModal } from "@/components/auth/EmailVerificationModal";
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
