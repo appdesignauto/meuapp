@@ -6,7 +6,7 @@ const BREVO_API_KEY = process.env.BREVO_API_KEY;
 // Modo de desenvolvimento (simulação de envio)
 // Definir como true para desenvolvimento/teste
 // Em produção, definir como false para usar o Brevo real
-const DEV_MODE = true; 
+const DEV_MODE = false; 
 
 // Configurações de remetentes disponíveis no Brevo
 const SENDERS = {
