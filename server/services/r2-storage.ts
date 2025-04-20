@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 const AVATAR_BUCKET_NAME = 'designautoimages';
 
 // Configurações para Cloudflare R2
-const BUCKET_NAME = process.env.R2_BUCKET_NAME || 'designautoimages';
+const BUCKET_NAME = 'designautoimages'; // Nome fixo do bucket
 const PUBLIC_URL = process.env.R2_PUBLIC_URL || 'https://pub-484b1f980bd24bb893017d5185fbfa93.r2.dev';
 
 // Certifique-se de que o endpoint esteja no formato correto incluindo .r2.cloudflarestorage.com
