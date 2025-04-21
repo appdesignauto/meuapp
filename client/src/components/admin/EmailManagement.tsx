@@ -474,14 +474,14 @@ export default function EmailManagement() {
                       </div>
                       <div>
                         <p><strong>Email:</strong> {verificationResult.user.email}</p>
-                        <p>
+                        <div>
                           <strong>Status de Verificação:</strong> {' '}
                           {verificationResult.user.emailconfirmed ? (
                             <Badge className="bg-green-500 hover:bg-green-600">Verificado</Badge>
                           ) : (
                             <Badge variant="destructive">Não Verificado</Badge>
                           )}
-                        </p>
+                        </div>
                         {!verificationResult.user.emailconfirmed && (
                           <div className="flex gap-2 mt-2">
                             <Button 
