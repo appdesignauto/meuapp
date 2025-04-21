@@ -2,6 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Estilos para o componente PhoneInput */
+.phone-input-container {
+  @apply w-full;
+}
+
+.phone-input {
+  @apply w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+}
+
+.PhoneInputCountry {
+  @apply mr-2;
+}
+
+.PhoneInputCountrySelect {
+  @apply py-1 rounded-md border border-input bg-background text-sm focus-visible:outline-none;
+}
+
+.PhoneInputInput {
+  @apply w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
