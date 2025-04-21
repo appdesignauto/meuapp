@@ -108,14 +108,10 @@ const AuthPage = () => {
       };
       
       console.log("Enviando credenciais de login:", loginData);
-      const userData = await loginMutation.mutateAsync(loginData);
+      await loginMutation.mutateAsync(loginData);
       
-      // Verificar se o email foi confirmado
-      if (userData && userData.emailconfirmed === false) {
-        setLocation("/email-verification");
-      } else {
-        setLocation("/");
-      }
+      // Todos os emails já são verificados automaticamente
+      setLocation("/");
     } catch (error) {
       // Erro já tratado no hook useAuth
     }
@@ -128,7 +124,7 @@ const AuthPage = () => {
       const username = values.email.split('@')[0];
       // Adicionar valores padrão para manter API compatível
       // Não precisamos definir origemassinatura aqui, pois o backend já define automaticamente como "auto"
-      const userData = await registerMutation.mutateAsync({ 
+      await registerMutation.mutateAsync({ 
         ...registerData, 
         username,
         nivelacesso: "usuario", // Definir nível de acesso como "usuario" (gratuito)
@@ -137,13 +133,12 @@ const AuthPage = () => {
         periodType: "mensal" // Período mensal por padrão
       });
       
-      // Se o registro foi bem-sucedido, redirecionar para a página de verificação de e-mail
-      // Novos usuários sempre são criados com emailconfirmed=false
-      setLocation("/email-verification");
+      // O email já é verificado automaticamente, redirecionar diretamente para a home
+      setLocation("/");
       
       toast({
         title: "Conta criada com sucesso!",
-        description: "Verifique seu e-mail para ativar sua conta.",
+        description: "Sua conta foi ativada automaticamente. Bem-vindo(a)!",
         variant: "success",
       });
     } catch (error) {
