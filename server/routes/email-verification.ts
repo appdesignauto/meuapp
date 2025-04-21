@@ -5,6 +5,9 @@ import { storage } from "../storage";
 const router = Router();
 const emailVerificationService = new EmailVerificationService();
 
+// Verificar se estamos em ambiente de desenvolvimento
+const isDevelopment = process.env.NODE_ENV === 'development';
+
 // Middleware para garantir que o usuário está autenticado
 const isAuthenticated = (req: Request, res: Response, next: Function) => {
   if (!req.isAuthenticated()) {
@@ -16,6 +19,14 @@ const isAuthenticated = (req: Request, res: Response, next: Function) => {
 // Obter status da verificação de email (se já foi enviado um código)
 router.get("/status", isAuthenticated, async (req: Request, res: Response) => {
   try {
+    // Em ambiente de desenvolvimento, simular que o email já está verificado
+    if (isDevelopment) {
+      return res.json({
+        success: true,
+        sent: true
+      });
+    }
+    
     const userId = req.user!.id;
     
     // Verifica se já existe um código de verificação pendente
@@ -39,6 +50,12 @@ router.post("/resend", isAuthenticated, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const userEmail = req.user!.email;
+    
+    // Em ambiente de desenvolvimento, simular envio bem-sucedido sem enviar email
+    if (isDevelopment) {
+      console.log(`[DEV MODE] Simulando envio de código de verificação para ${userEmail}`);
+      return res.json({ success: true });
+    }
     
     if (!userEmail) {
       return res.status(400).json({
@@ -65,6 +82,13 @@ router.post("/verify", isAuthenticated, async (req: Request, res: Response) => {
   try {
     const { code } = req.body;
     const userId = req.user!.id;
+    
+    // Em ambiente de desenvolvimento, aceitar qualquer código e marcar email como confirmado
+    if (isDevelopment) {
+      console.log(`[DEV MODE] Verificando código para usuário ${userId} (simulado)`);
+      await storage.updateUserEmailConfirmed(userId, true);
+      return res.json({ success: true });
+    }
     
     if (!code) {
       return res.status(400).json({

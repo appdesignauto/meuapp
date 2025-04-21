@@ -15,7 +15,15 @@ import { Loader2, CheckCircle, AlertCircle, RefreshCw } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 
+// Verificação se estamos em modo de desenvolvimento
+const isDevelopment = process.env.NODE_ENV === 'development';
+
 export function EmailVerificationModal() {
+  // MODO DESENVOLVIMENTO: Não mostrar o modal durante o desenvolvimento para evitar loops de renderização
+  if (isDevelopment) {
+    return null;
+  }
+
   const { user, isLoading } = useAuth();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
