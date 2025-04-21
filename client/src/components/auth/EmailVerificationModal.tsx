@@ -11,7 +11,7 @@ import {
   DialogTitle 
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle, AlertCircle, RefreshCw, ShieldCheck } from "lucide-react";
+import { Loader2, CheckCircle, AlertCircle, RefreshCw, ShieldCheck, Mail } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { motion } from "framer-motion";
@@ -227,7 +227,21 @@ export function EmailVerificationModal() {
             <div className="my-6">
               <div className="flex items-center justify-center mb-4">
                 {verificationStatus?.sent ? (
-                  <CheckCircle className="h-12 w-12 text-green-500" />
+                  <motion.div
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: 1 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 260,
+                      damping: 20,
+                      repeat: Infinity,
+                      repeatType: "mirror",
+                      repeatDelay: 3,
+                      duration: 0.5
+                    }}
+                  >
+                    <Mail className="h-12 w-12 text-green-500" />
+                  </motion.div>
                 ) : (
                   <AlertCircle className="h-12 w-12 text-amber-500" />
                 )}
