@@ -1,9 +1,13 @@
-import { emailService } from './email-service';
+import fetch from 'node-fetch';
 
 /**
  * Serviço para enviar emails de boas-vindas aos novos usuários
  */
 class WelcomeEmailService {
+  private readonly BREVO_API_KEY = process.env.BREVO_API_KEY;
+  private readonly BREVO_API_URL = 'https://api.brevo.com/v3';
+  private initialized = !!process.env.BREVO_API_KEY;
+  
   /**
    * Envia um email de boas-vindas para o usuário recém-registrado
    * @param email Email do usuário
@@ -12,6 +16,11 @@ class WelcomeEmailService {
    */
   public async sendWelcomeEmail(email: string, name: string): Promise<boolean> {
     try {
+      if (!this.initialized) {
+        console.error('❌ Serviço de email não inicializado (BREVO_API_KEY não configurada)');
+        return false;
+      }
+      
       const htmlContent = `
         <html>
           <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">
@@ -53,13 +62,54 @@ class WelcomeEmailService {
         </html>
       `;
       
+      // Converter HTML para texto simples para clientes sem suporte a HTML
+      const textContent = htmlContent.replace(/<[^>]*>/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      
       const subject = "Bem-vindo ao Design Auto! 🚗✨";
       
-      // Chamar o serviço de email com o conteúdo HTML e assunto personalizados
-      // Usar o método específico para envio de email de boas-vindas
-      const result = await emailService.sendWelcomeEmail(email, name || email.split('@')[0]);
+      // Enviar email diretamente via Brevo API
+      if (process.env.NODE_ENV === 'development' && process.env.DEV_MAIL_SIMULATION === 'true') {
+        console.log(`🧪 [DEV MODE] Simulando envio de email para ${email}`);
+        console.log(`Assunto: ${subject}`);
+        console.log(`Conteúdo: Email de boas-vindas para ${name}`);
+        return true;
+      }
       
-      return result.success;
+      const response = await fetch(`${this.BREVO_API_URL}/smtp/email`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'api-key': this.BREVO_API_KEY!
+        },
+        body: JSON.stringify({
+          sender: {
+            name: 'Design Auto',
+            email: 'contato@designauto.com.br'
+          },
+          to: [
+            {
+              email,
+              name: name || email.split('@')[0]
+            }
+          ],
+          subject,
+          htmlContent,
+          textContent
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`✅ Email de boas-vindas enviado com sucesso para ${email}: ${data.messageId}`);
+        return true;
+      } else {
+        const errorData = await response.text();
+        console.error(`❌ Erro ao enviar email de boas-vindas para ${email}: ${response.status} ${response.statusText} - ${errorData}`);
+        return false;
+      }
       
     } catch (error) {
       console.error(`[WelcomeEmailService] Erro ao enviar email de boas-vindas para ${email}:`, error);
