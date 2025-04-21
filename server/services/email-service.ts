@@ -6,7 +6,7 @@ const BREVO_API_KEY = process.env.BREVO_API_KEY || '';
 // Modo de desenvolvimento (simulação de envio)
 // Definir como true para desenvolvimento/teste
 // Em produção, definir como false para usar o Brevo real
-const DEV_MODE = true; // Ativando temporariamente modo de desenvolvimento para garantir que os emails sejam processados
+const DEV_MODE = false; // Usando API real do Brevo para garantir entrega de emails
 
 // Opções de segurança para garantir entrega de emails
 const MOBILE_BACKUP_MODE = true; // Modo de backup para dispositivos móveis

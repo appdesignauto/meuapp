@@ -3,7 +3,7 @@ import { useLocation } from 'wouter';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/context/AuthContext';
 import { Link } from 'wouter';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -49,9 +49,13 @@ const Login = () => {
     setIsSubmitting(true);
     try {
       await login(data.username, data.password);
-      // Redirecionar para o painel do usuário ao invés da página inicial
-      setLocation('/painel/inicio');
       console.log('Login bem-sucedido, redirecionando para /painel/inicio');
+      
+      // Adicionando um pequeno atraso para garantir que o estado do usuário seja atualizado
+      setTimeout(() => {
+        setLocation('/painel/inicio');
+      }, 200);
+      
     } catch (error) {
       console.error('Login failed:', error);
     } finally {
