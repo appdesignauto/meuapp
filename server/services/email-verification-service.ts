@@ -5,6 +5,17 @@ import { emailService } from "./email-service";
 
 export class EmailVerificationService {
   private CODE_EXPIRATION_HOURS = 24; // Código válido por 24 horas
+  
+  // Instância única para ser usada em toda a aplicação
+  private static instance: EmailVerificationService;
+  
+  // Método para obter a instância única
+  public static getInstance(): EmailVerificationService {
+    if (!EmailVerificationService.instance) {
+      EmailVerificationService.instance = new EmailVerificationService();
+    }
+    return EmailVerificationService.instance;
+  }
 
   /**
    * Verifica se existe um código de verificação pendente para o usuário

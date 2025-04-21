@@ -3,7 +3,7 @@ import { EmailVerificationService } from "../services/email-verification-service
 import { storage } from "../storage";
 
 const router = Router();
-const emailVerificationService = new EmailVerificationService();
+const emailVerificationService = EmailVerificationService.getInstance();
 
 // Middleware para garantir que o usuário está autenticado
 const isAuthenticated = (req: Request, res: Response, next: Function) => {

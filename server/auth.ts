@@ -9,6 +9,7 @@ import connectPg from "connect-pg-simple";
 import { db, pool } from "./db";
 import { eq } from "drizzle-orm";
 import { supabaseAuthService } from "./services/supabase-auth";
+import { EmailVerificationService } from "./services/email-verification-service";
 
 declare global {
   namespace Express {
