@@ -33,6 +33,7 @@ export const users = pgTable("users", {
   // Campos para informações de perfil adicional
   website: text("website"),
   location: text("location"),
+  phone: text("phone"), // Novo campo para número de telefone
   
   // Campo para compatibilidade com o código existente - será descontinuado gradualmente
   role: text("role"),
@@ -41,7 +42,7 @@ export const users = pgTable("users", {
   supabaseId: text("supabaseId").unique(),
   
   // Campo para controlar status de confirmação de email
-  emailconfirmed: boolean("emailconfirmed").default(false),
+  emailconfirmed: boolean("emailconfirmed").default(true), // Alterado para true por padrão
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({

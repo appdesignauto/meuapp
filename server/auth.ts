@@ -297,28 +297,27 @@ export function setupAuth(app: Express) {
         role: nivelAcesso, // Manter role para compatibilidade
         isactive: true,
         origemassinatura: origemAssinatura, // Define origem como "auto"
-        emailconfirmed: false, // Explicitamente definir como não confirmado
+        emailconfirmed: true, // Definir como true por padrão
       });
       
-      // Enviar email de verificação
+      // Enviar e-mail de boas-vindas
       try {
-        // Importar o serviço de verificação de email
-        const { emailVerificationService } = await import('./services/email-verification-service');
+        // Importar o serviço de email de boas-vindas
+        const { welcomeEmailService } = await import('./services/welcome-email-service');
         
-        // Enviar email de verificação
-        const sent = await emailVerificationService.sendVerificationEmail(
-          newUser.id, 
+        // Enviar email de boas-vindas
+        const sent = await welcomeEmailService.sendWelcomeEmail(
           newUser.email,
           newUser.name || 'Usuário'
         );
         
         if (sent) {
-          console.log(`E-mail de verificação enviado para ${newUser.email}`);
+          console.log(`E-mail de boas-vindas enviado para ${newUser.email}`);
         } else {
-          console.warn(`Falha ao enviar e-mail de verificação para ${newUser.email}`);
+          console.warn(`Falha ao enviar e-mail de boas-vindas para ${newUser.email}`);
         }
       } catch (emailError) {
-        console.error("Erro ao enviar e-mail de verificação:", emailError);
+        console.error("Erro ao enviar e-mail de boas-vindas:", emailError);
         // Não interromper o fluxo se o envio de e-mail falhar - apenas logar o erro
       }
       
@@ -336,8 +335,7 @@ export function setupAuth(app: Express) {
         return res.status(201).json({
           success: true,
           user: userWithoutPassword,
-          verificationSent: true,
-          message: "Usuário criado com sucesso. Por favor, verifique seu e-mail para confirmar sua conta."
+          message: "Usuário criado com sucesso! Enviamos um e-mail de boas-vindas."
         });
       });
     } catch (error) {
