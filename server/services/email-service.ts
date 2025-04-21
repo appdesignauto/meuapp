@@ -112,15 +112,14 @@ class EmailService {
   }
 
   /**
-   * Método utilitário para enviar e-mail - usado internamente por outros métodos especializados
+   * Método utilitário para enviar e-mail - pode ser usado por serviços externos
    * @param sender O remetente do e-mail (suporte ou contato)
    * @param to Array com destinatários (email e nome)
    * @param subject Assunto do e-mail
    * @param htmlContent Conteúdo HTML do e-mail
    * @returns Promise<{success: boolean, messageId?: string}>
-   * @private
    */
-  private async sendBrevoEmail(
+  public async sendBrevoEmail(
     sender: typeof SENDERS.suporte | typeof SENDERS.contato,
     to: Array<{ email: string; name?: string }>,
     subject: string,

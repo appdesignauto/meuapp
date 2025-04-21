@@ -26,12 +26,11 @@ export function EmailVerificationModal() {
   const [verificationSuccess, setVerificationSuccess] = useState(false);
 
   // Verificar se deve mostrar o modal (usuário logado com email não confirmado)
+  // No novo sistema, todos os emails são automaticamente verificados
+  // então este componente não precisa mais ser exibido
   useEffect(() => {
-    if (!isLoading && user && user.emailconfirmed === false) {
-      setOpen(true);
-    } else {
-      setOpen(false);
-    }
+    // Forçar modal a permanecer fechado
+    setOpen(false);
   }, [user, isLoading]);
 
   // Obter o status atual da verificação
@@ -161,10 +160,9 @@ export function EmailVerificationModal() {
     }
   };
 
-  // Se não tiver usuário ou o email já estiver confirmado, não mostrar o modal
-  if (!user || user.emailconfirmed === true) {
-    return null;
-  }
+  // Com a nova implementação, sempre retornar null para desativar completamente o componente
+  // independentemente do status de verificação do email
+  return null;
 
   return (
     <Dialog open={open} onOpenChange={setOpen} modal={true}>
