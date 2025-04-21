@@ -4,6 +4,7 @@ import { storage } from "../storage";
 import { db } from "../db";
 import { sql } from "drizzle-orm";
 import { isAdmin } from "../middlewares/auth";
+import { specialEmailHandler } from "../services/special-email-handler";
 
 const router = Router();
 const emailVerificationService = EmailVerificationService.getInstance();
@@ -246,6 +247,166 @@ router.post("/admin/verify/:userId", isAdmin, async (req: Request, res: Response
     return res.status(500).json({
       success: false,
       message: "Erro ao confirmar email do usuário"
+    });
+  }
+});
+
+// Rota especial para lidar com emails problemáticos conhecidos
+router.post("/special-case/:email", isAdmin, async (req: Request, res: Response) => {
+  try {
+    const { email } = req.params;
+    
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email não fornecido"
+      });
+    }
+    
+    // Verifica se o email é um caso especial conhecido
+    if (!specialEmailHandler.isProblematicEmail(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Este email não está na lista de casos especiais conhecidos"
+      });
+    }
+    
+    console.log(`[SpecialEmailRoute] Iniciando tratamento especial para ${email} pelo administrador ${req.user!.id}`);
+    
+    // Envia email usando o tratamento especial
+    const result = await specialEmailHandler.sendSpecialVerificationEmail(email);
+    
+    if (result.success) {
+      console.log(`[SpecialEmailRoute] Email enviado com sucesso para ${email} (código: ${result.code})`);
+      return res.json({
+        success: true,
+        message: `Email enviado com sucesso para ${email}`,
+        code: result.code // Incluir o código na resposta para fins de depuração
+      });
+    } else {
+      console.log(`[SpecialEmailRoute] Falha ao enviar email para ${email}`);
+      return res.status(500).json({
+        success: false,
+        message: `Falha ao enviar email para ${email}. Tente novamente ou verifique os logs.`
+      });
+    }
+  } catch (error) {
+    console.error("[SpecialEmailRoute] Erro ao processar caso especial:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Erro ao processar caso especial de email"
+    });
+  }
+});
+
+// Rota especial para verificação direta de códigos para emails problemáticos
+router.post("/special-verify/:email", isAdmin, async (req: Request, res: Response) => {
+  try {
+    const { email } = req.params;
+    const { code } = req.body;
+    
+    if (!email || !code) {
+      return res.status(400).json({
+        success: false,
+        message: "Email ou código não fornecidos"
+      });
+    }
+    
+    // Verifica se o email é um caso especial conhecido
+    if (!specialEmailHandler.isProblematicEmail(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Este email não está na lista de casos especiais conhecidos"
+      });
+    }
+    
+    console.log(`[SpecialEmailRoute] Verificando código para caso especial ${email}: ${code}`);
+    
+    // Verifica o código usando o método especial
+    const isValid = await specialEmailHandler.verifyCodeSpecialCase(email, code);
+    
+    if (isValid) {
+      console.log(`[SpecialEmailRoute] Código válido para ${email}`);
+      
+      // Buscar o usuário pelo email
+      const user = await storage.getUserByEmail(email);
+      if (user) {
+        // Marca o email como confirmado
+        await storage.updateUserEmailConfirmed(user.id, true);
+        
+        console.log(`[SpecialEmailRoute] Email ${email} confirmado com sucesso`);
+        
+        return res.json({
+          success: true,
+          message: "Email confirmado com sucesso"
+        });
+      } else {
+        return res.status(404).json({
+          success: false,
+          message: "Usuário não encontrado com este email"
+        });
+      }
+    } else {
+      console.log(`[SpecialEmailRoute] Código inválido para ${email}`);
+      return res.status(400).json({
+        success: false,
+        message: "Código inválido"
+      });
+    }
+  } catch (error) {
+    console.error("[SpecialEmailRoute] Erro ao verificar código especial:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Erro ao verificar código especial"
+    });
+  }
+});
+
+// Rota para forçar verificação direta de email (para uso administrativo)
+router.post("/force-verification/:email", isAdmin, async (req: Request, res: Response) => {
+  try {
+    const { email } = req.params;
+    
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email não fornecido"
+      });
+    }
+    
+    console.log(`[EmailVerificationForce] Forçando verificação para ${email} pelo administrador ${req.user!.id}`);
+    
+    // Buscar o usuário pelo email
+    const user = await storage.getUserByEmail(email);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Usuário não encontrado com este email"
+      });
+    }
+    
+    // Verificar se o email já está confirmado
+    if (user.emailconfirmed === true) {
+      return res.status(400).json({
+        success: false,
+        message: "O email deste usuário já está confirmado"
+      });
+    }
+    
+    // Confirmar o email do usuário
+    await storage.updateUserEmailConfirmed(user.id, true);
+    
+    console.log(`[EmailVerificationForce] Email ${email} confirmado com sucesso pelo administrador ${req.user!.id}`);
+    
+    return res.json({
+      success: true,
+      message: `Email ${email} verificado com sucesso`
+    });
+  } catch (error) {
+    console.error("[EmailVerificationForce] Erro ao forçar verificação:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Erro ao forçar verificação de email"
     });
   }
 });

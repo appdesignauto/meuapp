@@ -629,7 +629,9 @@ class EmailService {
   public async sendDiagnosticEmail(email: string, subject: string, message: string, options: {
     testMode?: boolean,
     emailProviderCategory?: string,
-    deviceInfo?: any
+    deviceInfo?: any,
+    highPriority?: boolean,
+    bypassFilters?: boolean
   } = {}): Promise<{success: boolean, messageId?: string, error?: string}> {
     try {
       // Extrair nome do email
@@ -644,6 +646,14 @@ class EmailService {
       
       if (options.deviceInfo) {
         this.log(`🔍 Informações do dispositivo: ${JSON.stringify(options.deviceInfo)}`);
+      }
+      
+      if (options.highPriority) {
+        this.log(`⚡ Email com prioridade alta ativada`);
+      }
+      
+      if (options.bypassFilters) {
+        this.log(`🔓 Modo de bypass de filtros ativado`);
       }
       
       // Adicionar metadados de diagnóstico ao conteúdo
