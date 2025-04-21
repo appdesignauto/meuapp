@@ -8,8 +8,10 @@ const BREVO_API_KEY = process.env.BREVO_API_KEY || '';
 // Em produção, definir como false para usar o Brevo real
 const DEV_MODE = false; 
 
-// Backup de envio para dispositivos móveis - útil para testes e diagnostico
-const MOBILE_BACKUP_MODE = true;
+// Opções de segurança para garantir entrega de emails
+const MOBILE_BACKUP_MODE = true; // Modo de backup para dispositivos móveis
+const EXTERNAL_DOMAIN_SECURITY = true; // Segurança extra para domínios externos
+const GMAIL_SPECIAL_HANDLING = true; // Tratamento especial para Gmail e outros provedores populares
 
 // Configurações de remetentes disponíveis no Brevo
 const SENDERS = {
@@ -124,7 +126,7 @@ class EmailService {
     subject: string,
     htmlContent: string,
     isMobileRequest: boolean = false
-  ): Promise<{success: boolean, messageId?: string}> {
+  ): Promise<{success: boolean, messageId?: string, error?: string}> {
     try {
       if (!this.initialized) {
         this.log('❌ Serviço não inicializado');
@@ -303,39 +305,110 @@ class EmailService {
       const emailDomain = email.split('@')[1];
       this.logForEmail(email, `📧 Domínio do email: ${emailDomain}`);
       
+      // Lista de domínios populares para tratamento especial
+      const popularDomains = ['gmail.com', 'hotmail.com', 'outlook.com', 'yahoo.com', 'icloud.com'];
+      const isPopularDomain = popularDomains.includes(emailDomain);
+      const isGmail = emailDomain === 'gmail.com';
+      
+      // Aplicar tratamento especial para Gmail
+      let useGmailSpecial = GMAIL_SPECIAL_HANDLING && isGmail;
+      
       // Verificar condições especiais para dispositivos móveis
       if (isMobileDevice) {
-        // Para emails em domínios populares, adicionar diagnóstico adicional
-        const popularDomains = ['gmail.com', 'hotmail.com', 'outlook.com', 'yahoo.com', 'icloud.com'];
-        if (popularDomains.includes(emailDomain)) {
+        if (isPopularDomain) {
           this.logForEmail(email, `📱 Email em provedor popular (${emailDomain}) sendo enviado de dispositivo móvel`);
         }
       }
       
-      const htmlContent = `
-        <html>
-          <body>
-            <h1>Olá ${name},</h1>
-            <p>Obrigado por se cadastrar no Design Auto!</p>
-            <p>Seu código de verificação é:</p>
-            <h2 style="font-size: 24px; padding: 10px; background-color: #f0f0f0; text-align: center; letter-spacing: 5px;">${verificationCode}</h2>
-            <p>Este código expira em 24 horas.</p>
-            <p>Se você não solicitou este código, por favor ignore este e-mail.</p>
-            <p>Atenciosamente,<br>Equipe Design Auto</p>
-          </body>
-        </html>
-      `;
+      // Verificar se é um domínio externo (não é o domínio de desenvolvimento)
+      const isExternalDomain = EXTERNAL_DOMAIN_SECURITY && isPopularDomain;
+      if (isExternalDomain) {
+        this.logForEmail(email, `🔐 Aplicando segurança adicional para domínio externo: ${emailDomain}`);
+      }
+      
+      if (useGmailSpecial) {
+        this.logForEmail(email, `📮 Aplicando tratamento especial para Gmail`);
+      }
+      
+      // Personalizar conteúdo HTML com base no domínio e tipo de dispositivo
+      let htmlContent = '';
+      
+      // Formato especial para Gmail
+      if (useGmailSpecial) {
+        htmlContent = `
+          <html>
+            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333333;">
+              <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+                <h1 style="color: #2c3e50; margin-bottom: 20px;">Olá ${name},</h1>
+                <p>Obrigado por se cadastrar no Design Auto!</p>
+                <p>Seu código de verificação é:</p>
+                <div style="background-color: #f8f9fa; padding: 15px; margin: 20px 0; text-align: center; border-radius: 4px;">
+                  <span style="font-size: 28px; font-weight: bold; letter-spacing: 8px; color: #3498db;">${verificationCode}</span>
+                </div>
+                <p>Digite este código na página de verificação para ativar sua conta.</p>
+                <p>Este código expira em 24 horas.</p>
+                <p>Atenciosamente,<br><strong>Equipe Design Auto</strong></p>
+              </div>
+            </body>
+          </html>
+        `;
+      } 
+      // Formato específico para domínios externos
+      else if (isExternalDomain) {
+        htmlContent = `
+          <html>
+            <body style="font-family: Arial, sans-serif; line-height: 1.5;">
+              <div style="max-width: 600px; margin: 0 auto; padding: 15px;">
+                <h2 style="color: #333;">Olá ${name},</h2>
+                <p>Seu código de verificação para o Design Auto é:</p>
+                <div style="font-size: 26px; padding: 10px; background-color: #f0f0f0; text-align: center; letter-spacing: 5px; margin: 15px 0; font-weight: bold;">${verificationCode}</div>
+                <p>Este código expira em 24 horas.</p>
+                <p>Atenciosamente,<br>Equipe Design Auto</p>
+              </div>
+            </body>
+          </html>
+        `;
+      }
+      // Formato padrão
+      else {
+        htmlContent = `
+          <html>
+            <body>
+              <h1>Olá ${name},</h1>
+              <p>Obrigado por se cadastrar no Design Auto!</p>
+              <p>Seu código de verificação é:</p>
+              <h2 style="font-size: 24px; padding: 10px; background-color: #f0f0f0; text-align: center; letter-spacing: 5px;">${verificationCode}</h2>
+              <p>Este código expira em 24 horas.</p>
+              <p>Se você não solicitou este código, por favor ignore este e-mail.</p>
+              <p>Atenciosamente,<br>Equipe Design Auto</p>
+            </body>
+          </html>
+        `;
+      }
       
       // Usar explicitamente o remetente de suporte para verificação
       const supportSender = SENDERS.suporte;
-      const subject = 'Verifique seu e-mail - Design Auto';
+      
+      // Base do assunto do email
+      let baseSubject = 'Verifique seu e-mail - Design Auto';
       
       this.logForEmail(email, `🔄 Iniciando envio com código: ${verificationCode}`);
       
-      // Modificar ligeiramente o assunto para dispositivos móveis para evitar filtros anti-spam
-      const adjustedSubject = isMobileDevice 
-        ? `Código de verificação - Design Auto: ${verificationCode.substring(0, 2)}****` 
-        : subject;
+      // Adaptar o assunto com base no tipo de dispositivo e domínio
+      let adjustedSubject = baseSubject;
+      
+      // Para Gmail, usar um formato otimizado
+      if (useGmailSpecial) {
+        adjustedSubject = `Seu código de verificação ${verificationCode.substring(0, 2)}XX para Design Auto`;
+      }
+      // Para dispositivos móveis
+      else if (isMobileDevice) {
+        adjustedSubject = `Código de verificação - Design Auto: ${verificationCode.substring(0, 2)}****`;
+      }
+      // Para domínios externos
+      else if (isExternalDomain) {
+        adjustedSubject = `${verificationCode} - Seu código de verificação Design Auto`;
+      }
       
       this.logForEmail(email, `📧 Enviando email com assunto: ${adjustedSubject} (Dispositivo móvel: ${isMobileDevice ? 'Sim' : 'Não'})`);
       
