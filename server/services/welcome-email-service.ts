@@ -54,7 +54,12 @@ class WelcomeEmailService {
       `;
       
       const subject = "Bem-vindo ao Design Auto! 🚗✨";
-      return await emailService.sendWelcomeEmail(email, name || email.split('@')[0]);
+      
+      // Chamar o serviço de email com o conteúdo HTML e assunto personalizados
+      // Usar o método específico para envio de email de boas-vindas
+      const result = await emailService.sendWelcomeEmail(email, name || email.split('@')[0]);
+      
+      return result.success;
       
     } catch (error) {
       console.error(`[WelcomeEmailService] Erro ao enviar email de boas-vindas para ${email}:`, error);
