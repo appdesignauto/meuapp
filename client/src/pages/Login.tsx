@@ -48,16 +48,28 @@ const Login = () => {
   const onSubmit = async (data: LoginFormValues) => {
     setIsSubmitting(true);
     try {
-      await login(data.username, data.password);
+      const result = await login(data.username, data.password);
       console.log('Login bem-sucedido, redirecionando para /painel/inicio');
       
-      // Adicionando um pequeno atraso para garantir que o estado do usuário seja atualizado
+      // Após login bem-sucedido, aguardar um pouco mais para garantir que o estado 
+      // seja atualizado em todos os componentes
       setTimeout(() => {
-        setLocation('/painel/inicio');
-      }, 200);
+        // Verificar se login ainda está válido antes de redirecionar
+        if (localStorage.getItem('isAuthenticated') === 'true') {
+          console.log('Autenticação confirmada, redirecionando...');
+          window.location.href = '/painel/inicio'; // Usando navegação direta para garantir refresh completo
+        } else {
+          console.log('Redirecionando com wouter');
+          setLocation('/painel/inicio');
+        }
+      }, 500); // Aumento do tempo de espera
       
     } catch (error) {
       console.error('Login failed:', error);
+      form.setError("username", { 
+        type: "manual", 
+        message: "Usuário/email ou senha incorretos" 
+      });
     } finally {
       setIsSubmitting(false);
     }

@@ -88,40 +88,9 @@ const Header = () => {
   // Contador para forçar recarregamento das configurações
   const [settingsRefreshCounter, setSettingsRefreshCounter] = useState(0);
   
-  // Aumentar o contador a cada 5 segundos para forçar recarregamento
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setSettingsRefreshCounter(prev => prev + 1);
-    }, 5000);
-    
-    return () => clearInterval(interval);
-  }, []);
-  
-  // Forçar recarregamento imediato das configurações ao subir um novo logo
-  useEffect(() => {
-    // Função para lidar com o evento de atualização do logo
-    const handleLogoUpdated = (event: Event) => {
-      console.log("Logo atualizado, atualizando configurações sem recarregar...");
-      
-      // Extrair detalhes do evento customizado
-      const customEvent = event as CustomEvent<{logoUrl: string, timestamp: number}>;
-      
-      // Forçar recarregar as configurações imediatamente
-      setSettingsRefreshCounter(prev => prev + 1000); // Valor alto para garantir nova consulta
-    };
-    
-    // Adicionar listener para o evento customizado 'logo-updated'
-    window.addEventListener('logo-updated', handleLogoUpdated);
-    
-    return () => {
-      // Remover listener quando componente for desmontado
-      window.removeEventListener('logo-updated', handleLogoUpdated);
-    };
-  }, []);
-  
-  // Buscamos as configurações do site com um mecanismo para atualização do logo
+  // Buscamos as configurações do site sem atualização automática frequente
   const { data: siteSettings, refetch: refetchSettings } = useQuery({
-    queryKey: ['/api/site-settings', settingsRefreshCounter],
+    queryKey: ['/api/site-settings'],
     queryFn: async () => {
       try {
         const res = await fetch('/api/site-settings');
@@ -132,33 +101,36 @@ const Header = () => {
         return { logoUrl: '/images/logo.png' };
       }
     },
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
     refetchOnMount: true,
-    staleTime: 0 // Sempre buscar dados frescos
+    staleTime: 60000 // Cache por 1 minuto
   });
   
-  // Adicionar um listener global para a API de atualização de logo
+  // Apenas um único listener para todos os eventos de atualização do logo
   useEffect(() => {
     // Função para forçar recarregamento das configurações
-    const forceRefreshSettings = () => {
-      console.log("Detectada mudança no logo, recarregando configurações...");
+    const refreshSettings = () => {
+      console.log("Atualizando configurações do site...");
       refetchSettings();
-      setSettingsRefreshCounter(prev => prev + 1);
     };
     
-    // Adicionar listener de evento global
-    window.addEventListener('logo-updated', forceRefreshSettings);
-    window.addEventListener('logo-removed', forceRefreshSettings);
-    document.addEventListener('visibilitychange', () => {
+    // Adicionar listeners para eventos de logo
+    window.addEventListener('logo-updated', refreshSettings);
+    window.addEventListener('logo-removed', refreshSettings);
+    
+    // Listener para quando a aba voltar a estar visível
+    const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        forceRefreshSettings();
+        refreshSettings();
       }
-    });
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     
     return () => {
-      window.removeEventListener('logo-updated', forceRefreshSettings);
-      window.removeEventListener('logo-removed', forceRefreshSettings);
-      document.removeEventListener('visibilitychange', forceRefreshSettings);
+      // Remover todos os listeners quando o componente for desmontado
+      window.removeEventListener('logo-updated', refreshSettings);
+      window.removeEventListener('logo-removed', refreshSettings);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [refetchSettings]);
 

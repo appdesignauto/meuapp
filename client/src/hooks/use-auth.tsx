@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext } from "react";
+import { createContext, ReactNode, useContext, useEffect } from "react";
 import {
   useQuery,
   useMutation,
@@ -63,6 +63,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     },
   });
+  
+  // Efeito para atualizar o localStorage com base no estado de autenticação
+  // Executado apenas quando o status de autenticação muda
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem('isAuthenticated', 'true');
+    } else if (!isLoading) {
+      // Só remove se não estiver carregando (para evitar remover durante a inicialização)
+      localStorage.removeItem('isAuthenticated');
+    }
+  }, [user, isLoading]);
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
@@ -80,7 +91,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return userData;
     },
     onSuccess: (user: User) => {
+      // Define os dados do usuário no cache sem atualizar o localStorage diretamente
+      // O useEffect já irá cuidar disso quando o estado do user mudar
       queryClient.setQueryData(['/api/user'], user);
+      
       toast({
         title: "Login realizado com sucesso",
         description: `Bem-vindo, ${user.name || user.username}!`,
@@ -146,6 +160,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: () => {
       queryClient.setQueryData(['/api/user'], null);
+      // Remover o flag de autenticação do localStorage
+      localStorage.removeItem('isAuthenticated');
+      
       toast({
         title: "Logout realizado",
         description: "Você foi desconectado com sucesso.",
