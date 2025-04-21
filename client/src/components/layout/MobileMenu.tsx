@@ -199,15 +199,24 @@ const MobileMenu = ({ isOpen, onClose, navLinks, userRole }: MobileMenuProps) =>
             </Link>
           ))}
           
-          {/* Botão Login (exibido apenas se não houver usuário) */}
+          {/* Botões de Login e Cadastro (exibidos apenas se não houver usuário) */}
           {!user && (
-            <Link
-              href="/auth"
-              className="flex justify-center items-center bg-blue-600 text-white font-medium rounded-lg py-3 px-4 mt-4 hover:bg-blue-700"
-              onClick={onClose}
-            >
-              Entrar
-            </Link>
+            <>
+              <Link
+                href="/login"
+                className="flex justify-center items-center bg-blue-600 text-white font-medium rounded-lg py-3 px-4 mt-4 hover:bg-blue-700"
+                onClick={onClose}
+              >
+                Entrar
+              </Link>
+              <Link
+                href="/register"
+                className="flex justify-center items-center bg-blue-50 text-blue-600 font-medium rounded-lg py-3 px-4 mt-3 hover:bg-blue-100 border border-blue-100"
+                onClick={onClose}
+              >
+                Cadastre-se
+              </Link>
+            </>
           )}
         </nav>
       </div>
