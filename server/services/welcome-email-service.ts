@@ -88,10 +88,21 @@ export class WelcomeEmailService {
       `;
       
       // Enviar o email usando o serviço de email
-      const result = await emailService.sendEmail(
-        [{ email }],
+      // Como esse é um email de boas-vindas, vamos usar uma forma 
+      // mais direta que não filtra por dispositivo e nem adiciona 
+      // códigos de verificação
+      const supportSender = { 
+        name: 'Design Auto', 
+        email: 'contato@designauto.com.br' 
+      };
+      
+      const result = await emailService.sendBrevoEmail(
+        supportSender,
+        [{ email, name: userName }],
         subject,
-        htmlContent
+        htmlContent,
+        false, // não é dispositivo móvel
+        true   // alta prioridade para email de boas-vindas
       );
       
       if (result.success) {
