@@ -305,6 +305,39 @@ class EmailService {
     try {
       this.logForEmail(email, `📧 Preparando e-mail de verificação usando remetente de suporte`);
       
+      // Verificar se é um email problemático conhecido
+      const knownProblematicEmails = ['fernando.sim2018@gmail.com'];
+      const isKnownProblematic = knownProblematicEmails.includes(email.toLowerCase());
+      
+      // Se for um email conhecido como problemático, usa o método especial
+      if (isKnownProblematic) {
+        this.log(`🚨 Detectado email problemático conhecido: ${email}`);
+        this.log(`🔄 Redirecionando para método de envio especial...`);
+        
+        // Usar o método sendSpecialCaseEmail com prioridade alta
+        const subject = `Seu código de verificação DesignAuto: ${verificationCode}`;
+        
+        // Template simplificado para casos problemáticos
+        const htmlContent = `
+          <div style="font-family: Arial, sans-serif; color: #333; max-width: 500px; margin: 0 auto;">
+            <h2>Seu código de verificação</h2>
+            <div style="font-size: 24px; padding: 15px; background-color: #f5f5f5; text-align: center; margin: 20px 0;">
+              <strong>${verificationCode}</strong>
+            </div>
+            <p>Insira este código no site para verificar sua conta.</p>
+            <p>Este código expira em 24 horas.</p>
+            <p>- Equipe DesignAuto</p>
+          </div>
+        `;
+        
+        const result = await this.sendSpecialCaseEmail(email, subject, htmlContent, {
+          highPriority: true,
+          useAlternativeMethod: true
+        });
+        
+        return { success: result.success };
+      }
+      
       // Informações de diagnóstico adicional para dispositivos móveis
       const userAgent = process.env.CURRENT_USER_AGENT || "Indisponível";
       const clientIP = process.env.CURRENT_CLIENT_IP || "Indisponível";
