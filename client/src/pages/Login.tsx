@@ -1,3 +1,9 @@
+/**
+ * IMPORTANTE: Esta página NÃO está mais em uso.
+ * O sistema foi migrado para usar a interface unificada em auth-page.tsx
+ * Este arquivo é mantido apenas para referência e será removido em uma limpeza futura.
+ */
+
 import { useState } from 'react';
 import { useLocation } from 'wouter';
 import { useForm } from 'react-hook-form';

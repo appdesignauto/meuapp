@@ -266,7 +266,7 @@ const AuthPage = () => {
                     <Button 
                       variant="link" 
                       className="p-0" 
-                      onClick={() => setLocation("/auth/forgot-password")}
+                      onClick={() => setLocation("/password/forgot")}
                     >
                       Esqueceu sua senha?
                     </Button>

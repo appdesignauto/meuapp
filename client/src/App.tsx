@@ -13,8 +13,6 @@ import { ThemeProvider } from "@/components/theme-provider";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Home from "@/pages/Home";
-import Login from "@/pages/Login";
-import Register from "@/pages/Register";
 import Collections from "@/pages/Collections";
 import Categories from "@/pages/Categories";
 import CategoryPage from "@/pages/CategoryPage";
@@ -68,25 +66,13 @@ function AppRoutes() {
     <Switch>
       {/* Rotas públicas */}
       <Route path="/" component={Home} />
-      {/* Rota principal de autenticação */}
+      {/* Rotas de autenticação */}
+      <Route path="/login" component={AuthPage} />
+      <Route path="/register" component={AuthPage} />
       <Route path="/auth" component={AuthPage} />
-      
-      {/* Redirecionamento das rotas antigas para a nova página de autenticação */}
-      <Route path="/login">
-        {() => {
-          window.location.href = "/auth?tab=login";
-          return null;
-        }}
-      </Route>
-      <Route path="/register">
-        {() => {
-          window.location.href = "/auth?tab=register";
-          return null;
-        }}
-      </Route>
-      <Route path="/auth/forgot-password" component={ForgotPasswordPage} />
-      <Route path="/auth/reset-password" component={ResetPasswordPage} />
-      <Route path="/email-verification" component={EmailVerificationPage} />
+      <Route path="/password/forgot" component={ForgotPasswordPage} />
+      <Route path="/password/reset" component={ResetPasswordPage} />
+      <Route path="/email/verify" component={EmailVerificationPage} />
       <Route path="/auth/supabase">
         {() => {
           const SupabaseAuthPage = lazy(() => import("@/pages/supabase-auth-page"));
