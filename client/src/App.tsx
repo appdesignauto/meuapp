@@ -74,9 +74,36 @@ function AppRoutes() {
           return null;
         }}
       </Route>
-      <Route path="/password/forgot" component={() => import("@/pages/password/forgot").then(module => <module.default />)} />
-      <Route path="/password/reset" component={() => import("@/pages/password/reset").then(module => <module.default />)} />
-      <Route path="/email/verify" component={() => import("@/pages/email/verify").then(module => <module.default />)} />
+      <Route path="/password/forgot">
+        {() => {
+          const ForgotPasswordPage = lazy(() => import("@/pages/password/forgot"));
+          return (
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+              <ForgotPasswordPage />
+            </Suspense>
+          );
+        }}
+      </Route>
+      <Route path="/password/reset">
+        {() => {
+          const ResetPasswordPage = lazy(() => import("@/pages/password/reset"));
+          return (
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+              <ResetPasswordPage />
+            </Suspense>
+          );
+        }}
+      </Route>
+      <Route path="/email/verify">
+        {() => {
+          const EmailVerificationPage = lazy(() => import("@/pages/email/verify"));
+          return (
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+              <EmailVerificationPage />
+            </Suspense>
+          );
+        }}
+      </Route>
       <Route path="/auth/supabase">
         {() => {
           const SupabaseAuthPage = lazy(() => import("@/pages/supabase-auth-page"));
