@@ -92,31 +92,114 @@ export class EmailVerificationService {
    */
   async verifyCode(userId: number, code: string): Promise<{ success: boolean; message?: string }> {
     try {
+      // Normalize o código removendo espaços
+      const normalizedCode = code.trim();
+      
+      if (!normalizedCode) {
+        return { 
+          success: false, 
+          message: "Código não fornecido. Por favor, insira o código de verificação." 
+        };
+      }
+      
+      console.log(`[EmailVerificationService] Verificando código para usuário ${userId}. Código fornecido: ${normalizedCode}`);
+      
       const now = new Date();
       
-      // Buscar o código de verificação do usuário que ainda é válido
+      // Primeiro busque todos os códigos do usuário para fins de depuração
+      const allCodes = await db.execute(sql`
+        SELECT * FROM "emailVerificationCodes"
+        WHERE "userId" = ${userId}
+        ORDER BY "createdAt" DESC
+      `);
+      
+      console.log(`[EmailVerificationService] Encontrados ${allCodes.rows.length} códigos para o usuário ${userId}`);
+      
+      // Agora busque o código específico
       const results = await db.execute(sql`
         SELECT * FROM "emailVerificationCodes"
         WHERE "userId" = ${userId}
-        AND "code" = ${code}
+        AND "code" = ${normalizedCode}
         AND "expiresAt" > ${now}
         AND "isUsed" = false
       `);
       
       if (results.rows.length === 0) {
+        // Verificar se o código existe, mas expirou
+        const expiredResults = await db.execute(sql`
+          SELECT * FROM "emailVerificationCodes"
+          WHERE "userId" = ${userId}
+          AND "code" = ${normalizedCode}
+          AND "expiresAt" <= ${now}
+          AND "isUsed" = false
+        `);
+        
+        if (expiredResults.rows.length > 0) {
+          return { 
+            success: false, 
+            message: "Código expirado. Por favor, solicite um novo código." 
+          };
+        }
+        
+        // Verificar se o código já foi usado
+        const usedResults = await db.execute(sql`
+          SELECT * FROM "emailVerificationCodes"
+          WHERE "userId" = ${userId}
+          AND "code" = ${normalizedCode}
+          AND "isUsed" = true
+        `);
+        
+        if (usedResults.rows.length > 0) {
+          return { 
+            success: false, 
+            message: "Este código já foi utilizado. Por favor, solicite um novo." 
+          };
+        }
+        
+        // Verificar se existe qualquer código para este usuário
+        if (allCodes.rows.length > 0) {
+          // Verificando o tipo e garantindo que `code` existe e é uma string
+          const lastCodeRow = allCodes.rows[0];
+          if (lastCodeRow && typeof lastCodeRow === 'object' && 'code' in lastCodeRow && typeof lastCodeRow.code === 'string') {
+            const lastCode = lastCodeRow.code;
+            // Não mostramos o código completo por segurança
+            const lastCodeMasked = lastCode.substring(0, 2) + '****';
+            
+            return { 
+              success: false, 
+              message: `Código inválido. O último código enviado começa com ${lastCodeMasked}. Verifique seu email mais recente.` 
+            };
+          }
+          
+          // Caso não consiga obter o código corretamente
+          return { 
+            success: false, 
+            message: `Código inválido. Verifique o código ou solicite um novo.` 
+          };
+        }
+        
         return { 
           success: false, 
-          message: "Código inválido ou expirado. Verifique o código ou solicite um novo." 
+          message: "Código inválido. Verifique o código ou solicite um novo." 
         };
       }
       
       // Marcar o código como utilizado
       const usedAt = new Date();
-      await db.execute(sql`
-        UPDATE "emailVerificationCodes"
-        SET "isUsed" = true, "usedAt" = ${usedAt}
-        WHERE "id" = ${results.rows[0].id}
-      `);
+      const resultRow = results.rows[0];
+      
+      if (resultRow && typeof resultRow === 'object' && 'id' in resultRow) {
+        await db.execute(sql`
+          UPDATE "emailVerificationCodes"
+          SET "isUsed" = true, "usedAt" = ${usedAt}
+          WHERE "id" = ${resultRow.id}
+        `);
+      } else {
+        console.error("[EmailVerificationService] Erro ao marcar código como utilizado: id não encontrado.");
+        throw new Error("Código encontrado, mas estrutura de dados inconsistente.");
+      }
+      
+      console.log(`[EmailVerificationService] Código ${normalizedCode} verificado com sucesso para o usuário ${userId}`);
       
       return { success: true };
     } catch (error) {

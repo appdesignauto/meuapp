@@ -139,8 +139,13 @@ export function EmailVerificationModal() {
 
   const handleVerifyCode = (e: React.FormEvent) => {
     e.preventDefault();
-    if (verificationCode.trim().length === 6) {
-      verifyMutation.mutate(verificationCode);
+    // Limpar espaços e caracteres não numéricos
+    const cleanedCode = verificationCode.replace(/\D/g, '').trim();
+    
+    if (cleanedCode.length === 6) {
+      // Log para depuração
+      console.log("[EmailVerification] Enviando código para verificação:", cleanedCode);
+      verifyMutation.mutate(cleanedCode);
     } else {
       toast({
         title: "Código inválido",
@@ -269,7 +274,9 @@ export function EmailVerificationModal() {
                 <div className="relative">
                   <Input
                     id="verification-code"
-                    type="text" 
+                    type="tel" 
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
                     placeholder="Digite o código de 6 dígitos"
                     value={verificationCode}
                     onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
