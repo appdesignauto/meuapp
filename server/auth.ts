@@ -424,7 +424,28 @@ export function setupAuth(app: Express) {
       }
       
       // Email já é marcado como verificado automaticamente no banco de dados
-      // Não precisamos mais enviar email de verificação
+      // Enviar email de boas-vindas ao invés de email de verificação
+      try {
+        if (result.user) {
+          const WelcomeEmailService = (await import('./services/welcome-email-service')).WelcomeEmailService;
+          const welcomeEmailService = WelcomeEmailService.getInstance();
+          const welcomeResult = await welcomeEmailService.sendWelcomeEmail(
+            result.user.id, 
+            result.user.email,
+            result.user.name
+          );
+          
+          if (welcomeResult.success) {
+            console.log(`[Registro Supabase] Email de boas-vindas enviado para ${result.user.email}`);
+          } else {
+            console.warn(`[Registro Supabase] Falha ao enviar email de boas-vindas: ${welcomeResult.message || 'Erro desconhecido'}`);
+          }
+        }
+      } catch (emailError) {
+        console.error("[Registro Supabase] Erro ao enviar email de boas-vindas:", emailError);
+        // Não falhar o registro por isso, apenas logar o erro
+      }
+      
       console.log(`[Registro Supabase] Usuário registrado com sucesso: ${result.user?.email}. Email marcado como verificado automaticamente.`);
 
       // Se o registro foi bem-sucedido, fazer login do usuário automaticamente
