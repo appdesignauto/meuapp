@@ -1,235 +1,176 @@
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
+import { Link, useLocation } from 'wouter';
 import { Loader2 } from 'lucide-react';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useLocation, useNavigate } from 'wouter';
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
-// Schema para validação
-const resetPasswordSchema = z.object({
+// Definindo o esquema de validação para o formulário
+const resetSchema = z.object({
   password: z.string()
-    .min(6, 'A senha deve ter pelo menos 6 caracteres')
-    .max(100, 'A senha não pode ter mais de 100 caracteres'),
+    .min(8, { message: "A senha deve ter no mínimo 8 caracteres" })
+    .max(100, { message: "A senha é muito longa" }),
   confirmPassword: z.string()
-    .min(1, 'Confirme a senha'),
-}).refine(data => data.password === data.confirmPassword, {
-  message: 'As senhas não conferem',
-  path: ['confirmPassword'],
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "As senhas não coincidem",
+  path: ["confirmPassword"],
 });
 
-type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
+type ResetFormValues = z.infer<typeof resetSchema>;
 
 export default function ResetPasswordForm() {
-  const [location] = useLocation();
-  const navigate = useNavigate();
-  const [token, setToken] = useState<string | null>(null);
-  const [tokenStatus, setTokenStatus] = useState<'loading' | 'valid' | 'invalid'>('loading');
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { toast } = useToast();
+  const [_, setLocation] = useLocation();
+  const [token, setToken] = useState('');
 
-  const { register, handleSubmit, formState: { errors } } = useForm<ResetPasswordFormValues>({
-    resolver: zodResolver(resetPasswordSchema),
+  // Inicializando o formulário
+  const form = useForm<ResetFormValues>({
+    resolver: zodResolver(resetSchema),
     defaultValues: {
       password: '',
-      confirmPassword: '',
+      confirmPassword: ''
     },
   });
 
-  // Extrair token da URL
+  // Extrair o token da URL ao carregar o componente
   useEffect(() => {
-    const url = new URL(window.location.href);
-    const tokenFromUrl = url.searchParams.get('token');
-    
-    if (!tokenFromUrl) {
-      setTokenStatus('invalid');
-      setErrorMessage('Token não encontrado na URL. Por favor, tente novamente ou solicite um novo link de redefinição.');
-      return;
+    const params = new URLSearchParams(window.location.search);
+    const tokenParam = params.get('token');
+    if (tokenParam) {
+      setToken(tokenParam);
+    } else {
+      toast({
+        title: 'Token inválido',
+        description: 'O link de recuperação parece ser inválido ou expirado.',
+        variant: 'destructive',
+      });
     }
-    
-    setToken(tokenFromUrl);
-    
-    // Verificar validade do token
-    const verifyToken = async () => {
-      try {
-        const response = await apiRequest('POST', '/api/password-reset/verify-token', { token: tokenFromUrl });
-        const data = await response.json();
-        
-        if (response.ok && data.success) {
-          setTokenStatus('valid');
-        } else {
-          setTokenStatus('invalid');
-          setErrorMessage(data.message || 'Token inválido ou expirado. Por favor, solicite um novo link de redefinição.');
-        }
-      } catch (error) {
-        setTokenStatus('invalid');
-        setErrorMessage('Erro ao verificar o token. Por favor, tente novamente mais tarde.');
-        console.error('Erro ao verificar token:', error);
-      }
-    };
-    
-    verifyToken();
-  }, [location]);
+  }, [toast]);
 
-  const resetMutation = useMutation({
-    mutationFn: async (data: ResetPasswordFormValues & { token: string }) => {
+  const { mutate, isPending } = useMutation({
+    mutationFn: async (data: { password: string, token: string }) => {
       const response = await apiRequest('POST', '/api/password-reset/reset', data);
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erro ao redefinir senha');
+        const error = await response.json();
+        throw new Error(error.message || 'Falha ao redefinir a senha');
       }
       return response.json();
     },
-    onSuccess: (data) => {
-      setSuccessMessage(data.message || 'Senha redefinida com sucesso! Você já pode fazer login com sua nova senha.');
-      setErrorMessage(null);
+    onSuccess: () => {
+      toast({
+        title: 'Senha redefinida com sucesso',
+        description: 'Agora você pode fazer login com sua nova senha.',
+        variant: 'default',
+      });
       
-      // Redirecionar para página de login após 3 segundos
+      // Redirecionar para tela de login após um breve delay
       setTimeout(() => {
-        navigate('/auth');
-      }, 3000);
+        setLocation('/login');
+      }, 2000);
     },
-    onError: (error) => {
-      setErrorMessage(error instanceof Error ? error.message : 'Ocorreu um erro ao redefinir sua senha.');
-      setSuccessMessage(null);
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro',
+        description: error.message,
+        variant: 'destructive',
+      });
     },
   });
 
-  const onSubmit = (data: ResetPasswordFormValues) => {
+  const onSubmit = (values: ResetFormValues) => {
     if (!token) {
-      setErrorMessage('Token não encontrado. Por favor, tente novamente ou solicite um novo link de redefinição.');
+      toast({
+        title: 'Token inválido',
+        description: 'O link de recuperação parece ser inválido ou expirado.',
+        variant: 'destructive',
+      });
       return;
     }
     
-    resetMutation.mutate({ ...data, token });
+    mutate({ 
+      password: values.password,
+      token
+    });
   };
 
-  if (tokenStatus === 'loading') {
-    return (
-      <Card className="w-full max-w-md mx-auto">
-        <CardHeader>
-          <CardTitle>Redefinir Senha</CardTitle>
-          <CardDescription>
-            Verificando o seu link...
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex justify-center p-6">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (tokenStatus === 'invalid') {
-    return (
-      <Card className="w-full max-w-md mx-auto">
-        <CardHeader>
-          <CardTitle>Link Inválido</CardTitle>
-          <CardDescription>
-            O link para redefinição de senha é inválido ou expirou
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Alert className="bg-red-50 border-red-200">
-            <AlertDescription className="text-red-800">
-              {errorMessage || 'Link inválido ou expirado. Por favor, solicite um novo link de redefinição.'}
-            </AlertDescription>
-          </Alert>
-        </CardContent>
-        <CardFooter>
-          <Button 
-            className="w-full" 
-            onClick={() => navigate('/auth/forgot-password')}
-          >
-            Solicitar novo link
-          </Button>
-        </CardFooter>
-      </Card>
-    );
-  }
-
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle>Redefinir Senha</CardTitle>
+    <Card className="w-full">
+      <CardHeader className="space-y-1">
+        <CardTitle className="text-2xl font-bold">Redefinir senha</CardTitle>
         <CardDescription>
           Crie uma nova senha para sua conta
         </CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <CardContent className="space-y-4">
-          {successMessage && (
-            <Alert className="bg-green-50 border-green-200">
-              <AlertDescription className="text-green-800">
-                {successMessage}
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {errorMessage && (
-            <Alert className="bg-red-50 border-red-200">
-              <AlertDescription className="text-red-800">
-                {errorMessage}
-              </AlertDescription>
-            </Alert>
-          )}
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Nova senha</Label>
-            <Input
-              id="password"
-              type="password"
-              {...register('password')}
-              disabled={resetMutation.isPending || !!successMessage}
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nova senha</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="Nova senha"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-            {errors.password && (
-              <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirme a nova senha</Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              {...register('confirmPassword')}
-              disabled={resetMutation.isPending || !!successMessage}
+            
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Confirme a nova senha</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="Confirme a senha"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-            {errors.confirmPassword && (
-              <p className="text-sm text-red-500 mt-1">{errors.confirmPassword.message}</p>
-            )}
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-2">
-          <Button 
-            type="submit" 
-            className="w-full" 
-            disabled={resetMutation.isPending || !!successMessage}
-          >
-            {resetMutation.isPending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Redefinindo...
-              </>
-            ) : (
-              "Redefinir Senha"
-            )}
-          </Button>
-          <Button 
-            type="button" 
-            variant="outline" 
-            className="w-full" 
-            onClick={() => navigate('/auth')}
-          >
-            Voltar para login
-          </Button>
-        </CardFooter>
-      </form>
+          </CardContent>
+          <CardFooter className="flex flex-col space-y-4">
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={isPending || !token}
+            >
+              {isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processando...
+                </>
+              ) : (
+                'Redefinir senha'
+              )}
+            </Button>
+            <div className="text-center text-sm">
+              <Link href="/login" className="text-primary hover:underline">
+                Voltar para o login
+              </Link>
+            </div>
+          </CardFooter>
+        </form>
+      </Form>
     </Card>
   );
 }

@@ -32,6 +32,8 @@ import NotFound from "@/pages/not-found";
 import AvatarTestPage from "@/pages/AvatarTestPage";
 import SupabaseAuthTestPage from "@/pages/SupabaseAuthTestPage";
 import EmailVerificationPage from "@/pages/email-verification-page";
+import ForgotPasswordPage from "@/pages/forgot-password";
+import ResetPasswordPage from "@/pages/reset-password";
 
 // Páginas do Painel do Usuário
 import { ProtectedPainelRoute } from "@/components/painel/ProtectedPainelRoute";
@@ -69,6 +71,8 @@ function AppRoutes() {
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/auth/forgot-password" component={ForgotPasswordPage} />
+      <Route path="/auth/reset-password" component={ResetPasswordPage} />
       <Route path="/email-verification" component={EmailVerificationPage} />
       <Route path="/auth/supabase">
         {() => {

@@ -1,5 +1,5 @@
-import { scrypt, randomBytes, timingSafeEqual } from "crypto";
-import { promisify } from "util";
+import { randomBytes, scrypt } from 'crypto';
+import { promisify } from 'util';
 
 const scryptAsync = promisify(scrypt);
 
@@ -9,9 +9,9 @@ const scryptAsync = promisify(scrypt);
  * @returns Senha hasheada no formato hash.salt
  */
 export async function hashPassword(password: string): Promise<string> {
-  const salt = randomBytes(16).toString("hex");
+  const salt = randomBytes(16).toString('hex');
   const buf = (await scryptAsync(password, salt, 64)) as Buffer;
-  return `${buf.toString("hex")}.${salt}`;
+  return `${buf.toString('hex')}.${salt}`;
 }
 
 /**
@@ -21,8 +21,8 @@ export async function hashPassword(password: string): Promise<string> {
  * @returns Booleano indicando se as senhas correspondem
  */
 export async function comparePasswords(supplied: string, stored: string): Promise<boolean> {
-  const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
+  const [hashed, salt] = stored.split('.');
+  const hashedBuf = Buffer.from(hashed, 'hex');
   const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
+  return hashedBuf.equals(suppliedBuf);
 }
