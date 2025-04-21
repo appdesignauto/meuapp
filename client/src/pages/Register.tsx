@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth } from '@/context/AuthContext';
@@ -22,13 +22,18 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import { Car, Loader2 } from 'lucide-react';
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
+import { useToast } from '@/hooks/use-toast';
 
 const registerSchema = z.object({
   username: z.string().min(3, { message: 'Usuário deve ter pelo menos 3 caracteres' }),
   name: z.string().optional(),
   email: z.string().email({ message: 'Email inválido' }),
+  phone: z.string().optional(),
   password: z.string().min(6, { message: 'Senha deve ter pelo menos 6 caracteres' }),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -40,6 +45,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 const Register = () => {
   const { register } = useAuth();
+  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [, setLocation] = useLocation();
 
@@ -49,6 +55,7 @@ const Register = () => {
       username: '',
       name: '',
       email: '',
+      phone: '+55', // Código do Brasil como padrão
       password: '',
       confirmPassword: '',
     },
@@ -57,10 +64,24 @@ const Register = () => {
   const onSubmit = async (data: RegisterFormValues) => {
     setIsSubmitting(true);
     try {
-      await register(data.username, data.password, data.email, data.name);
+      await register(data.username, data.password, data.email, data.name, data.phone);
+      
+      // Mostrar mensagem de sucesso
+      toast({
+        title: 'Conta criada com sucesso!',
+        description: 'Enviamos um email de boas-vindas para você.',
+        variant: 'success',
+      });
+      
       setLocation('/');
     } catch (error) {
       console.error('Registration failed:', error);
+      
+      toast({
+        title: 'Erro ao criar conta',
+        description: error instanceof Error ? error.message : 'Ocorreu um erro inesperado',
+        variant: 'destructive',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -121,6 +142,37 @@ const Register = () => {
                       <FormControl>
                         <Input type="email" placeholder="Seu email" {...field} />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Telefone</FormLabel>
+                      <FormControl>
+                        <div className="phone-input-container">
+                          <Controller
+                            control={form.control}
+                            name="phone"
+                            render={({ field }) => (
+                              <PhoneInput
+                                international
+                                defaultCountry="BR"
+                                placeholder="Seu telefone com DDD"
+                                value={field.value}
+                                onChange={field.onChange}
+                                className="phone-input"
+                              />
+                            )}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormDescription>
+                        Incluir código do país e DDD
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}

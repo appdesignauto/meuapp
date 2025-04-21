@@ -7,7 +7,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   login: (username: string, password: string) => Promise<void>;
-  register: (username: string, password: string, email: string, name?: string) => Promise<void>;
+  register: (username: string, password: string, email: string, name?: string, phone?: string) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   userRole: UserRole;
@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const register = async (username: string, password: string, email: string, name?: string) => {
+  const register = async (username: string, password: string, email: string, name?: string, phone?: string) => {
     setIsLoading(true);
     try {
       const res = await apiRequest('POST', '/api/register', { 
@@ -70,14 +70,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password, 
         email,
         name,
+        phone,
         role: 'free', // Default role for new users
+        origemassinatura: 'Auto Cadastro', // Indicando que o usuário se cadastrou pelo site
+        nivelacesso: 'usuario', // Nível de acesso padrão
         isActive: true
       });
       const userData = await res.json();
       setUser(userData);
       toast({
         title: "Registro bem-sucedido",
-        description: "Sua conta foi criada com sucesso!",
+        description: "Sua conta foi criada com sucesso! Enviamos um email de boas-vindas.",
+        variant: "success",
       });
     } catch (error) {
       console.error('Registration failed:', error);
@@ -120,7 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     register,
     logout,
     isAuthenticated: !!user,
-    userRole: user?.role || 'visitor',
+    userRole: (user?.role || 'visitor') as UserRole,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

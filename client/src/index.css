@@ -2,6 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Estilos personalizados para o componente PhoneInput */
+.phone-input-container {
+  position: relative;
+  width: 100%;
+}
+
+.phone-input {
+  width: 100% !important;
+  border: 1px solid hsl(var(--input));
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  background-color: transparent;
+  color: hsl(var(--foreground));
+}
+
+.phone-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px hsl(var(--ring));
+  border-color: hsl(var(--ring));
+}
+
+.PhoneInputCountrySelectArrow {
+  margin-right: 0.5rem;
+  opacity: 0.6;
+}
+
+.PhoneInputCountryIcon {
+  margin-right: 0.5rem;
+}
+
+.PhoneInputCountry {
+  margin-right: 0.5rem;
+  padding-right: 0.5rem;
+}
+
 /* Estilos para o componente PhoneInput */
 .phone-input-container {
   @apply w-full;
