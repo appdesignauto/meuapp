@@ -301,25 +301,24 @@ export function setupAuth(app: Express) {
         emailconfirmed: false, // Explicitamente definir como não confirmado
       });
       
-      // Enviar email de verificação
+      // Enviar email de verificação automaticamente
       try {
-        // Importar o serviço de verificação de email
-        const emailVerificationModule = await import('./services/email-verification-service');
-        const emailVerificationService = new emailVerificationModule.EmailVerificationService();
+        // Usar o singleton do serviço de verificação
+        const emailVerificationService = EmailVerificationService.getInstance();
         
-        // Enviar email de verificação
+        // Enviar email de verificação automaticamente
         const result = await emailVerificationService.sendVerificationCode(
           newUser.id, 
           newUser.email
         );
         
         if (result.success) {
-          console.log(`E-mail de verificação enviado com sucesso para ${newUser.email}`);
+          console.log(`[Registro] E-mail de verificação enviado automaticamente para ${newUser.email}`);
         } else {
-          console.warn(`Falha ao enviar e-mail de verificação para ${newUser.email}: ${result.message || 'Erro desconhecido'}`);
+          console.warn(`[Registro] Falha ao enviar e-mail de verificação para ${newUser.email}: ${result.message || 'Erro desconhecido'}`);
         }
       } catch (emailError) {
-        console.error("Erro ao enviar e-mail de verificação:", emailError);
+        console.error("[Registro] Erro ao enviar e-mail de verificação:", emailError);
         // Não interromper o fluxo se o envio de e-mail falhar - apenas logar o erro
       }
       
@@ -424,16 +423,25 @@ export function setupAuth(app: Express) {
         });
       }
       
-      // Em ambiente de teste, para evitar a necessidade de confirmação de email,
-      // vamos confirmar o email automaticamente usando o método admin
+      // Enviar email de verificação automaticamente após registro Supabase
       try {
-        // Tentar confirmar o email com admin API, isso só funciona com service_role key
-        if (result.user?.supabaseId) {
-          await supabaseAuthService.confirmEmail(result.user.supabaseId);
+        // Se temos um usuário, enviar código de verificação
+        if (result.user) {
+          const emailVerificationService = EmailVerificationService.getInstance();
+          const verificationResult = await emailVerificationService.sendVerificationCode(
+            result.user.id, 
+            result.user.email
+          );
+          
+          if (verificationResult.success) {
+            console.log(`[Registro Supabase] E-mail de verificação enviado automaticamente para ${result.user.email}`);
+          } else {
+            console.warn(`[Registro Supabase] Falha ao enviar e-mail de verificação: ${verificationResult.message || 'Erro desconhecido'}`);
+          }
         }
-      } catch (confirmError) {
-        console.log("Não foi possível confirmar o email automaticamente:", confirmError);
-        // Não falhar o registro por isso, apenas registrar o erro
+      } catch (emailError) {
+        console.error("[Registro Supabase] Erro ao enviar e-mail de verificação:", emailError);
+        // Não falhar o registro por isso, apenas logar o erro
       }
 
       // Se o registro foi bem-sucedido, fazer login do usuário automaticamente
