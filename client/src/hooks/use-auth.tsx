@@ -232,5 +232,24 @@ export function useAuth() {
   if (!context) {
     throw new Error("useAuth deve ser usado dentro de um AuthProvider");
   }
-  return context;
+  
+  // Função auxiliar para facilitar o login
+  const login = async (username: string, password: string, rememberMe?: boolean) => {
+    return await context.loginMutation.mutateAsync({ 
+      username, 
+      password,
+      rememberMe 
+    });
+  };
+
+  // Função auxiliar para facilitar o logout
+  const logout = async () => {
+    return await context.logoutMutation.mutateAsync();
+  };
+
+  return {
+    ...context,
+    login,
+    logout
+  };
 }
