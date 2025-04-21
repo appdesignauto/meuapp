@@ -26,7 +26,7 @@ import {
 import { Car, Loader2 } from 'lucide-react';
 
 const loginSchema = z.object({
-  username: z.string().min(3, { message: 'Usuário deve ter pelo menos 3 caracteres' }),
+  username: z.string().min(3, { message: 'Email ou usuário deve ter pelo menos 3 caracteres' }),
   password: z.string().min(6, { message: 'Senha deve ter pelo menos 6 caracteres' }),
 });
 
@@ -84,9 +84,9 @@ const Login = () => {
                   name="username"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Usuário</FormLabel>
+                      <FormLabel>Email ou Usuário</FormLabel>
                       <FormControl>
-                        <Input placeholder="Seu nome de usuário" {...field} />
+                        <Input placeholder="Digite seu email ou nome de usuário" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
