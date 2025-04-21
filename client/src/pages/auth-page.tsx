@@ -27,6 +27,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import PhoneInput from "react-phone-number-input";
+import "react-phone-number-input/style.css";
 
 const loginSchema = z.object({
   email: z.string().email("Digite um email válido"),
@@ -37,6 +39,7 @@ const loginSchema = z.object({
 const registerSchema = z.object({
   email: z.string().email("Email inválido"),
   name: z.string().min(2, "O nome deve ter pelo menos 2 caracteres"),
+  phone: z.string().optional(),
   password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -80,6 +83,7 @@ const AuthPage = () => {
     defaultValues: {
       email: "",
       name: "",
+      phone: "",
       password: "",
       confirmPassword: "",
     },
@@ -306,6 +310,32 @@ const AuthPage = () => {
                             <FormControl>
                               <Input type="email" placeholder="seu@email.com" {...field} />
                             </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={registerForm.control}
+                        name="phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Telefone</FormLabel>
+                            <FormControl>
+                              <div className="phone-input-container">
+                                <PhoneInput
+                                  international
+                                  defaultCountry="BR"
+                                  placeholder="(99) 99999-9999"
+                                  value={field.value}
+                                  onChange={field.onChange}
+                                  className="phone-input"
+                                />
+                              </div>
+                            </FormControl>
+                            <FormDescription className="text-xs">
+                              Seu número de telefone com DDD
+                            </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
