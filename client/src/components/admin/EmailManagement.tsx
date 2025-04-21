@@ -477,7 +477,7 @@ export default function EmailManagement() {
                         <p>
                           <strong>Status de Verificação:</strong> {' '}
                           {verificationResult.user.emailconfirmed ? (
-                            <Badge variant="success" className="bg-green-500">Verificado</Badge>
+                            <Badge className="bg-green-500 hover:bg-green-600">Verificado</Badge>
                           ) : (
                             <Badge variant="destructive">Não Verificado</Badge>
                           )}
@@ -535,7 +535,7 @@ export default function EmailManagement() {
                               </TableCell>
                               <TableCell>
                                 {code.isUsed ? (
-                                  <Badge className="bg-green-500">Usado</Badge>
+                                  <Badge className="bg-green-500 hover:bg-green-600">Usado</Badge>
                                 ) : (
                                   <Badge variant="outline">Não Usado</Badge>
                                 )}

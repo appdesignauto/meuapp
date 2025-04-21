@@ -15,7 +15,8 @@ import {
   LogOut,
   Sliders,
   Database,
-  HardDrive
+  HardDrive,
+  Mail
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
