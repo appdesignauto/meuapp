@@ -138,7 +138,7 @@ const AuthPage = () => {
       
       toast({
         title: "Conta criada com sucesso!",
-        description: "Sua conta foi ativada automaticamente. Bem-vindo(a)!",
+        description: "Sua conta foi ativada automaticamente e enviamos um email de boas-vindas. Bem-vindo(a)!",
         variant: "success",
       });
     } catch (error) {
@@ -272,7 +272,7 @@ const AuthPage = () => {
                 <CardHeader>
                   <CardTitle>Cadastro</CardTitle>
                   <CardDescription>
-                    Crie sua conta para acessar todas as funcionalidades
+                    Crie sua conta para acessar todas as funcionalidades. Você receberá um email de boas-vindas!
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
