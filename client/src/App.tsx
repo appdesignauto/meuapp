@@ -68,9 +68,22 @@ function AppRoutes() {
     <Switch>
       {/* Rotas públicas */}
       <Route path="/" component={Home} />
-      <Route path="/login" component={Login} />
-      <Route path="/register" component={Register} />
+      {/* Rota principal de autenticação */}
       <Route path="/auth" component={AuthPage} />
+      
+      {/* Redirecionamento das rotas antigas para a nova página de autenticação */}
+      <Route path="/login">
+        {() => {
+          window.location.href = "/auth?tab=login";
+          return null;
+        }}
+      </Route>
+      <Route path="/register">
+        {() => {
+          window.location.href = "/auth?tab=register";
+          return null;
+        }}
+      </Route>
       <Route path="/auth/forgot-password" component={ForgotPasswordPage} />
       <Route path="/auth/reset-password" component={ResetPasswordPage} />
       <Route path="/email-verification" component={EmailVerificationPage} />
