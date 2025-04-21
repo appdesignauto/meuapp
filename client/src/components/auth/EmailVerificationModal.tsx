@@ -253,67 +253,126 @@ export function EmailVerificationModal() {
               </p>
             </div>
 
-            <form onSubmit={handleVerifyCode} className="space-y-4">
-              <div>
-                <label htmlFor="verification-code" className="block text-sm font-medium mb-1">
-                  🔢 Código de verificação
+            <form onSubmit={handleVerifyCode} className="space-y-6">
+              <div className="relative">
+                <label htmlFor="verification-code" className="block text-sm font-medium mb-2 flex items-center">
+                  <span className="bg-primary/10 text-primary p-1 rounded-md mr-2">
+                    <span className="flex items-center justify-center h-4 w-4">
+                      <ShieldCheck className="h-3 w-3" />
+                    </span>
+                  </span>
+                  Código de verificação
                 </label>
-                <Input
-                  id="verification-code"
-                  type="text"
-                  placeholder="Digite o código de 6 dígitos"
-                  value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  pattern="[0-9]{6}"
-                  maxLength={6}
-                  className="font-mono tracking-wider text-center text-lg"
-                  disabled={verifyMutation.isPending}
-                />
+                
+                <div className="relative">
+                  <Input
+                    id="verification-code"
+                    type="text" 
+                    placeholder="Digite o código de 6 dígitos"
+                    value={verificationCode}
+                    onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    pattern="[0-9]{6}"
+                    maxLength={6}
+                    className="font-mono tracking-wider text-center text-lg pr-10"
+                    disabled={verifyMutation.isPending}
+                  />
+                  
+                  {verificationCode.length > 0 && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      {verificationCode.length === 6 ? (
+                        <CheckCircle className="h-5 w-5 text-green-500" />
+                      ) : (
+                        <span className="text-xs text-muted-foreground">
+                          {verificationCode.length}/6
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+                
+                <p className="text-xs text-muted-foreground mt-1">
+                  Digite os 6 dígitos enviados para seu email
+                </p>
               </div>
+              
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full h-11 rounded-md relative overflow-hidden group"
                 disabled={verificationCode.length !== 6 || verifyMutation.isPending}
               >
-                {verifyMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Verificando...
-                  </>
-                ) : (
-                  "🔘 Verificar e-mail"
+                <span className="relative z-10 flex items-center justify-center w-full">
+                  {verifyMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      <span>Verificando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="mr-2 h-5 w-5" />
+                      <span>Verificar e-mail</span>
+                    </>
+                  )}
+                </span>
+                
+                {!verifyMutation.isPending && verificationCode.length === 6 && (
+                  <motion.div 
+                    className="absolute bottom-0 left-0 h-full bg-primary/10"
+                    initial={{ width: 0 }}
+                    animate={{ width: "100%" }}
+                    transition={{ duration: 0.5 }}
+                  />
                 )}
               </Button>
             </form>
 
-            <DialogFooter className="flex flex-col sm:flex-row sm:justify-between sm:space-x-0">
-              <div className="text-center text-sm mb-2">
-                👀 Não recebeu o código? 
+            <div className="mt-8 pt-4 border-t border-gray-200 dark:border-gray-800">
+              <div className="flex flex-col items-center space-y-3">
+                <div className="text-center text-sm text-muted-foreground flex items-center">
+                  <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
+                  Não recebeu o código?
+                </div>
+                
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="rounded-full px-6 hover:bg-primary/10 hover:text-primary transition-all duration-200"
+                  onClick={handleResendCode}
+                  disabled={resendDisabled || resendMutation.isPending}
+                >
+                  {resendMutation.isPending ? (
+                    <div className="flex items-center">
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <span>Enviando...</span>
+                    </div>
+                  ) : resendDisabled ? (
+                    <div className="flex items-center">
+                      <motion.div
+                        initial={{ rotate: 0 }}
+                        animate={{ rotate: 360 }}
+                        transition={{ 
+                          duration: 0.5,
+                          repeat: 1,
+                          repeatType: "loop",
+                          ease: "easeInOut"
+                        }}
+                      >
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                      </motion.div>
+                      <span>Aguarde {countdown}s</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center">
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      <span>Reenviar código</span>
+                    </div>
+                  )}
+                </Button>
+                
+                <p className="text-xs text-muted-foreground text-center max-w-xs">
+                  Verifique também sua pasta de spam. O código é válido por 10 minutos.
+                </p>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleResendCode}
-                disabled={resendDisabled || resendMutation.isPending}
-              >
-                {resendMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Enviando...
-                  </>
-                ) : resendDisabled ? (
-                  <>
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Aguarde {countdown}s para reenviar
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    🔄 Reenviar código
-                  </>
-                )}
-              </Button>
-            </DialogFooter>
+            </div>
           </>
         )}
       </DialogContent>
