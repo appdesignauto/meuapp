@@ -3,13 +3,14 @@ import { EmailVerificationService } from "../services/email-verification-service
 import { emailService } from "../services/email-service";
 import { db } from "../db";
 import { sql } from "drizzle-orm";
+import { isAdmin } from "../middlewares/auth";
 
 const router = Router();
 
 /**
  * Obter logs do serviço de email
  */
-router.get("/logs", async (_req, res) => {
+router.get("/logs", isAdmin, async (_req, res) => {
   try {
     const logs = emailService.getLogs();
     return res.json({ success: true, logs });
@@ -26,7 +27,7 @@ router.get("/logs", async (_req, res) => {
 /**
  * Limpar logs do serviço de email
  */
-router.delete("/logs", async (_req, res) => {
+router.delete("/logs", isAdmin, async (_req, res) => {
   try {
     emailService.clearLogs();
     return res.json({ 
@@ -45,7 +46,7 @@ router.delete("/logs", async (_req, res) => {
 /**
  * Verificar status de verificação por usuário
  */
-router.get("/verification/:userId", async (req, res) => {
+router.get("/verification/:userId", isAdmin, async (req, res) => {
   try {
     const userId = parseInt(req.params.userId);
     if (isNaN(userId)) {
@@ -95,7 +96,7 @@ router.get("/verification/:userId", async (req, res) => {
 /**
  * Verificar status de verificação por email
  */
-router.get("/verification/email/:email", async (req, res) => {
+router.get("/verification/email/:email", isAdmin, async (req, res) => {
   try {
     const email = req.params.email;
     
@@ -148,7 +149,7 @@ router.get("/verification/email/:email", async (req, res) => {
 /**
  * Reenviar código de verificação
  */
-router.post("/verification/:userId/resend", async (req, res) => {
+router.post("/verification/:userId/resend", isAdmin, async (req, res) => {
   try {
     const userId = parseInt(req.params.userId);
     if (isNaN(userId)) {
@@ -316,7 +317,7 @@ router.post("/test-delivery", async (req, res) => {
 /**
  * Verificar e tentar corrigir problemas na tabela de verificação de email
  */
-router.post("/verify-table-structure", async (req, res) => {
+router.post("/verify-table-structure", isAdmin, async (req, res) => {
   try {
     // Verificar se a tabela emailVerificationCodes existe
     const tableExists = await db.execute(sql`
@@ -415,7 +416,7 @@ router.post("/verify-table-structure", async (req, res) => {
 /**
  * Remover códigos de verificação problemáticos
  */
-router.post("/cleanup-verification-codes", async (req, res) => {
+router.post("/cleanup-verification-codes", isAdmin, async (req, res) => {
   try {
     const { userId, email, all } = req.body;
     
