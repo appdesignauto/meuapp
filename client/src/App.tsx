@@ -71,7 +71,13 @@ function AppRoutes() {
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
       <Route path="/auth" component={AuthPage} />
-      <Route path="/email-verification" component={EmailVerificationPage} />
+      {/* Redirecionar verificação de email para o painel, já que agora emails são verificados automaticamente */}
+      <Route path="/email-verification">
+        {() => {
+          window.location.href = "/painel/inicio";
+          return null;
+        }}
+      </Route>
       <Route path="/auth/supabase">
         {() => {
           const SupabaseAuthPage = lazy(() => import("@/pages/supabase-auth-page"));
@@ -167,7 +173,7 @@ function App() {
               <AppLayout>
                 <AppRoutes />
               </AppLayout>
-              <EmailVerificationModal />
+              {/* Modal de verificação removido, emails são verificados automaticamente */}
             </Router>
             <Toaster />
           </SupabaseAuthProvider>
