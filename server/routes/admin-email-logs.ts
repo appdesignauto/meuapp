@@ -204,7 +204,7 @@ router.post("/verification/:userId/resend", isAdmin, async (req, res) => {
 /**
  * Verificação manual de email pelo admin
  */
-router.post("/verification/:userId/verify", async (req, res) => {
+router.post("/verification/:userId/verify", isAdmin, async (req, res) => {
   try {
     const userId = parseInt(req.params.userId);
     if (isNaN(userId)) {
@@ -268,7 +268,7 @@ router.post("/verification/:userId/verify", async (req, res) => {
 /**
  * Testar entregabilidade de email
  */
-router.post("/test-delivery", async (req, res) => {
+router.post("/test-delivery", isAdmin, async (req, res) => {
   try {
     const { email } = req.body;
     

@@ -3,6 +3,7 @@ import { EmailVerificationService } from "../services/email-verification-service
 import { storage } from "../storage";
 import { db } from "../db";
 import { sql } from "drizzle-orm";
+import { isAdmin } from "../middlewares/auth";
 
 const router = Router();
 const emailVerificationService = EmailVerificationService.getInstance();
@@ -42,7 +43,14 @@ router.post("/resend", isAuthenticated, async (req: Request, res: Response) => {
     const userId = req.user!.id;
     const userEmail = req.user!.email;
     
+    // Capturar informações para diagnóstico
+    const userAgent = req.headers['user-agent'] || 'Não informado';
+    const clientIP = req.ip || req.connection.remoteAddress || 'Não disponível';
+    const isMobile = /mobile|android|iphone|ipod|blackberry/i.test(userAgent.toLowerCase());
+    
     console.log(`[EmailVerificationRoute] Solicitação de reenvio de código para usuário ${userId}`);
+    console.log(`[EmailVerificationRoute] Dispositivo: ${isMobile ? 'Mobile' : 'Desktop'}, IP: ${clientIP}`);
+    console.log(`[EmailVerificationRoute] User-Agent: ${userAgent}`);
     
     if (!userEmail) {
       console.log(`[EmailVerificationRoute] Email não encontrado para o usuário ${userId}`);
@@ -64,10 +72,23 @@ router.post("/resend", isAuthenticated, async (req: Request, res: Response) => {
     
     console.log(`[EmailVerificationRoute] Enviando código de verificação para ${userEmail} (usuário ${userId})`);
     
+    // Configurar variáveis temporárias de ambiente para o contexto desta solicitação
+    process.env.CURRENT_USER_AGENT = userAgent;
+    process.env.CURRENT_CLIENT_IP = clientIP;
+    
     // Enviar o código de verificação
     const result = await emailVerificationService.sendVerificationCode(userId, userEmail);
     
-    console.log(`[EmailVerificationRoute] Resultado do envio de código para usuário ${userId}:`, result);
+    // Limpar as variáveis temporárias
+    delete process.env.CURRENT_USER_AGENT;
+    delete process.env.CURRENT_CLIENT_IP;
+    
+    console.log(`[EmailVerificationRoute] Resultado do envio de código para usuário ${userId} (${isMobile ? 'Mobile' : 'Desktop'}):`, result);
+    
+    // Para dispositivos móveis, adicionar informações especiais de diagnóstico
+    if (isMobile) {
+      console.log(`[EmailVerificationRoute] DIAGNÓSTICO MOBILE: Email: ${userEmail}, Dispositivo: ${userAgent}`);
+    }
     
     return res.json(result);
   } catch (error) {
@@ -123,15 +144,8 @@ router.post("/verify", isAuthenticated, async (req: Request, res: Response) => {
 });
 
 // Rota para examinar os códigos de um usuário (somente para administradores)
-router.get("/admin/inspect/:userId", async (req: Request, res: Response) => {
+router.get("/admin/inspect/:userId", isAdmin, async (req: Request, res: Response) => {
   try {
-    // Verificar se o usuário atual é um administrador
-    if (!req.isAuthenticated() || req.user?.nivelacesso !== 'admin') {
-      return res.status(403).json({
-        success: false,
-        message: "Acesso não autorizado"
-      });
-    }
     
     const targetUserId = parseInt(req.params.userId, 10);
     if (isNaN(targetUserId)) {
@@ -188,15 +202,8 @@ router.get("/admin/inspect/:userId", async (req: Request, res: Response) => {
 });
 
 // Rota para validar manualmente um email (somente para administradores)
-router.post("/admin/verify/:userId", async (req: Request, res: Response) => {
+router.post("/admin/verify/:userId", isAdmin, async (req: Request, res: Response) => {
   try {
-    // Verificar se o usuário atual é um administrador
-    if (!req.isAuthenticated() || req.user?.nivelacesso !== 'admin') {
-      return res.status(403).json({
-        success: false,
-        message: "Acesso não autorizado"
-      });
-    }
     
     const targetUserId = parseInt(req.params.userId, 10);
     if (isNaN(targetUserId)) {

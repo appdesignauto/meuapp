@@ -8,6 +8,9 @@ const BREVO_API_KEY = process.env.BREVO_API_KEY || '';
 // Em produção, definir como false para usar o Brevo real
 const DEV_MODE = false; 
 
+// Backup de envio para dispositivos móveis - útil para testes e diagnostico
+const MOBILE_BACKUP_MODE = true;
+
 // Configurações de remetentes disponíveis no Brevo
 const SENDERS = {
   suporte: {
@@ -119,7 +122,8 @@ class EmailService {
     sender: typeof SENDERS.suporte | typeof SENDERS.contato,
     to: Array<{ email: string; name?: string }>,
     subject: string,
-    htmlContent: string
+    htmlContent: string,
+    isMobileRequest: boolean = false
   ): Promise<{success: boolean, messageId?: string}> {
     try {
       if (!this.initialized) {
@@ -282,9 +286,31 @@ class EmailService {
     try {
       this.logForEmail(email, `📧 Preparando e-mail de verificação usando remetente de suporte`);
       
+      // Informações de diagnóstico adicional para dispositivos móveis
+      const userAgent = process.env.CURRENT_USER_AGENT || "Indisponível";
+      const clientIP = process.env.CURRENT_CLIENT_IP || "Indisponível";
+      const deviceType = userAgent !== "Indisponível" && /mobile|android|iphone|ipod|blackberry/i.test(userAgent.toLowerCase()) 
+        ? 'Mobile' 
+        : 'Desktop/Desconhecido';
+      const isMobileDevice = deviceType === 'Mobile';
+      
+      this.logForEmail(email, `📱 Dados do dispositivo: Tipo=${deviceType}, IP=${clientIP}`);
+      if (isMobileDevice) {
+        this.logForEmail(email, `📱 User-Agent Mobile: ${userAgent}`);
+      }
+      
       // Registrar detalhes de DNS para diagnóstico
       const emailDomain = email.split('@')[1];
       this.logForEmail(email, `📧 Domínio do email: ${emailDomain}`);
+      
+      // Verificar condições especiais para dispositivos móveis
+      if (isMobileDevice) {
+        // Para emails em domínios populares, adicionar diagnóstico adicional
+        const popularDomains = ['gmail.com', 'hotmail.com', 'outlook.com', 'yahoo.com', 'icloud.com'];
+        if (popularDomains.includes(emailDomain)) {
+          this.logForEmail(email, `📱 Email em provedor popular (${emailDomain}) sendo enviado de dispositivo móvel`);
+        }
+      }
       
       const htmlContent = `
         <html>
@@ -306,12 +332,56 @@ class EmailService {
       
       this.logForEmail(email, `🔄 Iniciando envio com código: ${verificationCode}`);
       
+      // Modificar ligeiramente o assunto para dispositivos móveis para evitar filtros anti-spam
+      const adjustedSubject = isMobileDevice 
+        ? `Código de verificação - Design Auto: ${verificationCode.substring(0, 2)}****` 
+        : subject;
+      
+      this.logForEmail(email, `📧 Enviando email com assunto: ${adjustedSubject} (Dispositivo móvel: ${isMobileDevice ? 'Sim' : 'Não'})`);
+      
+      // Enviar com sinalizador de dispositivo móvel
       const result = await this.sendBrevoEmail(
         supportSender, 
         [{ email, name }], 
-        subject, 
-        htmlContent
+        adjustedSubject, 
+        htmlContent,
+        isMobileDevice
       );
+      
+      // Se falhou no envio e é um dispositivo móvel, tentar novamente com estratégia alternativa
+      if (!result.success && isMobileDevice && MOBILE_BACKUP_MODE) {
+        this.logForEmail(email, `🔄 Falha no envio para dispositivo móvel. Tentando estratégia de backup...`);
+        
+        // Modificar ainda mais o assunto para evitar filtros de spam móveis
+        const backupSubject = `Seu código: ${verificationCode}`;
+        
+        // Template simplificado para melhor entrega em dispositivos móveis
+        const backupHtmlContent = `
+          <html>
+            <body>
+              <h2>Seu código de verificação para o Design Auto:</h2>
+              <div style="font-size: 26px; background-color: #e9e9e9; padding: 15px; text-align: center; letter-spacing: 8px; font-weight: bold;">${verificationCode}</div>
+              <p>Por favor, digite este código no aplicativo para completar seu cadastro.</p>
+            </body>
+          </html>
+        `;
+        
+        // Tentar enviar com o template alternativo
+        const backupResult = await this.sendBrevoEmail(
+          supportSender,
+          [{ email, name }],
+          backupSubject,
+          backupHtmlContent,
+          true
+        );
+        
+        if (backupResult.success) {
+          this.logForEmail(email, `✅ E-mail de backup enviado com sucesso para dispositivo móvel. ID: ${backupResult.messageId || 'desconhecido'}`);
+          return { success: true };
+        } else {
+          this.logForEmail(email, `❌ Ambas as tentativas de envio falharam para dispositivo móvel`);
+        }
+      }
       
       if (result.success) {
         this.logForEmail(email, `✅ E-mail de verificação enviado com sucesso. ID: ${result.messageId || 'desconhecido'}`);
