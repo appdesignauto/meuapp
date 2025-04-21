@@ -72,6 +72,7 @@ export class SupabaseAuthService {
       }
 
       // 3. Criar usuário no banco local com ID do Supabase
+      // IMPORTANTE: Configurando emailconfirmed=true automaticamente para todos os usuários
       const [newUser] = await db
         .insert(users)
         .values({
@@ -85,6 +86,7 @@ export class SupabaseAuthService {
           tipoplano: 'gratuito', // Definir explicitamente para usuários gratuitos
           origemassinatura: 'auto', // Autocadastro
           isactive: true,
+          emailconfirmed: true, // Marcando automaticamente como verificado
           criadoem: new Date(),
           atualizadoem: new Date()
         })
@@ -145,6 +147,7 @@ export class SupabaseAuthService {
             tipoplano: 'gratuito', // Definir explicitamente para usuários gratuitos
             origemassinatura: 'auto', // Autocadastro
             isactive: true,
+            emailconfirmed: true, // Marcando automaticamente como verificado
             criadoem: new Date(),
             atualizadoem: new Date()
           })

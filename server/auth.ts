@@ -423,26 +423,9 @@ export function setupAuth(app: Express) {
         });
       }
       
-      // Enviar email de verificação automaticamente após registro Supabase
-      try {
-        // Se temos um usuário, enviar código de verificação
-        if (result.user) {
-          const emailVerificationService = EmailVerificationService.getInstance();
-          const verificationResult = await emailVerificationService.sendVerificationCode(
-            result.user.id, 
-            result.user.email
-          );
-          
-          if (verificationResult.success) {
-            console.log(`[Registro Supabase] E-mail de verificação enviado automaticamente para ${result.user.email}`);
-          } else {
-            console.warn(`[Registro Supabase] Falha ao enviar e-mail de verificação: ${verificationResult.message || 'Erro desconhecido'}`);
-          }
-        }
-      } catch (emailError) {
-        console.error("[Registro Supabase] Erro ao enviar e-mail de verificação:", emailError);
-        // Não falhar o registro por isso, apenas logar o erro
-      }
+      // Email já é marcado como verificado automaticamente no banco de dados
+      // Não precisamos mais enviar email de verificação
+      console.log(`[Registro Supabase] Usuário registrado com sucesso: ${result.user?.email}. Email marcado como verificado automaticamente.`);
 
       // Se o registro foi bem-sucedido, fazer login do usuário automaticamente
       req.login(result.user, (err) => {
@@ -462,7 +445,7 @@ export function setupAuth(app: Express) {
           success: true, 
           message: "Usuário registrado com sucesso", 
           user: userWithoutPassword,
-          needEmailConfirmation: true // Indicar que o usuário precisa confirmar o email
+          needEmailConfirmation: false // Email já está automaticamente confirmado
         });
       });
     } catch (error) {
