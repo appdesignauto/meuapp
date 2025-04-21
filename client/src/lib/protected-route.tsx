@@ -31,14 +31,7 @@ export function ProtectedRoute({
     );
   }
 
-  // Verificação de email confirmado
-  if (requireEmailVerification && user.emailconfirmed === false) {
-    return (
-      <Route path={path}>
-        <Redirect to="/email-verification" />
-      </Route>
-    );
-  }
+  // Não verificamos mais o email, pois todos os emails são verificados automaticamente durante o registro
 
   // Verificação de papel/role específica
   if (roles.length > 0 && !roles.includes(user.role)) {

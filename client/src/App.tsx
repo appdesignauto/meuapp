@@ -1,4 +1,4 @@
-import { Switch, Route, Router, useLocation } from "wouter";
+import { Switch, Route, Router, useLocation, Redirect } from "wouter";
 import { Suspense, lazy } from "react";
 import { Loader2 } from "lucide-react";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -105,10 +105,7 @@ function AppRoutes() {
       
       {/* Redirecionamento da raiz do painel para /painel/inicio */}
       <Route path="/painel">
-        {() => {
-          window.location.href = "/painel/inicio";
-          return null;
-        }}
+        <Redirect to="/painel/inicio" />
       </Route>
       
       {/* Página de teste de autenticação Supabase */}
