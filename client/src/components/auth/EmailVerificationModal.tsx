@@ -226,44 +226,30 @@ export function EmailVerificationModal() {
             
             <div className="my-6">
               <div className="flex items-center justify-center mb-4">
-                {verificationStatus?.sent ? (
-                  <motion.div
-                    initial={{ scale: 0.8 }}
-                    animate={{ scale: 1 }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 260,
-                      damping: 20,
-                      repeat: Infinity,
-                      repeatType: "mirror",
-                      repeatDelay: 3,
-                      duration: 0.5
-                    }}
-                  >
-                    <Mail className="h-12 w-12 text-green-500" />
-                  </motion.div>
-                ) : (
-                  <AlertCircle className="h-12 w-12 text-amber-500" />
-                )}
+                <motion.div
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: 1 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 260,
+                    damping: 20,
+                    repeat: Infinity,
+                    repeatType: "mirror",
+                    repeatDelay: 3,
+                    duration: 0.5
+                  }}
+                >
+                  <Mail className="h-12 w-12 text-green-500" />
+                </motion.div>
               </div>
               <p className="text-center text-base mb-4">
-                {verificationStatus?.sent ? (
-                  <>
-                    <span className="block font-medium mb-2">Acabamos de enviar um código para:</span>
-                    <span className="block text-primary font-bold mb-2">{user.email}</span>
-                    <span className="block">
-                      Digite o código de 6 dígitos abaixo para confirmar sua conta e acessar a plataforma completa.
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <span className="block font-medium mb-2">Precisamos enviar um código para:</span>
-                    <span className="block text-primary font-bold mb-2">{user.email}</span>
-                    <span className="block">
-                      Clique em "Enviar código" abaixo para receber o código de verificação.
-                    </span>
-                  </>
-                )}
+                <>
+                  <span className="block font-medium mb-2">Um código foi enviado para:</span>
+                  <span className="block text-primary font-bold mb-2">{user.email}</span>
+                  <span className="block">
+                    Digite o código de 6 dígitos abaixo para confirmar sua conta e acessar a plataforma completa.
+                  </span>
+                </>
               </p>
             </div>
 
