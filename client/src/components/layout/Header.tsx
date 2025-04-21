@@ -1,42 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
   Car,
-  Crown,
   Menu,
-  Search,
-  LayoutDashboard,
   User,
-  Heart,
-  Download,
-  LogOut,
-  CreditCard,
-  Settings,
-  Infinity,
-  ChevronDown,
-  Bookmark,
-  Moon,
-  Users,
-  HelpCircle,
-  Link as LinkIcon,
+  LogOut
 } from 'lucide-react';
 import MobileMenu from './MobileMenu';
 import { useQuery } from '@tanstack/react-query';
@@ -50,22 +20,45 @@ const LogoImage = ({ siteSettings }: LogoImageProps) => {
   // Usar o logo das configurações do site ou o padrão se não existir
   const logoUrl = siteSettings?.logoUrl || '/images/logo.png';
   
-  // Adicionar um pequeno timestamp ao final para evitar cache excessivo
-  const finalLogoUrl = `${logoUrl}${logoUrl.includes('?') ? '&' : '?'}t=${new Date().getTime()}`;
-  
   return (
     <img 
-      src={finalLogoUrl}
-      alt="DesignAuto App" 
-      className="h-12 w-auto max-w-[200px] sm:max-w-[230px] object-contain mr-3 transition-transform duration-200 hover:scale-105 pr-1"
-      loading="eager"
-      onError={(e) => {
-        // Em caso de erro, carregar o logo padrão
-        console.error('Erro ao carregar logo, usando padrão');
-        (e.target as HTMLImageElement).src = '/images/logo.png';
-      }}
+      src={logoUrl} 
+      alt="DesignAuto Logo" 
+      className="h-full object-contain"
     />
   );
+};
+
+// Links de navegação
+const defaultNavLinks = [
+  { label: 'Início', path: '/' },
+  { label: 'Categorias', path: '/categorias' },
+  { label: 'Como Funciona', path: '/como-funciona' },
+  { label: 'Planos', path: '/planos' },
+  { label: 'Suporte', path: '/suporte' }
+];
+
+// Links adicionais baseados no papel do usuário
+const roleBasedLinks: Record<string, { label: string, path: string }[]> = {
+  usuario: [
+    { label: 'Painel', path: '/painel/inicio' },
+  ],
+  premium: [
+    { label: 'Painel', path: '/painel/inicio' },
+  ],
+  designer: [
+    { label: 'Painel', path: '/painel/inicio' },
+    { label: 'Gerenciar Artes', path: '/painel/designer/artes' },
+  ],
+  designer_adm: [
+    { label: 'Painel', path: '/painel/inicio' },
+    { label: 'Gerenciar Artes', path: '/painel/designer/artes' },
+    { label: 'Usuários', path: '/painel/designer/usuarios' },
+  ],
+  admin: [
+    { label: 'Painel', path: '/painel/inicio' },
+    { label: 'Administração', path: '/painel/admin/dashboard' },
+  ]
 };
 
 const Header = () => {
@@ -73,23 +66,8 @@ const Header = () => {
   const { user, logoutMutation } = useAuth();
   const [location] = useLocation();
   
-  // Buscar estatísticas do usuário para exibir no dropdown
-  const { data: userStats } = useQuery({
-    queryKey: ['/api/users/stats'],
-    queryFn: async () => {
-      if (!user) return null;
-      const res = await fetch('/api/users/stats');
-      if (!res.ok) return { totalFavorites: 0, totalDownloads: 0, totalViews: 0 };
-      return res.json();
-    },
-    enabled: !!user, // Só executa se o usuário estiver logado
-  });
-  
-  // Contador para forçar recarregamento das configurações
-  const [settingsRefreshCounter, setSettingsRefreshCounter] = useState(0);
-  
-  // Buscamos as configurações do site sem atualização automática frequente
-  const { data: siteSettings, refetch: refetchSettings } = useQuery({
+  // Buscar configurações do site
+  const { data: siteSettings } = useQuery({
     queryKey: ['/api/site-settings'],
     queryFn: async () => {
       try {
@@ -101,47 +79,13 @@ const Header = () => {
         return { logoUrl: '/images/logo.png' };
       }
     },
-    refetchOnWindowFocus: false,
-    refetchOnMount: true,
-    staleTime: 60000 // Cache por 1 minuto
   });
-  
-  // Apenas um único listener para todos os eventos de atualização do logo
-  useEffect(() => {
-    // Função para forçar recarregamento das configurações
-    const refreshSettings = () => {
-      console.log("Atualizando configurações do site...");
-      refetchSettings();
-    };
-    
-    // Adicionar listeners para eventos de logo
-    window.addEventListener('logo-updated', refreshSettings);
-    window.addEventListener('logo-removed', refreshSettings);
-    
-    // Listener para quando a aba voltar a estar visível
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        refreshSettings();
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      // Remover todos os listeners quando o componente for desmontado
-      window.removeEventListener('logo-updated', refreshSettings);
-      window.removeEventListener('logo-removed', refreshSettings);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [refetchSettings]);
 
-  const navLinks = [
-    { name: 'Início', path: '/' },
-    { name: 'Categorias', path: '/categories' },
-    { name: 'Designers', path: '/designers' },
-    { name: 'Formatos', path: '/formats' },
-    { name: 'Tutoriais', path: '/tutorials' },
-    { name: 'Suporte', path: '/support' },
-  ];
+  // Determinar os links de navegação baseados no papel do usuário
+  let navLinks = [...defaultNavLinks];
+  if (user?.role && roleBasedLinks[user.role]) {
+    navLinks = [...defaultNavLinks, ...roleBasedLinks[user.role]];
+  }
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -151,11 +95,10 @@ const Header = () => {
     <header className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm backdrop-blur-sm bg-white/95">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 sm:h-[4.5rem] md:h-20">
-          {/* Logo restaurado conforme solicitado */}
+          {/* Logo */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center">
               <div className="h-11 sm:h-12 md:h-14 w-[200px] sm:w-[220px] flex items-center">
-                {/* Exibir logo utilizando o componente dedicado */}
                 <LogoImage siteSettings={siteSettings} />
               </div>
             </Link>
@@ -168,55 +111,20 @@ const Header = () => {
                 key={link.path}
                 href={link.path}
                 className={`text-neutral-600 hover:text-blue-600 font-medium text-[13px] px-3 py-2 rounded-md transition-all duration-200 hover:bg-blue-50 ${
-                  location === link.path ? 'text-blue-600 bg-blue-50/80' : ''
+                  location === link.path ? 'text-blue-600 bg-blue-50' : ''
                 }`}
               >
-                {link.name}
+                {link.label}
               </Link>
             ))}
           </nav>
 
-          {/* User Actions */}
-          <div className="flex items-center space-x-3">
-            {/* Icone de Busca - Visível apenas em telas médias e maiores */}
-            <Button 
-              variant="ghost" 
-              className="hidden md:flex w-9 h-9 rounded-full items-center justify-center p-0 text-neutral-600 hover:text-blue-600 hover:bg-blue-50"
-              onClick={() => window.location.href = '/search'}
-            >
-              <Search className="h-[18px] w-[18px]" />
-            </Button>
-
-            {user && user.role !== 'premium' && (
-              <Link href="/planos">
-                <Button 
-                  variant="ghost" 
-                  className="hidden md:flex h-9 items-center rounded-full px-3 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-600 hover:text-blue-700 hover:from-blue-100 hover:to-blue-200 border border-blue-200"
-                >
-                  <Crown className="h-3.5 w-3.5 mr-1.5" />
-                  <span className="text-xs font-medium">Upgrade</span>
-                </Button>
-              </Link>
-            )}
-            
-            {/* Link para painel administrativo - mostrado apenas para admin */}
-            {user && (user.role === 'admin' || user.role === 'designer_adm') && (
-              <Link href="/admin">
-                <Button 
-                  variant="ghost" 
-                  className="hidden md:flex h-9 items-center rounded-full px-3 bg-amber-50 text-amber-600 hover:bg-amber-100 border border-amber-200"
-                >
-                  <LayoutDashboard className="h-3.5 w-3.5 mr-1.5" />
-                  <span className="text-xs font-medium">Admin</span>
-                </Button>
-              </Link>
-            )}
-            
-            {/* Botão do menu mobile */}
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="md:hidden h-9 w-9 rounded-full ml-1 text-neutral-600 hover:bg-blue-50 hover:text-blue-600"
+          {/* Right Side - User Controls */}
+          <div className="flex items-center">
+            {/* Mobile Menu Toggle */}
+            <Button
+              variant="ghost"
+              className="md:hidden mr-2 h-8 w-8 p-0 rounded-md"
               onClick={toggleMobileMenu}
             >
               <Menu className="h-[18px] w-[18px]" />
@@ -257,7 +165,6 @@ const Header = () => {
                   onClick={() => {
                     if (logoutMutation) {
                       logoutMutation.mutate();
-                      window.location.href = '/auth'; // Redirecionar para a página de login
                     }
                   }}
                 >
