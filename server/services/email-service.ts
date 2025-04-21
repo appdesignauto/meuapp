@@ -75,7 +75,21 @@ class EmailService {
     const timestamp = new Date().toISOString();
     const logMessage = `[EmailService ${timestamp}] ${message}`;
     console.log(logMessage);
+    
+    // Limitar o tamanho máximo do log para evitar problemas de memória
+    if (this.logs.length >= 500) {
+      // Manter apenas os 450 logs mais recentes quando atingir o limite
+      this.logs = this.logs.slice(this.logs.length - 450);
+    }
+    
     this.logs.push(logMessage);
+  }
+  
+  /**
+   * Registra logs específicos para um email
+   */
+  private logForEmail(email: string, message: string): void {
+    this.log(`[${email}] ${message}`);
   }
 
   /**
@@ -238,7 +252,11 @@ class EmailService {
     // Extrair nome do email para fallback
     const name = email.split('@')[0];
     try {
-      this.log(`📧 Preparando e-mail de verificação para ${email} usando remetente de suporte`);
+      this.logForEmail(email, `📧 Preparando e-mail de verificação usando remetente de suporte`);
+      
+      // Registrar detalhes de DNS para diagnóstico
+      const emailDomain = email.split('@')[1];
+      this.logForEmail(email, `📧 Domínio do email: ${emailDomain}`);
       
       const htmlContent = `
         <html>
@@ -258,6 +276,8 @@ class EmailService {
       const supportSender = SENDERS.suporte;
       const subject = 'Verifique seu e-mail - Design Auto';
       
+      this.logForEmail(email, `🔄 Iniciando envio com código: ${verificationCode}`);
+      
       const result = await this.sendBrevoEmail(
         supportSender, 
         [{ email, name }], 
@@ -266,14 +286,15 @@ class EmailService {
       );
       
       if (result.success) {
-        this.log(`✅ E-mail de verificação enviado com sucesso de ${supportSender.email}: ${result.messageId}`);
+        this.logForEmail(email, `✅ E-mail de verificação enviado com sucesso. ID: ${result.messageId || 'desconhecido'}`);
       } else {
-        this.log(`❌ Falha ao enviar e-mail de verificação para ${email}`);
+        this.logForEmail(email, `❌ Falha ao enviar e-mail de verificação`);
       }
       
       return { success: result.success };
     } catch (error) {
-      this.log(`❌ Erro ao enviar e-mail de verificação para ${email}: ${error instanceof Error ? error.message : String(error)}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logForEmail(email, `❌ Erro ao enviar e-mail de verificação: ${errorMessage}`);
       return { success: false };
     }
   }
