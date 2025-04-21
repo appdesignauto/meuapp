@@ -298,27 +298,29 @@ export function setupAuth(app: Express) {
         role: nivelAcesso, // Manter role para compatibilidade
         isactive: true,
         origemassinatura: origemAssinatura, // Define origem como "auto"
-        emailconfirmed: false, // Explicitamente definir como não confirmado
+        emailconfirmed: true, // Email já verificado automaticamente
       });
       
-      // Enviar email de verificação automaticamente
+      // Enviar email de boas-vindas automaticamente
       try {
-        // Usar o singleton do serviço de verificação
-        const emailVerificationService = EmailVerificationService.getInstance();
+        // Importar e usar o serviço de email de boas-vindas
+        const WelcomeEmailService = (await import('./services/welcome-email-service')).WelcomeEmailService;
+        const welcomeEmailService = WelcomeEmailService.getInstance();
         
-        // Enviar email de verificação automaticamente
-        const result = await emailVerificationService.sendVerificationCode(
+        // Enviar email de boas-vindas automaticamente
+        const result = await welcomeEmailService.sendWelcomeEmail(
           newUser.id, 
-          newUser.email
+          newUser.email,
+          newUser.name
         );
         
         if (result.success) {
-          console.log(`[Registro] E-mail de verificação enviado automaticamente para ${newUser.email}`);
+          console.log(`[Registro] E-mail de boas-vindas enviado automaticamente para ${newUser.email}`);
         } else {
-          console.warn(`[Registro] Falha ao enviar e-mail de verificação para ${newUser.email}: ${result.message || 'Erro desconhecido'}`);
+          console.warn(`[Registro] Falha ao enviar e-mail de boas-vindas para ${newUser.email}: ${result.message || 'Erro desconhecido'}`);
         }
       } catch (emailError) {
-        console.error("[Registro] Erro ao enviar e-mail de verificação:", emailError);
+        console.error("[Registro] Erro ao enviar e-mail de boas-vindas:", emailError);
         // Não interromper o fluxo se o envio de e-mail falhar - apenas logar o erro
       }
       
@@ -336,8 +338,8 @@ export function setupAuth(app: Express) {
         return res.status(201).json({
           success: true,
           user: userWithoutPassword,
-          verificationSent: true,
-          message: "Usuário criado com sucesso. Por favor, verifique seu e-mail para confirmar sua conta."
+          welcomeEmailSent: true,
+          message: "Usuário criado com sucesso! Enviamos um e-mail de boas-vindas para você."
         });
       });
     } catch (error) {
@@ -464,8 +466,9 @@ export function setupAuth(app: Express) {
         
         return res.status(201).json({ 
           success: true, 
-          message: "Usuário registrado com sucesso", 
+          message: "Usuário registrado com sucesso! Enviamos um e-mail de boas-vindas para você.", 
           user: userWithoutPassword,
+          welcomeEmailSent: true,
           needEmailConfirmation: false // Email já está automaticamente confirmado
         });
       });
