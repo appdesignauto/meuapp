@@ -108,10 +108,14 @@ const AuthPage = () => {
       };
       
       console.log("Enviando credenciais de login:", loginData);
-      await loginMutation.mutateAsync(loginData);
+      const userData = await loginMutation.mutateAsync(loginData);
       
-      // Todos os emails já são verificados automaticamente
-      setLocation("/");
+      // Verificar se o email foi confirmado
+      if (userData && userData.emailconfirmed === false) {
+        setLocation("/email-verification");
+      } else {
+        setLocation("/");
+      }
     } catch (error) {
       // Erro já tratado no hook useAuth
     }
@@ -124,7 +128,7 @@ const AuthPage = () => {
       const username = values.email.split('@')[0];
       // Adicionar valores padrão para manter API compatível
       // Não precisamos definir origemassinatura aqui, pois o backend já define automaticamente como "auto"
-      await registerMutation.mutateAsync({ 
+      const userData = await registerMutation.mutateAsync({ 
         ...registerData, 
         username,
         nivelacesso: "usuario", // Definir nível de acesso como "usuario" (gratuito)
@@ -133,12 +137,13 @@ const AuthPage = () => {
         periodType: "mensal" // Período mensal por padrão
       });
       
-      // O email já é verificado automaticamente, redirecionar diretamente para a home
-      setLocation("/");
+      // Se o registro foi bem-sucedido, redirecionar para a página de verificação de e-mail
+      // Novos usuários sempre são criados com emailconfirmed=false
+      setLocation("/email-verification");
       
       toast({
         title: "Conta criada com sucesso!",
-        description: "Sua conta foi ativada automaticamente e enviamos um email de boas-vindas. Bem-vindo(a)!",
+        description: "Verifique seu e-mail para ativar sua conta.",
         variant: "success",
       });
     } catch (error) {
@@ -272,7 +277,7 @@ const AuthPage = () => {
                 <CardHeader>
                   <CardTitle>Cadastro</CardTitle>
                   <CardDescription>
-                    Crie sua conta para acessar todas as funcionalidades. Você receberá um email de boas-vindas!
+                    Crie sua conta para acessar todas as funcionalidades
                   </CardDescription>
                 </CardHeader>
                 <CardContent>

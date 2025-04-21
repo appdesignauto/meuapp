@@ -34,8 +34,6 @@ import avatarUploadRouter from './routes/avatar-upload';
 import userProfileRouter from './routes/user-profile';
 import emailVerificationRouter from './routes/email-verification';
 import emailTestRouter from './routes/email-test';
-import adminEmailLogsRouter from './routes/admin-email-logs';
-import emailDiagnosticRouter from './routes/email-diagnostic';
 import { setupTestR2DirectRoute } from './routes/test-r2-direct';
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -3835,12 +3833,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Registrar rotas para teste de envio de e-mail
   app.use('/api/email-test', emailTestRouter);
-  
-  // Registrar rotas administrativas para logs e diagnóstico de email
-  app.use('/api/admin/email', isAdmin, adminEmailLogsRouter);
-  
-  // Rota de diagnóstico para problemas de envio de email
-  app.use('/api/admin/email-diagnostic', isAdmin, emailDiagnosticRouter);
   
   // Configurar rota de diagnóstico direto do R2
   setupTestR2DirectRoute(app);

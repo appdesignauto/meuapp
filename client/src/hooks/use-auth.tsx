@@ -15,11 +15,14 @@ type AuthContextType = {
   loginMutation: UseMutationResult<User, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
   registerMutation: UseMutationResult<any, Error, RegisterData>;
+  verifyEmailMutation: UseMutationResult<any, Error, VerifyEmailData>;
+  resendVerificationMutation: UseMutationResult<any, Error, void>;
 };
 
 type LoginData = {
   username: string;
   password: string;
+  rememberMe?: boolean;
 };
 
 type RegisterData = {
@@ -33,6 +36,10 @@ type RegisterData = {
   periodType?: "mensal" | "anual" | "vitalicio";
 };
 
+type VerifyEmailData = {
+  code: string;
+};
+
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -41,6 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     data: user,
     error,
     isLoading,
+    refetch: refetchUser,
   } = useQuery<User | null, Error>({
     queryKey: ['/api/user'],
     queryFn: async () => {
@@ -58,18 +66,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
+      console.log("Enviando credenciais de login:", credentials);
       const res = await apiRequest('POST', '/api/login', credentials);
       
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
+        console.error("Erro na resposta de login:", res.status, errorData);
         throw new Error(errorData.message || "Falha na autenticação. Verifique suas credenciais.");
       }
       
-      return await res.json();
+      const userData = await res.json();
+      console.log("Login bem-sucedido:", userData);
+      return userData;
     },
     onSuccess: (user: User) => {
       queryClient.setQueryData(['/api/user'], user);
-      
       toast({
         title: "Login realizado com sucesso",
         description: `Bem-vindo, ${user.name || user.username}!`,
@@ -88,19 +99,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     mutationFn: async (credentials: RegisterData) => {
       const res = await apiRequest('POST', '/api/register', credentials);
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || "Falha no registro. Tente novamente.");
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Erro ao registrar usuário");
       }
       return await res.json();
     },
-    onSuccess: (data) => {
-      // Após o registro, definimos o usuário automaticamente como verificado
-      queryClient.setQueryData(['/api/user'], data);
-      
-      toast({
-        title: "Cadastro realizado",
-        description: "Sua conta foi criada com sucesso!",
-      });
+    onSuccess: (response) => {
+      if (response.success) {
+        // Se tiver um usuário na resposta, atualize o estado
+        if (response.user) {
+          queryClient.setQueryData(['/api/user'], response.user);
+        }
+        
+        // Verifica se foi enviado um email para verificação
+        if (response.verificationSent) {
+          toast({
+            title: "Registro realizado com sucesso",
+            description: "Enviamos um código de verificação para seu e-mail. Por favor, verifique sua caixa de entrada.",
+          });
+        } else {
+          toast({
+            title: "Registro realizado com sucesso",
+            description: `Bem-vindo, ${response.user?.name || response.user?.username || 'novo usuário'}!`,
+          });
+        }
+      } else {
+        toast({
+          title: "Registro realizado, mas com problemas",
+          description: response.message || "Registro parcialmente concluído. Entre em contato com o suporte.",
+          variant: "destructive",
+        });
+      }
     },
     onError: (error: Error) => {
       toast({
@@ -113,25 +142,67 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest('POST', '/api/logout');
-      if (!res.ok) {
-        throw new Error("Falha ao fazer logout");
-      }
+      await apiRequest('POST', '/api/logout');
     },
     onSuccess: () => {
       queryClient.setQueryData(['/api/user'], null);
-      
       toast({
         title: "Logout realizado",
         description: "Você foi desconectado com sucesso.",
       });
-      
-      // Redirecionar para a página inicial após logout
-      window.location.href = '/';
     },
     onError: (error: Error) => {
       toast({
         title: "Falha ao desconectar",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  const verifyEmailMutation = useMutation({
+    mutationFn: async (data: VerifyEmailData) => {
+      const res = await apiRequest('POST', '/api/email-verification/verify', data);
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Falha ao verificar e-mail");
+      }
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+      toast({
+        title: "E-mail verificado com sucesso",
+        description: "Sua conta foi ativada e você já pode acessar todos os recursos.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Falha na verificação",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  const resendVerificationMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest('POST', '/api/email-verification/send');
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Falha ao reenviar código de verificação");
+      }
+      return await res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Código reenviado",
+        description: "Um novo código de verificação foi enviado para seu e-mail.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Falha ao reenviar código",
         description: error.message,
         variant: "destructive",
       });
@@ -146,7 +217,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         error,
         loginMutation,
         logoutMutation,
-        registerMutation
+        registerMutation,
+        verifyEmailMutation,
+        resendVerificationMutation
       }}
     >
       {children}
@@ -159,23 +232,5 @@ export function useAuth() {
   if (!context) {
     throw new Error("useAuth deve ser usado dentro de um AuthProvider");
   }
-  
-  // Função auxiliar para facilitar o login
-  const login = async (username: string, password: string) => {
-    return await context.loginMutation.mutateAsync({ 
-      username, 
-      password
-    });
-  };
-
-  // Função auxiliar para facilitar o logout
-  const logout = async () => {
-    return await context.logoutMutation.mutateAsync();
-  };
-
-  return {
-    ...context,
-    login,
-    logout
-  };
+  return context;
 }

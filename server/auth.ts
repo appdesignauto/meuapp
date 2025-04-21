@@ -9,7 +9,6 @@ import connectPg from "connect-pg-simple";
 import { db, pool } from "./db";
 import { eq } from "drizzle-orm";
 import { supabaseAuthService } from "./services/supabase-auth";
-import { EmailVerificationService } from "./services/email-verification-service";
 
 declare global {
   namespace Express {
@@ -298,29 +297,28 @@ export function setupAuth(app: Express) {
         role: nivelAcesso, // Manter role para compatibilidade
         isactive: true,
         origemassinatura: origemAssinatura, // Define origem como "auto"
-        emailconfirmed: true, // Email já verificado automaticamente
+        emailconfirmed: false, // Explicitamente definir como não confirmado
       });
       
-      // Enviar email de boas-vindas automaticamente
+      // Enviar email de verificação
       try {
-        // Importar e usar o serviço de email de boas-vindas
-        const WelcomeEmailService = (await import('./services/welcome-email-service')).WelcomeEmailService;
-        const welcomeEmailService = WelcomeEmailService.getInstance();
+        // Importar o serviço de verificação de email
+        const { emailVerificationService } = await import('./services/email-verification-service');
         
-        // Enviar email de boas-vindas automaticamente
-        const result = await welcomeEmailService.sendWelcomeEmail(
+        // Enviar email de verificação
+        const sent = await emailVerificationService.sendVerificationEmail(
           newUser.id, 
           newUser.email,
-          newUser.name
+          newUser.name || 'Usuário'
         );
         
-        if (result.success) {
-          console.log(`[Registro] E-mail de boas-vindas enviado automaticamente para ${newUser.email}`);
+        if (sent) {
+          console.log(`E-mail de verificação enviado para ${newUser.email}`);
         } else {
-          console.warn(`[Registro] Falha ao enviar e-mail de boas-vindas para ${newUser.email}: ${result.message || 'Erro desconhecido'}`);
+          console.warn(`Falha ao enviar e-mail de verificação para ${newUser.email}`);
         }
       } catch (emailError) {
-        console.error("[Registro] Erro ao enviar e-mail de boas-vindas:", emailError);
+        console.error("Erro ao enviar e-mail de verificação:", emailError);
         // Não interromper o fluxo se o envio de e-mail falhar - apenas logar o erro
       }
       
@@ -338,8 +336,8 @@ export function setupAuth(app: Express) {
         return res.status(201).json({
           success: true,
           user: userWithoutPassword,
-          welcomeEmailSent: true,
-          message: "Usuário criado com sucesso! Enviamos um e-mail de boas-vindas para você."
+          verificationSent: true,
+          message: "Usuário criado com sucesso. Por favor, verifique seu e-mail para confirmar sua conta."
         });
       });
     } catch (error) {
@@ -425,30 +423,17 @@ export function setupAuth(app: Express) {
         });
       }
       
-      // Email já é marcado como verificado automaticamente no banco de dados
-      // Enviar email de boas-vindas ao invés de email de verificação
+      // Em ambiente de teste, para evitar a necessidade de confirmação de email,
+      // vamos confirmar o email automaticamente usando o método admin
       try {
-        if (result.user) {
-          const WelcomeEmailService = (await import('./services/welcome-email-service')).WelcomeEmailService;
-          const welcomeEmailService = WelcomeEmailService.getInstance();
-          const welcomeResult = await welcomeEmailService.sendWelcomeEmail(
-            result.user.id, 
-            result.user.email,
-            result.user.name
-          );
-          
-          if (welcomeResult.success) {
-            console.log(`[Registro Supabase] Email de boas-vindas enviado para ${result.user.email}`);
-          } else {
-            console.warn(`[Registro Supabase] Falha ao enviar email de boas-vindas: ${welcomeResult.message || 'Erro desconhecido'}`);
-          }
+        // Tentar confirmar o email com admin API, isso só funciona com service_role key
+        if (result.user?.supabaseId) {
+          await supabaseAuthService.confirmEmail(result.user.supabaseId);
         }
-      } catch (emailError) {
-        console.error("[Registro Supabase] Erro ao enviar email de boas-vindas:", emailError);
-        // Não falhar o registro por isso, apenas logar o erro
+      } catch (confirmError) {
+        console.log("Não foi possível confirmar o email automaticamente:", confirmError);
+        // Não falhar o registro por isso, apenas registrar o erro
       }
-      
-      console.log(`[Registro Supabase] Usuário registrado com sucesso: ${result.user?.email}. Email marcado como verificado automaticamente.`);
 
       // Se o registro foi bem-sucedido, fazer login do usuário automaticamente
       req.login(result.user, (err) => {
@@ -466,10 +451,9 @@ export function setupAuth(app: Express) {
         
         return res.status(201).json({ 
           success: true, 
-          message: "Usuário registrado com sucesso! Enviamos um e-mail de boas-vindas para você.", 
+          message: "Usuário registrado com sucesso", 
           user: userWithoutPassword,
-          welcomeEmailSent: true,
-          needEmailConfirmation: false // Email já está automaticamente confirmado
+          needEmailConfirmation: true // Indicar que o usuário precisa confirmar o email
         });
       });
     } catch (error) {

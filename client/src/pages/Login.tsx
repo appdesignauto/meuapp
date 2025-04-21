@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2 } from 'lucide-react';
-import { Car } from 'lucide-react';
+import { z } from 'zod';
+import { useAuth } from '@/context/AuthContext';
 import { Link } from 'wouter';
-import { useAuth } from '@/hooks/use-auth';
-
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -15,8 +14,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+} from '@/components/ui/card';
 import {
   Form,
   FormControl,
@@ -24,21 +22,20 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+} from '@/components/ui/form';
+import { Car, Loader2 } from 'lucide-react';
 
-// Schema de validação do formulário
 const loginSchema = z.object({
-  username: z.string().min(1, { message: 'Campo obrigatório' }),
-  password: z.string().min(1, { message: 'Campo obrigatório' }),
+  username: z.string().min(3, { message: 'Usuário deve ter pelo menos 3 caracteres' }),
+  password: z.string().min(6, { message: 'Senha deve ter pelo menos 6 caracteres' }),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 const Login = () => {
-  const [, setLocation] = useLocation();
   const { login } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [, setLocation] = useLocation();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -50,20 +47,11 @@ const Login = () => {
 
   const onSubmit = async (data: LoginFormValues) => {
     setIsSubmitting(true);
-    
     try {
       await login(data.username, data.password);
-      console.log('Login bem-sucedido, redirecionando para /painel/inicio');
-      
-      // Usar redirecionamento direto para o painel após login bem-sucedido
-      window.location.href = '/painel/inicio';
-      
+      setLocation('/');
     } catch (error) {
       console.error('Login failed:', error);
-      form.setError("username", { 
-        type: "manual", 
-        message: "Usuário/email ou senha incorretos" 
-      });
     } finally {
       setIsSubmitting(false);
     }
@@ -94,9 +82,9 @@ const Login = () => {
                   name="username"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email ou Usuário</FormLabel>
+                      <FormLabel>Usuário</FormLabel>
                       <FormControl>
-                        <Input placeholder="Digite seu email ou nome de usuário" {...field} />
+                        <Input placeholder="Seu nome de usuário" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

@@ -1,4 +1,4 @@
-import { Switch, Route, Router, useLocation, Redirect } from "wouter";
+import { Switch, Route, Router, useLocation } from "wouter";
 import { Suspense, lazy } from "react";
 import { Loader2 } from "lucide-react";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -9,6 +9,7 @@ import { SupabaseAuthProvider } from "@/hooks/use-supabase-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { ScrollToTop } from "@/hooks/useScrollTop";
 import { ThemeProvider } from "@/components/theme-provider";
+import { EmailVerificationModal } from "@/components/auth/EmailVerificationModal";
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -27,7 +28,6 @@ import ProfilePage from "@/pages/profile-page";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import LogoUploadPage from "@/pages/admin/LogoUploadPage";
 import StorageTestPage from "@/pages/admin/StorageTestPage";
-import EmailManagementPage from "@/pages/admin/EmailManagementPage";
 import AuthPage from "@/pages/auth-page";
 import NotFound from "@/pages/not-found";
 import AvatarTestPage from "@/pages/AvatarTestPage";
@@ -70,7 +70,6 @@ function AppRoutes() {
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
       <Route path="/auth" component={AuthPage} />
-      {/* Página de verificação de email foi revisada para redirecionar adequadamente */}
       <Route path="/email-verification" component={EmailVerificationPage} />
       <Route path="/auth/supabase">
         {() => {
@@ -105,7 +104,10 @@ function AppRoutes() {
       
       {/* Redirecionamento da raiz do painel para /painel/inicio */}
       <Route path="/painel">
-        <Redirect to="/painel/inicio" />
+        {() => {
+          window.location.href = "/painel/inicio";
+          return null;
+        }}
       </Route>
       
       {/* Página de teste de autenticação Supabase */}
@@ -137,11 +139,6 @@ function AppRoutes() {
         roles={['admin', 'designer_adm']} 
       />
       <ProtectedRoute 
-        path="/admin/email-management" 
-        component={EmailManagementPage}
-        roles={['admin']} 
-      />
-      <ProtectedRoute 
         path="/admin/:page" 
         component={AdminDashboard}
         roles={['admin', 'designer_adm']} 
@@ -164,6 +161,7 @@ function App() {
               <AppLayout>
                 <AppRoutes />
               </AppLayout>
+              <EmailVerificationModal />
             </Router>
             <Toaster />
           </SupabaseAuthProvider>

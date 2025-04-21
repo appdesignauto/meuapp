@@ -6,10 +6,12 @@ export function ProtectedRoute({
   path,
   component: Component,
   roles = [],
+  requireEmailVerification = true,
 }: {
   path: string;
   component: () => React.JSX.Element | null;
   roles?: string[];
+  requireEmailVerification?: boolean;
 }) {
   const { user, isLoading } = useAuth();
 
@@ -31,7 +33,14 @@ export function ProtectedRoute({
     );
   }
 
-  // Não verificamos mais o email, pois todos os emails são verificados automaticamente durante o registro
+  // Verificação de email confirmado
+  if (requireEmailVerification && user.emailconfirmed === false) {
+    return (
+      <Route path={path}>
+        <Redirect to="/email-verification" />
+      </Route>
+    );
+  }
 
   // Verificação de papel/role específica
   if (roles.length > 0 && !roles.includes(user.role)) {
