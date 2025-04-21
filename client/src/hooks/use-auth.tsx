@@ -64,16 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
   
-  // Efeito para atualizar o localStorage com base no estado de autenticação
-  // Executado apenas quando o status de autenticação muda
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem('isAuthenticated', 'true');
-    } else if (!isLoading) {
-      // Só remove se não estiver carregando (para evitar remover durante a inicialização)
-      localStorage.removeItem('isAuthenticated');
-    }
-  }, [user, isLoading]);
+  // Removido useEffect que gerenciava localStorage para evitar loop de atualização
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
@@ -91,8 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return userData;
     },
     onSuccess: (user: User) => {
-      // Define os dados do usuário no cache sem atualizar o localStorage diretamente
-      // O useEffect já irá cuidar disso quando o estado do user mudar
+      // Define os dados do usuário no cache
       queryClient.setQueryData(['/api/user'], user);
       
       toast({
