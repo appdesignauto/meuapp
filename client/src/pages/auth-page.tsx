@@ -263,13 +263,14 @@ const AuthPage = () => {
                 </CardContent>
                 <CardFooter className="flex flex-col items-center space-y-2">
                   <div className="text-sm text-gray-500">
-                    <Button 
-                      variant="link" 
-                      className="p-0" 
-                      onClick={() => setLocation("/password/forgot")}
-                    >
-                      Esqueceu sua senha?
-                    </Button>
+                    <Link href="/password/forgot">
+                      <Button 
+                        variant="link" 
+                        className="p-0"
+                      >
+                        Esqueceu sua senha?
+                      </Button>
+                    </Link>
                   </div>
                   <div className="text-sm text-gray-500">
                     Não tem uma conta?{" "}
