@@ -456,14 +456,14 @@ const Header = () => {
               </DropdownMenu>
             ) : (
               <div className="flex items-center space-x-2">
-                <Link href="/auth">
+                <Link href="/login">
                   <Button 
                     className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3.5 h-9 rounded-full shadow-sm"
                   >
                     Entrar
                   </Button>
                 </Link>
-                <Link href="/auth?tab=register" className="hidden sm:block">
+                <Link href="/register" className="hidden sm:block">
                   <Button 
                     variant="ghost" 
                     className="text-xs px-3 h-9 rounded-full text-neutral-700 hover:text-blue-600 hover:bg-blue-50"
