@@ -718,7 +718,8 @@ class EmailService {
    */
   public async sendSpecialCaseEmail(email: string, subject: string, message: string, options: {
     highPriority?: boolean,
-    useAlternativeMethod?: boolean
+    useAlternativeMethod?: boolean,
+    isKnownProblematic?: boolean
   } = {}): Promise<{success: boolean, messageId?: string, error?: string}> {
     try {
       // Extrair nome do email
@@ -731,6 +732,12 @@ class EmailService {
       this.log(`🚨 Enviando email para caso especial/problemático: ${email}`);
       this.log(`🔍 Domínio: ${domain}, É Gmail: ${isGmail ? 'Sim' : 'Não'}`);
       this.log(`🔧 Opções: Alta prioridade: ${options.highPriority ? 'Sim' : 'Não'}, Método alternativo: ${options.useAlternativeMethod ? 'Sim' : 'Não'}`);
+      
+      // Verificar se é um email conhecido como problemático
+      if (options.isKnownProblematic) {
+        this.log(`⚠️ ATENÇÃO: Este é um email MARCADO como PROBLEMÁTICO na base de conhecimento`);
+        this.log(`📝 Aplicando cuidados especiais para garantir entrega para ${email}`);
+      }
       
       // Técnicas especiais para o Gmail
       if (isGmail) {

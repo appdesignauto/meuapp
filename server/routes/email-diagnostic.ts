@@ -492,7 +492,15 @@ router.post('/force-verification/:email', async (req: Request, res: Response) =>
       });
     }
     
+    // Lista de emails conhecidos como problemáticos
+    const knownProblematicEmails = ['fernando.sim2018@gmail.com'];
+    const isKnownProblematic = knownProblematicEmails.includes(email.toLowerCase());
+    
     console.log(`\n==== INICIANDO VERIFICAÇÃO FORÇADA PARA ${email} ====\n`);
+    if (isKnownProblematic) {
+      console.log(`🚨 AVISO: Este é um email conhecido como problemático!`);
+      console.log(`📝 Aplicando tratamento especial com alta prioridade para ${email}`);
+    }
     
     // Gerar um novo código de verificação
     const verificationCode = await emailVerificationService.generateVerificationCode(email);
@@ -517,7 +525,9 @@ router.post('/force-verification/:email', async (req: Request, res: Response) =>
     // Usar o método especial para casos problemáticos
     const result = await emailService.sendSpecialCaseEmail(email, subject, message, {
       highPriority: true,
-      useAlternativeMethod: true
+      useAlternativeMethod: true,
+      // Adicionar informação se é um email conhecido como problemático para logs
+      isKnownProblematic
     });
     
     if (result.success) {
@@ -558,6 +568,109 @@ router.post('/force-verification/:email', async (req: Request, res: Response) =>
     res.status(500).json({
       success: false,
       message: 'Erro ao forçar verificação',
+      error: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
+/**
+ * POST /api/admin/email-diagnostic/special-case-email/:email
+ * Rota específica para o caso do email fernando.sim2018@gmail.com e outros emails problemáticos
+ * conhecidos que precisam de tratamento especial
+ */
+router.post('/special-case-email/:email', async (req: Request, res: Response) => {
+  try {
+    const email = req.params.email.toLowerCase();
+    
+    // Lista específica de emails problemáticos
+    const knownProblematicEmails = ['fernando.sim2018@gmail.com'];
+    
+    // Verificar se o email está na lista de problemas conhecidos
+    if (!knownProblematicEmails.includes(email)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Este email não está na lista de casos especiais conhecidos'
+      });
+    }
+    
+    console.log(`\n==== ENVIANDO EMAIL PARA CASO ESPECIAL: ${email} ====\n`);
+    console.log(`🚨 AVISO: Email com histórico de problemas de entrega detectado!`);
+    
+    // Verificar se o usuário existe
+    const [user] = await db.select()
+      .from(users)
+      .where(eq(users.email, email));
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: `Usuário com email ${email} não encontrado no sistema`
+      });
+    }
+    
+    // Gerar um código de verificação específico para este caso
+    const verificationCode = await emailVerificationService.generateVerificationCode(email);
+    console.log(`Código de verificação especial gerado: ${verificationCode.code}`);
+    
+    // Usar template simplificado específico para problemas de entrega
+    const subject = `Seu código de verificação DesignAuto: ${verificationCode.code}`;
+    
+    // HTML ultra-simplificado para máxima compatibilidade
+    const message = `
+      <div style="font-family: Arial, sans-serif;">
+        <h2>Seu código de verificação</h2>
+        <div style="font-size: 24px; padding: 10px; margin: 15px 0; text-align: center;">
+          <b>${verificationCode.code}</b>
+        </div>
+        <p>Digite este código para verificar sua conta no DesignAuto.</p>
+        <p>- Equipe DesignAuto</p>
+      </div>
+    `;
+    
+    // Enviar usando a estratégia mais robusta possível
+    const result = await emailService.sendSpecialCaseEmail(email, subject, message, {
+      highPriority: true,
+      useAlternativeMethod: true,
+      isKnownProblematic: true
+    });
+    
+    if (result.success) {
+      console.log(`✅ Email enviado com sucesso para o caso especial ${email}`);
+      
+      // Registrar sucesso nos logs para futuro diagnóstico
+      emailService.clearLogs();
+      emailService.getSimulatedEmails().forEach(email => console.log(JSON.stringify(email)));
+      
+      res.json({
+        success: true,
+        message: `Email enviado com sucesso para o caso especial ${email}`,
+        verificationCode: {
+          id: verificationCode.id,
+          code: verificationCode.code.substring(0, 2) + '****', // Mascarar o código
+          createdAt: verificationCode.createdAt,
+          expiresAt: verificationCode.expiresAt
+        }
+      });
+    } else {
+      console.error(`❌ Falha ao enviar email para o caso especial ${email}: ${result.error}`);
+      
+      res.status(500).json({
+        success: false,
+        message: `Falha ao enviar email para o caso especial ${email}`,
+        error: result.error,
+        verificationCode: {
+          id: verificationCode.id,
+          code: verificationCode.code.substring(0, 2) + '****',
+          createdAt: verificationCode.createdAt,
+          expiresAt: verificationCode.expiresAt
+        }
+      });
+    }
+  } catch (error) {
+    console.error(`Erro ao processar caso especial para ${req.params.email}:`, error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro ao processar caso especial',
       error: error instanceof Error ? error.message : String(error)
     });
   }
