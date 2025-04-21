@@ -302,24 +302,20 @@ class EmailService {
   /**
    * Envia um e-mail de redefinição de senha usando o remetente de suporte
    * @param email Email do destinatário
-   * @param name Nome do destinatário
-   * @param resetToken Token de redefinição de senha
+   * @param data Dados para o template do email
    * @returns Promise<boolean> Indica se o envio foi bem-sucedido
    */
-  public async sendPasswordResetEmail(email: string, name: string, resetToken: string): Promise<boolean> {
+  public async sendPasswordResetEmail(email: string, data: {userName: string, resetUrl: string}): Promise<boolean> {
     try {
       this.log(`📧 Preparando e-mail de redefinição de senha para ${email} usando remetente de suporte`);
-      
-      // URL para redefinição de senha
-      const resetUrl = `https://designauto.com.br/reset-password?token=${resetToken}`;
       
       const htmlContent = `
         <html>
           <body>
-            <h1>Olá ${name},</h1>
+            <h1>Olá ${data.userName},</h1>
             <p>Recebemos uma solicitação para redefinir sua senha.</p>
             <p>Clique no botão abaixo para criar uma nova senha:</p>
-            <a href="${resetUrl}" style="padding: 12px 24px; background-color: #4285f4; color: white; text-decoration: none; border-radius: 4px; display: inline-block; margin: 20px 0;">Redefinir Senha</a>
+            <a href="${data.resetUrl}" style="padding: 12px 24px; background-color: #4285f4; color: white; text-decoration: none; border-radius: 4px; display: inline-block; margin: 20px 0;">Redefinir Senha</a>
             <p>Este link expira em 1 hora.</p>
             <p>Se você não solicitou esta mudança, por favor ignore este e-mail.</p>
             <p>Atenciosamente,<br>Equipe Design Auto</p>
@@ -333,7 +329,7 @@ class EmailService {
       
       const result = await this.sendBrevoEmail(
         supportSender, 
-        [{ email, name }], 
+        [{ email, name: data.userName }], 
         subject, 
         htmlContent
       );
@@ -347,6 +343,51 @@ class EmailService {
       return result.success;
     } catch (error) {
       this.log(`❌ Erro ao enviar e-mail de redefinição de senha para ${email}: ${error instanceof Error ? error.message : String(error)}`);
+      return false;
+    }
+  }
+  
+  /**
+   * Envia um e-mail de confirmação de alteração de senha
+   * @param email Email do destinatário
+   * @param data Dados para o template do email
+   * @returns Promise<boolean> Indica se o envio foi bem-sucedido
+   */
+  public async sendPasswordChangeConfirmationEmail(email: string, data: {userName: string}): Promise<boolean> {
+    try {
+      this.log(`📧 Preparando e-mail de confirmação de alteração de senha para ${email}`);
+      
+      const htmlContent = `
+        <html>
+          <body>
+            <h1>Olá ${data.userName},</h1>
+            <p>Sua senha foi alterada com sucesso.</p>
+            <p>Se você não realizou esta alteração, entre em contato imediatamente com nosso suporte.</p>
+            <p>Atenciosamente,<br>Equipe Design Auto</p>
+          </body>
+        </html>
+      `;
+      
+      // Usar remetente de suporte para notificações de segurança
+      const supportSender = SENDERS.suporte;
+      const subject = 'Confirmação de Alteração de Senha - Design Auto';
+      
+      const result = await this.sendBrevoEmail(
+        supportSender, 
+        [{ email, name: data.userName }], 
+        subject, 
+        htmlContent
+      );
+      
+      if (result.success) {
+        this.log(`✅ E-mail de confirmação de alteração de senha enviado com sucesso de ${supportSender.email}: ${result.messageId}`);
+      } else {
+        this.log(`❌ Falha ao enviar e-mail de confirmação de alteração de senha para ${email}`);
+      }
+      
+      return result.success;
+    } catch (error) {
+      this.log(`❌ Erro ao enviar e-mail de confirmação de alteração de senha para ${email}: ${error instanceof Error ? error.message : String(error)}`);
       return false;
     }
   }

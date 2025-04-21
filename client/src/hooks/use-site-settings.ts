@@ -12,19 +12,8 @@ interface SiteSettings {
 }
 
 export function useSiteSettings() {
-  const { 
-    data: settings,
-    isLoading,
-    error
-  } = useQuery<SiteSettings>({
+  return useQuery<SiteSettings>({
     queryKey: ['/api/site-settings'],
-    staleTime: 1000 * 60 * 5, // 5 minutos
-    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 60, // 1 hora
   });
-
-  return {
-    settings,
-    isLoading,
-    error
-  };
 }

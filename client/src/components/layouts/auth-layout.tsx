@@ -1,81 +1,59 @@
 import React from 'react';
 import { Link } from 'wouter';
 import { useSiteSettings } from '@/hooks/use-site-settings';
+import { Loader2 } from 'lucide-react';
 
 interface AuthLayoutProps {
   children: React.ReactNode;
 }
 
 export function AuthLayout({ children }: AuthLayoutProps) {
-  const { isLoading, settings } = useSiteSettings();
-  
+  const { data: siteSettings, isLoading } = useSiteSettings();
+
   return (
-    <div className="flex flex-col md:flex-row h-screen">
-      {/* Formulário - Lado esquerdo */}
-      <div className="w-full md:w-1/2 flex items-center justify-center p-4 md:p-8 bg-white">
-        <div className="max-w-md w-full">
-          {/* Logo */}
-          <div className="mb-8 text-center">
-            <Link href="/">
-              <a className="inline-block">
+    <div className="flex min-h-screen flex-col">
+      <div className="container flex flex-col items-center justify-center md:grid lg:max-w-none lg:grid-cols-2 lg:px-0">
+        <div className="lg:p-8">
+          <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+            <div className="flex flex-col space-y-2 text-center">
+              <Link href="/" className="mx-auto mb-6">
                 {isLoading ? (
-                  <div className="h-10 w-36 bg-gray-200 animate-pulse rounded"></div>
+                  <div className="h-16 w-16 flex items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                  </div>
                 ) : (
-                  <img 
-                    src={settings?.logoUrl || '/placeholder-logo.png'} 
-                    alt="Design Auto Logo" 
-                    className="h-10 inline-block"
+                  <img
+                    src={siteSettings?.logoUrl || '/images/logos/logo_default.png'}
+                    alt={siteSettings?.siteName || 'DesignAuto'}
+                    className="h-16 object-contain"
                   />
                 )}
-              </a>
-            </Link>
+              </Link>
+            </div>
+            {children}
           </div>
-          
-          {/* Formulário */}
-          {children}
         </div>
-      </div>
-      
-      {/* Hero section - Lado direito */}
-      <div className="hidden md:flex md:w-1/2 bg-primary-50 items-center justify-center p-8">
-        <div className="max-w-md text-center">
-          <h1 className="text-3xl font-bold text-primary mb-4">
-            Design Auto
-          </h1>
-          <p className="text-gray-700 mb-6">
-            Tenha acesso a mais de 3.000 artes editáveis para personalizar e utilizar em sua loja ou oficina automotiva.
-          </p>
-          <div className="space-y-4">
-            <div className="flex items-center">
-              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white mr-3">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <p className="text-gray-700 text-left">
-                Mais de 3.000 artes para diversos segmentos automotivos
+        <div className="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex dark:border-r">
+          <div className="absolute inset-0 bg-zinc-900">
+            <div className="absolute inset-0 bg-gradient-to-r from-zinc-900/10 to-zinc-900/60" />
+            <div className="absolute inset-0 backdrop-blur-sm" style={{ backgroundImage: 'url(/images/auth-background.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.25 }} />
+          </div>
+          <div className="relative z-20 flex items-center text-lg font-medium">
+            <img
+              src="/images/logos/logo_white.png"
+              alt="DesignAuto"
+              className="h-12 mr-2"
+            />
+            {siteSettings?.siteName || 'DesignAuto'}
+          </div>
+          <div className="relative z-20 mt-auto">
+            <blockquote className="space-y-2">
+              <p className="text-lg">
+                Mais de 3.000 artes automotivas editáveis para impulsionar seu negócio. 
+                Personalize facilmente e destaque sua empresa no mercado.
               </p>
-            </div>
-            <div className="flex items-center">
-              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white mr-3">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <p className="text-gray-700 text-left">
-                Artes editáveis com Canva, totalmente personalizáveis
-              </p>
-            </div>
-            <div className="flex items-center">
-              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white mr-3">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <p className="text-gray-700 text-left">
-                Diversos formatos para redes sociais e mídias impressas
-              </p>
-            </div>
+              <footer className="text-sm">Design Auto - Sua Solução em Artes Automotivas</footer>
+            </blockquote>
           </div>
         </div>
       </div>

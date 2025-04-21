@@ -1,12 +1,17 @@
-import { randomBytes } from 'crypto';
 import { db } from '../db';
-import { passwordResetTokens, users } from '@shared/schema';
-import { eq, and, lt, gt } from 'drizzle-orm';
+import { randomBytes } from 'crypto';
+import { users } from '@shared/schema';
+import { eq } from 'drizzle-orm';
 import { emailService } from './email-service';
+import { hashPassword } from '../auth-utils';
 
-class PasswordResetService {
+export class PasswordResetService {
+  constructor() {
+    // Não é necessário inicializar o emailService aqui, pois é uma instância global
+  }
+
   /**
-   * Gera um token único para redefinição de senha
+   * Gera um token de redefinição de senha único
    * @returns Token de redefinição
    */
   private generateToken(): string {
@@ -14,194 +19,120 @@ class PasswordResetService {
   }
 
   /**
-   * Cria um token de redefinição de senha para um usuário específico
-   * @param userId ID do usuário
+   * Cria um token de redefinição de senha para um usuário
    * @param email Email do usuário
-   * @returns Objeto com status do processo e mensagem ou token
+   * @returns Sucesso da operação e mensagens
    */
-  public async createResetToken(userId: number, email: string): Promise<{ success: boolean; token?: string; message?: string }> {
+  async createResetToken(email: string): Promise<{ success: boolean; message: string }> {
     try {
-      // Verificar e invalidar tokens existentes
-      await db
-        .update(passwordResetTokens)
-        .set({ isUsed: true })
-        .where(and(
-          eq(passwordResetTokens.userId, userId),
-          eq(passwordResetTokens.isUsed, false)
-        ));
-
-      // Gerar novo token
-      const token = this.generateToken();
-      
-      // Calcular data de expiração (1 hora no futuro)
-      const expiresAt = new Date();
-      expiresAt.setHours(expiresAt.getHours() + 1);
-      
-      // Inserir novo token
-      await db
-        .insert(passwordResetTokens)
-        .values({
-          userId,
-          token,
-          expiresAt,
-          isUsed: false
-        });
-      
-      return { success: true, token };
-    } catch (error) {
-      console.error('Erro ao criar token de redefinição de senha:', error);
-      return { 
-        success: false, 
-        message: `Erro ao gerar token: ${error instanceof Error ? error.message : String(error)}` 
-      };
-    }
-  }
-
-  /**
-   * Envia um email com instruções para redefinição de senha
-   * @param email Email do usuário
-   * @returns Objeto com status do processo e mensagem
-   */
-  public async sendPasswordResetEmail(email: string): Promise<{ success: boolean; message: string }> {
-    try {
-      // Procurar usuário pelo email
+      // Verifica se o usuário existe
       const [user] = await db
         .select()
         .from(users)
         .where(eq(users.email, email));
-      
-      // Por segurança, não revelar se o email existe ou não
+
       if (!user) {
+        // Por segurança, não informamos que o email não existe
         return { 
           success: true, 
-          message: 'Se o email estiver cadastrado, você receberá instruções para redefinir sua senha.' 
+          message: 'Se o email estiver cadastrado, você receberá um link para redefinir a senha'
         };
       }
-      
-      // Gerar token de redefinição
-      const resetResult = await this.createResetToken(user.id, email);
-      
-      if (!resetResult.success || !resetResult.token) {
-        return { 
-          success: false, 
-          message: resetResult.message || 'Erro ao gerar token de redefinição de senha.' 
-        };
-      }
-      
-      // Extrair o nome do usuário ou fallback para o nome de usuário
-      const name = user.name || user.username;
-      
-      // Enviar email com instruções de redefinição
-      const emailSent = await emailService.sendPasswordResetEmail(email, name, resetResult.token);
-      
-      if (!emailSent) {
-        return { 
-          success: false, 
-          message: 'Falha ao enviar email de redefinição de senha.' 
-        };
-      }
-      
-      return { 
-        success: true, 
-        message: 'Se o email estiver cadastrado, você receberá instruções para redefinir sua senha.' 
-      };
-    } catch (error) {
-      console.error('Erro ao processar solicitação de redefinição de senha:', error);
-      return { 
-        success: false, 
-        message: `Erro ao processar solicitação: ${error instanceof Error ? error.message : String(error)}` 
-      };
-    }
-  }
 
-  /**
-   * Verifica se um token de redefinição de senha é válido
-   * @param token Token a ser verificado
-   * @returns Objeto com status de validação e usuário associado (se válido)
-   */
-  public async validateResetToken(token: string): Promise<{ 
-    valid: boolean; 
-    userId?: number; 
-    message?: string 
-  }> {
-    try {
-      const now = new Date();
+      // Gera token único
+      const token = this.generateToken();
       
-      // Buscar token não utilizado e não expirado
-      const [resetToken] = await db
-        .select()
-        .from(passwordResetTokens)
-        .where(and(
-          eq(passwordResetTokens.token, token),
-          eq(passwordResetTokens.isUsed, false),
-          gt(passwordResetTokens.expiresAt, now)
-        ));
-      
-      if (!resetToken) {
-        return { 
-          valid: false, 
-          message: 'Token inválido ou expirado. Por favor, solicite uma nova redefinição de senha.' 
-        };
-      }
-      
-      return { valid: true, userId: resetToken.userId };
-    } catch (error) {
-      console.error('Erro ao validar token de redefinição:', error);
-      return { 
-        valid: false, 
-        message: `Erro ao validar token: ${error instanceof Error ? error.message : String(error)}` 
-      };
-    }
-  }
+      // Data de expiração (1 hora a partir de agora)
+      const expiration = new Date();
+      expiration.setHours(expiration.getHours() + 1);
 
-  /**
-   * Redefine a senha de um usuário usando um token de redefinição
-   * @param token Token de redefinição
-   * @param newPassword Nova senha
-   * @returns Objeto com status do processo e mensagem
-   */
-  public async resetPassword(token: string, newPassword: string): Promise<{ 
-    success: boolean; 
-    message: string 
-  }> {
-    try {
-      // Verificar se o token é válido
-      const validation = await this.validateResetToken(token);
-      
-      if (!validation.valid || !validation.userId) {
-        return { 
-          success: false, 
-          message: validation.message || 'Token inválido ou expirado.' 
-        };
-      }
-      
-      // Atualizar a senha do usuário
+      // Atualiza o token de redefinição de senha do usuário
       await db
         .update(users)
-        .set({ password: newPassword })
-        .where(eq(users.id, validation.userId));
-      
-      // Marcar o token como usado
-      await db
-        .update(passwordResetTokens)
-        .set({ 
-          isUsed: true,
-          usedAt: new Date()
+        .set({
+          resetpasswordtoken: token,
+          resetpasswordexpires: expiration
         })
-        .where(eq(passwordResetTokens.token, token));
+        .where(eq(users.id, user.id));
+
+      // Envia email com o link de redefinição
+      const resetUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/reset-password?token=${token}`;
       
+      await emailService.sendPasswordResetEmail(user.email, {
+        userName: user.name || user.username,
+        resetUrl
+      });
+
       return { 
         success: true, 
-        message: 'Senha redefinida com sucesso. Agora você pode fazer login com sua nova senha.' 
+        message: 'Um email com instruções para redefinir sua senha foi enviado'
+      };
+    } catch (error) {
+      console.error('Erro ao criar token de redefinição:', error);
+      return { 
+        success: false, 
+        message: 'Ocorreu um erro ao processar sua solicitação. Tente novamente mais tarde.'
+      };
+    }
+  }
+
+  /**
+   * Redefine a senha de um usuário usando um token válido
+   * @param token Token de redefinição
+   * @param newPassword Nova senha
+   * @returns Sucesso da operação e mensagens
+   */
+  async resetPassword(token: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+    try {
+      // Busca usuário com o token fornecido e que ainda não expirou
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.resetpasswordtoken, token));
+
+      if (!user) {
+        return { 
+          success: false, 
+          message: 'Token inválido ou expirado. Solicite um novo link de redefinição de senha.'
+        };
+      }
+
+      // Verifica se o token ainda é válido
+      if (user.resetpasswordexpires && new Date() > new Date(user.resetpasswordexpires)) {
+        return { 
+          success: false, 
+          message: 'O link de redefinição de senha expirou. Solicite um novo.'
+        };
+      }
+
+      // Gera hash da nova senha
+      const hashedPassword = await hashPassword(newPassword);
+
+      // Atualiza a senha e limpa os tokens de redefinição
+      await db
+        .update(users)
+        .set({
+          password: hashedPassword,
+          resetpasswordtoken: null,
+          resetpasswordexpires: null
+        })
+        .where(eq(users.id, user.id));
+
+      // Envia e-mail de confirmação
+      await emailService.sendPasswordChangeConfirmationEmail(user.email, {
+        userName: user.name || user.username
+      });
+
+      return { 
+        success: true, 
+        message: 'Senha redefinida com sucesso'
       };
     } catch (error) {
       console.error('Erro ao redefinir senha:', error);
       return { 
         success: false, 
-        message: `Erro ao redefinir senha: ${error instanceof Error ? error.message : String(error)}` 
+        message: 'Ocorreu um erro ao redefinir sua senha. Tente novamente mais tarde.'
       };
     }
   }
 }
-
-export const passwordResetService = new PasswordResetService();
