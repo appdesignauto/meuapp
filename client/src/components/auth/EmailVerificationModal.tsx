@@ -249,10 +249,10 @@ export function EmailVerificationModal() {
               <p className="text-center text-base mb-4">
                 {verificationStatus?.sent ? (
                   <>
-                    <span className="block font-medium mb-2">✉️ Enviamos um código de 6 dígitos para:</span>
+                    <span className="block font-medium mb-2">Acabamos de enviar um código para:</span>
                     <span className="block text-primary font-bold mb-2">{user.email}</span>
                     <span className="block">
-                      Verifique sua caixa de entrada (ou spam) e digite o código abaixo.
+                      Digite o código de 6 dígitos abaixo para confirmar sua conta e acessar a plataforma completa.
                     </span>
                   </>
                 ) : (
