@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 
 // Chave da API do Brevo
-const BREVO_API_KEY = process.env.BREVO_API_KEY;
+const BREVO_API_KEY = process.env.BREVO_API_KEY || '';
 
 // Modo de desenvolvimento (simulação de envio)
 // Definir como true para desenvolvimento/teste
@@ -169,48 +169,76 @@ class EmailService {
       }
       
       // Em modo de produção, faz a chamada real para a API do Brevo
-      this.log(`🔄 Enviando e-mail via Brevo para: ${to}`);
+      this.log(`🔄 Enviando e-mail via Brevo para: ${to.map(t => t.email).join(', ')}`);
       this.log(`🔄 Dados do payload: Remetente: ${JSON.stringify(payload.sender)}, Assunto: ${payload.subject}`);
       
-      // Log da configuração da API
-      this.log(`🔧 Configuração da API: URL=${BREVO_API_URL}, Chave API presente: ${!!BREVO_API_KEY}`);
-      
-      const response = await fetch(`${BREVO_API_URL}/smtp/email`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'api-key': BREVO_API_KEY
-        },
-        body: JSON.stringify(payload)
-      });
-
-      this.log(`📊 Resposta HTTP: Status=${response.status}, OK=${response.ok}`);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        let errorData;
-        try {
-          errorData = JSON.parse(errorText);
-          this.log(`❌ API do Brevo retornou erro: ${JSON.stringify(errorData)}`);
-        } catch (e) {
-          this.log(`❌ API do Brevo retornou erro não-JSON: ${errorText}`);
-          errorData = { message: errorText };
-        }
-        throw new Error(`API do Brevo retornou erro: ${JSON.stringify(errorData)}`);
+      // Verificar se a chave da API está disponível
+      if (!BREVO_API_KEY) {
+        this.log(`❌ ERRO CRÍTICO: Chave da API Brevo não está disponível. Verifique as variáveis de ambiente.`);
+        return { success: false, messageId: 'error-no-api-key' };
       }
-
-      const responseText = await response.text();
-      let data;
+      
+      // Log detalhado da configuração da API
+      this.log(`🔧 Configuração da API: URL=${BREVO_API_URL}, Chave API (primeiros 5 caracteres): ${BREVO_API_KEY.substring(0, 5)}...`);
+      
       try {
-        data = JSON.parse(responseText);
-        this.log(`✅ Email enviado com sucesso! ID: ${data.messageId}`);
-      } catch (e) {
-        this.log(`⚠️ Resposta não é JSON válido: ${responseText}`);
-        data = { messageId: 'unknown' };
+        const response = await fetch(`${BREVO_API_URL}/smtp/email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'api-key': BREVO_API_KEY
+          },
+          body: JSON.stringify(payload)
+        });
+
+        this.log(`📊 Resposta HTTP: Status=${response.status}, Status Text=${response.statusText}, OK=${response.ok}`);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          this.log(`❌ Resposta de erro completa: ${errorText}`);
+          
+          let errorData;
+          try {
+            errorData = JSON.parse(errorText);
+            this.log(`❌ API do Brevo retornou erro: ${JSON.stringify(errorData)}`);
+          } catch (e) {
+            this.log(`❌ API do Brevo retornou erro não-JSON: ${errorText}`);
+            errorData = { message: errorText };
+          }
+          
+          // Log detalhado do erro para diagnóstico
+          this.log(`❌ Detalhes do erro: Código=${response.status}, Mensagem=${JSON.stringify(errorData)}`);
+          
+          return { success: false, messageId: `error-${response.status}` };
+        }
+
+        const responseText = await response.text();
+        this.log(`✅ Resposta bruta: ${responseText}`);
+        
+        let data;
+        try {
+          data = JSON.parse(responseText);
+          this.log(`✅ Email enviado com sucesso! ID: ${data.messageId}`);
+          
+          // Log adicional para rastrear sucesso
+          if (to && to.length > 0) {
+            this.log(`✅ Email enviado com sucesso para: ${to[0].email}, ID: ${data.messageId}`);
+          }
+        } catch (e) {
+          this.log(`⚠️ Resposta não é JSON válido: ${responseText}`);
+          data = { messageId: 'unknown-format' };
+        }
+        
+        return { success: true, messageId: data.messageId };
+      } catch (error) {
+        // Captura erros de rede ou falhas na requisição fetch
+        const fetchError = error as Error;
+        this.log(`❌ Erro na requisição HTTP para o Brevo: ${fetchError.message || 'Erro desconhecido'}`);
+        console.error("Erro completo na chamada para API do Brevo:", fetchError);
+        
+        return { success: false, messageId: 'fetch-error' };
       }
-      
-      return { success: true, messageId: data.messageId };
     } catch (error) {
       this.log(`❌ Erro ao enviar e-mail: ${error instanceof Error ? error.message : String(error)}`);
       return { success: false };

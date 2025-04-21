@@ -39,44 +39,66 @@ export class EmailVerificationService {
    */
   async sendVerificationCode(userId: number, email: string): Promise<{ success: boolean; message?: string }> {
     try {
+      console.log(`[EmailVerificationService] Iniciando envio de código para usuário ID=${userId}, email=${email}`);
+      
       // Verificar se já existe um código pendente
       const hasPending = await this.hasPendingVerificationCode(userId);
+      console.log(`[EmailVerificationService] Usuário ${userId} já possui código pendente? ${hasPending}`);
       
       // Se já existir, inative-o antes de criar um novo
       if (hasPending) {
+        console.log(`[EmailVerificationService] Inativando códigos anteriores para usuário ${userId}`);
         const now = new Date();
-        await db.execute(sql`
-          UPDATE "emailVerificationCodes"
-          SET "isUsed" = true, "usedAt" = ${now}
-          WHERE "userId" = ${userId} AND "isUsed" = false
-        `);
+        try {
+          await db.execute(sql`
+            UPDATE "emailVerificationCodes"
+            SET "isUsed" = true, "usedAt" = ${now}
+            WHERE "userId" = ${userId} AND "isUsed" = false
+          `);
+          console.log(`[EmailVerificationService] Códigos anteriores inativados com sucesso para usuário ${userId}`);
+        } catch (updateError) {
+          console.error(`[EmailVerificationService] Erro ao inativar códigos anteriores:`, updateError);
+        }
       }
       
       // Gerar código de 6 dígitos
       const code = randomInt(100000, 999999).toString();
+      console.log(`[EmailVerificationService] Código gerado para usuário ${userId}: ${code}`);
       
       // Calcular data de expiração (24 horas a partir de agora)
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + this.CODE_EXPIRATION_HOURS);
       const createdAt = new Date();
       
-      // Salvar o código no banco de dados
-      await db.execute(sql`
-        INSERT INTO "emailVerificationCodes" 
-        ("userId", "email", "code", "expiresAt", "createdAt", "isUsed")
-        VALUES (${userId}, ${email}, ${code}, ${expiresAt}, ${createdAt}, false)
-      `);
+      console.log(`[EmailVerificationService] Tentando salvar código no banco para usuário ${userId}`);
+      try {
+        // Salvar o código no banco de dados
+        await db.execute(sql`
+          INSERT INTO "emailVerificationCodes" 
+          ("userId", "email", "code", "expiresAt", "createdAt", "isUsed")
+          VALUES (${userId}, ${email}, ${code}, ${expiresAt}, ${createdAt}, false)
+        `);
+        console.log(`[EmailVerificationService] Código salvo com sucesso no banco para usuário ${userId}`);
+      } catch (error) {
+        const insertError = error as Error;
+        console.error(`[EmailVerificationService] ERRO AO INSERIR CÓDIGO NO BANCO:`, insertError);
+        throw new Error(`Falha ao salvar código de verificação: ${insertError.message || 'Erro desconhecido'}`);
+      }
       
+      console.log(`[EmailVerificationService] Iniciando envio de email de verificação para ${email} com código ${code}`);
       // Enviar o e-mail de verificação com o código gerado
       const result = await emailService.sendEmailVerification(email, code);
+      console.log(`[EmailVerificationService] Resultado do envio de email: ${JSON.stringify(result)}`);
       
       if (!result.success) {
+        console.error(`[EmailVerificationService] Falha no envio de email para ${email}`);
         return { 
           success: false, 
           message: "Falha ao enviar e-mail de verificação. Tente novamente mais tarde." 
         };
       }
       
+      console.log(`[EmailVerificationService] Código de verificação enviado com sucesso para usuário ${userId}`);
       return { success: true };
     } catch (error) {
       console.error("[EmailVerificationService] Erro ao enviar código:", error);
