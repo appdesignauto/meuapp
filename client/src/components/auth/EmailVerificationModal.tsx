@@ -74,7 +74,7 @@ export function EmailVerificationModal() {
       } else {
         toast({
           title: "Falha na verificação",
-          description: data.message || "Código inválido ou expirado. Tente novamente.",
+          description: data.message || "Opa! Código inválido ou expirado. Tente novamente 😊",
           variant: "destructive",
         });
       }
@@ -218,9 +218,9 @@ export function EmailVerificationModal() {
           // Formulário de verificação normal
           <>
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold">Verificação de E-mail</DialogTitle>
+              <DialogTitle className="text-2xl font-bold">📩 Quase lá! Só falta confirmar seu e-mail</DialogTitle>
               <DialogDescription className="text-base">
-                A verificação de e-mail é essencial para sua segurança e para garantir acesso completo à plataforma
+                Para garantir sua segurança e liberar o acesso completo à plataforma
               </DialogDescription>
             </DialogHeader>
             
@@ -235,11 +235,10 @@ export function EmailVerificationModal() {
               <p className="text-center text-base mb-4">
                 {verificationStatus?.sent ? (
                   <>
-                    <span className="block font-medium mb-2">Um código de verificação de 6 dígitos foi enviado para:</span>
+                    <span className="block font-medium mb-2">✉️ Enviamos um código de 6 dígitos para:</span>
                     <span className="block text-primary font-bold mb-2">{user.email}</span>
                     <span className="block">
-                      Por favor, verifique sua caixa de entrada e a pasta de spam.
-                      A verificação garante que você tenha acesso completo a todos os recursos da plataforma.
+                      Verifique sua caixa de entrada (ou spam) e digite o código abaixo.
                     </span>
                   </>
                 ) : (
@@ -248,7 +247,6 @@ export function EmailVerificationModal() {
                     <span className="block text-primary font-bold mb-2">{user.email}</span>
                     <span className="block">
                       Clique em "Enviar código" abaixo para receber o código de verificação.
-                      Este passo é importante para garantir a segurança da sua conta.
                     </span>
                   </>
                 )}
@@ -258,7 +256,7 @@ export function EmailVerificationModal() {
             <form onSubmit={handleVerifyCode} className="space-y-4">
               <div>
                 <label htmlFor="verification-code" className="block text-sm font-medium mb-1">
-                  Código de verificação
+                  🔢 Código de verificação
                 </label>
                 <Input
                   id="verification-code"
@@ -283,14 +281,14 @@ export function EmailVerificationModal() {
                     Verificando...
                   </>
                 ) : (
-                  "Verificar e-mail"
+                  "🔘 Verificar e-mail"
                 )}
               </Button>
             </form>
 
             <DialogFooter className="flex flex-col sm:flex-row sm:justify-between sm:space-x-0">
               <div className="text-center text-sm mb-2">
-                Não recebeu o código? 
+                👀 Não recebeu o código? 
               </div>
               <Button
                 type="button"
@@ -311,7 +309,7 @@ export function EmailVerificationModal() {
                 ) : (
                   <>
                     <RefreshCw className="mr-2 h-4 w-4" />
-                    Enviar código
+                    🔄 Reenviar código
                   </>
                 )}
               </Button>
