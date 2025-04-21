@@ -2,8 +2,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import EmailManagement from "@/components/admin/EmailManagement";
-import { ArrowLeft } from "lucide-react";
+import SpecialEmailHandler from "@/components/admin/SpecialEmailHandler";
+import { ArrowLeft, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function EmailManagementPage() {
   const { user } = useAuth();
@@ -41,7 +43,41 @@ export default function EmailManagementPage() {
           Consulte logs, verifique status de emails e realize testes de entregabilidade.
         </p>
         
-        <EmailManagement />
+        <Tabs defaultValue="general" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="general">Gerenciamento Geral</TabsTrigger>
+            <TabsTrigger 
+              value="special-cases" 
+              className="flex items-center"
+            >
+              <AlertTriangle className="h-3.5 w-3.5 mr-1.5 text-amber-500" />
+              Casos Especiais
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="general" className="pt-4">
+            <EmailManagement />
+          </TabsContent>
+          
+          <TabsContent value="special-cases" className="pt-4">
+            <div className="mb-4">
+              <h2 className="text-lg font-semibold mb-2">Tratamento de Casos Especiais</h2>
+              <p className="text-sm text-muted-foreground">
+                Esta seção é dedicada ao tratamento de casos especiais de verificação de email,
+                destinada a usuários com dificuldades comprovadas em receber emails de verificação.
+              </p>
+            </div>
+            <SpecialEmailHandler 
+              onVerificationComplete={() => {
+                toast({
+                  title: "Verificação concluída",
+                  description: "O usuário já pode acessar a plataforma normalmente",
+                  variant: "default",
+                });
+              }}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
