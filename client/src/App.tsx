@@ -9,7 +9,6 @@ import { SupabaseAuthProvider } from "@/hooks/use-supabase-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { ScrollToTop } from "@/hooks/useScrollTop";
 import { ThemeProvider } from "@/components/theme-provider";
-import { EmailVerificationModal } from "@/components/auth/EmailVerificationModal";
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -71,13 +70,8 @@ function AppRoutes() {
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
       <Route path="/auth" component={AuthPage} />
-      {/* Redirecionar verificação de email para o painel, já que agora emails são verificados automaticamente */}
-      <Route path="/email-verification">
-        {() => {
-          window.location.href = "/painel/inicio";
-          return null;
-        }}
-      </Route>
+      {/* Página de verificação de email foi revisada para redirecionar adequadamente */}
+      <Route path="/email-verification" component={EmailVerificationPage} />
       <Route path="/auth/supabase">
         {() => {
           const SupabaseAuthPage = lazy(() => import("@/pages/supabase-auth-page"));
@@ -173,7 +167,6 @@ function App() {
               <AppLayout>
                 <AppRoutes />
               </AppLayout>
-              {/* Modal de verificação removido, emails são verificados automaticamente */}
             </Router>
             <Toaster />
           </SupabaseAuthProvider>

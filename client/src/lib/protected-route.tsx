@@ -6,12 +6,10 @@ export function ProtectedRoute({
   path,
   component: Component,
   roles = [],
-  requireEmailVerification = true,
 }: {
   path: string;
   component: () => React.JSX.Element | null;
   roles?: string[];
-  requireEmailVerification?: boolean;
 }) {
   const { user, isLoading } = useAuth();
 

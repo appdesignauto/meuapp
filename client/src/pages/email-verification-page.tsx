@@ -8,17 +8,26 @@
  */
 
 import { useEffect } from "react";
-import { useNavigate } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
+import { Loader2 } from "lucide-react";
+import { Redirect } from "wouter";
 
 export default function EmailVerificationPage() {
-  const [, navigate] = useNavigate();
+  const { user, isLoading } = useAuth();
   
-  useEffect(() => {
-    // Redirecionar automaticamente para o painel do usuário
-    navigate("/painel/inicio");
-  }, [navigate]);
+  // Exibe um loader enquanto verifica autenticação
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
   
-  // Este componente não renderiza nada visível,
-  // pois o redirecionamento acontece automaticamente
-  return null;
+  // Redireciona baseado no status de autenticação
+  if (user) {
+    return <Redirect to="/painel/inicio" />;
+  } else {
+    return <Redirect to="/" />;
+  }
 }
