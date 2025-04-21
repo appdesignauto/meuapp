@@ -49,7 +49,9 @@ const Login = () => {
     setIsSubmitting(true);
     try {
       await login(data.username, data.password);
-      setLocation('/');
+      // Redirecionar para o painel do usuário ao invés da página inicial
+      setLocation('/painel/inicio');
+      console.log('Login bem-sucedido, redirecionando para /painel/inicio');
     } catch (error) {
       console.error('Login failed:', error);
     } finally {
