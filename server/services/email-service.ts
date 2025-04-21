@@ -125,7 +125,8 @@ class EmailService {
     to: Array<{ email: string; name?: string }>,
     subject: string,
     htmlContent: string,
-    isMobileRequest: boolean = false
+    isMobileRequest: boolean = false,
+    highPriority: boolean = false
   ): Promise<{success: boolean, messageId?: string, error?: string}> {
     try {
       if (!this.initialized) {
@@ -138,7 +139,8 @@ class EmailService {
         .replace(/\s+/g, ' ')
         .trim();
       
-      const payload = {
+      // Configurar o payload básico
+      const payload: any = {
         sender: {
           name: sender.name,
           email: sender.email
@@ -148,6 +150,21 @@ class EmailService {
         htmlContent,
         textContent
       };
+      
+      // Adicionar prioridade alta se necessário
+      if (highPriority) {
+        this.log(`⚠️ Definindo alta prioridade para este email`);
+        payload.headers = {
+          'X-Priority': '1',
+          'X-MSMail-Priority': 'High',
+          'Importance': 'High'
+        };
+      }
+      
+      // Log adicional para tráfego de dispositivos móveis
+      if (isMobileRequest) {
+        this.log(`📱 Configurando email para dispositivo móvel`);
+      }
 
       // Verifica se está em modo de desenvolvimento para simulação
       if (DEV_MODE) {
@@ -565,6 +582,283 @@ class EmailService {
     } catch (error) {
       this.log(`❌ Erro ao enviar e-mail de redefinição de senha para ${email}: ${error instanceof Error ? error.message : String(error)}`);
       return false;
+    }
+  }
+
+  /**
+   * Envia um e-mail de diagnóstico para testes e depuração
+   * @param email Email do destinatário
+   * @param subject Assunto do e-mail
+   * @param message Conteúdo do e-mail (HTML)
+   * @param options Opções adicionais para o envio
+   * @returns Promise<{success: boolean, messageId?: string, error?: string}> Resultado do envio
+   */
+  public async sendDiagnosticEmail(email: string, subject: string, message: string, options: {
+    testMode?: boolean,
+    emailProviderCategory?: string,
+    deviceInfo?: any
+  } = {}): Promise<{success: boolean, messageId?: string, error?: string}> {
+    try {
+      // Extrair nome do email
+      const name = email.split('@')[0];
+      
+      this.log(`🔍 Enviando email de diagnóstico para ${email}`);
+      
+      // Log das opções de diagnóstico
+      if (options.emailProviderCategory) {
+        this.log(`🔍 Categoria do provedor: ${options.emailProviderCategory}`);
+      }
+      
+      if (options.deviceInfo) {
+        this.log(`🔍 Informações do dispositivo: ${JSON.stringify(options.deviceInfo)}`);
+      }
+      
+      // Adicionar metadados de diagnóstico ao conteúdo
+      const now = new Date();
+      const timestamp = now.toISOString();
+      const diagnosticMessage = `
+        <div style="margin-top: 30px; padding: 10px; border-top: 1px solid #ccc; font-size: 12px; color: #666;">
+          <p><strong>Informações de diagnóstico:</strong></p>
+          <ul>
+            <li>Timestamp: ${timestamp}</li>
+            <li>ID de mensagem: ${Math.random().toString(36).substring(2, 15)}</li>
+            <li>Provedor de email: ${options.emailProviderCategory || 'não especificado'}</li>
+            <li>Modo de teste: ${options.testMode ? 'Sim' : 'Não'}</li>
+          </ul>
+        </div>
+      `;
+      
+      // Combinar o conteúdo original com os metadados de diagnóstico
+      const htmlContent = `
+        <html>
+          <body>
+            ${message}
+            ${diagnosticMessage}
+          </body>
+        </html>
+      `;
+      
+      // Usar o remetente de suporte para emails de diagnóstico
+      const supportSender = SENDERS.suporte;
+      
+      // Modificar o assunto para diagnóstico
+      const diagnosticSubject = `[DIAGNÓSTICO] ${subject}`;
+      
+      // Enviar o email
+      const result = await this.sendBrevoEmail(
+        supportSender,
+        [{ email, name }],
+        diagnosticSubject,
+        htmlContent
+      );
+      
+      if (result.success) {
+        this.log(`✅ Email de diagnóstico enviado com sucesso para ${email}: ${result.messageId}`);
+        return {
+          success: true,
+          messageId: result.messageId
+        };
+      } else {
+        this.log(`❌ Falha ao enviar email de diagnóstico para ${email}`);
+        return {
+          success: false,
+          error: 'Falha ao enviar email de diagnóstico'
+        };
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.log(`❌ Erro ao enviar email de diagnóstico para ${email}: ${errorMessage}`);
+      return {
+        success: false,
+        error: errorMessage
+      };
+    }
+  }
+
+  /**
+   * Envia um e-mail para casos especiais/problemáticos com técnicas avançadas para garantir entrega
+   * @param email Email do destinatário
+   * @param subject Assunto do e-mail
+   * @param message Conteúdo do e-mail (HTML)
+   * @param options Opções adicionais (prioridade alta, método alternativo)
+   * @returns Promise<{success: boolean, messageId?: string, error?: string}> Resultado do envio
+   */
+  public async sendSpecialCaseEmail(email: string, subject: string, message: string, options: {
+    highPriority?: boolean,
+    useAlternativeMethod?: boolean
+  } = {}): Promise<{success: boolean, messageId?: string, error?: string}> {
+    try {
+      // Extrair nome do email
+      const name = email.split('@')[0];
+      
+      // Detectar domínio
+      const domain = email.split('@')[1];
+      const isGmail = domain === 'gmail.com';
+      
+      this.log(`🚨 Enviando email para caso especial/problemático: ${email}`);
+      this.log(`🔍 Domínio: ${domain}, É Gmail: ${isGmail ? 'Sim' : 'Não'}`);
+      this.log(`🔧 Opções: Alta prioridade: ${options.highPriority ? 'Sim' : 'Não'}, Método alternativo: ${options.useAlternativeMethod ? 'Sim' : 'Não'}`);
+      
+      // Técnicas especiais para o Gmail
+      if (isGmail) {
+        this.log(`📧 Aplicando técnicas especiais para Gmail`);
+        
+        // Para o Gmail, usar o título mais simples possível sem caracteres especiais
+        let specialSubject = subject.replace(/[\[\]\(\)\{\}\<\>\!\?\#\$\%\&\*\=\+\~\`\:\;\,]/g, '');
+        specialSubject = specialSubject.slice(0, 50); // Limitar tamanho
+        
+        // Simplificar o HTML para Gmail (remover estilos complexos, etc.)
+        let specialContent = `
+          <html>
+            <body style="font-family: Arial, sans-serif; color: #333333;">
+              <div style="max-width: 580px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #333333;">DesignAuto - Mensagem Importante</h2>
+                ${message}
+                <p style="font-size: 12px; color: #666666; margin-top: 30px; border-top: 1px solid #eeeeee; padding-top: 10px;">
+                  Esta é uma mensagem automática. Por favor, não responda.
+                </p>
+              </div>
+            </body>
+          </html>
+        `;
+        
+        // Usar o remetente de contato para maior probabilidade de entrega
+        const sender = SENDERS.contato;
+        
+        this.log(`📧 Enviando email especial para Gmail com técnicas otimizadas`);
+        
+        // Primeira tentativa
+        const result = await this.sendBrevoEmail(
+          sender,
+          [{ email, name }],
+          specialSubject,
+          specialContent
+        );
+        
+        if (result.success) {
+          this.log(`✅ Email especial enviado com sucesso para ${email} (Gmail): ${result.messageId}`);
+          return {
+            success: true,
+            messageId: result.messageId
+          };
+        } else if (options.useAlternativeMethod) {
+          // Se falhou e temos permissão para método alternativo, tentar de outra forma
+          this.log(`🔄 Tentando método alternativo para Gmail...`);
+          
+          // Tentar com outro remetente e ainda mais simples
+          const secondarySubject = `Código de Verificação DesignAuto`;
+          const secondaryContent = `
+            <html>
+              <body>
+                <h3>Seu código de verificação</h3>
+                ${message}
+              </body>
+            </html>
+          `;
+          
+          const alternativeResult = await this.sendBrevoEmail(
+            SENDERS.suporte,
+            [{ email, name }],
+            secondarySubject,
+            secondaryContent,
+            false, // não é dispositivo móvel
+            true   // alta prioridade
+          );
+          
+          if (alternativeResult.success) {
+            this.log(`✅ Método alternativo para Gmail bem-sucedido: ${alternativeResult.messageId}`);
+            return {
+              success: true,
+              messageId: alternativeResult.messageId
+            };
+          } else {
+            this.log(`❌ Método alternativo para Gmail também falhou`);
+          }
+        }
+        
+        // Se chegou aqui, todas as tentativas falharam para Gmail
+        this.log(`❌ Todas as tentativas falharam para ${email} (Gmail)`);
+        return {
+          success: false,
+          error: 'Falha em todas as tentativas de envio para Gmail'
+        };
+      } 
+      // Para outros domínios
+      else {
+        this.log(`📧 Usando estratégia genérica para domínio não-Gmail: ${domain}`);
+        
+        // Para outros domínios, usar estratégia mais simples
+        const simplifiedSubject = `[${new Date().toISOString().slice(0, 10)}] ${subject}`;
+        
+        // Conteúdo genérico, evitando formatação complexa
+        const genericContent = `
+          <html>
+            <body>
+              ${message}
+              <p style="font-size: 12px; color: #666666; margin-top: 30px;">
+                Mensagem enviada por DesignAuto em ${new Date().toLocaleString('pt-BR')}
+              </p>
+            </body>
+          </html>
+        `;
+        
+        // Usar remetente de suporte para domínios genéricos
+        const sender = SENDERS.suporte;
+        
+        const result = await this.sendBrevoEmail(
+          sender,
+          [{ email, name }],
+          simplifiedSubject,
+          genericContent,
+          false,
+          options.highPriority
+        );
+        
+        if (result.success) {
+          this.log(`✅ Email especial enviado com sucesso para ${email} (não-Gmail): ${result.messageId}`);
+          return {
+            success: true,
+            messageId: result.messageId
+          };
+        } else if (options.useAlternativeMethod) {
+          // Tentar método alternativo para não-Gmail
+          this.log(`🔄 Tentando método alternativo para domínio ${domain}...`);
+          
+          // Tentar com outro remetente
+          const alternativeResult = await this.sendBrevoEmail(
+            SENDERS.contato,
+            [{ email, name }],
+            `Verificação DesignAuto`,
+            genericContent,
+            false,
+            true
+          );
+          
+          if (alternativeResult.success) {
+            this.log(`✅ Método alternativo para ${domain} bem-sucedido: ${alternativeResult.messageId}`);
+            return {
+              success: true,
+              messageId: alternativeResult.messageId
+            };
+          } else {
+            this.log(`❌ Método alternativo para ${domain} também falhou`);
+          }
+        }
+        
+        // Se chegou aqui, todas as tentativas falharam
+        this.log(`❌ Todas as tentativas falharam para ${email} (${domain})`);
+        return {
+          success: false,
+          error: `Falha em todas as tentativas de envio para ${domain}`
+        };
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.log(`❌ Erro ao enviar email para caso especial ${email}: ${errorMessage}`);
+      return {
+        success: false,
+        error: errorMessage
+      };
     }
   }
 }

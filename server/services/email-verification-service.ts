@@ -1,9 +1,42 @@
 import { db } from "../db";
-import { sql } from "drizzle-orm";
+import { sql, eq } from "drizzle-orm";
 import { randomInt } from "crypto";
 import { emailService } from "./email-service";
+import { users, emailVerificationCodes } from "@shared/schema";
 
 export class EmailVerificationService {
+  /**
+   * Envia um email de verificação com o código fornecido
+   * @param email O email do destinatário
+   * @param code O código de verificação a ser enviado
+   * @returns Promise com o resultado do envio
+   */
+  async sendVerificationEmail(email: string, code: string): Promise<{ success: boolean; message?: string }> {
+    try {
+      console.log(`[EmailVerificationService] Enviando email de verificação para ${email} com código ${code}`);
+      
+      // Usar o serviço de email para enviar o código
+      const result = await emailService.sendEmailVerification(email, code);
+      console.log(`[EmailVerificationService] Resultado do envio de email: ${JSON.stringify(result)}`);
+      
+      if (!result.success) {
+        console.error(`[EmailVerificationService] Falha no envio de email para ${email}`);
+        return { 
+          success: false, 
+          message: "Falha ao enviar e-mail de verificação. Tente novamente mais tarde." 
+        };
+      }
+      
+      console.log(`[EmailVerificationService] Código de verificação enviado com sucesso para ${email}`);
+      return { success: true };
+    } catch (error) {
+      console.error("[EmailVerificationService] Erro ao enviar código:", error);
+      return { 
+        success: false, 
+        message: "Erro ao enviar código de verificação. Tente novamente mais tarde." 
+      };
+    }
+  }
   private CODE_EXPIRATION_HOURS = 24; // Código válido por 24 horas
   
   // Instância única para ser usada em toda a aplicação
@@ -32,6 +65,83 @@ export class EmailVerificationService {
     `);
     
     return results.rows.length > 0;
+  }
+
+  /**
+   * Gera um código de verificação para o email especificado
+   * @param email O endereço de email para o qual gerar o código
+   * @returns O objeto com o código gerado e suas informações
+   */
+  async generateVerificationCode(email: string): Promise<{ id: number; code: string; createdAt: Date; expiresAt: Date }> {
+    try {
+      console.log(`[EmailVerificationService] Gerando código de verificação para email ${email}`);
+      
+      // Buscar o usuário pelo email
+      const [user] = await db.select().from(users).where(eq(users.email, email));
+      
+      if (!user) {
+        throw new Error(`Usuário com email ${email} não encontrado`);
+      }
+      
+      const userId = user.id;
+      
+      // Verificar se já existe um código pendente
+      const hasPending = await this.hasPendingVerificationCode(userId);
+      console.log(`[EmailVerificationService] Usuário ${userId} já possui código pendente? ${hasPending}`);
+      
+      // Se já existir, inative-o antes de criar um novo
+      if (hasPending) {
+        console.log(`[EmailVerificationService] Inativando códigos anteriores para usuário ${userId}`);
+        const now = new Date();
+        try {
+          await db.execute(sql`
+            UPDATE "emailVerificationCodes"
+            SET "isUsed" = true, "usedAt" = ${now}
+            WHERE "userId" = ${userId} AND "isUsed" = false
+          `);
+          console.log(`[EmailVerificationService] Códigos anteriores inativados com sucesso para usuário ${userId}`);
+        } catch (updateError) {
+          console.error(`[EmailVerificationService] Erro ao inativar códigos anteriores:`, updateError);
+        }
+      }
+      
+      // Gerar código de 6 dígitos
+      const code = randomInt(100000, 999999).toString();
+      console.log(`[EmailVerificationService] Código gerado para usuário ${userId}: ${code}`);
+      
+      // Calcular data de expiração (24 horas a partir de agora)
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + this.CODE_EXPIRATION_HOURS);
+      const createdAt = new Date();
+      
+      console.log(`[EmailVerificationService] Tentando salvar código no banco para usuário ${userId}`);
+      
+      // Salvar o código no banco de dados
+      const [result] = await db.insert(emailVerificationCodes)
+        .values({
+          userId,
+          email,
+          code,
+          expiresAt,
+          createdAt,
+          isUsed: false
+        })
+        .returning();
+      
+      if (!result || !result.id) {
+        throw new Error("Erro ao gerar código de verificação: resultado da inserção inválido");
+      }
+      
+      return {
+        id: result.id,
+        code,
+        createdAt,
+        expiresAt
+      };
+    } catch (error) {
+      console.error("[EmailVerificationService] Erro ao gerar código de verificação:", error);
+      throw new Error(`Falha ao gerar código de verificação: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
   /**
@@ -110,9 +220,37 @@ export class EmailVerificationService {
   }
 
   /**
-   * Verifica o código informado pelo usuário
+   * Verifica o código informado pelo email e código
+   * @param email O email do usuário
+   * @param code O código de verificação
+   * @returns Promise com o resultado da verificação
    */
-  async verifyCode(userId: number, code: string): Promise<{ success: boolean; message?: string }> {
+  async verifyCode(email: string, code: string): Promise<{ success: boolean; message?: string; code?: any }>;
+  
+  /**
+   * Verifica o código informado pelo usuário (versão com userId)
+   * @param userId O ID do usuário
+   * @param code O código de verificação
+   * @returns Promise com o resultado da verificação
+   */
+  async verifyCode(userIdOrEmail: number | string, code: string): Promise<{ success: boolean; message?: string; code?: any }> {
+    // Se for email, primeiro busca o usuário
+    if (typeof userIdOrEmail === 'string') {
+      const email = userIdOrEmail;
+      const [user] = await db.select().from(users).where(eq(users.email, email));
+      
+      if (!user) {
+        return {
+          success: false,
+          message: `Usuário com email ${email} não encontrado`
+        };
+      }
+      
+      return this.verifyCode(user.id, code);
+    }
+    
+    // Se for userId, continua com a implementação original
+    const userId = userIdOrEmail;
     try {
       // Normalize o código removendo espaços
       const normalizedCode = code.trim();
