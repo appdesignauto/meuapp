@@ -66,7 +66,14 @@ function AppRoutes() {
       {/* Rotas de autenticação */}
       <Route path="/login" component={AuthPage} />
       <Route path="/register" component={AuthPage} />
-      <Route path="/auth" component={AuthPage} />
+      
+      {/* Rota legada para compatibilidade - redireciona para /login */}
+      <Route path="/auth">
+        {() => {
+          window.location.href = "/login";
+          return null;
+        }}
+      </Route>
       <Route path="/password/forgot" component={() => import("@/pages/password/forgot").then(module => <module.default />)} />
       <Route path="/password/reset" component={() => import("@/pages/password/reset").then(module => <module.default />)} />
       <Route path="/email/verify" component={() => import("@/pages/email/verify").then(module => <module.default />)} />
