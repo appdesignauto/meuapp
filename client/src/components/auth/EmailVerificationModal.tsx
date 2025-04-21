@@ -68,9 +68,10 @@ export function EmailVerificationModal() {
         });
         
         // Recarregar a página para atualizar os dados do usuário
+        // Usando um timeout menor para melhorar a experiência
         setTimeout(() => {
           window.location.reload();
-        }, 2500);
+        }, 1200);
       } else {
         toast({
           title: "Falha na verificação",
@@ -191,7 +192,7 @@ export function EmailVerificationModal() {
               className="text-2xl font-bold text-center mb-3"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
+              transition={{ delay: 0.3 }}
             >
               Verificação Concluída!
             </motion.h2>
@@ -200,7 +201,7 @@ export function EmailVerificationModal() {
               className="text-center text-muted-foreground mb-6"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7 }}
+              transition={{ delay: 0.5 }}
             >
               Seu e-mail foi confirmado com sucesso. Você agora tem acesso completo à plataforma.
             </motion.p>
@@ -208,10 +209,11 @@ export function EmailVerificationModal() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 1.2 }}
-              className="text-center text-sm text-muted-foreground"
+              transition={{ delay: 0.8 }}
+              className="text-center text-sm text-muted-foreground flex items-center justify-center"
             >
-              Redirecionando para o painel...
+              <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+              Acessando o painel...
             </motion.div>
           </motion.div>
         ) : (
