@@ -223,8 +223,8 @@ const Header = () => {
             </Button>
 
             {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+              <div className="flex items-center space-x-2">
+                <Link href="/painel/perfil">
                   <Button 
                     variant="ghost" 
                     className="p-0 h-9 flex items-center rounded-full pl-1.5 pr-2 space-x-1.5 bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 shadow-sm"
@@ -248,184 +248,22 @@ const Header = () => {
                           : `Conta ${user.tipoplano}`}
                       </span>
                     </div>
-                    <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-72 mr-2 mt-1 p-0 rounded-xl shadow-xl" align="end">
-                  {/* Informações do usuário com banner de status incorporado */}
-                  <div className="relative">
-                    {/* Banner colorido no fundo que depende do tipo de conta */}
-                    <div className={`absolute top-0 left-0 right-0 h-20 rounded-t-xl ${
-                      user.nivelacesso === 'usuario' || !user.tipoplano 
-                        ? 'bg-gradient-to-r from-blue-500 to-blue-600' 
-                        : 'bg-gradient-to-r from-green-500 to-green-600'
-                    }`}></div>
-                  
-                    {/* Container do perfil com espaçamento para ficar sobre o banner */}
-                    <div className="relative z-10 px-4 pt-4 pb-3">
-                      {/* Avatar grande */}
-                      <div className="w-20 h-20 mb-3 mx-auto rounded-full overflow-hidden border-4 border-white bg-white shadow-md">
-                        {user.profileimageurl ? (
-                          <img 
-                            src={user.profileimageurl} 
-                            alt={user.name || user.username} 
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-blue-100 text-blue-600 font-medium text-3xl">
-                            {(user.name?.[0] || user.username?.[0] || '?').toUpperCase()}
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Dados do usuário centralizados */}
-                      <div className="text-center">
-                        <h3 className="font-medium text-lg">{user.name || user.username}</h3>
-                        <p className="text-sm text-gray-500 mb-2">{user.email}</p>
-                        
-                        {/* Badge de tipo de conta */}
-                        <div className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                          user.nivelacesso === 'usuario' || !user.tipoplano 
-                            ? 'bg-blue-100 text-blue-700' 
-                            : 'bg-green-100 text-green-700'
-                        }`}>
-                          {user.nivelacesso === 'usuario' || !user.tipoplano 
-                            ? 'CONTA GRÁTIS' 
-                            : `CONTA ${user.tipoplano?.toUpperCase()}`}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Menu de opções */}
-                  <div className="py-2">
-                    <Link href="/painel/perfil">
-                      <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-blue-50 mr-3">
-                          <User className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="font-medium">Minha conta</span>
-                          <span className="text-xs text-gray-500">Perfil, privacidade e dados</span>
-                        </div>
-                      </DropdownMenuItem>
-                    </Link>
-                    
-                    {user.nivelacesso === 'usuario' || !user.tipoplano ? (
-                      <Link href="/planos">
-                        <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
-                          <div className="w-10 h-10 rounded-full flex items-center justify-center bg-green-50 mr-3">
-                            <CreditCard className="w-5 h-5 text-green-600" />
-                          </div>
-                          <div className="flex flex-col flex-1">
-                            <span className="font-medium">Assinatura</span>
-                            <span className="text-xs text-gray-500">Fazer upgrade</span>
-                          </div>
-                          <Badge variant="outline" className="bg-green-100 border-green-200 text-green-700 text-xs">UPGRADE</Badge>
-                        </DropdownMenuItem>
-                      </Link>
-                    ) : (
-                      <Link href="/painel/assinatura">
-                        <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
-                          <div className="w-10 h-10 rounded-full flex items-center justify-center bg-blue-50 mr-3">
-                            <CreditCard className="w-5 h-5 text-blue-600" />
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="font-medium">Assinatura</span>
-                            <span className="text-xs text-gray-500">Gerenciar sua assinatura</span>
-                          </div>
-                        </DropdownMenuItem>
-                      </Link>
-                    )}
-                    
-                    <Link href="/painel/downloads">
-                      <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-purple-50 mr-3">
-                          <Download className="w-5 h-5 text-purple-600" />
-                        </div>
-                        <div className="flex flex-col flex-1">
-                          <span className="font-medium">Downloads</span>
-                          <span className="text-xs text-gray-500">Histórico de downloads</span>
-                        </div>
-                        <span className="text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-700 font-medium">
-                          {user.nivelacesso === 'premium' || user.tipoplano 
-                            ? '∞' 
-                            : `${userStats?.totalDownloads || 0}/10`}
-                        </span>
-                      </DropdownMenuItem>
-                    </Link>
-                    
-                    <Link href="/painel/favoritas">
-                      <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-red-50 mr-3">
-                          <Heart className="w-5 h-5 text-red-600" />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="font-medium">Curtidas</span>
-                          <span className="text-xs text-gray-500">Seus itens favoritos</span>
-                        </div>
-                      </DropdownMenuItem>
-                    </Link>
-                    
-                    <Link href="/painel/salvos">
-                      <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-yellow-50 mr-3">
-                          <Bookmark className="w-5 h-5 text-yellow-600" />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="font-medium">Salvos</span>
-                          <span className="text-xs text-gray-500">Artes para usar depois</span>
-                        </div>
-                      </DropdownMenuItem>
-                    </Link>
-                    
-                    <Link href="/painel/seguindo">
-                      <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-indigo-50 mr-3">
-                          <Users className="w-5 h-5 text-indigo-600" />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="font-medium">Seguindo</span>
-                          <span className="text-xs text-gray-500">Designers que você segue</span>
-                        </div>
-                      </DropdownMenuItem>
-                    </Link>
-                  </div>
-                  
-                  {/* Seção de Suporte */}
-                  <div className="border-t pt-2 pb-2">
-                    <Link href="https://wa.me/5527999999999" target="_blank" rel="noopener noreferrer">
-                      <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-green-50 mr-3">
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="#25D366" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M17.6 6.32c-1.44-1.52-3.4-2.32-5.55-2.32-4.48 0-8.13 3.75-8.13 8.35 0 1.62.46 3.2 1.33 4.55L4.17 20.8l4.05-1.06c1.28.7 2.7 1.07 4.06 1.07 4.48 0 8.12-3.76 8.12-8.35s-2.14-6.14-2.8-6.14z" />
-                          </svg>
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="font-medium">Suporte por WhatsApp</span>
-                          <span className="text-xs text-gray-500">Dúvidas e perguntas</span>
-                        </div>
-                      </DropdownMenuItem>
-                    </Link>
-                  </div>
-                  
-                  {/* Logout */}
-                  <div className="border-t pt-2 pb-2">
-                    <DropdownMenuItem 
-                      className="cursor-pointer py-4 px-4 hover:bg-red-50"
-                      onClick={() => logoutMutation.mutate()}
-                    >
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-red-50 mr-3">
-                        <LogOut className="w-5 h-5 text-red-600" />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="font-medium text-red-600">Sair da conta</span>
-                        <span className="text-xs text-gray-500">Encerrar sessão atual</span>
-                      </div>
-                    </DropdownMenuItem>
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                </Link>
+                
+                <Button 
+                  variant="ghost"
+                  className="ml-2 px-2 h-9 text-gray-500 hover:text-red-600 hover:bg-red-50"
+                  onClick={() => {
+                    if (logoutMutation) {
+                      logoutMutation.mutate();
+                      window.location.href = '/auth'; // Redirecionar para a página de login
+                    }
+                  }}
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
             ) : (
               <div className="flex items-center space-x-2">
                 <Link href="/auth">
