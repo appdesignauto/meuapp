@@ -29,9 +29,6 @@ import AuthPage from "@/pages/auth-page";
 import NotFound from "@/pages/not-found";
 import AvatarTestPage from "@/pages/AvatarTestPage";
 import SupabaseAuthTestPage from "@/pages/SupabaseAuthTestPage";
-import EmailVerificationPage from "@/pages/email-verification-page";
-import ForgotPasswordPage from "@/pages/forgot-password";
-import ResetPasswordPage from "@/pages/reset-password";
 
 // Páginas do Painel do Usuário
 import { ProtectedPainelRoute } from "@/components/painel/ProtectedPainelRoute";
@@ -70,9 +67,9 @@ function AppRoutes() {
       <Route path="/login" component={AuthPage} />
       <Route path="/register" component={AuthPage} />
       <Route path="/auth" component={AuthPage} />
-      <Route path="/password/forgot" component={ForgotPasswordPage} />
-      <Route path="/password/reset" component={ResetPasswordPage} />
-      <Route path="/email/verify" component={EmailVerificationPage} />
+      <Route path="/password/forgot" component={() => import("@/pages/password/forgot").then(module => <module.default />)} />
+      <Route path="/password/reset" component={() => import("@/pages/password/reset").then(module => <module.default />)} />
+      <Route path="/email/verify" component={() => import("@/pages/email/verify").then(module => <module.default />)} />
       <Route path="/auth/supabase">
         {() => {
           const SupabaseAuthPage = lazy(() => import("@/pages/supabase-auth-page"));
