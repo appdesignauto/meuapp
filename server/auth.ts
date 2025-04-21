@@ -303,19 +303,19 @@ export function setupAuth(app: Express) {
       // Enviar email de verificação
       try {
         // Importar o serviço de verificação de email
-        const { emailVerificationService } = await import('./services/email-verification-service');
+        const emailVerificationModule = await import('./services/email-verification-service');
+        const emailVerificationService = new emailVerificationModule.EmailVerificationService();
         
         // Enviar email de verificação
-        const sent = await emailVerificationService.sendVerificationEmail(
+        const result = await emailVerificationService.sendVerificationCode(
           newUser.id, 
-          newUser.email,
-          newUser.name || 'Usuário'
+          newUser.email
         );
         
-        if (sent) {
-          console.log(`E-mail de verificação enviado para ${newUser.email}`);
+        if (result.success) {
+          console.log(`E-mail de verificação enviado com sucesso para ${newUser.email}`);
         } else {
-          console.warn(`Falha ao enviar e-mail de verificação para ${newUser.email}`);
+          console.warn(`Falha ao enviar e-mail de verificação para ${newUser.email}: ${result.message || 'Erro desconhecido'}`);
         }
       } catch (emailError) {
         console.error("Erro ao enviar e-mail de verificação:", emailError);
