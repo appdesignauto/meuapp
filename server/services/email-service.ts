@@ -3,6 +3,14 @@ import fetch from 'node-fetch';
 // Chave da API do Brevo
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
 
+// Verificar a chave na inicialização
+console.log(`[EmailService] Verificando BREVO_API_KEY: ${BREVO_API_KEY ? 'Chave presente com ' + BREVO_API_KEY.length + ' caracteres' : 'Chave não configurada!'}`);
+
+// Domínio para URLs de redefinição
+const APP_DOMAIN = process.env.NODE_ENV === 'production' 
+  ? 'https://design-auto-hub-1-appdesignauto.replit.app'
+  : 'http://localhost:5000';
+
 // Modo de desenvolvimento (simulação de envio)
 // Em ambiente de desenvolvimento, simula o envio de emails
 // Em produção, usa a API real do Brevo
