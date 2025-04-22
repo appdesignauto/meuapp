@@ -20,18 +20,25 @@ export default function RequestResetForm() {
   const { mutate, isPending } = useMutation({
     mutationFn: async (email: string) => {
       const response = await apiRequest('POST', '/api/password-reset/request', { email });
-      const data = await response.json();
       
       if (!response.ok) {
         // Verifica se é erro de cooldown (retorna 429)
-        if (response.status === 429 && data.cooldown) {
-          // Tratando o erro de uma forma mais direta, sem passar objeto JSON na mensagem
+        if (response.status === 429) {
+          // Define o estado de cooldown
           setIsInCooldown(true);
-          throw new Error("Um e-mail já foi enviado e chegará em instantes. Caso não chegue em até 3 minutos, clique para solicitar novamente.");
+          
+          // Para resposta de texto simples, usamos response.text()
+          const errorText = await response.text();
+          throw new Error(errorText || "Um e-mail já foi enviado e chegará em instantes. Caso não chegue em até 3 minutos, clique para solicitar novamente.");
         }
+        
+        // Para outros erros em formato JSON, usamos response.json()
+        const data = await response.json();
         throw new Error(data.message || 'Falha ao enviar o e-mail de recuperação');
       }
       
+      // Resposta de sucesso em formato JSON
+      const data = await response.json();
       return data;
     },
     onSuccess: () => {
