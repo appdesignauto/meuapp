@@ -25,12 +25,9 @@ export default function RequestResetForm() {
       if (!response.ok) {
         // Verifica se é erro de cooldown (retorna 429)
         if (response.status === 429 && data.cooldown) {
-          throw new Error(data.message || "Um e-mail já foi enviado e chegará em instantes.", { 
-            cause: { 
-              cooldown: data.cooldown,
-              title: data.title || "Atenção"
-            } 
-          });
+          // Tratando o erro de uma forma mais direta, sem passar objeto JSON na mensagem
+          setIsInCooldown(true);
+          throw new Error("Um e-mail já foi enviado e chegará em instantes. Caso não chegue em até 3 minutos, clique para solicitar novamente.");
         }
         throw new Error(data.message || 'Falha ao enviar o e-mail de recuperação');
       }
@@ -46,14 +43,12 @@ export default function RequestResetForm() {
       });
     },
     onError: (error: any) => {
-      // Verifica se é um erro de cooldown
-      if (error.cause?.cooldown) {
-        // Define o estado de cooldown
-        setIsInCooldown(true);
-        
-        // Mostra um toast no estilo de alerta (amarelo)
+      // O estado de cooldown já foi definido no mutationFn, se necessário
+      
+      // Sempre mostra o alerta amarelo para mensagens de cooldown
+      if (isInCooldown) {
         toast({
-          title: error.cause.title || 'Atenção',
+          title: 'Atenção',
           description: error.message,
           variant: 'default',
           className: "bg-amber-50 border-amber-300 text-amber-800",
