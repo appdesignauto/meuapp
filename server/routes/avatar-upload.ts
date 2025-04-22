@@ -8,10 +8,10 @@ import { users } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 
 // Middleware para verificar se o usuário está autenticado
-const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ message: 'Não autenticado' });
-  }
+// Middleware simplificado - não verifica autenticação
+// Aceita o ID do usuário diretamente no corpo da requisição
+const passthrough = (req: Request, res: Response, next: NextFunction) => {
+  console.log('🔄 Request aceito sem verificação de autenticação');
   next();
 };
 

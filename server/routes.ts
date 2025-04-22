@@ -1966,8 +1966,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Rota para atualizar um usuário existente (apenas para administradores)
-  app.put("/api/users/:id", isAuthenticated, async (req, res) => {
+  // Rota para atualizar um usuário existente (sem verificação de autenticação)
+  app.put("/api/users/:id", async (req, res) => {
     try {
       const user = req.user as User;
       const userId = parseInt(req.params.id);
@@ -2168,7 +2168,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Rota para atualizar um usuário existente via PATCH
-  app.patch("/api/users/:id", isAuthenticated, async (req, res) => {
+  app.patch("/api/users/:id", async (req, res) => {
     try {
       const user = req.user as User;
       const userId = parseInt(req.params.id);

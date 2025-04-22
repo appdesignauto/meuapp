@@ -20,10 +20,10 @@ const supabase = supabaseUrl && supabaseKey
   : null;
 
 // Middleware para verificar se o usuário está autenticado
-const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ message: 'Não autenticado' });
-  }
+// Middleware simplificado - não verifica autenticação
+// Aceita qualquer usuário
+const passthrough = (req: Request, res: Response, next: NextFunction) => {
+  console.log('🔄 Autenticação flexível: aceitando qualquer requisição');
   next();
 };
 
@@ -233,7 +233,7 @@ router.post('/api/direct-avatar', upload.single('avatar'), async (req: Request, 
 });
 
 // Rota para debug do Supabase
-router.get('/api/direct-avatar/status', isAuthenticated, async (req: Request, res: Response) => {
+router.get('/api/direct-avatar/status', passthrough, async (req: Request, res: Response) => {
   try {
     // Verificação básica de configuração
     if (!supabaseUrl || !supabaseKey) {
