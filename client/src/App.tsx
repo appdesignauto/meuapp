@@ -116,6 +116,13 @@ function AppRoutes() {
           );
         }}
       </Route>
+      {/* Rota adicional para verificação de email para compatibilidade */}
+      <Route path="/email-verification">
+        {() => {
+          window.location.href = "/email/verify";
+          return null;
+        }}
+      </Route>
       <Route path="/auth/supabase">
         {() => {
           const SupabaseAuthPage = lazy(() => import("@/pages/supabase-auth-page"));
