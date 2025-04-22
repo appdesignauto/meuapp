@@ -30,7 +30,7 @@ export class PasswordResetService {
    * @param email Email do usuário
    * @returns Sucesso da operação e mensagens
    */
-  async createResetToken(email: string): Promise<{ success: boolean; message: string; cooldown?: number }> {
+  async createResetToken(email: string): Promise<{ success: boolean; message: string }> {
     try {
       // Verifica se o usuário existe
       const [user] = await db
@@ -46,24 +46,8 @@ export class PasswordResetService {
         };
       }
       
-      // Verificar se o usuário já solicitou recentemente (intervalo de 3 minutos)
-      const COOLDOWN_SECONDS = 180; // 3 minutos
-      if (user.lastresetrequest) {
-        const lastRequest = new Date(user.lastresetrequest);
-        const now = new Date();
-        const diffSeconds = Math.floor((now.getTime() - lastRequest.getTime()) / 1000);
-        
-        if (diffSeconds < COOLDOWN_SECONDS) {
-          const remainingSeconds = COOLDOWN_SECONDS - diffSeconds;
-          console.log(`[PasswordResetService] Solicitação muito recente para ${email}. Última: ${lastRequest.toISOString()}, Restante: ${remainingSeconds}s`);
-          
-          return {
-            success: false,
-            message: "Um e-mail já foi enviado e chegará em instantes. Caso não chegue em até 3 minutos, clique para solicitar novamente.",
-            cooldown: remainingSeconds
-          };
-        }
-      }
+      // Removi a verificação de tempo entre solicitações conforme solicitado
+      // Apenas registramos a hora da solicitação para fins de rastreamento
 
       // Gera token único
       const token = this.generateToken();
@@ -96,8 +80,8 @@ export class PasswordResetService {
       console.log(`[PasswordResetService] Gerando link de redefinição com base URL: ${baseUrl}`);
       console.log(`[PasswordResetService] Token gerado em: ${new Date(parseInt(tokenTimestamp) || Date.now()).toISOString()}`);
       
-      // Caminho direto para a página de reset
-      const resetUrl = `${baseUrl}/reset-password?token=${token}`;
+      // Caminho direto para a página de reset (agora usando o novo padrão de URL)
+      const resetUrl = `${baseUrl}/password/reset?token=${token}`;
       
       // Registrar detalhes da solicitação para diagnóstico
       console.log(`[PasswordResetService] Solicitação de redefinição para usuário ID: ${user.id}, email: ${user.email}`);
