@@ -114,9 +114,20 @@ class EmailService {
       }
 
       // Converter HTML para texto simples para clientes sem suporte a HTML
-      const textContent = htmlContent.replace(/<[^>]*>/g, '')
+      // Remover qualquer código de HTML e preservar o texto puro
+      let textContent = htmlContent
+        .replace(/<[^>]*>/g, '')
         .replace(/\s+/g, ' ')
         .trim();
+        
+      // Garantir que o link de redefinição permaneça intacto no texto
+      if (to[0]?.email && subject.includes('Redefinição de Senha')) {
+        // Tentar extrair o link de resetUrl do conteúdo HTML
+        const resetUrlMatch = htmlContent.match(/href="([^"]+)"/);
+        if (resetUrlMatch && resetUrlMatch[1]) {
+          textContent += "\n\nLink direto para redefinição de senha: " + resetUrlMatch[1];
+        }
+      }
       
       const payload = {
         sender: {
@@ -150,6 +161,14 @@ class EmailService {
         // Gera um ID de mensagem simulado
         const simulatedMessageId = `sim-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
         this.log(`🧪 [DEV MODE] Email simulado com sucesso! ID: ${simulatedMessageId}`);
+        
+        // Mostrar link de redefinição em logs de desenvolvimento
+        if (subject.includes('Redefinição de Senha')) {
+          const resetUrlMatch = htmlContent.match(/href="([^"]+)"/);
+          if (resetUrlMatch && resetUrlMatch[1]) {
+            this.log(`🔗 [DEV MODE] Link de redefinição: ${resetUrlMatch[1]}`);
+          }
+        }
         
         return { success: true, messageId: simulatedMessageId };
       }
@@ -315,9 +334,10 @@ class EmailService {
             <h1>Olá ${data.userName},</h1>
             <p>Recebemos uma solicitação para redefinir sua senha.</p>
             <p>Clique no botão abaixo para criar uma nova senha:</p>
+            <!-- Link direto sem rastreamento -->
             <a href="${data.resetUrl}" style="padding: 12px 24px; background-color: #4285f4; color: white; text-decoration: none; border-radius: 4px; display: inline-block; margin: 20px 0;">Redefinir Senha</a>
             <p>Se o botão acima não funcionar, copie e cole o link a seguir no seu navegador:</p>
-            <p style="word-break: break-all; font-family: monospace;">${data.resetUrl}</p>
+            <p style="word-break: break-all; font-family: monospace; background-color: #f5f5f5; padding: 10px; border-radius: 4px;">${data.resetUrl}</p>
             <p>Este link expira em 1 hora.</p>
             <p>Se você não solicitou esta mudança, por favor ignore este e-mail.</p>
             <p>Atenciosamente,<br>Equipe Design Auto</p>
