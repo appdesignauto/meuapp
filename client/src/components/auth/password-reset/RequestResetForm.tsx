@@ -77,9 +77,10 @@ export default function RequestResetForm() {
           <Alert variant="default" className="bg-primary/10 border-primary/30">
             <AlertTitle className="font-medium">O que fazer agora?</AlertTitle>
             <AlertDescription className="text-sm mt-2">
-              1. Verifique sua caixa de entrada e pasta de spam<br />
-              2. Clique no link de redefinição no email<br />
-              3. Crie uma nova senha segura
+              1. Verifique sua caixa de entrada e também a pasta de spam.<br />
+              2. Os e-mails podem levar até 3 minutos para chegar. Por favor, aguarde.<br />
+              3. Quando receber o e-mail, clique no link de redefinição da senha.<br />
+              4. Crie uma nova senha segura para sua conta.
             </AlertDescription>
           </Alert>
         </CardContent>
