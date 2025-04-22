@@ -39,7 +39,8 @@ router.post('/request', async (req, res) => {
       // Se existe cooldown, envia essa informação para o cliente
       if (result.cooldown) {
         return res.status(429).json({ 
-          message: "Um e-mail já foi enviado e chegará em instantes. Para solicitar outro, aguarde alguns minutos (prazo máximo de 3 minutos).",
+          title: "Atenção",
+          message: "Um e-mail já foi enviado e chegará em instantes. Caso não chegue em até 3 minutos, clique para solicitar novamente.",
           cooldown: result.cooldown
         });
       }

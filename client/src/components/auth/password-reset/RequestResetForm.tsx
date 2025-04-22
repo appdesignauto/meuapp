@@ -44,8 +44,13 @@ export default function RequestResetForm() {
       if (!response.ok) {
         // Verifica se é erro de cooldown (retorna 429)
         if (response.status === 429 && data.cooldown) {
-          // Simplifica a mensagem para o frontend formatar melhor
-        throw new Error("Um e-mail já foi enviado e chegará em instantes.", { cause: { cooldown: data.cooldown } });
+          // Captura o título e a mensagem enviados pelo servidor
+          throw new Error(data.message || "Um e-mail já foi enviado e chegará em instantes.", { 
+            cause: { 
+              cooldown: data.cooldown,
+              title: data.title || "Atenção"
+            } 
+          });
         }
         throw new Error(data.message || 'Falha ao enviar o e-mail de recuperação');
       }
@@ -67,15 +72,12 @@ export default function RequestResetForm() {
         setCooldown(error.cause.cooldown);
         setCountdown(error.cause.cooldown);
         
-        // Formata o tempo para exibição
-        const minutes = Math.floor(error.cause.cooldown / 60);
-        const seconds = error.cause.cooldown % 60;
-        const timeDisplay = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-        
         toast({
-          title: 'E-mail já enviado',
-          description: `Um e-mail de redefinição já foi enviado e chegará em instantes. Para solicitar outro, aguarde ${timeDisplay} (prazo máximo de 3 minutos).`,
-          variant: 'destructive',
+          title: error.cause.title || 'Atenção',
+          description: error.message,
+          // Muda a cor para amarelo (warning) em vez de vermelho (destructive)
+          variant: 'default',
+          className: "bg-amber-50 border-amber-300 text-amber-800",
         });
       } else {
         toast({
@@ -92,15 +94,11 @@ export default function RequestResetForm() {
     
     // Verifica se está em cooldown
     if (countdown > 0) {
-      // Formata o tempo para exibição
-      const minutes = Math.floor(countdown / 60);
-      const seconds = countdown % 60;
-      const timeDisplay = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-      
       toast({
-        title: 'E-mail já enviado',
-        description: `Um e-mail de redefinição já foi enviado e chegará em instantes. Para solicitar outro, aguarde ${timeDisplay} (prazo máximo de 3 minutos).`,
-        variant: 'destructive',
+        title: 'Atenção',
+        description: 'Um e-mail já foi enviado e chegará em instantes. Caso não chegue em até 3 minutos, clique para solicitar novamente.',
+        variant: 'default',
+        className: "bg-amber-50 border-amber-300 text-amber-800",
       });
       return;
     }
