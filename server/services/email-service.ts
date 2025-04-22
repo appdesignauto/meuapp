@@ -182,11 +182,11 @@ class EmailService {
     subject: string,
     htmlContent: string,
     textContent?: string
-  ): Promise<{success: boolean, messageId?: string}> {
+  ): Promise<{success: boolean, messageId?: string, error?: string}> {
     try {
       if (!this.initialized) {
         this.log('❌ Serviço não inicializado');
-        return { success: false };
+        return { success: false, error: 'Serviço de email não inicializado' };
       }
 
       // Converter HTML para texto simples para clientes sem suporte a HTML
@@ -267,7 +267,7 @@ class EmailService {
       // Verificar se temos a chave da API
       if (!BREVO_API_KEY) {
         this.log('❌ ERRO CRÍTICO: BREVO_API_KEY não configurada!');
-        return { success: false };
+        return { success: false, error: 'Chave de API Brevo não configurada' };
       }
       
       // Validar o formato do email antes de enviar
@@ -314,8 +314,9 @@ class EmailService {
       
       return { success: true, messageId };
     } catch (error) {
-      this.log(`❌ Erro ao enviar e-mail: ${error instanceof Error ? error.message : String(error)}`);
-      return { success: false };
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.log(`❌ Erro ao enviar e-mail: ${errorMessage}`);
+      return { success: false, error: errorMessage };
     }
   }
   
@@ -351,21 +352,43 @@ class EmailService {
    * @returns Promise<{success: boolean}> Indica se o envio foi bem-sucedido
    */
   public async sendEmailVerification(email: string, verificationCode: string): Promise<{success: boolean}> {
+    // Validar email antes de continuar
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+      this.log(`❌ Endereço de email inválido para verificação: ${email}`);
+      return { success: false };
+    }
+    
     // Extrair nome do email para fallback
     const name = email.split('@')[0];
     try {
       this.log(`📧 Preparando e-mail de verificação para ${email} usando remetente de suporte`);
       
+      // Gerar um ID único para rastreamento da solicitação de verificação
+      const requestId = createHash('md5').update(`${email}-${Date.now()}`).digest('hex').substring(0, 8);
+      
       const htmlContent = `
         <html>
-          <body>
-            <h1>Olá ${name},</h1>
-            <p>Obrigado por se cadastrar no Design Auto!</p>
-            <p>Seu código de verificação é:</p>
-            <h2 style="font-size: 24px; padding: 10px; background-color: #f0f0f0; text-align: center; letter-spacing: 5px;">${verificationCode}</h2>
-            <p>Este código expira em 24 horas.</p>
-            <p>Se você não solicitou este código, por favor ignore este e-mail.</p>
-            <p>Atenciosamente,<br>Equipe Design Auto</p>
+          <body style="font-family: Arial, Helvetica, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">
+            <div style="background-color: #f8f8f8; padding: 20px; text-align: center; border-bottom: 3px solid #4285f4;">
+              <img src="https://designauto.com.br/images/logos/logo_1744762344394.png" alt="Design Auto Logo" style="max-width: 200px; margin-bottom: 10px;">
+            </div>
+            
+            <div style="padding: 20px;">
+              <h1 style="color: #4285f4;">Olá ${name},</h1>
+              <p>Obrigado por se cadastrar no Design Auto!</p>
+              <p>Seu código de verificação é:</p>
+              
+              <div style="margin: 30px 0; text-align: center;">
+                <div style="font-size: 24px; padding: 15px; background-color: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 4px; display: inline-block; letter-spacing: 8px; font-weight: bold; color: #333;">${verificationCode}</div>
+              </div>
+              
+              <p>Este código expira em 24 horas.</p>
+              <p><strong>Importante:</strong> Se você não solicitou este código, por favor ignore este e-mail.</p>
+              <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+              <p style="color: #777; font-size: 12px;">Atenciosamente,<br>Equipe Design Auto</p>
+              <p style="color: #999; font-size: 11px; text-align: center; margin-top: 20px;">ID da solicitação: ${requestId}</p>
+            </div>
           </body>
         </html>
       `;
@@ -402,16 +425,48 @@ class EmailService {
    */
   public async sendWelcomeEmail(email: string, name: string): Promise<boolean> {
     try {
+      // Validar email antes de continuar
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!email || !emailRegex.test(email)) {
+        this.log(`❌ Endereço de email inválido para envio de boas-vindas: ${email}`);
+        return false;
+      }
+      
+      // Usar o nome do usuário ou extrair do email como fallback
+      const userName = name || email.split('@')[0];
+      
       this.log(`📧 Preparando e-mail de boas-vindas para ${email} usando remetente de contato`);
       
       const htmlContent = `
         <html>
-          <body>
-            <h1>Bem-vindo ao Design Auto, ${name}!</h1>
-            <p>Sua conta foi verificada com sucesso.</p>
-            <p>Você agora tem acesso a todos os recursos disponíveis para seu plano.</p>
-            <p>Se tiver qualquer dúvida, entre em contato conosco.</p>
-            <p>Atenciosamente,<br>Equipe Design Auto</p>
+          <body style="font-family: Arial, Helvetica, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">
+            <div style="background-color: #f8f8f8; padding: 20px; text-align: center; border-bottom: 3px solid #4285f4;">
+              <img src="https://designauto.com.br/images/logos/logo_1744762344394.png" alt="Design Auto Logo" style="max-width: 200px; margin-bottom: 10px;">
+            </div>
+            
+            <div style="padding: 20px;">
+              <h1 style="color: #4285f4;">Bem-vindo ao Design Auto, ${userName}!</h1>
+              
+              <p>Sua conta foi verificada com sucesso! 🎉</p>
+              
+              <div style="padding: 15px; background-color: #f5f5f5; border-radius: 4px; margin: 20px 0;">
+                <p><strong>Você agora tem acesso a:</strong></p>
+                <ul style="margin-top: 10px; padding-left: 20px;">
+                  <li>Milhares de designs automotivos prontos para edição</li>
+                  <li>Todas as artes disponíveis para seu plano</li>
+                  <li>Categorias exclusivas de conteúdo para sua oficina</li>
+                </ul>
+              </div>
+              
+              <p>Se tiver qualquer dúvida, entre em contato conosco pelo suporte.</p>
+              
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="https://designauto.com.br" style="padding: 12px 24px; background-color: #4285f4; color: white; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold;">Acessar Minha Conta</a>
+              </div>
+              
+              <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+              <p style="color: #777; font-size: 12px;">Atenciosamente,<br>Equipe Design Auto</p>
+            </div>
           </body>
         </html>
       `;
@@ -556,17 +611,62 @@ Equipe Design Auto
    */
   public async sendPasswordChangeConfirmationEmail(email: string, data: {userName: string}): Promise<boolean> {
     try {
-      this.log(`📧 Preparando e-mail de confirmação de alteração de senha para ${email}`);
+      // Validar email antes de continuar
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!email || !emailRegex.test(email)) {
+        this.log(`❌ Endereço de email inválido para confirmação de alteração: ${email}`);
+        return false;
+      }
+      
+      // Garantir que temos um nome de usuário válido
+      const userName = data.userName || email.split('@')[0];
+      
+      // Gerar um ID único para rastreamento da solicitação
+      const requestId = createHash('md5').update(`${email}-${Date.now()}`).digest('hex').substring(0, 8);
+      
+      this.log(`📧 [ID:${requestId}] Preparando e-mail de confirmação de alteração de senha para ${email}`);
       
       const htmlContent = `
         <html>
-          <body>
-            <h1>Olá ${data.userName},</h1>
-            <p>Sua senha foi alterada com sucesso.</p>
-            <p>Se você não realizou esta alteração, entre em contato imediatamente com nosso suporte.</p>
-            <p>Atenciosamente,<br>Equipe Design Auto</p>
+          <body style="font-family: Arial, Helvetica, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">
+            <div style="background-color: #f8f8f8; padding: 20px; text-align: center; border-bottom: 3px solid #4285f4;">
+              <img src="https://designauto.com.br/images/logos/logo_1744762344394.png" alt="Design Auto Logo" style="max-width: 200px; margin-bottom: 10px;">
+            </div>
+            
+            <div style="padding: 20px;">
+              <h1 style="color: #4285f4;">Olá ${userName},</h1>
+              
+              <p><strong>Sua senha foi alterada com sucesso.</strong></p>
+              
+              <div style="margin: 20px 0; padding: 15px; background-color: #f5f5f5; border-left: 4px solid #4285f4; border-radius: 4px;">
+                <p>Se você não realizou esta alteração, entre em contato <strong>imediatamente</strong> com nosso suporte.</p>
+              </div>
+              
+              <p>Esta é uma notificação de segurança para garantir que apenas você tenha acesso à sua conta.</p>
+              
+              <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+              <p style="color: #777; font-size: 12px;">Atenciosamente,<br>Equipe de Segurança<br>Design Auto</p>
+              <p style="color: #999; font-size: 11px; text-align: center; margin-top: 20px;">ID da notificação: ${requestId}</p>
+            </div>
           </body>
         </html>
+      `;
+      
+      // Versão em texto simples para clientes de email sem suporte a HTML
+      const textContent = `
+Olá ${userName},
+
+Sua senha foi alterada com sucesso.
+
+IMPORTANTE: Se você não realizou esta alteração, entre em contato imediatamente com nosso suporte.
+
+Esta é uma notificação de segurança para garantir que apenas você tenha acesso à sua conta.
+
+Atenciosamente,
+Equipe de Segurança
+Design Auto
+
+ID da notificação: ${requestId}
       `;
       
       // Usar remetente de suporte para notificações de segurança
@@ -575,9 +675,10 @@ Equipe Design Auto
       
       const result = await this.sendBrevoEmail(
         supportSender, 
-        [{ email, name: data.userName }], 
+        [{ email, name: userName }], 
         subject, 
-        htmlContent
+        htmlContent,
+        textContent
       );
       
       if (result.success) {
