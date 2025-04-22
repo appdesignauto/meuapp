@@ -185,12 +185,21 @@ class EmailService {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`API do Brevo retornou erro: ${JSON.stringify(errorData)}`);
+        try {
+          const errorData = await response.json();
+          throw new Error(`API do Brevo retornou erro: ${JSON.stringify(errorData)}`);
+        } catch (parseError) {
+          throw new Error(`API do Brevo retornou erro: ${response.status} ${response.statusText}`);
+        }
       }
 
-      const data = await response.json() as { messageId: string };
-      return { success: true, messageId: data.messageId };
+      // Garantir que o retorno tem a estrutura correta
+      const responseData = await response.json();
+      const messageId = typeof responseData === 'object' && responseData !== null && 'messageId' in responseData
+        ? String(responseData.messageId)
+        : `response-${Date.now()}`;
+      
+      return { success: true, messageId };
     } catch (error) {
       this.log(`❌ Erro ao enviar e-mail: ${error instanceof Error ? error.message : String(error)}`);
       return { success: false };
