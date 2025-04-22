@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,6 +15,35 @@ export default function RequestResetForm() {
   const [email, setEmail] = useState('');
   const [_, setLocation] = useLocation();
   const [emailSent, setEmailSent] = useState(false);
+  const [isCooldown, setIsCooldown] = useState(false);
+  const [cooldownTime, setCooldownTime] = useState(180); // 3 minutos em segundos
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Limpa o timer quando o componente é desmontado
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, []);
+  
+  // Inicia a contagem regressiva de cooldown
+  const startCooldown = () => {
+    setIsCooldown(true);
+    setCooldownTime(180); // 3 minutos
+    
+    timerRef.current = setInterval(() => {
+      setCooldownTime(prevTime => {
+        if (prevTime <= 1) {
+          clearInterval(timerRef.current as NodeJS.Timeout);
+          setIsCooldown(false);
+          return 0;
+        }
+        return prevTime - 1;
+      });
+    }, 1000);
+  };
   
   const { mutate, isPending } = useMutation({
     mutationFn: async (email: string) => {
@@ -31,6 +60,7 @@ export default function RequestResetForm() {
     },
     onSuccess: () => {
       setEmailSent(true);
+      startCooldown(); // Inicia o cooldown após enviar o email com sucesso
       toast({
         title: 'E-mail enviado',
         description: 'Um e-mail com instruções para redefinir sua senha foi enviado.',
@@ -87,11 +117,19 @@ export default function RequestResetForm() {
         <CardFooter className="flex flex-col space-y-4">
           <Button 
             variant="outline"
-            onClick={() => setEmailSent(false)}
+            onClick={() => {
+              if (!isCooldown) {
+                setEmailSent(false);
+              }
+            }}
+            disabled={isCooldown}
             className="w-full"
           >
             <Mail className="mr-2 h-4 w-4" />
-            Tentar novamente
+            {isCooldown 
+              ? `Aguarde ${Math.floor(cooldownTime / 60)}:${(cooldownTime % 60).toString().padStart(2, '0')}`
+              : 'Tentar novamente'
+            }
           </Button>
           <div className="text-center text-sm">
             <Link href="/login" className="text-primary hover:underline inline-flex items-center">
