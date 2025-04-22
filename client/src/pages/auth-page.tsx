@@ -114,12 +114,8 @@ const AuthPage = () => {
       console.log("Enviando credenciais de login:", loginData);
       const userData = await loginMutation.mutateAsync(loginData);
       
-      // Verificar se o email foi confirmado
-      if (userData && userData.emailconfirmed === false) {
-        setLocation("/email-verification");
-      } else {
-        setLocation("/");
-      }
+      // Redirecionar diretamente para a página principal, sem verificar emailconfirmed
+      setLocation("/");
     } catch (error) {
       // Erro já tratado no hook useAuth
     }
@@ -139,15 +135,15 @@ const AuthPage = () => {
         role: "usuario", // Manter compatibilidade com campo legacy
         plan: "free", // Plano gratuito por padrão
         periodType: "mensal" // Período mensal por padrão
+        // O emailconfirmed será definido como true no servidor
       });
       
-      // Se o registro foi bem-sucedido, redirecionar para a página de verificação de e-mail
-      // Novos usuários sempre são criados com emailconfirmed=false
-      setLocation("/email-verification");
+      // Se o registro foi bem-sucedido, redirecionar diretamente para a página principal
+      setLocation("/");
       
       toast({
         title: "Conta criada com sucesso!",
-        description: "Verifique seu e-mail para ativar sua conta.",
+        description: "Confira seu e-mail para mais informações.",
         variant: "success",
       });
     } catch (error) {
