@@ -270,8 +270,22 @@ class EmailService {
         return { success: false };
       }
       
+      // Validar o formato do email antes de enviar
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      for (const recipient of to) {
+        if (!emailRegex.test(recipient.email)) {
+          this.log(`⚠️ Endereço de email inválido: ${recipient.email}`);
+          return { success: false, error: `Endereço de email inválido: ${recipient.email}` };
+        }
+      }
+      
       // Registrar comprimento da chave da API para diagnóstico (sem revelar a chave)
       this.log(`🔑 Usando chave Brevo API com ${BREVO_API_KEY.length} caracteres`);
+      
+      // Log completo do payload sem dados sensíveis para diagnóstico
+      const debugPayload = { ...payload };
+      if (debugPayload.sender) debugPayload.sender = { ...payload.sender };
+      this.log(`📧 Detalhes do email: ${JSON.stringify(debugPayload)}`);
       
       const response = await fetch(`${BREVO_API_URL}/smtp/email`, {
         method: 'POST',
@@ -434,39 +448,68 @@ class EmailService {
    */
   public async sendPasswordResetEmail(email: string, data: {userName: string, resetUrl: string}): Promise<boolean> {
     try {
+      // Validar email antes de continuar
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!email || !emailRegex.test(email)) {
+        this.log(`❌ Endereço de email inválido para redefinição de senha: ${email}`);
+        return false;
+      }
+      
       // Gerar um ID único para rastreamento da solicitação
       const requestId = createHash('md5').update(`${email}-${Date.now()}`).digest('hex').substring(0, 8);
       
       this.log(`📧 [ID:${requestId}] Preparando e-mail de redefinição de senha para ${email} usando remetente de suporte`);
       
+      // Garantir que temos um nome de usuário válido
+      const userName = data.userName || email.split('@')[0];
+      
+      // Verificar o URL de redefinição
+      if (!data.resetUrl || !data.resetUrl.includes('token=')) {
+        this.log(`❌ [ID:${requestId}] URL de redefinição inválido: ${data.resetUrl}`);
+        return false;
+      }
+      
       // Adicionar parâmetro de rastreamento ao URL para debug
       const resetUrlWithTracking = `${data.resetUrl}&_debugid=${requestId}`;
       
+      // Detecção e formatação de URL para diferentes provedores de email
+      // URLs mais limpos e compatíveis com clientes de email
+      const resetLink = resetUrlWithTracking.replace(/\s+/g, '');
+      
       const htmlContent = `
         <html>
-          <body>
-            <h1>Olá ${data.userName},</h1>
-            <p>Recebemos uma solicitação para redefinir sua senha.</p>
-            <p>Clique no botão abaixo para criar uma nova senha:</p>
-            <!-- Link direto com ID de rastreamento para diagnóstico -->
-            <a href="${resetUrlWithTracking}" style="padding: 12px 24px; background-color: #4285f4; color: white; text-decoration: none; border-radius: 4px; display: inline-block; margin: 20px 0;">Redefinir Senha</a>
-            <p>Se o botão acima não funcionar, copie e cole o link a seguir no seu navegador:</p>
-            <p style="word-break: break-all; font-family: monospace; background-color: #f5f5f5; padding: 10px; border-radius: 4px;">${resetUrlWithTracking}</p>
-            <p>Este link expira em 1 hora.</p>
-            <p>Se você não solicitou esta mudança, por favor ignore este e-mail.</p>
-            <p>Atenciosamente,<br>Equipe Design Auto</p>
+          <body style="font-family: Arial, Helvetica, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">
+            <div style="background-color: #f8f8f8; padding: 20px; text-align: center; border-bottom: 3px solid #4285f4;">
+              <img src="https://designauto.com.br/images/logos/logo_1744762344394.png" alt="Design Auto Logo" style="max-width: 200px; margin-bottom: 10px;">
+            </div>
+            
+            <div style="padding: 20px;">
+              <h1 style="color: #4285f4;">Olá ${userName},</h1>
+              <p>Recebemos uma solicitação para redefinir sua senha.</p>
+              <p>Clique no botão abaixo para criar uma nova senha:</p>
+              <!-- Link direto com ID de rastreamento para diagnóstico -->
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${resetLink}" style="padding: 12px 24px; background-color: #4285f4; color: white; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold;">Redefinir Senha</a>
+              </div>
+              <p>Se o botão acima não funcionar, copie e cole o link a seguir no seu navegador:</p>
+              <p style="word-break: break-all; font-family: monospace; background-color: #f5f5f5; padding: 10px; border-radius: 4px; font-size: 12px;">${resetLink}</p>
+              <p>Este link expira em 1 hora.</p>
+              <p><strong>Importante:</strong> Se você não solicitou esta mudança, por favor ignore este e-mail.</p>
+              <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+              <p style="color: #777; font-size: 12px;">Atenciosamente,<br>Equipe Design Auto</p>
+            </div>
           </body>
         </html>
       `;
       
       // Criar versão em texto plano explícita para garantir que os links funcionem
       const textContent = `
-Olá ${data.userName},
+Olá ${userName},
 
 Recebemos uma solicitação para redefinir sua senha.
 
 Para criar uma nova senha, acesse o link abaixo:
-${resetUrlWithTracking}
+${resetLink}
 
 Este link expira em 1 hora.
 
