@@ -3857,6 +3857,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Ferramenta de diagnóstico do Supabase Storage
   app.use(supabeDiagnosticsRouter);
+  
+  // Rota flexível para atualização de perfil
+  app.use(userProfileRouter);
 
   const httpServer = createServer(app);
   

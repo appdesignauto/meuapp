@@ -1,78 +1,84 @@
-import express, { Request, Response, NextFunction } from 'express';
-import { storage } from '../storage';
+import express, { Request, Response } from "express";
+import { db } from "../db";
+import { users } from "@shared/schema";
+import { eq } from "drizzle-orm";
+import { flexibleAuth } from "../auth-flexible";
 
 const router = express.Router();
 
-// Middleware para verificar se o usuário está autenticado
-const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
-  if (req.isAuthenticated()) {
-    return next();
-  }
-  return res.status(401).json({ error: 'Não autenticado' });
-};
-
-// Rota para atualizar informações do perfil
-router.put('/api/user/profile', isAuthenticated, async (req: Request, res: Response) => {
+/**
+ * Rota flexível para atualização de perfil
+ * Aceita diferentes métodos de autenticação e pode ser acessada via PATCH
+ */
+router.patch("/api/user/profile", flexibleAuth, async (req: Request, res: Response) => {
   try {
+    const { name, bio, website, location, avatarUrl } = req.body;
+    
+    // Obter ID do usuário do middleware flexível
     const userId = req.user?.id;
+    
     if (!userId) {
-      return res.status(401).json({ error: 'Usuário não autenticado' });
-    }
-
-    const { name, bio } = req.body;
-    
-    // Valida os dados recebidos
-    if (name && typeof name !== 'string') {
-      return res.status(400).json({ error: 'Nome inválido' });
+      return res.status(401).json({ 
+        success: false,
+        message: "Usuário não identificado" 
+      });
     }
     
-    if (bio && typeof bio !== 'string') {
-      return res.status(400).json({ error: 'Biografia inválida' });
+    console.log(`[Profile] Atualizando perfil do usuário ${userId}`);
+    
+    // Construir objeto de atualização
+    const updateData: Record<string, any> = {
+      atualizadoem: new Date()
+    };
+    
+    if (name !== undefined) updateData.name = name || null;
+    if (bio !== undefined) updateData.bio = bio || null;
+    if (website !== undefined) updateData.website = website || null;
+    if (location !== undefined) updateData.location = location || null;
+    
+    // Se avatarUrl for fornecido, atualizar profileimageurl
+    if (avatarUrl !== undefined) {
+      updateData.profileimageurl = avatarUrl || null;
     }
-
-    // Atualiza no banco de dados
-    const updatedUser = await storage.updateUser(userId, {
-      name: name || null,
-      bio: bio || null
-    });
-
+    
+    // Atualizar usuário no banco de dados
+    await db
+      .update(users)
+      .set(updateData)
+      .where(eq(users.id, userId));
+    
+    // Recuperar usuário atualizado
+    const [updatedUser] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, userId));
+    
     if (!updatedUser) {
-      return res.status(404).json({ error: 'Usuário não encontrado' });
+      return res.status(500).json({ 
+        success: false,
+        message: "Erro ao recuperar dados atualizados" 
+      });
     }
-
-    // Retorna os dados atualizados (sem a senha)
-    const { password, ...userWithoutPassword } = updatedUser;
-    res.status(200).json(userWithoutPassword);
-  } catch (error) {
-    console.error('Erro ao atualizar perfil:', error);
-    res.status(500).json({ 
-      error: 'Erro ao atualizar perfil',
-      details: error instanceof Error ? error.message : 'Erro desconhecido'
+    
+    // Retornar sucesso com dados atualizados
+    return res.json({
+      success: true,
+      message: "Perfil atualizado com sucesso",
+      user: {
+        id: updatedUser.id,
+        name: updatedUser.name,
+        bio: updatedUser.bio,
+        website: updatedUser.website,
+        location: updatedUser.location,
+        profileImageUrl: updatedUser.profileimageurl
+      }
     });
-  }
-});
-
-// Rota para obter informações do perfil
-router.get('/api/user/profile', isAuthenticated, async (req: Request, res: Response) => {
-  try {
-    const userId = req.user?.id;
-    if (!userId) {
-      return res.status(401).json({ error: 'Usuário não autenticado' });
-    }
-
-    const user = await storage.getUser(userId);
-    if (!user) {
-      return res.status(404).json({ error: 'Usuário não encontrado' });
-    }
-
-    // Retorna os dados do usuário (sem a senha)
-    const { password, ...userWithoutPassword } = user;
-    res.status(200).json(userWithoutPassword);
   } catch (error) {
-    console.error('Erro ao obter perfil:', error);
-    res.status(500).json({ 
-      error: 'Erro ao obter perfil',
-      details: error instanceof Error ? error.message : 'Erro desconhecido'
+    console.error("[Profile] Erro ao atualizar perfil:", error);
+    return res.status(500).json({ 
+      success: false,
+      message: "Erro ao atualizar perfil",
+      error: error instanceof Error ? error.message : "Erro desconhecido"
     });
   }
 });
