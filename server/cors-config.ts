@@ -13,6 +13,13 @@ const ALLOWED_ORIGINS = [
   'https://design-auto-hub-1-appdesignauto.replit.app'
 ];
 
+// Domínios Replit para desenvolvimento
+const REPLIT_DOMAINS = [
+  '.replit.dev',
+  '.repl.co',
+  '.replit.app'
+];
+
 // Lista de domínios confiáveis para cookies
 export const TRUSTED_DOMAINS = [
   'localhost',
@@ -21,7 +28,10 @@ export const TRUSTED_DOMAINS = [
   'app.designauto.com.br',
   'designauto-app.replit.app',
   'designauto-app.repl.co',
-  'design-auto-hub-1-appdesignauto.replit.app'
+  'design-auto-hub-1-appdesignauto.replit.app',
+  '.replit.dev',
+  '.repl.co',
+  '.replit.app'
 ];
 
 /**
@@ -38,7 +48,13 @@ export function configureCors(app: Express): void {
       // Verificar se a origem está na lista de origens permitidas
       if (ALLOWED_ORIGINS.indexOf(origin) !== -1) {
         callback(null, true);
-      } else {
+      } 
+      // Verificar se é um domínio do Replit
+      else if (REPLIT_DOMAINS.some(domain => origin.endsWith(domain))) {
+        console.log(`Domínio Replit permitido: ${origin}`);
+        callback(null, true);
+      }
+      else {
         console.warn(`Origem não permitida: ${origin}`);
         if (process.env.NODE_ENV === 'development') {
           // Em desenvolvimento, permitir todas as origens

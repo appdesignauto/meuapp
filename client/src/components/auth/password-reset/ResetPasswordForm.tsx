@@ -75,9 +75,8 @@ export default function ResetPasswordForm() {
 
   // Extrair o token da URL ao carregar o componente
   useEffect(() => {
-    try {
-      // Esperar um momento para garantir que o DOM esteja completamente carregado
-      setTimeout(() => {
+    const extractToken = () => {
+      try {
         // Extrai o token da URL
         const params = new URLSearchParams(window.location.search);
         const tokenParam = params.get('token');
@@ -85,34 +84,43 @@ export default function ResetPasswordForm() {
         if (tokenParam) {
           console.log("Token encontrado na URL:", tokenParam.substring(0, 10) + "...");
           setToken(tokenParam);
-        } else {
-          // Tentativa de extrair o token da URL caso esteja em outro formato
-          const pathSegments = window.location.pathname.split('/');
-          const lastSegment = pathSegments[pathSegments.length - 1];
-          
-          if (lastSegment && lastSegment.length > 20) {
-            console.log("Token extraído do caminho:", lastSegment.substring(0, 10) + "...");
-            setToken(lastSegment);
-          } else {
-            console.log("Nenhum token válido encontrado na URL");
-            setTokenError(true);
-            toast({
-              title: 'Token não encontrado',
-              description: 'Verifique se você usou o link completo do email de recuperação.',
-              variant: 'destructive',
-            });
-          }
+          return;
         }
-      }, 500);
-    } catch (error) {
-      console.error("Erro ao extrair token:", error);
-      setTokenError(true);
-      toast({
-        title: 'Erro ao processar token',
-        description: 'Ocorreu um erro ao processar o link de recuperação.',
-        variant: 'destructive',
-      });
-    }
+        
+        // Tentativa de extrair o token da URL caso esteja em outro formato
+        const pathSegments = window.location.pathname.split('/');
+        const lastSegment = pathSegments[pathSegments.length - 1];
+        
+        if (lastSegment && lastSegment.length > 20) {
+          console.log("Token extraído do caminho:", lastSegment.substring(0, 10) + "...");
+          setToken(lastSegment);
+          return;
+        }
+        
+        // Nenhum token encontrado
+        console.log("Nenhum token válido encontrado na URL");
+        setTokenError(true);
+        toast({
+          title: 'Token não encontrado',
+          description: 'Verifique se você usou o link completo do email de recuperação.',
+          variant: 'destructive',
+        });
+      } catch (error) {
+        console.error("Erro ao extrair token:", error);
+        setTokenError(true);
+        toast({
+          title: 'Erro ao processar token',
+          description: 'Ocorreu um erro ao processar o link de recuperação.',
+          variant: 'destructive',
+        });
+      }
+    };
+
+    // Pequeno atraso para garantir que o DOM esteja completamente carregado
+    const timerId = setTimeout(extractToken, 300);
+    
+    // Limpar o timeout se o componente for desmontado
+    return () => clearTimeout(timerId);
   }, [toast]);
 
   const { mutate, isPending } = useMutation({
