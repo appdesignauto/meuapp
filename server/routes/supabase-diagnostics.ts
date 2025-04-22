@@ -1,203 +1,213 @@
 import express, { Request, Response } from 'express';
-import { supabaseStorageService } from '../services/supabase-storage';
 import { createClient } from '@supabase/supabase-js';
+import fs from 'fs';
+import path from 'path';
+
+// Configuração direta do Supabase
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_ANON_KEY;
+const avatarsBucket = 'avatars';
+const mainBucket = 'designauto-images';
+
+// Criação do cliente Supabase diretamente
+const supabase = supabaseUrl && supabaseKey
+  ? createClient(supabaseUrl, supabaseKey)
+  : null;
 
 const router = express.Router();
 
-// Middleware para verificar se é administrador
+// Verificar se o usuário é administrador
 const isAdmin = (req: Request, res: Response, next: express.NextFunction) => {
-  if (!req.isAuthenticated() || req.user?.role !== 'admin') {
-    return res.status(403).json({ 
-      error: 'Acesso negado',
-      message: 'Esta área é restrita a administradores do sistema'
-    });
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ success: false, message: 'Não autenticado' });
   }
+  
+  const user = req.user as any;
+  if (!user || user.nivelacesso !== 'admin') {
+    return res.status(403).json({ success: false, message: 'Acesso negado. Apenas administradores podem acessar esta rota.' });
+  }
+  
   next();
 };
 
-// Teste de conexão com Supabase
+// Rota para diagnóstico geral do Supabase Storage
 router.get('/api/diagnostics/supabase', isAdmin, async (req: Request, res: Response) => {
   try {
-    // Verificar status da conexão
-    const connectionStatus = await supabaseStorageService.checkConnection();
-    
-    // Variáveis de ambiente (mascaradas)
-    const url = process.env.SUPABASE_URL;
-    const key = process.env.SUPABASE_ANON_KEY;
-    
-    const envStatus = {
-      SUPABASE_URL: url ? `${url.substring(0, 15)}...` : 'não definido',
-      SUPABASE_ANON_KEY: key ? `${key.substring(0, 5)}...${key.substring(key.length - 3)}` : 'não definido',
-      KEY_LENGTH: key ? key.length : 0
-    };
-    
-    res.json({
-      connection: connectionStatus,
-      environment: envStatus,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error('Erro na diagnóstico do Supabase:', error);
-    res.status(500).json({ 
-      error: 'Falha ao executar diagnóstico',
-      message: error instanceof Error ? error.message : 'Erro desconhecido',
-      timestamp: new Date().toISOString()
-    });
-  }
-});
-
-// Teste de upload para o Supabase Storage
-router.post('/api/diagnostics/supabase/test-upload', isAdmin, async (req: Request, res: Response) => {
-  try {
-    if (!req.body.imageUrl) {
-      return res.status(400).json({ error: 'URL de imagem não fornecida' });
-    }
-    
-    const imageUrl = req.body.imageUrl;
-    console.log(`Iniciando teste com imagem: ${imageUrl}`);
-    
-    // Buscar a imagem da URL fornecida
-    const response = await fetch(imageUrl);
-    if (!response.ok) {
-      return res.status(400).json({ error: `Falha ao buscar imagem: ${response.statusText}` });
-    }
-    
-    // Converter para buffer
-    const buffer = await response.arrayBuffer();
-    
-    // Enviar para o serviço de diagnóstico do Supabase
-    const result = await supabaseStorageService.testUploadDirectNoSharp({
-      buffer: Buffer.from(buffer),
-      originalname: 'test-image.jpg',
-      mimetype: response.headers.get('content-type') || 'image/jpeg',
-      size: buffer.byteLength
-    } as Express.Multer.File);
-    
-    res.json(result);
-  } catch (error) {
-    console.error('Erro no teste de upload para Supabase:', error);
-    res.status(500).json({ 
-      error: 'Falha no teste de upload',
-      message: error instanceof Error ? error.message : 'Erro desconhecido'
-    });
-  }
-});
-
-// Teste específico para avatar upload
-router.post('/api/diagnostics/supabase/test-avatar', isAdmin, async (req: Request, res: Response) => {
-  try {
-    if (!req.body.imageUrl) {
-      return res.status(400).json({ error: 'URL de imagem não fornecida' });
-    }
-    
-    const imageUrl = req.body.imageUrl;
-    const userId = req.body.userId || 'test-user';
-    console.log(`Iniciando teste de avatar com imagem: ${imageUrl}`);
-    console.log(`ID do usuário para teste: ${userId}`);
-    
-    // Buscar a imagem da URL fornecida
-    const response = await fetch(imageUrl);
-    if (!response.ok) {
-      return res.status(400).json({ error: `Falha ao buscar imagem: ${response.statusText}` });
-    }
-    
-    // Converter para buffer
-    const buffer = await response.arrayBuffer();
-    
-    // Opções de otimização de avatar
-    const options = {
-      width: 250,
-      height: 250,
-      quality: 90,
-      format: 'webp' as const
-    };
-    
-    // Enviar para o serviço de upload de avatar
-    const result = await supabaseStorageService.uploadAvatar({
-      buffer: Buffer.from(buffer),
-      originalname: 'test-avatar.jpg',
-      mimetype: response.headers.get('content-type') || 'image/jpeg',
-      size: buffer.byteLength
-    } as Express.Multer.File, options, userId);
-    
-    res.json({
-      success: true,
-      result,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error('Erro no teste de upload de avatar:', error);
-    res.status(500).json({ 
-      success: false,
-      error: 'Falha no teste de upload de avatar',
-      message: error instanceof Error ? error.message : 'Erro desconhecido',
-      timestamp: new Date().toISOString()
-    });
-  }
-});
-
-// Lista buckets disponíveis
-router.get('/api/diagnostics/supabase/buckets', isAdmin, async (req: Request, res: Response) => {
-  try {
-    // Acessar diretamente o Supabase
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_ANON_KEY;
-    
-    if (!supabaseUrl || !supabaseKey) {
-      return res.status(500).json({ error: 'Credenciais do Supabase não configuradas' });
-    }
-    
-    const supabase = createClient(supabaseUrl, supabaseKey);
-    
-    // Obter lista de buckets
-    const { data: buckets, error } = await supabase.storage.listBuckets();
-    
-    if (error) {
-      return res.status(500).json({ 
+    if (!supabase) {
+      return res.json({
         success: false,
-        error: `Erro ao listar buckets: ${error.message}`
+        message: 'Supabase não configurado',
+        credentials: {
+          url: !!supabaseUrl,
+          key: !!supabaseKey
+        }
       });
     }
     
-    // Para cada bucket, tentar listar alguns arquivos
-    const bucketsWithFiles = await Promise.all(
-      (buckets || []).map(async (bucket) => {
-        try {
-          const { data: files, error: listError } = await supabase.storage
-            .from(bucket.name)
-            .list();
-          
-          return {
-            ...bucket,
-            files: files && files.length > 0 ? files.slice(0, 5) : [], // limitar a 5 arquivos
-            totalFiles: files ? files.length : 0,
-            error: listError ? listError.message : null,
-            accessible: !listError
-          };
-        } catch (err) {
-          return {
-            ...bucket,
-            files: [],
-            totalFiles: 0,
-            error: err instanceof Error ? err.message : 'Erro desconhecido',
-            accessible: false
-          };
-        }
-      })
-    );
+    // Verificar configuração
+    const diagnostics = {
+      credentials: {
+        url: !!supabaseUrl,
+        key: !!supabaseKey,
+        urlLength: supabaseUrl?.length || 0,
+        keyLength: supabaseKey?.length || 0,
+        urlFirstChars: supabaseUrl?.substring(0, 15) + '...' || '',
+        keyFirstChars: supabaseKey?.substring(0, 10) + '...' || ''
+      },
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development'
+    };
     
-    res.json({
+    return res.json({
       success: true,
-      buckets: bucketsWithFiles,
-      timestamp: new Date().toISOString()
+      diagnostics
     });
   } catch (error) {
-    console.error('Erro ao listar buckets do Supabase:', error);
-    res.status(500).json({ 
+    console.error('Erro no diagnóstico Supabase:', error);
+    return res.status(500).json({
       success: false,
-      error: 'Falha ao listar buckets',
-      message: error instanceof Error ? error.message : 'Erro desconhecido',
-      timestamp: new Date().toISOString()
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
+  }
+});
+
+// Rota para listar buckets e verificar acesso
+router.get('/api/diagnostics/supabase/buckets', isAdmin, async (req: Request, res: Response) => {
+  try {
+    if (!supabase) {
+      return res.status(500).json({
+        success: false,
+        message: 'Supabase não configurado'
+      });
+    }
+    
+    // Listar buckets
+    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+    
+    if (bucketsError) {
+      return res.status(500).json({
+        success: false,
+        message: 'Erro ao listar buckets',
+        error: bucketsError
+      });
+    }
+    
+    // Verificar cada bucket
+    const bucketResults = [];
+    
+    for (const bucket of buckets) {
+      try {
+        const { data: files, error: filesError } = await supabase.storage
+          .from(bucket.name)
+          .list();
+          
+        bucketResults.push({
+          name: bucket.name,
+          accessible: !filesError,
+          files: filesError ? null : files?.length || 0,
+          error: filesError ? filesError.message : null
+        });
+      } catch (bucketError) {
+        bucketResults.push({
+          name: bucket.name,
+          accessible: false,
+          error: bucketError instanceof Error ? bucketError.message : 'Erro desconhecido'
+        });
+      }
+    }
+    
+    return res.json({
+      success: true,
+      buckets: bucketResults
+    });
+  } catch (error) {
+    console.error('Erro no diagnóstico de buckets:', error);
+    return res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
+  }
+});
+
+// Rota para testar upload de avatar
+router.post('/api/diagnostics/supabase/test-avatar', isAdmin, async (req: Request, res: Response) => {
+  try {
+    if (!supabase) {
+      return res.status(500).json({
+        success: false,
+        message: 'Supabase não configurado'
+      });
+    }
+    
+    // Criar um arquivo de teste simples
+    const testImagePath = path.join(process.cwd(), 'temp', 'test-avatar.png');
+    const testDir = path.dirname(testImagePath);
+    
+    if (!fs.existsSync(testDir)) {
+      fs.mkdirSync(testDir, { recursive: true });
+    }
+    
+    // Criar um PNG de 1x1 pixel transparente
+    const transparentPixel = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAEDQIHq4C2fAAAAABJRU5ErkJggg==',
+      'base64'
+    );
+    
+    fs.writeFileSync(testImagePath, transparentPixel);
+    console.log(`Arquivo de teste criado: ${testImagePath}`);
+    
+    // Fazer upload para o bucket de avatares
+    const timestamp = Date.now();
+    const filename = `test/test_avatar_${timestamp}.png`;
+    
+    console.log(`Tentando upload para ${avatarsBucket}/${filename}`);
+    const { data: uploadResult, error: uploadError } = await supabase.storage
+      .from(avatarsBucket)
+      .upload(filename, fs.readFileSync(testImagePath), {
+        contentType: 'image/png',
+        upsert: true
+      });
+    
+    if (uploadError) {
+      console.error(`Erro no upload: ${uploadError.message}`);
+      return res.status(500).json({
+        success: false,
+        stage: 'upload',
+        error: uploadError.message
+      });
+    }
+    
+    // Obter URL pública
+    const { data: urlData } = supabase.storage
+      .from(avatarsBucket)
+      .getPublicUrl(filename);
+    
+    // Limpar
+    try {
+      fs.unlinkSync(testImagePath);
+    } catch (cleanupError) {
+      console.warn('Erro ao limpar arquivo temporário:', cleanupError);
+    }
+    
+    // Excluir do bucket após o teste
+    await supabase.storage
+      .from(avatarsBucket)
+      .remove([filename]);
+    
+    return res.json({
+      success: true,
+      message: 'Teste de upload concluído com sucesso',
+      result: {
+        uploadPath: `${avatarsBucket}/${filename}`,
+        publicUrl: urlData.publicUrl,
+        fileSize: transparentPixel.length
+      }
+    });
+  } catch (error) {
+    console.error('Erro no teste de upload:', error);
+    return res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
     });
   }
 });

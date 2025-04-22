@@ -31,6 +31,7 @@ import logoUploadRouter from './routes/logo-upload';
 import removeLogoRouter from './routes/remove-logo';
 import supabaseRegisterTestRouter from './routes/supabase-register-test';
 import avatarUploadRouter from './routes/avatar-upload';
+import directAvatarRouter from './routes/direct-avatar'; // Nova rota direta de avatar
 import userProfileRouter from './routes/user-profile';
 import emailVerificationRouter from './routes/email-verification';
 import emailTestRouter from './routes/email-test';
@@ -3828,6 +3829,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Registrar rotas para upload de avatar
   app.use(avatarUploadRouter);
+  app.use(directAvatarRouter); // Nova rota direta para upload de avatar
   
   // Registrar rotas para perfil de usuário
   app.use(userProfileRouter);
