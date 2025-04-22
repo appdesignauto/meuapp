@@ -1,150 +1,78 @@
-import express, { Request, Response } from "express";
-import { isAuthenticated } from "../middlewares/auth";
-import { db } from "../db";
-import { users } from "@shared/schema";
-import { eq } from "drizzle-orm";
-import { supabaseStorageService } from "../services/supabase-storage";
+import express, { Request, Response, NextFunction } from 'express';
+import { storage } from '../storage';
 
 const router = express.Router();
 
-interface ProfileUpdateData {
-  name?: string;
-  bio?: string;
-  website?: string;
-  location?: string;
-}
+// Middleware para verificar se o usuário está autenticado
+const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  return res.status(401).json({ error: 'Não autenticado' });
+};
 
-/**
- * Rota para atualização do perfil do usuário
- * Requer autenticação via Passport
- */
-router.patch("/api/user/profile", isAuthenticated, async (req: Request, res: Response) => {
+// Rota para atualizar informações do perfil
+router.put('/api/user/profile', isAuthenticated, async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
     if (!userId) {
-      console.error("[ProfileUpdate] ID do usuário não encontrado na sessão");
-      return res.status(401).json({
-        success: false,
-        error: "Usuário não autenticado",
-        code: "UNAUTHORIZED"
-      });
+      return res.status(401).json({ error: 'Usuário não autenticado' });
     }
 
-    const { name, bio, website, location } = req.body as ProfileUpdateData;
+    const { name, bio } = req.body;
     
-    // Preparar dados para atualização
-    const updateData: any = {
-      atualizadoem: new Date()
-    };
-
-    if (name !== undefined) updateData.name = name;
-    if (bio !== undefined) updateData.bio = bio;
-    if (website !== undefined) updateData.website = website;
-    if (location !== undefined) updateData.location = location;
-
-    console.log(`[ProfileUpdate] Atualizando perfil para usuário ${userId}:`, updateData);
-
-    // Realizar a atualização
-    const [updatedUser] = await db
-      .update(users)
-      .set(updateData)
-      .where(eq(users.id, userId))
-      .returning();
-
-    if (!updatedUser) {
-      throw new Error("Falha ao atualizar perfil");
+    // Valida os dados recebidos
+    if (name && typeof name !== 'string') {
+      return res.status(400).json({ error: 'Nome inválido' });
+    }
+    
+    if (bio && typeof bio !== 'string') {
+      return res.status(400).json({ error: 'Biografia inválida' });
     }
 
-    return res.json({
-      success: true,
-      message: "Perfil atualizado com sucesso",
-      data: {
-        id: updatedUser.id,
-        name: updatedUser.name,
-        bio: updatedUser.bio,
-        website: updatedUser.website,
-        location: updatedUser.location,
-        profileImageUrl: updatedUser.profileimageurl,
-        updatedAt: updatedUser.atualizadoem
-      }
+    // Atualiza no banco de dados
+    const updatedUser = await storage.updateUser(userId, {
+      name: name || null,
+      bio: bio || null
     });
 
+    if (!updatedUser) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+
+    // Retorna os dados atualizados (sem a senha)
+    const { password, ...userWithoutPassword } = updatedUser;
+    res.status(200).json(userWithoutPassword);
   } catch (error) {
-    console.error("[ProfileUpdate] Erro ao atualizar perfil:", error);
-    return res.status(500).json({
-      success: false,
-      error: "Erro interno ao atualizar perfil",
-      details: error instanceof Error ? error.message : "Erro desconhecido",
-      code: "INTERNAL_ERROR"
+    console.error('Erro ao atualizar perfil:', error);
+    res.status(500).json({ 
+      error: 'Erro ao atualizar perfil',
+      details: error instanceof Error ? error.message : 'Erro desconhecido'
     });
   }
 });
 
-/**
- * Rota para upload de avatar
- * Requer autenticação via Passport
- */
-router.post("/api/user/avatar", isAuthenticated, async (req: Request, res: Response) => {
+// Rota para obter informações do perfil
+router.get('/api/user/profile', isAuthenticated, async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
     if (!userId) {
-      console.error("[AvatarUpload] ID do usuário não encontrado na sessão");
-      return res.status(401).json({
-        success: false,
-        error: "Usuário não autenticado",
-        code: "UNAUTHORIZED"
-      });
+      return res.status(401).json({ error: 'Usuário não autenticado' });
     }
 
-    if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        error: "Nenhum arquivo enviado",
-        code: "NO_FILE"
-      });
+    const user = await storage.getUser(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
     }
 
-    console.log(`[AvatarUpload] Iniciando upload de avatar para usuário ${userId}`);
-
-    // Upload para o Supabase Storage
-    const result = await supabaseStorageService.uploadAvatar(req.file, {
-      width: 400,
-      height: 400,
-      quality: 85,
-      format: 'webp'
-    }, userId);
-
-    // Atualizar URL do avatar no banco
-    const [updatedUser] = await db
-      .update(users)
-      .set({
-        profileimageurl: result.imageUrl,
-        atualizadoem: new Date()
-      })
-      .where(eq(users.id, userId))
-      .returning();
-
-    if (!updatedUser) {
-      throw new Error("Falha ao atualizar URL do avatar");
-    }
-
-    console.log(`[AvatarUpload] Avatar atualizado com sucesso para usuário ${userId}`);
-
-    return res.json({
-      success: true,
-      message: "Avatar atualizado com sucesso",
-      data: {
-        profileImageUrl: updatedUser.profileimageurl
-      }
-    });
-
+    // Retorna os dados do usuário (sem a senha)
+    const { password, ...userWithoutPassword } = user;
+    res.status(200).json(userWithoutPassword);
   } catch (error) {
-    console.error("[AvatarUpload] Erro ao fazer upload do avatar:", error);
-    return res.status(500).json({
-      success: false,
-      error: "Erro interno ao fazer upload do avatar",
-      details: error instanceof Error ? error.message : "Erro desconhecido",
-      code: "INTERNAL_ERROR"
+    console.error('Erro ao obter perfil:', error);
+    res.status(500).json({ 
+      error: 'Erro ao obter perfil',
+      details: error instanceof Error ? error.message : 'Erro desconhecido'
     });
   }
 });
