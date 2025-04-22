@@ -36,6 +36,13 @@ router.post('/request', async (req, res) => {
     const result = await passwordResetService.createResetToken(email);
 
     if (!result.success) {
+      // Se existe cooldown, envia essa informação para o cliente
+      if (result.cooldown) {
+        return res.status(429).json({ 
+          message: result.message,
+          cooldown: result.cooldown
+        });
+      }
       return res.status(500).json({ message: result.message });
     }
 

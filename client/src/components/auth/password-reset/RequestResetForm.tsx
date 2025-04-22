@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,23 +7,49 @@ import { useToast } from '@/hooks/use-toast';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { Link, useLocation } from 'wouter';
-import { Loader2, Mail, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Loader2, Mail, ArrowLeft, CheckCircle, Clock, RefreshCw } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Progress } from '@/components/ui/progress';
 
 export default function RequestResetForm() {
   const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [_, setLocation] = useLocation();
   const [emailSent, setEmailSent] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const [countdown, setCountdown] = useState(0);
+  
+  // Efeito para o contador regressivo
+  useEffect(() => {
+    if (countdown <= 0) return;
+    
+    const timer = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, [countdown]);
   
   const { mutate, isPending } = useMutation({
     mutationFn: async (email: string) => {
       const response = await apiRequest('POST', '/api/password-reset/request', { email });
+      const data = await response.json();
+      
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Falha ao enviar o e-mail de recuperação');
+        // Verifica se é erro de cooldown (retorna 429)
+        if (response.status === 429 && data.cooldown) {
+          throw new Error(data.message, { cause: { cooldown: data.cooldown } });
+        }
+        throw new Error(data.message || 'Falha ao enviar o e-mail de recuperação');
       }
-      return response.json();
+      
+      return data;
     },
     onSuccess: () => {
       setEmailSent(true);
@@ -33,17 +59,41 @@ export default function RequestResetForm() {
         variant: 'default',
       });
     },
-    onError: (error: Error) => {
-      toast({
-        title: 'Erro',
-        description: error.message,
-        variant: 'destructive',
-      });
+    onError: (error: any) => {
+      // Verifica se é um erro de cooldown
+      if (error.cause?.cooldown) {
+        // Define o tempo de cooldown e inicia a contagem regressiva
+        setCooldown(error.cause.cooldown);
+        setCountdown(error.cause.cooldown);
+        
+        toast({
+          title: 'Aguarde um momento',
+          description: 'Você precisa aguardar antes de solicitar um novo e-mail de redefinição.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Erro',
+          description: error.message,
+          variant: 'destructive',
+        });
+      }
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Verifica se está em cooldown
+    if (countdown > 0) {
+      toast({
+        title: 'Aguarde um momento',
+        description: `Você poderá solicitar outro e-mail em ${countdown} segundos`,
+        variant: 'warning',
+      });
+      return;
+    }
+    
     if (!email) {
       toast({
         title: 'Erro',
@@ -53,6 +103,13 @@ export default function RequestResetForm() {
       return;
     }
     mutate(email);
+  };
+  
+  // Formata o tempo de contagem regressiva para minutos e segundos
+  const formatCountdown = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
   };
 
   // Se o email foi enviado, mostrar tela de confirmação

@@ -44,6 +44,7 @@ export const users = pgTable("users", {
   // Campos para redefinição de senha
   resetpasswordtoken: text("resetpasswordtoken"),
   resetpasswordexpires: timestamp("resetpasswordexpires"),
+  lastresetrequest: timestamp("lastresetrequest"), // Última vez que o usuário solicitou redefinição de senha
   
   // Campo para controlar status de confirmação de email
   emailconfirmed: boolean("emailconfirmed").default(true), // Alterado para true por padrão
