@@ -76,24 +76,15 @@ export default function AvatarUploader({ currentAvatarUrl, onSuccess }: AvatarUp
         });
       }, 500);
 
-      // Tentar primeiro com a rota direta
-      let usedDirectRoute = true;
-      let response = await fetch('/api/direct-avatar', {
+      // Usar apenas a rota principal
+      const response = await fetch('/api/user/avatar', {
         method: 'POST',
         body: formData,
         credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
       });
-      
-      // Se falhar, tentar rota alternativa
-      if (!response.ok) {
-        console.log('Recaindo para rota padrão após falha na rota direta');
-        usedDirectRoute = false;
-        response = await fetch('/api/user/avatar', {
-          method: 'POST',
-          body: formData,
-          credentials: 'include',
-        });
-      }
 
       clearInterval(progressInterval);
 
@@ -110,7 +101,7 @@ export default function AvatarUploader({ currentAvatarUrl, onSuccess }: AvatarUp
         
         toast({
           title: 'Avatar atualizado',
-          description: `Seu avatar foi atualizado com sucesso${usedDirectRoute ? ' (rota direta)' : ''}.`,
+          description: 'Seu avatar foi atualizado com sucesso.',
           variant: 'default',
         });
         
