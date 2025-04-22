@@ -7,34 +7,15 @@ import { useToast } from '@/hooks/use-toast';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { Link, useLocation } from 'wouter';
-import { Loader2, Mail, ArrowLeft, CheckCircle, Clock, RefreshCw } from 'lucide-react';
+import { Loader2, Mail, ArrowLeft, CheckCircle, Clock } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Progress } from '@/components/ui/progress';
 
 export default function RequestResetForm() {
   const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [_, setLocation] = useLocation();
   const [emailSent, setEmailSent] = useState(false);
-  const [cooldown, setCooldown] = useState(0);
-  const [countdown, setCountdown] = useState(0);
-  
-  // Efeito para o contador regressivo
-  useEffect(() => {
-    if (countdown <= 0) return;
-    
-    const timer = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    
-    return () => clearInterval(timer);
-  }, [countdown]);
+  const [isInCooldown, setIsInCooldown] = useState(false);
   
   const { mutate, isPending } = useMutation({
     mutationFn: async (email: string) => {
@@ -44,7 +25,6 @@ export default function RequestResetForm() {
       if (!response.ok) {
         // Verifica se é erro de cooldown (retorna 429)
         if (response.status === 429 && data.cooldown) {
-          // Captura o título e a mensagem enviados pelo servidor
           throw new Error(data.message || "Um e-mail já foi enviado e chegará em instantes.", { 
             cause: { 
               cooldown: data.cooldown,
@@ -68,14 +48,13 @@ export default function RequestResetForm() {
     onError: (error: any) => {
       // Verifica se é um erro de cooldown
       if (error.cause?.cooldown) {
-        // Define o tempo de cooldown e inicia a contagem regressiva
-        setCooldown(error.cause.cooldown);
-        setCountdown(error.cause.cooldown);
+        // Define o estado de cooldown
+        setIsInCooldown(true);
         
+        // Mostra um toast no estilo de alerta (amarelo)
         toast({
           title: error.cause.title || 'Atenção',
           description: error.message,
-          // Muda a cor para amarelo (warning) em vez de vermelho (destructive)
           variant: 'default',
           className: "bg-amber-50 border-amber-300 text-amber-800",
         });
@@ -93,7 +72,7 @@ export default function RequestResetForm() {
     e.preventDefault();
     
     // Verifica se está em cooldown
-    if (countdown > 0) {
+    if (isInCooldown) {
       toast({
         title: 'Atenção',
         description: 'Um e-mail já foi enviado e chegará em instantes. Caso não chegue em até 3 minutos, clique para solicitar novamente.',
@@ -112,13 +91,6 @@ export default function RequestResetForm() {
       return;
     }
     mutate(email);
-  };
-  
-  // Formata o tempo de contagem regressiva para minutos e segundos
-  const formatCountdown = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
   };
 
   // Se o email foi enviado, mostrar tela de confirmação
@@ -144,23 +116,17 @@ export default function RequestResetForm() {
             </AlertDescription>
           </Alert>
           
-          {countdown > 0 && (
+          {isInCooldown && (
             <div className="space-y-2 mt-4">
-              <Alert variant="default" className="bg-amber-50 border-amber-200 text-amber-800">
+              <Alert variant="default" className="bg-amber-50 border-amber-300 text-amber-800">
                 <Clock className="h-4 w-4 mr-2" />
                 <AlertTitle className="text-sm font-medium inline-flex items-center">
-                  E-mail já enviado
+                  Atenção
                 </AlertTitle>
                 <AlertDescription className="text-xs">
-                  Um e-mail já foi enviado e chegará em instantes. Para solicitar outro, aguarde {formatCountdown(countdown)} (prazo máximo de 3 minutos). 
+                  Um e-mail já foi enviado e chegará em instantes. Caso não chegue em até 3 minutos, clique para solicitar novamente.
                 </AlertDescription>
               </Alert>
-              <div className="space-y-1">
-                <Progress value={(countdown / cooldown) * 100} className="h-2" />
-                <p className="text-[10px] text-muted-foreground text-right">
-                  {formatCountdown(countdown)}
-                </p>
-              </div>
             </div>
           )}
         </CardContent>
@@ -169,7 +135,7 @@ export default function RequestResetForm() {
             variant="outline"
             onClick={() => setEmailSent(false)}
             className="w-full"
-            disabled={countdown > 0}
+            disabled={false}
           >
             <Mail className="mr-2 h-4 w-4" />
             Tentar novamente
@@ -213,23 +179,17 @@ export default function RequestResetForm() {
               autoComplete="email"
             />
           </div>
-          {countdown > 0 ? (
+          {isInCooldown ? (
             <div className="space-y-2">
-              <Alert variant="default" className="bg-amber-50 border-amber-200 text-amber-800">
+              <Alert variant="default" className="bg-amber-50 border-amber-300 text-amber-800">
                 <Clock className="h-4 w-4 mr-2" />
                 <AlertTitle className="text-sm font-medium inline-flex items-center">
-                  E-mail já enviado
+                  Atenção
                 </AlertTitle>
                 <AlertDescription className="text-xs">
-                  Um e-mail já foi enviado e chegará em instantes. Para solicitar outro, aguarde {formatCountdown(countdown)} (prazo máximo de 3 minutos). 
+                  Um e-mail já foi enviado e chegará em instantes. Caso não chegue em até 3 minutos, clique para solicitar novamente.
                 </AlertDescription>
               </Alert>
-              <div className="space-y-1">
-                <Progress value={(countdown / cooldown) * 100} className="h-2" />
-                <p className="text-[10px] text-muted-foreground text-right">
-                  {formatCountdown(countdown)}
-                </p>
-              </div>
             </div>
           ) : (
             <p className="text-xs text-muted-foreground">
@@ -241,7 +201,7 @@ export default function RequestResetForm() {
           <Button 
             type="submit" 
             className="w-full transition-all" 
-            disabled={isPending || countdown > 0}
+            disabled={isPending}
           >
             {isPending ? (
               <>

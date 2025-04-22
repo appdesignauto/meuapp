@@ -59,7 +59,7 @@ export class PasswordResetService {
           
           return {
             success: false,
-            message: `Um e-mail de redefinição já foi enviado e chegará em instantes. Para solicitar outro, aguarde ${remainingSeconds} segundos (prazo máximo de 3 minutos).`,
+            message: "Um e-mail já foi enviado e chegará em instantes. Caso não chegue em até 3 minutos, clique para solicitar novamente.",
             cooldown: remainingSeconds
           };
         }
