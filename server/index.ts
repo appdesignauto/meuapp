@@ -6,8 +6,13 @@ import { initializeDatabase } from "./init-data";
 import { createAdminUser } from "./init-admin";
 import { SubscriptionService } from "./services/subscription-service";
 import { validateR2Environment } from "./env-check";
+import { configureCors } from "./cors-config";
 
 const app = express();
+
+// Configurar CORS para o domínio customizado
+configureCors(app);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
