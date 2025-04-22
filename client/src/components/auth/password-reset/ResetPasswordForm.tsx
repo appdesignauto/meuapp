@@ -42,14 +42,35 @@ export default function ResetPasswordForm() {
 
   // Extrair o token da URL ao carregar o componente
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const tokenParam = params.get('token');
-    if (tokenParam) {
-      setToken(tokenParam);
-    } else {
+    try {
+      // Extrai o token da URL
+      const params = new URLSearchParams(window.location.search);
+      const tokenParam = params.get('token');
+      
+      if (tokenParam) {
+        console.log("Token encontrado na URL:", tokenParam.substring(0, 10) + "...");
+        setToken(tokenParam);
+      } else {
+        // Tentativa de extrair o token da URL caso esteja em outro formato
+        const pathSegments = window.location.pathname.split('/');
+        const lastSegment = pathSegments[pathSegments.length - 1];
+        
+        if (lastSegment && lastSegment.length > 20) {
+          console.log("Token extraído do caminho:", lastSegment.substring(0, 10) + "...");
+          setToken(lastSegment);
+        } else {
+          toast({
+            title: 'Token inválido',
+            description: 'O link de recuperação parece ser inválido ou expirado.',
+            variant: 'destructive',
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao extrair token:", error);
       toast({
-        title: 'Token inválido',
-        description: 'O link de recuperação parece ser inválido ou expirado.',
+        title: 'Erro ao processar token',
+        description: 'Ocorreu um erro ao processar o link de recuperação.',
         variant: 'destructive',
       });
     }

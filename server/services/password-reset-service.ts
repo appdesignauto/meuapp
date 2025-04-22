@@ -56,7 +56,14 @@ export class PasswordResetService {
         .where(eq(users.id, user.id));
 
       // Envia email com o link de redefinição
-      const resetUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/password/reset?token=${token}`;
+      // Detectar automaticamente a URL da aplicação
+      const host = process.env.HOST || 'localhost:5000';
+      const protocol = host.includes('localhost') ? 'http' : 'https';
+      const baseUrl = process.env.BASE_URL || `${protocol}://${host}`;
+      
+      // Usar a URL padrão de redefinição de senha com token
+      const urlFormat = process.env.REPLIT_SLUG ? 'reset-password' : 'password/reset';
+      const resetUrl = `${baseUrl}/${urlFormat}?token=${token}`;
       
       await emailService.sendPasswordResetEmail(user.email, {
         userName: user.name || user.username,

@@ -94,6 +94,17 @@ function AppRoutes() {
           );
         }}
       </Route>
+      {/* Rota alternativa para redefinição de senha (para compatibilidade com múltiplos ambientes) */}
+      <Route path="/reset-password">
+        {() => {
+          const ResetPasswordPage = lazy(() => import("@/pages/password/reset"));
+          return (
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+              <ResetPasswordPage />
+            </Suspense>
+          );
+        }}
+      </Route>
       <Route path="/email/verify">
         {() => {
           const EmailVerificationPage = lazy(() => import("@/pages/email/verify"));
