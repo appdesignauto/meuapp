@@ -72,8 +72,8 @@ export default function RequestResetForm() {
         const timeDisplay = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
         
         toast({
-          title: 'Aguarde um momento',
-          description: `Nova solicitação permitida em ${timeDisplay}. Por favor, aguarde ou verifique seu e-mail.`,
+          title: 'E-mail já enviado',
+          description: `Um e-mail de redefinição já foi enviado e chegará em instantes. Para solicitar outro, aguarde ${timeDisplay} (prazo máximo de 3 minutos).`,
           variant: 'destructive',
         });
       } else {
@@ -98,7 +98,7 @@ export default function RequestResetForm() {
       
       toast({
         title: 'E-mail já enviado',
-        description: `Um e-mail de redefinição já foi enviado. Verifique sua caixa de entrada. Nova solicitação permitida em ${timeDisplay}.`,
+        description: `Um e-mail de redefinição já foi enviado e chegará em instantes. Para solicitar outro, aguarde ${timeDisplay} (prazo máximo de 3 minutos).`,
         variant: 'destructive',
       });
       return;
@@ -150,10 +150,10 @@ export default function RequestResetForm() {
               <Alert variant="default" className="bg-amber-50 border-amber-200 text-amber-800">
                 <Clock className="h-4 w-4 mr-2" />
                 <AlertTitle className="text-sm font-medium inline-flex items-center">
-                  Aguarde um momento
+                  E-mail já enviado
                 </AlertTitle>
                 <AlertDescription className="text-xs">
-                  Um e-mail já foi enviado. Aguarde {formatCountdown(countdown)} para solicitar outro. 
+                  Um e-mail já foi enviado e chegará em instantes. Para solicitar outro, aguarde {formatCountdown(countdown)} (prazo máximo de 3 minutos). 
                 </AlertDescription>
               </Alert>
               <div className="space-y-1">
@@ -219,10 +219,10 @@ export default function RequestResetForm() {
               <Alert variant="default" className="bg-amber-50 border-amber-200 text-amber-800">
                 <Clock className="h-4 w-4 mr-2" />
                 <AlertTitle className="text-sm font-medium inline-flex items-center">
-                  Aguarde um momento
+                  E-mail já enviado
                 </AlertTitle>
                 <AlertDescription className="text-xs">
-                  Um e-mail já foi enviado. Aguarde {formatCountdown(countdown)} para solicitar outro. 
+                  Um e-mail já foi enviado e chegará em instantes. Para solicitar outro, aguarde {formatCountdown(countdown)} (prazo máximo de 3 minutos). 
                 </AlertDescription>
               </Alert>
               <div className="space-y-1">
