@@ -5,6 +5,7 @@ import { arts, insertUserSchema, users, userFollows, categories, collections, vi
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth } from "./auth";
+import { flexibleAuth } from "./auth-flexible";
 import imageUploadRoutes from "./routes/image-upload";
 import { setupFollowRoutes } from "./routes/follows";
 import { db } from "./db";
