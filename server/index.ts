@@ -14,6 +14,14 @@ app.use(express.urlencoded({ extended: false }));
 // Configuração para servir arquivos estáticos da pasta public
 app.use(express.static(path.join(process.cwd(), 'public')));
 
+// Adicionar rota estática para servir cliente diretamente
+app.use('/client', express.static(path.join(process.cwd(), 'client')));
+
+// Redirecionar raiz para o cliente
+app.get('/', (req, res) => {
+  res.redirect('/client/');
+});
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
