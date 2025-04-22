@@ -41,6 +41,10 @@ export const users = pgTable("users", {
   // ID do usuário no Supabase Auth
   supabaseId: text("supabaseId").unique(),
   
+  // Campos para redefinição de senha
+  resetpasswordtoken: text("resetpasswordtoken"),
+  resetpasswordexpires: timestamp("resetpasswordexpires"),
+  
   // Campo para controlar status de confirmação de email
   emailconfirmed: boolean("emailconfirmed").default(true), // Alterado para true por padrão
 });
