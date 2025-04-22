@@ -11,16 +11,8 @@ export function registerDateRoutes(app: express.Express) {
       const now = new Date();
       const brazilDateTime = getBrazilDateTime();
       
-      // Consultar o banco para verificar o timezone da conexão
-      const dbResult = await db.execute(sql`SELECT 
-        NOW() as db_now,
-        current_timestamp as db_current_timestamp,
-        current_date as db_current_date,
-        current_time as db_current_time,
-        timezone('UTC', NOW()) as utc_time,
-        timezone('${BRAZIL_TIMEZONE}', NOW()) as brazil_time,
-        EXTRACT(timezone FROM NOW())/3600 as timezone_hours
-      `);
+      // Consultar o banco para verificar o timezone da conexão - versão simplificada
+      const dbResult = await db.execute(sql`SELECT NOW() as db_now`);
       
       // Retornar resultado com dados de diferentes fontes para comparação
       res.json({
@@ -37,7 +29,7 @@ export function registerDateRoutes(app: express.Express) {
           brazil_formatted_datetime: formatBrazilDateTime(now),
           brazil_iso_string: getBrazilISOString(),
         },
-        database_dates: dbResult[0] || 'Erro ao consultar banco de dados'
+        database_dates: dbResult.rows?.[0] || 'Erro ao consultar banco de dados'
       });
     } catch (error) {
       console.error('Erro ao testar timezone:', error);

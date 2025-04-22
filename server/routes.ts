@@ -37,7 +37,7 @@ import emailTestRouter from './routes/email-test';
 import { emailDiagnosticsRouter } from './routes/email-diagnostics';
 import passwordResetRouter from './routes/password-reset';
 import { setupTestR2DirectRoute } from './routes/test-r2-direct';
-import { registerDateRoutes } from './routes-date-test';
+import dateTestRouter from './date-test-router';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Rota de debug para testar getUserByUsername
@@ -3847,7 +3847,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupTestR2DirectRoute(app);
   
   // Registrar rotas para teste de timezone (fuso horário)
-  registerDateRoutes(app);
+  app.use('/api/date-test', dateTestRouter);
 
   const httpServer = createServer(app);
   
