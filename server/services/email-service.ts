@@ -179,7 +179,7 @@ class EmailService {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'api-key': BREVO_API_KEY
+          'api-key': BREVO_API_KEY || ''
         },
         body: JSON.stringify(payload)
       });
@@ -189,7 +189,7 @@ class EmailService {
         throw new Error(`API do Brevo retornou erro: ${JSON.stringify(errorData)}`);
       }
 
-      const data = await response.json();
+      const data = await response.json() as { messageId: string };
       return { success: true, messageId: data.messageId };
     } catch (error) {
       this.log(`❌ Erro ao enviar e-mail: ${error instanceof Error ? error.message : String(error)}`);
