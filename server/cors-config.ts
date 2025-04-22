@@ -7,6 +7,7 @@ const ALLOWED_ORIGINS = [
   'http://localhost:5000',
   'https://designauto.com.br',
   'https://www.designauto.com.br',
+  'https://app.designauto.com.br',
   'https://designauto-app.replit.app',
   'https://designauto-app.repl.co'
 ];
@@ -16,6 +17,7 @@ export const TRUSTED_DOMAINS = [
   'localhost',
   'designauto.com.br',
   'www.designauto.com.br',
+  'app.designauto.com.br',
   'designauto-app.replit.app',
   'designauto-app.repl.co'
 ];

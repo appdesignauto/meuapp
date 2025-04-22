@@ -68,6 +68,7 @@ export function setupAuth(app: Express) {
     'localhost',
     'designauto.com.br',
     'www.designauto.com.br',
+    'app.designauto.com.br',
     'designauto-app.replit.app',
     'designauto-app.repl.co'
   ];
