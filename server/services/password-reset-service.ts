@@ -60,9 +60,8 @@ export class PasswordResetService {
       // No Replit, será o domínio do projeto
       let baseUrl = 'http://localhost:5000';
       
-      // Força usar URL estática para o Replit
-      // "SITE CRIADO POR FERNANDO PORTELA" - usando diretamente o replit.app
-      baseUrl = 'https://designauto.fernandosimoes.repl.co';
+      // Força usar URL estática para o Replit - domínio oficial da aplicação
+      baseUrl = 'https://design-auto-hub-1-appdesignauto.replit.app';
       
       // Caminho direto para a página de reset
       const resetUrl = `${baseUrl}/reset-password?token=${token}`;
