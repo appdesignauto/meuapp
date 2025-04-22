@@ -94,16 +94,11 @@ function AppRoutes() {
           );
         }}
       </Route>
-      {/* Rota alternativa para redefinição de senha (para compatibilidade com múltiplos ambientes) */}
+      {/* Rota de redirecionamento para manter compatibilidade com emails antigos */}
       <Route path="/reset-password">
         {() => {
-          // Carregar diretamente de /pages/reset-password.tsx
-          const DirectResetPasswordPage = lazy(() => import("@/pages/reset-password"));
-          return (
-            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
-              <DirectResetPasswordPage />
-            </Suspense>
-          );
+          window.location.href = "/password/reset" + window.location.search;
+          return null;
         }}
       </Route>
       <Route path="/email/verify">
