@@ -56,7 +56,7 @@ export class PasswordResetService {
         .where(eq(users.id, user.id));
 
       // Envia email com o link de redefinição
-      const resetUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/reset-password?token=${token}`;
+      const resetUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/password/reset?token=${token}`;
       
       await emailService.sendPasswordResetEmail(user.email, {
         userName: user.name || user.username,
