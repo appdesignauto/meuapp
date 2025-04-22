@@ -12,9 +12,10 @@ const APP_DOMAIN = process.env.NODE_ENV === 'production'
   : 'http://localhost:5000';
 
 // Modo de desenvolvimento (simulação de envio)
-// Em ambiente de desenvolvimento, simula o envio de emails
-// Em produção, usa a API real do Brevo
-const DEV_MODE = process.env.NODE_ENV === 'development'; 
+// Em ambiente de desenvolvimento local, pode-se optar por simular o envio de emails
+// Em produção, usa sempre a API real do Brevo
+// Para testes em desenvolvimento, estamos usando a API real por padrão
+const DEV_MODE = false;
 
 // Configurações de remetentes disponíveis no Brevo
 const SENDERS = {

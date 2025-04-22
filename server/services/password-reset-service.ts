@@ -56,12 +56,13 @@ export class PasswordResetService {
         .where(eq(users.id, user.id));
 
       // Envia email com o link de redefinição
-      // Usar "localhost:5000" para desenvolvimento, mas obter a URL real da requisição para produção
-      // No Replit, será o domínio do projeto
-      let baseUrl = 'http://localhost:5000';
+      // Usar o domínio correto baseado no ambiente (desenvolvimento ou produção)
+      // Em desenvolvimento: localhost; Em produção: URL do Replit
+      const baseUrl = process.env.NODE_ENV === 'production'
+        ? 'https://design-auto-hub-1-appdesignauto.replit.app'
+        : 'http://localhost:5000';
       
-      // Força usar URL estática para o Replit - domínio oficial da aplicação
-      baseUrl = 'https://design-auto-hub-1-appdesignauto.replit.app';
+      console.log(`[PasswordResetService] Gerando link de redefinição com base URL: ${baseUrl}`);
       
       // Caminho direto para a página de reset
       const resetUrl = `${baseUrl}/reset-password?token=${token}`;
