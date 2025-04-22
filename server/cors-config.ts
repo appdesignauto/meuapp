@@ -9,7 +9,8 @@ const ALLOWED_ORIGINS = [
   'https://www.designauto.com.br',
   'https://app.designauto.com.br',
   'https://designauto-app.replit.app',
-  'https://designauto-app.repl.co'
+  'https://designauto-app.repl.co',
+  'https://design-auto-hub-1-appdesignauto.replit.app'
 ];
 
 // Lista de domínios confiáveis para cookies
@@ -19,7 +20,8 @@ export const TRUSTED_DOMAINS = [
   'www.designauto.com.br',
   'app.designauto.com.br',
   'designauto-app.replit.app',
-  'designauto-app.repl.co'
+  'designauto-app.repl.co',
+  'design-auto-hub-1-appdesignauto.replit.app'
 ];
 
 /**
@@ -67,7 +69,7 @@ export function configureCors(app: Express): void {
     if (process.env.NODE_ENV === 'production') {
       res.setHeader(
         'Content-Security-Policy',
-        "default-src 'self' https://designauto.com.br https://*.designauto.com.br https://*.supabase.co https://*.r2.dev https://*.r2.cloudflarestorage.com; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' https://*.supabase.co https://*.r2.dev https://*.r2.cloudflarestorage.com data: blob:; font-src 'self' data:; connect-src 'self' https://*.designauto.com.br https://*.supabase.co https://*.r2.dev https://*.r2.cloudflarestorage.com;"
+        "default-src 'self' https://designauto.com.br https://*.designauto.com.br https://*.replit.app https://*.supabase.co https://*.r2.dev https://*.r2.cloudflarestorage.com; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' https://*.supabase.co https://*.r2.dev https://*.r2.cloudflarestorage.com data: blob:; font-src 'self' data:; connect-src 'self' https://*.replit.app https://*.designauto.com.br https://*.supabase.co https://*.r2.dev https://*.r2.cloudflarestorage.com;"
       );
     }
     

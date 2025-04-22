@@ -70,7 +70,8 @@ export function setupAuth(app: Express) {
     'www.designauto.com.br',
     'app.designauto.com.br',
     'designauto-app.replit.app',
-    'designauto-app.repl.co'
+    'designauto-app.repl.co',
+    'design-auto-hub-1-appdesignauto.replit.app'
   ];
 
   // Configure session
@@ -82,7 +83,7 @@ export function setupAuth(app: Express) {
       secure: process.env.NODE_ENV === "production",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       sameSite: process.env.NODE_ENV === "production" ? 'none' : 'lax',
-      domain: process.env.NODE_ENV === "production" ? '.designauto.com.br' : undefined,
+      domain: undefined, // Permitir cookies em qualquer domínio para facilitar teste
       path: '/'
     },
     store: new PostgresSessionStore({
