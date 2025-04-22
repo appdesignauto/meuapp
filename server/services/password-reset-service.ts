@@ -56,14 +56,16 @@ export class PasswordResetService {
         .where(eq(users.id, user.id));
 
       // Envia email com o link de redefinição
-      // Detectar automaticamente a URL da aplicação
-      const host = process.env.HOST || 'localhost:5000';
-      const protocol = host.includes('localhost') ? 'http' : 'https';
-      const baseUrl = process.env.BASE_URL || `${protocol}://${host}`;
+      // Usar "localhost:5000" para desenvolvimento, mas obter a URL real da requisição para produção
+      // No Replit, será o domínio do projeto
+      let baseUrl = 'http://localhost:5000';
       
-      // Usar a URL padrão de redefinição de senha com token
-      const urlFormat = process.env.REPLIT_SLUG ? 'reset-password' : 'password/reset';
-      const resetUrl = `${baseUrl}/${urlFormat}?token=${token}`;
+      // Força usar URL estática para o Replit
+      // "SITE CRIADO POR FERNANDO PORTELA" - usando diretamente o replit.app
+      baseUrl = 'https://designauto.fernandosimoes.repl.co';
+      
+      // Caminho direto para a página de reset
+      const resetUrl = `${baseUrl}/reset-password?token=${token}`;
       
       await emailService.sendPasswordResetEmail(user.email, {
         userName: user.name || user.username,

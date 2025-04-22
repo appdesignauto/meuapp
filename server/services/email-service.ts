@@ -316,6 +316,8 @@ class EmailService {
             <p>Recebemos uma solicitação para redefinir sua senha.</p>
             <p>Clique no botão abaixo para criar uma nova senha:</p>
             <a href="${data.resetUrl}" style="padding: 12px 24px; background-color: #4285f4; color: white; text-decoration: none; border-radius: 4px; display: inline-block; margin: 20px 0;">Redefinir Senha</a>
+            <p>Se o botão acima não funcionar, copie e cole o link a seguir no seu navegador:</p>
+            <p style="word-break: break-all; font-family: monospace;">${data.resetUrl}</p>
             <p>Este link expira em 1 hora.</p>
             <p>Se você não solicitou esta mudança, por favor ignore este e-mail.</p>
             <p>Atenciosamente,<br>Equipe Design Auto</p>
