@@ -66,9 +66,14 @@ export default function RequestResetForm() {
         setCooldown(error.cause.cooldown);
         setCountdown(error.cause.cooldown);
         
+        // Formata o tempo para exibição
+        const minutes = Math.floor(error.cause.cooldown / 60);
+        const seconds = error.cause.cooldown % 60;
+        const timeDisplay = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        
         toast({
           title: 'Aguarde um momento',
-          description: 'Você precisa aguardar antes de solicitar um novo e-mail de redefinição.',
+          description: `Nova solicitação permitida em ${timeDisplay}. Por favor, aguarde ou verifique seu e-mail.`,
           variant: 'destructive',
         });
       } else {
@@ -86,9 +91,14 @@ export default function RequestResetForm() {
     
     // Verifica se está em cooldown
     if (countdown > 0) {
+      // Formata o tempo para exibição
+      const minutes = Math.floor(countdown / 60);
+      const seconds = countdown % 60;
+      const timeDisplay = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+      
       toast({
         title: 'Aguarde um momento',
-        description: `Você poderá solicitar outro e-mail em ${countdown} segundos`,
+        description: `Nova solicitação permitida em ${timeDisplay}. Por favor, aguarde.`,
         variant: 'destructive',
       });
       return;
@@ -143,7 +153,7 @@ export default function RequestResetForm() {
                   Aguarde um momento
                 </AlertTitle>
                 <AlertDescription className="text-xs">
-                  Você poderá solicitar outro e-mail em {formatCountdown(countdown)} segundos
+                  Você poderá solicitar outro e-mail em {formatCountdown(countdown)} 
                 </AlertDescription>
               </Alert>
               <div className="space-y-1">
@@ -212,7 +222,7 @@ export default function RequestResetForm() {
                   Aguarde um momento
                 </AlertTitle>
                 <AlertDescription className="text-xs">
-                  Você poderá solicitar outro e-mail em {formatCountdown(countdown)} segundos
+                  Você poderá solicitar outro e-mail em {formatCountdown(countdown)} 
                 </AlertDescription>
               </Alert>
               <div className="space-y-1">
