@@ -1,5 +1,6 @@
 import fetch from 'node-fetch';
 import { createHash } from 'crypto';
+import { getBrazilDateTime, getBrazilISOString } from '../utils/date-utils';
 
 // Chave da API do Brevo
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
@@ -100,7 +101,9 @@ class EmailService {
    * Registra logs para diagnóstico
    */
   private log(message: string): void {
-    const timestamp = new Date().toISOString();
+    // Usar o utilitário importado para timestamp no timezone do Brasil (UTC-3)
+    // Não podemos usar require em módulos ES, portanto o import é feito no topo do arquivo
+    const timestamp = getBrazilISOString();
     const logMessage = `[EmailService ${timestamp}] ${message}`;
     console.log(logMessage);
     this.logs.push(logMessage);
@@ -233,14 +236,17 @@ class EmailService {
         this.log(`🧪 [DEV MODE] Simulando envio de email de ${sender.email} para ${to.map(t => t.email).join(', ')}`);
         this.log(`🧪 [DEV MODE] Assunto: ${subject}`);
         
-        // Armazena o email simulado
+        // Utilizando função de data importada no topo do arquivo
+        // para timezone do Brasil 
+        
+        // Armazena o email simulado com data no timezone do Brasil
         const simulatedEmail: SimulatedEmail = {
           from: sender.email,
           to: to[0].email, // Simplifica para o primeiro destinatário
           subject,
           html: htmlContent,
           text: finalTextContent || '', // Usando o texto final processado
-          sentAt: new Date()
+          sentAt: getBrazilDateTime() // Data atual no fuso horário do Brasil
         };
         
         this.simulatedEmails.push(simulatedEmail);

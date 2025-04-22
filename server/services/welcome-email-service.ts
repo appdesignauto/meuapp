@@ -55,7 +55,7 @@ class WelcomeEmailService {
             </div>
             
             <div style="background-color: #333; color: #fff; padding: 15px; text-align: center; font-size: 12px;">
-              <p>&copy; ${new Date().getFullYear()} Design Auto - Todos os direitos reservados</p>
+              <p>&copy; ${new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' })).getFullYear()} Design Auto - Todos os direitos reservados</p>
               <p>Este email foi enviado para ${email} porque você se cadastrou em nossa plataforma.</p>
             </div>
           </body>
