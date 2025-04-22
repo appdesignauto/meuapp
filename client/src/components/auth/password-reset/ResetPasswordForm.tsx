@@ -137,30 +137,23 @@ export default function ResetPasswordForm() {
     onSuccess: (data) => {
       setResetSuccess(true);
       
-      // Verificar se o login automático foi realizado
-      if (data.autoLogin) {
-        toast({
-          title: 'Senha redefinida com sucesso',
-          description: 'Você será redirecionado para a página inicial automaticamente.',
-          variant: 'default',
-        });
-        
-        // Redirecionar para home já logado
-        setTimeout(() => {
-          window.location.href = '/';
-        }, 2000);
-      } else {
-        toast({
-          title: 'Senha redefinida com sucesso',
-          description: 'Agora você pode fazer login com sua nova senha.',
-          variant: 'default',
-        });
-        
-        // Redirecionar para tela de login após um delay
-        setTimeout(() => {
-          window.location.href = '/login';
-        }, 3000);
+      // Abordagem simplificada: apenas direcionar para login após redefinição
+      toast({
+        title: 'Senha redefinida com sucesso',
+        description: 'Agora você pode fazer login com sua nova senha.',
+        variant: 'default',
+      });
+      
+      // Salvar credenciais no localStorage apenas para feedback
+      if (data.credentials) {
+        localStorage.setItem('reset_success', 'true');
+        localStorage.setItem('reset_email', data.credentials.email);
       }
+      
+      // Redirecionar para tela de login após um delay
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 3000);
     },
     onError: (error: Error) => {
       toast({
@@ -244,9 +237,6 @@ export default function ResetPasswordForm() {
 
   // Se a senha foi redefinida com sucesso
   if (resetSuccess) {
-    // Verificar se o redirecionamento será para home (login automático) ou para página de login
-    const isAutoLogin = window.location.href === '/' || window.location.href.includes('autoLogin=true');
-    
     return (
       <Card className="w-full border border-green-200">
         <CardHeader className="space-y-1">
@@ -262,20 +252,16 @@ export default function ResetPasswordForm() {
           <Alert className="bg-green-50 border-green-200">
             <AlertTitle className="text-green-700">Tudo certo!</AlertTitle>
             <AlertDescription className="text-sm text-green-600 pt-2">
-              {isAutoLogin ? (
-                "Você será redirecionado para a página inicial automaticamente. Você já está logado!"
-              ) : (
-                "Você será redirecionado para a página de login em instantes para acessar sua conta com a nova senha."
-              )}
+              Você será redirecionado para a página de login em instantes para acessar sua conta com a nova senha.
             </AlertDescription>
           </Alert>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <Button 
-            onClick={() => window.location.href = isAutoLogin ? '/' : '/login'}
+            onClick={() => window.location.href = '/login'}
             className="w-full"
           >
-            {isAutoLogin ? 'Ir para a página inicial' : 'Ir para o login agora'}
+            Ir para o login agora
           </Button>
         </CardFooter>
       </Card>
