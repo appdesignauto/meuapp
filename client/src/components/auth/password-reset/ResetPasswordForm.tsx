@@ -6,7 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { Link, useLocation } from 'wouter';
-import { Loader2, Key, Lock, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
+import { Loader2, Key, Lock, ArrowLeft, CheckCircle, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -250,6 +250,9 @@ export default function ResetPasswordForm() {
     );
   }
 
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   return (
     <Card className="w-full border border-primary/20">
       <CardHeader className="space-y-1">
@@ -271,12 +274,26 @@ export default function ResetPasswordForm() {
                 <FormItem>
                   <FormLabel className="text-sm font-medium">Nova senha</FormLabel>
                   <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="Digite sua nova senha"
-                      className="h-10 px-3"
-                      {...field}
-                    />
+                    <div className="relative">
+                      <Input
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Digite sua nova senha"
+                        className="h-10 px-3 pr-10"
+                        {...field}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-10 w-10 px-0"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? 
+                          <EyeOff className="h-4 w-4 text-muted-foreground" /> : 
+                          <Eye className="h-4 w-4 text-muted-foreground" />
+                        }
+                      </Button>
+                    </div>
                   </FormControl>
                   <div className="mt-2 space-y-1">
                     <div className="flex justify-between items-center text-xs">
@@ -301,12 +318,26 @@ export default function ResetPasswordForm() {
                 <FormItem>
                   <FormLabel className="text-sm font-medium">Confirme a nova senha</FormLabel>
                   <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="Digite a senha novamente"
-                      className="h-10 px-3"
-                      {...field}
-                    />
+                    <div className="relative">
+                      <Input
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="Digite a senha novamente"
+                        className="h-10 px-3 pr-10"
+                        {...field}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-10 w-10 px-0"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      >
+                        {showConfirmPassword ? 
+                          <EyeOff className="h-4 w-4 text-muted-foreground" /> : 
+                          <Eye className="h-4 w-4 text-muted-foreground" />
+                        }
+                      </Button>
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
