@@ -3849,6 +3849,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Registrar rotas para teste de timezone (fuso horário)
   app.use('/api/date-test', dateTestRouter);
+  
+  // Ferramenta de diagnóstico do Supabase Storage
+  app.use(supabeDiagnosticsRouter);
 
   const httpServer = createServer(app);
   

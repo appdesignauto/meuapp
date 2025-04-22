@@ -71,7 +71,7 @@ router.post('/api/user/avatar', isAuthenticated, upload.single('avatar'), async 
       width: 250,
       height: 250,
       quality: 90,
-      format: 'webp'
+      format: 'webp' as const  // Especificando tipo literal para evitar erro de tipagem
     };
     
     const multerFile = {
