@@ -134,7 +134,8 @@ export default function ResetPasswordForm() {
       
       // Redirecionar para tela de login após um delay
       setTimeout(() => {
-        setLocation('/login');
+        // Usar window.location.href para um redirecionamento mais confiável
+        window.location.href = '/login';
       }, 3000);
     },
     onError: (error: Error) => {
@@ -200,7 +201,7 @@ export default function ResetPasswordForm() {
         <CardFooter className="flex flex-col space-y-4">
           <Button 
             variant="default"
-            onClick={() => setLocation('/password/forgot')}
+            onClick={() => window.location.href = '/password/forgot'}
             className="w-full"
           >
             <Key className="mr-2 h-4 w-4" />
@@ -240,7 +241,7 @@ export default function ResetPasswordForm() {
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <Button 
-            onClick={() => setLocation('/login')}
+            onClick={() => window.location.href = '/login'}
             className="w-full"
           >
             Ir para o login agora
