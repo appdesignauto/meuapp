@@ -32,12 +32,10 @@ export function EmailVerificationModal() {
   const [countdown, setCountdown] = useState(0);
 
   // Verificar se deve mostrar o modal (usuário logado com email não confirmado)
+  // Desativado - não queremos mais abrir o modal de verificação automaticamente
   useEffect(() => {
-    if (!isLoading && user && user.emailconfirmed === false) {
-      setOpen(true);
-    } else {
-      setOpen(false);
-    }
+    // Sempre manter fechado, independentemente do status de verificação
+    setOpen(false);
   }, [user, isLoading]);
 
   // Obter o status atual da verificação
@@ -52,7 +50,8 @@ export function EmailVerificationModal() {
         return { success: false, sent: false };
       }
     },
-    enabled: !!user && user.emailconfirmed === false,
+    // Desativado - não queremos mais fazer esta verificação automaticamente
+    enabled: false,
     refetchOnWindowFocus: false,
   });
 

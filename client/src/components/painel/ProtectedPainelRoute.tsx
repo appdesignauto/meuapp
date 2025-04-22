@@ -12,7 +12,7 @@ interface ProtectedPainelRouteProps {
 export function ProtectedPainelRoute({
   path,
   component: Component,
-  requireEmailVerification = true,
+  requireEmailVerification = false, // Alterado para false por padrão
 }: ProtectedPainelRouteProps) {
   const { user, isLoading } = useAuth();
 
@@ -34,7 +34,9 @@ export function ProtectedPainelRoute({
     );
   }
   
-  // Verificação de email confirmado
+  // Verificação de email desativada - comentado para não usar mais
+  // A verificação de email agora é opcional e desativada por padrão
+  /*
   if (requireEmailVerification && user.emailconfirmed === false) {
     return (
       <Route path={path}>
@@ -42,6 +44,7 @@ export function ProtectedPainelRoute({
       </Route>
     );
   }
+  */
 
   return (
     <Route path={path}>

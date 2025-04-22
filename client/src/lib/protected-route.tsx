@@ -6,7 +6,7 @@ export function ProtectedRoute({
   path,
   component: Component,
   roles = [],
-  requireEmailVerification = true,
+  requireEmailVerification = false, // Alterado para false por padrão
 }: {
   path: string;
   component: () => React.JSX.Element | null;
@@ -33,7 +33,9 @@ export function ProtectedRoute({
     );
   }
 
-  // Verificação de email confirmado
+  // Verificação de email desativada - comentado para não usar mais
+  // A verificação de email agora é opcional e desativada por padrão
+  /*
   if (requireEmailVerification && user.emailconfirmed === false) {
     return (
       <Route path={path}>
@@ -41,6 +43,7 @@ export function ProtectedRoute({
       </Route>
     );
   }
+  */
 
   // Verificação de papel/role específica
   if (roles.length > 0 && !roles.includes(user.role)) {
