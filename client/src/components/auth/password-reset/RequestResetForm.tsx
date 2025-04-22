@@ -44,7 +44,8 @@ export default function RequestResetForm() {
       if (!response.ok) {
         // Verifica se é erro de cooldown (retorna 429)
         if (response.status === 429 && data.cooldown) {
-          throw new Error(data.message, { cause: { cooldown: data.cooldown } });
+          // Simplifica a mensagem para o frontend formatar melhor
+        throw new Error("Um e-mail já foi enviado e chegará em instantes.", { cause: { cooldown: data.cooldown } });
         }
         throw new Error(data.message || 'Falha ao enviar o e-mail de recuperação');
       }
