@@ -107,9 +107,13 @@ export class PasswordResetService {
    * Redefine a senha de um usuário usando um token válido
    * @param token Token de redefinição
    * @param newPassword Nova senha
-   * @returns Sucesso da operação e mensagens
+   * @returns Sucesso da operação, mensagens e dados do usuário para autenticação
    */
-  async resetPassword(token: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+  async resetPassword(token: string, newPassword: string): Promise<{ 
+    success: boolean; 
+    message: string;
+    user?: any; // Usuário para login automático
+  }> {
     try {
       // Extrair metadados do token para diagnóstico
       const tokenParts = token.split('.');
@@ -170,9 +174,18 @@ export class PasswordResetService {
         userName: user.name || user.username
       });
 
+      // Buscar dados atualizados do usuário após a alteração
+      const [updatedUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, user.id));
+
+      console.log(`[PasswordResetService] Senha redefinida com sucesso para o usuário ID: ${user.id}. Login automático será realizado.`);
+
       return { 
         success: true, 
-        message: 'Senha redefinida com sucesso'
+        message: 'Senha redefinida com sucesso',
+        user: updatedUser // Retorna o usuário para login automático
       };
     } catch (error) {
       console.error('Erro ao redefinir senha:', error);

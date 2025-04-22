@@ -71,7 +71,34 @@ router.post('/reset', async (req, res) => {
       return res.status(400).json({ message: result.message });
     }
 
-    return res.status(200).json({ message: result.message });
+    // Se a redefinição foi bem-sucedida e temos as credenciais do usuário
+    if (result.user) {
+      // Efetua login automaticamente
+      req.login(result.user, (err) => {
+        if (err) {
+          console.error('Erro ao efetuar login automático após redefinição de senha:', err);
+          // Mesmo com erro no login automático, consideramos a redefinição bem-sucedida
+          return res.status(200).json({ 
+            message: result.message,
+            autoLogin: false
+          });
+        }
+        
+        // Login realizado com sucesso
+        console.log(`Login automático realizado com sucesso após redefinição de senha para usuário ID: ${result.user.id}`);
+        return res.status(200).json({ 
+          message: result.message,
+          autoLogin: true,
+          user: req.user
+        });
+      });
+    } else {
+      // Redefinição bem-sucedida, mas sem login automático
+      return res.status(200).json({ 
+        message: result.message,
+        autoLogin: false
+      });
+    }
   } catch (error) {
     console.error('Erro na redefinição de senha:', error);
     return res.status(500).json({ 
