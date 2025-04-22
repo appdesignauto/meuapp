@@ -22,18 +22,14 @@ export default function RequestResetForm() {
       const response = await apiRequest('POST', '/api/password-reset/request', { email });
       
       if (!response.ok) {
-        // Verifica se é erro de cooldown (retorna 429)
+        // Verifica se é erro de cooldown (retorna 429) ou outro erro
+        const data = await response.json();
+        
+        // Se for 429, define o estado de cooldown
         if (response.status === 429) {
-          // Define o estado de cooldown
           setIsInCooldown(true);
-          
-          // Para resposta de texto simples, usamos response.text()
-          const errorText = await response.text();
-          throw new Error(errorText || "Um e-mail já foi enviado e chegará em instantes. Caso não chegue em até 3 minutos, clique para solicitar novamente.");
         }
         
-        // Para outros erros em formato JSON, usamos response.json()
-        const data = await response.json();
         throw new Error(data.message || 'Falha ao enviar o e-mail de recuperação');
       }
       

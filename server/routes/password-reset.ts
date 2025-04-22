@@ -36,9 +36,11 @@ router.post('/request', async (req, res) => {
     const result = await passwordResetService.createResetToken(email);
 
     if (!result.success) {
-      // Se existe cooldown, enviamos apenas um texto simples para evitar problemas de formatação no cliente
+      // Se existe cooldown, enviamos apenas a mensagem principal no formato JSON
       if (result.cooldown) {
-        return res.status(429).send("Um e-mail já foi enviado e chegará em instantes. Caso não chegue em até 3 minutos, clique para solicitar novamente.");
+        return res.status(429).json({ 
+          message: "Um e-mail já foi enviado e chegará em instantes. Caso não chegue em até 3 minutos, clique para solicitar novamente."
+        });
       }
       return res.status(500).json({ message: result.message });
     }
