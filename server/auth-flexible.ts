@@ -72,7 +72,46 @@ export const flexibleAuth = (req: Request, res: Response, next: NextFunction) =>
     return;
   }
   
-  // 4. Se chegou aqui, nenhuma estratégia de autenticação funcionou
+  // 4. Verificar se tem um header de usuário personalizado
+  // Este é um método adicional para compatibilidade com clientes que não conseguem
+  // manter sessões normais
+  const userId = req.headers['x-user-id'];
+  if (userId) {
+    const userIdValue = typeof userId === 'string' ? userId : userId[0];
+    console.log('[FlexAuth] Tentando autenticar via header x-user-id:', userIdValue);
+    
+    try {
+      const userIdInt = parseInt(userIdValue);
+      
+      // Procurar usuário no banco de dados
+      db.select()
+        .from(users)
+        .where(eq(users.id, userIdInt))
+        .limit(1)
+        .then(([user]) => {
+          if (user) {
+            // Simular autenticação
+            console.log('[FlexAuth] Usuário encontrado via header:', user.username);
+            req.user = user;
+            return next();
+          } else {
+            // Usuário não encontrado
+            console.log('[FlexAuth] Usuário não encontrado via header');
+            res.status(401).json({ message: 'Usuário não encontrado' });
+          }
+        })
+        .catch(error => {
+          console.error('[FlexAuth] Erro ao buscar usuário via header:', error);
+          res.status(500).json({ message: 'Erro ao verificar autenticação' });
+        });
+      
+      return;
+    } catch (e) {
+      console.error('[FlexAuth] Erro ao processar header x-user-id:', e);
+    }
+  }
+  
+  // 5. Se chegou aqui, nenhuma estratégia de autenticação funcionou
   console.log('[FlexAuth] Autenticação falhou - nenhuma estratégia funcionou');
   res.status(401).json({ message: 'Não autenticado' });
 };
