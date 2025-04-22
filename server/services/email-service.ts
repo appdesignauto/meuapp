@@ -120,19 +120,67 @@ class EmailService {
   }
 
   /**
+   * Método para envio direto de email - exposto para testes de diagnóstico
+   * @param params Parâmetros do email {to, subject, html, text}
+   * @returns Promise<{success: boolean, messageId?: string, error?: string}>
+   */
+  public async sendDirectEmail(params: {
+    to: string;
+    subject: string;
+    html: string;
+    text?: string;
+  }): Promise<{success: boolean, messageId?: string, error?: string}> {
+    try {
+      if (!this.initialized) {
+        this.log('❌ Serviço não inicializado para envio direto');
+        return { success: false, error: 'Serviço não inicializado' };
+      }
+      
+      // Preparar destinatário
+      const to = [{ email: params.to, name: params.to.split('@')[0] }];
+      
+      // Usar remetente padrão para envios diretos
+      const sender = DEFAULT_SENDER;
+      
+      // Conteúdo em texto plano (opcional)
+      const textContent = params.text || params.html
+        .replace(/<[^>]*>/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      
+      this.log(`📧 [ENVIO DIRETO] Enviando email para ${params.to} com assunto: ${params.subject}`);
+      
+      // Enviar usando o método interno
+      return await this.sendBrevoEmail(
+        sender,
+        to,
+        params.subject,
+        params.html,
+        textContent
+      );
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.log(`❌ [ENVIO DIRETO] Erro ao enviar email: ${errorMessage}`);
+      return { success: false, error: errorMessage };
+    }
+  }
+  
+  /**
    * Método utilitário para enviar e-mail - usado internamente por outros métodos especializados
    * @param sender O remetente do e-mail (suporte ou contato)
    * @param to Array com destinatários (email e nome)
    * @param subject Assunto do e-mail
    * @param htmlContent Conteúdo HTML do e-mail
-   * @returns Promise<{success: boolean, messageId?: string}>
+   * @param textContent Conteúdo em texto puro (opcional)
+   * @returns Promise<{success: boolean, messageId?: string, error?: string}>
    * @private
    */
   private async sendBrevoEmail(
     sender: typeof SENDERS.suporte | typeof SENDERS.contato,
     to: Array<{ email: string; name?: string }>,
     subject: string,
-    htmlContent: string
+    htmlContent: string,
+    textContent?: string
   ): Promise<{success: boolean, messageId?: string}> {
     try {
       if (!this.initialized) {
@@ -142,17 +190,20 @@ class EmailService {
 
       // Converter HTML para texto simples para clientes sem suporte a HTML
       // Remover qualquer código de HTML e preservar o texto puro
-      let textContent = htmlContent
-        .replace(/<[^>]*>/g, '')
-        .replace(/\s+/g, ' ')
-        .trim();
+      let finalTextContent = textContent;
+      if (!finalTextContent) {
+        finalTextContent = htmlContent
+          .replace(/<[^>]*>/g, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+      }
         
       // Garantir que o link de redefinição permaneça intacto no texto
       if (to[0]?.email && subject.includes('Redefinição de Senha')) {
         // Tentar extrair o link de resetUrl do conteúdo HTML
         const resetUrlMatch = htmlContent.match(/href="([^"]+)"/);
         if (resetUrlMatch && resetUrlMatch[1]) {
-          textContent += "\n\nLink direto para redefinição de senha: " + resetUrlMatch[1];
+          finalTextContent += "\n\nLink direto para redefinição de senha: " + resetUrlMatch[1];
         }
       }
       
@@ -179,7 +230,7 @@ class EmailService {
           to: to[0].email, // Simplifica para o primeiro destinatário
           subject,
           html: htmlContent,
-          text: textContent,
+          text: finalTextContent || '', // Usando o texto final processado
           sentAt: new Date()
         };
         
