@@ -75,25 +75,32 @@ router.post('/api/user/avatar', isAuthenticated, upload.single('avatar'), async 
       size: file.size
     } as Express.Multer.File;
     
-    const uploadResult = await supabaseStorageService.uploadAvatar(multerFile, uploadOptions);
+    // Chamar o método com o ID do usuário para melhor organização
+    const uploadResult = await supabaseStorageService.uploadAvatar(multerFile, uploadOptions, userId);
 
     // Remover o arquivo temporário
     fs.unlinkSync(file.path);
 
-    if (!uploadResult.success) {
-      console.error(`Erro no upload de avatar: ${uploadResult.error}`);
-      return res.status(500).json({ error: 'Falha ao fazer upload do avatar', details: uploadResult.error });
+    // O uploadResult agora retorna { imageUrl, storageType } em vez de { success, url, error }
+    if (!uploadResult || !uploadResult.imageUrl) {
+      console.error(`Erro no upload de avatar: resposta inválida`);
+      return res.status(500).json({ error: 'Falha ao fazer upload do avatar', details: 'Resposta inválida do serviço de storage' });
     }
+
+    // Log para debug
+    console.log(`Avatar carregado com sucesso: ${uploadResult.imageUrl}`);
+    console.log(`Tipo de armazenamento: ${uploadResult.storageType || 'não especificado'}`);
 
     // Atualizar URL do avatar no banco de dados
     await db.update(users)
-      .set({ profileimageurl: uploadResult.url })
+      .set({ profileimageurl: uploadResult.imageUrl })
       .where(eq(users.id, userId));
 
     // Retornar sucesso com a URL do avatar
     res.json({ 
       success: true, 
-      url: uploadResult.url,
+      url: uploadResult.imageUrl, // Usando imageUrl em vez de url para corresponder ao retorno do serviço
+      storageType: uploadResult.storageType,
       message: 'Avatar atualizado com sucesso'
     });
 
