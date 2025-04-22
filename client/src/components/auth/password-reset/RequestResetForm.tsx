@@ -134,15 +134,36 @@ export default function RequestResetForm() {
               3. Crie uma nova senha segura
             </AlertDescription>
           </Alert>
+          
+          {countdown > 0 && (
+            <div className="space-y-2 mt-4">
+              <Alert variant="default" className="bg-amber-50 border-amber-200 text-amber-800">
+                <Clock className="h-4 w-4 mr-2" />
+                <AlertTitle className="text-sm font-medium inline-flex items-center">
+                  Aguarde um momento
+                </AlertTitle>
+                <AlertDescription className="text-xs">
+                  Você poderá solicitar outro e-mail em {formatCountdown(countdown)} segundos
+                </AlertDescription>
+              </Alert>
+              <div className="space-y-1">
+                <Progress value={(countdown / cooldown) * 100} className="h-2" />
+                <p className="text-[10px] text-muted-foreground text-right">
+                  {formatCountdown(countdown)}
+                </p>
+              </div>
+            </div>
+          )}
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <Button 
             variant="outline"
             onClick={() => setEmailSent(false)}
             className="w-full"
+            disabled={countdown > 0}
           >
             <Mail className="mr-2 h-4 w-4" />
-            Tentar com outro e-mail
+            Tentar novamente
           </Button>
           <div className="text-center text-sm">
             <Link href="/login" className="text-primary hover:underline inline-flex items-center">
