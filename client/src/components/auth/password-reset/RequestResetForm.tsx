@@ -89,7 +89,7 @@ export default function RequestResetForm() {
       toast({
         title: 'Aguarde um momento',
         description: `Você poderá solicitar outro e-mail em ${countdown} segundos`,
-        variant: 'warning',
+        variant: 'destructive',
       });
       return;
     }
@@ -183,15 +183,35 @@ export default function RequestResetForm() {
               autoComplete="email"
             />
           </div>
-          <p className="text-xs text-muted-foreground">
-            Enviaremos um link para você redefinir a senha da sua conta.
-          </p>
+          {countdown > 0 ? (
+            <div className="space-y-2">
+              <Alert variant="default" className="bg-amber-50 border-amber-200 text-amber-800">
+                <Clock className="h-4 w-4 mr-2" />
+                <AlertTitle className="text-sm font-medium inline-flex items-center">
+                  Aguarde um momento
+                </AlertTitle>
+                <AlertDescription className="text-xs">
+                  Você poderá solicitar outro e-mail em {formatCountdown(countdown)} segundos
+                </AlertDescription>
+              </Alert>
+              <div className="space-y-1">
+                <Progress value={(countdown / cooldown) * 100} className="h-2" />
+                <p className="text-[10px] text-muted-foreground text-right">
+                  {formatCountdown(countdown)}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              Enviaremos um link para você redefinir a senha da sua conta.
+            </p>
+          )}
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <Button 
             type="submit" 
             className="w-full transition-all" 
-            disabled={isPending}
+            disabled={isPending || countdown > 0}
           >
             {isPending ? (
               <>
