@@ -574,6 +574,7 @@ export class SupabaseStorageService {
   /**
    * Método específico para upload de avatares usando o bucket 'designautoimages'
    * Otimiza e redimensiona a imagem para uso como avatar de perfil
+   * Implementação robusta com múltiplos fallbacks para garantir funcionamento em qualquer ambiente
    */
   async uploadAvatar(
     file: Express.Multer.File,
@@ -594,8 +595,24 @@ export class SupabaseStorageService {
       return await this.uploadEmergencyAvatar(file, options);
     }
 
-    // Certifica-se de que temos conexão com o Supabase
-    await this.initBucket();
+    console.log("🔶 INICIANDO UPLOAD DE AVATAR COM NOVO MÉTODO ROBUSTO");
+    console.log(`🔶 Ambiente: ${process.env.NODE_ENV || 'não especificado'}`);
+    console.log(`🔶 Usuário ID: ${userId || 'não especificado'}`);
+    
+    // Verificar se temos credenciais Supabase antes de tentar
+    if (!supabaseUrl || !supabaseKey) {
+      console.error("❌ Credenciais do Supabase não configuradas. Usando fallback local.");
+      return await this.uploadAvatarLocalFallback(file, options, userId);
+    }
+
+    // Certifica-se de que temos conexão com o Supabase (com tratamento de erro melhorado)
+    try {
+      await this.initBucket();
+    } catch (error) {
+      console.error("❌ Falha ao inicializar buckets do Supabase:", error);
+      console.log("🔄 Usando fallback local para avatar...");
+      return await this.uploadAvatarLocalFallback(file, options, userId);
+    }
 
     try {
       console.log("==== UPLOAD DE AVATAR PARA BUCKET 'avatars' ====");
@@ -1263,6 +1280,87 @@ export class SupabaseStorageService {
       imageUrl: `https://placehold.co/400x400/555588/ffffff?text=${userText}&date=${timestamp}`,
       storageType: 'placeholder'
     };
+  }
+  
+  /**
+   * Método dedicado para fallback local de avatar quando o Supabase falha
+   * Funciona em qualquer ambiente, inclusive em produção
+   */
+  async uploadAvatarLocalFallback(
+    file: Express.Multer.File,
+    options: ImageOptimizationOptions = {},
+    userId?: number | string
+  ): Promise<{ imageUrl: string; storageType: string }> {
+    console.log("🔄 INICIANDO UPLOAD LOCAL DE AVATAR (FALLBACK)");
+    console.log(`🔄 Usuário ID: ${userId || 'não especificado'}`);
+    
+    try {
+      // Verifica e cria diretórios necessários
+      const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+      const avatarsDir = path.join(uploadsDir, 'avatars');
+      
+      // Cria estrutura de diretórios necessária
+      [
+        path.join(process.cwd(), 'public'),
+        uploadsDir,
+        avatarsDir
+      ].forEach(dir => {
+        if (!fs.existsSync(dir)) {
+          try {
+            fs.mkdirSync(dir, { recursive: true });
+            console.log(`Diretório criado: ${dir}`);
+          } catch (dirError) {
+            console.error(`Erro ao criar diretório ${dir}:`, dirError);
+          }
+        }
+      });
+      
+      // Otimiza a imagem
+      console.log("Otimizando imagem para upload local...");
+      let optimizedBuffer: Buffer;
+      
+      try {
+        optimizedBuffer = await this.optimizeImage(file.buffer, {
+          width: options.width || 400,
+          height: options.height || 400,
+          quality: options.quality || 85,
+          format: "webp"
+        });
+        console.log(`Imagem otimizada: ${optimizedBuffer.length} bytes (${Math.round(optimizedBuffer.length/1024)}KB)`);
+      } catch (optimizeError) {
+        console.error("Erro ao otimizar imagem:", optimizeError);
+        // Em caso de falha na otimização, usar o buffer original
+        optimizedBuffer = file.buffer;
+        console.log("Usando buffer original por falha na otimização");
+      }
+      
+      // Gera nome de arquivo único baseado no ID do usuário e timestamp
+      const timestamp = Date.now();
+      const uniqueId = randomUUID().slice(0, 8);
+      const filename = userId
+        ? `avatar_${userId}_${timestamp}.webp`
+        : `avatar_temp_${uniqueId}_${timestamp}.webp`;
+      
+      // Caminho completo do arquivo
+      const filePath = path.join(avatarsDir, filename);
+      
+      // Salva o arquivo otimizado
+      fs.writeFileSync(filePath, optimizedBuffer);
+      
+      console.log(`Avatar salvo com sucesso: ${filePath}`);
+      
+      // URL relativa para o avatar
+      const avatarUrl = `/uploads/avatars/${filename}`;
+      console.log(`URL do avatar: ${avatarUrl}`);
+      
+      return {
+        imageUrl: avatarUrl,
+        storageType: "local_avatar"
+      };
+    } catch (error) {
+      console.error("Erro fatal no upload local de avatar:", error);
+      return this.generatePlaceholderAvatar(userId?.toString() || 'User');
+    }
   }
   
   /**
