@@ -34,6 +34,8 @@ export default function ResetPasswordForm() {
   const [resetSuccess, setResetSuccess] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [tokenError, setTokenError] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Inicializando o formulário
   const form = useForm<ResetFormValues>({
@@ -279,9 +281,6 @@ export default function ResetPasswordForm() {
       </Card>
     );
   }
-
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   return (
     <Card className="w-full border border-primary/20">
