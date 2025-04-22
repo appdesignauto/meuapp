@@ -1,3 +1,23 @@
+/**
+ * SOLUÇÃO PARA O PROBLEMA DE UPLOAD DE AVATAR NO AMBIENTE DE PRODUÇÃO
+ * 
+ * Este script contém um conjunto de soluções para resolver o problema onde o frontend envia
+ * requisições para "/api/users/profile-image" mas o backend está configurado para 
+ * receber em outras rotas ("/api/user/avatar" e "/api/direct-avatar").
+ * 
+ * INSTRUÇÕES DE IMPLANTAÇÃO:
+ * 1. Criar o arquivo server/routes/users-profile-image.ts com o conteúdo abaixo
+ * 2. Modificar o arquivo server/routes.ts para importar e registrar a nova rota
+ * 
+ * A solução permite que os uploads de avatar funcionem mesmo quando o usuário enfrenta
+ * problemas de autenticação, utilizando múltiplos fallbacks.
+ */
+
+// ============================================================================
+// PASSO 1: Criar o arquivo server/routes/users-profile-image.ts
+// ============================================================================
+
+/*
 import express, { Request, Response } from 'express';
 import multer from 'multer';
 import path from 'path';
@@ -108,3 +128,73 @@ router.post('/api/users/profile-image', upload.single('image'), async (req: Requ
 });
 
 export default router;
+*/
+
+// ============================================================================
+// PASSO 2: Atualizar o arquivo server/routes.ts
+// ============================================================================
+
+// A. Adicionar a importação da nova rota:
+/*
+import usersProfileImageRouter from './routes/users-profile-image'; // Compatibilidade frontend/produção
+*/
+
+// B. Registrar a nova rota (após as linhas que registram avatarUploadRouter e directAvatarRouter):
+/*
+  // Registrar rotas para upload de avatar
+  app.use(avatarUploadRouter);
+  app.use(directAvatarRouter); // Nova rota direta para upload de avatar
+  app.use(usersProfileImageRouter); // Compatibilidade com frontend (rota /api/users/profile-image)
+*/
+
+// ============================================================================
+// NOTA ESPECIAL:
+// Se o upload de avatar falhar mesmo com esta solução, você pode tentar 
+// fazer upload diretamente para o Supabase usando:
+// ============================================================================
+
+/*
+// No frontend:
+import { createClient } from '@supabase/supabase-js';
+
+// Inicializar cliente Supabase
+const supabaseUrl = 'https://dcodfuzoxmddmpvowhap.supabase.co'; // Substitua com seu URL Supabase real
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // Substitua com sua chave anon
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Função para upload de avatar
+async function uploadAvatarDirectly(file, userId) {
+  try {
+    const filePath = `user_${userId}/avatar_${Date.now()}.png`;
+    
+    // Upload diretamente para o Supabase
+    const { data, error } = await supabase.storage
+      .from('avatars')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: true
+      });
+      
+    if (error) throw error;
+    
+    // Obter URL pública
+    const { data: publicUrlData } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(filePath);
+      
+    // Atualizar URL no banco de dados
+    await fetch('/api/user/update-avatar-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageUrl: publicUrlData.publicUrl })
+    });
+    
+    return publicUrlData.publicUrl;
+  } catch (error) {
+    console.error('Erro no upload direto:', error);
+    throw error;
+  }
+}
+*/
+
+console.log('Script de correção para upload de avatar carregado. Siga as instruções para implementar a solução.');
