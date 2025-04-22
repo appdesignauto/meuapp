@@ -25,7 +25,13 @@ export default function ResetPasswordPage() {
 
   return (
     <AuthLayout>
-      <div className="mx-auto w-full max-w-md p-4">
+      <div className="mx-auto w-full max-w-md p-6 md:p-8">
+        <div className="mb-6 text-center">
+          <h1 className="text-3xl font-bold tracking-tight">Nova senha</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Crie uma senha forte para proteger sua conta
+          </p>
+        </div>
         <ResetPasswordForm />
       </div>
     </AuthLayout>
