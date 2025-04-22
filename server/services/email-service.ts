@@ -215,7 +215,7 @@ class EmailService {
         to,
         subject,
         htmlContent,
-        textContent
+        textContent: finalTextContent || ''
       };
 
       // Verifica se está em modo de desenvolvimento para simulação
