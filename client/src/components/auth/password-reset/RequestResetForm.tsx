@@ -97,8 +97,8 @@ export default function RequestResetForm() {
       const timeDisplay = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
       
       toast({
-        title: 'Aguarde um momento',
-        description: `Nova solicitação permitida em ${timeDisplay}. Por favor, aguarde.`,
+        title: 'E-mail já enviado',
+        description: `Um e-mail de redefinição já foi enviado. Verifique sua caixa de entrada. Nova solicitação permitida em ${timeDisplay}.`,
         variant: 'destructive',
       });
       return;
@@ -153,7 +153,7 @@ export default function RequestResetForm() {
                   Aguarde um momento
                 </AlertTitle>
                 <AlertDescription className="text-xs">
-                  Você poderá solicitar outro e-mail em {formatCountdown(countdown)} 
+                  Um e-mail já foi enviado. Aguarde {formatCountdown(countdown)} para solicitar outro. 
                 </AlertDescription>
               </Alert>
               <div className="space-y-1">
@@ -222,7 +222,7 @@ export default function RequestResetForm() {
                   Aguarde um momento
                 </AlertTitle>
                 <AlertDescription className="text-xs">
-                  Você poderá solicitar outro e-mail em {formatCountdown(countdown)} 
+                  Um e-mail já foi enviado. Aguarde {formatCountdown(countdown)} para solicitar outro. 
                 </AlertDescription>
               </Alert>
               <div className="space-y-1">
