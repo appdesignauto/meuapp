@@ -150,10 +150,21 @@ export default function ResetPasswordForm() {
         localStorage.setItem('reset_email', data.credentials.email);
       }
       
-      // Redirecionar para tela de login após um delay
+      // Usar location.replace para substituir a página atual no histórico
+      // e evitar problemas com a navegação e cache
       setTimeout(() => {
-        window.location.href = '/login';
-      }, 3000);
+        // Força limpeza de cache antes do redirecionamento
+        sessionStorage.clear();
+        localStorage.setItem('just_reset_password', 'true');
+        
+        // Usa replace em vez de href para melhor comportamento de navegação
+        window.location.replace('/login');
+        
+        // Garante que a página será recarregada completamente caso necessite
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+      }, 2500);
     },
     onError: (error: Error) => {
       toast({
@@ -218,17 +229,26 @@ export default function ResetPasswordForm() {
         <CardFooter className="flex flex-col space-y-4">
           <Button 
             variant="default"
-            onClick={() => window.location.href = '/password/forgot'}
+            onClick={() => {
+              sessionStorage.clear();
+              window.location.replace('/password/forgot');
+            }}
             className="w-full"
           >
             <Key className="mr-2 h-4 w-4" />
             Solicitar novo link
           </Button>
           <div className="text-center text-sm">
-            <Link href="/login" className="text-primary hover:underline inline-flex items-center">
+            <button 
+              onClick={() => {
+                sessionStorage.clear();
+                window.location.replace('/login');
+              }}
+              className="text-primary hover:underline inline-flex items-center bg-transparent border-none cursor-pointer text-sm"
+            >
               <ArrowLeft className="mr-1 h-3 w-3" />
               Voltar para o login
-            </Link>
+            </button>
           </div>
         </CardFooter>
       </Card>
@@ -258,7 +278,11 @@ export default function ResetPasswordForm() {
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <Button 
-            onClick={() => window.location.href = '/login'}
+            onClick={() => {
+              sessionStorage.clear();
+              localStorage.setItem('just_reset_password', 'true');
+              window.location.replace('/login');
+            }}
             className="w-full"
           >
             Ir para o login agora
@@ -381,10 +405,16 @@ export default function ResetPasswordForm() {
               )}
             </Button>
             <div className="text-center text-sm">
-              <Link href="/login" className="text-primary hover:underline inline-flex items-center">
+              <button 
+                onClick={() => {
+                  sessionStorage.clear();
+                  window.location.replace('/login');
+                }}
+                className="text-primary hover:underline inline-flex items-center bg-transparent border-none cursor-pointer text-sm"
+              >
                 <ArrowLeft className="mr-1 h-3 w-3" />
                 Voltar para o login
-              </Link>
+              </button>
             </div>
           </CardFooter>
         </form>
