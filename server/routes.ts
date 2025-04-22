@@ -42,8 +42,18 @@ import passwordResetRouter from './routes/password-reset';
 import { setupTestR2DirectRoute } from './routes/test-r2-direct';
 import dateTestRouter from './date-test-router';
 import supabeDiagnosticsRouter from './routes/supabase-diagnostics';
+import emergencyProfileRouter from "./routes/emergency-profile";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Health Check - deve ser a primeira rota
+  app.get('/', (req, res) => {
+    res.status(200).json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development'
+    });
+  });
+  
   // Rota de debug para testar getUserByUsername
   app.get('/api/debug/getUserByUsername/:username', async (req, res) => {
     try {
@@ -3860,6 +3870,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Rota flexível para atualização de perfil
   app.use(userProfileRouter);
+  app.use(emergencyProfileRouter);
 
   const httpServer = createServer(app);
   

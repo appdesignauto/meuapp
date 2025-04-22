@@ -44,68 +44,44 @@ app.use((req, res, next) => {
   next();
 });
 
-(async () => {
+// Configurar CORS para desenvolvimento
+if (process.env.NODE_ENV === 'development') {
+  app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,PATCH');
+    res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+    next();
+  });
+}
+
+async function startServer() {
   try {
     // Verificar configuração de ambiente (migrado para Supabase Storage)
     validateR2Environment();
     
-    // Inicializar o banco de dados com dados
+    // Inicializar banco de dados
     await initializeDatabase();
-    console.log("Banco de dados inicializado com sucesso");
+    console.log('✅ Banco de dados inicializado');
     
-    // Criar usuário administrador
+    // Criar usuário admin se necessário
     await createAdminUser();
     
-    // Configurar verificação diária de assinaturas expiradas (executar a cada 12 horas)
-    const VERIFICAR_ASSINATURAS_INTERVALO = 12 * 60 * 60 * 1000; // 12 horas em milissegundos
+    // Registrar rotas
+    const server = await registerRoutes(app);
     
-    // Iniciar verificador de assinaturas expiradas
-    setInterval(async () => {
-      try {
-        console.log("Verificando assinaturas expiradas...");
-        const downgradedCount = await SubscriptionService.checkExpiredSubscriptions();
-        console.log(`Verificação concluída: ${downgradedCount} usuários rebaixados para free`);
-      } catch (error) {
-        console.error("Erro ao verificar assinaturas expiradas:", error);
-      }
-    }, VERIFICAR_ASSINATURAS_INTERVALO);
+    // Configurar porta
+    const port = parseInt(process.env.PORT || '5000', 10);
     
-    // Executar verificação inicial na inicialização do servidor
-    console.log("Executando verificação inicial de assinaturas expiradas...");
-    const initialDowngradedCount = await SubscriptionService.checkExpiredSubscriptions();
-    console.log(`Verificação inicial concluída: ${initialDowngradedCount} usuários rebaixados para free`);
+    // Ouvir em todas as interfaces
+    server.listen(port, '0.0.0.0', () => {
+      console.log(`🚀 Servidor rodando em http://0.0.0.0:${port}`);
+    });
+
+    return server;
   } catch (error) {
-    console.error("Erro ao inicializar banco de dados:", error);
+    console.error('❌ Erro ao iniciar servidor:', error);
+    process.exit(1);
   }
-  
-  const server = await registerRoutes(app);
+}
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    res.status(status).json({ message });
-    throw err;
-  });
-
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
-
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
-})();
+startServer();
