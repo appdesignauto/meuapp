@@ -182,7 +182,7 @@ emailDiagnosticsRouter.post('/test-password-reset', requireAdmin, async (req: Re
     }
     
     // Gerar um link de redefinição de testes
-    const testResetUrl = `https://design-auto-hub-1-appdesignauto.replit.app/reset-password?token=test-token-${Date.now()}`;
+    const testResetUrl = `https://design-auto-hub-1-appdesignauto.replit.app/password/reset?token=test-token-${Date.now()}`;
     
     // Enviar o email de teste
     const result = await emailService.sendPasswordResetEmail(email, {
