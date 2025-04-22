@@ -1,0 +1,69 @@
+Objetivo:
+Garantir que os uploads funcionem 100% em produção, com segurança, estabilidade e sem gambiarras.
+
+🧭 Recomendação em 3 níveis:
+✅ 1. AÇÃO IMEDIATA (HOTFIX CONTROLADO)
+Use seu emergency-auth-bypass.js com validação segura.
+
+🛠 Inclua no script:
+
+Verificação se o arquivo está indo para userId/filename
+
+Confirmação se auth.uid() ou o ID enviado corresponde ao path
+
+Log de tentativas para rastrear abusos
+
+🧱 Com isso, você garante que o sistema siga funcionando em produção sem quebrar a segurança.
+
+🧰 2. INVESTIGAÇÃO DE PRODUÇÃO
+Revise os pontos mais críticos do ambiente:
+
+✅ Variáveis no Replit (SUPABASE_URL, SUPABASE_ANON_KEY)
+
+✅ Sessão ativa com supabase.auth.getSession()
+
+✅ Bucket existente com mesmo nome
+
+✅ Caminho de upload começa com user.id/ conforme suas policies
+
+🔎 Adicione logs para verificar se a sessão do usuário está realmente ativa na produção.
+
+🧱 3. AJUSTE ESTRUTURAL (RECOMENDADO)
+Implemente um middleware de autenticação flexível no seu backend ou frontend que:
+
+Valide via auth.getSession() (normal)
+
+Como fallback, aceite token + userId na query string
+
+Valide que o arquivo está indo para a pasta correta (auth.uid() === folderName)
+
+Gere logs de erro ou sucesso
+
+✅ Isso elimina a necessidade de rotas "emergency" a longo prazo e mantém segurança.
+
+🧩 Se quiser uma rota segura de upload agora, aqui está um exemplo pronto (Express):
+ts
+Copiar
+Editar
+app.post("/upload-avatar", async (req, res) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  const userId = req.body.userId;
+
+  if (!token || !userId) return res.status(401).json({ error: "Não autorizado." });
+
+  const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const { data: { user }, error } = await supabaseClient.auth.getUser(token);
+
+  if (error || user.id !== userId) return res.status(403).json({ error: "Usuário inválido." });
+
+  const file = req.files?.avatar;
+  const path = `${user.id}/avatar.png`;
+
+  const { error: uploadError } = await supabaseClient.storage.from("avatars").upload(path, file, {
+    upsert: true
+  });
+
+  if (uploadError) return res.status(500).json({ error: uploadError.message });
+
+  res.json({ message: "Avatar atualizado com sucesso!" });
+});
