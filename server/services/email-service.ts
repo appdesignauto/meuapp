@@ -1,4 +1,5 @@
 import fetch from 'node-fetch';
+import { createHash } from 'crypto';
 
 // Chave da API do Brevo
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
@@ -207,6 +208,9 @@ class EmailService {
         }
       }
       
+      // Incluir messageId personalizado para rastreamento
+      const customMessageId = `design-auto-${Date.now()}-${createHash('md5').update(to[0].email + subject).digest('hex').substring(0, 8)}`;
+      
       const payload = {
         sender: {
           name: sender.name,
@@ -215,7 +219,12 @@ class EmailService {
         to,
         subject,
         htmlContent,
-        textContent: finalTextContent || ''
+        textContent: finalTextContent || '',
+        headers: {
+          'X-Custom-MessageId': customMessageId,
+          'X-App-Name': 'DesignAuto',
+          'X-Environment': process.env.NODE_ENV || 'development'
+        }
       };
 
       // Verifica se está em modo de desenvolvimento para simulação
@@ -425,7 +434,13 @@ class EmailService {
    */
   public async sendPasswordResetEmail(email: string, data: {userName: string, resetUrl: string}): Promise<boolean> {
     try {
-      this.log(`📧 Preparando e-mail de redefinição de senha para ${email} usando remetente de suporte`);
+      // Gerar um ID único para rastreamento da solicitação
+      const requestId = createHash('md5').update(`${email}-${Date.now()}`).digest('hex').substring(0, 8);
+      
+      this.log(`📧 [ID:${requestId}] Preparando e-mail de redefinição de senha para ${email} usando remetente de suporte`);
+      
+      // Adicionar parâmetro de rastreamento ao URL para debug
+      const resetUrlWithTracking = `${data.resetUrl}&_debugid=${requestId}`;
       
       const htmlContent = `
         <html>
@@ -433,10 +448,10 @@ class EmailService {
             <h1>Olá ${data.userName},</h1>
             <p>Recebemos uma solicitação para redefinir sua senha.</p>
             <p>Clique no botão abaixo para criar uma nova senha:</p>
-            <!-- Link direto sem rastreamento -->
-            <a href="${data.resetUrl}" style="padding: 12px 24px; background-color: #4285f4; color: white; text-decoration: none; border-radius: 4px; display: inline-block; margin: 20px 0;">Redefinir Senha</a>
+            <!-- Link direto com ID de rastreamento para diagnóstico -->
+            <a href="${resetUrlWithTracking}" style="padding: 12px 24px; background-color: #4285f4; color: white; text-decoration: none; border-radius: 4px; display: inline-block; margin: 20px 0;">Redefinir Senha</a>
             <p>Se o botão acima não funcionar, copie e cole o link a seguir no seu navegador:</p>
-            <p style="word-break: break-all; font-family: monospace; background-color: #f5f5f5; padding: 10px; border-radius: 4px;">${data.resetUrl}</p>
+            <p style="word-break: break-all; font-family: monospace; background-color: #f5f5f5; padding: 10px; border-radius: 4px;">${resetUrlWithTracking}</p>
             <p>Este link expira em 1 hora.</p>
             <p>Se você não solicitou esta mudança, por favor ignore este e-mail.</p>
             <p>Atenciosamente,<br>Equipe Design Auto</p>
@@ -444,21 +459,43 @@ class EmailService {
         </html>
       `;
       
+      // Criar versão em texto plano explícita para garantir que os links funcionem
+      const textContent = `
+Olá ${data.userName},
+
+Recebemos uma solicitação para redefinir sua senha.
+
+Para criar uma nova senha, acesse o link abaixo:
+${resetUrlWithTracking}
+
+Este link expira em 1 hora.
+
+Se você não solicitou esta mudança, por favor ignore este e-mail.
+
+Atenciosamente,
+Equipe Design Auto
+      `;
+      
       // Usar explicitamente o remetente de suporte para senhas
       const supportSender = SENDERS.suporte;
       const subject = 'Redefinição de Senha - Design Auto';
+      
+      this.log(`📧 [ID:${requestId}] Enviando e-mail para ${email} com URL de redefinição`);
       
       const result = await this.sendBrevoEmail(
         supportSender, 
         [{ email, name: data.userName }], 
         subject, 
-        htmlContent
+        htmlContent,
+        textContent
       );
       
       if (result.success) {
-        this.log(`✅ E-mail de redefinição de senha enviado com sucesso de ${supportSender.email}: ${result.messageId}`);
+        this.log(`✅ [ID:${requestId}] E-mail de redefinição de senha enviado com sucesso de ${supportSender.email}: ${result.messageId}`);
+        // Registrar o URL de redefinição no log para diagnóstico
+        this.log(`🔗 [ID:${requestId}] URL de redefinição: ${resetUrlWithTracking}`);
       } else {
-        this.log(`❌ Falha ao enviar e-mail de redefinição de senha para ${email}`);
+        this.log(`❌ [ID:${requestId}] Falha ao enviar e-mail de redefinição de senha para ${email}`);
       }
       
       return result.success;

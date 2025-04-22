@@ -15,7 +15,14 @@ export class PasswordResetService {
    * @returns Token de redefinição
    */
   private generateToken(): string {
-    return randomBytes(32).toString('hex');
+    // Gera token hexadecimal único
+    const tokenBase = randomBytes(32).toString('hex');
+    
+    // Adiciona timestamp para diagnóstico e rastreamento
+    const timestamp = Date.now();
+    
+    // Concatena para ter um token com timestamp embutido (útil para diagnóstico)
+    return `${tokenBase}.${timestamp}`;
   }
 
   /**
@@ -62,10 +69,19 @@ export class PasswordResetService {
         ? 'https://design-auto-hub-1-appdesignauto.replit.app'
         : 'http://localhost:5000';
       
+      // Extrair o timestamp do token para diagnóstico
+      const tokenParts = token.split('.');
+      const tokenTimestamp = tokenParts.length > 1 ? tokenParts[1] : 'unknown';
+      
       console.log(`[PasswordResetService] Gerando link de redefinição com base URL: ${baseUrl}`);
+      console.log(`[PasswordResetService] Token gerado em: ${new Date(parseInt(tokenTimestamp) || Date.now()).toISOString()}`);
       
       // Caminho direto para a página de reset
       const resetUrl = `${baseUrl}/reset-password?token=${token}`;
+      
+      // Registrar detalhes da solicitação para diagnóstico
+      console.log(`[PasswordResetService] Solicitação de redefinição para usuário ID: ${user.id}, email: ${user.email}`);
+      console.log(`[PasswordResetService] Token expira em: ${expiration.toISOString()}`);
       
       await emailService.sendPasswordResetEmail(user.email, {
         userName: user.name || user.username,
@@ -93,6 +109,19 @@ export class PasswordResetService {
    */
   async resetPassword(token: string, newPassword: string): Promise<{ success: boolean; message: string }> {
     try {
+      // Extrair metadados do token para diagnóstico
+      const tokenParts = token.split('.');
+      const tokenBase = tokenParts[0] || token;
+      const tokenTimestamp = tokenParts[1] ? new Date(parseInt(tokenParts[1])).toISOString() : 'unknown';
+      
+      console.log(`[PasswordResetService] Processando redefinição de senha com token: ${tokenBase.substring(0, 8)}... (gerado em: ${tokenTimestamp})`);
+      
+      // Extrair parâmetro de debug se presente
+      const debugId = token.includes('_debugid=') ? token.split('_debugid=')[1] : 'none';
+      if (debugId !== 'none') {
+        console.log(`[PasswordResetService] Parâmetro de diagnóstico presente: ${debugId}`);
+      }
+      
       // Busca usuário com o token fornecido e que ainda não expirou
       const [user] = await db
         .select()
@@ -100,19 +129,26 @@ export class PasswordResetService {
         .where(eq(users.resetpasswordtoken, token));
 
       if (!user) {
+        console.log(`[PasswordResetService] Token inválido: ${tokenBase.substring(0, 8)}... não encontrado no banco de dados`);
         return { 
           success: false, 
           message: 'Token inválido ou expirado. Solicite um novo link de redefinição de senha.'
         };
       }
 
+      console.log(`[PasswordResetService] Token válido para usuário ID: ${user.id}, email: ${user.email}`);
+      
       // Verifica se o token ainda é válido
       if (user.resetpasswordexpires && new Date() > new Date(user.resetpasswordexpires)) {
+        console.log(`[PasswordResetService] Token expirado: Expirou em ${new Date(user.resetpasswordexpires).toISOString()}`);
         return { 
           success: false, 
           message: 'O link de redefinição de senha expirou. Solicite um novo.'
         };
       }
+      
+      console.log(`[PasswordResetService] Token válido e não expirado. Data de expiração: ${new Date(user.resetpasswordexpires || Date.now()).toISOString()}`);
+      
 
       // Gera hash da nova senha
       const hashedPassword = await hashPassword(newPassword);

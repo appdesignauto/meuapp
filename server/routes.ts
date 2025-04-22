@@ -34,7 +34,7 @@ import avatarUploadRouter from './routes/avatar-upload';
 import userProfileRouter from './routes/user-profile';
 import emailVerificationRouter from './routes/email-verification';
 import emailTestRouter from './routes/email-test';
-import emailDiagnosticsRouter from './routes/email-diagnostics';
+import { emailDiagnosticsRouter } from './routes/email-diagnostics';
 import passwordResetRouter from './routes/password-reset';
 import { setupTestR2DirectRoute } from './routes/test-r2-direct';
 
