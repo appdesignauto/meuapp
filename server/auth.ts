@@ -63,6 +63,15 @@ async function comparePasswords(supplied: string, stored: string): Promise<boole
 }
 
 export function setupAuth(app: Express) {
+  // Lista de domínios confiáveis para cookies
+  const TRUSTED_DOMAINS = [
+    'localhost',
+    'designauto.com.br',
+    'www.designauto.com.br',
+    'designauto-app.replit.app',
+    'designauto-app.repl.co'
+  ];
+
   // Configure session
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "designauto-secret-key",
@@ -70,7 +79,10 @@ export function setupAuth(app: Express) {
     saveUninitialized: false,
     cookie: { 
       secure: process.env.NODE_ENV === "production",
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      sameSite: process.env.NODE_ENV === "production" ? 'none' : 'lax',
+      domain: process.env.NODE_ENV === "production" ? '.designauto.com.br' : undefined,
+      path: '/'
     },
     store: new PostgresSessionStore({
       pool,
