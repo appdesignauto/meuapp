@@ -38,6 +38,7 @@ import { emailDiagnosticsRouter } from './routes/email-diagnostics';
 import passwordResetRouter from './routes/password-reset';
 import { setupTestR2DirectRoute } from './routes/test-r2-direct';
 import dateTestRouter from './date-test-router';
+import supabeDiagnosticsRouter from './routes/supabase-diagnostics';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Rota de debug para testar getUserByUsername

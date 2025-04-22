@@ -20,10 +20,16 @@ const router = express.Router();
 // Configurar diretório temporário para os uploads
 const tempDir = path.join(process.cwd(), 'temp');
 if (!fs.existsSync(tempDir)) {
-  fs.mkdirSync(tempDir, { recursive: true });
+  try {
+    fs.mkdirSync(tempDir, { recursive: true });
+    console.log(`Diretório temporário criado: ${tempDir}`);
+  } catch (error) {
+    console.error(`Erro ao criar diretório temporário:`, error);
+    // Continuar mesmo com erro, o multer tentará criar o diretório novamente
+  }
 }
 
-// Configurar o Multer para upload temporário
+// Configurar o Multer para upload temporário (com manipulação de erro)
 const upload = multer({ 
   dest: tempDir,
   limits: {
