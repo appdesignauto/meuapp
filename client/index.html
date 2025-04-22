@@ -1,13 +1,58 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>DesignAuto - Artes Automotivas Profissionais</title>
+    <meta name="description" content="Plataforma com mais de 3.000 artes automotivas editáveis para profissionais do setor">
+    <!-- Adicionar favicon e meta tags -->
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <!-- Evitar problemas com CORS e caching -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <!-- Adicionar pré-conectores para APIs -->
+    <link rel="preconnect" href="https://0f7a409b79bd29f7cf3970f077da05ee.r2.cloudflarestorage.com" />
+    <link rel="preconnect" href="https://vwepqryqwqatbloesggw.supabase.co" />
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-    <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
-    <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
+    <div id="root">
+      <!-- Adicionar fallback de carregamento -->
+      <div style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+        <img src="/logo-designauto.png" alt="DesignAuto" style="max-width: 200px; margin-bottom: 20px;" onerror="this.style.display='none'" />
+        <div style="display: flex; justify-content: center; align-items: center;">
+          <div style="border: 3px solid #f3f3f3; border-top: 3px solid #0070f3; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin-right: 15px;"></div>
+          <p>Carregando DesignAuto...</p>
+        </div>
+      </div>
+      <style>
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      </style>
+    </div>
+    <!-- Carregar a aplicação a partir de um caminho absoluto -->
+    <script type="module" src="/client/src/main.tsx"></script>
+    <!-- Script para detector de problemas -->
+    <script>
+      // Adicionar fallback para problemas de carregamento
+      window.addEventListener('error', function(e) {
+        console.error('Erro detectado:', e.message);
+        if (e.message.includes('@vitejs/plugin-react')) {
+          console.log('Tentando carregar o aplicativo diretamente...');
+          window.location.href = '/';
+        }
+      });
+      
+      // Verificar se o aplicativo carregou em 8 segundos
+      setTimeout(function() {
+        const appRoot = document.getElementById('root');
+        if (appRoot && appRoot.childNodes.length <= 1) {
+          console.log('Aplicativo não carregou corretamente, redirecionando...');
+          window.location.href = '/';
+        }
+      }, 8000);
+    </script>
   </body>
 </html>

@@ -17,6 +17,16 @@ app.use(express.static(path.join(process.cwd(), 'public')));
 // Adicionar rota estática para servir cliente diretamente
 app.use('/client', express.static(path.join(process.cwd(), 'client')));
 
+// Servir o arquivo index.html diretamente na rota /client/
+app.get('/client/', (req, res) => {
+  res.sendFile(path.join(process.cwd(), 'client', 'index.html'));
+});
+
+// Servir o arquivo main.tsx na rota src/main.tsx para resolver problemas do Vite
+app.get('/src/main.tsx', (req, res) => {
+  res.sendFile(path.join(process.cwd(), 'client', 'src', 'main.tsx'));
+});
+
 // Redirecionar raiz para o cliente
 app.get('/', (req, res) => {
   res.redirect('/client/');
