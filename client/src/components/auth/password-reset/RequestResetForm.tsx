@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { Link, useLocation } from 'wouter';
-import { Loader2, Mail, ArrowLeft, CheckCircle, Clock } from 'lucide-react';
+import { Loader2, Mail, ArrowLeft, CheckCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function RequestResetForm() {
@@ -15,21 +15,13 @@ export default function RequestResetForm() {
   const [email, setEmail] = useState('');
   const [_, setLocation] = useLocation();
   const [emailSent, setEmailSent] = useState(false);
-  const [isInCooldown, setIsInCooldown] = useState(false);
   
   const { mutate, isPending } = useMutation({
     mutationFn: async (email: string) => {
       const response = await apiRequest('POST', '/api/password-reset/request', { email });
       
       if (!response.ok) {
-        // Verifica se é erro de cooldown (retorna 429) ou outro erro
         const data = await response.json();
-        
-        // Se for 429, define o estado de cooldown
-        if (response.status === 429) {
-          setIsInCooldown(true);
-        }
-        
         throw new Error(data.message || 'Falha ao enviar o e-mail de recuperação');
       }
       
@@ -46,39 +38,16 @@ export default function RequestResetForm() {
       });
     },
     onError: (error: any) => {
-      // O estado de cooldown já foi definido no mutationFn, se necessário
-      
-      // Sempre mostra o alerta amarelo para mensagens de cooldown
-      if (isInCooldown) {
-        toast({
-          title: 'Atenção',
-          description: error.message,
-          variant: 'default',
-          className: "bg-amber-50 border-amber-300 text-amber-800",
-        });
-      } else {
-        toast({
-          title: 'Erro',
-          description: error.message,
-          variant: 'destructive',
-        });
-      }
+      toast({
+        title: 'Erro',
+        description: error.message,
+        variant: 'destructive',
+      });
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Verifica se está em cooldown
-    if (isInCooldown) {
-      toast({
-        title: 'Atenção',
-        description: 'Um e-mail já foi enviado e chegará em instantes. Caso não chegue em até 3 minutos, clique para solicitar novamente.',
-        variant: 'default',
-        className: "bg-amber-50 border-amber-300 text-amber-800",
-      });
-      return;
-    }
     
     if (!email) {
       toast({
@@ -113,27 +82,12 @@ export default function RequestResetForm() {
               3. Crie uma nova senha segura
             </AlertDescription>
           </Alert>
-          
-          {isInCooldown && (
-            <div className="space-y-2 mt-4">
-              <Alert variant="default" className="bg-amber-50 border-amber-300 text-amber-800">
-                <Clock className="h-4 w-4 mr-2" />
-                <AlertTitle className="text-sm font-medium inline-flex items-center">
-                  Atenção
-                </AlertTitle>
-                <AlertDescription className="text-xs">
-                  Um e-mail já foi enviado e chegará em instantes. Caso não chegue em até 3 minutos, clique para solicitar novamente.
-                </AlertDescription>
-              </Alert>
-            </div>
-          )}
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <Button 
             variant="outline"
             onClick={() => setEmailSent(false)}
             className="w-full"
-            disabled={false}
           >
             <Mail className="mr-2 h-4 w-4" />
             Tentar novamente
@@ -177,23 +131,9 @@ export default function RequestResetForm() {
               autoComplete="email"
             />
           </div>
-          {isInCooldown ? (
-            <div className="space-y-2">
-              <Alert variant="default" className="bg-amber-50 border-amber-300 text-amber-800">
-                <Clock className="h-4 w-4 mr-2" />
-                <AlertTitle className="text-sm font-medium inline-flex items-center">
-                  Atenção
-                </AlertTitle>
-                <AlertDescription className="text-xs">
-                  Um e-mail já foi enviado e chegará em instantes. Caso não chegue em até 3 minutos, clique para solicitar novamente.
-                </AlertDescription>
-              </Alert>
-            </div>
-          ) : (
-            <p className="text-xs text-muted-foreground">
-              Enviaremos um link para você redefinir a senha da sua conta.
-            </p>
-          )}
+          <p className="text-xs text-muted-foreground">
+            Enviaremos um link para você redefinir a senha da sua conta.
+          </p>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <Button 
