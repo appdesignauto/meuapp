@@ -30,7 +30,7 @@ export class PasswordResetService {
    * @param email Email do usuário
    * @returns Sucesso da operação e mensagens
    */
-  async createResetToken(email: string): Promise<{ success: boolean; message: string }> {
+  async createResetToken(email: string): Promise<{ success: boolean; message: string; cooldown?: number }> {
     try {
       // Verifica se o usuário existe
       const [user] = await db
@@ -45,6 +45,25 @@ export class PasswordResetService {
           message: 'Se o email estiver cadastrado, você receberá um link para redefinir a senha'
         };
       }
+      
+      // Verificar se o usuário já solicitou recentemente (intervalo de 3 minutos)
+      const COOLDOWN_SECONDS = 180; // 3 minutos
+      if (user.lastresetrequest) {
+        const lastRequest = new Date(user.lastresetrequest);
+        const now = new Date();
+        const diffSeconds = Math.floor((now.getTime() - lastRequest.getTime()) / 1000);
+        
+        if (diffSeconds < COOLDOWN_SECONDS) {
+          const remainingSeconds = COOLDOWN_SECONDS - diffSeconds;
+          console.log(`[PasswordResetService] Solicitação muito recente para ${email}. Última: ${lastRequest.toISOString()}, Restante: ${remainingSeconds}s`);
+          
+          return {
+            success: false,
+            message: `Aguarde alguns instantes antes de solicitar novamente. Uma nova solicitação poderá ser feita em breve.`,
+            cooldown: remainingSeconds
+          };
+        }
+      }
 
       // Gera token único
       const token = this.generateToken();
@@ -58,7 +77,8 @@ export class PasswordResetService {
         .update(users)
         .set({
           resetpasswordtoken: token,
-          resetpasswordexpires: expiration
+          resetpasswordexpires: expiration,
+          lastresetrequest: new Date() // Registra o momento desta solicitação
         })
         .where(eq(users.id, user.id));
 
