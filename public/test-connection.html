@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teste de Conexão DesignAuto</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f2f5;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: #333;
+    }
+    .container {
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+      width: 90%;
+      max-width: 600px;
+      text-align: center;
+    }
+    h1 {
+      color: #444;
+      margin-bottom: 20px;
+    }
+    .logo {
+      margin-bottom: 20px;
+      max-width: 200px;
+    }
+    .status {
+      display: inline-block;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+    .status.online {
+      background-color: #e6f7e9;
+      color: #28a745;
+      border: 1px solid #28a745;
+    }
+    .status.offline {
+      background-color: #feeeef;
+      color: #dc3545;
+      border: 1px solid #dc3545;
+    }
+    .details {
+      margin-top: 20px;
+      text-align: left;
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 14px;
+      overflow-x: auto;
+    }
+    button {
+      background-color: #0066ff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      margin-top: 20px;
+      transition: background-color 0.2s;
+    }
+    button:hover {
+      background-color: #0055cc;
+    }
+    .link {
+      display: block;
+      margin-top: 20px;
+      color: #0066ff;
+      text-decoration: none;
+    }
+    .link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>DesignAuto - Diagnóstico de Conexão</h1>
+    <div id="status" class="status">Verificando conexão...</div>
+    <div id="details" class="details">Carregando detalhes do servidor...</div>
+    <button id="check-btn">Verificar Novamente</button>
+    <a href="/" class="link">Voltar para a Página Principal</a>
+  </div>
+
+  <script>
+    const statusElement = document.getElementById('status');
+    const detailsElement = document.getElementById('details');
+    const checkButton = document.getElementById('check-btn');
+
+    async function checkServerStatus() {
+      statusElement.className = 'status';
+      statusElement.textContent = 'Verificando conexão...';
+      detailsElement.textContent = 'Carregando detalhes do servidor...';
+      
+      try {
+        const response = await fetch('/health');
+        if (response.ok) {
+          const data = await response.json();
+          statusElement.className = 'status online';
+          statusElement.textContent = '✓ Servidor Online';
+          
+          detailsElement.innerHTML = `
+            <strong>Status:</strong> ${data.status}<br>
+            <strong>Ambiente:</strong> ${data.environment}<br>
+            <strong>Timestamp:</strong> ${data.timestamp}<br>
+            <strong>Mensagem:</strong> ${data.message}
+          `;
+        } else {
+          statusElement.className = 'status offline';
+          statusElement.textContent = '✗ Servidor com Problemas';
+          detailsElement.textContent = `Erro: O servidor respondeu com status ${response.status}`;
+        }
+      } catch (error) {
+        statusElement.className = 'status offline';
+        statusElement.textContent = '✗ Sem Conexão';
+        detailsElement.textContent = `Erro de conexão: ${error.message}`;
+      }
+    }
+
+    checkButton.addEventListener('click', checkServerStatus);
+    
+    // Verificar o status do servidor ao carregar a página
+    checkServerStatus();
+  </script>
+</body>
+</html>

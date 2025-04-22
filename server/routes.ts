@@ -44,6 +44,16 @@ import dateTestRouter from './date-test-router';
 import supabeDiagnosticsRouter from './routes/supabase-diagnostics';
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Rota simples de verificação de saúde
+  app.get('/health', (req, res) => {
+    res.status(200).json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development',
+      message: 'Servidor está funcionando corretamente'
+    });
+  });
+
   // Rota de debug para testar getUserByUsername
   app.get('/api/debug/getUserByUsername/:username', async (req, res) => {
     try {
