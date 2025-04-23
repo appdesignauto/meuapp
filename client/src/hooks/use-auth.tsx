@@ -67,32 +67,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
       console.log("Enviando credenciais de login:", credentials);
-      const res = await apiRequest('POST', '/api/login', credentials);
-      
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        console.error("Erro na resposta de login:", res.status, errorData);
-        
-        // Extrair apenas a mensagem do erro, ignorando outros detalhes do JSON
-        let errorMessage = "Falha na autenticação. Verifique suas credenciais.";
-        
-        if (errorData && typeof errorData === 'object') {
-          // Se tiver uma mensagem, use-a
-          if (errorData.message && typeof errorData.message === 'string') {
-            errorMessage = errorData.message;
-          }
-          // Se tiver um erro estruturado com message, use-o
-          else if (errorData.error && errorData.error.message && typeof errorData.error.message === 'string') {
-            errorMessage = errorData.error.message;
-          }
-        }
-        
-        throw new Error(errorMessage);
+      try {
+        // O apiRequest já lançará erro com a mensagem extraída do JSON
+        const res = await apiRequest('POST', '/api/login', credentials);
+        const userData = await res.json();
+        console.log("Login bem-sucedido:", userData);
+        return userData;
+      } catch (error) {
+        console.error("Erro de login:", error);
+        throw error; // Preserva o erro original para que seja usado no formato correto
       }
-      
-      const userData = await res.json();
-      console.log("Login bem-sucedido:", userData);
-      return userData;
     },
     onSuccess: (user: User) => {
       queryClient.setQueryData(['/api/user'], user);
@@ -112,28 +96,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const registerMutation = useMutation({
     mutationFn: async (credentials: RegisterData) => {
-      const res = await apiRequest('POST', '/api/register', credentials);
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        console.error("Erro na resposta de registro:", res.status, errorData);
-        
-        // Extrair apenas a mensagem do erro
-        let errorMessage = "Erro ao registrar usuário";
-        
-        if (errorData && typeof errorData === 'object') {
-          // Se tiver uma mensagem, use-a
-          if (errorData.message && typeof errorData.message === 'string') {
-            errorMessage = errorData.message;
-          }
-          // Se tiver um erro estruturado com message, use-o
-          else if (errorData.error && errorData.error.message && typeof errorData.error.message === 'string') {
-            errorMessage = errorData.error.message;
-          }
-        }
-        
-        throw new Error(errorMessage);
+      try {
+        // O apiRequest já lançará erro com a mensagem extraída do JSON
+        const res = await apiRequest('POST', '/api/register', credentials);
+        const userData = await res.json();
+        console.log("Registro bem-sucedido:", userData);
+        return userData;
+      } catch (error) {
+        console.error("Erro de registro:", error);
+        throw error; // Preserva o erro original para que seja usado no formato correto
       }
-      return await res.json();
     },
     onSuccess: (response) => {
       if (response.success) {
@@ -193,28 +165,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   const verifyEmailMutation = useMutation({
     mutationFn: async (data: VerifyEmailData) => {
-      const res = await apiRequest('POST', '/api/email-verification/verify', data);
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        console.error("Erro na verificação de e-mail:", res.status, errorData);
-        
-        // Extrair apenas a mensagem do erro
-        let errorMessage = "Falha ao verificar e-mail";
-        
-        if (errorData && typeof errorData === 'object') {
-          // Se tiver uma mensagem, use-a
-          if (errorData.message && typeof errorData.message === 'string') {
-            errorMessage = errorData.message;
-          }
-          // Se tiver um erro estruturado com message, use-o
-          else if (errorData.error && errorData.error.message && typeof errorData.error.message === 'string') {
-            errorMessage = errorData.error.message;
-          }
-        }
-        
-        throw new Error(errorMessage);
+      try {
+        // O apiRequest já lançará erro com a mensagem extraída do JSON
+        const res = await apiRequest('POST', '/api/email-verification/verify', data);
+        const responseData = await res.json();
+        console.log("Verificação de e-mail bem-sucedida:", responseData);
+        return responseData;
+      } catch (error) {
+        console.error("Erro na verificação de e-mail:", error);
+        throw error; // Preserva o erro original para que seja usado no formato correto
       }
-      return await res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
@@ -234,28 +194,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   const resendVerificationMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest('POST', '/api/email-verification/send');
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        console.error("Erro ao reenviar código:", res.status, errorData);
-        
-        // Extrair apenas a mensagem do erro
-        let errorMessage = "Falha ao reenviar código de verificação";
-        
-        if (errorData && typeof errorData === 'object') {
-          // Se tiver uma mensagem, use-a
-          if (errorData.message && typeof errorData.message === 'string') {
-            errorMessage = errorData.message;
-          }
-          // Se tiver um erro estruturado com message, use-o
-          else if (errorData.error && errorData.error.message && typeof errorData.error.message === 'string') {
-            errorMessage = errorData.error.message;
-          }
-        }
-        
-        throw new Error(errorMessage);
+      try {
+        // O apiRequest já lançará erro com a mensagem extraída do JSON
+        const res = await apiRequest('POST', '/api/email-verification/send');
+        const responseData = await res.json();
+        console.log("Reenvio de código bem-sucedido:", responseData);
+        return responseData;
+      } catch (error) {
+        console.error("Erro ao reenviar código:", error);
+        throw error; // Preserva o erro original para que seja usado no formato correto
       }
-      return await res.json();
     },
     onSuccess: () => {
       toast({
