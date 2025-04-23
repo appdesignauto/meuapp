@@ -86,11 +86,15 @@ export interface IStorage {
   getFormats(): Promise<Format[]>;
   getFormatById(id: number): Promise<Format | undefined>;
   createFormat(format: InsertFormat): Promise<Format>;
+  updateFormat(id: number, format: Partial<InsertFormat>): Promise<Format | undefined>;
+  deleteFormat(id: number): Promise<boolean>;
   
   // File type methods
   getFileTypes(): Promise<FileType[]>;
   getFileTypeById(id: number): Promise<FileType | undefined>;
   createFileType(fileType: InsertFileType): Promise<FileType>;
+  updateFileType(id: number, fileType: Partial<InsertFileType>): Promise<FileType | undefined>;
+  deleteFileType(id: number): Promise<boolean>;
   
   // Collection methods
   getCollections(page: number, limit: number, search?: string): Promise<{ collections: Collection[], totalCount: number }>;
@@ -712,6 +716,26 @@ export class MemStorage implements IStorage {
     return newFormat;
   }
   
+  async updateFormat(id: number, format: Partial<InsertFormat>): Promise<Format | undefined> {
+    const existingFormat = this.formats.get(id);
+    if (!existingFormat) return undefined;
+    
+    const updatedFormat: Format = {
+      ...existingFormat,
+      ...format
+    };
+    
+    this.formats.set(id, updatedFormat);
+    return updatedFormat;
+  }
+  
+  async deleteFormat(id: number): Promise<boolean> {
+    const formatExists = this.formats.has(id);
+    if (!formatExists) return false;
+    
+    return this.formats.delete(id);
+  }
+  
   // File type methods
   async getFileTypes(): Promise<FileType[]> {
     return Array.from(this.fileTypes.values());
@@ -726,6 +750,26 @@ export class MemStorage implements IStorage {
     const newFileType: FileType = { ...fileType, id };
     this.fileTypes.set(id, newFileType);
     return newFileType;
+  }
+  
+  async updateFileType(id: number, fileType: Partial<InsertFileType>): Promise<FileType | undefined> {
+    const existingFileType = this.fileTypes.get(id);
+    if (!existingFileType) return undefined;
+    
+    const updatedFileType: FileType = {
+      ...existingFileType,
+      ...fileType
+    };
+    
+    this.fileTypes.set(id, updatedFileType);
+    return updatedFileType;
+  }
+  
+  async deleteFileType(id: number): Promise<boolean> {
+    const fileTypeExists = this.fileTypes.has(id);
+    if (!fileTypeExists) return false;
+    
+    return this.fileTypes.delete(id);
   }
   
   // Collection methods
