@@ -15,7 +15,9 @@ import {
   LogOut,
   Sliders,
   Database,
-  HardDrive
+  HardDrive,
+  FileType,
+  CreditCard
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +27,8 @@ import ArtsList from '@/components/admin/ArtsList';
 import CategoriesList from '@/components/admin/CategoriesList';
 import UserManagement from '@/components/admin/UserManagement';
 import SiteSettings from '@/components/admin/SiteSettings';
+import FormatsList from '@/components/admin/FormatsList';
+import FileTypesList from '@/components/admin/FileTypesList';
 import { useToast } from '@/hooks/use-toast';
 
 const AdminDashboard = () => {
@@ -87,6 +91,24 @@ const AdminDashboard = () => {
             >
               <LayoutGrid className="w-5 h-5 mr-3" />
               <span>Categorias</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('formats')}
+              className={`flex items-center w-full px-4 py-2.5 mb-2 rounded-lg ${
+                activeTab === 'formats' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <CreditCard className="w-5 h-5 mr-3" />
+              <span>Formatos</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('fileTypes')}
+              className={`flex items-center w-full px-4 py-2.5 mb-2 rounded-lg ${
+                activeTab === 'fileTypes' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <FileType className="w-5 h-5 mr-3" />
+              <span>Tipos de Arquivo</span>
             </button>
             <button
               onClick={() => setActiveTab('users')}
@@ -180,6 +202,8 @@ const AdminDashboard = () => {
             <h1 className="text-xl font-semibold">
               {activeTab === 'arts' && 'Gerenciar Artes'}
               {activeTab === 'categories' && 'Gerenciar Categorias'}
+              {activeTab === 'formats' && 'Gerenciar Formatos'}
+              {activeTab === 'fileTypes' && 'Gerenciar Tipos de Arquivo'}
               {activeTab === 'users' && 'Gerenciar Usuários'}
               {activeTab === 'collections' && 'Gerenciar Coleções'}
               {activeTab === 'community' && 'Gerenciar Comunidade'}
@@ -194,10 +218,16 @@ const AdminDashboard = () => {
                   className="pl-9 w-64"
                 />
               </div>
-              {(activeTab === 'arts' || activeTab === 'categories' || activeTab === 'collections') && (
+              {(activeTab === 'arts' || activeTab === 'categories' || activeTab === 'collections' || activeTab === 'formats' || activeTab === 'fileTypes') && (
                 <Button className="flex items-center">
                   <Plus className="w-4 h-4 mr-2" />
-                  Adicionar {activeTab === 'arts' ? 'Arte' : activeTab === 'categories' ? 'Categoria' : 'Coleção'}
+                  Adicionar {
+                    activeTab === 'arts' ? 'Arte' : 
+                    activeTab === 'categories' ? 'Categoria' : 
+                    activeTab === 'collections' ? 'Coleção' :
+                    activeTab === 'formats' ? 'Formato' :
+                    'Tipo de Arquivo'
+                  }
                 </Button>
               )}
             </div>
@@ -212,6 +242,14 @@ const AdminDashboard = () => {
             
             <TabsContent value="categories" className="mt-0">
               <CategoriesList />
+            </TabsContent>
+
+            <TabsContent value="formats" className="mt-0">
+              <FormatsList />
+            </TabsContent>
+            
+            <TabsContent value="fileTypes" className="mt-0">
+              <FileTypesList />
             </TabsContent>
             
             <TabsContent value="users" className="mt-0">
