@@ -751,6 +751,135 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Erro ao buscar formatos" });
     }
   });
+  
+  app.get("/api/formats/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const format = await storage.getFormatById(id);
+      
+      if (!format) {
+        return res.status(404).json({ message: "Formato não encontrado" });
+      }
+      
+      res.json(format);
+    } catch (error) {
+      res.status(500).json({ message: "Erro ao buscar formato" });
+    }
+  });
+  
+  app.post("/api/formats", async (req, res) => {
+    try {
+      // Apenas usuários admin ou designer_adm podem criar formatos
+      if (req.user?.role !== 'admin' && req.user?.role !== 'designer_adm') {
+        return res.status(403).json({ message: "Sem permissão para criar formatos" });
+      }
+      
+      const { name, slug } = req.body;
+      
+      // Validar dados
+      if (!name || !slug) {
+        return res.status(400).json({ message: "Nome e slug são obrigatórios" });
+      }
+      
+      // Verificar se o slug já existe
+      const formats = await storage.getFormats();
+      const existingFormat = formats.find(f => f.slug === slug);
+      
+      if (existingFormat) {
+        return res.status(400).json({ message: "Este slug já está em uso" });
+      }
+      
+      // Criar o formato
+      const newFormat = await storage.createFormat({
+        name,
+        slug
+      });
+      
+      res.status(201).json(newFormat);
+    } catch (error) {
+      console.error("Erro ao criar formato:", error);
+      res.status(500).json({ message: "Erro ao criar formato" });
+    }
+  });
+  
+  app.put("/api/formats/:id", async (req, res) => {
+    try {
+      // Apenas usuários admin ou designer_adm podem atualizar formatos
+      if (req.user?.role !== 'admin' && req.user?.role !== 'designer_adm') {
+        return res.status(403).json({ message: "Sem permissão para atualizar formatos" });
+      }
+      
+      const id = parseInt(req.params.id);
+      const { name, slug } = req.body;
+      
+      // Validar dados
+      if (!name || !slug) {
+        return res.status(400).json({ message: "Nome e slug são obrigatórios" });
+      }
+      
+      // Verificar se o formato existe
+      const format = await storage.getFormatById(id);
+      if (!format) {
+        return res.status(404).json({ message: "Formato não encontrado" });
+      }
+      
+      // Verificar se o slug já existe (exceto para o mesmo formato)
+      const formats = await storage.getFormats();
+      const existingFormat = formats.find(f => f.slug === slug && f.id !== id);
+      
+      if (existingFormat) {
+        return res.status(400).json({ message: "Este slug já está em uso" });
+      }
+      
+      // Atualizar o formato
+      const updatedFormat = await storage.updateFormat(id, {
+        name,
+        slug
+      });
+      
+      res.json(updatedFormat);
+    } catch (error) {
+      console.error("Erro ao atualizar formato:", error);
+      res.status(500).json({ message: "Erro ao atualizar formato" });
+    }
+  });
+  
+  app.delete("/api/formats/:id", async (req, res) => {
+    try {
+      // Apenas usuários admin podem excluir formatos
+      if (req.user?.role !== 'admin') {
+        return res.status(403).json({ message: "Sem permissão para excluir formatos" });
+      }
+      
+      const id = parseInt(req.params.id);
+      
+      // Verificar se o formato existe
+      const format = await storage.getFormatById(id);
+      if (!format) {
+        return res.status(404).json({ message: "Formato não encontrado" });
+      }
+      
+      // Verificar se o formato está sendo usado em alguma arte
+      const arts = await storage.getArts(1, 1000, { format: format.name });
+      if (arts.arts.length > 0) {
+        return res.status(400).json({ 
+          message: `Não é possível excluir o formato pois está sendo usado em ${arts.arts.length} arte(s)` 
+        });
+      }
+      
+      // Excluir o formato
+      const success = await storage.deleteFormat(id);
+      
+      if (success) {
+        res.json({ message: "Formato excluído com sucesso" });
+      } else {
+        res.status(500).json({ message: "Erro ao excluir formato" });
+      }
+    } catch (error) {
+      console.error("Erro ao excluir formato:", error);
+      res.status(500).json({ message: "Erro ao excluir formato" });
+    }
+  });
 
   // File Types API
   app.get("/api/fileTypes", async (req, res) => {
@@ -759,6 +888,135 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(fileTypes);
     } catch (error) {
       res.status(500).json({ message: "Erro ao buscar tipos de arquivo" });
+    }
+  });
+  
+  app.get("/api/fileTypes/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const fileType = await storage.getFileTypeById(id);
+      
+      if (!fileType) {
+        return res.status(404).json({ message: "Tipo de arquivo não encontrado" });
+      }
+      
+      res.json(fileType);
+    } catch (error) {
+      res.status(500).json({ message: "Erro ao buscar tipo de arquivo" });
+    }
+  });
+  
+  app.post("/api/fileTypes", async (req, res) => {
+    try {
+      // Apenas usuários admin ou designer_adm podem criar tipos de arquivo
+      if (req.user?.role !== 'admin' && req.user?.role !== 'designer_adm') {
+        return res.status(403).json({ message: "Sem permissão para criar tipos de arquivo" });
+      }
+      
+      const { name, slug } = req.body;
+      
+      // Validar dados
+      if (!name || !slug) {
+        return res.status(400).json({ message: "Nome e slug são obrigatórios" });
+      }
+      
+      // Verificar se o slug já existe
+      const fileTypes = await storage.getFileTypes();
+      const existingFileType = fileTypes.find(f => f.slug === slug);
+      
+      if (existingFileType) {
+        return res.status(400).json({ message: "Este slug já está em uso" });
+      }
+      
+      // Criar o tipo de arquivo
+      const newFileType = await storage.createFileType({
+        name,
+        slug
+      });
+      
+      res.status(201).json(newFileType);
+    } catch (error) {
+      console.error("Erro ao criar tipo de arquivo:", error);
+      res.status(500).json({ message: "Erro ao criar tipo de arquivo" });
+    }
+  });
+  
+  app.put("/api/fileTypes/:id", async (req, res) => {
+    try {
+      // Apenas usuários admin ou designer_adm podem atualizar tipos de arquivo
+      if (req.user?.role !== 'admin' && req.user?.role !== 'designer_adm') {
+        return res.status(403).json({ message: "Sem permissão para atualizar tipos de arquivo" });
+      }
+      
+      const id = parseInt(req.params.id);
+      const { name, slug } = req.body;
+      
+      // Validar dados
+      if (!name || !slug) {
+        return res.status(400).json({ message: "Nome e slug são obrigatórios" });
+      }
+      
+      // Verificar se o tipo de arquivo existe
+      const fileType = await storage.getFileTypeById(id);
+      if (!fileType) {
+        return res.status(404).json({ message: "Tipo de arquivo não encontrado" });
+      }
+      
+      // Verificar se o slug já existe (exceto para o mesmo tipo de arquivo)
+      const fileTypes = await storage.getFileTypes();
+      const existingFileType = fileTypes.find(f => f.slug === slug && f.id !== id);
+      
+      if (existingFileType) {
+        return res.status(400).json({ message: "Este slug já está em uso" });
+      }
+      
+      // Atualizar o tipo de arquivo
+      const updatedFileType = await storage.updateFileType(id, {
+        name,
+        slug
+      });
+      
+      res.json(updatedFileType);
+    } catch (error) {
+      console.error("Erro ao atualizar tipo de arquivo:", error);
+      res.status(500).json({ message: "Erro ao atualizar tipo de arquivo" });
+    }
+  });
+  
+  app.delete("/api/fileTypes/:id", async (req, res) => {
+    try {
+      // Apenas usuários admin podem excluir tipos de arquivo
+      if (req.user?.role !== 'admin') {
+        return res.status(403).json({ message: "Sem permissão para excluir tipos de arquivo" });
+      }
+      
+      const id = parseInt(req.params.id);
+      
+      // Verificar se o tipo de arquivo existe
+      const fileType = await storage.getFileTypeById(id);
+      if (!fileType) {
+        return res.status(404).json({ message: "Tipo de arquivo não encontrado" });
+      }
+      
+      // Verificar se o tipo de arquivo está sendo usado em alguma arte
+      const arts = await storage.getArts(1, 1000, { fileType: fileType.name });
+      if (arts.arts.length > 0) {
+        return res.status(400).json({ 
+          message: `Não é possível excluir o tipo de arquivo pois está sendo usado em ${arts.arts.length} arte(s)` 
+        });
+      }
+      
+      // Excluir o tipo de arquivo
+      const success = await storage.deleteFileType(id);
+      
+      if (success) {
+        res.json({ message: "Tipo de arquivo excluído com sucesso" });
+      } else {
+        res.status(500).json({ message: "Erro ao excluir tipo de arquivo" });
+      }
+    } catch (error) {
+      console.error("Erro ao excluir tipo de arquivo:", error);
+      res.status(500).json({ message: "Erro ao excluir tipo de arquivo" });
     }
   });
 
