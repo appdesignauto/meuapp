@@ -72,7 +72,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
         console.error("Erro na resposta de login:", res.status, errorData);
-        throw new Error(errorData.message || "Falha na autenticação. Verifique suas credenciais.");
+        
+        // Extrair apenas a mensagem do erro, ignorando outros detalhes do JSON
+        let errorMessage = "Falha na autenticação. Verifique suas credenciais.";
+        
+        if (errorData && typeof errorData === 'object') {
+          // Se tiver uma mensagem, use-a
+          if (errorData.message && typeof errorData.message === 'string') {
+            errorMessage = errorData.message;
+          }
+          // Se tiver um erro estruturado com message, use-o
+          else if (errorData.error && errorData.error.message && typeof errorData.error.message === 'string') {
+            errorMessage = errorData.error.message;
+          }
+        }
+        
+        throw new Error(errorMessage);
       }
       
       const userData = await res.json();
@@ -99,8 +114,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     mutationFn: async (credentials: RegisterData) => {
       const res = await apiRequest('POST', '/api/register', credentials);
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Erro ao registrar usuário");
+        const errorData = await res.json().catch(() => ({}));
+        console.error("Erro na resposta de registro:", res.status, errorData);
+        
+        // Extrair apenas a mensagem do erro
+        let errorMessage = "Erro ao registrar usuário";
+        
+        if (errorData && typeof errorData === 'object') {
+          // Se tiver uma mensagem, use-a
+          if (errorData.message && typeof errorData.message === 'string') {
+            errorMessage = errorData.message;
+          }
+          // Se tiver um erro estruturado com message, use-o
+          else if (errorData.error && errorData.error.message && typeof errorData.error.message === 'string') {
+            errorMessage = errorData.error.message;
+          }
+        }
+        
+        throw new Error(errorMessage);
       }
       return await res.json();
     },
@@ -164,8 +195,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     mutationFn: async (data: VerifyEmailData) => {
       const res = await apiRequest('POST', '/api/email-verification/verify', data);
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Falha ao verificar e-mail");
+        const errorData = await res.json().catch(() => ({}));
+        console.error("Erro na verificação de e-mail:", res.status, errorData);
+        
+        // Extrair apenas a mensagem do erro
+        let errorMessage = "Falha ao verificar e-mail";
+        
+        if (errorData && typeof errorData === 'object') {
+          // Se tiver uma mensagem, use-a
+          if (errorData.message && typeof errorData.message === 'string') {
+            errorMessage = errorData.message;
+          }
+          // Se tiver um erro estruturado com message, use-o
+          else if (errorData.error && errorData.error.message && typeof errorData.error.message === 'string') {
+            errorMessage = errorData.error.message;
+          }
+        }
+        
+        throw new Error(errorMessage);
       }
       return await res.json();
     },
@@ -189,8 +236,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     mutationFn: async () => {
       const res = await apiRequest('POST', '/api/email-verification/send');
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Falha ao reenviar código de verificação");
+        const errorData = await res.json().catch(() => ({}));
+        console.error("Erro ao reenviar código:", res.status, errorData);
+        
+        // Extrair apenas a mensagem do erro
+        let errorMessage = "Falha ao reenviar código de verificação";
+        
+        if (errorData && typeof errorData === 'object') {
+          // Se tiver uma mensagem, use-a
+          if (errorData.message && typeof errorData.message === 'string') {
+            errorMessage = errorData.message;
+          }
+          // Se tiver um erro estruturado com message, use-o
+          else if (errorData.error && errorData.error.message && typeof errorData.error.message === 'string') {
+            errorMessage = errorData.error.message;
+          }
+        }
+        
+        throw new Error(errorMessage);
       }
       return await res.json();
     },
