@@ -97,7 +97,7 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
       <div className="container mx-auto px-3 sm:px-4">
         <div className="flex flex-wrap items-center justify-between mb-2 sm:mb-3">
           <div className="flex items-center gap-2 sm:gap-3">
-            <h2 className="text-xs sm:text-sm font-medium text-neutral-800">Categorias em destaque</h2>
+            <h2 className="text-xs sm:text-sm font-medium text-neutral-800 whitespace-nowrap">Categorias em destaque</h2>
           </div>
           <Link 
             href="/arts" 

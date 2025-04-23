@@ -78,7 +78,7 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
         <div className="flex flex-wrap items-center justify-between mb-2 sm:mb-4">
           <div className="flex flex-col sm:flex-row w-full sm:w-auto items-start sm:items-center gap-2 sm:gap-3">
             <div className="flex w-full sm:w-auto items-center justify-between">
-              <h2 className="text-xs sm:text-sm font-medium text-neutral-800">Artes em Destaque</h2>
+              <h2 className="text-xs sm:text-sm font-medium text-neutral-800 whitespace-nowrap">Artes em Destaque</h2>
               <Link 
                 href="/arts" 
                 className="text-blue-600 hover:text-blue-500 font-medium text-[10px] sm:text-xs flex items-center px-2 py-1 transition-all sm:hidden"
