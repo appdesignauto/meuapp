@@ -860,7 +860,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verificar se o formato está sendo usado em alguma arte
-      const arts = await storage.getArts(1, 1000, { format: format.name });
+      const arts = await storage.getArts(1, 1000, { formatId: format.id });
       if (arts.arts.length > 0) {
         return res.status(400).json({ 
           message: `Não é possível excluir o formato pois está sendo usado em ${arts.arts.length} arte(s)` 
@@ -999,7 +999,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verificar se o tipo de arquivo está sendo usado em alguma arte
-      const arts = await storage.getArts(1, 1000, { fileType: fileType.name });
+      const arts = await storage.getArts(1, 1000, { fileTypeId: fileType.id });
       if (arts.arts.length > 0) {
         return res.status(400).json({ 
           message: `Não é possível excluir o tipo de arquivo pois está sendo usado em ${arts.arts.length} arte(s)` 

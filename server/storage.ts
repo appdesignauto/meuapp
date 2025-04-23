@@ -1681,6 +1681,33 @@ export class DatabaseStorage implements IStorage {
     return newFormat;
   }
   
+  async updateFormat(id: number, formatData: Partial<InsertFormat>): Promise<Format | undefined> {
+    try {
+      const [updatedFormat] = await db
+        .update(formats)
+        .set(formatData)
+        .where(eq(formats.id, id))
+        .returning();
+      return updatedFormat;
+    } catch (error) {
+      console.error("Erro ao atualizar formato:", error);
+      return undefined;
+    }
+  }
+  
+  async deleteFormat(id: number): Promise<boolean> {
+    try {
+      const result = await db
+        .delete(formats)
+        .where(eq(formats.id, id));
+        
+      return !!result.rowCount;
+    } catch (error) {
+      console.error("Erro ao excluir formato:", error);
+      return false;
+    }
+  }
+  
   // File type methods
   async getFileTypes(): Promise<FileType[]> {
     return db.select().from(fileTypes);
@@ -1694,6 +1721,33 @@ export class DatabaseStorage implements IStorage {
   async createFileType(fileType: InsertFileType): Promise<FileType> {
     const [newFileType] = await db.insert(fileTypes).values(fileType).returning();
     return newFileType;
+  }
+  
+  async updateFileType(id: number, fileTypeData: Partial<InsertFileType>): Promise<FileType | undefined> {
+    try {
+      const [updatedFileType] = await db
+        .update(fileTypes)
+        .set(fileTypeData)
+        .where(eq(fileTypes.id, id))
+        .returning();
+      return updatedFileType;
+    } catch (error) {
+      console.error("Erro ao atualizar tipo de arquivo:", error);
+      return undefined;
+    }
+  }
+  
+  async deleteFileType(id: number): Promise<boolean> {
+    try {
+      const result = await db
+        .delete(fileTypes)
+        .where(eq(fileTypes.id, id));
+        
+      return !!result.rowCount;
+    } catch (error) {
+      console.error("Erro ao excluir tipo de arquivo:", error);
+      return false;
+    }
   }
   
   // Collection methods
