@@ -63,6 +63,8 @@ const AuthPage = () => {
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [registerError, setRegisterError] = useState<string | null>(null);
   const [, setLocation] = useLocation();
   const { user, loginMutation, registerMutation } = useAuth();
   const { toast } = useToast();
@@ -111,19 +113,30 @@ const AuthPage = () => {
         rememberMe: values.rememberMe,
       };
       
+      // Limpar mensagem de erro anterior
+      setLoginError(null);
+      
       console.log("Enviando credenciais de login:", loginData);
       const userData = await loginMutation.mutateAsync(loginData);
       
       // Redirecionar diretamente para a página principal, sem verificar emailconfirmed
       setLocation("/");
-    } catch (error) {
-      // Erro já tratado no hook useAuth
+    } catch (error: any) {
+      // Capturar a mensagem de erro para exibir na interface
+      if (error instanceof Error) {
+        setLoginError(error.message);
+      } else {
+        setLoginError("Erro ao fazer login. Tente novamente.");
+      }
     }
   };
 
   const onRegisterSubmit = async (values: RegisterFormValues) => {
     const { confirmPassword, ...registerData } = values;
     try {
+      // Limpar mensagem de erro anterior
+      setRegisterError(null);
+      
       // Adicionar username gerado a partir do email
       const username = values.email.split('@')[0];
       // Adicionar valores padrão para manter API compatível
@@ -146,8 +159,13 @@ const AuthPage = () => {
         description: "Confira seu e-mail para mais informações.",
         variant: "success",
       });
-    } catch (error) {
-      // Erro já tratado no hook useAuth
+    } catch (error: any) {
+      // Capturar a mensagem de erro para exibir na interface
+      if (error instanceof Error) {
+        setRegisterError(error.message);
+      } else {
+        setRegisterError("Erro ao criar conta. Tente novamente.");
+      }
     }
   };
 
@@ -254,6 +272,13 @@ const AuthPage = () => {
                           "Entrar"
                         )}
                       </Button>
+                      
+                      {/* Exibir mensagem de erro */}
+                      {loginError && (
+                        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                          <p className="text-sm text-red-600">{loginError}</p>
+                        </div>
+                      )}
                     </form>
                   </Form>
                 </CardContent>
@@ -438,6 +463,13 @@ const AuthPage = () => {
                           "Criar conta"
                         )}
                       </Button>
+
+                      {/* Exibir mensagem de erro */}
+                      {registerError && (
+                        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                          <p className="text-sm text-red-600">{registerError}</p>
+                        </div>
+                      )}
                     </form>
                   </Form>
                 </CardContent>
