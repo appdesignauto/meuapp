@@ -852,6 +852,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const id = parseInt(req.params.id);
+      const forceDelete = req.query.force === 'true';
       
       // Verificar se o formato existe
       const format = await storage.getFormatById(id);
@@ -861,17 +862,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Verificar se o formato está sendo usado em alguma arte
       const arts = await storage.getArts(1, 1000, { formatId: format.id });
-      if (arts.arts.length > 0) {
+      if (arts.arts.length > 0 && !forceDelete) {
+        // Permitir exclusão forçada com parâmetro ou aviso
         return res.status(400).json({ 
-          message: `Não é possível excluir o formato pois está sendo usado em ${arts.arts.length} arte(s)` 
+          message: `Este formato está sendo usado em ${arts.arts.length} arte(s). Confirme para excluir mesmo assim.`,
+          artsCount: arts.arts.length,
+          allowForce: true
         });
       }
       
-      // Excluir o formato
+      // Excluir o formato mesmo que esteja em uso
       const success = await storage.deleteFormat(id);
       
       if (success) {
-        res.json({ message: "Formato excluído com sucesso" });
+        // Informações extras para o caso de exclusão com artes vinculadas
+        const responseMsg = arts.arts.length > 0 
+          ? `Formato excluído com sucesso. ${arts.arts.length} arte(s) precisarão ser atualizadas.`
+          : "Formato excluído com sucesso.";
+        
+        res.json({ 
+          message: responseMsg,
+          artsAffected: arts.arts.length
+        });
       } else {
         res.status(500).json({ message: "Erro ao excluir formato" });
       }
@@ -991,6 +1003,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const id = parseInt(req.params.id);
+      const forceDelete = req.query.force === 'true';
       
       // Verificar se o tipo de arquivo existe
       const fileType = await storage.getFileTypeById(id);
@@ -1000,17 +1013,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Verificar se o tipo de arquivo está sendo usado em alguma arte
       const arts = await storage.getArts(1, 1000, { fileTypeId: fileType.id });
-      if (arts.arts.length > 0) {
+      if (arts.arts.length > 0 && !forceDelete) {
+        // Permitir exclusão forçada com parâmetro ou aviso
         return res.status(400).json({ 
-          message: `Não é possível excluir o tipo de arquivo pois está sendo usado em ${arts.arts.length} arte(s)` 
+          message: `Este tipo de arquivo está sendo usado em ${arts.arts.length} arte(s). Confirme para excluir mesmo assim.`,
+          artsCount: arts.arts.length,
+          allowForce: true
         });
       }
       
-      // Excluir o tipo de arquivo
+      // Excluir o tipo de arquivo mesmo que esteja em uso
       const success = await storage.deleteFileType(id);
       
       if (success) {
-        res.json({ message: "Tipo de arquivo excluído com sucesso" });
+        // Informações extras para o caso de exclusão com artes vinculadas
+        const responseMsg = arts.arts.length > 0 
+          ? `Tipo de arquivo excluído com sucesso. ${arts.arts.length} arte(s) precisarão ser atualizadas.`
+          : "Tipo de arquivo excluído com sucesso.";
+        
+        res.json({ 
+          message: responseMsg,
+          artsAffected: arts.arts.length
+        });
       } else {
         res.status(500).json({ message: "Erro ao excluir tipo de arquivo" });
       }

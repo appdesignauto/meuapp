@@ -44,7 +44,9 @@ const FormatsList = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isForceDeleteDialogOpen, setIsForceDeleteDialogOpen] = useState(false);
   const [currentFormat, setCurrentFormat] = useState<Format | null>(null);
+  const [artsUsingFormat, setArtsUsingFormat] = useState(0);
   const [newFormat, setNewFormat] = useState({ name: '', slug: '' });
   const [editFormat, setEditFormat] = useState({ id: 0, name: '', slug: '' });
 
@@ -127,28 +129,43 @@ const FormatsList = () => {
 
   // Remoção de formatos
   const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const res = await fetch(`/api/formats/${id}`, {
+    mutationFn: async ({ id, force }: { id: number, force?: boolean }) => {
+      const url = force ? `/api/formats/${id}?force=true` : `/api/formats/${id}`;
+      const res = await fetch(url, {
         method: 'DELETE',
       });
       
       if (!res.ok) {
         const error = await res.json();
+        
+        // Verificar se é um erro de formato em uso que podemos contornar
+        if (res.status === 400 && error.allowForce) {
+          setArtsUsingFormat(error.artsCount || 0);
+          setIsDeleteDialogOpen(false);
+          setIsForceDeleteDialogOpen(true);
+          throw new Error('force_delete_required');
+        }
+        
         throw new Error(error.message || 'Falha ao excluir formato');
       }
       
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/formats'] });
       setIsDeleteDialogOpen(false);
+      setIsForceDeleteDialogOpen(false);
       setCurrentFormat(null);
       toast({
         title: 'Formato excluído',
-        description: 'O formato foi excluído com sucesso',
+        description: data.message || 'O formato foi excluído com sucesso',
       });
     },
     onError: (error: Error) => {
+      // Ignorar o erro específico que usamos para sinalizar a necessidade de exclusão forçada
+      if (error.message === 'force_delete_required') return;
+      
+      setIsDeleteDialogOpen(false);
       toast({
         title: 'Erro',
         description: error.message,
@@ -202,7 +219,14 @@ const FormatsList = () => {
   // Handler para exclusão
   const handleDeleteConfirm = () => {
     if (currentFormat) {
-      deleteMutation.mutate(currentFormat.id);
+      deleteMutation.mutate({ id: currentFormat.id });
+    }
+  };
+  
+  // Handler para exclusão forçada
+  const handleForceDeleteConfirm = () => {
+    if (currentFormat) {
+      deleteMutation.mutate({ id: currentFormat.id, force: true });
     }
   };
 
@@ -376,6 +400,36 @@ const FormatsList = () => {
               className="bg-red-600 text-white hover:bg-red-700"
             >
               {deleteMutation.isPending ? 'Excluindo...' : 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      {/* Diálogo de exclusão forçada */}
+      <AlertDialog open={isForceDeleteDialogOpen} onOpenChange={setIsForceDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Formato em Uso</AlertDialogTitle>
+            <AlertDialogDescription>
+              <p className="mb-2">
+                O formato "{currentFormat?.name}" está sendo usado em {artsUsingFormat} arte(s). 
+              </p>
+              <p className="mb-2">
+                Se você excluir este formato, as artes permanecerão no sistema, mas você precisará 
+                atribuir um novo formato a elas posteriormente.
+              </p>
+              <p className="font-semibold">
+                Deseja prosseguir com a exclusão mesmo assim?
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleForceDeleteConfirm}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              {deleteMutation.isPending ? 'Excluindo...' : 'Excluir Mesmo Assim'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
