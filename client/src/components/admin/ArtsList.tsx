@@ -40,6 +40,7 @@ const ArtsList = () => {
     isPremium?: boolean;
     categoryId?: number;
     search?: string;
+    isVisible?: boolean;
   }>({});
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingArt, setEditingArt] = useState<Art | null>(null);
@@ -89,15 +90,37 @@ const ArtsList = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
       toast({
-        title: 'Status atualizado',
-        description: 'O status da arte foi atualizado com sucesso.',
+        title: 'Status premium atualizado',
+        description: 'O status premium da arte foi atualizado com sucesso.',
         variant: 'default',
       });
     },
     onError: (error: any) => {
       toast({
         title: 'Erro',
-        description: error.message || 'Ocorreu um erro ao atualizar o status.',
+        description: error.message || 'Ocorreu um erro ao atualizar o status premium.',
+        variant: 'destructive',
+      });
+    },
+  });
+  
+  // Toggle visibility status mutation
+  const toggleVisibilityMutation = useMutation({
+    mutationFn: async ({ id, isVisible }: { id: number; isVisible: boolean }) => {
+      await apiRequest('PUT', `/api/admin/arts/${id}/visibility`, { isVisible });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
+      toast({
+        title: 'Visibilidade atualizada',
+        description: 'A visibilidade da arte foi atualizada com sucesso.',
+        variant: 'default',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Erro',
+        description: error.message || 'Ocorreu um erro ao atualizar a visibilidade.',
         variant: 'destructive',
       });
     },
@@ -134,6 +157,10 @@ const ArtsList = () => {
 
   const handleTogglePremium = (id: number, currentValue: boolean) => {
     togglePremiumMutation.mutate({ id, isPremium: !currentValue });
+  };
+  
+  const handleToggleVisibility = (id: number, currentValue: boolean) => {
+    toggleVisibilityMutation.mutate({ id, isVisible: !currentValue });
   };
 
   const formatDate = (dateString: string | Date) => {
@@ -236,7 +263,7 @@ const ArtsList = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="premium">Status</Label>
+              <Label htmlFor="premium">Premium</Label>
               <Select
                 value={filter.isPremium?.toString() || ''}
                 onValueChange={(value) => 
@@ -247,12 +274,34 @@ const ArtsList = () => {
                 }
               >
                 <SelectTrigger id="premium">
-                  <SelectValue placeholder="Todos os status" />
+                  <SelectValue placeholder="Todos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos os status</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="true">Premium</SelectItem>
                   <SelectItem value="false">Gratuito</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="visible">Visibilidade</Label>
+              <Select
+                value={filter.isVisible?.toString() || ''}
+                onValueChange={(value) => 
+                  setFilter({ 
+                    ...filter, 
+                    isVisible: value === 'true' ? true : value === 'false' ? false : undefined 
+                  })
+                }
+              >
+                <SelectTrigger id="visible">
+                  <SelectValue placeholder="Todas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas</SelectItem>
+                  <SelectItem value="true">Visíveis</SelectItem>
+                  <SelectItem value="false">Ocultas</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -318,6 +367,7 @@ const ArtsList = () => {
                     <TableHead>Formato</TableHead>
                     <TableHead>Tipo</TableHead>
                     <TableHead className="w-[100px]">Premium</TableHead>
+                    <TableHead className="w-[100px]">Visível</TableHead>
                     <TableHead className="w-[100px]">Criado em</TableHead>
                     <TableHead className="text-right w-[120px]">Ações</TableHead>
                   </TableRow>
