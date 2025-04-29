@@ -1114,6 +1114,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         filters.isPremium = req.query.isPremium === 'true';
       }
       
+      // Apenas usuários admin, designer_adm e designer podem ver artes ocultas
+      const isAdmin = req.user?.nivelacesso === 'admin' || req.user?.nivelacesso === 'designer_adm' || req.user?.nivelacesso === 'designer';
+      
+      // Se o usuário não for admin, vamos filtrar apenas artes visíveis
+      if (!isAdmin) {
+        filters.isVisible = true;
+      } else if (req.query.showHidden === 'true') {
+        // Admin pode escolher ver apenas ocultas
+        filters.isVisible = false;
+      } else if (req.query.showAll !== 'true') {
+        // Por padrão, mesmo admin vê apenas as visíveis, a menos que solicite todas
+        filters.isVisible = true;
+      }
+      
       const result = await storage.getArts(page, limit, filters);
       res.json(result);
     } catch (error) {
