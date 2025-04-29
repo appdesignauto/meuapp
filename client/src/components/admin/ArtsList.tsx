@@ -404,6 +404,12 @@ const ArtsList = () => {
                             onCheckedChange={() => handleTogglePremium(art.id, art.isPremium)}
                           />
                         </TableCell>
+                        <TableCell>
+                          <Switch 
+                            checked={art.isVisible !== false} 
+                            onCheckedChange={() => handleToggleVisibility(art.id, art.isVisible !== false)}
+                          />
+                        </TableCell>
                         <TableCell>{formatDate(art.createdAt)}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">

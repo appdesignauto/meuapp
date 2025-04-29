@@ -1632,6 +1632,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Erro ao atualizar arte" });
     }
   });
+  
+  // Admin API - Update Art Visibility
+  app.put("/api/admin/arts/:id/visibility", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { isVisible } = req.body;
+      
+      if (typeof isVisible !== 'boolean') {
+        return res.status(400).json({ message: "O campo isVisible deve ser um booleano" });
+      }
+      
+      // Buscar a arte atual para verificar se existe
+      const art = await storage.getArtById(id);
+      if (!art) {
+        return res.status(404).json({ message: "Arte não encontrada" });
+      }
+      
+      // Atualizar apenas o campo de visibilidade
+      const updatedArt = await storage.updateArt(id, { isVisible });
+      
+      res.json({ 
+        success: true,
+        message: isVisible ? "Arte tornada visível" : "Arte oculta com sucesso",
+        art: updatedArt
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar visibilidade da arte:", error);
+      res.status(500).json({ 
+        message: "Erro ao atualizar visibilidade da arte",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
 
   // Admin API - Delete Art
   app.delete("/api/admin/arts/:id", isAdmin, async (req, res) => {
