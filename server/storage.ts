@@ -1839,27 +1839,40 @@ export class DatabaseStorage implements IStorage {
       
       // Adicionar filtros se existirem
       if (filters) {
-        const conditions = [];
+        let hasWhere = false;
         
         if (filters.categoryId) {
           query = sql`${query} WHERE "categoryId" = ${filters.categoryId}`;
+          hasWhere = true;
         }
         
         if (filters.search) {
           const searchTerm = `%${filters.search}%`;
-          if (filters.categoryId) {
+          if (hasWhere) {
             query = sql`${query} AND title ILIKE ${searchTerm}`;
           } else {
             query = sql`${query} WHERE title ILIKE ${searchTerm}`;
+            hasWhere = true;
           }
         }
         
         if (filters.isPremium !== undefined) {
           const condition = filters.isPremium ? 'TRUE' : 'FALSE';
-          if (filters.categoryId || filters.search) {
+          if (hasWhere) {
             query = sql`${query} AND "isPremium" = ${sql.raw(condition)}`;
           } else {
             query = sql`${query} WHERE "isPremium" = ${sql.raw(condition)}`;
+            hasWhere = true;
+          }
+        }
+        
+        if (filters.isVisible !== undefined) {
+          const condition = filters.isVisible ? 'TRUE' : 'FALSE';
+          if (hasWhere) {
+            query = sql`${query} AND "isVisible" = ${sql.raw(condition)}`;
+          } else {
+            query = sql`${query} WHERE "isVisible" = ${sql.raw(condition)}`;
+            hasWhere = true;
           }
         }
       }
@@ -1874,25 +1887,40 @@ export class DatabaseStorage implements IStorage {
       let countQuery = sql`SELECT COUNT(*) as count FROM arts`;
       
       if (filters) {
+        let hasWhere = false;
+        
         if (filters.categoryId) {
           countQuery = sql`${countQuery} WHERE "categoryId" = ${filters.categoryId}`;
+          hasWhere = true;
         }
         
         if (filters.search) {
           const searchTerm = `%${filters.search}%`;
-          if (filters.categoryId) {
+          if (hasWhere) {
             countQuery = sql`${countQuery} AND title ILIKE ${searchTerm}`;
           } else {
             countQuery = sql`${countQuery} WHERE title ILIKE ${searchTerm}`;
+            hasWhere = true;
           }
         }
         
         if (filters.isPremium !== undefined) {
           const condition = filters.isPremium ? 'TRUE' : 'FALSE';
-          if (filters.categoryId || filters.search) {
+          if (hasWhere) {
             countQuery = sql`${countQuery} AND "isPremium" = ${sql.raw(condition)}`;
           } else {
             countQuery = sql`${countQuery} WHERE "isPremium" = ${sql.raw(condition)}`;
+            hasWhere = true;
+          }
+        }
+        
+        if (filters.isVisible !== undefined) {
+          const condition = filters.isVisible ? 'TRUE' : 'FALSE';
+          if (hasWhere) {
+            countQuery = sql`${countQuery} AND "isVisible" = ${sql.raw(condition)}`;
+          } else {
+            countQuery = sql`${countQuery} WHERE "isVisible" = ${sql.raw(condition)}`;
+            hasWhere = true;
           }
         }
       }
