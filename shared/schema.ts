@@ -111,6 +111,7 @@ export const arts = pgTable("arts", {
   fileType: text("fileType").notNull(),
   editUrl: text("editUrl").notNull(),
   isPremium: boolean("isPremium").notNull().default(false),
+  isVisible: boolean("isVisible").notNull().default(true),
   categoryId: integer("categoryId").notNull().references(() => categories.id),
   collectionId: integer("collectionId").notNull().references(() => collections.id),
   designerid: integer("designerid").references(() => users.id),
