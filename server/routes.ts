@@ -1142,7 +1142,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Rota para buscar artes recentes (usada no painel inicial)
   app.get("/api/arts/recent", async (req, res) => {
     try {
-      // Buscar as 6 artes mais recentes diretamente da tabela artes
+      // Verificar se o usuário é admin para determinar visibilidade
+      const isAdmin = req.user?.nivelacesso === 'admin' || req.user?.nivelacesso === 'designer_adm' || req.user?.nivelacesso === 'designer';
+      
+      // Buscar as 6 artes mais recentes diretamente da tabela artes (apenas visíveis para usuários normais)
       const artsResult = await db.execute(sql`
         SELECT 
           id, 
@@ -1153,6 +1156,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           format,
           "isPremium"
         FROM arts 
+        WHERE ${!isAdmin ? sql`"isVisible" = TRUE` : sql`1=1`}
         ORDER BY "createdAt" DESC 
         LIMIT 6
       `);
@@ -1307,7 +1311,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Rota para buscar artes recentes (usada no painel inicial)
   app.get("/api/arts/recent", async (req, res) => {
     try {
-      // Buscar as 6 artes mais recentes diretamente da tabela artes
+      // Verificar se o usuário é admin para determinar visibilidade
+      const isAdmin = req.user?.nivelacesso === 'admin' || req.user?.nivelacesso === 'designer_adm' || req.user?.nivelacesso === 'designer';
+      
+      // Buscar as 6 artes mais recentes diretamente da tabela artes (apenas visíveis para usuários normais)
       const artsResult = await db.execute(sql`
         SELECT 
           id, 
@@ -2875,6 +2882,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           viewcount,
           "downloadCount" as downloadcount
         FROM arts
+        WHERE ${!isAdmin ? sql`"isVisible" = TRUE` : sql`1=1`}
         WHERE designerid = ${designer.id}
         ORDER BY "createdAt" DESC
       `;
