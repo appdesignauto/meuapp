@@ -85,7 +85,7 @@ export function DesignerSection({ designer, userId }: DesignerSectionProps) {
     <div className="mb-0 py-2 border-t border-b border-neutral-100">
       {/* Header: Nome, imagem e botão seguir agrupados */}
       <div className="flex items-center gap-2 mb-1.5">
-        <div className="flex-grow cursor-pointer" onClick={() => setLocation(`/designers/${designer.username}`)}>
+        <div className="cursor-pointer" onClick={() => setLocation(`/designers/${designer.username}`)}>
           <div className="flex items-center">
             <div className="w-9 h-9 rounded-full overflow-hidden bg-neutral-100 flex-shrink-0">
               {designer.profileImageUrl ? (
@@ -102,9 +102,38 @@ export function DesignerSection({ designer, userId }: DesignerSectionProps) {
             </div>
             
             <div className="ml-3">
-              <p className="font-medium text-sm text-gray-900 hover:text-blue-600 transition-colors">
-                {designer.name || designer.username}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="font-medium text-sm text-gray-900 hover:text-blue-600 transition-colors">
+                  {designer.name || designer.username}
+                </p>
+                
+                {/* Botão de seguir ao lado do nome */}
+                {userId && userId !== designer.id && (
+                  <Button
+                    variant={designer.isFollowing ? "default" : "outline"}
+                    size="sm"
+                    className={`text-xs h-7 min-w-[80px] ${
+                      designer.isFollowing 
+                        ? "bg-blue-600 hover:bg-blue-700 text-white" 
+                        : "border-blue-300 text-blue-600 hover:bg-blue-50"
+                    }`}
+                    onClick={handleFollowClick}
+                  >
+                    {designer.isFollowing ? (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M20 6 9 17l-5-5"></path></svg>
+                        Seguindo
+                      </>
+                    ) : (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                        Seguir
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+              
               {/* Total de artes destacado abaixo do nome */}
               <p className="text-xs text-neutral-500">
                 {designer.totalArts ? 
@@ -116,32 +145,6 @@ export function DesignerSection({ designer, userId }: DesignerSectionProps) {
             </div>
           </div>
         </div>
-        
-        {/* Botão de seguir próximo ao perfil */}
-        {userId && userId !== designer.id && (
-          <Button
-            variant={designer.isFollowing ? "default" : "outline"}
-            size="sm"
-            className={`text-xs h-8 min-w-[90px] ${
-              designer.isFollowing 
-                ? "bg-blue-600 hover:bg-blue-700 text-white" 
-                : "border-blue-300 text-blue-600 hover:bg-blue-50"
-            }`}
-            onClick={handleFollowClick}
-          >
-            {designer.isFollowing ? (
-              <>
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M20 6 9 17l-5-5"></path></svg>
-                Seguindo
-              </>
-            ) : (
-              <>
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                Seguir
-              </>
-            )}
-          </Button>
-        )}
       </div>
       
       {/* Bio do designer */}
