@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
 import { ArrowRight, ArrowDown } from 'lucide-react';
@@ -7,6 +7,7 @@ import ArtCard from '@/components/ui/ArtCard';
 import { useAuth } from '@/hooks/use-auth';
 import { queryClient } from '@/lib/queryClient';
 import MinimalCategoryFilters from './MinimalCategoryFilters';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ArtGalleryProps {
   categoryId: number | null;
@@ -82,28 +83,45 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
     staleTime: 30000, // Cache por 30 segundos
   });
 
+  // Função para pré-carregar as imagens
+  const preloadImages = useCallback((arts: any[]) => {
+    const promises = arts.map(art => {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = resolve;
+        img.onerror = resolve; // Continue mesmo se falhar o carregamento
+        img.src = art.imageUrl;
+      });
+    });
+    
+    return Promise.all(promises);
+  }, []);
+
   // Atualiza o estado das artes quando novos dados são carregados
   useEffect(() => {
     if (data?.arts) {
-      if (currentPage === 1) {
-        // Se é a primeira página, apenas substitui as artes
-        setAllArts(data.arts);
-      } else {
-        // Se não, adiciona às artes existentes
-        setAllArts(prev => [...prev, ...data.arts]);
-      }
+      // Pré-carrega as imagens antes de exibir
+      preloadImages(data.arts).then(() => {
+        if (currentPage === 1) {
+          // Se é a primeira página, apenas substitui as artes
+          setAllArts(data.arts);
+        } else {
+          // Se não, adiciona às artes existentes
+          setAllArts(prev => [...prev, ...data.arts]);
+        }
+      });
       
       // Verifica se ainda há mais artes para carregar
       setHasMoreArts(currentPage * initialLimit < (data.totalCount || 0));
     }
-  }, [data, currentPage]);
+  }, [data, currentPage, preloadImages]);
 
   // Force re-fetch when filters or user authentication/role change
   useEffect(() => {
     queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
   }, [categoryId, formatId, fileTypeId, user?.nivelacesso]);
 
-  const loadMore = () => {
+  const loadMore = useCallback(() => {
     if (isFetching) return;
 
     // Se já clicou duas vezes (loadCounter = 2)
@@ -123,6 +141,9 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
       setLoadCounter(prev => prev + 1);
       setCurrentPage(prev => prev + 1);
       
+      // Começar a pré-carregar as próximas imagens imediatamente
+      // enquanto outras animações ainda estão acontecendo
+      
       // Manter a posição do scroll após carregar
       if (buttonPosition) {
         // Usando setTimeout para garantir que o scroll aconteça após a renderização
@@ -134,7 +155,7 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
         }, 100);
       }
     }
-  };
+  }, [loadCounter, hasMoreArts, isFetching, setLocation]);
 
   return (
     <section className="py-8 md:py-10 bg-gradient-to-b from-blue-50/50 to-white">
@@ -188,44 +209,69 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
         ) : (
           <>
             <div className="columns-2 xs:columns-2 sm:columns-2 md:columns-3 lg:columns-4 gap-2 xs:gap-3 md:gap-4 space-y-0">
-              {allArts.map((art) => (
-                <div 
-                  key={art.id} 
-                  className="break-inside-avoid mb-3 xs:mb-4 transform hover:-translate-y-1 transition-transform duration-300"
-                  style={{ 
-                    display: 'inline-block',
-                    width: '100%'
-                  }}
-                >
-                  <ArtCard 
-                    art={art} 
-                    onClick={() => setLocation(`/arts/${art.id}`)}
-                  />
-                </div>
-              ))}
+              <AnimatePresence>
+                {allArts.map((art) => (
+                  <motion.div
+                    key={art.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ 
+                      duration: 0.4, 
+                      delay: 0.05 * (art.id % 8), // Escalonamento suave
+                      ease: [0.25, 0.1, 0.25, 1.0] // Curva de easing profissional
+                    }}
+                    className="break-inside-avoid mb-3 xs:mb-4 transform hover:-translate-y-1 transition-transform duration-300"
+                    style={{ 
+                      display: 'inline-block',
+                      width: '100%' 
+                    }}
+                  >
+                    <ArtCard 
+                      art={art} 
+                      onClick={() => setLocation(`/arts/${art.id}`)}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
             
             {/* Load More Button */}
             {hasMoreArts && (
-              <div className="flex justify-center mt-12">
+              <motion.div 
+                className="flex justify-center mt-12"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+                key="load-more-container"
+              >
                 <Button 
                   ref={loadMoreButtonRef}
                   variant="outline" 
                   onClick={loadMore}
                   disabled={isFetching}
-                  className="px-8 py-6 flex items-center rounded-full border-2 border-blue-300 text-blue-600 hover:bg-blue-50 font-medium"
+                  className="px-8 py-6 flex items-center rounded-full border-2 border-blue-300 text-blue-600 hover:bg-blue-50 font-medium transform transition-all duration-300 hover:scale-105 active:scale-95"
                   id="load-more-button"
                 >
                   {isFetching ? (
-                    <span className="flex items-center">
+                    <motion.span 
+                      className="flex items-center"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.2 }}
+                    >
                       <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
                       Carregando...
-                    </span>
+                    </motion.span>
                   ) : (
-                    <>
+                    <motion.div 
+                      className="flex items-center"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.2 }}
+                    >
                       <span>
                         {loadCounter === 0 
                           ? 'Carregar mais designs' 
@@ -236,10 +282,10 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
                         }
                       </span>
                       {loadCounter < 2 ? <ArrowDown className="ml-2 h-5 w-5" /> : <ArrowRight className="ml-2 h-5 w-5" />}
-                    </>
+                    </motion.div>
                   )}
                 </Button>
-              </div>
+              </motion.div>
             )}
           </>
         )}
