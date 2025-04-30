@@ -1964,27 +1964,32 @@ export class DatabaseStorage implements IStorage {
   async getArtById(id: number): Promise<Art | undefined> {
     try {
       // Usar SQL bruto para evitar problemas com nomes de colunas
+      // Incluir JOIN com categorias para obter dados da categoria diretamente
       const result = await db.execute(sql`
         SELECT 
-          id, 
-          "createdAt", 
-          "updatedAt", 
-          designerid, 
-          viewcount,
-          width, 
-          height, 
-          "isPremium",
-          "isVisible", 
-          "categoryId", 
-          "collectionId", 
-          title, 
-          "imageUrl", 
-          format, 
-          "fileType", 
-          "editUrl", 
-          aspectratio
-        FROM arts 
-        WHERE id = ${id}
+          a.id, 
+          a."createdAt", 
+          a."updatedAt", 
+          a.designerid, 
+          a.viewcount,
+          a.width, 
+          a.height, 
+          a."isPremium",
+          a."isVisible", 
+          a."categoryId", 
+          a."collectionId", 
+          a.title, 
+          a."imageUrl", 
+          a.format, 
+          a."fileType", 
+          a."editUrl", 
+          a.aspectratio,
+          c.id as "category_id",
+          c.name as "category_name",
+          c.slug as "category_slug"
+        FROM arts a
+        LEFT JOIN categories c ON a."categoryId" = c.id
+        WHERE a.id = ${id}
       `);
       
       if (result.rows.length === 0) {
@@ -1992,13 +1997,25 @@ export class DatabaseStorage implements IStorage {
       }
       
       // Mapear colunas minúsculas para camelCase
-      const art = result.rows[0];
-      return {
-        ...art,
-        designerId: art.designerid,
-        viewCount: art.viewcount,
-        aspectRatio: art.aspectratio
+      const row = result.rows[0];
+      
+      // Criar objeto categoria se existir
+      const category = row.category_id ? {
+        id: row.category_id,
+        name: row.category_name,
+        slug: row.category_slug
+      } : null;
+      
+      // Criar objeto arte com categoria embutida
+      const art = {
+        ...row,
+        designerId: row.designerid,
+        viewCount: row.viewcount,
+        aspectRatio: row.aspectratio,
+        category: category
       } as Art;
+      
+      return art;
     } catch (error) {
       console.error("Erro em getArtById:", error);
       throw error;
