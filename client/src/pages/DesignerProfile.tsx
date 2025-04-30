@@ -556,7 +556,11 @@ export default function DesignerProfile() {
               <Button 
                 variant="outline" 
                 size="sm" 
-                className={`rounded-full px-3 md:px-4 h-8 bg-white shadow-sm text-xs md:text-sm ${activeFilter === 'todos' ? 'border-blue-200 text-blue-700' : 'hover:border-blue-200'}`}
+                className={`rounded-full px-3 md:px-4 h-8 bg-white shadow-sm text-xs md:text-sm transition-all duration-300 ease-in-out ${
+                  activeFilter === 'todos' 
+                    ? 'border-blue-200 text-blue-700 scale-105 shadow-md' 
+                    : 'hover:border-blue-200 hover:scale-105'
+                }`}
                 onClick={() => {
                   setActiveFilter('todos');
                   setArtsPage(1); 
@@ -570,7 +574,11 @@ export default function DesignerProfile() {
               <Button 
                 variant="outline" 
                 size="sm" 
-                className={`rounded-full px-3 md:px-4 h-8 bg-white shadow-sm text-xs md:text-sm ${activeFilter === 'favoritas' ? 'border-blue-200 text-blue-700' : 'hover:border-blue-200'}`}
+                className={`rounded-full px-3 md:px-4 h-8 bg-white shadow-sm text-xs md:text-sm transition-all duration-300 ease-in-out ${
+                  activeFilter === 'favoritas' 
+                    ? 'border-blue-200 text-blue-700 scale-105 shadow-md' 
+                    : 'hover:border-blue-200 hover:scale-105'
+                }`}
                 onClick={() => {
                   setActiveFilter('favoritas');
                   setArtsPage(1);
@@ -584,7 +592,11 @@ export default function DesignerProfile() {
               <Button 
                 variant="outline" 
                 size="sm" 
-                className={`rounded-full px-3 md:px-4 h-8 bg-white shadow-sm text-xs md:text-sm ${activeFilter === 'recentes' ? 'border-blue-200 text-blue-700' : 'hover:border-blue-200'}`}
+                className={`rounded-full px-3 md:px-4 h-8 bg-white shadow-sm text-xs md:text-sm transition-all duration-300 ease-in-out ${
+                  activeFilter === 'recentes' 
+                    ? 'border-blue-200 text-blue-700 scale-105 shadow-md' 
+                    : 'hover:border-blue-200 hover:scale-105'
+                }`}
                 onClick={() => {
                   setActiveFilter('recentes');
                   setArtsPage(1);
@@ -599,7 +611,11 @@ export default function DesignerProfile() {
               <Button 
                 variant="outline" 
                 size="sm" 
-                className={`rounded-full px-3 md:px-4 h-8 bg-white shadow-sm text-xs md:text-sm ${activeFilter === 'emalta' ? 'border-blue-200 text-blue-700' : 'hover:border-blue-200'}`}
+                className={`rounded-full px-3 md:px-4 h-8 bg-white shadow-sm text-xs md:text-sm transition-all duration-300 ease-in-out ${
+                  activeFilter === 'emalta' 
+                    ? 'border-blue-200 text-blue-700 scale-105 shadow-md' 
+                    : 'hover:border-blue-200 hover:scale-105'
+                }`}
                 onClick={() => {
                   setActiveFilter('emalta');
                   setArtsPage(1);
@@ -630,14 +646,21 @@ export default function DesignerProfile() {
         ) : (
           <>
             {/* Layout com Masonry adaptativo para estilo Pinterest - Responsivo */}
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6 px-2 md:px-0">
+            <div 
+              className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6 px-2 md:px-0 transition-opacity duration-300 ease-in-out opacity-100"
+              key={activeFilter} // Força a remontagem do grid ao trocar de filtro
+            >
               {displayedArts(data).map((art, index) => (
                 <div 
                   key={art.id} 
                   className={`
                     mb-3 md:mb-4 lg:mb-6 transition-all duration-200 hover:translate-y-[-5px]
+                    animate-fadeIn
                     ${index % 3 === 0 ? 'row-span-1' : index % 5 === 0 ? 'row-span-1' : ''}
                   `}
+                  style={{
+                    animationDelay: `${index * 50}ms`, // Cria um efeito de "cascata" na aparição
+                  }}
                 >
                   <ArtCard art={art} />
                 </div>
