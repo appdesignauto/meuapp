@@ -2983,7 +2983,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           role: users.role,
           followers: sql`COALESCE(followers, 0)::int`, 
           following: sql`COALESCE(following, 0)::int`,
-          createdat: users.createdAt
+          createdat: users.criadoem
         })
         .from(users)
         .where(eq(users.username, username));
