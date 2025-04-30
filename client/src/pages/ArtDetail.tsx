@@ -495,7 +495,7 @@ export default function ArtDetail() {
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.3, delay: 0.2 }}
-                className="mb-4"
+                className="mb-3"
               >
                 <DesignerSection designer={art.designer} userId={user?.id} />
               </motion.div>
@@ -505,7 +505,7 @@ export default function ArtDetail() {
             
             {/* Benefits Section - Animação e design melhorados */}
             <motion.div 
-              className="mb-4 space-y-2"
+              className="mb-3 space-y-1.5"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.3, delay: 0.3 }}
@@ -541,7 +541,7 @@ export default function ArtDetail() {
             
             {/* Action Buttons - Redesenhados com animações */}
             <motion.div 
-              className="mb-4 space-y-2"
+              className="mb-3 space-y-1.5"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.3, delay: 0.4 }}
@@ -557,10 +557,10 @@ export default function ArtDetail() {
                   className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 py-5 shadow-md"
                 >
                   <ExternalLink className="h-5 w-5" />
-                  <span className="flex items-center">
-                    Editar no {art.fileType?.name || 'Editor'}
+                  <span className="flex items-center font-semibold">
+                    EDITAR ARTE
                     {art.downloadCount > 0 && (
-                      <span className="ml-2 bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                      <span className="ml-2 bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full font-normal">
                         {art.downloadCount} {art.downloadCount === 1 ? 'download' : 'downloads'}
                       </span>
                     )}
@@ -639,7 +639,7 @@ export default function ArtDetail() {
             
             {/* Additional Info Box - Mostra o banner premium */}
             {art.isPremiumLocked && (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-3">
                 <h3 className="text-amber-800 font-semibold flex items-center gap-2 mb-2 text-sm">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
                   Acesso Premium Necessário
