@@ -555,7 +555,7 @@ export default function ArtDetail() {
                   <Button 
                     onClick={() => setLocation('/plans')} 
                     size="lg"
-                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 py-5 shadow-md"
+                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 py-5 shadow-md text-white"
                   >
                     <Sparkles className="h-5 w-5" />
                     <span className="flex items-center font-semibold">
