@@ -2971,22 +2971,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Verificar se o usuário é admin
       const isAdmin = req.user && (req.user as any).role === 'admin';
       
-      // Buscar designer pelo username usando parâmetros preparados
-      const [designer] = await db
-        .select({
-          id: users.id,
-          name: users.name,
-          username: users.username,
-          bio: users.bio,
-          profileimageurl: users.profileimageurl,
-          nivelacesso: users.nivelacesso,
-          role: users.role,
-          followers: sql`COALESCE(followers, 0)::int`, 
-          following: sql`COALESCE(following, 0)::int`,
-          createdat: users.criadoem
-        })
-        .from(users)
-        .where(eq(users.username, username));
+      // Buscar designer pelo username usando SQL direto para evitar problemas com o COALESCE
+      const designerQuery = await db.execute(
+        sql`
+          SELECT 
+            id,
+            name,
+            username,
+            bio,
+            profileimageurl,
+            nivelacesso,
+            role,
+            COALESCE(followers, 0) as followers,
+            COALESCE(following, 0) as following,
+            criadoem as createdat
+          FROM users
+          WHERE username = ${username}
+          LIMIT 1
+        `
+      );
+      
+      const designer = designerQuery.rows[0];
         
       if (!designer) {
         return res.status(404).json({ message: "Designer não encontrado" });
