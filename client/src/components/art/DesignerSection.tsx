@@ -31,13 +31,16 @@ export function DesignerSection({ designer: initialDesigner, userId }: DesignerS
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [designer, setDesigner] = useState(initialDesigner);
+  const [isFollowing, setIsFollowing] = useState(initialDesigner.isFollowing);
+  const [isUpdating, setIsUpdating] = useState(false);
   
   // Log para debug das propriedades do designer
-  console.log('Dados do designer:', designer);
+  console.log('Dados do designer:', designer, 'Status de seguidor:', isFollowing);
 
   // Atualiza o estado local quando as props mudam
   useEffect(() => {
     setDesigner(initialDesigner);
+    setIsFollowing(initialDesigner.isFollowing);
   }, [initialDesigner]);
 
   const handleFollowClick = (e: React.MouseEvent) => {
@@ -49,18 +52,25 @@ export function DesignerSection({ designer: initialDesigner, userId }: DesignerS
         description: "Faça login para seguir este designer",
         variant: "destructive",
       });
+      setLocation("/auth");
       return;
     }
+
+    if (isUpdating) return; // Evita múltiplos cliques durante uma operação
     
-    const isCurrentlyFollowing = designer.isFollowing;
+    setIsUpdating(true);
+    const newFollowStatus = !isFollowing;
     
-    // Otimistic UI update - atualiza o estado local imediatamente
+    // Atualiza imediatamente para melhor UX
+    setIsFollowing(newFollowStatus);
+    
+    // Atualiza o contador de seguidores
     setDesigner(prev => ({
       ...prev,
-      isFollowing: !isCurrentlyFollowing,
-      followers: isCurrentlyFollowing
-        ? (prev.followers || 1) - 1
-        : (prev.followers || 0) + 1
+      isFollowing: newFollowStatus,
+      followers: newFollowStatus
+        ? (prev.followers || 0) + 1
+        : Math.max(0, (prev.followers || 1) - 1)
     }));
     
     // API call - Usando o endpoint unificado
@@ -69,16 +79,17 @@ export function DesignerSection({ designer: initialDesigner, userId }: DesignerS
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ action: isCurrentlyFollowing ? 'unfollow' : 'follow' }),
+      body: JSON.stringify({ action: !newFollowStatus ? 'unfollow' : 'follow' }),
       credentials: 'include'
     })
     .then(response => {
       if (!response.ok) {
         // Reverte a mudança em caso de erro
+        setIsFollowing(!newFollowStatus);
         setDesigner(prev => ({
           ...prev,
-          isFollowing: isCurrentlyFollowing,
-          followers: isCurrentlyFollowing
+          isFollowing: !newFollowStatus,
+          followers: !newFollowStatus
             ? (prev.followers || 0) + 1
             : Math.max(0, (prev.followers || 1) - 1)
         }));
@@ -88,8 +99,8 @@ export function DesignerSection({ designer: initialDesigner, userId }: DesignerS
     })
     .then(() => {
       toast({
-        title: isCurrentlyFollowing ? "Deixou de seguir" : "Designer seguido",
-        description: isCurrentlyFollowing 
+        title: !newFollowStatus ? "Deixou de seguir" : "Designer seguido",
+        description: !newFollowStatus 
           ? `Você deixou de seguir ${designer.name || designer.username}`
           : `Você está seguindo ${designer.name || designer.username}`,
       });
@@ -100,6 +111,9 @@ export function DesignerSection({ designer: initialDesigner, userId }: DesignerS
         description: error.message,
         variant: "destructive",
       });
+    })
+    .finally(() => {
+      setIsUpdating(false);
     });
   };
   
@@ -180,22 +194,31 @@ export function DesignerSection({ designer: initialDesigner, userId }: DesignerS
             <Button
               variant="default"
               size="sm"
-              className={`text-xs px-3 h-8 rounded-full ${
-                designer.isFollowing 
+              disabled={isUpdating}
+              className={`text-xs px-3 h-8 rounded-full transition-all duration-200 ${
+                isFollowing 
                   ? "bg-blue-600 hover:bg-blue-700 text-white shadow-sm" 
                   : "bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200/50 shadow-sm"
               }`}
               onClick={handleFollowClick}
             >
-              {designer.isFollowing ? (
+              {isUpdating ? (
+                <span className="flex items-center">
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Atualizando...
+                </span>
+              ) : isFollowing ? (
                 <span className="flex items-center">
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5"><path d="M20 6 9 17l-5-5"></path></svg>
-                  Seguindo {/* Status: {designer.isFollowing ? 'true' : 'false'} */}
+                  Seguindo
                 </span>
               ) : (
                 <span className="flex items-center">
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                  Seguir {/* Status: {designer.isFollowing ? 'true' : 'false'} */}
+                  Seguir
                 </span>
               )}
             </Button>
