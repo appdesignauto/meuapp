@@ -110,12 +110,12 @@ export function DesignerSection({ designer, userId }: DesignerSectionProps) {
                 {/* Botão de seguir ao lado do nome */}
                 {userId && userId !== designer.id && (
                   <Button
-                    variant={designer.isFollowing ? "default" : "outline"}
+                    variant="default"
                     size="sm"
                     className={`text-xs h-7 min-w-[80px] ${
                       designer.isFollowing 
                         ? "bg-blue-600 hover:bg-blue-700 text-white" 
-                        : "border-blue-300 text-blue-600 hover:bg-blue-50"
+                        : "bg-blue-100 hover:bg-blue-200 text-blue-700 border-0"
                     }`}
                     onClick={handleFollowClick}
                   >
