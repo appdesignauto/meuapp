@@ -78,13 +78,16 @@ export default function PainelSeguindo() {
 
     try {
       setIsFollowingAction(true);
-      const action = isCurrentlyFollowing ? "unfollow" : "follow";
-      const response = await fetch(`/api/users/follow/${designerId}`, {
-        method: "POST",
+      // Ajustar a URL e método baseado na ação
+      const endpoint = isCurrentlyFollowing 
+        ? `/api/unfollow/${designerId}`
+        : `/api/follow/${designerId}`;
+        
+      const response = await fetch(endpoint, {
+        method: isCurrentlyFollowing ? "DELETE" : "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ action }),
       });
 
       if (!response.ok) {

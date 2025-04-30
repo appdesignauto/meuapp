@@ -1908,6 +1908,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(imageUploadRoutes);
   
   // Configurar rotas de seguidores (following)
+
+  // Rota para listar os designers que o usuário atual está seguindo
+  app.get("/api/users/following", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      
+      // Buscar todos os designers que o usuário está seguindo
+      const query = `
+        SELECT u.id, u.username, u.name, u.profileimageurl, u.bio, u.role, u.followers, 
+        (SELECT COUNT(*) FROM arts WHERE "designerId" = u.id) as "artsCount",
+        u.followers as "followersCount", 
+        true as "isFollowing"
+        FROM users u
+        JOIN "userFollows" uf ON u.id = uf."followingId"
+        WHERE uf."followerId" = ${userId}
+        ORDER BY u.name ASC
+      `;
+      
+      const result = await db.execute(sql.raw(query));
+      const followingDesigners = result.rows || [];
+      
+      // Retornar no formato que o componente espera
+      res.json({ following: followingDesigners });
+    } catch (error) {
+      console.error("Erro ao buscar designers seguidos:", error);
+      res.status(500).json({ message: "Erro ao buscar designers seguidos" });
+    }
+  });
+  
+  // Rota para listar designers populares
+  app.get("/api/designers/popular", async (req, res) => {
+    try {
+      const userId = req.isAuthenticated() ? req.user!.id : null;
+      
+      // Buscar designers populares baseados no número de seguidores e artes
+      const query = `
+        SELECT u.id, u.username, u.name, u.profileimageurl, u.bio, u.role, u.followers, 
+        (SELECT COUNT(*) FROM arts WHERE "designerId" = u.id) as "artsCount",
+        u.followers as "followersCount",
+        ${userId ? `
+          EXISTS (
+            SELECT 1 FROM "userFollows" 
+            WHERE "followerId" = ${userId} AND "followingId" = u.id
+          ) as "isFollowing"
+        ` : 'false as "isFollowing"'}
+        FROM users u
+        WHERE (u.role = 'designer' OR u.role = 'designer_adm' OR u.role = 'admin')
+        AND u.isactive = true
+        ORDER BY u.followers DESC, "artsCount" DESC
+        LIMIT 10
+      `;
+      
+      const result = await db.execute(sql.raw(query));
+      const designers = result.rows || [];
+      
+      res.json({ designers });
+    } catch (error) {
+      console.error("Erro ao buscar designers populares:", error);
+      res.status(500).json({ message: "Erro ao buscar designers populares" });
+    }
+  });
   setupFollowRoutes(app, isAuthenticated);
   
   // Endpoints para gerenciar configurações do site
