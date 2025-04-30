@@ -679,7 +679,14 @@ export default function ArtDetail() {
                   className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 py-5 shadow-md"
                 >
                   <ExternalLink className="h-5 w-5" />
-                  Editar no {art.fileType?.name || 'Editor'}
+                  <span className="flex items-center">
+                    Editar no {art.fileType?.name || 'Editor'}
+                    {art.downloadCount > 0 && (
+                      <span className="ml-2 bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                        {art.downloadCount} {art.downloadCount === 1 ? 'download' : 'downloads'}
+                      </span>
+                    )}
+                  </span>
                 </Button>
               </motion.div>
               
@@ -712,7 +719,14 @@ export default function ArtDetail() {
                         >
                           <Heart className={`h-4 w-4 ${liked ? 'fill-blue-600 text-blue-600' : ''}`} />
                         </motion.div>
-                        {liked ? 'Favoritado' : 'Favoritar'}
+                        <span className="flex items-center">
+                          {liked ? 'Favoritado' : 'Favoritar'}
+                          {art.favoriteCount > 0 && (
+                            <span className="ml-1.5 bg-blue-100 text-blue-700 text-xs px-1.5 py-0.5 rounded-full">
+                              {art.favoriteCount}
+                            </span>
+                          )}
+                        </span>
                       </>
                     )}
                   </Button>
@@ -730,7 +744,14 @@ export default function ArtDetail() {
                     onClick={handleShare}
                   >
                     <Share2 className="h-4 w-4" />
-                    Compartilhar
+                    <span className="flex items-center">
+                      Compartilhar
+                      {art.shareCount > 0 && (
+                        <span className="ml-1.5 bg-blue-100 text-blue-700 text-xs px-1.5 py-0.5 rounded-full">
+                          {art.shareCount}
+                        </span>
+                      )}
+                    </span>
                   </Button>
                 </motion.div>
               </div>
@@ -795,7 +816,7 @@ export default function ArtDetail() {
               </div>
               
               <div className="bg-gradient-to-r from-blue-50 to-white border-y border-neutral-200 p-3">
-                <h3 className="text-sm font-semibold text-blue-700">Estatísticas</h3>
+                <h3 className="text-sm font-semibold text-blue-700">Visualizações e Downloads</h3>
               </div>
               
               <div className="grid grid-cols-2 divide-x divide-neutral-200">
@@ -812,24 +833,6 @@ export default function ArtDetail() {
                   <div className="flex items-center">
                     <Download className="h-4 w-4 text-blue-600 mr-2" />
                     <p className="font-medium text-sm">{art.downloadCount || 0}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 divide-x divide-neutral-200 border-t border-neutral-200">
-                <div className="p-3 bg-white hover:bg-blue-50/30 transition-colors">
-                  <p className="text-xs text-neutral-500 mb-1">Favoritos</p>
-                  <div className="flex items-center">
-                    <Heart className="h-4 w-4 text-rose-500 mr-2" />
-                    <p className="font-medium text-sm">{art.favoriteCount || 0}</p>
-                  </div>
-                </div>
-                
-                <div className="p-3 bg-white hover:bg-blue-50/30 transition-colors">
-                  <p className="text-xs text-neutral-500 mb-1">Compartilhamentos</p>
-                  <div className="flex items-center">
-                    <Share2 className="h-4 w-4 text-blue-600 mr-2" />
-                    <p className="font-medium text-sm">{art.shareCount || 0}</p>
                   </div>
                 </div>
               </div>
