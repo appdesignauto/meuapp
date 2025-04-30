@@ -54,7 +54,7 @@ export const artsRelations = relations(arts, ({one, many}) => ({
     references: [collections.id],
   }),
   designer: one(users, {
-    fields: [arts.designerId],
+    fields: [arts.designerid], // Corrigido para minúsculo para corresponder ao banco de dados
     references: [users.id],
     relationName: 'designer'
   }),
