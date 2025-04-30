@@ -14,9 +14,10 @@ interface Art {
 interface ArtCardProps {
   art: Art;
   onClick?: () => void;
+  showEditAction?: boolean;
 }
 
-function ArtCard({ art, onClick }: ArtCardProps) {
+function ArtCard({ art, onClick, showEditAction = true }: ArtCardProps) {
   // Estilo Pinterest: sem rodapé com informações, apenas imagem com badges opcionais
   const renderCard = () => (
     <div className="overflow-hidden rounded-xl transition-all duration-300 hover:shadow-md cursor-pointer h-full bg-muted">

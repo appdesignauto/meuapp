@@ -840,7 +840,11 @@ export default function ArtDetail() {
           </Badge>
         </div>
         
-        <RelatedArts artId={Number(id)} />
+        <RelatedArts 
+          artId={Number(id)} 
+          originalCategory={art?.category} 
+          designerName={art?.designer?.name || art?.designer?.username || "Design Auto"}
+        />
         
         <div className="mt-8 flex justify-center">
           <Button 
