@@ -36,12 +36,9 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
     if (formatId) url.searchParams.append('formatId', formatId.toString());
     if (fileTypeId) url.searchParams.append('fileTypeId', fileTypeId.toString());
     
-    // Adiciona explicitamente o filtro de visibilidade para usuários não admin
-    // Isso garante que artes marcadas como não visíveis não apareçam na galeria pública
-    const isAdmin = user?.nivelacesso === 'admin' || user?.nivelacesso === 'designer_adm' || user?.nivelacesso === 'designer';
-    if (!isAdmin) {
-      url.searchParams.append('isVisible', 'true');
-    }
+    // Adiciona explicitamente o filtro de visibilidade para TODOS os usuários na vitrine pública
+    // Apenas no painel admin as artes ocultas devem aparecer
+    url.searchParams.append('isVisible', 'true');
     
     return url.pathname + url.search;
   };
@@ -58,8 +55,8 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
       categoryId, 
       formatId, 
       fileTypeId,
-      // Adiciona visibilidade ao cache key para que a consulta seja refeita quando o status do usuário mudar
-      isVisible: !isAdmin ? true : undefined
+      // Na vitrine, sempre exibimos apenas artes visíveis, independente do nível de acesso do usuário
+      isVisible: true
     }
   ];
 
