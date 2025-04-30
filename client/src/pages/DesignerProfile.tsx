@@ -543,33 +543,33 @@ export default function DesignerProfile() {
             </span>
           </h2>
           
-          {/* Filtros inteligentes */}
-          <div className="flex flex-wrap justify-center gap-2 mt-4 md:mt-0">
+          {/* Filtros inteligentes - Melhorados para mobile */}
+          <div className="flex flex-nowrap overflow-x-auto scrollbar-hide justify-start md:justify-center gap-2 mt-4 md:mt-0 -mx-4 px-4 md:px-0 md:mx-0 pb-2">
             <Button 
               variant="outline" 
               size="sm" 
-              className="rounded-full px-4 h-8 bg-white shadow-sm"
+              className="rounded-full px-3 md:px-4 h-8 bg-white shadow-sm text-xs md:text-sm flex-none"
               disabled
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path></svg>
-              Filtros
+              <span className="hidden md:inline">Filtros</span>
             </Button>
             <Button 
               variant="outline" 
               size="sm" 
-              className={`rounded-full px-4 h-8 bg-white shadow-sm ${activeFilter === 'todos' ? 'border-blue-200 text-blue-700' : 'hover:border-blue-200'}`}
+              className={`rounded-full px-3 md:px-4 h-8 bg-white shadow-sm text-xs md:text-sm flex-none ${activeFilter === 'todos' ? 'border-blue-200 text-blue-700' : 'hover:border-blue-200'}`}
               onClick={() => {
                 setActiveFilter('todos');
                 setArtsPage(1); // Reset para página 1 ao mudar filtro
               }}
             >
               Todos
-              {activeFilter === 'todos' && <span className="ml-1.5 text-xs">({data.arts.length})</span>}
+              {activeFilter === 'todos' && <span className="ml-1 text-xs">({data.arts.length})</span>}
             </Button>
             <Button 
               variant="outline" 
               size="sm" 
-              className={`rounded-full px-4 h-8 bg-white shadow-sm ${activeFilter === 'favoritas' ? 'border-blue-200 text-blue-700' : 'hover:border-blue-200'}`}
+              className={`rounded-full px-3 md:px-4 h-8 bg-white shadow-sm text-xs md:text-sm flex-none ${activeFilter === 'favoritas' ? 'border-blue-200 text-blue-700' : 'hover:border-blue-200'}`}
               onClick={() => {
                 setActiveFilter('favoritas');
                 setArtsPage(1); // Reset para página 1 ao mudar filtro
@@ -577,16 +577,11 @@ export default function DesignerProfile() {
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
               Favoritas
-              {activeFilter === 'favoritas' && (
-                <span className="ml-1.5 text-xs">
-                  ({data.arts.length})
-                </span>
-              )}
             </Button>
             <Button 
               variant="outline" 
               size="sm" 
-              className={`rounded-full px-4 h-8 bg-white shadow-sm ${activeFilter === 'recentes' ? 'border-blue-200 text-blue-700' : 'hover:border-blue-200'}`}
+              className={`rounded-full px-3 md:px-4 h-8 bg-white shadow-sm text-xs md:text-sm flex-none ${activeFilter === 'recentes' ? 'border-blue-200 text-blue-700' : 'hover:border-blue-200'}`}
               onClick={() => {
                 setActiveFilter('recentes');
                 setArtsPage(1); // Reset para página 1 ao mudar filtro
@@ -595,7 +590,7 @@ export default function DesignerProfile() {
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
               Recentes
               {activeFilter === 'recentes' && (
-                <span className="ml-1.5 text-xs">
+                <span className="ml-1 text-xs">
                   ({data.arts.length})
                 </span>
               )}
@@ -604,7 +599,7 @@ export default function DesignerProfile() {
             <Button 
               variant="outline" 
               size="sm" 
-              className={`rounded-full px-4 h-8 bg-white shadow-sm ${activeFilter === 'emalta' ? 'border-blue-200 text-blue-700' : 'hover:border-blue-200'}`}
+              className={`rounded-full px-3 md:px-4 h-8 bg-white shadow-sm text-xs md:text-sm flex-none ${activeFilter === 'emalta' ? 'border-blue-200 text-blue-700' : 'hover:border-blue-200'}`}
               onClick={() => {
                 setActiveFilter('emalta');
                 setArtsPage(1); // Reset para página 1 ao mudar filtro
@@ -633,13 +628,13 @@ export default function DesignerProfile() {
           </div>
         ) : (
           <>
-            {/* Layout com Masonry adaptativo para estilo Pinterest */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            {/* Layout com Masonry adaptativo para estilo Pinterest - Responsivo */}
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6 px-2 md:px-0">
               {displayedArts(data).map((art, index) => (
                 <div 
                   key={art.id} 
                   className={`
-                    mb-4 md:mb-6 transition-all duration-200 hover:translate-y-[-5px]
+                    mb-3 md:mb-4 lg:mb-6 transition-all duration-200 hover:translate-y-[-5px]
                     ${index % 3 === 0 ? 'row-span-1' : index % 5 === 0 ? 'row-span-1' : ''}
                   `}
                 >
@@ -648,13 +643,14 @@ export default function DesignerProfile() {
               ))}
             </div>
             
-            {/* Paginação centralizada */}
+            {/* Paginação centralizada - Responsiva */}
             {totalArtsPages(data) > 1 && (
-              <div className="flex justify-center mt-10 mb-6">
+              <div className="flex justify-center mt-6 md:mt-8 mb-4 md:mb-6">
                 <Pagination
                   currentPage={artsPage}
                   totalPages={totalArtsPages(data)}
                   onPageChange={handlePageChange}
+                  className="scale-90 md:scale-100"
                 />
               </div>
             )}
