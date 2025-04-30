@@ -460,10 +460,10 @@ export default function ArtDetail() {
                     variant="default"
                     size="sm"
                     className="bg-white/90 backdrop-blur-sm text-gray-700 hover:bg-white border border-gray-200 shadow-sm"
-                    onClick={handleToggleFavorite}
+                    onClick={handleLike}
                   >
-                    {isFavorite ? 
-                      <><HeartFilled className="h-4 w-4 text-rose-500 mr-1.5" /> Favoritado</> : 
+                    {liked ? 
+                      <><Heart className="h-4 w-4 text-rose-500 fill-current mr-1.5" /> Favoritado</> : 
                       <><Heart className="h-4 w-4 mr-1.5" /> Favoritar</>
                     }
                   </Button>
