@@ -414,9 +414,9 @@ export default function ArtDetail() {
       
       {/* Layout principal: uma única linha, duas colunas */}
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0">
-          {/* Coluna da imagem - agora ocupa mais espaço */}
-          <div className="lg:col-span-2 relative">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-0 min-h-[80vh]">
+          {/* Coluna da imagem - agora ocupa 75% do espaço (3/4) */}
+          <div className="md:col-span-3 relative flex flex-col">
             {/* Header com título nos dispositivos móveis (visível apenas em telas pequenas) */}
             <div className="block md:hidden p-4 bg-white border-b">
               <h1 className="text-xl font-bold text-gray-800">
@@ -436,8 +436,8 @@ export default function ArtDetail() {
               </div>
             </div>
             
-            {/* Container da imagem com fundo gradiente */}
-            <div className="relative bg-gradient-to-br from-blue-50/30 to-neutral-50 h-full min-h-[50vh] flex items-center justify-center p-6">
+            {/* Container da imagem com fundo gradiente - flex-grow para preencher altura disponível */}
+            <div className="relative bg-gradient-to-br from-blue-50/30 to-neutral-50 flex-grow flex items-center justify-center p-6 h-full">
               {/* Imagem */}
               <motion.div 
                 className="relative group w-full h-full flex items-center justify-center"
@@ -448,7 +448,7 @@ export default function ArtDetail() {
                 <motion.img 
                   src={art.imageUrl} 
                   alt={art.title} 
-                  className="w-full h-full object-contain max-h-[70vh] transition-all duration-300 rounded-md"
+                  className="w-full h-auto object-contain max-h-[80vh] transition-all duration-300 rounded-md"
                   initial={{ scale: 0.95, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.5 }}
@@ -525,7 +525,7 @@ export default function ArtDetail() {
           </div>
           
           {/* Painel de informações - design moderno e clean */}
-          <div className="p-0 flex flex-col h-full border-l border-gray-100">
+          <div className="p-0 flex flex-col h-full border-l border-gray-100 md:h-auto md:max-h-[calc(100vh-200px)] md:overflow-y-auto">
             {/* Header com título (visível apenas em telas médias e grandes) */}
             <div className="hidden md:block p-6 bg-white border-b border-gray-100">
               <h1 className="text-xl font-bold text-gray-800">
@@ -963,27 +963,30 @@ export default function ArtDetail() {
         </div>
       )}
       
-      {/* Related Arts Section - Com animação */}
+      {/* Related Arts Section - Com animação e design mais clean */}
       <motion.div 
-        className="bg-white rounded-xl shadow-md p-6"
+        className="bg-white rounded-xl shadow-sm p-6"
         initial={{ y: 40, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.4, delay: 0.5 }}
       >
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-bold text-gray-800 flex items-center">
-            <ArrowUpRight className="h-5 w-5 text-blue-600 mr-2" />
-            Conheça artes similares
+          <h2 className="text-xl font-bold text-gray-800 flex items-center">
+            <span className="text-blue-600 mr-2">•</span>
+            Artes similares
           </h2>
-          <Badge 
-            variant="outline" 
-            className="px-3 py-0.5 text-xs font-normal text-neutral-600 border-neutral-200"
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs border-neutral-200 text-neutral-600 hover:text-blue-600 hover:border-blue-200"
+            onClick={() => setLocation(`/category/${art.category?.id || 'all'}`)}
           >
-            Baseadas na sua navegação
-          </Badge>
+            Ver mais
+            <ChevronRight className="h-3.5 w-3.5 ml-1" />
+          </Button>
         </div>
         
-        <RelatedArts artId={Number(id)} />
+        <RelatedArts artId={Number(id)} limit={4} />
         
         <div className="mt-8 flex justify-center">
           <Button 
