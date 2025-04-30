@@ -483,11 +483,11 @@ export default function CategoryPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Eye className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                    <span className="text-xs sm:text-sm text-gray-600 truncate">Visualizações: 347</span>
+                    <span className="text-xs sm:text-sm text-gray-600 truncate">Visualizações: {arts.reduce((total, art) => total + (art.viewCount || art.viewcount || 0), 0)}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Star className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                    <span className="text-xs sm:text-sm text-gray-600 truncate">Arte premium: {category.isPremium ? 'Sim' : 'Não'}</span>
+                    <Sparkles className="h-4 w-4 text-purple-400 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm text-gray-600 truncate">Artes premium: {arts.filter(art => art.isPremium).length}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <BookMarked className="h-4 w-4 text-gray-400 flex-shrink-0" />
@@ -511,14 +511,14 @@ export default function CategoryPage() {
                         <Sparkles className="h-4 w-4 mr-2 text-purple-400" />
                         Artes premium
                       </div>
-                      <span className="font-medium">5</span>
+                      <span className="font-medium">{arts.filter(art => art.isPremium).length}</span>
                     </div>
                     <div className="flex items-center justify-between border-b border-gray-100 pb-2">
                       <div className="flex items-center text-sm text-gray-600">
                         <Tag className="h-4 w-4 mr-2 text-green-400" />
                         Artes gratuitas
                       </div>
-                      <span className="font-medium">{totalCount - 5}</span>
+                      <span className="font-medium">{arts.filter(art => !art.isPremium).length}</span>
                     </div>
                   </div>
                 </div>
