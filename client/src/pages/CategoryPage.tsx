@@ -7,7 +7,7 @@ import { ptBR } from 'date-fns/locale';
 import { 
   ArrowLeft, Search, Filter, AlertCircle, Loader2, 
   LayoutGrid, LayoutList, Calendar, Star, Eye, Clock, Sparkles, 
-  BookMarked, ChevronRight, Info, Tag
+  BookMarked, ChevronRight, Info, Tag, FileImage
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -497,31 +497,31 @@ export default function CategoryPage() {
               </div>
               <div className="md:w-64 flex flex-col justify-between mt-4 md:mt-0">
                 <div>
-                  <h4 className="text-sm font-medium mb-2 text-gray-500 uppercase">Buscar nesta categoria</h4>
-                  <form onSubmit={handleSearch} className="relative mb-4">
-                    <Input
-                      type="text"
-                      placeholder="Buscar arte..."
-                      className="pr-10 text-sm"
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                    />
-                    <button 
-                      type="submit" 
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      <Search className="h-4 w-4" />
-                    </button>
-                  </form>
+                  <h4 className="text-sm font-medium mb-2 text-gray-500 uppercase">Estatísticas</h4>
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                      <div className="flex items-center text-sm text-gray-600">
+                        <FileImage className="h-4 w-4 mr-2 text-gray-400" />
+                        Total de artes
+                      </div>
+                      <span className="font-medium">{totalCount}</span>
+                    </div>
+                    <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                      <div className="flex items-center text-sm text-gray-600">
+                        <Sparkles className="h-4 w-4 mr-2 text-purple-400" />
+                        Artes premium
+                      </div>
+                      <span className="font-medium">5</span>
+                    </div>
+                    <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                      <div className="flex items-center text-sm text-gray-600">
+                        <Tag className="h-4 w-4 mr-2 text-green-400" />
+                        Artes gratuitas
+                      </div>
+                      <span className="font-medium">{totalCount - 5}</span>
+                    </div>
+                  </div>
                 </div>
-                <Button 
-                  variant="outline"
-                  className={`w-full mt-2 ${colorScheme.primary} border-gray-200 hover:bg-gray-50`}
-                  onClick={() => setLocation('/categories')}
-                >
-                  Ver todas categorias
-                  <ChevronRight className="ml-1 h-3 w-3" />
-                </Button>
               </div>
             </div>
           </div>
@@ -576,27 +576,6 @@ export default function CategoryPage() {
             Grátis
           </Badge>
         </div>
-        
-        {/* Área de busca rápida quando info não está visível */}
-        {!showCategoryInfo && (
-          <div className="max-w-xl mx-auto mb-8">
-            <form onSubmit={handleSearch} className="relative">
-              <Input
-                type="text"
-                placeholder="Buscar arte nesta categoria..."
-                className="pr-12 py-6 text-center rounded-full"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-              <button 
-                type="submit" 
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-blue-600 text-white rounded-full p-2 hover:bg-blue-700"
-              >
-                <Search className="h-5 w-5" />
-              </button>
-            </form>
-          </div>
-        )}
       </div>
       
       {/* Filtros horizontais centralizados */}
