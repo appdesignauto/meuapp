@@ -63,12 +63,13 @@ export function DesignerSection({ designer: initialDesigner, userId }: DesignerS
         : (prev.followers || 0) + 1
     }));
     
-    // API call
-    fetch(`/api/${isCurrentlyFollowing ? 'unfollow' : 'follow'}/${designer.id}`, {
-      method: isCurrentlyFollowing ? 'DELETE' : 'POST',
+    // API call - Usando o endpoint unificado
+    fetch(`/api/users/follow/${designer.id}`, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
+      body: JSON.stringify({ action: isCurrentlyFollowing ? 'unfollow' : 'follow' }),
       credentials: 'include'
     })
     .then(response => {

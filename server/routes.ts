@@ -3183,111 +3183,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Seguir um designer (protegido por autenticação)
+  // Mantida para compatibilidade com código frontend legado
   app.post("/api/follow/:designerId", isAuthenticated, async (req, res) => {
     try {
       const designerId = parseInt(req.params.designerId);
       const followerId = (req.user as any).id;
       
-      // Verificar se o designer existe
-      const [designer] = await db.select()
-        .from(users)
-        .where(eq(users.id, designerId));
+      console.log("Redirecionando chamada de /api/follow para /api/users/follow com action=follow");
       
-      if (!designer) {
-        return res.status(404).json({ message: "Designer não encontrado" });
-      }
+      // Redirecionando para o novo endpoint unificado
+      // Modificando o req.body para incluir o parâmetro action
+      req.body = { action: "follow" };
       
-      // Verificar se não está tentando seguir a si mesmo
-      if (followerId === designerId) {
-        return res.status(400).json({ message: "Você não pode seguir a si mesmo" });
-      }
+      // Chamando a API nova diretamente através de fetch interno
+      const response = await fetch(`${process.env.NODE_ENV === 'production' ? 'https' : 'http'}://${req.headers.host}/api/users/follow/${designerId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cookie': req.headers.cookie || ''
+        },
+        body: JSON.stringify({ action: "follow" })
+      });
       
-      // Verificar se já segue
-      const [existingFollow] = await db.select()
-        .from(userFollows)
-        .where(
-          and(
-            eq(userFollows.followerId, followerId),
-            eq(userFollows.followingId, designerId)
-          )
-        );
-      
-      if (existingFollow) {
-        return res.status(400).json({ message: "Você já segue este designer" });
-      }
-      
-      // Criar novo registro de seguidor
-      await db.insert(userFollows)
-        .values({
-          followerId,
-          followingId: designerId
-        });
-      
-      // Atualizar contadores de seguidores e seguindo
-      await db.execute(sql`
-        UPDATE users 
-        SET followers = followers + 1 
-        WHERE id = ${designerId}
-      `);
-      
-      await db.execute(sql`
-        UPDATE users 
-        SET following = following + 1 
-        WHERE id = ${followerId}
-      `);
-      
-      res.status(201).json({ message: "Designer seguido com sucesso" });
+      const data = await response.json();
+      return res.status(response.status).json(data);
     } catch (error) {
-      console.error("Erro ao seguir designer:", error);
+      console.error("Erro ao seguir designer (redirecionamento):", error);
       res.status(500).json({ message: "Erro ao seguir designer" });
     }
   });
   
   // Deixar de seguir um designer (protegido por autenticação)
+  // Mantida para compatibilidade com código frontend legado
   app.delete("/api/unfollow/:designerId", isAuthenticated, async (req, res) => {
     try {
       const designerId = parseInt(req.params.designerId);
       const followerId = (req.user as any).id;
       
-      // Verificar se o registro de seguidor existe
-      const [existingFollow] = await db.select()
-        .from(userFollows)
-        .where(
-          and(
-            eq(userFollows.followerId, followerId),
-            eq(userFollows.followingId, designerId)
-          )
-        );
+      console.log("Redirecionando chamada de /api/unfollow para /api/users/follow com action=unfollow");
       
-      if (!existingFollow) {
-        return res.status(400).json({ message: "Você não segue este designer" });
-      }
+      // Redirecionando para o novo endpoint unificado
+      const response = await fetch(`${process.env.NODE_ENV === 'production' ? 'https' : 'http'}://${req.headers.host}/api/users/follow/${designerId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cookie': req.headers.cookie || ''
+        },
+        body: JSON.stringify({ action: "unfollow" })
+      });
       
-      // Remover registro de seguidor
-      await db.delete(userFollows)
-        .where(
-          and(
-            eq(userFollows.followerId, followerId),
-            eq(userFollows.followingId, designerId)
-          )
-        );
-      
-      // Atualizar contadores de seguidores e seguindo (decremento)
-      await db.execute(sql`
-        UPDATE users 
-        SET followers = GREATEST(followers - 1, 0) 
-        WHERE id = ${designerId}
-      `);
-      
-      await db.execute(sql`
-        UPDATE users 
-        SET following = GREATEST(following - 1, 0) 
-        WHERE id = ${followerId}
-      `);
-      
-      res.status(200).json({ message: "Deixou de seguir o designer com sucesso" });
+      const data = await response.json();
+      return res.status(response.status).json(data);
     } catch (error) {
-      console.error("Erro ao deixar de seguir designer:", error);
+      console.error("Erro ao deixar de seguir designer (redirecionamento):", error);
       res.status(500).json({ message: "Erro ao deixar de seguir designer" });
     }
   });
