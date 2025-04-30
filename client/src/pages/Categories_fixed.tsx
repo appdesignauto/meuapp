@@ -291,79 +291,71 @@ const Categories = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {filteredCategories?.map((category) => {
+            {filteredCategories.map((category) => {
               const imagePaths = getCategoryImagePaths(category);
+              const colorScheme = getCategoryColorScheme(category.slug);
               
               return (
                 <Link key={category.id} href={`/categories/${category.slug}`}>
                   <div className="group relative bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-500 cursor-pointer h-full transform hover:-translate-y-1">
-                    {/* Componente de categoria colorido */}
-                    {(() => {
-                      const colorScheme = getCategoryColorScheme(category.slug);
+                    {/* Faixa de cor superior */}
+                    <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${colorScheme.gradient} transform origin-left transition-all duration-500 group-hover:h-2`}></div>
+
+                    {/* Imagens em Grid */}
+                    <div className="aspect-square relative">
+                      <div className="grid grid-cols-2 h-full">
+                        {imagePaths.map((path, i) => (
+                          <div key={i} className="overflow-hidden border border-white relative">
+                            <img 
+                              src={path} 
+                              alt="" 
+                              className="object-cover w-full h-full transform group-hover:scale-110 transition-transform duration-700"
+                              loading="lazy"
+                            />
+                            {/* Overlay para efeito de hover */}
+                            <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
+                          </div>
+                        ))}
+                      </div>
                       
-                      return (
-                        <>
-                        {/* Faixa de cor superior */}
-                        <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${colorScheme.gradient} transform origin-left transition-all duration-500 group-hover:h-2`}></div>
+                      {/* Badge de quantidade */}
+                      <div className={`absolute top-3 left-3 ${colorScheme.light} ${colorScheme.primary} text-xs font-medium rounded-full px-2.5 py-1 shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-500 transform scale-75 group-hover:scale-100`}>
+                        {category.artCount} {category.artCount === 1 ? 'arte' : 'artes'}
+                      </div>
 
-                        {/* Imagens em Grid */}
-                        <div className="aspect-square relative">
-                          <div className="grid grid-cols-2 h-full">
-                            {imagePaths.map((path, i) => (
-                              <div key={i} className="overflow-hidden border border-white relative">
-                                <img 
-                                  src={path} 
-                                  alt="" 
-                                  className="object-cover w-full h-full transform group-hover:scale-110 transition-transform duration-700"
-                                  loading="lazy"
-                                />
-                                {/* Overlay para efeito de hover */}
-                                <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
-                              </div>
-                            ))}
-                          </div>
-                          
-                          {/* Badge de quantidade */}
-                          <div className={`absolute top-3 left-3 ${colorScheme.light} ${colorScheme.primary} text-xs font-medium rounded-full px-2.5 py-1 shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-500 transform scale-75 group-hover:scale-100`}>
-                            {category.artCount} {category.artCount === 1 ? 'arte' : 'artes'}
-                          </div>
+                      {/* Overlay com gradiente na parte inferior */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    </div>
+                    
+                    {/* Informações da Categoria */}
+                    <div className="p-4 relative">
+                      {/* Ícone do tipo circle pulse em hover */}
+                      <div className={`absolute -top-6 right-4 flex items-center justify-center ${colorScheme.light} rounded-full w-12 h-12 opacity-0 group-hover:opacity-100 shadow-lg transition-all duration-500 transform -translate-y-4 group-hover:translate-y-0`}>
+                        <div className={`absolute inset-0 ${colorScheme.light} rounded-full animate-ping opacity-30`}></div>
+                        <Eye className={`h-5 w-5 ${colorScheme.primary} relative z-10`} />
+                      </div>
 
-                          {/* Overlay com gradiente na parte inferior */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                        </div>
+                      <h3 className="text-lg font-semibold text-neutral-800 mb-1 group-hover:text-neutral-900 transition-colors duration-300">{category.name}</h3>
+                      
+                      <p className="text-sm text-neutral-600 group-hover:text-neutral-700 mb-2 transition-colors duration-300">
+                        <span className="font-medium">{category.artCount}</span> {category.artCount === 1 ? 'arte disponível' : 'artes disponíveis'}
+                      </p>
+                      
+                      <div className="flex justify-between items-center mt-3">
+                        <span className="text-xs text-neutral-500">
+                          {category.lastUpdate && (
+                            typeof category.lastUpdate === 'string' 
+                              ? formatDate(category.lastUpdate)
+                              : formatDate(new Date(category.lastUpdate).toISOString())
+                          )}
+                        </span>
                         
-                        {/* Informações da Categoria */}
-                        <div className="p-4 relative">
-                          {/* Ícone do tipo circle pulse em hover */}
-                          <div className={`absolute -top-6 right-4 flex items-center justify-center ${colorScheme.light} rounded-full w-12 h-12 opacity-0 group-hover:opacity-100 shadow-lg transition-all duration-500 transform -translate-y-4 group-hover:translate-y-0`}>
-                            <div className={`absolute inset-0 ${colorScheme.light} rounded-full animate-ping opacity-30`}></div>
-                            <Eye className={`h-5 w-5 ${colorScheme.primary} relative z-10`} />
-                          </div>
-
-                          <h3 className="text-lg font-semibold text-neutral-800 mb-1 group-hover:text-neutral-900 transition-colors duration-300">{category.name}</h3>
-                          
-                          <p className="text-sm text-neutral-600 group-hover:text-neutral-700 mb-2 transition-colors duration-300">
-                            <span className="font-medium">{category.artCount}</span> {category.artCount === 1 ? 'arte disponível' : 'artes disponíveis'}
-                          </p>
-                          
-                          <div className="flex justify-between items-center mt-3">
-                            <span className="text-xs text-neutral-500">
-                              {category.lastUpdate && (
-                                typeof category.lastUpdate === 'string' 
-                                  ? formatDate(category.lastUpdate)
-                                  : formatDate(new Date(category.lastUpdate).toISOString())
-                              )}
-                            </span>
-                            
-                            <div className={`flex items-center ${colorScheme.primary} text-xs font-medium`}>
-                              <span>Ver artes</span>
-                              <ChevronRight className={`h-4 w-4 ml-1 transition-transform duration-300 group-hover:translate-x-0.5`} />
-                            </div>
-                          </div>
+                        <div className={`flex items-center ${colorScheme.primary} text-xs font-medium`}>
+                          <span>Ver artes</span>
+                          <ChevronRight className={`h-4 w-4 ml-1 transition-transform duration-300 group-hover:translate-x-0.5`} />
                         </div>
-                        </>
-                      );
-                    })()}
+                      </div>
+                    </div>
                   </div>
                 </Link>
               );
