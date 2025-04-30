@@ -29,6 +29,9 @@ export function DesignerSection({ designer, userId }: DesignerSectionProps) {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   
+  // Log para debug das propriedades do designer
+  console.log('Dados do designer:', designer);
+
   const handleFollowClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Evita o redirecionamento para o perfil ao clicar no botão
     
