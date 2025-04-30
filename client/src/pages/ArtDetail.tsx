@@ -781,7 +781,7 @@ export default function ArtDetail() {
                   <p className="text-xs text-neutral-500 mb-1">Formato</p>
                   <p className="font-medium text-sm flex items-center">
                     <span className="w-2 h-2 bg-blue-600 rounded-full mr-2"></span>
-                    {art.format?.name || 'Não especificado'}
+                    {typeof art.format === 'string' ? art.format : art.format?.name || 'Não especificado'}
                   </p>
                 </div>
                 
@@ -789,7 +789,7 @@ export default function ArtDetail() {
                   <p className="text-xs text-neutral-500 mb-1">Tipo de Arquivo</p>
                   <p className="font-medium text-sm flex items-center">
                     <span className="w-2 h-2 bg-blue-600 rounded-full mr-2"></span>
-                    {art.fileType?.name || 'Não especificado'}
+                    {typeof art.fileType === 'string' ? art.fileType : art.fileType?.name || 'Não especificado'}
                   </p>
                 </div>
               </div>
