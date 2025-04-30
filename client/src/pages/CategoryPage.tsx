@@ -54,7 +54,7 @@ export default function CategoryPage() {
   const [, setLocation] = useLocation();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
-  const [activeQuickFilter, setActiveQuickFilter] = useState<'all' | 'popular' | 'recent' | 'premium'>('all');
+  const [activeQuickFilter, setActiveQuickFilter] = useState<'all' | 'popular' | 'recent' | 'premium' | 'free'>('all');
   const [filters, setFilters] = useState({
     formatId: null as number | null,
     fileTypeId: null as number | null,
@@ -290,7 +290,7 @@ export default function CategoryPage() {
   // Get the appropriate color scheme based on the category slug
   const colorScheme = slug ? getCategoryColorScheme(slug) : getCategoryColorScheme('default');
   
-  const handleQuickFilterChange = (filter: 'all' | 'popular' | 'recent' | 'premium') => {
+  const handleQuickFilterChange = (filter: 'all' | 'popular' | 'recent' | 'premium' | 'free') => {
     setActiveQuickFilter(filter);
     // Aqui você pode adicionar lógica para filtrar as artes com base no filtro selecionado
     // Por exemplo, você poderia atualizar os filtros de API
@@ -501,6 +501,15 @@ export default function CategoryPage() {
           >
             <Sparkles className="w-4 h-4 mr-1.5" />
             Premium
+          </Badge>
+          
+          <Badge 
+            variant={activeQuickFilter === 'free' ? 'default' : 'outline'} 
+            className={`px-4 py-2.5 cursor-pointer text-sm transition-all ${activeQuickFilter === 'free' ? 'bg-green-600' : 'hover:bg-green-50'}`}
+            onClick={() => handleQuickFilterChange('free')}
+          >
+            <Star className="w-4 h-4 mr-1.5" />
+            Grátis
           </Badge>
         </div>
         
