@@ -1700,6 +1700,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Erro ao remover favorito" });
     }
   });
+  
+  // Rota para registrar compartilhamento de arte
+  app.post("/api/shares", async (req, res) => {
+    try {
+      const { artId } = req.body;
+      const userId = req.user ? (req.user as any).id : null; // Opcional, usuários anônimos podem compartilhar
+      
+      // Validar o ID da arte
+      if (!artId || isNaN(parseInt(artId))) {
+        return res.status(400).json({ message: "ID de arte inválido" });
+      }
+      
+      // Verificar se a arte existe
+      const art = await storage.getArtById(parseInt(artId));
+      if (!art) {
+        return res.status(404).json({ message: "Arte não encontrada" });
+      }
+      
+      // Registrar o compartilhamento
+      await db.execute(sql`
+        INSERT INTO shares ("artId", "userId", "createdAt")
+        VALUES (${parseInt(artId)}, ${userId}, ${new Date()})
+      `);
+      
+      res.status(201).json({ success: true });
+    } catch (error) {
+      console.error("Erro ao registrar compartilhamento:", error);
+      res.status(500).json({ 
+        message: "Erro ao registrar compartilhamento",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
 
   // Admin API - Create Art
   app.post("/api/admin/arts", isAdmin, async (req, res) => {

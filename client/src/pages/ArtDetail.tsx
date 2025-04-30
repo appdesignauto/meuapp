@@ -247,7 +247,12 @@ export default function ArtDetail() {
       return await res.json();
     },
     onSuccess: () => {
+      // Invalidar a query para atualizar os detalhes da arte com o novo contador
       queryClient.invalidateQueries({ queryKey: ['/api/arts', id] });
+      toast({
+        title: "Compartilhamento registrado",
+        description: "Obrigado por compartilhar esta arte!",
+      });
     },
     onError: (error) => {
       console.error("Erro ao registrar compartilhamento:", error);
