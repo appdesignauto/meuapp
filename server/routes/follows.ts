@@ -18,6 +18,28 @@ interface CustomRequest extends Request {
 }
 
 export function setupFollowRoutes(app: any, isAuthenticated: (req: Request, res: Response, next: NextFunction) => void) {
+  // Rota para obter artes recentes dos designers seguidos
+  app.get("/api/following/arts", isAuthenticated, async (req: CustomRequest, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Usuário não autenticado" });
+      }
+      
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 12;
+      
+      // Usar método centralizado do storage
+      const storage = req.app.get('storage');
+      const arts = await storage.getFollowingDesignersArts(userId, limit);
+      
+      console.log(`Encontradas ${arts.length} artes dos designers seguidos por ${userId}`);
+      return res.status(200).json({ arts });
+    } catch (error) {
+      console.error("Erro ao buscar artes dos designers seguidos:", error);
+      return res.status(500).json({ message: "Erro ao buscar artes dos designers seguidos" });
+    }
+  });
   // Rota para buscar os designers que o usuário segue
   app.get("/api/users/following", isAuthenticated, async (req: CustomRequest, res: Response) => {
     try {
