@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
 import { ArrowRight, ArrowDown } from 'lucide-react';
@@ -16,23 +16,27 @@ interface ArtGalleryProps {
 }
 
 const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtGalleryProps) => {
-  const [page, setPage] = useState(1);
+  const initialLimit = 12; // Sempre mostra 12 itens inicialmente
   const [, setLocation] = useLocation();
-  const limit = 12; // Aumentado para 12 itens por página (era 8)
   const [loadCounter, setLoadCounter] = useState(0); // Contador para controlar redirecionamento
+  const [allArts, setAllArts] = useState<any[]>([]); // Estado para armazenar todas as artes carregadas
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMoreArts, setHasMoreArts] = useState(true);
+  const loadMoreButtonRef = useRef<HTMLButtonElement>(null); // Referência para o botão carregar mais
   const { user } = useAuth();
 
   // Reset page when filters change
   useEffect(() => {
-    setPage(1);
-    setLoadCounter(0); // Reseta contador ao mudar filtros
+    setCurrentPage(1);
+    setLoadCounter(0);
+    setAllArts([]);
   }, [categoryId, formatId, fileTypeId]);
 
   // Build the URL with query parameters
-  const getArtsUrl = () => {
+  const getArtsUrl = (page: number) => {
     const url = new URL('/api/arts', window.location.origin);
     url.searchParams.append('page', page.toString());
-    url.searchParams.append('limit', limit.toString());
+    url.searchParams.append('limit', initialLimit.toString());
     
     if (categoryId) url.searchParams.append('categoryId', categoryId.toString());
     if (formatId) url.searchParams.append('formatId', formatId.toString());
@@ -52,8 +56,8 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
   const queryKey = [
     '/api/arts',
     { 
-      page, 
-      limit, 
+      page: currentPage, 
+      limit: initialLimit, 
       categoryId, 
       formatId, 
       fileTypeId,
@@ -68,25 +72,41 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
   }>({
     queryKey,
     queryFn: async () => {
-      const res = await fetch(getArtsUrl());
+      const res = await fetch(getArtsUrl(currentPage));
       if (!res.ok) throw new Error('Erro ao carregar artes');
       return res.json();
     },
+    // Desabilita recargas automáticas para controlarmos manualmente
+    refetchOnWindowFocus: false,
+    refetchOnMount: currentPage === 1, // Carrega apenas na primeira montagem
+    staleTime: 30000, // Cache por 30 segundos
   });
+
+  // Atualiza o estado das artes quando novos dados são carregados
+  useEffect(() => {
+    if (data?.arts) {
+      if (currentPage === 1) {
+        // Se é a primeira página, apenas substitui as artes
+        setAllArts(data.arts);
+      } else {
+        // Se não, adiciona às artes existentes
+        setAllArts(prev => [...prev, ...data.arts]);
+      }
+      
+      // Verifica se ainda há mais artes para carregar
+      setHasMoreArts(currentPage * initialLimit < (data.totalCount || 0));
+    }
+  }, [data, currentPage]);
 
   // Force re-fetch when filters or user authentication/role change
   useEffect(() => {
     queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
   }, [categoryId, formatId, fileTypeId, user?.nivelacesso]);
 
-  const arts = data?.arts || [];
-  const totalCount = data?.totalCount || 0;
-  const hasMore = page * limit < totalCount;
-
   const loadMore = () => {
     if (isFetching) return;
 
-    // Verifica se já carregou uma vez (loadCounter = 1)
+    // Se já clicou uma vez (loadCounter = 1)
     if (loadCounter >= 1) {
       // Na segunda vez, redireciona para a página de artes com filtros
       setLocation('/arts');
@@ -94,9 +114,25 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
     }
 
     // Na primeira vez, carrega mais artes
-    if (hasMore) {
-      setPage(prevPage => prevPage + 1);
-      setLoadCounter(prevCounter => prevCounter + 1);
+    if (hasMoreArts) {
+      // Guardar a posição do botão para manter o scroll
+      const buttonPosition = loadMoreButtonRef.current?.getBoundingClientRect();
+      const scrollY = window.scrollY;
+      
+      // Incrementa o contador e a página
+      setLoadCounter(prev => prev + 1);
+      setCurrentPage(prev => prev + 1);
+      
+      // Manter a posição do scroll após carregar
+      if (buttonPosition) {
+        // Usando requestAnimationFrame para garantir que o scroll aconteça após a renderização
+        setTimeout(() => {
+          window.scrollTo({
+            top: scrollY,
+            behavior: 'auto'
+          });
+        }, 100);
+      }
     }
   };
 
@@ -152,7 +188,7 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
         ) : (
           <>
             <div className="columns-2 xs:columns-2 sm:columns-2 md:columns-3 lg:columns-4 gap-2 xs:gap-3 md:gap-4 space-y-0">
-              {arts.map((art) => (
+              {allArts.map((art) => (
                 <div 
                   key={art.id} 
                   className="break-inside-avoid mb-3 xs:mb-4 transform hover:-translate-y-1 transition-transform duration-300"
@@ -170,13 +206,15 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
             </div>
             
             {/* Load More Button */}
-            {hasMore && (
+            {hasMoreArts && (
               <div className="flex justify-center mt-12">
                 <Button 
+                  ref={loadMoreButtonRef}
                   variant="outline" 
                   onClick={loadMore}
                   disabled={isFetching}
                   className="px-8 py-6 flex items-center rounded-full border-2 border-blue-300 text-blue-600 hover:bg-blue-50 font-medium"
+                  id="load-more-button"
                 >
                   {isFetching ? (
                     <span className="flex items-center">
@@ -188,8 +226,8 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
                     </span>
                   ) : (
                     <>
-                      <span>Carregar mais designs</span>
-                      <ArrowDown className="ml-2 h-5 w-5" />
+                      <span>{loadCounter === 0 ? 'Carregar mais designs' : 'Ver todos os designs'}</span>
+                      {loadCounter === 0 ? <ArrowDown className="ml-2 h-5 w-5" /> : <ArrowRight className="ml-2 h-5 w-5" />}
                     </>
                   )}
                 </Button>
