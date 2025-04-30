@@ -2971,102 +2971,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Verificar se o usuário é admin
       const isAdmin = req.user && (req.user as any).role === 'admin';
       
-      // Buscar designer pelo username usando SQL direto para evitar problemas com o COALESCE
-      const designerQuery = await db.execute(
+      // Buscamos dados do designer diretamente
+      const userQuery = await db.execute(
         sql`
-          SELECT 
-            id,
-            name,
-            username,
-            bio,
-            profileimageurl,
-            nivelacesso,
-            role,
-            COALESCE(followers, 0) as followers,
-            COALESCE(following, 0) as following,
-            criadoem as createdat
-          FROM users
-          WHERE username = ${username}
-          LIMIT 1
+        SELECT 
+          id,
+          username,
+          name,
+          bio,
+          profileimageurl,
+          nivelacesso,
+          role,
+          website,
+          location,
+          criadoem,
+          COALESCE(followers, 0) as followers,
+          COALESCE(following, 0) as following,
+          sociallinks
+        FROM users
+        WHERE username = ${username}
+        LIMIT 1
         `
       );
       
-      const designer = designerQuery.rows[0];
-        
-      if (!designer) {
+      // Se não houver resultados, retornamos 404
+      if (userQuery.rows.length === 0) {
         return res.status(404).json({ message: "Designer não encontrado" });
       }
+      
+      // O primeiro resultado é o designer
+      const designer = userQuery.rows[0];
       
       // Verificar se o usuário logado já segue este designer
       let isFollowing = false;
       if (req.user) {
         const followerId = (req.user as any).id;
         
-        // Usar parâmetros preparados para evitar SQL injection
-        const [existingFollow] = await db
-          .select()
-          .from(userFollows)
-          .where(and(
-            eq(userFollows.followerId, followerId),
-            eq(userFollows.followingId, designer.id)
-          ));
-          
-        isFollowing = !!existingFollow;
+        const followQuery = await db.execute(
+          sql`
+          SELECT id FROM "userFollows"
+          WHERE "followerId" = ${followerId}
+          AND "followingId" = ${designer.id}
+          LIMIT 1
+          `
+        );
+        
+        isFollowing = followQuery.rows.length > 0;
       }
       
-      // Buscar as artes deste designer usando SQL direto
-      // Usando o formato sql`` que funciona para esta biblioteca específica
-      const designerArtsResult = await db.execute(
+      // Buscar artes do designer com condição de visibilidade para usuários não admin
+      const artsQuery = await db.execute(
         !isAdmin
           ? sql`
-              SELECT 
-                id, 
-                title, 
-                "imageUrl" as imageurl, 
-                "isPremium" as ispremium, 
-                format, 
-                "createdAt" as createdat,
-                viewcount,
-                "downloadCount" as downloadcount
-              FROM arts
-              WHERE designerid = ${designer.id}
-                AND "isVisible" = true
-              ORDER BY "createdAt" DESC
+            SELECT 
+              id, 
+              title, 
+              "imageUrl", 
+              "isPremium", 
+              format, 
+              "createdAt",
+              viewcount,
+              "downloadCount"
+            FROM arts
+            WHERE designerid = ${designer.id}
+              AND "isVisible" = true
+            ORDER BY "createdAt" DESC
             `
           : sql`
-              SELECT 
-                id, 
-                title, 
-                "imageUrl" as imageurl, 
-                "isPremium" as ispremium, 
-                format, 
-                "createdAt" as createdat,
-                viewcount,
-                "downloadCount" as downloadcount
-              FROM arts
-              WHERE designerid = ${designer.id}
-              ORDER BY "createdAt" DESC
+            SELECT 
+              id, 
+              title, 
+              "imageUrl", 
+              "isPremium", 
+              format, 
+              "createdAt",
+              viewcount,
+              "downloadCount"
+            FROM arts
+            WHERE designerid = ${designer.id}
+            ORDER BY "createdAt" DESC
             `
       );
       
-      const designerArts = designerArtsResult.rows;
-      
-      // Contagens
-      const artCount = designerArts.length;
-      const premiumArtCount = designerArts.filter((art: any) => art.ispremium).length;
+      const designerArts = artsQuery.rows;
       
       // Calcular estatísticas
-      // Agora que a coluna downloadCount existe, calculamos a soma real
-      const totalDownloads = designerArts.reduce((sum: number, art: any) => sum + (parseInt(String(art.downloadcount)) || 0), 0);
-      const totalViews = designerArts.reduce((sum: number, art: any) => sum + (parseInt(String(art.viewcount)) || 0), 0);
+      const artCount = designerArts.length;
+      const premiumArtCount = designerArts.filter(art => art.isPremium).length;
+      const totalDownloads = designerArts.reduce((sum, art) => 
+        sum + (parseInt(String(art.downloadCount || 0))), 0);
+      const totalViews = designerArts.reduce((sum, art) => 
+        sum + (parseInt(String(art.viewcount || 0))), 0);
       
-      // Adaptamos os nomes de campo para o padrão CamelCase esperado pelo frontend
+      // Preparar resposta formatada para o frontend
       const response = {
-        ...designer,
-        // Ajustar campos para camelCase para manter compatibilidade com frontend
+        id: designer.id,
+        username: designer.username,
+        name: designer.name,
+        bio: designer.bio,
         profileImageUrl: designer.profileimageurl,
-        createdAt: designer.createdat,
-        nivelAcesso: designer.nivelacesso, // Adicionamos o nivelacesso explicitamente
+        nivelAcesso: designer.nivelacesso,
+        role: designer.role,
+        website: designer.website || "",
+        location: designer.location || "",
+        socialLinks: designer.sociallinks || {},
+        followers: designer.followers || 0,
+        following: designer.following || 0,
+        createdAt: designer.criadoem,
         isFollowing,
         statistics: {
           totalArts: artCount,
@@ -3074,16 +3085,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           totalDownloads,
           totalViews
         },
-        arts: designerArts.map((art: any) => ({
+        arts: designerArts.map(art => ({
           id: art.id,
           title: art.title,
-          imageUrl: art.imageurl,
+          imageUrl: art.imageUrl,
           format: art.format,
-          isPremium: art.ispremium,
-          createdAt: art.createdat
+          isPremium: art.isPremium,
+          createdAt: art.createdAt
         }))
       };
       
+      // Retornar dados do designer com estatísticas
       res.json(response);
     } catch (error) {
       console.error("Erro ao buscar detalhes do designer:", error);
