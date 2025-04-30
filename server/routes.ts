@@ -720,14 +720,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Categoria não encontrada" });
       }
       
-      // Adicionar campos createdAt e updatedAt simulados às categorias
-      // para compatibilidade com o frontend
+      // Buscar as artes mais recentes desta categoria para determinar a data de atualização
+      const { arts } = await storage.getArts(1, 100, { categoryId: category.id, sortBy: 'recent' });
+      
+      // Data de criação - usar uma data histórica fixa se não for possível determinar
+      // Neste caso, usamos a data de lançamento do sistema no início de 2025
+      const createdDate = new Date("2025-01-01");
+      
+      // Data de atualização - usar a data da arte mais recente ou a data atual se não houver artes
+      let updatedDate = new Date();
+      if (arts && arts.length > 0) {
+        // Pegar a data da arte mais recente
+        const latestArt = arts[0]; // Já está ordenado por data (recente)
+        if (latestArt.updatedAt) {
+          updatedDate = new Date(latestArt.updatedAt);
+        } else if (latestArt.createdAt) {
+          updatedDate = new Date(latestArt.createdAt);
+        }
+      }
+      
+      // Adicionar campos createdAt e updatedAt com base nos dados reais
       const enhancedCategory = {
         ...category,
-        // Usar datas fixas para compatibilidade
-        createdAt: new Date("2025-01-01"),
-        updatedAt: new Date("2025-04-15")
+        createdAt: createdDate,
+        updatedAt: updatedDate
       };
+      
+      console.log("Enviando categoria com datas:", {
+        id: enhancedCategory.id,
+        name: enhancedCategory.name,
+        createdAt: enhancedCategory.createdAt,
+        updatedAt: enhancedCategory.updatedAt
+      });
       
       res.json(enhancedCategory);
     } catch (error) {
