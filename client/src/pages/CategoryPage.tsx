@@ -2,10 +2,15 @@ import { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import useScrollTop from '@/hooks/useScrollTop';
-import { ArrowLeft, Search, Filter, SlidersHorizontal, AlertCircle, Loader2 } from 'lucide-react';
+import { 
+  ArrowLeft, Search, Filter, AlertCircle, Loader2, 
+  LayoutGrid, LayoutList, Calendar, Star, Eye, Clock, Sparkles, 
+  BookMarked, ChevronRight, Info
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 import { 
   Select,
   SelectContent,
@@ -33,6 +38,13 @@ import {
   AlertDescription,
   AlertTitle,
 } from "@/components/ui/alert";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { formatDate } from '@/lib/utils';
 
 export default function CategoryPage() {
   // Garantir rolagem para o topo ao navegar para esta página
@@ -42,11 +54,71 @@ export default function CategoryPage() {
   const [, setLocation] = useLocation();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [activeQuickFilter, setActiveQuickFilter] = useState<'all' | 'popular' | 'recent' | 'premium'>('all');
   const [filters, setFilters] = useState({
     formatId: null as number | null,
     fileTypeId: null as number | null,
   });
+  const [showCategoryInfo, setShowCategoryInfo] = useState(false);
   const limit = 12;
+  
+  // Função para obter o esquema de cores específico da categoria
+  const getCategoryColorScheme = (slug: string): { primary: string, gradient: string, light: string, darkBg: string } => {
+    const colorSchemes: { [key: string]: { primary: string, gradient: string, light: string, darkBg: string } } = {
+      'vendas': { 
+        primary: 'text-blue-600', 
+        gradient: 'from-blue-500 to-blue-600',
+        light: 'bg-blue-50',
+        darkBg: 'bg-blue-600'
+      },
+      'lavagem': { 
+        primary: 'text-emerald-600', 
+        gradient: 'from-emerald-500 to-emerald-600',
+        light: 'bg-emerald-50',
+        darkBg: 'bg-emerald-600'
+      },
+      'mecanica': { 
+        primary: 'text-red-600', 
+        gradient: 'from-red-500 to-red-600',
+        light: 'bg-red-50',
+        darkBg: 'bg-red-600'
+      },
+      'locacao': { 
+        primary: 'text-amber-600', 
+        gradient: 'from-amber-500 to-amber-600',
+        light: 'bg-amber-50',
+        darkBg: 'bg-amber-600'
+      },
+      'seminovos': { 
+        primary: 'text-purple-600', 
+        gradient: 'from-purple-500 to-purple-600',
+        light: 'bg-purple-50',
+        darkBg: 'bg-purple-600'
+      },
+      'promocoes': { 
+        primary: 'text-orange-600', 
+        gradient: 'from-orange-500 to-orange-600',
+        light: 'bg-orange-50',
+        darkBg: 'bg-orange-600'
+      },
+      'lancamentos': { 
+        primary: 'text-indigo-600', 
+        gradient: 'from-indigo-500 to-indigo-600',
+        light: 'bg-indigo-50',
+        darkBg: 'bg-indigo-600'
+      },
+      // Default colors
+      'default': { 
+        primary: 'text-blue-600', 
+        gradient: 'from-blue-500 to-blue-600',
+        light: 'bg-blue-50',
+        darkBg: 'bg-blue-600'
+      }
+    };
+    
+    return colorSchemes[slug] || colorSchemes.default;
+  };
 
   // Verifique se o slug está presente e é válido
   const isValidSlug = typeof slug === 'string' && slug.length > 0;
@@ -216,22 +288,96 @@ export default function CategoryPage() {
     setSearch('');
   };
 
+  // Get the appropriate color scheme based on the category slug
+  const colorScheme = slug ? getCategoryColorScheme(slug) : getCategoryColorScheme('default');
+  
+  const handleQuickFilterChange = (filter: 'all' | 'popular' | 'recent' | 'premium') => {
+    setActiveQuickFilter(filter);
+    // Aqui você pode adicionar lógica para filtrar as artes com base no filtro selecionado
+    // Por exemplo, você poderia atualizar os filtros de API
+  };
+  
+  const toggleViewMode = () => {
+    setViewMode(prev => prev === 'grid' ? 'list' : 'grid');
+  };
+  
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header com navegação */}
       <header className="bg-white border-b border-gray-200 py-3 sticky top-0 z-10 shadow-sm">
         <div className="container mx-auto px-4 flex items-center justify-between">
-          <Button 
-            variant="ghost" 
-            size="sm"
-            className="text-blue-600"
-            onClick={() => setLocation('/')}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Voltar
-          </Button>
+          <div className="flex items-center">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="text-blue-600"
+              onClick={() => setLocation('/')}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Voltar
+            </Button>
+            
+            {/* Breadcrumb de navegação */}
+            {!categoryLoading && category && (
+              <div className="hidden sm:flex items-center ml-2 text-sm">
+                <span className="text-gray-400 mx-2">/</span>
+                <Button 
+                  variant="link" 
+                  className="p-0 text-sm text-gray-500 h-auto"
+                  onClick={() => setLocation('/categories')}
+                >
+                  Categorias
+                </Button>
+                <span className="text-gray-400 mx-2">/</span>
+                <span className={`text-sm font-medium ${colorScheme.primary}`}>{category.name}</span>
+              </div>
+            )}
+          </div>
           
           <div className="flex items-center space-x-3">
+            {/* Botão de alternância de visualização */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="icon"
+                    className="h-8 w-8 border-gray-300"
+                    onClick={toggleViewMode}
+                  >
+                    {viewMode === 'grid' ? (
+                      <LayoutGrid className="h-4 w-4 text-gray-600" />
+                    ) : (
+                      <LayoutList className="h-4 w-4 text-gray-600" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Alternar para visualização em {viewMode === 'grid' ? 'lista' : 'grade'}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            {/* Botão de informações da categoria */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="icon"
+                    className={`h-8 w-8 border-gray-300 ${showCategoryInfo ? `${colorScheme.primary} ${colorScheme.light}` : ''}`}
+                    onClick={() => setShowCategoryInfo(prev => !prev)}
+                  >
+                    <Info className="h-4 w-4 text-gray-600" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{showCategoryInfo ? 'Ocultar' : 'Mostrar'} informações da categoria</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            {/* Botão de filtros avançados */}
             <Button 
               variant="outline" 
               size="sm"
@@ -243,6 +389,28 @@ export default function CategoryPage() {
           </div>
         </div>
       </header>
+      
+      {/* Banner Hero da Categoria */}
+      {!categoryLoading && category && (
+        <div className={`relative ${colorScheme.darkBg} text-white overflow-hidden`}>
+          <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent"></div>
+          <div className="container mx-auto px-4 py-8 relative z-10">
+            <div className="max-w-4xl">
+              <div className="flex items-center mb-2">
+                <h1 className="text-3xl md:text-4xl font-bold">
+                  {category.name}
+                </h1>
+                <Badge className="ml-3 bg-white/20 hover:bg-white/30 text-white">
+                  {totalCount} {totalCount === 1 ? 'arte' : 'artes'}
+                </Badge>
+              </div>
+              <p className="text-white/80 mb-6 max-w-2xl">
+                Encontre artes exclusivas para {category.name.toLowerCase()} e destaque o seu negócio com designs profissionais personalizados.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Mensagem de erro */}
       {hasError && (
@@ -257,44 +425,131 @@ export default function CategoryPage() {
         </div>
       )}
       
-      {/* Área de busca centralizada */}
-      <div className="container mx-auto px-4 py-8 text-center">
-        {isLoading ? (
-          <>
-            <Skeleton className="h-10 w-52 mx-auto mb-3" />
-            <Skeleton className="h-4 w-1/4 mx-auto mb-6" />
-          </>
-        ) : (
-          <>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              BUSCAR
-            </h1>
-            <h2 className="text-2xl font-medium text-blue-600 mb-2">
-              {category?.name || 'Categoria'}
-            </h2>
-            <p className="text-neutral-600 mb-6">
-              Sua pesquisa retornou <span className="font-medium">{totalCount}</span> resultados
-            </p>
-          </>
-        )}
-        
-        <div className="max-w-xl mx-auto mb-6">
-          <form onSubmit={handleSearch} className="relative">
-            <Input
-              type="text"
-              placeholder="Buscar arte..."
-              className="pr-12 py-6 text-center rounded-full"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <button 
-              type="submit" 
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-blue-600 text-white rounded-full p-2 hover:bg-blue-700"
-            >
-              <Search className="h-5 w-5" />
-            </button>
-          </form>
+      {/* Painel de Informações da Categoria (exibido quando showCategoryInfo é true) */}
+      {showCategoryInfo && !isLoading && category && (
+        <div className="container mx-auto px-4 py-6">
+          <div className={`bg-white border border-gray-100 rounded-xl shadow-sm p-6 mb-8 relative overflow-hidden`}>
+            <div className={`absolute top-0 left-0 w-full h-1 ${colorScheme.darkBg}`}></div>
+            <div className="flex flex-col md:flex-row gap-6">
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold mb-3">Sobre esta categoria</h3>
+                <p className="text-gray-600 mb-4 leading-relaxed">
+                  Esta categoria contém artes profissionais para {category.name.toLowerCase()}, 
+                  otimizadas para mídias sociais, anúncios, e materiais promocionais. 
+                  Todas as artes podem ser editadas facilmente nos aplicativos suportados.
+                </p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-2">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm text-gray-600">Atualizada em: {formatDate(category.updatedAt ?? new Date())}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Eye className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm text-gray-600">Visualizações: 347</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Star className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm text-gray-600">Arte premium: {category.isPremium ? 'Sim' : 'Não'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <BookMarked className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm text-gray-600">Formatos: {category.formats || 'Variados'}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="md:w-64 flex flex-col justify-between">
+                <div>
+                  <h4 className="text-sm font-medium mb-2 text-gray-500 uppercase">Buscar nesta categoria</h4>
+                  <form onSubmit={handleSearch} className="relative mb-4">
+                    <Input
+                      type="text"
+                      placeholder="Buscar arte..."
+                      className="pr-10 text-sm"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                    />
+                    <button 
+                      type="submit" 
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      <Search className="h-4 w-4" />
+                    </button>
+                  </form>
+                </div>
+                <Button 
+                  variant="outline"
+                  className={`w-full mt-2 ${colorScheme.primary} border-gray-200 hover:bg-gray-50`}
+                  onClick={() => setLocation('/categories')}
+                >
+                  Ver todas categorias
+                  <ChevronRight className="ml-1 h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
+      )}
+      
+      {/* Filtros Rápidos */}
+      <div className="container mx-auto px-4 mb-8">
+        <div className="flex flex-wrap justify-center gap-2 mb-8">
+          <Badge 
+            variant={activeQuickFilter === 'all' ? 'default' : 'outline'} 
+            className={`px-4 py-2.5 cursor-pointer text-sm transition-all ${activeQuickFilter === 'all' ? 'bg-blue-600' : 'hover:bg-blue-50'}`}
+            onClick={() => handleQuickFilterChange('all')}
+          >
+            <Eye className="w-4 h-4 mr-1.5" />
+            Todas
+          </Badge>
+          
+          <Badge 
+            variant={activeQuickFilter === 'popular' ? 'default' : 'outline'} 
+            className={`px-4 py-2.5 cursor-pointer text-sm transition-all ${activeQuickFilter === 'popular' ? 'bg-amber-600' : 'hover:bg-amber-50'}`}
+            onClick={() => handleQuickFilterChange('popular')}
+          >
+            <Star className="w-4 h-4 mr-1.5" />
+            Mais populares
+          </Badge>
+          
+          <Badge 
+            variant={activeQuickFilter === 'recent' ? 'default' : 'outline'} 
+            className={`px-4 py-2.5 cursor-pointer text-sm transition-all ${activeQuickFilter === 'recent' ? 'bg-emerald-600' : 'hover:bg-emerald-50'}`}
+            onClick={() => handleQuickFilterChange('recent')}
+          >
+            <Clock className="w-4 h-4 mr-1.5" />
+            Recentes
+          </Badge>
+          
+          <Badge 
+            variant={activeQuickFilter === 'premium' ? 'default' : 'outline'} 
+            className={`px-4 py-2.5 cursor-pointer text-sm transition-all ${activeQuickFilter === 'premium' ? 'bg-purple-600' : 'hover:bg-purple-50'}`}
+            onClick={() => handleQuickFilterChange('premium')}
+          >
+            <Sparkles className="w-4 h-4 mr-1.5" />
+            Premium
+          </Badge>
+        </div>
+        
+        {/* Área de busca rápida quando info não está visível */}
+        {!showCategoryInfo && (
+          <div className="max-w-xl mx-auto mb-8">
+            <form onSubmit={handleSearch} className="relative">
+              <Input
+                type="text"
+                placeholder="Buscar arte nesta categoria..."
+                className="pr-12 py-6 text-center rounded-full"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              <button 
+                type="submit" 
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-blue-600 text-white rounded-full p-2 hover:bg-blue-700"
+              >
+                <Search className="h-5 w-5" />
+              </button>
+            </form>
+          </div>
+        )}
       </div>
       
       {/* Filtros horizontais centralizados */}
