@@ -3010,31 +3010,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Buscar as artes deste designer usando SQL direto
-      let sqlQuery = `
-        SELECT 
-          id, 
-          title, 
-          "imageUrl" as imageurl, 
-          "isPremium" as ispremium, 
-          format, 
-          "createdAt" as createdat,
-          viewcount,
-          "downloadCount" as downloadcount
-        FROM arts
-        WHERE designerid = $1
-      `;
-      
-      // Adicionar filtro de visibilidade se não for admin
-      if (!isAdmin) {
-        sqlQuery += ` AND "isVisible" = true`;
-      }
-      
-      sqlQuery += ` ORDER BY "createdAt" DESC`;
-      
-      const designerArtsResult = await db.execute({
-        text: sqlQuery,
-        values: [designer.id]
-      });
+      // Usando o formato sql`` que funciona para esta biblioteca específica
+      const designerArtsResult = await db.execute(
+        !isAdmin
+          ? sql`
+              SELECT 
+                id, 
+                title, 
+                "imageUrl" as imageurl, 
+                "isPremium" as ispremium, 
+                format, 
+                "createdAt" as createdat,
+                viewcount,
+                "downloadCount" as downloadcount
+              FROM arts
+              WHERE designerid = ${designer.id}
+                AND "isVisible" = true
+              ORDER BY "createdAt" DESC
+            `
+          : sql`
+              SELECT 
+                id, 
+                title, 
+                "imageUrl" as imageurl, 
+                "isPremium" as ispremium, 
+                format, 
+                "createdAt" as createdat,
+                viewcount,
+                "downloadCount" as downloadcount
+              FROM arts
+              WHERE designerid = ${designer.id}
+              ORDER BY "createdAt" DESC
+            `
+      );
       
       const designerArts = designerArtsResult.rows;
       
@@ -3097,31 +3105,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Buscar artes com paginação usando SQL direto
       const offset = (page - 1) * limit;
       
-      const sqlQuery = `
-        SELECT * FROM arts
-        WHERE designerid = $1
-        ORDER BY "createdAt" DESC
-        LIMIT $2 OFFSET $3
-      `;
-      
-      const artsResult = await db.execute({
-        text: sqlQuery,
-        values: [designerId, limit, offset]
-      });
+      // Usando o formato sql`` que funciona para esta biblioteca específica
+      const artsResult = await db.execute(
+        sql`
+          SELECT * FROM arts
+          WHERE designerid = ${designerId}
+          ORDER BY "createdAt" DESC
+          LIMIT ${limit} OFFSET ${offset}
+        `
+      );
       
       const designerArts = artsResult.rows;
       
       // Contar total de artes
-      const countQuery = `
-        SELECT COUNT(*) as value
-        FROM arts
-        WHERE designerid = $1
-      `;
-      
-      const countResult = await db.execute({
-        text: countQuery,
-        values: [designerId]
-      });
+      const countResult = await db.execute(
+        sql`
+          SELECT COUNT(*) as value
+          FROM arts
+          WHERE designerid = ${designerId}
+        `
+      );
       
       const totalCount = parseInt(countResult.rows[0].value);
       
@@ -3180,23 +3183,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       
       // Atualizar contadores de seguidores e seguindo
-      await db.execute({
-        text: `
-          UPDATE users 
-          SET followers = followers + 1 
-          WHERE id = $1
-        `,
-        values: [designerId]
-      });
+      await db.execute(sql`
+        UPDATE users 
+        SET followers = followers + 1 
+        WHERE id = ${designerId}
+      `);
       
-      await db.execute({
-        text: `
-          UPDATE users 
-          SET following = following + 1 
-          WHERE id = $1
-        `,
-        values: [followerId]
-      });
+      await db.execute(sql`
+        UPDATE users 
+        SET following = following + 1 
+        WHERE id = ${followerId}
+      `);
       
       res.status(201).json({ message: "Designer seguido com sucesso" });
     } catch (error) {
@@ -3235,23 +3232,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
       
       // Atualizar contadores de seguidores e seguindo (decremento)
-      await db.execute({
-        text: `
-          UPDATE users 
-          SET followers = GREATEST(followers - 1, 0) 
-          WHERE id = $1
-        `,
-        values: [designerId]
-      });
+      await db.execute(sql`
+        UPDATE users 
+        SET followers = GREATEST(followers - 1, 0) 
+        WHERE id = ${designerId}
+      `);
       
-      await db.execute({
-        text: `
-          UPDATE users 
-          SET following = GREATEST(following - 1, 0) 
-          WHERE id = $1
-        `,
-        values: [followerId]
-      });
+      await db.execute(sql`
+        UPDATE users 
+        SET following = GREATEST(following - 1, 0) 
+        WHERE id = ${followerId}
+      `);
       
       res.status(200).json({ message: "Deixou de seguir o designer com sucesso" });
     } catch (error) {
