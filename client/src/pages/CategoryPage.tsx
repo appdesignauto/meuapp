@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import useScrollTop from '@/hooks/useScrollTop';
+import { format, subDays, isAfter, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { 
   ArrowLeft, Search, Filter, AlertCircle, Loader2, 
   LayoutGrid, LayoutList, Calendar, Star, Eye, Clock, Sparkles, 
@@ -59,6 +61,7 @@ export default function CategoryPage() {
     formatId: null as number | null,
     fileTypeId: null as number | null,
     isPremium: null as boolean | null,
+    sortBy: null as 'recent' | 'popular' | null,
   });
   const [showCategoryInfo, setShowCategoryInfo] = useState(false);
   const limit = 12;
@@ -204,6 +207,11 @@ export default function CategoryPage() {
       url.searchParams.append('isPremium', filters.isPremium.toString());
     }
     
+    // Adiciona filtro de ordenação
+    if (filters.sortBy) {
+      url.searchParams.append('sortBy', filters.sortBy);
+    }
+    
     if (search) {
       url.searchParams.append('search', search);
     }
@@ -220,7 +228,8 @@ export default function CategoryPage() {
       categoryId: category?.id, 
       formatId: filters.formatId, 
       fileTypeId: filters.fileTypeId, 
-      isPremium: filters.isPremium, 
+      isPremium: filters.isPremium,
+      sortBy: filters.sortBy, 
       search 
     }
   ];
@@ -298,6 +307,7 @@ export default function CategoryPage() {
       formatId: null,
       fileTypeId: null,
       isPremium: null,
+      sortBy: null,
     });
     setSearch('');
     setActiveQuickFilter('all');
@@ -314,24 +324,39 @@ export default function CategoryPage() {
       // Filtro apenas de artes premium
       setFilters(prev => ({
         ...prev,
-        isPremium: true
+        isPremium: true,
+        sortBy: null // Remover ordenação existente
       }));
     } else if (filter === 'free') {
       // Filtro apenas de artes gratuitas
       setFilters(prev => ({
         ...prev,
-        isPremium: false
+        isPremium: false,
+        sortBy: null // Remover ordenação existente
+      }));
+    } else if (filter === 'popular') {
+      // Filtro de artes mais populares (por visualizações)
+      setFilters(prev => ({
+        ...prev,
+        sortBy: 'popular',
+        // Remover filtro de premium caso exista
+        isPremium: null
+      }));
+    } else if (filter === 'recent') {
+      // Filtro de artes mais recentes (por data)
+      setFilters(prev => ({
+        ...prev,
+        sortBy: 'recent',
+        // Remover filtro de premium caso exista
+        isPremium: null
       }));
     } else {
-      // Para os outros filtros, remover filtro de premium/free
-      setFilters(prev => {
-        const newFilters = { ...prev };
-        // Use delete apenas se a propriedade existir
-        if ('isPremium' in newFilters) {
-          delete newFilters.isPremium;
-        }
-        return newFilters;
-      });
+      // Filtro 'all' - remover todos os filtros especiais
+      setFilters(prev => ({
+        ...prev,
+        isPremium: null,
+        sortBy: null
+      }));
     }
   };
   
@@ -441,36 +466,36 @@ export default function CategoryPage() {
       {/* Painel de Informações da Categoria (exibido quando showCategoryInfo é true) */}
       {showCategoryInfo && !isLoading && category && (
         <div className="container mx-auto px-4 py-6">
-          <div className={`bg-white border border-gray-100 rounded-xl shadow-sm p-6 mb-8 relative overflow-hidden`}>
+          <div className={`bg-white border border-gray-100 rounded-xl shadow-sm p-4 md:p-6 mb-8 relative overflow-hidden`}>
             <div className={`absolute top-0 left-0 w-full h-1 ${colorScheme.darkBg}`}></div>
             <div className="flex flex-col md:flex-row gap-6">
               <div className="flex-1">
                 <h3 className="text-lg font-semibold mb-3">Sobre esta categoria</h3>
-                <p className="text-gray-600 mb-4 leading-relaxed">
+                <p className="text-gray-600 mb-4 leading-relaxed text-sm md:text-base">
                   Esta categoria contém artes profissionais para {category.name.toLowerCase()}, 
                   otimizadas para mídias sociais, anúncios, e materiais promocionais. 
                   Todas as artes podem ser editadas facilmente nos aplicativos suportados.
                 </p>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 mt-2">
                   <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">Atualizada em: {formatDate(category.updatedAt ?? new Date())}</span>
+                    <Calendar className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm text-gray-600 truncate">Atualizada em: {formatDate(category.updatedAt ?? new Date())}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Eye className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">Visualizações: 347</span>
+                    <Eye className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm text-gray-600 truncate">Visualizações: 347</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Star className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">Arte premium: {category.isPremium ? 'Sim' : 'Não'}</span>
+                    <Star className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm text-gray-600 truncate">Arte premium: {category.isPremium ? 'Sim' : 'Não'}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <BookMarked className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">Formatos: {category.formats || 'Variados'}</span>
+                    <BookMarked className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm text-gray-600 truncate">Formatos: {category.formats || 'Variados'}</span>
                   </div>
                 </div>
               </div>
-              <div className="md:w-64 flex flex-col justify-between">
+              <div className="md:w-64 flex flex-col justify-between mt-4 md:mt-0">
                 <div>
                   <h4 className="text-sm font-medium mb-2 text-gray-500 uppercase">Buscar nesta categoria</h4>
                   <form onSubmit={handleSearch} className="relative mb-4">
@@ -615,13 +640,28 @@ export default function CategoryPage() {
                 </SelectContent>
               </Select>
               
-              <Select defaultValue="newest" className="col-span-2 md:col-span-1">
+              <Select 
+                value={filters.sortBy || 'default'}
+                onValueChange={(value) => {
+                  if (value === 'default') {
+                    setFilters(prev => ({ ...prev, sortBy: null }));
+                    setActiveQuickFilter('all');
+                  } else if (value === 'recent') {
+                    setFilters(prev => ({ ...prev, sortBy: 'recent' }));
+                    setActiveQuickFilter('recent');
+                  } else if (value === 'popular') {
+                    setFilters(prev => ({ ...prev, sortBy: 'popular' }));
+                    setActiveQuickFilter('popular');
+                  }
+                }}
+                className="col-span-2 md:col-span-1"
+              >
                 <SelectTrigger className="border-none bg-transparent shadow-none h-9 text-sm">
                   <SelectValue placeholder="Ordenar" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="newest">Mais recentes</SelectItem>
-                  <SelectItem value="oldest">Mais antigos</SelectItem>
+                  <SelectItem value="default">Ordenação padrão</SelectItem>
+                  <SelectItem value="recent">Mais recentes</SelectItem>
                   <SelectItem value="popular">Mais populares</SelectItem>
                 </SelectContent>
               </Select>
