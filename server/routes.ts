@@ -3009,27 +3009,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isFollowing = !!existingFollow;
       }
       
-      // Buscar as artes deste designer
-      let designerArtsQuery = db
-        .select({
-          id: arts.id,
-          title: arts.title,
-          imageurl: arts.imageUrl,
-          ispremium: arts.isPremium,
-          format: arts.format,
-          createdat: arts.createdAt,
-          viewcount: arts.viewcount,
-          downloadcount: arts.downloadcount
-        })
-        .from(arts)
-        .where(eq(arts.designerid, designer.id));
-        
-      // Adicionar filtro de visibilidade se não for admin
-      if (!isAdmin) {
-        designerArtsQuery = designerArtsQuery.where(eq(arts.isVisible, true));
-      }
+      // Buscar as artes deste designer usando SQL direto
+      const designerArtsResult = await db.execute(sql`
+        SELECT 
+          id, 
+          title, 
+          "imageUrl" as imageurl, 
+          "isPremium" as ispremium, 
+          format, 
+          "createdAt" as createdat,
+          viewcount,
+          "downloadCount" as downloadcount
+        FROM arts
+        WHERE designerid = ${designer.id}
+        ${!isAdmin ? sql`AND "isVisible" = true` : sql``}
+        ORDER BY "createdAt" DESC
+      `);
       
-      const designerArts = await designerArtsQuery.orderBy(desc(arts.createdAt));
+      const designerArts = designerArtsResult.rows;
       
       // Contagens
       const artCount = designerArts.length;
@@ -3087,21 +3084,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Designer não encontrado" });
       }
       
-      // Buscar artes com paginação
+      // Buscar artes com paginação usando SQL direto
       const offset = (page - 1) * limit;
-      const designerArts = await db.select()
-        .from(arts)
-        .where(eq(arts.designerid, designerId))
-        .orderBy(desc(arts.createdAt))
-        .limit(limit)
-        .offset(offset);
+      
+      const artsResult = await db.execute(sql`
+        SELECT * FROM arts
+        WHERE designerid = ${designerId}
+        ORDER BY "createdAt" DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `);
+      
+      const designerArts = artsResult.rows;
       
       // Contar total de artes
-      const [{ value: totalCount }] = await db.select({
-        value: count()
-      })
-      .from(arts)
-      .where(eq(arts.designerid, designerId));
+      const countResult = await db.execute(sql`
+        SELECT COUNT(*) as value
+        FROM arts
+        WHERE designerid = ${designerId}
+      `);
+      
+      const totalCount = parseInt(countResult.rows[0].value);
       
       res.json({
         arts: designerArts,
