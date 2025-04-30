@@ -39,7 +39,7 @@ export const usersRelations = relations(users, ({many, one}) => ({
   userPreferences: many(userPreferences),
   userStats: many(userStats),
   userPermissions: many(userPermissions),
-  arts: many(arts, { relationName: 'designer' }),
+  arts: many(arts),
   followers: many(userFollows, { relationName: 'followers' }),
   following: many(userFollows, { relationName: 'following' })
 }));
@@ -54,9 +54,8 @@ export const artsRelations = relations(arts, ({one, many}) => ({
     references: [collections.id],
   }),
   designer: one(users, {
-    fields: [arts.designerid], // Corrigido para minúsculo para corresponder ao banco de dados
+    fields: [arts.designerid],
     references: [users.id],
-    relationName: 'designer'
   }),
   downloads: many(downloads),
   favorites: many(favorites),

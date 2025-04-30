@@ -27,46 +27,54 @@ export function setupFollowRoutes(app: any, isAuthenticated: (req: Request, res:
         return res.status(401).json({ message: "Usuário não autenticado" });
       }
 
-      // Buscar designers que o usuário segue incluindo contagem de artes e seguidores
-      const following = await db.query.userFollows.findMany({
-        where: eq(userFollows.followerId, userId),
-        with: {
-          following: {
-            columns: {
-              id: true,
-              username: true,
-              name: true,
-              profileimageurl: true,
-              bio: true,
-              nivelacesso: true,
-              role: true,
-            },
-          },
-        },
-      });
-
+      // Buscar IDs dos designers que o usuário segue
+      const followingRecords = await db
+        .select({ designerId: userFollows.followingId })
+        .from(userFollows)
+        .where(eq(userFollows.followerId, userId));
+      
+      if (followingRecords.length === 0) {
+        return res.status(200).json({ following: [] });
+      }
+      
+      const followingIds = followingRecords.map(record => record.designerId);
+      
+      // Buscar dados completos dos designers
+      const designersData = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          name: users.name,
+          profileimageurl: users.profileimageurl,
+          bio: users.bio,
+          nivelacesso: users.nivelacesso,
+          role: users.role,
+        })
+        .from(users)
+        .where(sql`${users.id} IN (${followingIds.join(',')})`);
+      
       // Recuperar designers completos com dados adicionais
       const designers = await Promise.all(
-        following.map(async (follow) => {
+        designersData.map(async (designer) => {
           // Contagem de artes do designer
           const [artsCount] = await db
             .select({ count: count() })
             .from(sql`arts`)
-            .where(eq(sql`designerid`, follow.following.id));
+            .where(eq(sql`designerid`, designer.id));
 
           // Contagem de seguidores do designer
           const [followersCount] = await db
             .select({ count: count() })
             .from(userFollows)
-            .where(eq(userFollows.followingId, follow.following.id));
+            .where(eq(userFollows.followingId, designer.id));
 
           return {
-            id: follow.following.id,
-            username: follow.following.username,
-            name: follow.following.name || follow.following.username,
-            profileimageurl: follow.following.profileimageurl,
-            bio: follow.following.bio,
-            role: follow.following.role || follow.following.nivelacesso,
+            id: designer.id,
+            username: designer.username,
+            name: designer.name || designer.username,
+            profileimageurl: designer.profileimageurl,
+            bio: designer.bio,
+            role: designer.role || designer.nivelacesso,
             artsCount: Number(artsCount?.count || 0),
             followersCount: Number(followersCount?.count || 0),
             isFollowing: true, // Já que estamos buscando os designers que o usuário segue

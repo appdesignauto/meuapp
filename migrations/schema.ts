@@ -78,7 +78,7 @@ export const arts = pgTable("arts", {
         editUrl: text().notNull(),
         isPremium: boolean().default(false).notNull(),
         status: text().default('approved').notNull(), // 'pending', 'approved', 'rejected'
-        designerId: integer(),
+        designerid: integer(), // Coluna no postgres é em lowercase (não camelCase)
         categoryId: integer().notNull(),
         collectionId: integer().notNull(),
         downloadCount: integer().default(0).notNull(),
@@ -98,9 +98,9 @@ export const arts = pgTable("arts", {
                         name: "arts_collectionId_collections_id_fk"
                 }),
         foreignKey({
-                        columns: [table.designerId],
+                        columns: [table.designerid],
                         foreignColumns: [users.id],
-                        name: "arts_designerId_users_id_fk"
+                        name: "arts_designerid_users_id_fk"
                 }),
 ]);
 
