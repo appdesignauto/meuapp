@@ -5,7 +5,7 @@ import useScrollTop from '@/hooks/useScrollTop';
 import { 
   ArrowLeft, Search, Filter, AlertCircle, Loader2, 
   LayoutGrid, LayoutList, Calendar, Star, Eye, Clock, Sparkles, 
-  BookMarked, ChevronRight, Info
+  BookMarked, ChevronRight, Info, Tag
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -58,6 +58,7 @@ export default function CategoryPage() {
   const [filters, setFilters] = useState({
     formatId: null as number | null,
     fileTypeId: null as number | null,
+    isPremium: null as boolean | null,
   });
   const [showCategoryInfo, setShowCategoryInfo] = useState(false);
   const limit = 12;
@@ -198,6 +199,11 @@ export default function CategoryPage() {
       url.searchParams.append('fileTypeId', filters.fileTypeId.toString());
     }
     
+    // Adiciona filtro de premium/grátis se existir
+    if (filters.isPremium !== null) {
+      url.searchParams.append('isPremium', filters.isPremium.toString());
+    }
+    
     if (search) {
       url.searchParams.append('search', search);
     }
@@ -208,7 +214,15 @@ export default function CategoryPage() {
   // Query key based on filters
   const queryKey = [
     '/api/arts',
-    { page, limit, categoryId: category?.id, formatId: filters.formatId, fileTypeId: filters.fileTypeId, search }
+    { 
+      page, 
+      limit, 
+      categoryId: category?.id, 
+      formatId: filters.formatId, 
+      fileTypeId: filters.fileTypeId, 
+      isPremium: filters.isPremium, 
+      search 
+    }
   ];
 
   // Fetch arts with filters - só executar quando categoria estiver carregada
@@ -283,8 +297,10 @@ export default function CategoryPage() {
     setFilters({
       formatId: null,
       fileTypeId: null,
+      isPremium: null,
     });
     setSearch('');
+    setActiveQuickFilter('all');
   };
 
   // Get the appropriate color scheme based on the category slug
@@ -292,8 +308,31 @@ export default function CategoryPage() {
   
   const handleQuickFilterChange = (filter: 'all' | 'popular' | 'recent' | 'premium' | 'free') => {
     setActiveQuickFilter(filter);
-    // Aqui você pode adicionar lógica para filtrar as artes com base no filtro selecionado
-    // Por exemplo, você poderia atualizar os filtros de API
+    
+    // Aplicar filtros baseados na seleção
+    if (filter === 'premium') {
+      // Filtro apenas de artes premium
+      setFilters(prev => ({
+        ...prev,
+        isPremium: true
+      }));
+    } else if (filter === 'free') {
+      // Filtro apenas de artes gratuitas
+      setFilters(prev => ({
+        ...prev,
+        isPremium: false
+      }));
+    } else {
+      // Para os outros filtros, remover filtro de premium/free
+      setFilters(prev => {
+        const newFilters = { ...prev };
+        // Use delete apenas se a propriedade existir
+        if ('isPremium' in newFilters) {
+          delete newFilters.isPremium;
+        }
+        return newFilters;
+      });
+    }
   };
   
   return (
@@ -508,7 +547,7 @@ export default function CategoryPage() {
             className={`px-4 py-2.5 cursor-pointer text-sm transition-all ${activeQuickFilter === 'free' ? 'bg-green-600' : 'hover:bg-green-50'}`}
             onClick={() => handleQuickFilterChange('free')}
           >
-            <Star className="w-4 h-4 mr-1.5" />
+            <Tag className="w-4 h-4 mr-1.5" />
             Grátis
           </Badge>
         </div>
