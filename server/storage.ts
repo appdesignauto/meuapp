@@ -1826,7 +1826,8 @@ export class DatabaseStorage implements IStorage {
           viewcount,
           width, 
           height, 
-          "isPremium", 
+          "isPremium",
+          "isVisible",
           "categoryId", 
           "collectionId", 
           title, 
@@ -1961,7 +1962,8 @@ export class DatabaseStorage implements IStorage {
           viewcount,
           width, 
           height, 
-          "isPremium", 
+          "isPremium",
+          "isVisible", 
           "categoryId", 
           "collectionId", 
           title, 
@@ -2076,12 +2078,47 @@ export class DatabaseStorage implements IStorage {
   }
   
   async updateArt(id: number, art: Partial<InsertArt>): Promise<Art | undefined> {
-    const [updatedArt] = await db
-      .update(arts)
-      .set(art)
-      .where(eq(arts.id, id))
-      .returning();
-    return updatedArt;
+    try {
+      // Se estiver atualizando a visibilidade, usar SQL direto para garantir
+      // que o nome da coluna seja exatamente o mesmo do banco de dados
+      if (art.isVisible !== undefined) {
+        console.log(`[updateArt] Atualizando visibilidade da arte ${id} para ${art.isVisible}`);
+        
+        // Usar SQL bruto para ter certeza que o nome da coluna está correto
+        const result = await db.execute(sql`
+          UPDATE arts 
+          SET "isVisible" = ${art.isVisible}, "updatedAt" = NOW()
+          WHERE id = ${id}
+          RETURNING *
+        `);
+        
+        if (result.rowCount === 0) {
+          console.log(`[updateArt] Nenhuma arte encontrada com ID ${id}`);
+          return undefined;
+        }
+        
+        // Retornar a primeira linha (a arte atualizada)
+        const updatedArt = result.rows[0];
+        console.log(`[updateArt] Arte atualizada:`, { 
+          id: updatedArt.id, 
+          title: updatedArt.title, 
+          isVisible: updatedArt.isVisible 
+        });
+        
+        return updatedArt as Art;
+      } else {
+        // Para outras atualizações, usar o método normal do Drizzle
+        const [updatedArt] = await db
+          .update(arts)
+          .set(art)
+          .where(eq(arts.id, id))
+          .returning();
+        return updatedArt;
+      }
+    } catch (error) {
+      console.error(`[updateArt] Erro ao atualizar arte ${id}:`, error);
+      throw error;
+    }
   }
   
   async deleteArt(id: number): Promise<boolean> {
@@ -2242,7 +2279,8 @@ export class DatabaseStorage implements IStorage {
           viewcount,
           width, 
           height, 
-          "isPremium", 
+          "isPremium",
+          "isVisible", 
           "categoryId", 
           "collectionId", 
           title, 
