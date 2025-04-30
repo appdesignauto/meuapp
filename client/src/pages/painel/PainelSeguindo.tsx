@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, UserX, User, UsersRound, ImageIcon, ListFilter } from "lucide-react";
+import { Loader2, UserX, User, UsersRound, ListFilter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -10,7 +10,6 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
-import ArtCard from "@/components/ui/ArtCard";
 
 // Tipo para o designer
 interface Designer {
@@ -25,26 +24,7 @@ interface Designer {
   isFollowing?: boolean;
 }
 
-// Tipo para arte
-interface Art {
-  id: number;
-  title: string;
-  imageUrl: string;
-  width: number;
-  height: number;
-  aspectRatio: string;
-  format: string;
-  fileType: string;
-  isPremium: boolean;
-  editUrl: string;
-  viewCount: number;
-  designer?: {
-    id: number;
-    username: string;
-    name: string;
-    profileimageurl: string | null;
-  };
-}
+
 
 export default function PainelSeguindo() {
   const { user } = useAuth();
@@ -52,7 +32,6 @@ export default function PainelSeguindo() {
   const [tab, setTab] = useState("seguindo");
   const [followingDesigners, setFollowingDesigners] = useState<Designer[]>([]);
   const [popularDesigners, setPopularDesigners] = useState<Designer[]>([]);
-  const [followingArts, setFollowingArts] = useState<Art[]>([]);
   const [isFollowingAction, setIsFollowingAction] = useState(false);
 
   // Buscar os designers que o usuário segue
@@ -83,19 +62,7 @@ export default function PainelSeguindo() {
     enabled: !!user,
   });
 
-  // Buscar artes dos designers seguidos
-  const { data: followingArtsData, isLoading: isLoadingFollowingArts, refetch: refetchFollowingArts } = useQuery({
-    queryKey: ["/api/following/arts"],
-    queryFn: async () => {
-      if (!user) return { arts: [] };
-      const res = await fetch("/api/following/arts");
-      if (!res.ok) {
-        throw new Error("Erro ao buscar artes dos designers seguidos");
-      }
-      return res.json();
-    },
-    enabled: !!user && followingDesigners.length > 0,
-  });
+
 
   useEffect(() => {
     if (followingData && followingData.following) {
@@ -109,11 +76,7 @@ export default function PainelSeguindo() {
     }
   }, [designersData]);
 
-  useEffect(() => {
-    if (followingArtsData && followingArtsData.arts) {
-      setFollowingArts(followingArtsData.arts);
-    }
-  }, [followingArtsData]);
+
 
   // Função para seguir/deixar de seguir um designer
   const handleToggleFollow = async (designerId: number, isCurrentlyFollowing: boolean) => {
@@ -306,10 +269,6 @@ export default function PainelSeguindo() {
             <User className="h-4 w-4 mr-2" />
             Designers que sigo
           </TabsTrigger>
-          <TabsTrigger value="artes" className="flex items-center">
-            <ImageIcon className="h-4 w-4 mr-2" />
-            Artes Recentes
-          </TabsTrigger>
           <TabsTrigger value="popular" className="flex items-center">
             <UsersRound className="h-4 w-4 mr-2" />
             Designers Populares
@@ -343,53 +302,6 @@ export default function PainelSeguindo() {
               >
                 Encontrar designers para seguir
               </Button>
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="artes" className="space-y-4">
-          {!followingDesigners.length ? (
-            <div className="text-center py-16">
-              <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-xl font-medium">Sem artes para mostrar</h3>
-              <p className="text-muted-foreground mt-2 mb-6">
-                Comece a seguir designers para ver suas artes mais recentes aqui
-              </p>
-              <Button
-                onClick={() => setTab("popular")}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                Encontrar designers para seguir
-              </Button>
-            </div>
-          ) : isLoadingFollowingArts ? (
-            // Exibir skeletons durante o carregamento
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
-                <div key={i} className="relative aspect-square rounded-md overflow-hidden bg-gray-100 dark:bg-gray-800 animate-pulse">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Loader2 className="h-8 w-8 text-gray-300 dark:text-gray-600 animate-spin" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : followingArts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {followingArts.map((art) => (
-                <ArtCard
-                  key={art.id}
-                  art={art}
-                  showDesigner={true}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-16">
-              <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-xl font-medium">Nenhuma arte disponível</h3>
-              <p className="text-muted-foreground mt-2">
-                Os designers que você segue ainda não publicaram artes. Volte mais tarde ou siga mais designers.
-              </p>
             </div>
           )}
         </TabsContent>
