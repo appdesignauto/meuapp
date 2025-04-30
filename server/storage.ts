@@ -2027,37 +2027,115 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getRelatedArts(artId: number, limit: number = 4): Promise<Art[]> {
-    // Primeiro obtém a arte de referência
-    const [art] = await db.select().from(arts).where(eq(arts.id, artId));
-    if (!art) return [];
-    
-    // Busca todas as artes exceto a atual
-    const allArts = await db.select().from(arts).where(sql`id != ${artId}`);
-    
-    // Calcula a pontuação de relevância para cada arte com base na similaridade
-    const scoredArts = allArts.map(a => {
-      // Atribui pontuação baseada em diferentes critérios de similaridade
-      let score = 0;
+    try {
+      // Primeiro obtém a arte de referência com sua categoria
+      const result = await db.execute(sql`
+        SELECT 
+          a.id, 
+          a."createdAt", 
+          a."updatedAt", 
+          a.designerid, 
+          a.viewcount,
+          a.width, 
+          a.height, 
+          a."isPremium",
+          a."isVisible", 
+          a."categoryId", 
+          a."collectionId", 
+          a.title, 
+          a."imageUrl", 
+          a.format, 
+          a."fileType", 
+          a."editUrl", 
+          a.aspectratio,
+          c.id as "category_id",
+          c.name as "category_name",
+          c.slug as "category_slug"
+        FROM arts a
+        LEFT JOIN categories c ON a."categoryId" = c.id
+        WHERE a.id = ${artId}
+      `);
       
-      // Mesma categoria (maior peso)
-      if (a.categoryId === art.categoryId) score += 3;
+      if (result.rows.length === 0) return [];
+      const artRow = result.rows[0];
       
-      // Mesma coleção (segundo maior peso)
-      if (a.collectionId === art.collectionId) score += 2;
+      // Busca todas as artes exceto a atual, incluindo suas categorias
+      const artsResult = await db.execute(sql`
+        SELECT 
+          a.id, 
+          a."createdAt", 
+          a."updatedAt", 
+          a.designerid, 
+          a.viewcount,
+          a.width, 
+          a.height, 
+          a."isPremium",
+          a."isVisible", 
+          a."categoryId", 
+          a."collectionId", 
+          a.title, 
+          a."imageUrl", 
+          a.format, 
+          a."fileType", 
+          a."editUrl", 
+          a.aspectratio,
+          c.id as "category_id",
+          c.name as "category_name",
+          c.slug as "category_slug"
+        FROM arts a
+        LEFT JOIN categories c ON a."categoryId" = c.id
+        WHERE a.id != ${artId} AND a."isVisible" = true
+        ORDER BY a."createdAt" DESC
+      `);
       
-      // Mesmo formato (menor peso)
-      if (a.format === art.format) score += 1;
+      const allArts = artsResult.rows;
       
-      return { art: a, score };
-    });
-    
-    // Ordena por pontuação (maior para menor) e limita o número de resultados
-    const relatedArts = scoredArts
-      .sort((a, b) => b.score - a.score)
-      .slice(0, limit)
-      .map(item => item.art);
-    
-    return relatedArts;
+      // Calcula a pontuação de relevância para cada arte com base na similaridade
+      const scoredArts = allArts.map(a => {
+        // Atribui pontuação baseada em diferentes critérios de similaridade
+        let score = 0;
+        
+        // Mesma categoria (maior peso)
+        if (a.categoryId === artRow.categoryId) score += 5;
+        
+        // Mesma coleção (segundo maior peso)
+        if (a.collectionId === artRow.collectionId) score += 3;
+        
+        // Mesmo formato (peso médio)
+        if (a.format === artRow.format) score += 2;
+        
+        // Mesmo designer (menor peso, mas ainda considerado)
+        if (a.designerid === artRow.designerid) score += 1;
+        
+        // Criar objeto arte com categoria embutida
+        const category = a.category_id ? {
+          id: a.category_id,
+          name: a.category_name,
+          slug: a.category_slug
+        } : null;
+        
+        const mappedArt = {
+          ...a,
+          designerId: a.designerid,
+          viewCount: a.viewcount,
+          aspectRatio: a.aspectratio,
+          category: category
+        } as Art;
+        
+        return { art: mappedArt, score };
+      });
+      
+      // Ordena por pontuação (maior para menor) e limita o número de resultados
+      const relatedArts = scoredArts
+        .sort((a, b) => b.score - a.score)
+        .slice(0, limit)
+        .map(item => item.art);
+      
+      return relatedArts;
+    } catch (error) {
+      console.error("Erro em getRelatedArts:", error);
+      return [];
+    }
   }
   
   async createArt(art: InsertArt): Promise<Art> {
