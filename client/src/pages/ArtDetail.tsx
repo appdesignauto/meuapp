@@ -11,7 +11,6 @@ import {
   ExternalLink,
   Calendar, 
   Tag,
-  Maximize,
   ArrowUpRight,
   Sparkles,
   Trophy,
@@ -27,8 +26,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import RelatedArts from '@/components/art/RelatedArts';
 import { apiRequest, queryClient } from '@/lib/queryClient';
-import Zoom from 'react-medium-image-zoom';
-import 'react-medium-image-zoom/dist/styles.css';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, formatDistance } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -370,16 +367,14 @@ export default function ArtDetail() {
             transition={{ duration: 0.5 }}
           >
             <div className="w-full h-full relative group">
-              <Zoom>
-                <motion.img 
-                  src={art.imageUrl} 
-                  alt={art.title} 
-                  className="w-full h-full object-contain max-h-[80vh] transition-all duration-300 rounded-md"
-                  initial={{ scale: 0.95, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ duration: 0.5 }}
-                />
-              </Zoom>
+              <motion.img 
+                src={art.imageUrl} 
+                alt={art.title} 
+                className="w-full h-full object-contain max-h-[80vh] transition-all duration-300 rounded-md"
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.5 }}
+              />
               
               {/* Badges de status */}
               <div className="absolute top-4 right-4 flex flex-col space-y-2">
@@ -437,11 +432,7 @@ export default function ArtDetail() {
                 </div>
               </div>
               
-              {/* Indicador de zoom */}
-              <div className="absolute bottom-4 left-4 bg-white/80 text-gray-800 rounded-full px-3 py-1 text-xs font-medium shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center">
-                <Maximize className="h-3.5 w-3.5 mr-1" />
-                Clique para ampliar
-              </div>
+
             </div>
           </motion.div>
           
