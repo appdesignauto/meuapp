@@ -66,6 +66,11 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
       isVisible: true
     }
   ];
+  
+  // Função para verificar se ainda há mais artes a serem carregadas
+  const checkHasMoreArts = useCallback((totalCount: number) => {
+    return (currentPage * initialLimit) < totalCount;
+  }, [currentPage, initialLimit]);
 
   const { data, isLoading, isFetching } = useQuery<{
     arts: any[];
@@ -100,6 +105,8 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
   // Atualiza o estado das artes quando novos dados são carregados
   useEffect(() => {
     if (data?.arts) {
+      console.log(`Carregando página ${currentPage}, total de artes: ${data.totalCount}, hasMoreArts: ${checkHasMoreArts(data.totalCount)}`);
+      
       // Pré-carrega as imagens antes de exibir
       preloadImages(data.arts).then(() => {
         if (currentPage === 1) {
@@ -109,12 +116,14 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
           // Se não, adiciona às artes existentes
           setAllArts(prev => [...prev, ...data.arts]);
         }
+        
+        // Atualiza o estado hasMoreArts após o carregamento
+        const moreArtsAvailable = checkHasMoreArts(data.totalCount);
+        setHasMoreArts(moreArtsAvailable);
+        console.log(`Após carregar página ${currentPage}, hasMoreArts atualizado para: ${moreArtsAvailable}`);
       });
-      
-      // Verifica se ainda há mais artes para carregar
-      setHasMoreArts(currentPage * initialLimit < (data.totalCount || 0));
     }
-  }, [data, currentPage, preloadImages]);
+  }, [data, currentPage, preloadImages, checkHasMoreArts]);
 
   // Force re-fetch when filters or user authentication/role change
   useEffect(() => {
@@ -235,8 +244,8 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
               </AnimatePresence>
             </div>
             
-            {/* Load More Button */}
-            {hasMoreArts && (
+            {/* Load More Button - sempre visível, apenas desabilitado quando não há mais artes */}
+            {(
               <motion.div 
                 className="flex justify-center mt-12"
                 initial={{ opacity: 0 }}
@@ -248,8 +257,8 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
                   ref={loadMoreButtonRef}
                   variant="outline" 
                   onClick={loadMore}
-                  disabled={isFetching}
-                  className="px-8 py-6 flex items-center rounded-full border-2 border-blue-300 text-blue-600 hover:bg-blue-50 font-medium transform transition-all duration-300 hover:scale-105 active:scale-95"
+                  disabled={isFetching || !hasMoreArts}
+                  className={`px-8 py-6 flex items-center rounded-full border-2 ${hasMoreArts ? 'border-blue-300 text-blue-600 hover:bg-blue-50' : 'border-gray-200 text-gray-400'} font-medium transform transition-all duration-300 hover:scale-105 active:scale-95`}
                   id="load-more-button"
                 >
                   {isFetching ? (
@@ -259,7 +268,7 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <svg className={`animate-spin -ml-1 mr-2 h-5 w-5 ${hasMoreArts ? 'text-blue-600' : 'text-gray-400'}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
@@ -272,16 +281,22 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <span>
-                        {loadCounter === 0 
-                          ? 'Carregar mais designs' 
-                          : (loadCounter === 1 
-                            ? 'Carregar mais designs' 
-                            : 'Ver todos os designs'
-                          )
+                      <span className={hasMoreArts ? '' : 'text-gray-400'}>
+                        {!hasMoreArts 
+                          ? 'Não há mais designs'
+                          : (loadCounter === 0 
+                              ? 'Carregar mais designs' 
+                              : (loadCounter === 1 
+                                ? 'Carregar mais designs' 
+                                : 'Ver todos os designs'
+                              )
+                            )
                         }
                       </span>
-                      {loadCounter < 2 ? <ArrowDown className="ml-2 h-5 w-5" /> : <ArrowRight className="ml-2 h-5 w-5" />}
+                      {hasMoreArts 
+                        ? (loadCounter < 2 ? <ArrowDown className="ml-2 h-5 w-5" /> : <ArrowRight className="ml-2 h-5 w-5" />)
+                        : null
+                      }
                     </motion.div>
                   )}
                 </Button>
