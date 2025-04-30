@@ -2981,8 +2981,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           profileimageurl: users.profileimageurl,
           nivelacesso: users.nivelacesso,
           role: users.role,
-          followers: sql`0`, 
-          following: sql`0`,
+          followers: sql`COALESCE(followers, 0)::int`, 
+          following: sql`COALESCE(following, 0)::int`,
           createdat: users.createdAt
         })
         .from(users)
@@ -3009,8 +3009,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isFollowing = !!existingFollow;
       }
       
-      // Buscar as artes deste designer com parâmetros preparados
-      const artsQueryBuilder = db
+      // Buscar as artes deste designer
+      let designerArtsQuery = db
         .select({
           id: arts.id,
           title: arts.title,
@@ -3018,19 +3018,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ispremium: arts.isPremium,
           format: arts.format,
           createdat: arts.createdAt,
-          viewcount: arts.viewCount,
-          downloadcount: arts.downloadCount
+          viewcount: arts.viewcount,
+          downloadcount: arts.downloadcount
         })
         .from(arts)
-        .where(eq(arts.designerid, designer.id))
-        .orderBy(desc(arts.createdAt));
+        .where(eq(arts.designerid, designer.id));
         
       // Adicionar filtro de visibilidade se não for admin
       if (!isAdmin) {
-        artsQueryBuilder.where(eq(arts.isVisible, true));
+        designerArtsQuery = designerArtsQuery.where(eq(arts.isVisible, true));
       }
-        
-      const designerArts = await artsQueryBuilder;
+      
+      const designerArts = await designerArtsQuery.orderBy(desc(arts.createdAt));
       
       // Contagens
       const artCount = designerArts.length;
