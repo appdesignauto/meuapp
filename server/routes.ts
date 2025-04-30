@@ -1120,6 +1120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Verificamos se há um filtro específico de visibilidade sendo aplicado
       if (req.query.isVisible !== undefined) {
         // Se o filtro de visibilidade foi explicitamente fornecido na consulta, usamos ele
+        // Isto permite ao admin filtrar especificamente por artes visíveis ou ocultas
         filters.isVisible = req.query.isVisible === 'true';
       } else if (!isAdmin) {
         // Se o usuário não for admin, vai ver apenas artes visíveis
@@ -1127,6 +1128,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       // Se for admin e não houver filtro específico, não aplica filtro de visibilidade
       // permitindo que vejam todas as artes, visíveis e ocultas
+      console.log(`Usuário ${isAdmin ? 'é admin' : 'NÃO é admin'}, filtro de visibilidade: ${filters.isVisible !== undefined ? filters.isVisible : 'não aplicado'}`)
       
       const result = await storage.getArts(page, limit, filters);
       res.json(result);

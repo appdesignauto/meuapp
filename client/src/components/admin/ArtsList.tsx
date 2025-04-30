@@ -163,6 +163,7 @@ const ArtsList = () => {
     // O valor enviado ao backend deve ser o novo valor desejado
     // Quando currentValue é true, queremos tornar invisible (false)
     // Quando currentValue é false, queremos tornar visible (true)
+    console.log(`Alterando visibilidade da arte ${id}: de ${currentValue ? 'visível' : 'oculta'} para ${!currentValue ? 'visível' : 'oculta'}`);
     toggleVisibilityMutation.mutate({ id, isVisible: !currentValue });
   };
 
@@ -409,9 +410,9 @@ const ArtsList = () => {
                         </TableCell>
                         <TableCell>
                           <Switch 
-                            checked={art.isVisible === true}
-                            onCheckedChange={() => handleToggleVisibility(art.id, art.isVisible !== true)}
-                            aria-label={art.isVisible ? "Arte visível" : "Arte oculta"}
+                            checked={art.isVisible === true || art.isVisible === undefined} 
+                            onCheckedChange={() => handleToggleVisibility(art.id, art.isVisible === true || art.isVisible === undefined)}
+                            aria-label={art.isVisible === false ? "Arte oculta" : "Arte visível"}
                           />
                         </TableCell>
                         <TableCell>{formatDate(art.createdAt)}</TableCell>
