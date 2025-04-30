@@ -16,13 +16,7 @@ import {
   Trophy,
   Clock,
   Zap,
-  ChevronRight,
-  Grid,
-  Users,
-  Layers,
-  Check,
-  Plus,
-  Lock
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -386,162 +380,111 @@ export default function ArtDetail() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-7xl">
-      <div className="flex items-center justify-between mb-8">
-        <Button 
-          variant="ghost" 
-          size="sm"
-          className="text-gray-600 hover:text-blue-600 transition-colors"
-          onClick={handleBack}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Voltar para a galeria
-        </Button>
-        
-        {/* Botões de navegação rápida */}
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs border-neutral-200 text-neutral-600 hover:text-blue-600 hover:border-blue-200"
-            onClick={() => setLocation(`/category/${art.category?.id || 'all'}`)}
-          >
-            <Grid className="h-3.5 w-3.5 mr-1" />
-            Ver mais desta categoria
-          </Button>
-        </div>
-      </div>
+    <div className="container mx-auto px-4 py-8">
+      <Button 
+        variant="ghost" 
+        size="sm"
+        className="mb-6 text-blue-600"
+        onClick={handleBack}
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Voltar para a galeria
+      </Button>
       
-      {/* Layout principal: uma única linha, duas colunas */}
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-10">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-0 min-h-[80vh]">
-          {/* Coluna da imagem - agora ocupa 75% do espaço (3/4) */}
-          <div className="md:col-span-3 relative flex flex-col">
-            {/* Header com título nos dispositivos móveis (visível apenas em telas pequenas) */}
-            <div className="block md:hidden p-4 bg-white border-b">
-              <h1 className="text-xl font-bold text-gray-800">
-                {art.title}
-              </h1>
+      <div className="bg-white rounded-xl shadow-md overflow-hidden mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-0">
+          {/* Art Image - Ocupando 3.5/5 para mais destaque e painel lateral mais estreito */}
+          <motion.div 
+            className="relative bg-neutral-50 flex items-center justify-center p-4 md:p-6 lg:col-span-3.5 border-r border-gray-100"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="w-full h-full relative group">
+              <motion.img 
+                src={art.imageUrl} 
+                alt={art.title} 
+                className="w-full h-full object-contain max-h-[80vh] transition-all duration-300 rounded-md"
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.5 }}
+              />
               
-              <div className="flex items-center gap-2 text-sm text-neutral-500 mt-2">
-                <div className="flex items-center">
-                  <Calendar className="h-4 w-4 mr-1" />
-                  {formatDate(art.createdAt)}
-                </div>
-                <span>•</span>
-                <div className="flex items-center">
-                  <Tag className="h-4 w-4 mr-1" />
-                  {art.category?.name || 'Categoria não especificada'}
+              {/* Badges de status */}
+              <div className="absolute top-4 right-4 flex flex-col space-y-2">
+                {art.isPremium && (
+                  <motion.div
+                    initial={{ x: 20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ duration: 0.3, delay: 0.2 }}
+                  >
+                    <Badge className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-3 py-1 rounded-full font-medium shadow-md flex items-center">
+                      <Sparkles className="h-3.5 w-3.5 mr-1" />
+                      Premium
+                    </Badge>
+                  </motion.div>
+                )}
+                
+                {art.viewCount && art.viewCount > 10 && (
+                  <motion.div
+                    initial={{ x: 20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ duration: 0.3, delay: 0.3 }}
+                  >
+                    <Badge className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1 rounded-full font-medium shadow-md flex items-center">
+                      <Trophy className="h-3.5 w-3.5 mr-1" />
+                      Popular
+                    </Badge>
+                  </motion.div>
+                )}
+                
+                {new Date(art.createdAt).getTime() > new Date().getTime() - 7 * 24 * 60 * 60 * 1000 && (
+                  <motion.div
+                    initial={{ x: 20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ duration: 0.3, delay: 0.4 }}
+                  >
+                    <Badge className="bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-1 rounded-full font-medium shadow-md flex items-center">
+                      <Zap className="h-3.5 w-3.5 mr-1" />
+                      Novidade
+                    </Badge>
+                  </motion.div>
+                )}
+              </div>
+              
+              {/* Overlay de informações no hover */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4 rounded-md">
+                <div className="text-white">
+                  <p className="text-sm font-medium mb-1 flex items-center">
+                    <Eye className="h-4 w-4 mr-1" />
+                    {art.viewCount || 0} visualizações
+                  </p>
+                  <p className="text-sm font-medium mb-1 flex items-center">
+                    <Clock className="h-4 w-4 mr-1" />
+                    Adicionado há {formatDistance(new Date(art.createdAt), new Date(), { locale: ptBR })}
+                  </p>
                 </div>
               </div>
-            </div>
-            
-            {/* Container da imagem com fundo gradiente - flex-grow para preencher altura disponível */}
-            <div className="relative bg-gradient-to-br from-blue-50/30 to-neutral-50 flex-grow flex items-center justify-center p-6 h-full">
-              {/* Imagem */}
-              <motion.div 
-                className="relative group w-full h-full flex items-center justify-center"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-              >
-                <motion.img 
-                  src={art.imageUrl} 
-                  alt={art.title} 
-                  className="w-full h-auto object-contain max-h-[80vh] transition-all duration-300 rounded-md"
-                  initial={{ scale: 0.95, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ duration: 0.5 }}
-                />
-                
-                {/* Botões de ação: flutuam no canto da imagem em telas menores */}
-                <div className="absolute top-4 right-4 flex flex-col space-y-2 md:hidden">
-                  <Button
-                    variant="default"
-                    size="sm"
-                    className="bg-white/90 backdrop-blur-sm text-gray-700 hover:bg-white border border-gray-200 shadow-sm"
-                    onClick={handleLike}
-                  >
-                    {liked ? 
-                      <><Heart className="h-4 w-4 text-rose-500 fill-current mr-1.5" /> Favoritado</> : 
-                      <><Heart className="h-4 w-4 mr-1.5" /> Favoritar</>
-                    }
-                  </Button>
-                  
-                  <Button
-                    variant="default"
-                    size="sm"
-                    className="bg-white/90 backdrop-blur-sm text-gray-700 hover:bg-white border border-gray-200 shadow-sm"
-                    onClick={handleShare}
-                  >
-                    <Share2 className="h-4 w-4 mr-1.5" />
-                    Compartilhar
-                  </Button>
-                </div>
-                
-                {/* Badges de status */}
-                <div className="absolute top-4 left-4 flex flex-col space-y-2">
-                  {art.isPremium && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <Badge className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-3 py-1 rounded-full font-medium shadow-sm flex items-center">
-                        <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-                        Premium
-                      </Badge>
-                    </motion.div>
-                  )}
-                  
-                  {art.viewCount && art.viewCount > 10 && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: 0.1 }}
-                    >
-                      <Badge className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1 rounded-full font-medium shadow-sm flex items-center">
-                        <Trophy className="h-3.5 w-3.5 mr-1.5" />
-                        Popular
-                      </Badge>
-                    </motion.div>
-                  )}
-                  
-                  {new Date(art.createdAt).getTime() > new Date().getTime() - 7 * 24 * 60 * 60 * 1000 && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: 0.2 }}
-                    >
-                      <Badge className="bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-1 rounded-full font-medium shadow-sm flex items-center">
-                        <Zap className="h-3.5 w-3.5 mr-1.5" />
-                        Novidade
-                      </Badge>
-                    </motion.div>
-                  )}
-                </div>
-              </motion.div>
-            </div>
-          </div>
-          
-          {/* Painel de informações - design moderno e clean */}
-          <div className="p-0 flex flex-col h-full border-l border-gray-100 md:h-auto md:max-h-[calc(100vh-200px)] md:overflow-y-auto">
-            {/* Header com título (visível apenas em telas médias e grandes) */}
-            <div className="hidden md:block p-6 bg-white border-b border-gray-100">
-              <h1 className="text-xl font-bold text-gray-800">
-                {art.title}
-              </h1>
               
-              <div className="flex items-center gap-2 text-sm text-neutral-500 mt-2">
-                <div className="flex items-center">
-                  <Calendar className="h-4 w-4 mr-1" />
-                  {formatDate(art.createdAt)}
-                </div>
-                <span>•</span>
-                <div className="flex items-center">
-                  <Tag className="h-4 w-4 mr-1" />
-                  {art.category?.name || 'Categoria não especificada'}
-                </div>
+
+            </div>
+          </motion.div>
+          
+          {/* Art Details - Agora ocupa 1.5/5 para um painel lateral mais estreito */}
+          <div className="p-5 md:p-6 flex flex-col h-full lg:col-span-1.5 bg-white">
+            <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">
+              {art.title}
+            </h1>
+            
+            <div className="flex items-center gap-2 text-sm text-neutral-500 mb-4">
+              <div className="flex items-center">
+                <Calendar className="h-4 w-4 mr-1" />
+                {formatDate(art.createdAt)}
+              </div>
+              <span>•</span>
+              <div className="flex items-center">
+                <Tag className="h-4 w-4 mr-1" />
+                {art.category?.name || 'Categoria não especificada'}
               </div>
             </div>
             
@@ -963,30 +906,27 @@ export default function ArtDetail() {
         </div>
       )}
       
-      {/* Related Arts Section - Com animação e design mais clean */}
+      {/* Related Arts Section - Com animação */}
       <motion.div 
-        className="bg-white rounded-xl shadow-sm p-6"
+        className="bg-white rounded-xl shadow-md p-6"
         initial={{ y: 40, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.4, delay: 0.5 }}
       >
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-800 flex items-center">
-            <span className="text-blue-600 mr-2">•</span>
-            Artes similares
+          <h2 className="text-lg font-bold text-gray-800 flex items-center">
+            <ArrowUpRight className="h-5 w-5 text-blue-600 mr-2" />
+            Conheça artes similares
           </h2>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs border-neutral-200 text-neutral-600 hover:text-blue-600 hover:border-blue-200"
-            onClick={() => setLocation(`/category/${art.category?.id || 'all'}`)}
+          <Badge 
+            variant="outline" 
+            className="px-3 py-0.5 text-xs font-normal text-neutral-600 border-neutral-200"
           >
-            Ver mais
-            <ChevronRight className="h-3.5 w-3.5 ml-1" />
-          </Button>
+            Baseadas na sua navegação
+          </Badge>
         </div>
         
-        <RelatedArts artId={Number(id)} limit={4} />
+        <RelatedArts artId={Number(id)} />
         
         <div className="mt-8 flex justify-center">
           <Button 
