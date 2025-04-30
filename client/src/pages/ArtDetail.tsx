@@ -553,7 +553,7 @@ export default function ArtDetail() {
               >
                 {art.isPremiumLocked ? (
                   <Button 
-                    onClick={() => setLocation('/plans')} 
+                    onClick={() => setLocation('/pricing')} 
                     size="lg"
                     className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-amber-500 hover:to-amber-600 py-5 shadow-md hover:text-white group"
                   >
