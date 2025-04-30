@@ -1275,6 +1275,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Buscar contagem de favoritos para esta arte
+      const favoritesResult = await db.execute(sql`
+        SELECT COUNT(*) as count
+        FROM favorites
+        WHERE "artId" = ${id}
+      `);
+      const favoriteCount = parseInt(favoritesResult.rows[0].count) || 0;
+      
+      // Buscar contagem de compartilhamentos para esta arte (se existir a tabela)
+      let shareCount = 0;
+      try {
+        const sharesResult = await db.execute(sql`
+          SELECT COUNT(*) as count
+          FROM shares
+          WHERE "artId" = ${id}
+        `);
+        shareCount = parseInt(sharesResult.rows[0].count) || 0;
+      } catch (error) {
+        console.log("Tabela de compartilhamentos não encontrada:", error);
+        // Se a tabela não existir, apenas ignoramos e continuamos com 0
+      }
+      
       // Incrementar contador de visualizações
       try {
         // Registrar a visualização
