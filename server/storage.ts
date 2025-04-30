@@ -846,6 +846,10 @@ export class MemStorage implements IStorage {
       if (filters.isPremium !== undefined) {
         arts = arts.filter(art => art.isPremium === filters.isPremium);
       }
+      
+      if (filters.isVisible !== undefined) {
+        arts = arts.filter(art => art.isVisible === filters.isVisible);
+      }
     }
     
     const totalCount = arts.length;

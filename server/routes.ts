@@ -1187,6 +1187,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Arte não encontrada" });
       }
       
+      // Verificar se o usuário é admin para permitir acesso a artes ocultas
+      const isAdmin = req.user?.nivelacesso === 'admin' || req.user?.nivelacesso === 'designer_adm' || req.user?.nivelacesso === 'designer';
+      
+      // Se a arte estiver oculta e o usuário não for admin, retornar 404
+      if (art.isVisible === false && !isAdmin) {
+        return res.status(404).json({ message: "Arte não encontrada" });
+      }
+      
       // Verificar se é conteúdo premium e adicionar flag em vez de bloquear acesso
       let isPremiumLocked = false;
       if (art.isPremium) {
