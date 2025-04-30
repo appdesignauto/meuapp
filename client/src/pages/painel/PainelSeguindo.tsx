@@ -24,8 +24,6 @@ interface Designer {
   isFollowing?: boolean;
 }
 
-
-
 export default function PainelSeguindo() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -62,8 +60,6 @@ export default function PainelSeguindo() {
     enabled: !!user,
   });
 
-
-
   useEffect(() => {
     if (followingData && followingData.following) {
       setFollowingDesigners(followingData.following);
@@ -75,9 +71,7 @@ export default function PainelSeguindo() {
       setPopularDesigners(designersData.designers);
     }
   }, [designersData]);
-
-
-
+  
   // Função para seguir/deixar de seguir um designer
   const handleToggleFollow = async (designerId: number, isCurrentlyFollowing: boolean) => {
     if (isFollowingAction) return;
