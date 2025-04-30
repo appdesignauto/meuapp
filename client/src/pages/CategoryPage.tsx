@@ -486,12 +486,12 @@ export default function CategoryPage() {
                     <span className="text-xs sm:text-sm text-gray-600 truncate">Visualizações: {arts.reduce((total, art) => total + (art.viewCount || art.viewcount || 0), 0)}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-purple-400 flex-shrink-0" />
-                    <span className="text-xs sm:text-sm text-gray-600 truncate">Artes premium: {arts.filter(art => art.isPremium).length}</span>
+                    <LayoutGrid className="h-4 w-4 text-amber-400 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm text-gray-600 truncate">Formatos disponíveis: {Array.from(new Set(arts.map(art => art.format))).length}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <BookMarked className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                    <span className="text-xs sm:text-sm text-gray-600 truncate">Formatos: {category.formats || 'Variados'}</span>
+                    <span className="text-xs sm:text-sm text-gray-600 truncate">Adicionada: {format(parseISO(category.createdAt.toString()), 'PP', { locale: ptBR })}</span>
                   </div>
                 </div>
               </div>
