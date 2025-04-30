@@ -82,12 +82,26 @@ export function DesignerSection({ designer, userId }: DesignerSectionProps) {
   };
   
   return (
-    <div className="mb-0 py-2 border-t border-b border-neutral-100">
-      {/* Header: Nome, imagem e botão seguir agrupados */}
-      <div className="flex items-center gap-2 mb-1.5">
-        <div className="cursor-pointer" onClick={() => setLocation(`/designers/${designer.username}`)}>
+    <motion.div 
+      className="mb-0 py-3 px-1 border-t border-b border-neutral-100 bg-gradient-to-r from-white to-blue-50/20"
+      initial={{ opacity: 0.8 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.2 }}
+    >
+      {/* Layout principal com flexbox para distribuição de espaço */}
+      <div className="flex items-center justify-between">
+        {/* Área do perfil do designer - Lado esquerdo */}
+        <div 
+          className="flex-grow cursor-pointer group" 
+          onClick={() => setLocation(`/designers/${designer.username}`)}
+        >
           <div className="flex items-center">
-            <div className="w-9 h-9 rounded-full overflow-hidden bg-neutral-100 flex-shrink-0">
+            {/* Avatar com sombreamento suave */}
+            <motion.div 
+              className="w-10 h-10 rounded-full overflow-hidden bg-neutral-100 flex-shrink-0 border-2 border-white shadow-sm"
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
+            >
               {designer.profileImageUrl ? (
                 <img 
                   src={designer.profileImageUrl}
@@ -95,69 +109,92 @@ export function DesignerSection({ designer, userId }: DesignerSectionProps) {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-blue-50 text-blue-600 font-medium">
+                <div className="w-full h-full flex items-center justify-center bg-blue-50 text-blue-700 font-medium">
                   {(designer.name?.[0] || designer.username[0]).toUpperCase()}
                 </div>
               )}
-            </div>
+            </motion.div>
             
+            {/* Informações do designer com melhor hierarquia */}
             <div className="ml-3">
-              <div className="flex items-center gap-2">
-                <p className="font-medium text-sm text-gray-900 hover:text-blue-600 transition-colors">
+              <div className="flex items-center">
+                <p className="font-semibold text-sm text-gray-900 group-hover:text-blue-600 transition-colors">
                   {designer.name || designer.username}
                 </p>
                 
-                {/* Botão de seguir ao lado do nome */}
-                {userId && userId !== designer.id && (
-                  <Button
-                    variant="default"
-                    size="sm"
-                    className={`text-xs h-7 min-w-[80px] ${
-                      designer.isFollowing 
-                        ? "bg-blue-600 hover:bg-blue-700 text-white" 
-                        : "bg-blue-100 hover:bg-blue-200 text-blue-700 border-0"
-                    }`}
-                    onClick={handleFollowClick}
-                  >
-                    {designer.isFollowing ? (
-                      <>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M20 6 9 17l-5-5"></path></svg>
-                        Seguindo
-                      </>
-                    ) : (
-                      <>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                        Seguir
-                      </>
-                    )}
-                  </Button>
+                {/* Badge de verificação para designers oficiais */}
+                {designer.id === 1 && (
+                  <span className="ml-1 text-blue-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
+                      <path fillRule="evenodd" d="M8.603 3.799A4.49 4.49 0 0112 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 013.498 1.307 4.491 4.491 0 011.307 3.497A4.49 4.49 0 0121.75 12a4.49 4.49 0 01-1.549 3.397 4.491 4.491 0 01-1.307 3.497 4.491 4.491 0 01-3.497 1.307A4.49 4.49 0 0112 21.75a4.49 4.49 0 01-3.397-1.549 4.49 4.49 0 01-3.498-1.306 4.491 4.491 0 01-1.307-3.498A4.49 4.49 0 012.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 011.307-3.497 4.49 4.49 0 013.497-1.307zm7.007 6.387a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" />
+                    </svg>
+                  </span>
                 )}
               </div>
               
-              {/* Total de artes destacado abaixo do nome */}
-              <p className="text-xs text-neutral-500">
+              {/* Info de artes com ícone para melhor visualização */}
+              <div className="flex items-center text-xs text-neutral-500 mt-0.5">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3 mr-1 text-blue-400">
+                  <path d="M11.644 1.59a.75.75 0 01.712 0l9.75 5.25a.75.75 0 010 1.32l-9.75 5.25a.75.75 0 01-.712 0l-9.75-5.25a.75.75 0 010-1.32l9.75-5.25z" />
+                  <path d="M3.265 10.602l7.668 4.129a2.25 2.25 0 002.134 0l7.668-4.13 1.37.739a.75.75 0 010 1.32l-9.75 5.25a.75.75 0 01-.71 0l-9.75-5.25a.75.75 0 010-1.32l1.37-.738z" />
+                  <path d="M10.933 19.231l-7.668-4.13-1.37.739a.75.75 0 000 1.32l9.75 5.25c.221.12.489.12.71 0l9.75-5.25a.75.75 0 000-1.32l-1.37-.738-7.668 4.13a2.25 2.25 0 01-2.134-.001z" />
+                </svg>
                 {designer.totalArts ? 
                   designer.totalArts > 1000 
                     ? `${Math.floor(designer.totalArts / 1000)}k artes` 
                     : `${designer.totalArts} artes` 
                   : '0 artes'}
-              </p>
+              </div>
             </div>
           </div>
         </div>
+        
+        {/* Botão de seguir - Lado direito, com animação e visual moderno */}
+        {userId && userId !== designer.id && (
+          <motion.div
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+          >
+            <Button
+              variant="default"
+              size="sm"
+              className={`text-xs px-3 h-8 rounded-full ${
+                designer.isFollowing 
+                  ? "bg-blue-600 hover:bg-blue-700 text-white shadow-sm" 
+                  : "bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200/50 shadow-sm"
+              }`}
+              onClick={handleFollowClick}
+            >
+              {designer.isFollowing ? (
+                <span className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5"><path d="M20 6 9 17l-5-5"></path></svg>
+                  Seguindo
+                </span>
+              ) : (
+                <span className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                  Seguir
+                </span>
+              )}
+            </Button>
+          </motion.div>
+        )}
       </div>
       
-      {/* Bio do designer */}
+      {/* Bio do designer com estilização aprimorada */}
       {designer.bio && (
-        <div 
-          className="cursor-pointer"
+        <motion.div 
+          initial={{ opacity: 0, y: 5 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mt-2 cursor-pointer"
           onClick={() => setLocation(`/designers/${designer.username}`)}
         >
-          <p className="text-xs text-neutral-500 line-clamp-2">
-            {designer.bio}
+          <p className="text-xs text-neutral-600 line-clamp-2 italic">
+            "{designer.bio}"
           </p>
-        </div>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 }
