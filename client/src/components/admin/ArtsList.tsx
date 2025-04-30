@@ -291,7 +291,7 @@ const ArtsList = () => {
             <div className="space-y-2">
               <Label htmlFor="visible">Visibilidade</Label>
               <Select
-                value={filter.isVisible?.toString() || ''}
+                value={filter.isVisible?.toString() || 'all'}
                 onValueChange={(value) => 
                   setFilter({ 
                     ...filter, 

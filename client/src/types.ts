@@ -76,6 +76,7 @@ export interface Art {
   fileType: string;
   editUrl: string;
   isPremium: boolean;
+  isVisible: boolean;
   categoryId: number;
   collectionId: number | null;
   width: number;
