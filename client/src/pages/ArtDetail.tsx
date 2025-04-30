@@ -358,10 +358,10 @@ export default function ArtDetail() {
       </Button>
       
       <div className="bg-white rounded-xl shadow-md overflow-hidden mb-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
-          {/* Art Image com Lightbox e Zoom - Ocupa 2/3 */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-0">
+          {/* Art Image - Ocupando 3/5 para mais destaque */}
           <motion.div 
-            className="relative bg-neutral-50 flex items-center justify-center p-4 md:p-6 lg:col-span-2 border-r border-gray-100"
+            className="relative bg-neutral-50 flex items-center justify-center p-4 md:p-6 lg:col-span-3 border-r border-gray-100"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
@@ -436,8 +436,8 @@ export default function ArtDetail() {
             </div>
           </motion.div>
           
-          {/* Art Details - Agora ocupa 1/3 */}
-          <div className="p-5 md:p-6 flex flex-col h-full">
+          {/* Art Details - Agora ocupa 2/5 para um layout mais equilibrado */}
+          <div className="p-5 md:p-6 flex flex-col h-full lg:col-span-2 bg-white">
             <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">
               {art.title}
             </h1>
@@ -731,22 +731,41 @@ export default function ArtDetail() {
               </div>
             )}
             
-            {/* Metadata */}
-            <div className="border border-neutral-200 rounded-lg overflow-hidden mt-auto">
+            {/* Metadata - Layout melhorado e mais profissional */}
+            <motion.div 
+              className="border border-neutral-200 rounded-lg overflow-hidden mt-auto bg-gray-50/50"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.3, delay: 0.5 }}
+            >
+              <div className="bg-gradient-to-r from-blue-50 to-white border-b border-neutral-200 p-3">
+                <h3 className="text-sm font-semibold text-blue-700">Especificações do Arquivo</h3>
+              </div>
+              
               <div className="grid grid-cols-2 divide-x divide-neutral-200">
-                <div className="p-3">
+                <div className="p-3 bg-white hover:bg-blue-50/30 transition-colors">
                   <p className="text-xs text-neutral-500 mb-1">Formato</p>
-                  <p className="font-medium text-sm">{art.format?.name || 'Não especificado'}</p>
+                  <p className="font-medium text-sm flex items-center">
+                    <span className="w-2 h-2 bg-blue-600 rounded-full mr-2"></span>
+                    {art.format?.name || 'Não especificado'}
+                  </p>
                 </div>
                 
-                <div className="p-3">
+                <div className="p-3 bg-white hover:bg-blue-50/30 transition-colors">
                   <p className="text-xs text-neutral-500 mb-1">Tipo de Arquivo</p>
-                  <p className="font-medium text-sm">{art.fileType?.name || 'Não especificado'}</p>
+                  <p className="font-medium text-sm flex items-center">
+                    <span className="w-2 h-2 bg-blue-600 rounded-full mr-2"></span>
+                    {art.fileType?.name || 'Não especificado'}
+                  </p>
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 divide-x divide-neutral-200 border-t border-neutral-200">
-                <div className="p-3">
+              <div className="bg-gradient-to-r from-blue-50 to-white border-y border-neutral-200 p-3">
+                <h3 className="text-sm font-semibold text-blue-700">Estatísticas</h3>
+              </div>
+              
+              <div className="grid grid-cols-2 divide-x divide-neutral-200">
+                <div className="p-3 bg-white hover:bg-blue-50/30 transition-colors">
                   <p className="text-xs text-neutral-500 mb-1">Visualizações</p>
                   <div className="flex items-center">
                     <Eye className="h-4 w-4 text-blue-600 mr-2" />
@@ -754,7 +773,7 @@ export default function ArtDetail() {
                   </div>
                 </div>
                 
-                <div className="p-3">
+                <div className="p-3 bg-white hover:bg-blue-50/30 transition-colors">
                   <p className="text-xs text-neutral-500 mb-1">Downloads</p>
                   <div className="flex items-center">
                     <Download className="h-4 w-4 text-blue-600 mr-2" />
@@ -762,7 +781,17 @@ export default function ArtDetail() {
                   </div>
                 </div>
               </div>
-            </div>
+              
+              {art.category && (
+                <div className="p-3 bg-white border-t border-neutral-200 hover:bg-blue-50/30 transition-colors">
+                  <p className="text-xs text-neutral-500 mb-1">Categoria</p>
+                  <div className="flex items-center">
+                    <Tag className="h-4 w-4 text-blue-600 mr-2" />
+                    <p className="font-medium text-sm">{art.category.name}</p>
+                  </div>
+                </div>
+              )}
+            </motion.div>
           </div>
         </div>
       </div>
