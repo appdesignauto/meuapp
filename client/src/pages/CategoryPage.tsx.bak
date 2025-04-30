@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import useScrollTop from '@/hooks/useScrollTop';
-import { format, parseISO } from 'date-fns';
+import { format, subDays, isAfter, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { 
   ArrowLeft, Search, Filter, AlertCircle, Loader2, 
@@ -46,6 +46,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { formatDate } from '@/lib/utils';
 
 export default function CategoryPage() {
   // Garantir rolagem para o topo ao navegar para esta página
@@ -368,17 +369,6 @@ export default function CategoryPage() {
       }));
     }
   };
-
-  // Função para formatar a data no formato desejado
-  const formatDateTime = (dateString: string) => {
-    if (!dateString) return "Data não disponível";
-    try {
-      return format(new Date(dateString), 'dd/MM/yyyy', { locale: ptBR });
-    } catch (error) {
-      console.error("Erro ao formatar data:", error);
-      return "Data não disponível";
-    }
-  };
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -500,7 +490,7 @@ export default function CategoryPage() {
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-gray-400 flex-shrink-0" />
                     <span className="text-xs sm:text-sm text-gray-600 truncate">
-                      Atualizada em: {category.updatedAt ? formatDateTime(category.updatedAt) : 'Data não disponível'}
+                      Atualizada em: {category.updatedAt ? format(new Date(category.updatedAt), 'dd/MM/yyyy', { locale: ptBR }) : 'Data não disponível'}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -514,7 +504,7 @@ export default function CategoryPage() {
                   <div className="flex items-center gap-2">
                     <BookMarked className="h-4 w-4 text-gray-400 flex-shrink-0" />
                     <span className="text-xs sm:text-sm text-gray-600 truncate">
-                      Adicionada: {category.createdAt ? formatDateTime(category.createdAt) : 'Data não disponível'}
+                      Adicionada: {category.createdAt ? format(new Date(category.createdAt), 'dd/MM/yyyy', { locale: ptBR }) : 'Data não disponível'}
                     </span>
                   </div>
                 </div>
@@ -669,7 +659,6 @@ export default function CategoryPage() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
             
             {(filters.formatId || filters.fileTypeId || search) && (
               <Button 
