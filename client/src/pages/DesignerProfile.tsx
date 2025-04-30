@@ -432,13 +432,26 @@ export default function DesignerProfile() {
                 <Button
                   onClick={handleFollowToggle}
                   variant={data.isFollowing ? "outline" : "default"}
-                  className={`px-5 py-1 h-8 text-sm rounded-full ${data.isFollowing ? 'border-blue-200 text-blue-600 hover:bg-blue-50' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+                  className={`px-5 py-1 h-9 text-sm rounded-full ${data.isFollowing ? 'border-blue-200 text-blue-600 hover:bg-blue-50' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
                   disabled={followMutation.isPending || unfollowMutation.isPending}
                 >
                   {followMutation.isPending || unfollowMutation.isPending ? (
-                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                  ) : null}
-                  {data.isFollowing ? "Seguindo" : "Seguir"}
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  ) : (
+                    data.isFollowing ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M20 6 9 17l-5-5"></path></svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    )
+                  )}
+                  <span className="flex items-center">
+                    {data.isFollowing ? "Seguindo" : "Seguir"}
+                    {data.followers > 0 && (
+                      <span className="ml-1.5 bg-blue-100 text-blue-700 text-xs px-1.5 py-0.5 rounded-full">
+                        {data.followers}
+                      </span>
+                    )}
+                  </span>
                 </Button>
               )}
               
