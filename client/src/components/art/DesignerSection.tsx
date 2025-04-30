@@ -105,9 +105,9 @@ export function DesignerSection({ designer, userId }: DesignerSectionProps) {
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
             >
-              {designer.profileImageUrl ? (
+              {designer.profileimageurl ? (
                 <img 
-                  src={designer.profileImageUrl}
+                  src={designer.profileimageurl}
                   alt={designer.name || designer.username}
                   className="w-full h-full object-cover"
                 />
