@@ -543,71 +543,75 @@ export default function DesignerProfile() {
             </span>
           </h2>
           
-          {/* Filtros inteligentes - Layout otimizado para dispositivos móveis */}
-          <div className="grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-center gap-2 mt-4 md:mt-0 px-4 md:px-0 pb-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="rounded-full px-3 md:px-4 h-8 bg-white shadow-sm text-xs md:text-sm"
-              disabled
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path></svg>
-              <span className="hidden md:inline">Filtros</span>
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className={`rounded-full px-3 md:px-4 h-8 bg-white shadow-sm text-xs md:text-sm ${activeFilter === 'todos' ? 'border-blue-200 text-blue-700' : 'hover:border-blue-200'}`}
-              onClick={() => {
-                setActiveFilter('todos');
-                setArtsPage(1); // Reset para página 1 ao mudar filtro
-              }}
-            >
-              Todos
-              {activeFilter === 'todos' && <span className="ml-1 text-xs">({data.arts.length})</span>}
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className={`rounded-full px-3 md:px-4 h-8 bg-white shadow-sm text-xs md:text-sm ${activeFilter === 'favoritas' ? 'border-blue-200 text-blue-700' : 'hover:border-blue-200'}`}
-              onClick={() => {
-                setActiveFilter('favoritas');
-                setArtsPage(1); // Reset para página 1 ao mudar filtro
-              }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
-              Favoritas
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className={`rounded-full px-3 md:px-4 h-8 bg-white shadow-sm text-xs md:text-sm ${activeFilter === 'recentes' ? 'border-blue-200 text-blue-700' : 'hover:border-blue-200'}`}
-              onClick={() => {
-                setActiveFilter('recentes');
-                setArtsPage(1); // Reset para página 1 ao mudar filtro
-              }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-              Recentes
-              {activeFilter === 'recentes' && (
-                <span className="ml-1 text-xs">
-                  ({data.arts.length})
-                </span>
-              )}
-            </Button>
+          {/* Filtros inteligentes - Layout compacto e organizado */}
+          <div className="flex flex-col sm:flex-row sm:flex-wrap sm:justify-center mt-4 md:mt-0 px-4 md:px-0 pb-2">
+            {/* Primeira linha no mobile - título e filtros principais */}
+            <div className="flex justify-between mb-2 sm:mb-0 sm:mr-2">
+              <div className="flex-none flex items-center bg-white rounded-full px-3 h-8 shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 text-gray-500"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path></svg>
+                <span className="text-xs text-gray-500">Filtros:</span>
+              </div>
+              
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className={`rounded-full px-3 md:px-4 h-8 bg-white shadow-sm text-xs md:text-sm ${activeFilter === 'todos' ? 'border-blue-200 text-blue-700' : 'hover:border-blue-200'}`}
+                onClick={() => {
+                  setActiveFilter('todos');
+                  setArtsPage(1); 
+                }}
+              >
+                Todos
+                {activeFilter === 'todos' && <span className="ml-1 text-xs">({data.arts.length})</span>}
+              </Button>
+            </div>
             
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className={`rounded-full px-3 md:px-4 h-8 bg-white shadow-sm text-xs md:text-sm ${activeFilter === 'emalta' ? 'border-blue-200 text-blue-700' : 'hover:border-blue-200'}`}
-              onClick={() => {
-                setActiveFilter('emalta');
-                setArtsPage(1); // Reset para página 1 ao mudar filtro
-              }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg>
-              Em Alta
-            </Button>
+            {/* Segunda linha no mobile - filtros específicos */}
+            <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className={`rounded-full px-3 md:px-4 h-8 bg-white shadow-sm text-xs md:text-sm ${activeFilter === 'favoritas' ? 'border-blue-200 text-blue-700' : 'hover:border-blue-200'}`}
+                onClick={() => {
+                  setActiveFilter('favoritas');
+                  setArtsPage(1);
+                }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                Favoritas
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className={`rounded-full px-3 md:px-4 h-8 bg-white shadow-sm text-xs md:text-sm ${activeFilter === 'recentes' ? 'border-blue-200 text-blue-700' : 'hover:border-blue-200'}`}
+                onClick={() => {
+                  setActiveFilter('recentes');
+                  setArtsPage(1);
+                }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                Recentes
+                {activeFilter === 'recentes' && (
+                  <span className="ml-1 text-xs">
+                    ({data.arts.length})
+                  </span>
+                )}
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className={`rounded-full px-3 md:px-4 h-8 bg-white shadow-sm text-xs md:text-sm ${activeFilter === 'emalta' ? 'border-blue-200 text-blue-700' : 'hover:border-blue-200'}`}
+                onClick={() => {
+                  setActiveFilter('emalta');
+                  setArtsPage(1);
+                }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg>
+                Em Alta
+              </Button>
+            </div>
           </div>
         </div>
         
