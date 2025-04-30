@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { db } from "../db";
-import { users, userFollows } from "../../shared/schema";
-import { eq, and, sql, count } from "drizzle-orm";
+import { users, userFollows, arts } from "../../shared/schema";
+import { eq, and, sql, count, desc } from "drizzle-orm";
 import { FollowRequest } from "../../shared/interfaces/follows";
 import { storage } from "../storage";
 
@@ -30,8 +30,74 @@ export function setupFollowRoutes(app: any, isAuthenticated: (req: Request, res:
       
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 12;
       
-      // Usar método centralizado do storage
-      const arts = await storage.getFollowingDesignersArts(userId, limit);
+      // Implementação direta em vez de usar o storage para fins de depuração
+      // Busca os IDs dos designers que o usuário segue
+      const followings = await db.select({
+        followingId: userFollows.followingId
+      })
+      .from(userFollows)
+      .where(eq(userFollows.followerId, userId));
+
+      if (followings.length === 0) {
+        return res.status(200).json({ arts: [] });
+      }
+      
+      // Extrai os IDs dos designers seguidos
+      const designerIds = followings.map(f => f.followingId);
+      
+      // Busca as artes mais recentes desses designers
+      const query = `
+        SELECT 
+          a.id, 
+          a."createdAt", 
+          a."updatedAt", 
+          a.designerid, 
+          a.viewcount,
+          a.width, 
+          a.height, 
+          a."isPremium",
+          a."isVisible", 
+          a."categoryId", 
+          a."collectionId", 
+          a.title, 
+          a."imageUrl", 
+          a.format, 
+          a."fileType", 
+          a."editUrl", 
+          a.aspectratio,
+          u.username AS designer_username,
+          u.name AS designer_name,
+          u.profileimageurl AS designer_avatar
+        FROM arts a
+        JOIN users u ON a.designerid = u.id
+        WHERE a.designerid IN (${designerIds.join(',')})
+          AND a."isVisible" = TRUE
+        ORDER BY a."createdAt" DESC
+        LIMIT ${limit}
+      `;
+      
+      const result = await db.execute(sql.raw(query));
+      
+      // Mapear as colunas para o formato esperado, incluindo informações do designer
+      const arts = result.rows.map(art => ({
+        id: art.id,
+        title: art.title,
+        imageUrl: art.imageUrl,
+        width: art.width,
+        height: art.height,
+        aspectRatio: art.aspectratio,
+        format: art.format,
+        fileType: art.fileType,
+        isPremium: art.isPremium,
+        editUrl: art.editUrl,
+        viewCount: art.viewcount,
+        designer: {
+          id: art.designerid,
+          username: art.designer_username,
+          name: art.designer_name,
+          profileimageurl: art.designer_avatar
+        }
+      }));
       
       console.log(`Encontradas ${arts.length} artes dos designers seguidos por ${userId}`);
       return res.status(200).json({ arts });
