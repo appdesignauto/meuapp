@@ -392,10 +392,10 @@ export default function ArtDetail() {
       </Button>
       
       <div className="bg-white rounded-xl shadow-md overflow-hidden mb-6">
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-0">
-          {/* Art Image - Ocupando 3.5/5 para mais destaque e painel lateral mais estreito */}
+        <div className="grid grid-cols-1 lg:grid-cols-6 gap-0">
+          {/* Art Image - Ocupando 4/6 para manter proporção original da imagem */}
           <motion.div 
-            className="relative bg-neutral-50 flex items-center justify-center p-4 md:p-6 lg:col-span-3.5 border-r border-gray-100"
+            className="relative bg-neutral-50 flex items-center justify-center p-4 md:p-6 lg:col-span-4 border-r border-gray-100"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
@@ -470,8 +470,8 @@ export default function ArtDetail() {
             </div>
           </motion.div>
           
-          {/* Art Details - Agora ocupa 1.5/5 para um painel lateral mais estreito */}
-          <div className="p-5 md:p-6 flex flex-col h-full lg:col-span-1.5 bg-white">
+          {/* Art Details - Agora ocupa 2/6 para um painel lateral mais estreito */}
+          <div className="p-5 md:p-6 flex flex-col h-full lg:col-span-2 bg-white">
             <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">
               {art.title}
             </h1>
