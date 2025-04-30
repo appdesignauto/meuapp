@@ -3,6 +3,7 @@ import { db } from "../db";
 import { users, userFollows } from "../../shared/schema";
 import { eq, and, sql, count } from "drizzle-orm";
 import { FollowRequest } from "../../shared/interfaces/follows";
+import { storage } from "../storage";
 
 interface CustomRequest extends Request {
   user?: {
@@ -30,7 +31,6 @@ export function setupFollowRoutes(app: any, isAuthenticated: (req: Request, res:
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 12;
       
       // Usar método centralizado do storage
-      const storage = req.app.get('storage');
       const arts = await storage.getFollowingDesignersArts(userId, limit);
       
       console.log(`Encontradas ${arts.length} artes dos designers seguidos por ${userId}`);
