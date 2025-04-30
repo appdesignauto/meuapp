@@ -489,9 +489,6 @@ export default function ArtDetail() {
               </div>
             </div>
             
-            {/* Designer Section - Agora usando componente separado */}
-            {art.designer && <DesignerSection designer={art.designer} userId={user?.id} />}
-            
             {/* Descrição da arte removida conforme solicitado */}
             
             {/* Benefits Section - Animação e design melhorados */}
@@ -625,6 +622,18 @@ export default function ArtDetail() {
                 </motion.div>
               </div>
             </motion.div>
+            
+            {/* Designer Section - Agora após os botões conforme solicitado */}
+            {art.designer && (
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.3, delay: 0.45 }}
+                className="mb-5"
+              >
+                <DesignerSection designer={art.designer} userId={user?.id} />
+              </motion.div>
+            )}
             
             {/* Additional Info Box - Mostra o banner premium */}
             {art.isPremiumLocked && (
