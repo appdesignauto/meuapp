@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import useScrollTop from '@/hooks/useScrollTop';
@@ -10,7 +10,14 @@ import {
   Heart, 
   ExternalLink,
   Calendar, 
-  Tag 
+  Tag,
+  Maximize,
+  ArrowUpRight,
+  Sparkles,
+  Trophy,
+  Clock,
+  Zap,
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,6 +27,11 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import RelatedArts from '@/components/art/RelatedArts';
 import { apiRequest, queryClient } from '@/lib/queryClient';
+import Zoom from 'react-medium-image-zoom';
+import 'react-medium-image-zoom/dist/styles.css';
+import { motion, AnimatePresence } from 'framer-motion';
+import { format, formatDistance } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 // Interfaces para tipagem de dados
 interface RecentArt {
@@ -350,25 +362,88 @@ export default function ArtDetail() {
       
       <div className="bg-white rounded-xl shadow-md overflow-hidden mb-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
-          {/* Art Image - Agora ocupa 2/3 */}
-          <div className="relative bg-neutral-50 flex items-center justify-center p-4 md:p-6 lg:col-span-2 border-r border-gray-100">
-            <div className="w-full h-full relative">
-              <img 
-                src={art.imageUrl} 
-                alt={art.title} 
-                className="w-full h-full object-contain max-h-[80vh]"
-              />
+          {/* Art Image com Lightbox e Zoom - Ocupa 2/3 */}
+          <motion.div 
+            className="relative bg-neutral-50 flex items-center justify-center p-4 md:p-6 lg:col-span-2 border-r border-gray-100"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="w-full h-full relative group">
+              <Zoom>
+                <motion.img 
+                  src={art.imageUrl} 
+                  alt={art.title} 
+                  className="w-full h-full object-contain max-h-[80vh] transition-all duration-300 rounded-md"
+                  initial={{ scale: 0.95, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                />
+              </Zoom>
               
-              {/* Premium Badge */}
-              {art.isPremium && (
-                <div className="absolute top-4 right-4">
-                  <Badge className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-3 py-1 rounded-full font-medium shadow-md">
-                    Premium
-                  </Badge>
+              {/* Badges de status */}
+              <div className="absolute top-4 right-4 flex flex-col space-y-2">
+                {art.isPremium && (
+                  <motion.div
+                    initial={{ x: 20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ duration: 0.3, delay: 0.2 }}
+                  >
+                    <Badge className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-3 py-1 rounded-full font-medium shadow-md flex items-center">
+                      <Sparkles className="h-3.5 w-3.5 mr-1" />
+                      Premium
+                    </Badge>
+                  </motion.div>
+                )}
+                
+                {art.viewCount && art.viewCount > 10 && (
+                  <motion.div
+                    initial={{ x: 20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ duration: 0.3, delay: 0.3 }}
+                  >
+                    <Badge className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1 rounded-full font-medium shadow-md flex items-center">
+                      <Trophy className="h-3.5 w-3.5 mr-1" />
+                      Popular
+                    </Badge>
+                  </motion.div>
+                )}
+                
+                {new Date(art.createdAt).getTime() > new Date().getTime() - 7 * 24 * 60 * 60 * 1000 && (
+                  <motion.div
+                    initial={{ x: 20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ duration: 0.3, delay: 0.4 }}
+                  >
+                    <Badge className="bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-1 rounded-full font-medium shadow-md flex items-center">
+                      <Zap className="h-3.5 w-3.5 mr-1" />
+                      Novidade
+                    </Badge>
+                  </motion.div>
+                )}
+              </div>
+              
+              {/* Overlay de informações no hover */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4 rounded-md">
+                <div className="text-white">
+                  <p className="text-sm font-medium mb-1 flex items-center">
+                    <Eye className="h-4 w-4 mr-1" />
+                    {art.viewCount || 0} visualizações
+                  </p>
+                  <p className="text-sm font-medium mb-1 flex items-center">
+                    <Clock className="h-4 w-4 mr-1" />
+                    Adicionado há {formatDistance(new Date(art.createdAt), new Date(), { locale: ptBR })}
+                  </p>
                 </div>
-              )}
+              </div>
+              
+              {/* Indicador de zoom */}
+              <div className="absolute bottom-4 left-4 bg-white/80 text-gray-800 rounded-full px-3 py-1 text-xs font-medium shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center">
+                <Maximize className="h-3.5 w-3.5 mr-1" />
+                Clique para ampliar
+              </div>
             </div>
-          </div>
+          </motion.div>
           
           {/* Art Details - Agora ocupa 1/3 */}
           <div className="p-5 md:p-6 flex flex-col h-full">
@@ -515,87 +590,126 @@ export default function ArtDetail() {
               </div>
             )}
             
-            <p className="text-neutral-600 mb-4 text-sm">
-              {art.description || 'Sem descrição disponível para esta arte.'}
-            </p>
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.3, delay: 0.2 }}
+            >
+              <p className="text-neutral-600 mb-4 text-sm">
+                {art.description || 'Sem descrição disponível para esta arte.'}
+              </p>
+            </motion.div>
             
-            {/* Benefits Section */}
-            <div className="mb-5 space-y-2">
-              <div className="flex items-start gap-2 text-sm">
-                <div className="mt-0.5 bg-blue-100 text-blue-700 rounded-full p-1">
+            {/* Benefits Section - Animação e design melhorados */}
+            <motion.div 
+              className="mb-5 space-y-2"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.3, delay: 0.3 }}
+            >
+              <div className="flex items-start gap-2 text-sm group cursor-default hover:bg-blue-50/40 p-2 rounded-md transition-colors">
+                <div className="mt-0.5 bg-blue-100 text-blue-700 rounded-full p-1 group-hover:scale-110 transition-transform">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 </div>
-                <span>Arquivo em formato {art.fileType?.name || 'editável'}</span>
+                <span>Arquivo em formato <span className="font-medium text-blue-700">{art.fileType?.name || 'editável'}</span></span>
               </div>
               
-              <div className="flex items-start gap-2 text-sm">
-                <div className="mt-0.5 bg-blue-100 text-blue-700 rounded-full p-1">
+              <div className="flex items-start gap-2 text-sm group cursor-default hover:bg-blue-50/40 p-2 rounded-md transition-colors">
+                <div className="mt-0.5 bg-blue-100 text-blue-700 rounded-full p-1 group-hover:scale-110 transition-transform">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 </div>
                 <span>Para qualquer competência e profissional</span>
               </div>
               
-              <div className="flex items-start gap-2 text-sm">
-                <div className="mt-0.5 bg-blue-100 text-blue-700 rounded-full p-1">
+              <div className="flex items-start gap-2 text-sm group cursor-default hover:bg-blue-50/40 p-2 rounded-md transition-colors">
+                <div className="mt-0.5 bg-blue-100 text-blue-700 rounded-full p-1 group-hover:scale-110 transition-transform">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 </div>
                 <span>Facilmente personalizável</span>
               </div>
               
-              <div className="flex items-start gap-2 text-sm">
-                <div className="mt-0.5 bg-blue-100 text-blue-700 rounded-full p-1">
+              <div className="flex items-start gap-2 text-sm group cursor-default hover:bg-blue-50/40 p-2 rounded-md transition-colors">
+                <div className="mt-0.5 bg-blue-100 text-blue-700 rounded-full p-1 group-hover:scale-110 transition-transform">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 </div>
                 <span>Qualidade de imagem verificada</span>
               </div>
-            </div>
+            </motion.div>
             
-            {/* Action Buttons */}
-            <div className="mb-5 space-y-2">
-              <Button 
-                onClick={handleOpenEdit} 
-                size="lg"
-                className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 py-5"
+            {/* Action Buttons - Redesenhados com animações */}
+            <motion.div 
+              className="mb-5 space-y-2"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.3, delay: 0.4 }}
+            >
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ type: "spring", stiffness: 400, damping: 15 }}
               >
-                <ExternalLink className="h-5 w-5" />
-                Editar no {art.fileType?.name || 'Editor'}
-              </Button>
+                <Button 
+                  onClick={handleOpenEdit} 
+                  size="lg"
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 py-5 shadow-md"
+                >
+                  <ExternalLink className="h-5 w-5" />
+                  Editar no {art.fileType?.name || 'Editor'}
+                </Button>
+              </motion.div>
               
               <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  size="default"
-                  className="flex-1 flex items-center justify-center gap-1 border-blue-200 text-blue-600 py-5"
-                  onClick={handleLike}
-                  disabled={addFavoriteMutation.isPending || removeFavoriteMutation.isPending}
+                <motion.div className="flex-1"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 15 }}
                 >
-                  {addFavoriteMutation.isPending || removeFavoriteMutation.isPending ? (
-                    <>
-                      <svg className="animate-spin h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      {liked ? 'Removendo...' : 'Adicionando...'}
-                    </>
-                  ) : (
-                    <>
-                      <Heart className={`h-4 w-4 ${liked ? 'fill-blue-600' : ''}`} />
-                      {liked ? 'Favoritado' : 'Favoritar'}
-                    </>
-                  )}
-                </Button>
+                  <Button 
+                    variant="outline" 
+                    size="default"
+                    className="w-full flex items-center justify-center gap-1 border-blue-200 text-blue-600 py-5 hover:bg-blue-50"
+                    onClick={handleLike}
+                    disabled={addFavoriteMutation.isPending || removeFavoriteMutation.isPending}
+                  >
+                    {addFavoriteMutation.isPending || removeFavoriteMutation.isPending ? (
+                      <>
+                        <svg className="animate-spin h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        {liked ? 'Removendo...' : 'Adicionando...'}
+                      </>
+                    ) : (
+                      <>
+                        <motion.div
+                          animate={liked ? { scale: [1, 1.5, 1] } : {}}
+                          transition={{ duration: 0.4 }}
+                        >
+                          <Heart className={`h-4 w-4 ${liked ? 'fill-blue-600 text-blue-600' : ''}`} />
+                        </motion.div>
+                        {liked ? 'Favoritado' : 'Favoritar'}
+                      </>
+                    )}
+                  </Button>
+                </motion.div>
                 
-                <Button 
-                  variant="outline" 
-                  size="default"
-                  className="flex-1 flex items-center justify-center gap-1 border-blue-200 text-blue-600 py-5"
-                  onClick={handleShare}
+                <motion.div className="flex-1"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 15 }}
                 >
-                  <Share2 className="h-4 w-4" />
-                  Compartilhar
-                </Button>
+                  <Button 
+                    variant="outline" 
+                    size="default"
+                    className="w-full flex items-center justify-center gap-1 border-blue-200 text-blue-600 py-5 hover:bg-blue-50"
+                    onClick={handleShare}
+                  >
+                    <Share2 className="h-4 w-4" />
+                    Compartilhar
+                  </Button>
+                </motion.div>
               </div>
-            </div>
+            </motion.div>
             
             {/* Additional Info Box - Mostra o banner premium */}
             {art.isPremiumLocked && (
@@ -720,13 +834,39 @@ export default function ArtDetail() {
         </div>
       )}
       
-      {/* Related Arts Section */}
-      <div className="bg-white rounded-xl shadow-md p-6">
-        <h2 className="text-lg font-bold text-gray-800 mb-6">
-          Conheça artes similares
-        </h2>
+      {/* Related Arts Section - Com animação */}
+      <motion.div 
+        className="bg-white rounded-xl shadow-md p-6"
+        initial={{ y: 40, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.4, delay: 0.5 }}
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-lg font-bold text-gray-800 flex items-center">
+            <ArrowUpRight className="h-5 w-5 text-blue-600 mr-2" />
+            Conheça artes similares
+          </h2>
+          <Badge 
+            variant="outline" 
+            className="px-3 py-0.5 text-xs font-normal text-neutral-600 border-neutral-200"
+          >
+            Baseadas na sua navegação
+          </Badge>
+        </div>
+        
         <RelatedArts artId={Number(id)} />
-      </div>
+        
+        <div className="mt-8 flex justify-center">
+          <Button 
+            variant="ghost" 
+            className="text-blue-600 flex items-center group"
+            onClick={() => setLocation('/')}
+          >
+            Explorar mais artes
+            <ChevronRight className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+          </Button>
+        </div>
+      </motion.div>
     </div>
   );
 }
