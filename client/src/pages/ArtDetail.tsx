@@ -57,6 +57,8 @@ interface Art {
   editUrl: string;
   viewCount?: number;
   downloadCount?: number;
+  favoriteCount?: number; // Contagem de favoritos
+  shareCount?: number; // Contagem de compartilhamentos
   isPremium: boolean;
   isPremiumLocked?: boolean;
   createdAt: string;
@@ -238,12 +240,39 @@ export default function ArtDetail() {
     });
   };
 
+  // Mutação para registrar compartilhamento
+  const registerShareMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/shares", { artId: Number(id) });
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/arts', id] });
+    },
+    onError: (error) => {
+      console.error("Erro ao registrar compartilhamento:", error);
+      // Silenciar erro para o usuário - não deve afetar a experiência
+    },
+  });
+
   const handleShare = () => {
+    // Otimistic update - incrementa o contador localmente antes da resposta da API
+    const currentShareCount = art.shareCount || 0;
+    
+    // Registrar o compartilhamento na API
+    registerShareMutation.mutate();
+    
     if (navigator.share) {
       navigator.share({
         title: art?.title || 'DesignAuto - Arte Automotiva',
         text: 'Confira esta arte incrível no DesignAuto!',
         url: window.location.href,
+      })
+      .then(() => {
+        toast({
+          title: "Compartilhado com sucesso",
+          description: "Obrigado por compartilhar nossa arte!",
+        });
       })
       .catch((error) => {
         console.log('Erro ao compartilhar:', error);
@@ -778,6 +807,24 @@ export default function ArtDetail() {
                   <div className="flex items-center">
                     <Download className="h-4 w-4 text-blue-600 mr-2" />
                     <p className="font-medium text-sm">{art.downloadCount || 0}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 divide-x divide-neutral-200 border-t border-neutral-200">
+                <div className="p-3 bg-white hover:bg-blue-50/30 transition-colors">
+                  <p className="text-xs text-neutral-500 mb-1">Favoritos</p>
+                  <div className="flex items-center">
+                    <Heart className="h-4 w-4 text-rose-500 mr-2" />
+                    <p className="font-medium text-sm">{art.favoriteCount || 0}</p>
+                  </div>
+                </div>
+                
+                <div className="p-3 bg-white hover:bg-blue-50/30 transition-colors">
+                  <p className="text-xs text-neutral-500 mb-1">Compartilhamentos</p>
+                  <div className="flex items-center">
+                    <Share2 className="h-4 w-4 text-blue-600 mr-2" />
+                    <p className="font-medium text-sm">{art.shareCount || 0}</p>
                   </div>
                 </div>
               </div>
