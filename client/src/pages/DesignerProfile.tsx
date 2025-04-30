@@ -54,14 +54,19 @@ export default function DesignerProfile() {
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  // Estado para o filtro ativo (todos, premium, recentes, emalta)
-  const [activeFilter, setActiveFilter] = useState<'todos' | 'premium' | 'recentes' | 'emalta'>('todos');
+  // Estado para o filtro ativo (todos, favoritas, recentes, emalta)
+  const [activeFilter, setActiveFilter] = useState<'todos' | 'favoritas' | 'recentes' | 'emalta'>('todos');
   
   // Função para filtrar artes com base no filtro selecionado
   const filterArts = (arts: Designer['arts']) => {
     switch (activeFilter) {
-      case 'premium':
-        return arts.filter(art => art.isPremium);
+      case 'favoritas':
+        // Ordenar por número de curtidas/favoritos (do maior para o menor)
+        return [...arts].sort((a, b) => {
+          const likesA = (a as any).favoritecount || 0;
+          const likesB = (b as any).favoritecount || 0;
+          return likesB - likesA;
+        });
       case 'recentes':
         // Clonar o array para não afetar o original e então ordenar por data mais recente
         return [...arts].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -564,16 +569,17 @@ export default function DesignerProfile() {
             <Button 
               variant="outline" 
               size="sm" 
-              className={`rounded-full px-4 h-8 bg-white shadow-sm ${activeFilter === 'premium' ? 'border-blue-200 text-blue-700' : 'hover:border-blue-200'}`}
+              className={`rounded-full px-4 h-8 bg-white shadow-sm ${activeFilter === 'favoritas' ? 'border-blue-200 text-blue-700' : 'hover:border-blue-200'}`}
               onClick={() => {
-                setActiveFilter('premium');
+                setActiveFilter('favoritas');
                 setArtsPage(1); // Reset para página 1 ao mudar filtro
               }}
             >
-              Premium
-              {activeFilter === 'premium' && (
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+              Favoritas
+              {activeFilter === 'favoritas' && (
                 <span className="ml-1.5 text-xs">
-                  ({data.arts.filter(art => art.isPremium).length})
+                  ({data.arts.length})
                 </span>
               )}
             </Button>
@@ -606,11 +612,6 @@ export default function DesignerProfile() {
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg>
               Em Alta
-              {activeFilter === 'emalta' && (
-                <span className="ml-1.5 text-xs">
-                  ({data.arts.length})
-                </span>
-              )}
             </Button>
           </div>
         </div>
@@ -622,7 +623,7 @@ export default function DesignerProfile() {
               {data.arts.length === 0 
                 ? "Este designer ainda não publicou nenhuma arte."
                 : `Nenhuma arte encontrada com o filtro ${
-                    activeFilter === 'premium' ? 'Premium' : 
+                    activeFilter === 'favoritas' ? 'Favoritas' : 
                     activeFilter === 'recentes' ? 'Recentes' : 
                     activeFilter === 'emalta' ? 'Em Alta' : 
                     'selecionado'
