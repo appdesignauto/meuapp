@@ -1917,7 +1917,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Buscar todos os designers que o usuário está seguindo
       const query = `
         SELECT u.id, u.username, u.name, u.profileimageurl, u.bio, u.role, u.followers, 
-        (SELECT COUNT(*) FROM arts WHERE "designerId" = u.id) as "artsCount",
+        (SELECT COUNT(*) FROM arts WHERE "designerid" = u.id) as "artsCount",
         u.followers as "followersCount", 
         true as "isFollowing"
         FROM users u
@@ -1945,7 +1945,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Buscar designers populares baseados no número de seguidores e artes
       const query = `
         SELECT u.id, u.username, u.name, u.profileimageurl, u.bio, u.role, u.followers, 
-        (SELECT COUNT(*) FROM arts WHERE "designerId" = u.id) as "artsCount",
+        (SELECT COUNT(*) FROM arts WHERE "designerid" = u.id) as "artsCount",
         u.followers as "followersCount",
         ${userId ? `
           EXISTS (
