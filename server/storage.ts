@@ -1883,8 +1883,18 @@ export class DatabaseStorage implements IStorage {
         }
       }
       
-      // Adicionar ordenação e limite
-      query = sql`${query} ORDER BY "createdAt" DESC LIMIT ${limit} OFFSET ${offset}`;
+      // Adicionar ordenação baseada no parâmetro sortBy e limite
+      if (filters?.sortBy === 'recent') {
+        query = sql`${query} ORDER BY "createdAt" DESC`;
+      } else if (filters?.sortBy === 'popular') {
+        query = sql`${query} ORDER BY "viewcount" DESC, "createdAt" DESC`;
+      } else {
+        // Ordenação padrão por data de criação
+        query = sql`${query} ORDER BY "createdAt" DESC`;
+      }
+      
+      // Adicionar limite e offset (paginação)
+      query = sql`${query} LIMIT ${limit} OFFSET ${offset}`;
       
       // Executar a consulta
       const result = await db.execute(query);

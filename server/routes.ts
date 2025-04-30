@@ -1114,6 +1114,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         filters.isPremium = req.query.isPremium === 'true';
       }
       
+      // Check if sortBy parameter is present
+      if (req.query.sortBy) {
+        filters.sortBy = req.query.sortBy as string;
+        console.log(`Ordenação aplicada: ${filters.sortBy}`);
+      }
+      
       // Apenas usuários admin, designer_adm e designer podem ver artes ocultas
       const isAdmin = req.user?.nivelacesso === 'admin' || req.user?.nivelacesso === 'designer_adm' || req.user?.nivelacesso === 'designer';
       
