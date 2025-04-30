@@ -495,7 +495,7 @@ export default function ArtDetail() {
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.3, delay: 0.2 }}
-                className="mb-5"
+                className="mb-4"
               >
                 <DesignerSection designer={art.designer} userId={user?.id} />
               </motion.div>
@@ -505,7 +505,7 @@ export default function ArtDetail() {
             
             {/* Benefits Section - Animação e design melhorados */}
             <motion.div 
-              className="mb-5 space-y-2"
+              className="mb-4 space-y-2"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.3, delay: 0.3 }}
@@ -541,7 +541,7 @@ export default function ArtDetail() {
             
             {/* Action Buttons - Redesenhados com animações */}
             <motion.div 
-              className="mb-5 space-y-2"
+              className="mb-4 space-y-2"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.3, delay: 0.4 }}
