@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -26,12 +27,18 @@ interface DesignerSectionProps {
   userId?: number | null;
 }
 
-export function DesignerSection({ designer, userId }: DesignerSectionProps) {
+export function DesignerSection({ designer: initialDesigner, userId }: DesignerSectionProps) {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const [designer, setDesigner] = useState(initialDesigner);
   
   // Log para debug das propriedades do designer
   console.log('Dados do designer:', designer);
+
+  // Atualiza o estado local quando as props mudam
+  useEffect(() => {
+    setDesigner(initialDesigner);
+  }, [initialDesigner]);
 
   const handleFollowClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Evita o redirecionamento para o perfil ao clicar no botão
@@ -47,14 +54,14 @@ export function DesignerSection({ designer, userId }: DesignerSectionProps) {
     
     const isCurrentlyFollowing = designer.isFollowing;
     
-    // Otimistic UI update
-    const updatedDesigner = {...designer};
-    updatedDesigner.isFollowing = !isCurrentlyFollowing;
-    if (isCurrentlyFollowing) {
-      updatedDesigner.followers = (updatedDesigner.followers || 1) - 1;
-    } else {
-      updatedDesigner.followers = (updatedDesigner.followers || 0) + 1;
-    }
+    // Otimistic UI update - atualiza o estado local imediatamente
+    setDesigner(prev => ({
+      ...prev,
+      isFollowing: !isCurrentlyFollowing,
+      followers: isCurrentlyFollowing
+        ? (prev.followers || 1) - 1
+        : (prev.followers || 0) + 1
+    }));
     
     // API call
     fetch(`/api/${isCurrentlyFollowing ? 'unfollow' : 'follow'}/${designer.id}`, {
@@ -65,7 +72,17 @@ export function DesignerSection({ designer, userId }: DesignerSectionProps) {
       credentials: 'include'
     })
     .then(response => {
-      if (!response.ok) throw new Error('Falha na operação de seguir');
+      if (!response.ok) {
+        // Reverte a mudança em caso de erro
+        setDesigner(prev => ({
+          ...prev,
+          isFollowing: isCurrentlyFollowing,
+          followers: isCurrentlyFollowing
+            ? (prev.followers || 0) + 1
+            : Math.max(0, (prev.followers || 1) - 1)
+        }));
+        throw new Error('Falha na operação de seguir');
+      }
       return response.json();
     })
     .then(() => {
