@@ -202,6 +202,7 @@ interface ArtFilters {
   fileTypeId?: number | null;
   search?: string;
   isPremium?: boolean;
+  isVisible?: boolean;
 }
 
 export class MemStorage implements IStorage {
