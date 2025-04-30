@@ -54,13 +54,31 @@ export default function DesignerProfile() {
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [activeFilter, setActiveFilter] = useState<'todos' | 'premium' | 'instagram'>('todos');
   
-  // Calcular páginas de artes para paginação
-  const displayedArts = (data: Designer) => 
-    data.arts.slice((artsPage - 1) * artsPerPage, artsPage * artsPerPage);
+  // Função para filtrar artes com base no filtro selecionado
+  const filterArts = (arts: Designer['arts']) => {
+    switch (activeFilter) {
+      case 'premium':
+        return arts.filter(art => art.isPremium);
+      case 'instagram':
+        return arts.filter(art => art.format.toLowerCase().includes('instagram'));
+      case 'todos':
+      default:
+        return arts;
+    }
+  };
   
-  const totalArtsPages = (data: Designer) => 
-    Math.ceil(data.arts.length / artsPerPage);
+  // Calcular páginas de artes para paginação com filtros aplicados
+  const displayedArts = (data: Designer) => {
+    const filteredArts = filterArts(data.arts);
+    return filteredArts.slice((artsPage - 1) * artsPerPage, artsPage * artsPerPage);
+  };
+  
+  const totalArtsPages = (data: Designer) => {
+    const filteredArts = filterArts(data.arts);
+    return Math.ceil(filteredArts.length / artsPerPage);
+  };
   
   // Buscar detalhes do designer
   const { data, isLoading, error } = useQuery<Designer>({
@@ -511,27 +529,70 @@ export default function DesignerProfile() {
           
           {/* Filtros inteligentes */}
           <div className="flex flex-wrap justify-center gap-2 mt-4 md:mt-0">
-            <Button variant="outline" size="sm" className="rounded-full px-4 h-8 bg-white shadow-sm">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="rounded-full px-4 h-8 bg-white shadow-sm"
+              disabled
+            >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path></svg>
               Filtros
             </Button>
-            <Button variant="outline" size="sm" className="rounded-full px-4 h-8 bg-white border-blue-200 text-blue-700 shadow-sm">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className={`rounded-full px-4 h-8 bg-white shadow-sm ${activeFilter === 'todos' ? 'border-blue-200 text-blue-700' : 'hover:border-blue-200'}`}
+              onClick={() => {
+                setActiveFilter('todos');
+                setArtsPage(1); // Reset para página 1 ao mudar filtro
+              }}
+            >
               Todos
+              {activeFilter === 'todos' && <span className="ml-1.5 text-xs">({data.arts.length})</span>}
             </Button>
-            <Button variant="outline" size="sm" className="rounded-full px-4 h-8 bg-white shadow-sm hover:border-blue-200">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className={`rounded-full px-4 h-8 bg-white shadow-sm ${activeFilter === 'premium' ? 'border-blue-200 text-blue-700' : 'hover:border-blue-200'}`}
+              onClick={() => {
+                setActiveFilter('premium');
+                setArtsPage(1); // Reset para página 1 ao mudar filtro
+              }}
+            >
               Premium
+              {activeFilter === 'premium' && (
+                <span className="ml-1.5 text-xs">
+                  ({data.arts.filter(art => art.isPremium).length})
+                </span>
+              )}
             </Button>
-            <Button variant="outline" size="sm" className="rounded-full px-4 h-8 bg-white shadow-sm hover:border-blue-200">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className={`rounded-full px-4 h-8 bg-white shadow-sm ${activeFilter === 'instagram' ? 'border-blue-200 text-blue-700' : 'hover:border-blue-200'}`}
+              onClick={() => {
+                setActiveFilter('instagram');
+                setArtsPage(1); // Reset para página 1 ao mudar filtro
+              }}
+            >
               Instagram
+              {activeFilter === 'instagram' && (
+                <span className="ml-1.5 text-xs">
+                  ({data.arts.filter(art => art.format.toLowerCase().includes('instagram')).length})
+                </span>
+              )}
             </Button>
           </div>
         </div>
         
-        {data.arts.length === 0 ? (
+        {data.arts.length === 0 || filterArts(data.arts).length === 0 ? (
           <div className="text-center py-16 bg-white rounded-xl shadow-sm border border-gray-100">
             <h3 className="text-xl font-medium text-gray-800">Nenhuma arte encontrada</h3>
             <p className="text-gray-500 mt-2">
-              Este designer ainda não publicou nenhuma arte.
+              {data.arts.length === 0 
+                ? "Este designer ainda não publicou nenhuma arte."
+                : `Nenhuma arte encontrada com o filtro ${activeFilter === 'premium' ? 'Premium' : activeFilter === 'instagram' ? 'Instagram' : 'selecionado'}.`
+              }
             </p>
           </div>
         ) : (
