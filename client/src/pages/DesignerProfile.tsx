@@ -54,6 +54,7 @@ export default function DesignerProfile() {
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Estado para o filtro ativo (todos, premium, recentes, emalta)
   const [activeFilter, setActiveFilter] = useState<'todos' | 'premium' | 'recentes' | 'emalta'>('todos');
   
   // Função para filtrar artes com base no filtro selecionado
