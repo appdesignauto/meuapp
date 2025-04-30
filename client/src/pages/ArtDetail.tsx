@@ -650,7 +650,19 @@ export default function ArtDetail() {
             
             {/* Designer Section já está posicionada após o título e metadados */}
             
-            {/* Notificação Premium aparece agora no botão principal */}
+            {/* Notificação Premium sem botão - apenas informativa */}
+            {art.isPremiumLocked && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-2">
+                <h3 className="text-amber-800 font-semibold flex items-center gap-2 mb-2 text-sm">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+                  Acesso Premium Necessário
+                </h3>
+                <p className="text-xs text-amber-700">
+                  Este produto está disponível exclusivamente para os membros premium. 
+                  Faça upgrade para uma conta Premium para ter acesso a todo o conteúdo premium.
+                </p>
+              </div>
+            )}
             
             {/* Metadata - Layout melhorado e mais profissional */}
             <motion.div 
