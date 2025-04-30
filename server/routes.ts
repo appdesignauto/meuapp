@@ -3010,7 +3010,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Buscar as artes deste designer usando SQL direto
-      const designerArtsResult = await db.execute(sql`
+      let sqlQuery = `
         SELECT 
           id, 
           title, 
@@ -3021,10 +3021,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           viewcount,
           "downloadCount" as downloadcount
         FROM arts
-        WHERE designerid = ${designer.id}
-        ${!isAdmin ? sql`AND "isVisible" = true` : sql``}
-        ORDER BY "createdAt" DESC
-      `);
+        WHERE designerid = $1
+      `;
+      
+      // Adicionar filtro de visibilidade se não for admin
+      if (!isAdmin) {
+        sqlQuery += ` AND "isVisible" = true`;
+      }
+      
+      sqlQuery += ` ORDER BY "createdAt" DESC`;
+      
+      const designerArtsResult = await db.execute({
+        text: sqlQuery,
+        values: [designer.id]
+      });
       
       const designerArts = designerArtsResult.rows;
       
@@ -3087,21 +3097,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Buscar artes com paginação usando SQL direto
       const offset = (page - 1) * limit;
       
-      const artsResult = await db.execute(sql`
+      const sqlQuery = `
         SELECT * FROM arts
-        WHERE designerid = ${designerId}
+        WHERE designerid = $1
         ORDER BY "createdAt" DESC
-        LIMIT ${limit} OFFSET ${offset}
-      `);
+        LIMIT $2 OFFSET $3
+      `;
+      
+      const artsResult = await db.execute({
+        text: sqlQuery,
+        values: [designerId, limit, offset]
+      });
       
       const designerArts = artsResult.rows;
       
       // Contar total de artes
-      const countResult = await db.execute(sql`
+      const countQuery = `
         SELECT COUNT(*) as value
         FROM arts
-        WHERE designerid = ${designerId}
-      `);
+        WHERE designerid = $1
+      `;
+      
+      const countResult = await db.execute({
+        text: countQuery,
+        values: [designerId]
+      });
       
       const totalCount = parseInt(countResult.rows[0].value);
       
@@ -3160,17 +3180,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       
       // Atualizar contadores de seguidores e seguindo
-      await db.execute(sql.raw(`
-        UPDATE users 
-        SET followers = followers + 1 
-        WHERE id = ${designerId}
-      `));
+      await db.execute({
+        text: `
+          UPDATE users 
+          SET followers = followers + 1 
+          WHERE id = $1
+        `,
+        values: [designerId]
+      });
       
-      await db.execute(sql.raw(`
-        UPDATE users 
-        SET following = following + 1 
-        WHERE id = ${followerId}
-      `));
+      await db.execute({
+        text: `
+          UPDATE users 
+          SET following = following + 1 
+          WHERE id = $1
+        `,
+        values: [followerId]
+      });
       
       res.status(201).json({ message: "Designer seguido com sucesso" });
     } catch (error) {
@@ -3209,17 +3235,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
       
       // Atualizar contadores de seguidores e seguindo (decremento)
-      await db.execute(sql.raw(`
-        UPDATE users 
-        SET followers = GREATEST(followers - 1, 0) 
-        WHERE id = ${designerId}
-      `));
+      await db.execute({
+        text: `
+          UPDATE users 
+          SET followers = GREATEST(followers - 1, 0) 
+          WHERE id = $1
+        `,
+        values: [designerId]
+      });
       
-      await db.execute(sql.raw(`
-        UPDATE users 
-        SET following = GREATEST(following - 1, 0) 
-        WHERE id = ${followerId}
-      `));
+      await db.execute({
+        text: `
+          UPDATE users 
+          SET following = GREATEST(following - 1, 0) 
+          WHERE id = $1
+        `,
+        values: [followerId]
+      });
       
       res.status(200).json({ message: "Deixou de seguir o designer com sucesso" });
     } catch (error) {
