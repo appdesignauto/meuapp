@@ -85,28 +85,35 @@ export function DesignerSection({ designer, userId }: DesignerSectionProps) {
     <div className="mb-4 py-3 border-t border-b border-neutral-100">
       {/* Header: Nome, imagem e botão seguir agrupados */}
       <div className="flex items-center gap-3 mb-3">
-        <div 
-          className="flex items-center cursor-pointer"
-          onClick={() => setLocation(`/designers/${designer.username}`)}
-        >
-          <div className="w-9 h-9 rounded-full overflow-hidden bg-neutral-100 flex-shrink-0">
-            {designer.profileImageUrl ? (
-              <img 
-                src={designer.profileImageUrl}
-                alt={designer.name || designer.username}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-blue-50 text-blue-600 font-medium">
-                {(designer.name?.[0] || designer.username[0]).toUpperCase()}
-              </div>
-            )}
-          </div>
-          
-          <div className="ml-3">
-            <p className="font-medium text-sm text-gray-900 hover:text-blue-600 transition-colors">
-              {designer.name || designer.username}
-            </p>
+        <div className="flex-grow cursor-pointer" onClick={() => setLocation(`/designers/${designer.username}`)}>
+          <div className="flex items-center">
+            <div className="w-9 h-9 rounded-full overflow-hidden bg-neutral-100 flex-shrink-0">
+              {designer.profileImageUrl ? (
+                <img 
+                  src={designer.profileImageUrl}
+                  alt={designer.name || designer.username}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-blue-50 text-blue-600 font-medium">
+                  {(designer.name?.[0] || designer.username[0]).toUpperCase()}
+                </div>
+              )}
+            </div>
+            
+            <div className="ml-3">
+              <p className="font-medium text-sm text-gray-900 hover:text-blue-600 transition-colors">
+                {designer.name || designer.username}
+              </p>
+              {/* Total de artes destacado abaixo do nome */}
+              <p className="text-xs text-neutral-500">
+                {designer.totalArts ? 
+                  designer.totalArts > 1000 
+                    ? `${Math.floor(designer.totalArts / 1000)}k artes` 
+                    : `${designer.totalArts} artes` 
+                  : '0 artes'}
+              </p>
+            </div>
           </div>
         </div>
         
@@ -142,15 +149,11 @@ export function DesignerSection({ designer, userId }: DesignerSectionProps) {
         className="cursor-pointer"
         onClick={() => setLocation(`/designers/${designer.username}`)}
       >
-        {/* Estatísticas */}
-        <div className="flex items-center gap-4 text-xs text-neutral-500 mb-2">
+        {/* Estatísticas - Apenas seguidores */}
+        <div className="flex items-center mb-2 text-xs text-neutral-500">
           <span className="flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
             <strong>{designer.followers || '0'}</strong> seguidores
-          </span>
-          <span className="flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-            <strong>{designer.totalArts || '0'}</strong> artes
           </span>
         </div>
         
