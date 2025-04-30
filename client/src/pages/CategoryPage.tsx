@@ -390,23 +390,47 @@ export default function CategoryPage() {
         </div>
       </header>
       
-      {/* Banner Hero da Categoria */}
+      {/* Cabeçalho Minimalista da Categoria */}
       {!categoryLoading && category && (
-        <div className={`relative ${colorScheme.darkBg} text-white overflow-hidden`}>
-          <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent"></div>
-          <div className="container mx-auto px-4 py-8 relative z-10">
-            <div className="max-w-4xl">
-              <div className="flex items-center mb-2">
-                <h1 className="text-3xl md:text-4xl font-bold">
-                  {category.name}
-                </h1>
-                <Badge className="ml-3 bg-white/20 hover:bg-white/30 text-white">
-                  {totalCount} {totalCount === 1 ? 'arte' : 'artes'}
-                </Badge>
+        <div className="bg-white border-b border-gray-100 py-6">
+          <div className="container mx-auto px-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+              <div className="flex items-center">
+                <div className={`h-10 w-1.5 rounded-full ${colorScheme.darkBg} mr-4`}></div>
+                <div>
+                  <div className="flex items-center gap-3">
+                    <h1 className="text-2xl font-bold text-gray-900">{category.name}</h1>
+                    <Badge variant="secondary" className="bg-gray-100 hover:bg-gray-200 text-gray-700">
+                      {totalCount} {totalCount === 1 ? 'arte' : 'artes'}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Designs profissionais para {category.name.toLowerCase()}
+                  </p>
+                </div>
               </div>
-              <p className="text-white/80 mb-6 max-w-2xl">
-                Encontre artes exclusivas para {category.name.toLowerCase()} e destaque o seu negócio com designs profissionais personalizados.
-              </p>
+              
+              <div className="flex items-center gap-3 mt-4 md:mt-0">
+                <div className={`px-3 py-1 rounded-full text-xs font-medium ${colorScheme.light} ${colorScheme.primary}`}>
+                  {category.isPremium ? 'Premium' : 'Grátis'}
+                </div>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="text-xs border-gray-200"
+                  onClick={() => setShowCategoryInfo(!showCategoryInfo)}
+                >
+                  {showCategoryInfo ? (
+                    <>
+                      <Eye className="h-3.5 w-3.5 mr-1" /> Ocultar detalhes
+                    </>
+                  ) : (
+                    <>
+                      <Info className="h-3.5 w-3.5 mr-1" /> Ver detalhes
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
