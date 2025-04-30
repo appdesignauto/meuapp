@@ -295,7 +295,7 @@ const ArtsList = () => {
                 onValueChange={(value) => 
                   setFilter({ 
                     ...filter, 
-                    isVisible: value === 'true' ? true : value === 'false' ? false : undefined 
+                    isVisible: value === 'true' ? true : value === 'false' ? false : value === 'all' ? undefined : undefined 
                   })
                 }
               >
