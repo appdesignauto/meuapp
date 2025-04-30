@@ -1397,10 +1397,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Adicionar flag de premium locked ao objeto retornado
+      // Adicionar flag de premium locked e contagens ao objeto retornado
       res.json({
         ...art,
-        isPremiumLocked
+        isPremiumLocked,
+        favoriteCount,
+        shareCount
       });
     } catch (error) {
       console.error("Erro ao buscar arte:", error);
