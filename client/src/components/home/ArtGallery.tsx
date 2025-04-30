@@ -36,13 +36,31 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
     if (formatId) url.searchParams.append('formatId', formatId.toString());
     if (fileTypeId) url.searchParams.append('fileTypeId', fileTypeId.toString());
     
+    // Adiciona explicitamente o filtro de visibilidade para usuários não admin
+    // Isso garante que artes marcadas como não visíveis não apareçam na galeria pública
+    const isAdmin = user?.nivelacesso === 'admin' || user?.nivelacesso === 'designer_adm' || user?.nivelacesso === 'designer';
+    if (!isAdmin) {
+      url.searchParams.append('isVisible', 'true');
+    }
+    
     return url.pathname + url.search;
   };
 
-  // Build query key based on filters
+  // Verifica se o usuário é admin para aplicação dos filtros
+  const isAdmin = user?.nivelacesso === 'admin' || user?.nivelacesso === 'designer_adm' || user?.nivelacesso === 'designer';
+  
+  // Build query key based on filters including visibility
   const queryKey = [
     '/api/arts',
-    { page, limit, categoryId, formatId, fileTypeId }
+    { 
+      page, 
+      limit, 
+      categoryId, 
+      formatId, 
+      fileTypeId,
+      // Adiciona visibilidade ao cache key para que a consulta seja refeita quando o status do usuário mudar
+      isVisible: !isAdmin ? true : undefined
+    }
   ];
 
   const { data, isLoading, isFetching } = useQuery<{
@@ -57,10 +75,10 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
     },
   });
 
-  // Force re-fetch when filters change
+  // Force re-fetch when filters or user authentication/role change
   useEffect(() => {
     queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
-  }, [categoryId, formatId, fileTypeId]);
+  }, [categoryId, formatId, fileTypeId, user?.nivelacesso]);
 
   const arts = data?.arts || [];
   const totalCount = data?.totalCount || 0;
