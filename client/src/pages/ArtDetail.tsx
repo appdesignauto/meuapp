@@ -180,14 +180,45 @@ export default function ArtDetail() {
     },
   });
   
+  // Função para verificar se o usuário tem acesso ao conteúdo premium
+  const userHasPremiumAccess = () => {
+    if (!user) return false;
+    
+    // Verificar se o usuário tem acesso premium
+    return user.tipoplano === 'mensal' || 
+           user.tipoplano === 'anual' || 
+           user.tipoplano === 'vitalicio' || 
+           user.tipoplano === 'personalizado' || 
+           user.acessovitalicio || 
+           user.nivelacesso === 'admin' || 
+           user.nivelacesso === 'designer_adm';
+  };
+
+  // Função para lidar com o clique no botão de edição para conteúdo premium
+  const handleOpenPremiumEdit = () => {
+    // Verificar se o usuário é premium
+    if (!userHasPremiumAccess()) {
+      // Redirecionar para página de planos
+      setLocation('/planos');
+      return;
+    }
+    
+    // Se o usuário for premium, abrir o link de edição
+    registerDownloadMutation.mutate();
+    
+    toast({
+      title: "Redirecionando para o editor",
+      description: "Abrindo o editor em uma nova janela...",
+    });
+
+    // Abrir a URL do editor em uma nova aba
+    window.open(art.editUrl, '_blank');
+  };
+
   const handleOpenEdit = () => {
-    // Para conteúdo premium bloqueado, mostrar mensagem de upgrade
+    // Para conteúdo premium bloqueado, tratar de forma diferente
     if (art.isPremiumLocked) {
-      toast({
-        title: "Conteúdo Premium",
-        description: "Assine o plano Premium para acessar este conteúdo",
-        variant: "destructive",
-      });
+      handleOpenPremiumEdit();
       return;
     }
 
@@ -553,7 +584,7 @@ export default function ArtDetail() {
               >
                 {art.isPremiumLocked ? (
                   <Button 
-                    onClick={() => setLocation('/planos')} 
+                    onClick={handleOpenPremiumEdit} 
                     size="lg"
                     className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-amber-500 hover:to-amber-600 py-5 shadow-md hover:text-white group"
                   >
