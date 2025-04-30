@@ -330,33 +330,21 @@ export default function CategoryPage() {
           </div>
           
           <div className="flex items-center space-x-3">
-            {/* Botão de informações da categoria */}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    size="icon"
-                    className={`h-8 w-8 border-gray-300 ${showCategoryInfo ? `${colorScheme.primary} ${colorScheme.light}` : ''}`}
-                    onClick={() => setShowCategoryInfo(prev => !prev)}
-                  >
-                    <Info className="h-4 w-4 text-gray-600" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{showCategoryInfo ? 'Ocultar' : 'Mostrar'} informações da categoria</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            
-            {/* Botão de filtros avançados */}
             <Button 
               variant="outline" 
               size="sm"
-              className="flex items-center gap-1 border-blue-200 text-blue-600"
+              className={`h-8 text-xs border-gray-300 ${showCategoryInfo ? `${colorScheme.primary} ${colorScheme.light}` : ''}`}
+              onClick={() => setShowCategoryInfo(prev => !prev)}
             >
-              <Filter className="h-3.5 w-3.5" />
-              Filtros
+              {showCategoryInfo ? (
+                <>
+                  <Eye className="h-3.5 w-3.5 mr-1" /> Ocultar detalhes
+                </>
+              ) : (
+                <>
+                  <Info className="h-3.5 w-3.5 mr-1" /> Ver detalhes
+                </>
+              )}
             </Button>
           </div>
         </div>
@@ -388,22 +376,6 @@ export default function CategoryPage() {
                     Premium
                   </div>
                 )}
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  className="text-xs border-gray-200"
-                  onClick={() => setShowCategoryInfo(!showCategoryInfo)}
-                >
-                  {showCategoryInfo ? (
-                    <>
-                      <Eye className="h-3.5 w-3.5 mr-1" /> Ocultar detalhes
-                    </>
-                  ) : (
-                    <>
-                      <Info className="h-3.5 w-3.5 mr-1" /> Ver detalhes
-                    </>
-                  )}
-                </Button>
               </div>
             </div>
           </div>
