@@ -106,14 +106,14 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
   const loadMore = () => {
     if (isFetching) return;
 
-    // Se já clicou uma vez (loadCounter = 1)
-    if (loadCounter >= 1) {
-      // Na segunda vez, redireciona para a página de artes com filtros
+    // Se já clicou duas vezes (loadCounter = 2)
+    if (loadCounter >= 2) {
+      // Na terceira vez, redireciona para a página de artes com filtros
       setLocation('/arts');
       return;
     }
 
-    // Na primeira vez, carrega mais artes
+    // Na primeira e segunda vez, carrega mais artes
     if (hasMoreArts) {
       // Guardar a posição do botão para manter o scroll
       const buttonPosition = loadMoreButtonRef.current?.getBoundingClientRect();
@@ -125,7 +125,7 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
       
       // Manter a posição do scroll após carregar
       if (buttonPosition) {
-        // Usando requestAnimationFrame para garantir que o scroll aconteça após a renderização
+        // Usando setTimeout para garantir que o scroll aconteça após a renderização
         setTimeout(() => {
           window.scrollTo({
             top: scrollY,
@@ -226,8 +226,16 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
                     </span>
                   ) : (
                     <>
-                      <span>{loadCounter === 0 ? 'Carregar mais designs' : 'Ver todos os designs'}</span>
-                      {loadCounter === 0 ? <ArrowDown className="ml-2 h-5 w-5" /> : <ArrowRight className="ml-2 h-5 w-5" />}
+                      <span>
+                        {loadCounter === 0 
+                          ? 'Carregar mais designs' 
+                          : (loadCounter === 1 
+                            ? 'Carregar mais designs' 
+                            : 'Ver todos os designs'
+                          )
+                        }
+                      </span>
+                      {loadCounter < 2 ? <ArrowDown className="ml-2 h-5 w-5" /> : <ArrowRight className="ml-2 h-5 w-5" />}
                     </>
                   )}
                 </Button>
