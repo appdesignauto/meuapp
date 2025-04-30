@@ -158,6 +158,16 @@ export default function CategoryPage() {
       }
       const data = await res.json();
       console.log("Categoria carregada:", data);
+      
+      // Log detalhado com informações sobre datas
+      console.log("Detalhes da categoria:", {
+        id: data.id,
+        name: data.name,
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt,
+        tipoCreatedAt: typeof data.createdAt,
+        tipoUpdatedAt: typeof data.updatedAt
+      });
       return data;
     },
     // Só execute a consulta se o slug for válido
