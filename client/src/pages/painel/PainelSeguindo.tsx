@@ -193,7 +193,7 @@ export default function PainelSeguindo() {
               ) : designer.isFollowing ? (
                 <>
                   <UserX className="h-4 w-4 mr-1" />
-                  Deixar
+                  Deixar de seguir
                 </>
               ) : (
                 <>
