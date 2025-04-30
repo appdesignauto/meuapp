@@ -282,7 +282,7 @@ export default function CategoryPage() {
           <form onSubmit={handleSearch} className="relative">
             <Input
               type="text"
-              placeholder="Buscar design..."
+              placeholder="Buscar arte..."
               className="pr-12 py-6 text-center rounded-full"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -450,7 +450,7 @@ export default function CategoryPage() {
                       Carregando...
                     </span>
                   ) : (
-                    <span>Carregar mais designs</span>
+                    <span>Carregar mais artes</span>
                   )}
                 </Button>
               </div>

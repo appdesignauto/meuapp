@@ -83,7 +83,7 @@ const Categories = () => {
           CATEGORIAS
         </h1>
         <p className="text-neutral-600 mb-8 max-w-2xl mx-auto">
-          Escolha uma categoria para encontrar centenas de designs automotivos para seu negócio
+          Escolha uma categoria para encontrar centenas de artes automotivas para seu negócio
         </p>
         
         <div className="max-w-xl mx-auto mb-6">
