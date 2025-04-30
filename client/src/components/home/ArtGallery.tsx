@@ -18,12 +18,14 @@ interface ArtGalleryProps {
 const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtGalleryProps) => {
   const [page, setPage] = useState(1);
   const [, setLocation] = useLocation();
-  const limit = 8; // Items per page
+  const limit = 12; // Aumentado para 12 itens por página (era 8)
+  const [loadCounter, setLoadCounter] = useState(0); // Contador para controlar redirecionamento
   const { user } = useAuth();
 
   // Reset page when filters change
   useEffect(() => {
     setPage(1);
+    setLoadCounter(0); // Reseta contador ao mudar filtros
   }, [categoryId, formatId, fileTypeId]);
 
   // Build the URL with query parameters
@@ -82,8 +84,19 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
   const hasMore = page * limit < totalCount;
 
   const loadMore = () => {
-    if (!isFetching && hasMore) {
+    if (isFetching) return;
+
+    // Verifica se já carregou uma vez (loadCounter = 1)
+    if (loadCounter >= 1) {
+      // Na segunda vez, redireciona para a página de artes com filtros
+      setLocation('/arts');
+      return;
+    }
+
+    // Na primeira vez, carrega mais artes
+    if (hasMore) {
       setPage(prevPage => prevPage + 1);
+      setLoadCounter(prevCounter => prevCounter + 1);
     }
   };
 
