@@ -191,6 +191,7 @@ export interface IStorage {
   getFollowingCount(userId: number): Promise<number>;
   updateFollowerCount(userId: number, count: number): Promise<boolean>;
   updateFollowingCount(userId: number, count: number): Promise<boolean>;
+  getFollowingDesignersArts(userId: number, limit?: number): Promise<Art[]>;
   
   // Email verification methods
   updateUserEmailConfirmed(userId: number, confirmed: boolean): Promise<User>;
@@ -2528,6 +2529,75 @@ export class DatabaseStorage implements IStorage {
     // Esta função seria utilizada para atualizar estatísticas do usuário em uma tabela específica
     // Por enquanto, vamos apenas retornar true
     return true;
+  }
+  
+  // Obtém artes recentes dos designers que o usuário segue
+  async getFollowingDesignersArts(userId: number, limit: number = 12): Promise<Art[]> {
+    try {
+      // Busca os IDs dos designers que o usuário segue
+      const followings = await db.select({
+        followingId: userFollows.followingId
+      })
+      .from(userFollows)
+      .where(eq(userFollows.followerId, userId));
+      
+      if (followings.length === 0) {
+        return [];
+      }
+      
+      // Extrai os IDs dos designers seguidos
+      const designerIds = followings.map(f => f.followingId);
+      
+      // Busca as artes mais recentes desses designers
+      const result = await db.execute(sql`
+        SELECT 
+          a.id, 
+          a."createdAt", 
+          a."updatedAt", 
+          a.designerid, 
+          a.viewcount,
+          a.width, 
+          a.height, 
+          a."isPremium",
+          a."isVisible", 
+          a."categoryId", 
+          a."collectionId", 
+          a.title, 
+          a."imageUrl", 
+          a.format, 
+          a."fileType", 
+          a."editUrl", 
+          a.aspectratio,
+          u.username AS designer_username,
+          u.name AS designer_name,
+          u.profileimageurl AS designer_avatar
+        FROM arts a
+        JOIN users u ON a.designerid = u.id
+        WHERE a.designerid IN (${sql.join(designerIds, sql`,`)})
+          AND a."isVisible" = TRUE
+        ORDER BY a."createdAt" DESC
+        LIMIT ${limit}
+      `);
+      
+      // Mapear as colunas para o formato esperado, incluindo informações do designer
+      const arts = result.rows.map(art => ({
+        ...art,
+        designerId: art.designerid,
+        viewCount: art.viewcount,
+        aspectRatio: art.aspectratio,
+        designer: {
+          id: art.designerid,
+          username: art.designer_username,
+          name: art.designer_name,
+          profileimageurl: art.designer_avatar
+        }
+      }));
+      
+      return arts as Art[];
+    } catch (error) {
+      console.error("Erro em getFollowingDesignersArts:", error);
+      return [];
+    }
   }
 
   // Download methods
