@@ -392,11 +392,11 @@ export default function CategoryPage() {
                   <Search className="h-8 w-8 text-blue-500" />
                 </div>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Nenhum design encontrado</h3>
+              <h3 className="text-xl font-semibold mb-2">Nenhuma arte encontrada</h3>
               <p className="text-neutral-500 mb-6">
                 {filters.formatId || filters.fileTypeId || search 
                   ? 'Tente ajustar seus filtros ou realizar uma busca diferente.'
-                  : 'Esta categoria ainda não possui designs disponíveis. Confira outras categorias.'}
+                  : 'Esta categoria ainda não possui artes disponíveis. Confira outras categorias.'}
               </p>
               {(filters.formatId || filters.fileTypeId || search) && (
                 <Button 

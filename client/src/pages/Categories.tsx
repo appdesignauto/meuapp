@@ -171,8 +171,7 @@ const Categories = () => {
                       <h3 className="text-lg font-semibold text-neutral-800 mb-1">{category.name}</h3>
                       
                       <p className="text-sm text-neutral-600 mb-2">
-                        <span className="font-medium">{category.artCount}</span> {category.artCount === 1 ? 'design' : 'designs'}
-                        {category.formats && category.formats.length > 0 && ` • ${formatFormatsList(category.formats)}`}
+                        <span className="font-medium">{category.artCount}</span> {category.artCount === 1 ? 'arte disponível' : 'artes disponíveis'}
                       </p>
                       
                       <div className="flex justify-between items-center mt-3">
@@ -185,7 +184,7 @@ const Categories = () => {
                         </span>
                         
                         <div className="flex items-center text-blue-600 text-xs font-medium">
-                          <span>Ver designs</span>
+                          <span>Ver artes</span>
                           <ChevronRight className="h-4 w-4 ml-1" />
                         </div>
                       </div>
