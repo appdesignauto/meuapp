@@ -54,7 +54,6 @@ export default function CategoryPage() {
   const [, setLocation] = useLocation();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [activeQuickFilter, setActiveQuickFilter] = useState<'all' | 'popular' | 'recent' | 'premium'>('all');
   const [filters, setFilters] = useState({
     formatId: null as number | null,
@@ -297,10 +296,6 @@ export default function CategoryPage() {
     // Por exemplo, você poderia atualizar os filtros de API
   };
   
-  const toggleViewMode = () => {
-    setViewMode(prev => prev === 'grid' ? 'list' : 'grid');
-  };
-  
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header com navegação */}
@@ -335,29 +330,6 @@ export default function CategoryPage() {
           </div>
           
           <div className="flex items-center space-x-3">
-            {/* Botão de alternância de visualização */}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    size="icon"
-                    className="h-8 w-8 border-gray-300"
-                    onClick={toggleViewMode}
-                  >
-                    {viewMode === 'grid' ? (
-                      <LayoutGrid className="h-4 w-4 text-gray-600" />
-                    ) : (
-                      <LayoutList className="h-4 w-4 text-gray-600" />
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Alternar para visualização em {viewMode === 'grid' ? 'lista' : 'grade'}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            
             {/* Botão de informações da categoria */}
             <TooltipProvider>
               <Tooltip>
@@ -411,9 +383,11 @@ export default function CategoryPage() {
               </div>
               
               <div className="flex items-center gap-3 mt-4 md:mt-0">
-                <div className={`px-3 py-1 rounded-full text-xs font-medium ${colorScheme.light} ${colorScheme.primary}`}>
-                  {category.isPremium ? 'Premium' : 'Grátis'}
-                </div>
+                {category.isPremium && (
+                  <div className={`px-3 py-1 rounded-full text-xs font-medium ${colorScheme.light} ${colorScheme.primary}`}>
+                    Premium
+                  </div>
+                )}
                 <Button 
                   size="sm" 
                   variant="outline" 
@@ -515,8 +489,8 @@ export default function CategoryPage() {
       )}
       
       {/* Filtros Rápidos */}
-      <div className="container mx-auto px-4 mb-8">
-        <div className="flex flex-wrap justify-center gap-2 mb-8">
+      <div className="container mx-auto px-4 py-4 mb-8">
+        <div className="flex flex-wrap justify-center gap-3 mb-8">
           <Badge 
             variant={activeQuickFilter === 'all' ? 'default' : 'outline'} 
             className={`px-4 py-2.5 cursor-pointer text-sm transition-all ${activeQuickFilter === 'all' ? 'bg-blue-600' : 'hover:bg-blue-50'}`}
