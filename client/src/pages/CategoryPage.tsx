@@ -333,16 +333,20 @@ export default function CategoryPage() {
             <Button 
               variant="outline" 
               size="sm"
-              className={`h-8 text-xs border-gray-300 ${showCategoryInfo ? `${colorScheme.primary} ${colorScheme.light}` : ''}`}
+              className={`h-8 text-xs px-3 sm:px-4 border-gray-300 ${showCategoryInfo ? `${colorScheme.primary} ${colorScheme.light}` : ''}`}
               onClick={() => setShowCategoryInfo(prev => !prev)}
             >
               {showCategoryInfo ? (
                 <>
-                  <Eye className="h-3.5 w-3.5 mr-1" /> Ocultar detalhes
+                  <Eye className="h-3.5 w-3.5 mr-1" /> 
+                  <span className="hidden xs:inline">Ocultar detalhes</span>
+                  <span className="xs:hidden">Ocultar</span>
                 </>
               ) : (
                 <>
-                  <Info className="h-3.5 w-3.5 mr-1" /> Ver detalhes
+                  <Info className="h-3.5 w-3.5 mr-1" /> 
+                  <span className="hidden xs:inline">Ver detalhes</span>
+                  <span className="xs:hidden">Detalhes</span>
                 </>
               )}
             </Button>
@@ -525,8 +529,8 @@ export default function CategoryPage() {
       {/* Filtros horizontais centralizados */}
       <div className="container mx-auto px-4 mb-8">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-full shadow-sm border border-gray-100 p-1.5 flex items-center justify-between">
-            <div className="flex-1 flex justify-center gap-2">
+          <div className="bg-white rounded-xl md:rounded-full shadow-sm border border-gray-100 p-1.5 flex flex-col md:flex-row items-center justify-between">
+            <div className="w-full md:w-auto flex-1 grid grid-cols-2 md:flex justify-center gap-2 mb-2 md:mb-0">
               <Select 
                 value={filters.formatId?.toString() || "_all"} 
                 onValueChange={handleFormatChange}
@@ -544,8 +548,6 @@ export default function CategoryPage() {
                   ))}
                 </SelectContent>
               </Select>
-              
-              <div className="h-6 border-r border-gray-200 my-1.5"></div>
               
               <Select 
                 value={filters.fileTypeId?.toString() || "_all"} 
@@ -565,9 +567,7 @@ export default function CategoryPage() {
                 </SelectContent>
               </Select>
               
-              <div className="h-6 border-r border-gray-200 my-1.5"></div>
-              
-              <Select defaultValue="newest">
+              <Select defaultValue="newest" className="col-span-2 md:col-span-1">
                 <SelectTrigger className="border-none bg-transparent shadow-none h-9 text-sm">
                   <SelectValue placeholder="Ordenar" />
                 </SelectTrigger>
@@ -577,8 +577,6 @@ export default function CategoryPage() {
                   <SelectItem value="popular">Mais populares</SelectItem>
                 </SelectContent>
               </Select>
-              
-              <div className="h-6 border-r border-gray-200 my-1.5 last:hidden"></div>
             </div>
             
             {(filters.formatId || filters.fileTypeId || search) && (
@@ -586,9 +584,9 @@ export default function CategoryPage() {
                 variant="ghost"
                 size="sm" 
                 onClick={clearFilters}
-                className="mr-2 text-xs text-blue-600"
+                className="w-full md:w-auto mb-1 md:mb-0 md:mr-2 text-xs text-blue-600"
               >
-                Limpar
+                Limpar filtros
               </Button>
             )}
           </div>
