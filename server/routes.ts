@@ -1275,6 +1275,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Buscar a categoria da arte pelo ID
+      let category = null;
+      if (art.categoryId) {
+        try {
+          category = await storage.getCategoryById(art.categoryId);
+          // Se a categoria for encontrada, anexá-la ao objeto arte
+          if (category) {
+            art.category = category;
+          }
+        } catch (categoryError) {
+          console.error("Erro ao buscar categoria da arte:", categoryError);
+        }
+      }
+      
       // Buscar contagem de favoritos para esta arte
       const favoritesResult = await db.execute(sql`
         SELECT COUNT(*) as count
