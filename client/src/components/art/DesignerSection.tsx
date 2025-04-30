@@ -82,9 +82,9 @@ export function DesignerSection({ designer, userId }: DesignerSectionProps) {
   };
   
   return (
-    <div className="mb-4 py-3 border-t border-b border-neutral-100">
+    <div className="mb-0 py-2 border-t border-b border-neutral-100">
       {/* Header: Nome, imagem e botão seguir agrupados */}
-      <div className="flex items-center gap-3 mb-3">
+      <div className="flex items-center gap-2 mb-1.5">
         <div className="flex-grow cursor-pointer" onClick={() => setLocation(`/designers/${designer.username}`)}>
           <div className="flex items-center">
             <div className="w-9 h-9 rounded-full overflow-hidden bg-neutral-100 flex-shrink-0">
