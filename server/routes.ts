@@ -2968,26 +2968,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const username = req.params.username;
       
-      // Buscar designer pelo username - executando SQL direto
-      const designerQuery = `
-        SELECT 
-          id, 
-          name, 
-          username, 
-          bio, 
-          profileimageurl, 
-          nivelacesso, 
-          role, 
-          0 AS followers, 
-          0 AS following, 
-          "createdAt" as createdat
-        FROM users 
-        WHERE username = '${username}'
-      `;
+      // Verificar se o usuário é admin
+      const isAdmin = req.user && (req.user as any).role === 'admin';
       
-      const result = await db.execute(sql.raw(designerQuery));
-      const designer = result.rows[0];
-      
+      // Buscar designer pelo username usando parâmetros preparados
+      const [designer] = await db
+        .select({
+          id: users.id,
+          name: users.name,
+          username: users.username,
+          bio: users.bio,
+          profileimageurl: users.profileimageurl,
+          nivelacesso: users.nivelacesso,
+          role: users.role,
+          followers: sql`0`, 
+          following: sql`0`,
+          createdat: users.createdAt
+        })
+        .from(users)
+        .where(eq(users.username, username));
+        
       if (!designer) {
         return res.status(404).json({ message: "Designer não encontrado" });
       }
@@ -2996,43 +2996,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let isFollowing = false;
       if (req.user) {
         const followerId = (req.user as any).id;
-        const followQuery = `
-          SELECT * FROM "userFollows"
-          WHERE "followerId" = ${followerId} AND "followingId" = ${designer.id}
-        `;
         
-        const followResult = await db.execute(sql.raw(followQuery));
-        isFollowing = followResult.rows.length > 0;
+        // Usar parâmetros preparados para evitar SQL injection
+        const [existingFollow] = await db
+          .select()
+          .from(userFollows)
+          .where(and(
+            eq(userFollows.followerId, followerId),
+            eq(userFollows.followingId, designer.id)
+          ));
+          
+        isFollowing = !!existingFollow;
       }
       
-      // Buscar as artes deste designer
-      const artsQuery = `
-        SELECT 
-          id, 
-          title, 
-          "imageUrl" as imageurl, 
-          "isPremium" as ispremium, 
-          format, 
-          "createdAt" as createdat,
-          viewcount,
-          "downloadCount" as downloadcount
-        FROM arts
-        WHERE ${!isAdmin ? sql`"isVisible" = TRUE` : sql`1=1`}
-        WHERE designerid = ${designer.id}
-        ORDER BY "createdAt" DESC
-      `;
-      
-      const artsResult = await db.execute(sql.raw(artsQuery));
-      const designerArts = artsResult.rows;
+      // Buscar as artes deste designer com parâmetros preparados
+      const artsQueryBuilder = db
+        .select({
+          id: arts.id,
+          title: arts.title,
+          imageurl: arts.imageUrl,
+          ispremium: arts.isPremium,
+          format: arts.format,
+          createdat: arts.createdAt,
+          viewcount: arts.viewCount,
+          downloadcount: arts.downloadCount
+        })
+        .from(arts)
+        .where(eq(arts.designerid, designer.id))
+        .orderBy(desc(arts.createdAt));
+        
+      // Adicionar filtro de visibilidade se não for admin
+      if (!isAdmin) {
+        artsQueryBuilder.where(eq(arts.isVisible, true));
+      }
+        
+      const designerArts = await artsQueryBuilder;
       
       // Contagens
       const artCount = designerArts.length;
-      const premiumArtCount = designerArts.filter((art: any) => art.isPremium).length;
+      const premiumArtCount = designerArts.filter((art: any) => art.ispremium).length;
       
       // Calcular estatísticas
       // Agora que a coluna downloadCount existe, calculamos a soma real
-      const totalDownloads = designerArts.reduce((sum: number, art: any) => sum + (parseInt(art.downloadcount) || 0), 0);
-      const totalViews = designerArts.reduce((sum: number, art: any) => sum + (parseInt(art.viewcount) || 0), 0);
+      const totalDownloads = designerArts.reduce((sum: number, art: any) => sum + (parseInt(String(art.downloadcount)) || 0), 0);
+      const totalViews = designerArts.reduce((sum: number, art: any) => sum + (parseInt(String(art.viewcount)) || 0), 0);
       
       // Adaptamos os nomes de campo para o padrão CamelCase esperado pelo frontend
       const response = {
