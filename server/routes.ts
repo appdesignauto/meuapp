@@ -720,8 +720,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Categoria não encontrada" });
       }
       
-      // Buscar as artes mais recentes desta categoria para determinar a data de atualização
-      const { arts } = await storage.getArts(1, 100, { categoryId: category.id, sortBy: 'recent' });
+      // Buscar todas as artes desta categoria para determinar a data de atualização
+      // Não usar filtro sortBy para garantir que todas as artes serão retornadas
+      const { arts } = await storage.getArts(1, 1000, { categoryId: category.id });
       
       // Data de criação - usar uma data histórica fixa se não for possível determinar
       // Neste caso, usamos a data de lançamento do sistema no início de 2025
@@ -729,9 +730,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Data de atualização - usar a data da arte mais recente ou a data atual se não houver artes
       let updatedDate = new Date();
+      
       if (arts && arts.length > 0) {
+        // Ordenar as artes por data de atualização de forma decrescente
+        // (mais recente primeiro) independente do que foi retornado do banco
+        const sortedArts = [...arts].sort((a, b) => {
+          const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : 
+                       a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const dateB = b.updatedAt ? new Date(b.updatedAt).getTime() : 
+                       b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return dateB - dateA; // ordem decrescente
+        });
+        
         // Pegar a data da arte mais recente
-        const latestArt = arts[0]; // Já está ordenado por data (recente)
+        const latestArt = sortedArts[0];
+        
+        console.log("Arte mais recente para categoria " + category.name + ":", {
+          id: latestArt.id,
+          title: latestArt.title,
+          updatedAt: latestArt.updatedAt,
+          createdAt: latestArt.createdAt
+        });
+        
         if (latestArt.updatedAt) {
           updatedDate = new Date(latestArt.updatedAt);
         } else if (latestArt.createdAt) {
