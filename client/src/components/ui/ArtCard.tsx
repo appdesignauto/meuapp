@@ -40,14 +40,6 @@ function ArtCard({ art, onClick }: ArtCardProps) {
             </Badge>
           </div>
         )}
-        
-        {art.format && (
-          <div className="absolute bottom-2 left-2">
-            <Badge variant="secondary" className="bg-white/80 backdrop-blur-sm shadow-sm text-xs">
-              {art.format}
-            </Badge>
-          </div>
-        )}
       </div>
     </div>
   );
