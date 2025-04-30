@@ -720,7 +720,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Categoria não encontrada" });
       }
       
-      res.json(category);
+      // Adicionar campos createdAt e updatedAt simulados às categorias
+      // para compatibilidade com o frontend
+      const enhancedCategory = {
+        ...category,
+        // Usar datas fixas para compatibilidade
+        createdAt: new Date("2025-01-01"),
+        updatedAt: new Date("2025-04-15")
+      };
+      
+      res.json(enhancedCategory);
     } catch (error) {
       console.error("Erro ao buscar categoria por slug:", error);
       res.status(500).json({ message: "Erro ao buscar categoria" });
