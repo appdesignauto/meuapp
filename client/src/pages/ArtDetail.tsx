@@ -541,7 +541,7 @@ export default function ArtDetail() {
             
             {/* Action Buttons - Redesenhados com animações */}
             <motion.div 
-              className="mb-3 space-y-1.5"
+              className="mb-1.5"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.3, delay: 0.4 }}
@@ -568,7 +568,7 @@ export default function ArtDetail() {
                 </Button>
               </motion.div>
               
-              <div className="flex gap-2">
+              <div className="flex gap-1.5 mt-1">
                 <motion.div className="flex-1"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -668,7 +668,7 @@ export default function ArtDetail() {
             
             {/* Metadata - Layout melhorado e mais profissional */}
             <motion.div 
-              className="border border-neutral-200 rounded-lg overflow-hidden mt-auto bg-gray-50/50"
+              className="border border-neutral-200 rounded-lg overflow-hidden mt-1.5 bg-gray-50/50"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.3, delay: 0.5 }}
