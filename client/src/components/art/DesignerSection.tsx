@@ -83,8 +83,8 @@ export function DesignerSection({ designer, userId }: DesignerSectionProps) {
   
   return (
     <div className="mb-4 py-3 border-t border-b border-neutral-100">
-      {/* Header: Nome e imagem à esquerda, botão à direita */}
-      <div className="flex items-center justify-between mb-3">
+      {/* Header: Nome, imagem e botão seguir agrupados */}
+      <div className="flex items-center gap-3 mb-3">
         <div 
           className="flex items-center cursor-pointer"
           onClick={() => setLocation(`/designers/${designer.username}`)}
@@ -110,12 +110,12 @@ export function DesignerSection({ designer, userId }: DesignerSectionProps) {
           </div>
         </div>
         
-        {/* Botão de seguir posicionado à direita */}
+        {/* Botão de seguir próximo ao perfil */}
         {userId && userId !== designer.id && (
           <Button
             variant={designer.isFollowing ? "default" : "outline"}
             size="sm"
-            className={`text-xs h-8 min-w-[90px] ml-auto ${
+            className={`text-xs h-8 min-w-[90px] ${
               designer.isFollowing 
                 ? "bg-blue-600 hover:bg-blue-700 text-white" 
                 : "border-blue-300 text-blue-600 hover:bg-blue-50"
@@ -142,15 +142,8 @@ export function DesignerSection({ designer, userId }: DesignerSectionProps) {
         className="cursor-pointer"
         onClick={() => setLocation(`/designers/${designer.username}`)}
       >
-        {/* Bio */}
-        {designer.bio && (
-          <p className="text-xs text-neutral-500 mb-2 line-clamp-2">
-            {designer.bio}
-          </p>
-        )}
-        
         {/* Estatísticas */}
-        <div className="flex items-center gap-4 text-xs text-neutral-500">
+        <div className="flex items-center gap-4 text-xs text-neutral-500 mb-2">
           <span className="flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
             <strong>{designer.followers || '0'}</strong> seguidores
@@ -160,6 +153,13 @@ export function DesignerSection({ designer, userId }: DesignerSectionProps) {
             <strong>{designer.totalArts || '0'}</strong> artes
           </span>
         </div>
+        
+        {/* Bio */}
+        {designer.bio && (
+          <p className="text-xs text-neutral-500 line-clamp-2">
+            {designer.bio}
+          </p>
+        )}
       </div>
     </div>
   );
