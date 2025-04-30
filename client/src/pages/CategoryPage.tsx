@@ -479,7 +479,7 @@ export default function CategoryPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 mt-2">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                    <span className="text-xs sm:text-sm text-gray-600 truncate">Atualizada em: {formatDate(category.updatedAt ?? new Date())}</span>
+                    <span className="text-xs sm:text-sm text-gray-600 truncate">Atualizada em: {category.updatedAt ? formatDate(category.updatedAt) : 'Data não disponível'}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Eye className="h-4 w-4 text-gray-400 flex-shrink-0" />
@@ -491,7 +491,7 @@ export default function CategoryPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <BookMarked className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                    <span className="text-xs sm:text-sm text-gray-600 truncate">Adicionada: {format(parseISO(category.createdAt.toString()), 'PP', { locale: ptBR })}</span>
+                    <span className="text-xs sm:text-sm text-gray-600 truncate">Adicionada: {category.createdAt ? format(parseISO(category.createdAt.toString()), 'PP', { locale: ptBR }) : 'Data não disponível'}</span>
                   </div>
                 </div>
               </div>
