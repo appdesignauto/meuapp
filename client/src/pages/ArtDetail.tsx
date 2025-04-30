@@ -555,11 +555,13 @@ export default function ArtDetail() {
                   <Button 
                     onClick={() => setLocation('/plans')} 
                     size="lg"
-                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 py-5 shadow-md text-white"
+                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-amber-500 hover:to-amber-600 py-5 shadow-md hover:text-white group"
                   >
-                    <Sparkles className="h-5 w-5" />
+                    <ExternalLink className="h-5 w-5 group-hover:hidden" />
+                    <Sparkles className="h-5 w-5 hidden group-hover:block" />
                     <span className="flex items-center font-semibold">
-                      FAÇA UPGRADE PARA PREMIUM
+                      <span className="group-hover:hidden">EDITAR NO CANVA</span>
+                      <span className="hidden group-hover:inline-block">FAÇA UPGRADE PARA PREMIUM</span>
                     </span>
                   </Button>
                 ) : (
