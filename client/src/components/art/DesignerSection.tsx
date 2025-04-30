@@ -8,7 +8,8 @@ interface Designer {
   id: number;
   name: string | null;
   username: string;
-  profileImageUrl: string | null;
+  profileimageurl: string | null; // nome exato que vem da API
+  profileImageUrl?: string | null; // mantido para compatibilidade com outras partes do código
   bio: string | null;
   followers: number;
   isFollowing: boolean;

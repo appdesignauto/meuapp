@@ -547,25 +547,38 @@ export default function ArtDetail() {
               transition={{ duration: 0.3, delay: 0.4 }}
             >
               <motion.div
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={{ scale: art.isPremiumLocked ? 1 : 1.02 }}
+                whileTap={{ scale: art.isPremiumLocked ? 1 : 0.98 }}
                 transition={{ type: "spring", stiffness: 400, damping: 15 }}
               >
-                <Button 
-                  onClick={handleOpenEdit} 
-                  size="lg"
-                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 py-5 shadow-md"
-                >
-                  <ExternalLink className="h-5 w-5" />
-                  <span className="flex items-center font-semibold">
-                    EDITAR ARTE
-                    {art.downloadCount > 0 && (
-                      <span className="ml-2 bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full font-normal">
-                        {art.downloadCount} {art.downloadCount === 1 ? 'download' : 'downloads'}
-                      </span>
-                    )}
-                  </span>
-                </Button>
+                {art.isPremiumLocked ? (
+                  <Button 
+                    onClick={() => setLocation('/plans')} 
+                    size="lg"
+                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 py-5 shadow-md"
+                  >
+                    <Sparkles className="h-5 w-5" />
+                    <span className="flex items-center font-semibold">
+                      FAÇA UPGRADE PARA PREMIUM
+                    </span>
+                  </Button>
+                ) : (
+                  <Button 
+                    onClick={handleOpenEdit} 
+                    size="lg"
+                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 py-5 shadow-md"
+                  >
+                    <ExternalLink className="h-5 w-5" />
+                    <span className="flex items-center font-semibold">
+                      EDITAR ARTE
+                      {art.downloadCount > 0 && (
+                        <span className="ml-2 bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full font-normal">
+                          {art.downloadCount} {art.downloadCount === 1 ? 'download' : 'downloads'}
+                        </span>
+                      )}
+                    </span>
+                  </Button>
+                )}
               </motion.div>
               
               <div className="flex gap-1.5 mt-1">
@@ -637,34 +650,7 @@ export default function ArtDetail() {
             
             {/* Designer Section já está posicionada após o título e metadados */}
             
-            {/* Additional Info Box - Mostra o banner premium */}
-            {art.isPremiumLocked && (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-2">
-                <h3 className="text-amber-800 font-semibold flex items-center gap-2 mb-2 text-sm">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
-                  Acesso Premium Necessário
-                </h3>
-                <p className="text-xs text-amber-700">
-                  Este produto está disponível exclusivamente para os membros premium. 
-                  Faça upgrade para uma conta Premium para ter acesso a todo o conteúdo premium.
-                </p>
-                <Button
-                  variant="default"
-                  size="sm"
-                  className="mt-2 w-full bg-amber-600 hover:bg-amber-700 text-white"
-                  onClick={() => {
-                    toast({
-                      title: "Upgrade para Premium",
-                      description: "Você será redirecionado para a página de planos premium",
-                    });
-                    // Navegar para página de planos
-                    setLocation('/plans');
-                  }}
-                >
-                  Fazer Upgrade para Premium
-                </Button>
-              </div>
-            )}
+            {/* Notificação Premium aparece agora no botão principal */}
             
             {/* Metadata - Layout melhorado e mais profissional */}
             <motion.div 
