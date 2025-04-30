@@ -144,7 +144,17 @@ export function DesignerSection({ designer, userId }: DesignerSectionProps) {
         )}
       </div>
       
-      {/* Removido a bio conforme solicitado */}
+      {/* Bio do designer */}
+      {designer.bio && (
+        <div 
+          className="cursor-pointer"
+          onClick={() => setLocation(`/designers/${designer.username}`)}
+        >
+          <p className="text-xs text-neutral-500 line-clamp-2">
+            {designer.bio}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

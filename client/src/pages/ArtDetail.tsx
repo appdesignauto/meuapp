@@ -492,15 +492,7 @@ export default function ArtDetail() {
             {/* Designer Section - Agora usando componente separado */}
             {art.designer && <DesignerSection designer={art.designer} userId={user?.id} />}
             
-            <motion.div 
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.3, delay: 0.2 }}
-            >
-              <p className="text-neutral-600 mb-4 text-sm">
-                {art.description || 'Sem descrição disponível para esta arte.'}
-              </p>
-            </motion.div>
+            {/* Descrição da arte removida conforme solicitado */}
             
             {/* Benefits Section - Animação e design melhorados */}
             <motion.div 
