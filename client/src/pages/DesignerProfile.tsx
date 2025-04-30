@@ -54,15 +54,25 @@ export default function DesignerProfile() {
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [activeFilter, setActiveFilter] = useState<'todos' | 'premium' | 'instagram'>('todos');
+  const [activeFilter, setActiveFilter] = useState<'todos' | 'premium' | 'recentes' | 'emalta'>('todos');
   
   // Função para filtrar artes com base no filtro selecionado
   const filterArts = (arts: Designer['arts']) => {
     switch (activeFilter) {
       case 'premium':
         return arts.filter(art => art.isPremium);
-      case 'instagram':
-        return arts.filter(art => art.format.toLowerCase().includes('instagram'));
+      case 'recentes':
+        // Clonar o array para não afetar o original e então ordenar por data mais recente
+        return [...arts].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      case 'emalta':
+        // Procurar artes com mais visualizações (assumindo que temos essa propriedade)
+        // Primeiro, verificamos se a arte tem o campo viewCount, e depois ordenamos
+        return [...arts].sort((a, b) => {
+          // Estas propriedades não são parte da interface inicial, mas podem estar disponíveis
+          const viewsA = (a as any).viewcount || 0;
+          const viewsB = (b as any).viewcount || 0;
+          return viewsB - viewsA;
+        });
       case 'todos':
       default:
         return arts;
@@ -569,16 +579,35 @@ export default function DesignerProfile() {
             <Button 
               variant="outline" 
               size="sm" 
-              className={`rounded-full px-4 h-8 bg-white shadow-sm ${activeFilter === 'instagram' ? 'border-blue-200 text-blue-700' : 'hover:border-blue-200'}`}
+              className={`rounded-full px-4 h-8 bg-white shadow-sm ${activeFilter === 'recentes' ? 'border-blue-200 text-blue-700' : 'hover:border-blue-200'}`}
               onClick={() => {
-                setActiveFilter('instagram');
+                setActiveFilter('recentes');
                 setArtsPage(1); // Reset para página 1 ao mudar filtro
               }}
             >
-              Instagram
-              {activeFilter === 'instagram' && (
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              Recentes
+              {activeFilter === 'recentes' && (
                 <span className="ml-1.5 text-xs">
-                  ({data.arts.filter(art => art.format.toLowerCase().includes('instagram')).length})
+                  ({data.arts.length})
+                </span>
+              )}
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className={`rounded-full px-4 h-8 bg-white shadow-sm ${activeFilter === 'emalta' ? 'border-blue-200 text-blue-700' : 'hover:border-blue-200'}`}
+              onClick={() => {
+                setActiveFilter('emalta');
+                setArtsPage(1); // Reset para página 1 ao mudar filtro
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg>
+              Em Alta
+              {activeFilter === 'emalta' && (
+                <span className="ml-1.5 text-xs">
+                  ({data.arts.length})
                 </span>
               )}
             </Button>
@@ -591,7 +620,12 @@ export default function DesignerProfile() {
             <p className="text-gray-500 mt-2">
               {data.arts.length === 0 
                 ? "Este designer ainda não publicou nenhuma arte."
-                : `Nenhuma arte encontrada com o filtro ${activeFilter === 'premium' ? 'Premium' : activeFilter === 'instagram' ? 'Instagram' : 'selecionado'}.`
+                : `Nenhuma arte encontrada com o filtro ${
+                    activeFilter === 'premium' ? 'Premium' : 
+                    activeFilter === 'recentes' ? 'Recentes' : 
+                    activeFilter === 'emalta' ? 'Em Alta' : 
+                    'selecionado'
+                  }.`
               }
             </p>
           </div>
