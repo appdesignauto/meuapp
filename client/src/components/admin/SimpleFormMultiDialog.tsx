@@ -76,13 +76,14 @@ interface SimpleFormMultiDialogProps {
 export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMultiDialogProps) {
   const { toast } = useToast();
   const { user } = useAuth();
-  const [step, setStep] = useState(1); // 1: Selecionar formatos, 2: Preencher detalhes
+  const [step, setStep] = useState(1); // 1: Configurações globais, 2: Formatos, 3: Upload
   const [currentTab, setCurrentTab] = useState<string | null>(null);
   const [formatDetails, setFormatDetails] = useState<Record<string, FormatValues>>({});
   const [images, setImages] = useState<Record<string, string>>({});
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
   const [uploadError, setUploadError] = useState<Record<string, string>>({});
   const [formatsComplete, setFormatsComplete] = useState<Record<string, boolean>>({});
+  const [uploadAllComplete, setUploadAllComplete] = useState(false);
 
   // Consultas para obter dados
   const { data: categories = [], isLoading: isLoadingCategories } = useQuery({
@@ -157,9 +158,32 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
     setStep(2);
   };
 
-  // Voltar para a etapa 1
-  const goToStep1 = () => {
-    setStep(1);
+  // Avançar para a etapa 3 (Upload)
+  const goToStep3 = () => {
+    // Verificar se todos os formatos estão com informações básicas completas
+    const allFormatsHaveBasicInfo = Object.values(formatDetails).every(
+      details => details.title && details.editUrl
+    );
+    
+    if (!allFormatsHaveBasicInfo) {
+      toast({
+        title: "Informações incompletas",
+        description: "Por favor, preencha título e link de edição para todos os formatos selecionados.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setStep(3);
+  };
+
+  // Voltar para a etapa anterior
+  const goToPreviousStep = () => {
+    if (step === 3) {
+      setStep(2);
+    } else if (step === 2) {
+      setStep(1);
+    }
   };
 
   // Verificar se o formato atual está completo
@@ -370,15 +394,24 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                 <div className={`flex items-center justify-center w-10 h-10 rounded-full text-white font-medium ${step === 1 ? 'bg-blue-600' : 'bg-green-600'}`}>
                   {step > 1 ? <Check className="h-6 w-6" /> : 1}
                 </div>
-                <div className={`w-32 h-1.5 ${step > 1 ? 'bg-blue-600' : 'bg-gray-200'}`}></div>
-                <div className={`flex items-center justify-center w-10 h-10 rounded-full font-medium ${step === 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}>
-                  2
+                <div className={`w-20 h-1.5 ${step > 1 ? 'bg-blue-600' : 'bg-gray-200'}`}></div>
+                <div className={`flex items-center justify-center w-10 h-10 rounded-full font-medium ${
+                  step === 2 ? 'bg-blue-600 text-white' : (step > 2 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700')
+                }`}>
+                  {step > 2 ? <Check className="h-6 w-6" /> : 2}
+                </div>
+                <div className={`w-20 h-1.5 ${step > 2 ? 'bg-blue-600' : 'bg-gray-200'}`}></div>
+                <div className={`flex items-center justify-center w-10 h-10 rounded-full font-medium ${
+                  step === 3 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                }`}>
+                  3
                 </div>
               </div>
             </div>
-            <div className="flex justify-between w-full px-12 text-sm font-medium">
-              <div className={`${step === 1 ? 'text-blue-600' : 'text-green-600'}`}>Configuração Global</div>
-              <div className={`${step === 2 ? 'text-blue-600' : 'text-gray-500'}`}>Detalhes por Formato</div>
+            <div className="flex justify-between w-full px-10 text-sm font-medium">
+              <div className={`${step === 1 ? 'text-blue-600' : (step > 1 ? 'text-green-600' : 'text-gray-500')}`}>Configuração Global</div>
+              <div className={`${step === 2 ? 'text-blue-600' : (step > 2 ? 'text-green-600' : 'text-gray-500')}`}>Formatos</div>
+              <div className={`${step === 3 ? 'text-blue-600' : 'text-gray-500'}`}>Upload</div>
             </div>
           </div>
           
@@ -386,17 +419,17 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
             {step === 1 && (
               <form onSubmit={step1Form.handleSubmit(goToStep2)} className="space-y-8">
                 {/* Configuração Global - Etapa 1 */}
-                <div className="bg-blue-50/60 p-6 rounded-xl border border-blue-100">
-                  <h3 className="text-lg font-semibold text-blue-800 mb-4 flex items-center">
+                <div className="p-2">
+                  <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center">
                     <Settings2 className="h-5 w-5 mr-2 text-blue-600" />
                     Configuração Global
                   </h3>
                   
-                  <div className="space-y-6">
+                  <div className="space-y-8">
                     {/* Título e Descrição Global */}
-                    <div className="bg-white p-4 rounded-lg border border-blue-100">
-                      <div className="flex justify-between items-center mb-1">
-                        <h4 className="text-md font-semibold flex items-center text-blue-700">
+                    <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                      <div className="flex justify-between items-center mb-3">
+                        <h4 className="text-md font-semibold flex items-center text-gray-700">
                           <PenLine className="h-4 w-4 mr-1.5 text-blue-600" />
                           Título e Descrição Global
                         </h4>
@@ -404,13 +437,13 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                           Aplicado automaticamente a todos os formatos
                         </div>
                       </div>
-                      <p className="text-xs text-gray-500 mb-3">
+                      <p className="text-xs text-gray-500 mb-4">
                         Estas informações serão aplicadas automaticamente a todos os formatos que você selecionar.
                       </p>
                       
-                      <div className="space-y-4">
+                      <div className="space-y-5">
                         <div className="space-y-2">
-                          <Label htmlFor="globalTitle" className="text-sm font-medium">
+                          <Label htmlFor="globalTitle" className="text-sm font-medium text-gray-700">
                             Título <span className="text-red-500 ml-1">*</span>
                           </Label>
                           <Controller
@@ -420,7 +453,7 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                               <Input
                                 id="globalTitle"
                                 placeholder="Título principal da arte"
-                                className="bg-blue-50/40 border-blue-100"
+                                className="bg-white border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                                 {...field}
                               />
                             )}
@@ -433,7 +466,7 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                         </div>
                         
                         <div className="space-y-2">
-                          <Label htmlFor="globalDescription" className="text-sm font-medium flex items-center">
+                          <Label htmlFor="globalDescription" className="text-sm font-medium text-gray-700 flex items-center">
                             Descrição <span className="text-gray-400 text-xs ml-1">(opcional)</span>
                           </Label>
                           <Controller
@@ -443,7 +476,7 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                               <Textarea
                                 id="globalDescription"
                                 placeholder="Descrição geral da arte"
-                                className="bg-blue-50/40 border-blue-100 h-24"
+                                className="bg-white border-gray-300 focus:ring-blue-500 focus:border-blue-500 h-24"
                                 {...field}
                               />
                             )}
@@ -454,71 +487,75 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                   
                     <div className="grid md:grid-cols-2 gap-6">
                       <div className="space-y-4">
-                        <div className="space-y-3">
-                          <Label htmlFor="category" className="text-sm font-medium flex items-center">
-                            <FolderOpen className="h-4 w-4 mr-1.5 text-blue-600" />
-                            Categoria <span className="text-red-500 ml-1">*</span>
-                          </Label>
-                          <Controller
-                            control={step1Form.control}
-                            name="categoryId"
-                            render={({ field }) => (
-                              <Select
-                                value={field.value}
-                                onValueChange={field.onChange}
-                              >
-                                <SelectTrigger className="bg-white border-blue-200 focus:ring-blue-500">
-                                  <SelectValue placeholder="Selecione uma categoria" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {categories.map((category: any) => (
-                                    <SelectItem key={category.id} value={category.id.toString()}>
-                                      {category.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                          <div className="space-y-4">
+                            <Label htmlFor="category" className="text-sm font-medium text-gray-700 flex items-center">
+                              <FolderOpen className="h-4 w-4 mr-1.5 text-blue-600" />
+                              Categoria <span className="text-red-500 ml-1">*</span>
+                            </Label>
+                            <Controller
+                              control={step1Form.control}
+                              name="categoryId"
+                              render={({ field }) => (
+                                <Select
+                                  value={field.value}
+                                  onValueChange={field.onChange}
+                                >
+                                  <SelectTrigger className="bg-white border-gray-300 focus:ring-blue-500">
+                                    <SelectValue placeholder="Selecione uma categoria" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {categories.map((category: any) => (
+                                      <SelectItem key={category.id} value={category.id.toString()}>
+                                        {category.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              )}
+                            />
+                            {step1Form.formState.errors.categoryId && (
+                              <p className="text-sm text-red-500">
+                                {step1Form.formState.errors.categoryId.message}
+                              </p>
                             )}
-                          />
-                          {step1Form.formState.errors.categoryId && (
-                            <p className="text-sm text-red-500 mt-1">
-                              {step1Form.formState.errors.categoryId.message}
-                            </p>
-                          )}
+                          </div>
                         </div>
                         
-                        <div className="space-y-3">
-                          <Label htmlFor="globalFileType" className="text-sm font-medium flex items-center">
-                            <FileType className="h-4 w-4 mr-1.5 text-blue-600" />
-                            Tipo de Arquivo <span className="text-red-500 ml-1">*</span>
-                          </Label>
-                          <Controller
-                            control={step1Form.control}
-                            name="globalFileType"
-                            render={({ field }) => (
-                              <Select
-                                value={field.value}
-                                onValueChange={field.onChange}
-                              >
-                                <SelectTrigger className="bg-white border-blue-200 focus:ring-blue-500">
-                                  <SelectValue placeholder="Selecione o tipo" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {fileTypes.map((type: any) => (
-                                    <SelectItem key={type.id} value={type.slug}>
-                                      {type.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            )}
-                          />
+                        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                          <div className="space-y-4">
+                            <Label htmlFor="globalFileType" className="text-sm font-medium text-gray-700 flex items-center">
+                              <FileType className="h-4 w-4 mr-1.5 text-blue-600" />
+                              Tipo de Arquivo <span className="text-red-500 ml-1">*</span>
+                            </Label>
+                            <Controller
+                              control={step1Form.control}
+                              name="globalFileType"
+                              render={({ field }) => (
+                                <Select
+                                  value={field.value}
+                                  onValueChange={field.onChange}
+                                >
+                                  <SelectTrigger className="bg-white border-gray-300 focus:ring-blue-500">
+                                    <SelectValue placeholder="Selecione o tipo" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {fileTypes.map((type: any) => (
+                                      <SelectItem key={type.id} value={type.slug}>
+                                        {type.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              )}
+                            />
+                          </div>
                         </div>
                       </div>
                       
                       <div className="flex flex-col justify-center">
-                        <div className="bg-white p-5 rounded-lg border border-blue-100 shadow-sm">
-                          <h4 className="text-sm font-medium text-gray-600 mb-3 flex items-center">
+                        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm h-full">
+                          <h4 className="text-sm font-medium text-gray-700 mb-6 flex items-center">
                             <BadgePlus className="h-4 w-4 mr-1.5 text-blue-600" />
                             Visibilidade da Arte
                           </h4>
@@ -844,7 +881,7 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                   ))}
                 </Tabs>
 
-                {/* Botão para salvar */}
+                {/* Navegação entre etapas */}
                 <div className="mt-8 pt-5 border-t border-gray-200">
                   {Object.values(formatsComplete).some(complete => !complete) ? (
                     <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 mb-4">
@@ -853,7 +890,7 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                         <h3 className="font-medium">Faltam campos a preencher</h3>
                       </div>
                       <p className="text-sm text-amber-600 pl-7">
-                        Complete todos os campos obrigatórios em cada formato antes de salvar.
+                        Complete todos os campos obrigatórios em cada formato para poder avançar.
                       </p>
                     </div>
                   ) : (
@@ -863,30 +900,35 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                         <h3 className="font-medium">Tudo pronto!</h3>
                       </div>
                       <p className="text-sm text-green-600 pl-7">
-                        Todos os formatos estão completos. Você já pode salvar sua arte multi-formato.
+                        Todos os detalhes dos formatos foram preenchidos. Você pode avançar para a próxima etapa.
                       </p>
                     </div>
                   )}
                   
-                  <Button 
-                    type="button"
-                    onClick={handleSubmit}
-                    disabled={Object.values(formatsComplete).some(complete => !complete)}
-                    className={`w-full py-6 rounded-xl text-base font-medium flex items-center justify-center gap-2 ${
-                      Object.values(formatsComplete).some(complete => !complete)
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white'
-                    }`}
-                  >
-                    {Object.values(formatsComplete).some(complete => !complete) ? (
-                      "Complete todos os formatos para salvar"
-                    ) : (
-                      <>
-                        Salvar Arte Multi-Formato
-                        <Check className="h-5 w-5 ml-1" />
-                      </>
-                    )}
-                  </Button>
+                  <div className="flex justify-between items-center">
+                    <button 
+                      type="button"
+                      onClick={goToPreviousStep}
+                      className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors flex items-center"
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-1" />
+                      Voltar
+                    </button>
+                    
+                    <Button 
+                      type="button"
+                      onClick={goToStep3}
+                      disabled={Object.values(formatsComplete).some(complete => !complete)}
+                      className={`px-6 py-2 rounded-lg text-base font-medium flex items-center gap-2 ${
+                        Object.values(formatsComplete).some(complete => !complete)
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white'
+                      }`}
+                    >
+                      Avançar
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
