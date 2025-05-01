@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { Loader2, Plus, Trash2, Upload, Image, Check } from 'lucide-react';
+import { Loader2, Upload, Image, X, Check, AlertCircle } from 'lucide-react';
 
 import {
   Card,
@@ -55,20 +55,21 @@ export default function AddArtFormMulti() {
   const [images, setImages] = useState<Record<string, string>>({});
   const [previewImages, setPreviewImages] = useState<Record<string, string>>({});
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
+  const [uploadError, setUploadError] = useState<Record<string, string>>({});
 
   // Estado para controlar os formatos selecionados
   const [selectedFormats, setSelectedFormats] = useState<string[]>([]);
 
   // Consultas para obter dados
-  const { data: categories, isLoading: isLoadingCategories } = useQuery({
+  const { data: categories = [], isLoading: isLoadingCategories } = useQuery({
     queryKey: ['/api/categories'],
   });
 
-  const { data: formats, isLoading: isLoadingFormats } = useQuery({
+  const { data: formats = [], isLoading: isLoadingFormats } = useQuery({
     queryKey: ['/api/formats'],
   });
 
-  const { data: fileTypes, isLoading: isLoadingFileTypes } = useQuery({
+  const { data: fileTypes = [], isLoading: isLoadingFileTypes } = useQuery({
     queryKey: ['/api/fileTypes'],
   });
 
@@ -82,20 +83,22 @@ export default function AddArtFormMulti() {
     },
   });
 
-  const { append, remove, replace } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: 'formats',
   });
 
   // Efeito para sincronizar os formatos selecionados com o formulário
   useEffect(() => {
+    // Remover formatos que foram desmarcados
     const currentFormats = form.getValues().formats || [];
+    const formatsToKeep = currentFormats.filter(f => selectedFormats.includes(f.format));
     
-    // Adicionar novos formatos que foram selecionados
+    // Adicionar novos formatos
     selectedFormats.forEach(formatSlug => {
-      const exists = currentFormats.some(f => f.format === formatSlug);
+      const exists = formatsToKeep.some(f => f.format === formatSlug);
       if (!exists) {
-        append({
+        formatsToKeep.push({
           format: formatSlug,
           fileType: '',
           title: '',
@@ -106,11 +109,10 @@ export default function AddArtFormMulti() {
         });
       }
     });
-
-    // Remover formatos que foram desmarcados
-    const newFormats = currentFormats.filter(f => selectedFormats.includes(f.format));
-    replace(newFormats);
-  }, [selectedFormats, append, replace]);
+    
+    // Atualizar o formulário
+    form.setValue('formats', formatsToKeep);
+  }, [selectedFormats, form]);
 
   // Manipuladores para seleção de formatos
   const toggleFormat = (formatSlug: string) => {
@@ -132,30 +134,19 @@ export default function AddArtFormMulti() {
 
     const identifier = isPreview ? `preview-${formatSlug}` : `main-${formatSlug}`;
     setUploading({ ...uploading, [identifier]: true });
+    setUploadError({ ...uploadError, [identifier]: '' });
 
     try {
       // Garantir que a categoria foi selecionada
       const categoryId = form.getValues('categoryId');
       if (!categoryId) {
-        toast({
-          title: "Selecione uma categoria",
-          description: "Você precisa selecionar uma categoria antes de fazer upload de imagens.",
-          variant: "destructive",
-        });
-        setUploading({ ...uploading, [identifier]: false });
-        return;
+        throw new Error("Selecione uma categoria antes de fazer upload de imagens");
       }
 
       // Encontrar o nome da categoria para uso na pasta
-      const category = categories?.find((cat: any) => cat.id.toString() === categoryId);
+      const category = categories.find((cat: any) => cat.id.toString() === categoryId);
       if (!category) {
-        toast({
-          title: "Categoria não encontrada",
-          description: "A categoria selecionada não foi encontrada.",
-          variant: "destructive",
-        });
-        setUploading({ ...uploading, [identifier]: false });
-        return;
+        throw new Error("Categoria não encontrada");
       }
 
       // Criar FormData para upload
@@ -170,7 +161,8 @@ export default function AddArtFormMulti() {
       });
 
       if (!response.ok) {
-        throw new Error('Falha ao fazer upload da imagem');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Falha ao fazer upload da imagem');
       }
 
       const result = await response.json();
@@ -182,11 +174,11 @@ export default function AddArtFormMulti() {
       }
 
       if (isPreview) {
-        setPreviewImages({ ...previewImages, [formatSlug]: result.url });
-        form.setValue(`formats.${index}.previewUrl`, result.url);
+        setPreviewImages({ ...previewImages, [formatSlug]: result.imageUrl });
+        form.setValue(`formats.${index}.previewUrl`, result.imageUrl);
       } else {
-        setImages({ ...images, [formatSlug]: result.url });
-        form.setValue(`formats.${index}.imageUrl`, result.url);
+        setImages({ ...images, [formatSlug]: result.imageUrl });
+        form.setValue(`formats.${index}.imageUrl`, result.imageUrl);
       }
 
       toast({
@@ -195,9 +187,11 @@ export default function AddArtFormMulti() {
       });
     } catch (error) {
       console.error('Erro ao fazer upload:', error);
+      const errorMessage = error instanceof Error ? error.message : "Falha ao carregar a imagem";
+      setUploadError({ ...uploadError, [identifier]: errorMessage });
       toast({
         title: "Erro no upload",
-        description: error instanceof Error ? error.message : "Falha ao carregar a imagem",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -261,29 +255,36 @@ export default function AddArtFormMulti() {
     );
   }
 
-  // Encontrar um formato no array de formatos do formulário pelo slug
-  const getFormatIndex = (formatSlug: string) => {
-    return form.getValues().formats.findIndex(f => f.format === formatSlug);
-  };
-
-  // Função para renderizar um bloco de formato
+  // Função para renderizar cada formato
   const renderFormatBlock = (formatSlug: string) => {
-    const index = getFormatIndex(formatSlug);
-    if (index === -1) return null;
-
-    const formatObj = formats?.find((f: any) => f.slug === formatSlug);
-    const formatName = formatObj?.name || formatSlug;
+    // Encontrar o formato nos dados do formulário
+    const formatIndex = form.getValues().formats.findIndex(f => f.format === formatSlug);
+    if (formatIndex === -1) return null;
+    
+    // Encontrar informações do formato na lista de formatos
+    const formatInfo = formats.find((f: any) => f.slug === formatSlug);
+    const formatName = formatInfo ? formatInfo.name : formatSlug;
 
     return (
-      <div key={formatSlug} className="formato-block mt-6 border border-gray-200 rounded-lg p-4">
-        <h3 className="text-lg font-medium mb-4">{formatName}</h3>
+      <div key={formatSlug} className="mt-6 p-5 border border-gray-200 rounded-lg">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold">{formatName}</h3>
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={() => toggleFormat(formatSlug)}
+            className="h-8 w-8"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
         
         <div className="grid md:grid-cols-2 gap-4 mb-4">
           <div className="space-y-2">
-            <Label htmlFor={`formats.${index}.fileType`}>Tipo de Arquivo <span className="text-red-500">*</span></Label>
+            <Label htmlFor={`formats.${formatIndex}.fileType`}>Tipo de Arquivo <span className="text-red-500">*</span></Label>
             <Controller
               control={form.control}
-              name={`formats.${index}.fileType`}
+              name={`formats.${formatIndex}.fileType`}
               render={({ field }) => (
                 <Select
                   value={field.value}
@@ -293,7 +294,7 @@ export default function AddArtFormMulti() {
                     <SelectValue placeholder="Selecione o tipo" />
                   </SelectTrigger>
                   <SelectContent>
-                    {fileTypes?.map((type: any) => (
+                    {fileTypes.map((type: any) => (
                       <SelectItem key={type.id} value={type.slug}>
                         {type.name}
                       </SelectItem>
@@ -302,56 +303,61 @@ export default function AddArtFormMulti() {
                 </Select>
               )}
             />
-            {form.formState.errors.formats?.[index]?.fileType && (
+            {form.formState.errors.formats?.[formatIndex]?.fileType && (
               <p className="text-sm text-red-500 mt-1">
-                {form.formState.errors.formats?.[index]?.fileType?.message}
+                {form.formState.errors.formats?.[formatIndex]?.fileType?.message}
               </p>
             )}
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor={`formats.${index}.title`}>Título <span className="text-red-500">*</span></Label>
+            <Label htmlFor={`formats.${formatIndex}.title`}>Título <span className="text-red-500">*</span></Label>
             <Input
-              {...form.register(`formats.${index}.title`)}
+              {...form.register(`formats.${formatIndex}.title`)}
               placeholder="Título da arte"
             />
-            {form.formState.errors.formats?.[index]?.title && (
+            {form.formState.errors.formats?.[formatIndex]?.title && (
               <p className="text-sm text-red-500 mt-1">
-                {form.formState.errors.formats?.[index]?.title?.message}
+                {form.formState.errors.formats?.[formatIndex]?.title?.message}
               </p>
             )}
           </div>
         </div>
 
         <div className="space-y-2 mb-4">
-          <Label htmlFor={`formats.${index}.description`}>Descrição</Label>
+          <Label htmlFor={`formats.${formatIndex}.description`}>Descrição</Label>
           <Textarea
-            {...form.register(`formats.${index}.description`)}
+            {...form.register(`formats.${formatIndex}.description`)}
             placeholder="Descrição da arte (opcional)"
             rows={3}
           />
         </div>
 
         <div className="space-y-2 mb-4">
-          <Label htmlFor={`formats.${index}.editUrl`}>URL de Edição <span className="text-red-500">*</span></Label>
+          <Label htmlFor={`formats.${formatIndex}.editUrl`}>URL de Edição <span className="text-red-500">*</span></Label>
           <Input
-            {...form.register(`formats.${index}.editUrl`)}
+            {...form.register(`formats.${formatIndex}.editUrl`)}
             placeholder="URL para edição (Canva, Google Drive, etc)"
           />
-          {form.formState.errors.formats?.[index]?.editUrl && (
+          {form.formState.errors.formats?.[formatIndex]?.editUrl && (
             <p className="text-sm text-red-500 mt-1">
-              {form.formState.errors.formats?.[index]?.editUrl?.message}
+              {form.formState.errors.formats?.[formatIndex]?.editUrl?.message}
             </p>
           )}
         </div>
 
         <div className="grid md:grid-cols-2 gap-4">
+          {/* Upload de imagem principal */}
           <div className="space-y-2">
             <Label>Imagem Principal <span className="text-red-500">*</span></Label>
             <div className="flex items-center space-x-2">
               <div 
-                className={`border-2 border-dashed rounded-lg p-4 flex flex-col items-center justify-center w-full h-32 bg-gray-50 ${
-                  uploading[`main-${formatSlug}`] ? 'border-blue-300 bg-blue-50' : 'border-gray-300 hover:border-blue-400'
+                className={`relative border-2 border-dashed rounded-lg p-4 flex flex-col items-center justify-center w-full h-36 ${
+                  uploading[`main-${formatSlug}`] 
+                    ? 'border-blue-300 bg-blue-50' 
+                    : uploadError[`main-${formatSlug}`] 
+                      ? 'border-red-300 bg-red-50'
+                      : 'border-gray-300 hover:border-blue-400 bg-gray-50'
                 }`}
               >
                 {images[formatSlug] ? (
@@ -361,11 +367,23 @@ export default function AddArtFormMulti() {
                       alt="Imagem carregada" 
                       className="h-full mx-auto object-contain cursor-pointer"
                     />
+                    {/* Ícone de sucesso */}
+                    <div className="absolute bottom-0 right-0 bg-green-500 text-white p-1 rounded-full">
+                      <Check className="h-4 w-4" />
+                    </div>
                   </div>
                 ) : (
                   <div className="text-center">
                     {uploading[`main-${formatSlug}`] ? (
-                      <Loader2 className="h-8 w-8 mx-auto animate-spin text-blue-500" />
+                      <>
+                        <Loader2 className="h-8 w-8 mx-auto animate-spin text-blue-500" />
+                        <p className="text-sm text-blue-500 mt-2">Enviando...</p>
+                      </>
+                    ) : uploadError[`main-${formatSlug}`] ? (
+                      <>
+                        <AlertCircle className="h-8 w-8 mx-auto text-red-500" />
+                        <p className="text-sm text-red-500 mt-2">Erro no upload</p>
+                      </>
                     ) : (
                       <>
                         <Upload className="h-8 w-8 mx-auto text-gray-400" />
@@ -383,24 +401,29 @@ export default function AddArtFormMulti() {
                 />
                 <input 
                   type="hidden" 
-                  {...form.register(`formats.${index}.imageUrl`)}
+                  {...form.register(`formats.${formatIndex}.imageUrl`)}
                   value={images[formatSlug] || ''}
                 />
               </div>
             </div>
-            {form.formState.errors.formats?.[index]?.imageUrl && (
+            {form.formState.errors.formats?.[formatIndex]?.imageUrl && (
               <p className="text-sm text-red-500 mt-1">
-                {form.formState.errors.formats?.[index]?.imageUrl?.message}
+                {form.formState.errors.formats?.[formatIndex]?.imageUrl?.message}
               </p>
             )}
           </div>
 
+          {/* Upload de preview (opcional) */}
           <div className="space-y-2">
             <Label>Imagem de Pré-visualização (opcional)</Label>
             <div className="flex items-center space-x-2">
               <div 
-                className={`border-2 border-dashed rounded-lg p-4 flex flex-col items-center justify-center w-full h-32 bg-gray-50 ${
-                  uploading[`preview-${formatSlug}`] ? 'border-blue-300 bg-blue-50' : 'border-gray-300 hover:border-blue-400'
+                className={`relative border-2 border-dashed rounded-lg p-4 flex flex-col items-center justify-center w-full h-36 ${
+                  uploading[`preview-${formatSlug}`] 
+                    ? 'border-blue-300 bg-blue-50' 
+                    : uploadError[`preview-${formatSlug}`] 
+                      ? 'border-red-300 bg-red-50' 
+                      : 'border-gray-300 hover:border-blue-400 bg-gray-50'
                 }`}
               >
                 {previewImages[formatSlug] ? (
@@ -410,11 +433,23 @@ export default function AddArtFormMulti() {
                       alt="Pré-visualização" 
                       className="h-full mx-auto object-contain cursor-pointer"
                     />
+                    {/* Ícone de sucesso */}
+                    <div className="absolute bottom-0 right-0 bg-green-500 text-white p-1 rounded-full">
+                      <Check className="h-4 w-4" />
+                    </div>
                   </div>
                 ) : (
                   <div className="text-center">
                     {uploading[`preview-${formatSlug}`] ? (
-                      <Loader2 className="h-8 w-8 mx-auto animate-spin text-blue-500" />
+                      <>
+                        <Loader2 className="h-8 w-8 mx-auto animate-spin text-blue-500" />
+                        <p className="text-sm text-blue-500 mt-2">Enviando...</p>
+                      </>
+                    ) : uploadError[`preview-${formatSlug}`] ? (
+                      <>
+                        <AlertCircle className="h-8 w-8 mx-auto text-red-500" />
+                        <p className="text-sm text-red-500 mt-2">Erro no upload</p>
+                      </>
                     ) : (
                       <>
                         <Image className="h-8 w-8 mx-auto text-gray-400" />
@@ -432,7 +467,7 @@ export default function AddArtFormMulti() {
                 />
                 <input 
                   type="hidden" 
-                  {...form.register(`formats.${index}.previewUrl`)}
+                  {...form.register(`formats.${formatIndex}.previewUrl`)}
                   value={previewImages[formatSlug] || ''}
                 />
               </div>
@@ -470,7 +505,7 @@ export default function AddArtFormMulti() {
                         <SelectValue placeholder="Selecione uma categoria" />
                       </SelectTrigger>
                       <SelectContent>
-                        {categories?.map((category: any) => (
+                        {categories.map((category: any) => (
                           <SelectItem key={category.id} value={category.id.toString()}>
                             {category.name}
                           </SelectItem>
@@ -506,24 +541,24 @@ export default function AddArtFormMulti() {
             {/* Seleção de formatos */}
             <div>
               <h3 className="text-lg font-medium mb-4">Formatos<span className="text-red-500">*</span></h3>
-              <p className="text-sm text-gray-500 mb-4">Selecione os formatos para sua coleção</p>
+              <p className="text-sm text-gray-500 mb-4">Selecione um ou mais formatos para sua arte</p>
               
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-                {formats?.map((format: any) => (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {formats.map((format: any) => (
                   <button
                     key={format.id}
                     type="button"
                     onClick={() => toggleFormat(format.slug)}
                     className={`
-                      h-16 py-2 px-3 rounded flex items-center justify-center
-                      transition-colors duration-200 text-center
+                      py-3 px-4 rounded-lg font-medium text-center
+                      transition-colors duration-200
                       ${selectedFormats.includes(format.slug) 
-                        ? 'bg-blue-600 text-white font-medium'
+                        ? 'bg-blue-600 text-white'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }
                     `}
                   >
-                    {format.name.toUpperCase()}
+                    {format.name}
                   </button>
                 ))}
               </div>
@@ -531,8 +566,39 @@ export default function AddArtFormMulti() {
 
             {/* Container para blocos de formatos */}
             <div id="blocos-formatos">
-              {selectedFormats.map(formatSlug => renderFormatBlock(formatSlug))}
+              {selectedFormats.map(renderFormatBlock)}
             </div>
+
+            {/* Resumo dos formatos selecionados */}
+            {selectedFormats.length > 0 && (
+              <div className="mt-6 bg-gray-50 p-4 rounded-lg">
+                <h3 className="text-md font-medium mb-2">Formatos selecionados:</h3>
+                <div className="flex flex-wrap gap-2">
+                  {selectedFormats.map(formatSlug => {
+                    const formatInfo = formats.find((f: any) => f.slug === formatSlug);
+                    const formatName = formatInfo ? formatInfo.name : formatSlug;
+                    
+                    // Verificar se os campos obrigatórios estão preenchidos
+                    const formatIndex = form.getValues().formats.findIndex(f => f.format === formatSlug);
+                    const formatData = form.getValues().formats[formatIndex];
+                    const isComplete = formatData && formatData.title && formatData.imageUrl && formatData.editUrl && formatData.fileType;
+                    
+                    return (
+                      <div key={formatSlug} className={`px-3 py-1 rounded-full text-sm flex items-center gap-1 ${
+                        isComplete ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {formatName}
+                        {isComplete ? (
+                          <Check className="h-3 w-3" />
+                        ) : (
+                          <AlertCircle className="h-3 w-3" />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Botão de enviar */}
             {selectedFormats.length > 0 && (
