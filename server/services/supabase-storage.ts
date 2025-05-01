@@ -3,7 +3,6 @@ import { randomUUID } from "crypto";
 import sharp from "sharp"; // Importando corretamente o sharp
 import * as path from "path";
 import * as fs from "fs";
-import { storageService } from './storage';
 
 // Configuração do cliente Supabase
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -374,9 +373,55 @@ export class SupabaseStorageService {
     } catch (error) {
       console.error("Erro no upload para Supabase:", error);
       
-      // Tenta usar o fallback local em caso de erro
+      // Implementa fallback local diretamente aqui
       console.log("Tentando fallback local após erro no Supabase...");
-      return await storageService.localUpload(file, options);
+      try {
+        // Criar estrutura de diretórios
+        const publicDir = path.join(process.cwd(), 'public');
+        const uploadsDir = path.join(publicDir, 'uploads');
+        const designautoImagesDir = path.join(uploadsDir, 'designautoimages');
+
+        if (!fs.existsSync(publicDir)) {
+          fs.mkdirSync(publicDir);
+        }
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir);
+        }
+        if (!fs.existsSync(designautoImagesDir)) {
+          fs.mkdirSync(designautoImagesDir);
+        }
+
+        // Gerar nomes únicos
+        const uuid = randomUUID();
+        const fileExtension = '.webp'; // Sempre usamos WebP para otimização
+        const filename = `${uuid}${fileExtension}`;
+        const thumbFilename = `thumb_${uuid}${fileExtension}`;
+        
+        const filepath = path.join(designautoImagesDir, filename);
+        const thumbFilepath = path.join(designautoImagesDir, thumbFilename);
+
+        // Salvar a imagem principal e o thumbnail localmente
+        fs.writeFileSync(filepath, optimizedBuffer);
+        fs.writeFileSync(thumbFilepath, thumbnailBuffer);
+
+        // URL relativa para o frontend
+        const relativeUrl = `/uploads/designautoimages/${filename}`;
+        const thumbRelativeUrl = `/uploads/designautoimages/${thumbFilename}`;
+        
+        console.log("Upload local concluído com sucesso:", { 
+          imageUrl: relativeUrl, 
+          thumbnailUrl: thumbRelativeUrl 
+        });
+        
+        return {
+          imageUrl: relativeUrl,
+          thumbnailUrl: thumbRelativeUrl,
+          storageType: "local"
+        };
+      } catch (localError: any) {
+        console.error("Erro no upload local:", localError);
+        throw new Error(`Falha no upload local: ${localError.message}`);
+      }
     }
   }
 

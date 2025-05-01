@@ -1,7 +1,6 @@
 import { Router, Request, Response } from "express";
 import upload from "../middlewares/upload";
 import { supabaseStorageService } from "../services/supabase-storage";
-import { r2StorageService } from "../services/r2-storage";
 import * as fs from "fs";
 import * as path from "path";
 import sharp from "sharp";
@@ -113,66 +112,7 @@ router.post(
         }
       }
       
-      // Verifica se o R2 está configurado (como segundo serviço)
-      const r2Configured = (storageService === 'r2' || storageService === 'cloudflare') && 
-                         process.env.R2_ACCESS_KEY_ID && 
-                         process.env.R2_SECRET_ACCESS_KEY && 
-                         process.env.R2_ENDPOINT && 
-                         process.env.R2_BUCKET_NAME;
-      
-      if (r2Configured) {
-        try {
-          console.log("Usando Cloudflare R2 para upload...");
-          
-          // Otimização da imagem
-          let fileBuffer = req.file.buffer;
-          
-          if (!skipOptimization) {
-            // Otimiza a imagem antes do upload para R2
-            fileBuffer = await sharp(req.file.buffer)
-              .resize(options.width || 1200, options.height, {
-                fit: "inside",
-                withoutEnlargement: true,
-              })
-              .webp({ quality: options.quality || 80 })
-              .toBuffer();
-            
-            console.log("Imagem otimizada para R2 upload");
-          }
-          
-          // Faz upload para o R2
-          const result = await r2StorageService.uploadFile(
-            process.env.R2_BUCKET_NAME || 'designautoimages',
-            req.file.originalname,
-            fileBuffer,
-            'image/webp'
-          );
-          
-          if (!result.success) {
-            throw new Error(result.error || "Falha no upload para R2");
-          }
-          
-          console.log("Upload R2 concluído com sucesso:", result);
-          
-          return res.status(200).json({
-            imageUrl: result.url,
-            thumbnailUrl: result.url, // Mesmo URL para thumbnail
-            storageType: "r2"
-          });
-        } catch (error: any) {
-          console.error("Erro detalhado:", error);
-          
-          if (req.body.r2Only === 'true') {
-            return res.status(500).json({
-              message: "Erro no upload para R2",
-              details: error.message,
-              errorCode: error.Code || 'unknown'
-            });
-          }
-          
-          console.log("Continuando para próxima opção de armazenamento...");
-        }
-      }
+      // Como não usamos R2, partimos diretamente para o fallback local quando Supabase falha
 
       // Fallback final: armazenamento local
       console.log("Usando armazenamento local como fallback final...");

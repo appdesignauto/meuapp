@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import fetch from 'node-fetch';
-import { supabaseStorageService } from '../services/storage-redirector';
+import { supabaseStorageService } from '../services/supabase-storage';
 import { createClient } from '@supabase/supabase-js';
 
 // Middleware para verificar autenticação
