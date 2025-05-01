@@ -932,6 +932,153 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                 </div>
               </div>
             )}
+            
+            {step === 3 && (
+              <div className="space-y-6">
+                {/* Navegação da etapa 3 */}
+                <div className="flex justify-between items-center mb-6">
+                  <button 
+                    onClick={goToPreviousStep}
+                    className="text-blue-600 hover:text-blue-800 flex items-center gap-1 px-3 py-1.5 border border-blue-200 rounded-lg transition-all hover:bg-blue-50"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Voltar
+                  </button>
+                  
+                  <div className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium">
+                    Revise e salve a arte multi-formato
+                  </div>
+                </div>
+                
+                {/* Resumo da arte multi-formato */}
+                <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                  <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4">
+                    <h2 className="text-lg font-semibold flex items-center">
+                      <FileImage className="h-5 w-5 mr-2 text-white" />
+                      Resumo da Arte Multi-Formato
+                    </h2>
+                  </div>
+                  
+                  <div className="p-6">
+                    <div className="space-y-6">
+                      {/* Informações globais */}
+                      <div className="rounded-lg bg-blue-50 p-4 border border-blue-100">
+                        <h3 className="text-base font-medium text-blue-700 mb-3 flex items-center">
+                          <Settings2 className="h-4 w-4 mr-2" />
+                          Informações Globais
+                        </h3>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-sm text-gray-500">Título Global</p>
+                            <p className="font-medium">{step1Form.getValues().globalTitle}</p>
+                          </div>
+                          
+                          <div>
+                            <p className="text-sm text-gray-500">Tipo de Arquivo</p>
+                            <p className="font-medium capitalize">{step1Form.getValues().globalFileType}</p>
+                          </div>
+                          
+                          {step1Form.getValues().globalDescription && (
+                            <div className="col-span-2">
+                              <p className="text-sm text-gray-500">Descrição Global</p>
+                              <p>{step1Form.getValues().globalDescription}</p>
+                            </div>
+                          )}
+                          
+                          <div>
+                            <p className="text-sm text-gray-500">Categoria</p>
+                            <p className="font-medium">
+                              {categories.find((cat: any) => cat.id.toString() === step1Form.getValues().categoryId)?.name || 'Categoria não encontrada'}
+                            </p>
+                          </div>
+                          
+                          <div>
+                            <p className="text-sm text-gray-500">Tipo de Acesso</p>
+                            <p className="font-medium">{step1Form.getValues().isPremium ? 'Premium' : 'Gratuito'}</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Lista de formatos */}
+                      <div>
+                        <h3 className="text-base font-medium text-gray-800 mb-3">Formatos Incluídos</h3>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {Object.entries(formatDetails).map(([formatSlug, details]) => (
+                            <div 
+                              key={formatSlug}
+                              className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm"
+                            >
+                              <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
+                                <h4 className="font-medium text-gray-700">{getFormatName(formatSlug)}</h4>
+                                <div className="text-green-600 flex items-center text-sm">
+                                  <Check className="h-4 w-4 mr-1" />
+                                  Completo
+                                </div>
+                              </div>
+                              
+                              <div className="p-4 grid grid-cols-3 gap-3">
+                                <div className="col-span-1">
+                                  {details.imageUrl && (
+                                    <img 
+                                      src={details.imageUrl} 
+                                      alt={details.title}
+                                      className="w-full h-24 object-cover rounded border border-gray-200"
+                                    />
+                                  )}
+                                </div>
+                                
+                                <div className="col-span-2 space-y-1">
+                                  <p className="text-sm font-medium line-clamp-1">{details.title}</p>
+                                  <p className="text-xs text-gray-500 line-clamp-1">
+                                    <span className="font-medium">Link:</span> {details.editUrl.substring(0, 30)}...
+                                  </p>
+                                  {details.description && (
+                                    <p className="text-xs text-gray-600 line-clamp-2">{details.description}</p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Botão para salvar */}
+                <div className="mt-8 pt-5 border-t border-gray-200">
+                  <div className="rounded-xl bg-green-50 border border-green-200 p-4 mb-4">
+                    <div className="flex items-center text-green-700 mb-1">
+                      <Check className="h-5 w-5 mr-2" />
+                      <h3 className="font-medium">Revisão concluída</h3>
+                    </div>
+                    <p className="text-sm text-green-600 pl-7">
+                      Todos os detalhes estão preenchidos. Clique em Salvar para finalizar.
+                    </p>
+                  </div>
+                  
+                  <Button 
+                    type="button"
+                    onClick={handleSubmit}
+                    className="w-full py-6 rounded-xl text-base font-medium flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
+                  >
+                    {uploadAllComplete ? (
+                      <>
+                        Upload Concluído
+                        <Check className="h-5 w-5 ml-1" />
+                      </>
+                    ) : (
+                      <>
+                        Salvar Arte Multi-Formato
+                        <Check className="h-5 w-5 ml-1" />
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </DialogContent>
