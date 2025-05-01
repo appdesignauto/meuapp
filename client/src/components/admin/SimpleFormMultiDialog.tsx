@@ -409,9 +409,9 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
               </div>
             </div>
             <div className="flex justify-between w-full px-10 text-sm font-medium">
-              <div className={`${step === 1 ? 'text-blue-600' : (step > 1 ? 'text-green-600' : 'text-gray-500')}`}>Configuração Global</div>
+              <div className={`${step === 1 ? 'text-blue-600' : (step > 1 ? 'text-green-600' : 'text-gray-500')}`}>Informações</div>
               <div className={`${step === 2 ? 'text-blue-600' : (step > 2 ? 'text-green-600' : 'text-gray-500')}`}>Formatos</div>
-              <div className={`${step === 3 ? 'text-blue-600' : 'text-gray-500'}`}>Revisão</div>
+              <div className={`${step === 3 ? 'text-blue-600' : 'text-gray-500'}`}>Upload</div>
             </div>
           </div>
           
@@ -421,17 +421,17 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                 {/* Configuração Global - Etapa 1 */}
                 <div className="p-2">
                   <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center">
-                    <Settings2 className="h-5 w-5 mr-2 text-blue-600" />
-                    Configuração Global
+                    <PenLine className="h-5 w-5 mr-2 text-blue-600" />
+                    Informações da Arte
                   </h3>
                   
                   <div className="space-y-8">
-                    {/* Título e Descrição Global */}
+                    {/* Título e Descrição */}
                     <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
                       <div className="flex justify-between items-center mb-3">
                         <h4 className="text-md font-semibold flex items-center text-gray-700">
                           <PenLine className="h-4 w-4 mr-1.5 text-blue-600" />
-                          Título e Descrição Global
+                          Informações da Arte
                         </h4>
                         <div className="bg-blue-50 border border-blue-100 rounded-full px-2.5 py-0.5 text-xs text-blue-700">
                           Aplicado automaticamente a todos os formatos
@@ -488,9 +488,14 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                     <div className="grid md:grid-cols-2 gap-6">
                       <div className="space-y-4">
                         <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                          <div className="flex justify-between items-center mb-3">
+                            <h4 className="text-md font-semibold flex items-center text-gray-700">
+                              <FolderOpen className="h-4 w-4 mr-1.5 text-blue-600" />
+                              Categoria & Visibilidade
+                            </h4>
+                          </div>
                           <div className="space-y-4">
                             <Label htmlFor="category" className="text-sm font-medium text-gray-700 flex items-center">
-                              <FolderOpen className="h-4 w-4 mr-1.5 text-blue-600" />
                               Categoria <span className="text-red-500 ml-1">*</span>
                             </Label>
                             <Controller
@@ -671,7 +676,7 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                         : 'bg-blue-600 hover:bg-blue-700'
                     }`}
                   >
-                    Continuar para detalhes de formatos
+                    Continuar
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </div>
@@ -925,8 +930,8 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                           : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white'
                       }`}
                     >
-                      Avançar
-                      <ChevronRight className="h-4 w-4" />
+                      Continuar
+                      <ArrowRight className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
