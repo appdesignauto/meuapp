@@ -367,23 +367,18 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
           <div className="flex flex-col items-center border-b pb-4">
             <div className="pt-5 pb-2">
               <div className="flex items-center">
-                <div className={`flex items-center justify-center w-8 h-8 rounded-full text-white font-medium ${step === 1 ? 'bg-blue-600' : 'bg-blue-200'}`}>
-                  1
+                <div className={`flex items-center justify-center w-10 h-10 rounded-full text-white font-medium ${step === 1 ? 'bg-blue-600' : 'bg-green-600'}`}>
+                  {step > 1 ? <Check className="h-6 w-6" /> : 1}
                 </div>
-                <div className={`w-16 h-1 ${step > 1 ? 'bg-blue-600' : 'bg-gray-200'}`}></div>
-                <div className={`flex items-center justify-center w-8 h-8 rounded-full font-medium ${step === 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}>
+                <div className={`w-32 h-1.5 ${step > 1 ? 'bg-blue-600' : 'bg-gray-200'}`}></div>
+                <div className={`flex items-center justify-center w-10 h-10 rounded-full font-medium ${step === 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}>
                   2
-                </div>
-                <div className={`w-16 h-1 ${step > 2 ? 'bg-blue-600' : 'bg-gray-200'}`}></div>
-                <div className={`flex items-center justify-center w-8 h-8 rounded-full font-medium bg-gray-200 text-gray-700`}>
-                  3
                 </div>
               </div>
             </div>
-            <div className="flex gap-16 text-sm font-medium">
-              <div className={`${step === 1 ? 'text-blue-600' : 'text-gray-500'}`}>Informações Gerais</div>
-              <div className={`${step === 2 ? 'text-blue-600' : 'text-gray-500'}`}>Formatos</div>
-              <div className="text-gray-400">Revisão</div>
+            <div className="flex justify-between w-full px-12 text-sm font-medium">
+              <div className={`${step === 1 ? 'text-blue-600' : 'text-green-600'}`}>Configuração Global</div>
+              <div className={`${step === 2 ? 'text-blue-600' : 'text-gray-500'}`}>Detalhes por Formato</div>
             </div>
           </div>
           
@@ -400,10 +395,18 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                   <div className="space-y-6">
                     {/* Título e Descrição Global */}
                     <div className="bg-white p-4 rounded-lg border border-blue-100">
-                      <h4 className="text-md font-semibold mb-3 flex items-center text-blue-700">
-                        <PenLine className="h-4 w-4 mr-1.5 text-blue-600" />
-                        Título e Descrição Global
-                      </h4>
+                      <div className="flex justify-between items-center mb-1">
+                        <h4 className="text-md font-semibold flex items-center text-blue-700">
+                          <PenLine className="h-4 w-4 mr-1.5 text-blue-600" />
+                          Título e Descrição Global
+                        </h4>
+                        <div className="bg-blue-50 border border-blue-100 rounded-full px-2.5 py-0.5 text-xs text-blue-700">
+                          Aplicado automaticamente a todos os formatos
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-500 mb-3">
+                        Estas informações serão aplicadas automaticamente a todos os formatos que você selecionar.
+                      </p>
                       
                       <div className="space-y-4">
                         <div className="space-y-2">
