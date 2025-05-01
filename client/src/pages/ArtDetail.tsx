@@ -489,7 +489,7 @@ export default function ArtDetail() {
                 <div className="text-white">
                   <p className="text-sm font-medium mb-1 flex items-center">
                     <Eye className="h-4 w-4 mr-1" />
-                    {art.viewCount || 0} visualizações
+                    {art.viewCount > 0 ? `${art.viewCount} visualizações` : "Nova"}
                   </p>
                   <p className="text-sm font-medium mb-1 flex items-center">
                     <Clock className="h-4 w-4 mr-1" />
