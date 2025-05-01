@@ -6,7 +6,11 @@ import { z } from 'zod';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { Loader2, Upload, Image, X, Check, AlertCircle } from 'lucide-react';
+import { 
+  Loader2, Upload, Image, X, Check, AlertCircle, 
+  Settings2, FileImage, FolderOpen, FileType, LayoutGrid,
+  BadgePlus, Link2, PenLine, UploadCloud, BookImage
+} from 'lucide-react';
 
 import {
   Card,
@@ -419,108 +423,136 @@ export default function AddArtFormMulti() {
 
   return (
     <div className="container mx-auto p-4 max-w-5xl">
-      <Card>
-        <CardHeader>
-          <CardTitle>Adicionar Arte Multi-Formato</CardTitle>
-          <CardDescription>
+      <Card className="border-0 shadow-lg overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-800 text-white pb-8">
+          <div className="flex items-center mb-2">
+            <FileImage className="h-6 w-6 mr-2" />
+            <CardTitle>Adicionar Arte Multi-Formato</CardTitle>
+          </div>
+          <CardDescription className="text-blue-100">
             Crie uma arte com variações para diferentes formatos (feed, stories, etc.)
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Seção de Categoria, Tipo de Arquivo e Premium (comum para todos os formatos) */}
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="category">Categoria <span className="text-red-500">*</span></Label>
-                  <Controller
-                    control={form.control}
-                    name="categoryId"
-                    render={({ field }) => (
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione uma categoria" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories.map((category: any) => (
-                            <SelectItem key={category.id} value={category.id.toString()}>
-                              {category.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+        <CardContent className="pt-6 px-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            {/* Seção de configuração global */}
+            <div className="bg-blue-50/60 p-6 rounded-xl border border-blue-100">
+              <h3 className="text-lg font-semibold text-blue-800 mb-4 flex items-center">
+                <Settings2 className="h-5 w-5 mr-2 text-blue-600" />
+                Configuração Global
+              </h3>
+              
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-5">
+                  <div className="space-y-3">
+                    <Label htmlFor="category" className="text-sm font-medium flex items-center">
+                      <FolderOpen className="h-4 w-4 mr-1.5 text-blue-600" />
+                      Categoria <span className="text-red-500 ml-1">*</span>
+                    </Label>
+                    <Controller
+                      control={form.control}
+                      name="categoryId"
+                      render={({ field }) => (
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger className="bg-white border-blue-200 focus:ring-blue-500">
+                            <SelectValue placeholder="Selecione uma categoria" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {categories.map((category: any) => (
+                              <SelectItem key={category.id} value={category.id.toString()}>
+                                {category.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    {form.formState.errors.categoryId && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {form.formState.errors.categoryId.message}
+                      </p>
                     )}
-                  />
-                  {form.formState.errors.categoryId && (
-                    <p className="text-sm text-red-500 mt-1">
-                      {form.formState.errors.categoryId.message}
-                    </p>
-                  )}
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <Label htmlFor="globalFileType" className="text-sm font-medium flex items-center">
+                      <FileType className="h-4 w-4 mr-1.5 text-blue-600" />
+                      Tipo de Arquivo <span className="text-red-500 ml-1">*</span>
+                    </Label>
+                    <Controller
+                      control={form.control}
+                      name="globalFileType"
+                      render={({ field }) => (
+                        <Select
+                          value={field.value}
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            
+                            // Aplicar este tipo para todos os formatos já adicionados
+                            const currentFormats = form.getValues().formats || [];
+                            if (currentFormats.length > 0) {
+                              const updatedFormats = currentFormats.map(format => ({
+                                ...format,
+                                fileType: value
+                              }));
+                              form.setValue('formats', updatedFormats);
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="bg-white border-blue-200 focus:ring-blue-500">
+                            <SelectValue placeholder="Selecione o tipo" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {fileTypes.map((type: any) => (
+                              <SelectItem key={type.id} value={type.slug}>
+                                {type.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                  </div>
                 </div>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="globalFileType">Tipo de Arquivo <span className="text-red-500">*</span></Label>
-                  <Controller
-                    control={form.control}
-                    name="globalFileType"
-                    render={({ field }) => (
-                      <Select
-                        value={field.value}
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          
-                          // Aplicar este tipo para todos os formatos já adicionados
-                          const currentFormats = form.getValues().formats || [];
-                          if (currentFormats.length > 0) {
-                            const updatedFormats = currentFormats.map(format => ({
-                              ...format,
-                              fileType: value
-                            }));
-                            form.setValue('formats', updatedFormats);
-                          }
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o tipo" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {fileTypes.map((type: any) => (
-                            <SelectItem key={type.id} value={type.slug}>
-                              {type.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
+                <div className="flex flex-col justify-center">
+                  <div className="bg-white p-5 rounded-lg border border-blue-100 shadow-sm">
+                    <h4 className="text-sm font-medium text-gray-600 mb-3 flex items-center">
+                      <BadgePlus className="h-4 w-4 mr-1.5 text-blue-600" />
+                      Visibilidade da Arte
+                    </h4>
+                    <div className="flex items-center space-x-3">
+                      <Controller
+                        control={form.control}
+                        name="isPremium"
+                        render={({ field }) => (
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            id="isPremium"
+                            className="data-[state=checked]:bg-blue-600"
+                          />
+                        )}
+                      />
+                      <Label htmlFor="isPremium" className="font-medium text-gray-700">Arte Premium</Label>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="flex items-center space-x-2 self-center mt-4">
-                <Controller
-                  control={form.control}
-                  name="isPremium"
-                  render={({ field }) => (
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                      id="isPremium"
-                    />
-                  )}
-                />
-                <Label htmlFor="isPremium">Arte Premium</Label>
               </div>
             </div>
 
-            <Separator className="my-6" />
+            <Separator className="my-2" />
 
             {/* Seleção de formatos */}
-            <div>
-              <h3 className="text-lg font-medium mb-4">Formatos<span className="text-red-500">*</span></h3>
-              <p className="text-sm text-gray-500 mb-4">Selecione um ou mais formatos para sua arte</p>
+            <div className="pt-2">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                <LayoutGrid className="h-5 w-5 mr-2 text-blue-600" />
+                Formatos<span className="text-red-500 ml-1">*</span>
+              </h3>
+              <p className="text-sm text-gray-500 mb-5">Selecione um ou mais formatos para sua arte</p>
               
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                 {formats.map((format: any) => (
@@ -530,10 +562,10 @@ export default function AddArtFormMulti() {
                     onClick={() => toggleFormat(format.slug)}
                     className={`
                       py-3 px-4 rounded-lg font-medium text-center
-                      transition-colors duration-200
+                      transition-all duration-200 shadow-sm
                       ${selectedFormats.includes(format.slug) 
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-blue-600 text-white transform scale-105 ring-2 ring-blue-300'
+                        : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-blue-300'
                       }
                     `}
                   >
