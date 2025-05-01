@@ -252,12 +252,15 @@ const AddArtFormMulti = () => {
 
   // Enviar todas as variações
   const uploadAllVariations = async () => {
+    // Se não existirem variações, publicamos com a variação principal apenas
     const hasValidVariations = variations.some(v => v.imageFile !== null);
     
-    if (!hasValidVariations) {
+    // Seguir adiante mesmo se não houver variações adicionais
+    // A variação principal já foi criada no primeiro passo
+    if (variations.length > 0 && !hasValidVariations) {
       toast({
-        title: 'Nenhuma variação válida',
-        description: 'Adicione pelo menos uma variação com imagem para continuar',
+        title: 'Variações adicionadas sem imagem',
+        description: 'As variações devem ter uma imagem selecionada. Remova as variações vazias ou adicione imagens.',
         variant: 'destructive',
       });
       return;
@@ -279,9 +282,14 @@ const AddArtFormMulti = () => {
     
     if (allSuccess) {
       setStep('success');
+      
+      // Mensagem adaptada baseada no número de variações adicionais
+      const hasAddedVariations = variations.some(v => v.status === 'success');
       toast({
         title: 'Arte publicada com sucesso',
-        description: 'Todas as variações foram adicionadas',
+        description: hasAddedVariations 
+          ? 'Todas as variações foram adicionadas' 
+          : 'Arte principal publicada com sucesso',
       });
       
       // Atualizar cache para atualizar a lista de artes
@@ -576,10 +584,11 @@ const AddArtFormMulti = () => {
       <div className="space-y-4">
         {variations.length === 0 ? (
           <Alert>
-            <AlertTitle>Nenhuma variação adicionada</AlertTitle>
+            <AlertTitle>Pronto para publicar!</AlertTitle>
             <AlertDescription>
-              Clique no botão "Adicionar Variação" para incluir versões desta arte em outros formatos.
-              Você também pode continuar sem adicionar variações.
+              <p>A arte principal já está pronta para ser publicada.</p>
+              <p className="mt-2">Se desejar adicionar variações em outros formatos, clique no botão "Adicionar Variação".</p>
+              <p className="mt-2 font-semibold">Você pode clicar em "Publicar Arte" para publicar apenas a versão principal.</p>
             </AlertDescription>
           </Alert>
         ) : (
