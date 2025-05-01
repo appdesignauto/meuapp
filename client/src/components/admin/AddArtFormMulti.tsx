@@ -33,6 +33,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 // Esquema de formulário com validação
 const formSchema = z.object({
   categoryId: z.string().min(1, "Por favor selecione uma categoria"),
+  globalFileType: z.string().min(1, "Por favor selecione um tipo de arquivo"),
   isPremium: z.boolean().default(false),
   formats: z.array(
     z.object({
@@ -78,6 +79,7 @@ export default function AddArtFormMulti() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       categoryId: '',
+      globalFileType: '',
       isPremium: true, // Arte premium sempre selecionada por padrão
       formats: []
     },
@@ -98,12 +100,12 @@ export default function AddArtFormMulti() {
     selectedFormats.forEach(formatSlug => {
       const exists = formatsToKeep.some(f => f.format === formatSlug);
       if (!exists) {
-        // Obter o tipo de arquivo comum para todos os formatos
-        const fileType = form.getValues().formats[0]?.fileType || '';
+        // Obter o tipo de arquivo global
+        const globalFileType = form.getValues().globalFileType || '';
         
         formatsToKeep.push({
           format: formatSlug,
-          fileType: fileType, // Usar o mesmo tipo de arquivo selecionado anteriormente
+          fileType: globalFileType, // Usar o tipo de arquivo global definido no início
           title: '',
           description: '',
           imageUrl: '',
@@ -219,6 +221,7 @@ export default function AddArtFormMulti() {
       const formattedData = {
         categoryId: parseInt(data.categoryId),
         isPremium: data.isPremium,
+        globalFileType: data.globalFileType,
         formats: data.formats.map(format => ({
           ...format,
           previewUrl: format.previewUrl || null,
@@ -235,6 +238,7 @@ export default function AddArtFormMulti() {
       });
       form.reset({
         categoryId: '',
+        globalFileType: '',
         isPremium: true, // Mantém como true após o reset
         formats: []
       });
@@ -292,37 +296,7 @@ export default function AddArtFormMulti() {
           </Button>
         </div>
         
-        <div className="grid md:grid-cols-2 gap-4 mb-4">
-          <div className="space-y-2">
-            <Label htmlFor={`formats.${formatIndex}.fileType`}>Tipo de Arquivo <span className="text-red-500">*</span></Label>
-            <Controller
-              control={form.control}
-              name={`formats.${formatIndex}.fileType`}
-              render={({ field }) => (
-                <Select
-                  value={field.value}
-                  onValueChange={field.onChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {fileTypes.map((type: any) => (
-                      <SelectItem key={type.id} value={type.slug}>
-                        {type.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
-            {form.formState.errors.formats?.[formatIndex]?.fileType && (
-              <p className="text-sm text-red-500 mt-1">
-                {form.formState.errors.formats?.[formatIndex]?.fileType?.message}
-              </p>
-            )}
-          </div>
-          
+        <div className="mb-4">
           <div className="space-y-2">
             <Label htmlFor={`formats.${formatIndex}.title`}>Título <span className="text-red-500">*</span></Label>
             <Input
@@ -336,6 +310,12 @@ export default function AddArtFormMulti() {
             )}
           </div>
         </div>
+        
+        {/* Campo oculto para fileType (valor definido globalmente) */}
+        <input 
+          type="hidden" 
+          {...form.register(`formats.${formatIndex}.fileType`)}
+        />
 
         <div className="space-y-2 mb-4">
           <Label htmlFor={`formats.${formatIndex}.description`}>Descrição</Label>
@@ -448,38 +428,78 @@ export default function AddArtFormMulti() {
         </CardHeader>
         <CardContent>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Seção de Categoria e Premium (comum para todos os formatos) */}
+            {/* Seção de Categoria, Tipo de Arquivo e Premium (comum para todos os formatos) */}
             <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="category">Categoria <span className="text-red-500">*</span></Label>
-                <Controller
-                  control={form.control}
-                  name="categoryId"
-                  render={({ field }) => (
-                    <Select
-                      value={field.value}
-                      onValueChange={field.onChange}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma categoria" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((category: any) => (
-                          <SelectItem key={category.id} value={category.id.toString()}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="category">Categoria <span className="text-red-500">*</span></Label>
+                  <Controller
+                    control={form.control}
+                    name="categoryId"
+                    render={({ field }) => (
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione uma categoria" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories.map((category: any) => (
+                            <SelectItem key={category.id} value={category.id.toString()}>
+                              {category.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {form.formState.errors.categoryId && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {form.formState.errors.categoryId.message}
+                    </p>
                   )}
-                />
-                {form.formState.errors.categoryId && (
-                  <p className="text-sm text-red-500 mt-1">
-                    {form.formState.errors.categoryId.message}
-                  </p>
-                )}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="globalFileType">Tipo de Arquivo <span className="text-red-500">*</span></Label>
+                  <Controller
+                    control={form.control}
+                    name="globalFileType"
+                    render={({ field }) => (
+                      <Select
+                        value={field.value}
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          
+                          // Aplicar este tipo para todos os formatos já adicionados
+                          const currentFormats = form.getValues().formats || [];
+                          if (currentFormats.length > 0) {
+                            const updatedFormats = currentFormats.map(format => ({
+                              ...format,
+                              fileType: value
+                            }));
+                            form.setValue('formats', updatedFormats);
+                          }
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o tipo" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {fileTypes.map((type: any) => (
+                            <SelectItem key={type.id} value={type.slug}>
+                              {type.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
               </div>
-              <div className="flex items-center space-x-2 pt-8">
+              
+              <div className="flex items-center space-x-2 self-center mt-4">
                 <Controller
                   control={form.control}
                   name="isPremium"
