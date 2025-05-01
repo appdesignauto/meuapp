@@ -79,7 +79,7 @@ export default function AddArtFormMulti() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       categoryId: '',
-      globalFileType: '',
+      globalFileType: 'canva', // "canva" como tipo de arquivo padrão
       isPremium: true, // Arte premium sempre selecionada por padrão
       formats: []
     },
@@ -100,8 +100,8 @@ export default function AddArtFormMulti() {
     selectedFormats.forEach(formatSlug => {
       const exists = formatsToKeep.some(f => f.format === formatSlug);
       if (!exists) {
-        // Obter o tipo de arquivo global
-        const globalFileType = form.getValues().globalFileType || '';
+        // Obter o tipo de arquivo global, ou usar 'canva' como padrão
+        const globalFileType = form.getValues().globalFileType || 'canva';
         
         formatsToKeep.push({
           format: formatSlug,
@@ -238,7 +238,7 @@ export default function AddArtFormMulti() {
       });
       form.reset({
         categoryId: '',
-        globalFileType: '',
+        globalFileType: 'canva', // Mantém "canva" como tipo de arquivo padrão
         isPremium: true, // Mantém como true após o reset
         formats: []
       });
