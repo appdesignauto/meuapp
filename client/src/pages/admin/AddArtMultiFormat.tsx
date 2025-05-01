@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Loader2, Home } from 'lucide-react';
 import { useLocation, Link } from 'wouter';
-import AddArtFormMulti from '@/components/admin/AddArtFormMulti';
+import SimpleFormMulti from '@/components/admin/SimpleFormMulti';
 import { Button } from '@/components/ui/button';
 
 export default function AddArtMultiFormatPage() {
@@ -43,7 +43,7 @@ export default function AddArtMultiFormatPage() {
 
         {/* Conteúdo principal */}
         <main className="flex-1 overflow-auto bg-gray-50 p-6">
-          <AddArtFormMulti />
+          <SimpleFormMulti />
         </main>
       </div>
     </div>
