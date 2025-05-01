@@ -411,7 +411,7 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
             <div className="flex justify-between w-full px-10 text-sm font-medium">
               <div className={`${step === 1 ? 'text-blue-600' : (step > 1 ? 'text-green-600' : 'text-gray-500')}`}>Configuração Global</div>
               <div className={`${step === 2 ? 'text-blue-600' : (step > 2 ? 'text-green-600' : 'text-gray-500')}`}>Formatos</div>
-              <div className={`${step === 3 ? 'text-blue-600' : 'text-gray-500'}`}>Upload</div>
+              <div className={`${step === 3 ? 'text-blue-600' : 'text-gray-500'}`}>Revisão</div>
             </div>
           </div>
           
@@ -946,7 +946,7 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                   </button>
                   
                   <div className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium">
-                    Revise e salve a arte multi-formato
+                    Revisão - Confirme as informações antes de salvar
                   </div>
                 </div>
                 
@@ -955,7 +955,7 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                   <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4">
                     <h2 className="text-lg font-semibold flex items-center">
                       <FileImage className="h-5 w-5 mr-2 text-white" />
-                      Resumo da Arte Multi-Formato
+                      Revisão - Resumo da Arte Multi-Formato
                     </h2>
                   </div>
                   
