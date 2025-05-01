@@ -235,12 +235,14 @@ const AdminDashboard = () => {
               {(activeTab === 'arts' || activeTab === 'categories' || activeTab === 'collections' || activeTab === 'formats' || activeTab === 'fileTypes') && (
                 <div className="flex gap-2">
                   {activeTab === 'arts' && (
-                    <Link href="/admin/add-art-multi">
-                      <Button variant="default" className="flex items-center bg-blue-600 hover:bg-blue-700 mr-2">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Arte Multi-Formato
-                      </Button>
-                    </Link>
+                    <Button 
+                      variant="default" 
+                      className="flex items-center bg-blue-600 hover:bg-blue-700 mr-2"
+                      onClick={() => setIsMultiFormOpen(true)}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Arte Multi-Formato
+                    </Button>
                   )}
                   <Button className="flex items-center">
                     <Plus className="w-4 h-4 mr-2" />
@@ -327,6 +329,12 @@ const AdminDashboard = () => {
           </Tabs>
         </main>
       </div>
+      
+      {/* Diálogo para adicionar arte multi-formato */}
+      <SimpleFormMultiDialog 
+        isOpen={isMultiFormOpen} 
+        onClose={() => setIsMultiFormOpen(false)} 
+      />
     </div>
   );
 };
