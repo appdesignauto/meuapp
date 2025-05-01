@@ -453,9 +453,10 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                       </p>
                       
                       <div className="space-y-5">
+                        {/* Título da arte */}
                         <div className="space-y-2">
                           <Label htmlFor="globalTitle" className="text-sm font-medium text-gray-700">
-                            Título <span className="text-red-500 ml-1">*</span>
+                            Título da arte <span className="text-red-500 ml-1">*</span>
                           </Label>
                           <Controller
                             control={step1Form.control}
@@ -475,6 +476,121 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                             </p>
                           )}
                         </div>
+                        
+                        {/* Descrição (opcional) */}
+                        <div className="space-y-2">
+                          <Label htmlFor="globalDescription" className="text-sm font-medium text-gray-700 flex items-center">
+                            Descrição <span className="text-gray-400 text-xs ml-1">(opcional)</span>
+                          </Label>
+                          <Controller
+                            control={step1Form.control}
+                            name="globalDescription"
+                            render={({ field }) => (
+                              <Textarea
+                                id="globalDescription"
+                                placeholder="Descrição geral da arte"
+                                className="bg-white border-gray-300 focus:ring-blue-500 focus:border-blue-500 h-24"
+                                {...field}
+                              />
+                            )}
+                          />
+                        </div>
+                        
+                        {/* Categoria */}
+                        <div className="space-y-2">
+                          <Label htmlFor="categoryId" className="text-sm font-medium text-gray-700">
+                            Categoria <span className="text-red-500 ml-1">*</span>
+                          </Label>
+                          <Controller
+                            control={step1Form.control}
+                            name="categoryId"
+                            render={({ field }) => (
+                              <Select
+                                value={field.value}
+                                onValueChange={field.onChange}
+                              >
+                                <SelectTrigger className="bg-white border-gray-300 focus:ring-blue-500">
+                                  <SelectValue placeholder="Selecione uma categoria" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {categories.map((category: any) => (
+                                    <SelectItem key={category.id} value={category.id.toString()}>
+                                      {category.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            )}
+                          />
+                          {step1Form.formState.errors.categoryId && (
+                            <p className="text-sm text-red-500">
+                              {step1Form.formState.errors.categoryId.message}
+                            </p>
+                          )}
+                        </div>
+                        
+                        {/* Tipo de arquivo */}
+                        <div className="space-y-2">
+                          <Label htmlFor="globalFileType" className="text-sm font-medium text-gray-700">
+                            Tipo de arquivo <span className="text-red-500 ml-1">*</span>
+                          </Label>
+                          <Controller
+                            control={step1Form.control}
+                            name="globalFileType"
+                            render={({ field }) => (
+                              <Select
+                                value={field.value}
+                                onValueChange={field.onChange}
+                              >
+                                <SelectTrigger className="bg-white border-gray-300 focus:ring-blue-500">
+                                  <SelectValue placeholder="Selecione o tipo" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {fileTypes.map((type: any) => (
+                                    <SelectItem key={type.id} value={type.slug}>
+                                      {type.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            )}
+                          />
+                          {step1Form.formState.errors.globalFileType && (
+                            <p className="text-sm text-red-500">
+                              {step1Form.formState.errors.globalFileType.message}
+                            </p>
+                          )}
+                        </div>
+                        
+                        {/* Arte Premium (toggle) */}
+                        <div className="space-y-2">
+                          <Label htmlFor="isPremium" className="text-sm font-medium text-gray-700">
+                            Arte Premium
+                          </Label>
+                          <div className="flex items-center space-x-2 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                            <Controller
+                              control={step1Form.control}
+                              name="isPremium"
+                              render={({ field }) => (
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                  id="isPremium"
+                                  className="data-[state=checked]:bg-blue-600"
+                                />
+                              )}
+                            />
+                            <Label htmlFor="isPremium" className="font-medium text-gray-700">
+                              {step1Form.watch("isPremium") ? "Ativo" : "Inativo"}
+                            </Label>
+                            {step1Form.watch("isPremium") && (
+                              <span className="ml-2 bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded-full flex items-center">
+                                <Crown className="h-3 w-3 mr-1 text-yellow-600" />
+                                Premium
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -482,8 +598,17 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
 
                 <Separator className="my-2" />
 
-                {/* Botão para avançar para a etapa 2 */}
-                <div className="flex justify-end mt-8">
+                {/* Botões para cancelar e avançar para a etapa 2 */}
+                <div className="flex justify-between mt-8">
+                  <Button 
+                    type="button"
+                    onClick={onClose}
+                    variant="outline"
+                    className="px-6 py-5 rounded-xl text-base"
+                  >
+                    Cancelar
+                  </Button>
+                  
                   <Button 
                     type="submit"
                     className="px-6 py-5 rounded-xl text-base flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
