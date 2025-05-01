@@ -52,6 +52,8 @@ const step1Schema = z.object({
   categoryId: z.string().min(1, "Por favor selecione uma categoria"),
   globalFileType: z.string().min(1, "Por favor selecione um tipo de arquivo"),
   isPremium: z.boolean().default(false),
+  globalTitle: z.string().min(3, "Título deve ter pelo menos 3 caracteres"),
+  globalDescription: z.string().optional(),
   selectedFormats: z.array(z.string()).min(1, "Selecione pelo menos um formato")
 });
 
@@ -98,6 +100,8 @@ export default function SimpleFormMulti() {
       categoryId: '',
       globalFileType: 'canva', // "canva" como tipo de arquivo padrão
       isPremium: true, // Arte premium sempre selecionada por padrão
+      globalTitle: '',
+      globalDescription: '',
       selectedFormats: []
     },
   });
@@ -134,8 +138,10 @@ export default function SimpleFormMulti() {
       initialDetails[formatSlug] = {
         format: formatSlug,
         fileType: data.globalFileType,
-        title: '',
-        description: '',
+        // Usar o título global para cada formato, se disponível
+        title: data.globalTitle || '',
+        // Usar a descrição global para cada formato, se disponível
+        description: data.globalDescription || '',
         imageUrl: '',
         previewUrl: '',
         editUrl: ''
@@ -286,6 +292,8 @@ export default function SimpleFormMulti() {
         categoryId: parseInt(step1Form.getValues().categoryId),
         globalFileType: step1Form.getValues().globalFileType,
         isPremium: step1Form.getValues().isPremium,
+        globalTitle: step1Form.getValues().globalTitle,
+        globalDescription: step1Form.getValues().globalDescription,
         formats: Object.values(formatDetails),
       };
 
@@ -303,6 +311,8 @@ export default function SimpleFormMulti() {
         categoryId: '',
         globalFileType: 'canva',
         isPremium: true,
+        globalTitle: '',
+        globalDescription: '',
         selectedFormats: []
       });
       
@@ -352,90 +362,143 @@ export default function SimpleFormMulti() {
                   Configuração Global
                 </h3>
                 
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-5">
-                    <div className="space-y-3">
-                      <Label htmlFor="category" className="text-sm font-medium flex items-center">
-                        <FolderOpen className="h-4 w-4 mr-1.5 text-blue-600" />
-                        Categoria <span className="text-red-500 ml-1">*</span>
-                      </Label>
-                      <Controller
-                        control={step1Form.control}
-                        name="categoryId"
-                        render={({ field }) => (
-                          <Select
-                            value={field.value}
-                            onValueChange={field.onChange}
-                          >
-                            <SelectTrigger className="bg-white border-blue-200 focus:ring-blue-500">
-                              <SelectValue placeholder="Selecione uma categoria" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {categories.map((category: any) => (
-                                <SelectItem key={category.id} value={category.id.toString()}>
-                                  {category.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        )}
-                      />
-                      {step1Form.formState.errors.categoryId && (
-                        <p className="text-sm text-red-500 mt-1">
-                          {step1Form.formState.errors.categoryId.message}
-                        </p>
-                      )}
-                    </div>
+                <div className="space-y-6">
+                  {/* Título e Descrição Global */}
+                  <div className="bg-white p-4 rounded-lg border border-blue-100">
+                    <h4 className="text-md font-semibold mb-3 flex items-center text-blue-700">
+                      <PenLine className="h-4 w-4 mr-1.5 text-blue-600" />
+                      Título e Descrição Global
+                    </h4>
                     
-                    <div className="space-y-3">
-                      <Label htmlFor="globalFileType" className="text-sm font-medium flex items-center">
-                        <FileType className="h-4 w-4 mr-1.5 text-blue-600" />
-                        Tipo de Arquivo <span className="text-red-500 ml-1">*</span>
-                      </Label>
-                      <Controller
-                        control={step1Form.control}
-                        name="globalFileType"
-                        render={({ field }) => (
-                          <Select
-                            value={field.value}
-                            onValueChange={field.onChange}
-                          >
-                            <SelectTrigger className="bg-white border-blue-200 focus:ring-blue-500">
-                              <SelectValue placeholder="Selecione o tipo" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {fileTypes.map((type: any) => (
-                                <SelectItem key={type.id} value={type.slug}>
-                                  {type.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        )}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-col justify-center">
-                    <div className="bg-white p-5 rounded-lg border border-blue-100 shadow-sm">
-                      <h4 className="text-sm font-medium text-gray-600 mb-3 flex items-center">
-                        <BadgePlus className="h-4 w-4 mr-1.5 text-blue-600" />
-                        Visibilidade da Arte
-                      </h4>
-                      <div className="flex items-center space-x-3">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="globalTitle" className="text-sm font-medium">
+                          Título <span className="text-red-500 ml-1">*</span>
+                        </Label>
                         <Controller
                           control={step1Form.control}
-                          name="isPremium"
+                          name="globalTitle"
                           render={({ field }) => (
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                              id="isPremium"
-                              className="data-[state=checked]:bg-blue-600"
+                            <Input
+                              id="globalTitle"
+                              placeholder="Título principal da arte"
+                              className="bg-blue-50/40 border-blue-100"
+                              {...field}
                             />
                           )}
                         />
-                        <Label htmlFor="isPremium" className="font-medium text-gray-700">Arte Premium</Label>
+                        {step1Form.formState.errors.globalTitle && (
+                          <p className="text-sm text-red-500">
+                            {step1Form.formState.errors.globalTitle.message}
+                          </p>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="globalDescription" className="text-sm font-medium flex items-center">
+                          Descrição <span className="text-gray-400 text-xs ml-1">(opcional)</span>
+                        </Label>
+                        <Controller
+                          control={step1Form.control}
+                          name="globalDescription"
+                          render={({ field }) => (
+                            <Textarea
+                              id="globalDescription"
+                              placeholder="Descrição geral da arte"
+                              className="bg-blue-50/40 border-blue-100 h-24"
+                              {...field}
+                            />
+                          )}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div className="space-y-3">
+                        <Label htmlFor="category" className="text-sm font-medium flex items-center">
+                          <FolderOpen className="h-4 w-4 mr-1.5 text-blue-600" />
+                          Categoria <span className="text-red-500 ml-1">*</span>
+                        </Label>
+                        <Controller
+                          control={step1Form.control}
+                          name="categoryId"
+                          render={({ field }) => (
+                            <Select
+                              value={field.value}
+                              onValueChange={field.onChange}
+                            >
+                              <SelectTrigger className="bg-white border-blue-200 focus:ring-blue-500">
+                                <SelectValue placeholder="Selecione uma categoria" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {categories.map((category: any) => (
+                                  <SelectItem key={category.id} value={category.id.toString()}>
+                                    {category.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                        {step1Form.formState.errors.categoryId && (
+                          <p className="text-sm text-red-500 mt-1">
+                            {step1Form.formState.errors.categoryId.message}
+                          </p>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <Label htmlFor="globalFileType" className="text-sm font-medium flex items-center">
+                          <FileType className="h-4 w-4 mr-1.5 text-blue-600" />
+                          Tipo de Arquivo <span className="text-red-500 ml-1">*</span>
+                        </Label>
+                        <Controller
+                          control={step1Form.control}
+                          name="globalFileType"
+                          render={({ field }) => (
+                            <Select
+                              value={field.value}
+                              onValueChange={field.onChange}
+                            >
+                              <SelectTrigger className="bg-white border-blue-200 focus:ring-blue-500">
+                                <SelectValue placeholder="Selecione o tipo" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {fileTypes.map((type: any) => (
+                                  <SelectItem key={type.id} value={type.slug}>
+                                    {type.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-col justify-center">
+                      <div className="bg-white p-5 rounded-lg border border-blue-100 shadow-sm">
+                        <h4 className="text-sm font-medium text-gray-600 mb-3 flex items-center">
+                          <BadgePlus className="h-4 w-4 mr-1.5 text-blue-600" />
+                          Visibilidade da Arte
+                        </h4>
+                        <div className="flex items-center space-x-3">
+                          <Controller
+                            control={step1Form.control}
+                            name="isPremium"
+                            render={({ field }) => (
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                                id="isPremium"
+                                className="data-[state=checked]:bg-blue-600"
+                              />
+                            )}
+                          />
+                          <Label htmlFor="isPremium" className="font-medium text-gray-700">Arte Premium</Label>
+                        </div>
                       </div>
                     </div>
                   </div>
