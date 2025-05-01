@@ -1,7 +1,11 @@
 import { Router, Request, Response } from "express";
 import upload from "../middlewares/upload";
-import { uploadToStorage } from "../services/storage-service";
 import { supabaseStorageService } from "../services/supabase-storage";
+import { r2StorageService } from "../services/r2-storage";
+import * as fs from "fs";
+import * as path from "path";
+import sharp from "sharp";
+import { randomUUID } from "crypto";
 import { Express } from "express";
 
 const router = Router();
@@ -118,16 +122,42 @@ router.post(
       
       if (r2Configured) {
         try {
-          console.log("Usando serviço de armazenamento centralizado para upload...");
+          console.log("Usando Cloudflare R2 para upload...");
           
-          // Usamos o serviço centralizado que tentará primeiro o Supabase, depois R2 e finalmente local
-          const result = await uploadToStorage(req.file);
-          console.log(`Upload concluído com sucesso via ${result.storageType}:`, result);
+          // Otimização da imagem
+          let fileBuffer = req.file.buffer;
+          
+          if (!skipOptimization) {
+            // Otimiza a imagem antes do upload para R2
+            fileBuffer = await sharp(req.file.buffer)
+              .resize(options.width || 1200, options.height, {
+                fit: "inside",
+                withoutEnlargement: true,
+              })
+              .webp({ quality: options.quality || 80 })
+              .toBuffer();
+            
+            console.log("Imagem otimizada para R2 upload");
+          }
+          
+          // Faz upload para o R2
+          const result = await r2StorageService.uploadFile(
+            process.env.R2_BUCKET_NAME || 'designautoimages',
+            req.file.originalname,
+            fileBuffer,
+            'image/webp'
+          );
+          
+          if (!result.success) {
+            throw new Error(result.error || "Falha no upload para R2");
+          }
+          
+          console.log("Upload R2 concluído com sucesso:", result);
           
           return res.status(200).json({
-            imageUrl: result.imageUrl,
-            thumbnailUrl: result.thumbnailUrl || result.imageUrl,
-            storageType: result.storageType || "central"
+            imageUrl: result.url,
+            thumbnailUrl: result.url, // Mesmo URL para thumbnail
+            storageType: "r2"
           });
         } catch (error: any) {
           console.error("Erro detalhado:", error);
@@ -144,15 +174,61 @@ router.post(
         }
       }
 
-      // Usar o serviço de armazenamento centralizado como fallback final
-      console.log("Usando serviço de armazenamento centralizado...");
-      const result = await uploadToStorage(req.file);
-      console.log(`Upload concluído com sucesso via ${result.storageType}:`, result);
-      return res.status(200).json({
-        imageUrl: result.imageUrl,
-        thumbnailUrl: result.thumbnailUrl || result.imageUrl,
-        storageType: result.storageType || "central"
-      });
+      // Fallback final: armazenamento local
+      console.log("Usando armazenamento local como fallback final...");
+      
+      try {
+        // Criar estrutura de diretórios
+        const publicDir = path.join(process.cwd(), 'public');
+        const uploadsDir = path.join(publicDir, 'uploads');
+        const designautoImagesDir = path.join(uploadsDir, 'designautoimages');
+
+        if (!fs.existsSync(publicDir)) {
+          fs.mkdirSync(publicDir);
+        }
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir);
+        }
+        if (!fs.existsSync(designautoImagesDir)) {
+          fs.mkdirSync(designautoImagesDir);
+        }
+
+        // Gerar nome único
+        const uuid = randomUUID();
+        const fileExtension = '.webp'; // Sempre usamos WebP para otimização
+        const filename = `${uuid}${fileExtension}`;
+        const filepath = path.join(designautoImagesDir, filename);
+
+        // Otimizar imagem se necessário
+        let outputBuffer = req.file.buffer;
+        
+        if (!skipOptimization) {
+          outputBuffer = await sharp(req.file.buffer)
+            .resize(options.width || 1200, options.height, {
+              fit: "inside",
+              withoutEnlargement: true,
+            })
+            .webp({ quality: options.quality || 80 })
+            .toBuffer();
+        }
+
+        // Salvar arquivo
+        fs.writeFileSync(filepath, outputBuffer);
+
+        // URL relativa para o frontend
+        const relativeUrl = `/uploads/designautoimages/${filename}`;
+        
+        console.log("Upload local concluído com sucesso:", { imageUrl: relativeUrl });
+        
+        return res.status(200).json({
+          imageUrl: relativeUrl,
+          thumbnailUrl: relativeUrl,
+          storageType: "local"
+        });
+      } catch (localError: any) {
+        console.error("Erro no upload local:", localError);
+        throw new Error(`Falha no upload local: ${localError.message}`);
+      }
     } catch (error: any) {
       console.error("Erro no upload de imagem:", error);
       res.status(500).json({
