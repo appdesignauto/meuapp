@@ -136,6 +136,18 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
 
   // Avançar para a etapa 2
   const goToStep2 = (data: Step1Values) => {
+    console.log("goToStep2 chamado com dados:", data);
+    
+    // Verificar se há formatos selecionados
+    if (!data.selectedFormats || data.selectedFormats.length === 0) {
+      toast({
+        title: "Seleção necessária",
+        description: "Por favor, selecione pelo menos um formato para continuar.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     // Criar objetos para cada formato selecionado
     const initialDetails: Record<string, FormatValues> = {};
     
@@ -156,6 +168,7 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
     setFormatDetails(initialDetails);
     setCurrentTab(data.selectedFormats[0]); // Definir a primeira aba como atual
     setStep(2);
+    console.log("Avançado para Etapa 2");
   };
 
   // Avançar para a etapa 3 (Revisão)
@@ -610,7 +623,11 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                   </Button>
                   
                   <Button 
-                    type="submit"
+                    type="button"
+                    onClick={() => {
+                      console.log("Botão Continuar clicado");
+                      step1Form.handleSubmit(goToStep2)();
+                    }}
                     className="px-6 py-5 rounded-xl text-base flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
                   >
                     Continuar
@@ -953,7 +970,11 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                   </Button>
                   
                   <Button 
-                    onClick={goToStep3}
+                    type="button"
+                    onClick={() => {
+                      console.log("Botão Continuar para Revisão clicado");
+                      goToStep3();
+                    }}
                     className="px-6 py-5 rounded-xl text-base flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
                   >
                     Continuar para Revisão
@@ -1211,7 +1232,10 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                   
                   <Button 
                     type="button"
-                    onClick={handleSubmit}
+                    onClick={() => {
+                      console.log("Botão Publicar clicado");
+                      handleSubmit();
+                    }}
                     className="w-full py-6 rounded-xl text-base font-medium flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transition-all"
                   >
                     {uploadAllComplete ? (
