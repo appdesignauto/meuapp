@@ -685,7 +685,216 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
               </form>
             )}
 
+            {step === 2 && (
+              <div className="space-y-6">
+                {/* Navegação da etapa 2 - Upload */}
+                <div className="flex justify-between items-center mb-6">
+                  <button 
+                    onClick={goToPreviousStep}
+                    className="text-blue-600 hover:text-blue-800 flex items-center gap-1 px-3 py-1.5 border border-blue-200 rounded-lg transition-all hover:bg-blue-50"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Voltar
+                  </button>
+                  
+                  <div className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium">
+                    Faça o upload das imagens para cada formato
+                  </div>
+                </div>
 
+                {/* Cabeçalho da etapa 2 */}
+                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                  <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <Upload className="h-5 w-5 mr-2 text-blue-600" />
+                    Upload de Imagens
+                  </h3>
+                  <p className="text-gray-600 text-sm">
+                    Faça o upload de imagens para cada formato selecionado. Todos os formatos precisam ter uma imagem de preview.
+                  </p>
+                  
+                  {/* Resumo dos formatos selecionados */}
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {step1Form.getValues().selectedFormats.map(formatSlug => {
+                      const formatName = getFormatName(formatSlug);
+                      const isComplete = formatsComplete[formatSlug];
+                      
+                      return (
+                        <div 
+                          key={formatSlug} 
+                          className={`px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 
+                            ${isComplete 
+                              ? 'bg-green-50 border border-green-200 text-green-700' 
+                              : 'bg-amber-50 border border-amber-200 text-amber-700'
+                            }`}
+                        >
+                          {formatName}
+                          {isComplete 
+                            ? <Check className="h-3.5 w-3.5" /> 
+                            : <AlertCircle className="h-3.5 w-3.5" />
+                          }
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Cards de upload para cada formato */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {step1Form.getValues().selectedFormats.map(formatSlug => {
+                    const formatName = getFormatName(formatSlug);
+                    const details = formatDetails[formatSlug] || {};
+                    const isComplete = formatsComplete[formatSlug];
+                    
+                    return (
+                      <div key={formatSlug} className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                        <div className={`p-4 text-white font-medium ${isComplete ? 'bg-gradient-to-r from-green-600 to-green-700' : 'bg-gradient-to-r from-blue-600 to-blue-700'}`}>
+                          <div className="flex justify-between items-center">
+                            <h4 className="flex items-center">
+                              <FileType className="h-4 w-4 mr-1.5" />
+                              {formatName}
+                            </h4>
+                            {isComplete && <Check className="h-4 w-4" />}
+                          </div>
+                        </div>
+                        
+                        <div className="p-4">
+                          <div className="space-y-4">
+                            {/* Título */}
+                            <div className="space-y-2">
+                              <Label htmlFor={`title-${formatSlug}`} className="text-sm font-medium">
+                                Título <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id={`title-${formatSlug}`}
+                                placeholder="Título específico para este formato"
+                                value={details.title || step1Form.getValues().globalTitle}
+                                onChange={(e) => saveFormatDetails(formatSlug, { title: e.target.value })}
+                                className="border-gray-300 focus:ring-blue-500"
+                              />
+                            </div>
+                            
+                            {/* URL de edição */}
+                            <div className="space-y-2">
+                              <Label htmlFor={`editUrl-${formatSlug}`} className="text-sm font-medium flex items-center">
+                                <Link2 className="h-4 w-4 mr-1.5 text-blue-600" />
+                                URL de Edição <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id={`editUrl-${formatSlug}`}
+                                placeholder="URL do Canva, Google Drive, etc."
+                                value={details.editUrl || ''}
+                                onChange={(e) => saveFormatDetails(formatSlug, { editUrl: e.target.value })}
+                                className="border-gray-300 focus:ring-blue-500"
+                              />
+                            </div>
+                            
+                            {/* Upload de imagem */}
+                            <div className="space-y-2">
+                              <Label htmlFor={`image-${formatSlug}`} className="text-sm font-medium flex items-center">
+                                <UploadCloud className="h-4 w-4 mr-1.5 text-blue-600" />
+                                Imagem de Preview <span className="text-red-500">*</span>
+                              </Label>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="col-span-1 md:col-span-2">
+                                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 transition-all hover:border-blue-400">
+                                    <div className="flex flex-col items-center justify-center py-3">
+                                      <Upload className="h-8 w-8 text-gray-400 mb-2" />
+                                      <p className="text-sm text-gray-500">
+                                        Clique para selecionar ou arraste uma imagem
+                                      </p>
+                                      <input
+                                        id={`image-${formatSlug}`}
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => handleImageUpload(e, formatSlug)}
+                                        className="hidden"
+                                      />
+                                      <label
+                                        htmlFor={`image-${formatSlug}`}
+                                        className="mt-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-md cursor-pointer hover:bg-blue-100 transition-colors"
+                                      >
+                                        {uploading[`image-${formatSlug}`] ? (
+                                          <div className="flex items-center">
+                                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                            Enviando...
+                                          </div>
+                                        ) : (
+                                          "Selecionar imagem"
+                                        )}
+                                      </label>
+                                      {uploadError[`image-${formatSlug}`] && (
+                                        <div className="mt-2 flex items-center text-red-500 text-sm">
+                                          <AlertCircle className="h-4 w-4 mr-1" />
+                                          {uploadError[`image-${formatSlug}`]}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <div className="col-span-1">
+                                  {details.imageUrl ? (
+                                    <div className="border rounded-lg overflow-hidden h-full flex items-center justify-center bg-gray-50">
+                                      <img
+                                        src={details.imageUrl}
+                                        alt={`Preview de ${formatName}`}
+                                        className="object-contain max-h-40 w-full"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div className="border rounded-lg overflow-hidden h-full flex items-center justify-center bg-gray-50 text-gray-400">
+                                      <p className="text-sm text-center px-4">
+                                        Preview da imagem <br />aparecerá aqui
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {/* Botões de navegação */}
+                <div className="flex justify-between mt-8 pt-6 border-t border-gray-200">
+                  <Button 
+                    type="button"
+                    onClick={goToPreviousStep}
+                    className="px-4 py-2 text-blue-600 bg-white border border-blue-200 hover:bg-blue-50 rounded-lg flex items-center gap-2"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Voltar
+                  </Button>
+                  
+                  <Button 
+                    type="button"
+                    onClick={() => {
+                      // Verificar se todos os formatos estão completos
+                      const allComplete = Object.values(formatsComplete).every(complete => complete);
+                      
+                      if (allComplete) {
+                        setStep(3);
+                        setCurrentTab(step1Form.getValues().selectedFormats[0]); // Definir a primeira aba como atual
+                      } else {
+                        toast({
+                          title: "Preencha todos os campos",
+                          description: "Todos os formatos precisam ter título, URL de edição e imagem",
+                          variant: "destructive",
+                        });
+                      }
+                    }}
+                    className="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+                  >
+                    Continuar para Revisão
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
             
             {step === 3 && currentTab && (
               <div className="space-y-6">
