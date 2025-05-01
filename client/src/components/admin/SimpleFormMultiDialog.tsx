@@ -77,7 +77,7 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
   const { toast } = useToast();
   const { user } = useAuth();
   const [step, setStep] = useState(1); // 1: Configurações globais, 2: Formatos, 3: Upload
-  const [currentTab, setCurrentTab] = useState<string | null>(null);
+  const [currentTab, setCurrentTab] = useState<string>("");
   const [formatDetails, setFormatDetails] = useState<Record<string, FormatValues>>({});
   const [images, setImages] = useState<Record<string, string>>({});
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
@@ -134,18 +134,12 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
     return format ? format.name : slug;
   };
 
-  // Avançar para a etapa 2 (Seleção de formatos)
+  // Avançar para a etapa 2 (Upload e detalhes de cada formato)
   const goToStep2 = (data: Step1Values) => {
     console.log("Avançando para etapa 2: Seleção de formatos", data);
-    setStep(2);
-  };
-
-  // Avançar para a etapa 3 (Detalhes e Upload)
-  const goToStep3 = () => {
-    console.log("Avançando para etapa 3: Detalhes e Upload");
     
     // Verificar se pelo menos um formato foi selecionado
-    const selectedFormats = step1Form.getValues().selectedFormats;
+    const selectedFormats = data.selectedFormats;
     if (!selectedFormats || selectedFormats.length === 0) {
       toast({
         title: "Nenhum formato selecionado",
@@ -157,7 +151,6 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
 
     // Criar objetos iniciais para cada formato selecionado
     const initialDetails: Record<string, FormatValues> = {};
-    const data = step1Form.getValues();
     
     selectedFormats.forEach(formatSlug => {
       initialDetails[formatSlug] = {
@@ -175,6 +168,12 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
     
     setFormatDetails(initialDetails);
     setCurrentTab(selectedFormats[0]); // Definir a primeira aba como atual
+    setStep(2);
+  };
+  
+  // Avançar para a etapa 3 (Revisão)
+  const goToStep3 = () => {
+    console.log("Avançando para etapa 3: Revisão");
     setStep(3);
   };
 
@@ -189,7 +188,7 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
 
   // Verificar se o formato atual está completo
   useEffect(() => {
-    if (step === 2 && currentTab) {
+    if (step === 2) {
       // Verificar quais formatos estão completos
       const updatedFormatsComplete: Record<string, boolean> = {};
       
@@ -200,7 +199,7 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
       
       setFormatsComplete(updatedFormatsComplete);
     }
-  }, [formatDetails, step, currentTab]);
+  }, [formatDetails, step]);
 
   // Manipulador para seleção de formatos
   const toggleFormat = (formatSlug: string) => {
