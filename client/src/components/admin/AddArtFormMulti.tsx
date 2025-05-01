@@ -78,7 +78,7 @@ export default function AddArtFormMulti() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       categoryId: '',
-      isPremium: false,
+      isPremium: true, // Arte premium sempre selecionada por padrão
       formats: []
     },
   });
@@ -98,13 +98,16 @@ export default function AddArtFormMulti() {
     selectedFormats.forEach(formatSlug => {
       const exists = formatsToKeep.some(f => f.format === formatSlug);
       if (!exists) {
+        // Obter o tipo de arquivo comum para todos os formatos
+        const fileType = form.getValues().formats[0]?.fileType || '';
+        
         formatsToKeep.push({
           format: formatSlug,
-          fileType: '',
+          fileType: fileType, // Usar o mesmo tipo de arquivo selecionado anteriormente
           title: '',
           description: '',
           imageUrl: '',
-          previewUrl: '',
+          previewUrl: '', // Será ignorado, mas mantemos para compatibilidade
           editUrl: '',
         });
       }
@@ -232,7 +235,7 @@ export default function AddArtFormMulti() {
       });
       form.reset({
         categoryId: '',
-        isPremium: false,
+        isPremium: true, // Mantém como true após o reset
         formats: []
       });
       setImages({});
@@ -423,66 +426,12 @@ export default function AddArtFormMulti() {
             )}
           </div>
 
-          {/* Upload de preview (opcional) */}
-          <div className="space-y-2">
-            <Label>Imagem de Pré-visualização (opcional)</Label>
-            <div className="flex items-center space-x-2">
-              <div 
-                className={`relative border-2 border-dashed rounded-lg p-4 flex flex-col items-center justify-center w-full h-36 ${
-                  uploading[`preview-${formatSlug}`] 
-                    ? 'border-blue-300 bg-blue-50' 
-                    : uploadError[`preview-${formatSlug}`] 
-                      ? 'border-red-300 bg-red-50' 
-                      : 'border-gray-300 hover:border-blue-400 bg-gray-50'
-                }`}
-              >
-                {previewImages[formatSlug] ? (
-                  <div className="relative w-full h-full">
-                    <img 
-                      src={previewImages[formatSlug]} 
-                      alt="Pré-visualização" 
-                      className="h-full mx-auto object-contain cursor-pointer"
-                    />
-                    {/* Ícone de sucesso */}
-                    <div className="absolute bottom-0 right-0 bg-green-500 text-white p-1 rounded-full">
-                      <Check className="h-4 w-4" />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center">
-                    {uploading[`preview-${formatSlug}`] ? (
-                      <>
-                        <Loader2 className="h-8 w-8 mx-auto animate-spin text-blue-500" />
-                        <p className="text-sm text-blue-500 mt-2">Enviando...</p>
-                      </>
-                    ) : uploadError[`preview-${formatSlug}`] ? (
-                      <>
-                        <AlertCircle className="h-8 w-8 mx-auto text-red-500" />
-                        <p className="text-sm text-red-500 mt-2">Erro no upload</p>
-                      </>
-                    ) : (
-                      <>
-                        <Image className="h-8 w-8 mx-auto text-gray-400" />
-                        <p className="text-sm text-gray-500 mt-2">Pré-visualização (opcional)</p>
-                      </>
-                    )}
-                  </div>
-                )}
-                <input
-                  type="file"
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  onChange={(e) => handleImageChange(e, formatSlug, true)}
-                  disabled={uploading[`preview-${formatSlug}`]}
-                  accept="image/*"
-                />
-                <input 
-                  type="hidden" 
-                  {...form.register(`formats.${formatIndex}.previewUrl`)}
-                  value={previewImages[formatSlug] || ''}
-                />
-              </div>
-            </div>
-          </div>
+          {/* Campo oculto para previewUrl (mantido apenas por compatibilidade) */}
+          <input 
+            type="hidden" 
+            {...form.register(`formats.${formatIndex}.previewUrl`)}
+            value=""
+          />
         </div>
       </div>
     );
