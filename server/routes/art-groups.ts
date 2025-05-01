@@ -5,6 +5,7 @@ import { db } from '../db';
 import { sql } from 'drizzle-orm';
 import path from 'path';
 import sharp from 'sharp';
+import { uploadToStorage } from '../services/storage-service';
 import { supabaseStorageService } from '../services/supabase-storage';
 import { generateRandomFilename } from '../utils/file-utils';
 
