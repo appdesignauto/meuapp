@@ -30,9 +30,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ArtFormatSchema, ArtGroupSchema } from '@shared/interfaces/art-groups';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 // Esquema de formulário com validação
 const formSchema = z.object({
@@ -64,7 +62,8 @@ export default function AddArtFormMulti() {
 
   // Estado para controlar os formatos selecionados
   const [selectedFormats, setSelectedFormats] = useState<string[]>([]);
-  const [currentTab, setCurrentTab] = useState<string>("selection");
+  const [activeTab, setActiveTab] = useState<string>("selection");
+  const [showFormats, setShowFormats] = useState(false);
 
   // Consultas para obter dados
   const { data: categories, isLoading: isLoadingCategories } = useQuery({
@@ -216,7 +215,7 @@ export default function AddArtFormMulti() {
     }
   };
 
-  // Função para continuar para as abas de formatos
+  // Função para continuar para os formatos
   const proceedToFormatTabs = () => {
     if (selectedFormats.length === 0) {
       toast({
@@ -238,7 +237,16 @@ export default function AddArtFormMulti() {
       return;
     }
 
-    // Sincronizar imediatamente os formatos no fieldArray
+    // Sincronizar os formatos selecionados
+    syncFormatsWithFieldArray();
+    
+    // Mostrar os formatos
+    setShowFormats(true);
+    setActiveTab(selectedFormats[0]);
+  };
+
+  // Função para sincronizar os formatos com o fieldArray
+  const syncFormatsWithFieldArray = () => {
     const currentFormats = form.getValues().formats;
     
     // Adicionar novos formatos que foram selecionados
@@ -260,11 +268,6 @@ export default function AddArtFormMulti() {
     // Remover formatos que foram desmarcados
     const newFormats = currentFormats.filter(f => selectedFormats.includes(f.format));
     replace(newFormats);
-
-    // Definir a primeira aba como ativa
-    if (selectedFormats.length > 0) {
-      setCurrentTab(selectedFormats[0]);
-    }
   };
 
   // Mutação para salvar a arte
@@ -296,7 +299,8 @@ export default function AddArtFormMulti() {
       setImages({});
       setPreviewImages({});
       setSelectedFormats([]);
-      setCurrentTab("selection");
+      setShowFormats(false);
+      setActiveTab("selection");
       queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
     },
     onError: (error: any) => {
@@ -329,15 +333,15 @@ export default function AddArtFormMulti() {
     return form.getValues().formats.findIndex(f => f.format === formatSlug);
   };
 
-  // Função para renderizar o conteúdo de uma aba específica
-  const renderFormatTabContent = (formatSlug: string) => {
+  // Função para renderizar o conteúdo de um formato específico
+  const renderFormatContent = (formatSlug: string) => {
     const index = getFormatIndex(formatSlug);
     if (index === -1) return null;
 
     const formatName = formats?.find((f: any) => f.slug === formatSlug)?.name || formatSlug;
 
     return (
-      <Card key={formatSlug} className="border-solid border-gray-200">
+      <Card key={formatSlug} className="border-solid border-gray-200 mt-4">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg">Detalhes do formato: {formatName}</CardTitle>
         </CardHeader>
@@ -509,10 +513,10 @@ export default function AddArtFormMulti() {
     );
   };
 
-  // Função para renderizar a tabela de visão geral
+  // Função para renderizar a visão geral
   const renderOverview = () => {
     return (
-      <Card className="border-solid border-gray-200">
+      <Card className="border-solid border-gray-200 mt-4">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg">Visão Geral</CardTitle>
           <CardDescription>
@@ -621,96 +625,95 @@ export default function AddArtFormMulti() {
 
             <Separator className="my-6" />
 
-            {/* Menu de tabs (sempre visível após seleção) */}
-            <Tabs value={currentTab} onValueChange={setCurrentTab}>
-              <TabsContent value="selection">
-                {/* Passo 1: Seleção de formatos */}
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-lg font-medium mb-4">Formatos<span className="text-red-500">*</span></h3>
-                    <p className="text-sm text-gray-500 mb-4">Selecione pelo menos um formato para sua coleção</p>
-                    
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-                      {formats?.map((format: any) => (
-                        <button
-                          key={format.id}
-                          type="button"
-                          onClick={() => toggleFormat(format.slug)}
-                          className={`
-                            h-16 py-2 px-3 rounded flex items-center justify-center
-                            transition-colors duration-200 text-center
-                            ${selectedFormats.includes(format.slug) 
-                              ? 'bg-blue-600 text-white font-medium'
-                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            }
-                          `}
-                        >
-                          {format.name.toUpperCase()}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="mt-6 flex justify-end">
+            {/* Seleção de formatos */}
+            <div>
+              <h3 className="text-lg font-medium mb-4">Formatos<span className="text-red-500">*</span></h3>
+              <p className="text-sm text-gray-500 mb-4">Selecione pelo menos um formato para sua coleção</p>
+              
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                {formats?.map((format: any) => (
+                  <button
+                    key={format.id}
+                    type="button"
+                    onClick={() => toggleFormat(format.slug)}
+                    className={`
+                      h-16 py-2 px-3 rounded flex items-center justify-center
+                      transition-colors duration-200 text-center
+                      ${selectedFormats.includes(format.slug) 
+                        ? 'bg-blue-600 text-white font-medium'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }
+                    `}
+                  >
+                    {format.name.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {!showFormats ? (
+              <div className="mt-6 flex justify-end">
+                <Button 
+                  type="button" 
+                  onClick={proceedToFormatTabs}
+                  className="flex items-center gap-2"
+                >
+                  Continuar
+                </Button>
+              </div>
+            ) : (
+              <div className="mt-6">
+                {/* Menu de navegação das abas */}
+                <div className="bg-gray-100 p-2 rounded mb-4 flex overflow-x-auto space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowFormats(false)}
+                    className="px-3 py-2 text-sm rounded hover:bg-gray-200"
+                  >
+                    Voltar
+                  </button>
+                  {selectedFormats.map(formatSlug => {
+                    const formatName = formats?.find((f: any) => f.slug === formatSlug)?.name || formatSlug;
+                    return (
+                      <button
+                        key={formatSlug}
+                        type="button"
+                        onClick={() => setActiveTab(formatSlug)}
+                        className={`px-3 py-2 text-sm rounded ${activeTab === formatSlug ? 'bg-blue-500 text-white' : 'hover:bg-gray-200'}`}
+                      >
+                        {formatName}
+                      </button>
+                    );
+                  })}
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("overview")}
+                    className={`px-3 py-2 text-sm rounded ${activeTab === "overview" ? 'bg-blue-500 text-white' : 'hover:bg-gray-200'}`}
+                  >
+                    Visão Geral
+                  </button>
+                </div>
+
+                {/* Conteúdo da aba ativa */}
+                {activeTab === "overview" ? (
+                  renderOverview()
+                ) : (
+                  renderFormatContent(activeTab)
+                )}
+
+                {/* Botão de enviar apenas na visão geral */}
+                {activeTab === "overview" && (
+                  <div className="flex justify-end mt-6">
                     <Button 
-                      type="button" 
-                      onClick={proceedToFormatTabs}
-                      className="flex items-center gap-2"
+                      type="submit"
+                      disabled={submitMutation.isPending}
+                      className="px-8"
                     >
-                      Continuar
+                      {submitMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Salvar Arte
                     </Button>
                   </div>
-                </div>
-              </TabsContent>
-              {/* TabsList só aparece quando há formatos selecionados */}
-              {selectedFormats.length > 0 && (
-                <div className="mb-6">
-                  <TabsList className="w-full overflow-x-auto whitespace-nowrap flex">
-                    <TabsTrigger value="selection" className="flex-shrink-0">
-                      Voltar
-                    </TabsTrigger>
-                    {selectedFormats.map(formatSlug => {
-                      const formatName = formats?.find((f: any) => f.slug === formatSlug)?.name || formatSlug;
-                      return (
-                        <TabsTrigger 
-                          key={formatSlug} 
-                          value={formatSlug}
-                          className="flex-shrink-0"
-                        >
-                          {formatName}
-                        </TabsTrigger>
-                      );
-                    })}
-                    <TabsTrigger value="overview" className="flex-shrink-0">
-                      Visão Geral
-                    </TabsTrigger>
-                  </TabsList>
-                </div>
-              )}
-              
-              {/* Conteúdo da aba atual */}
-              <TabsContent value="overview">
-                {renderOverview()}
-              </TabsContent>
-              
-              {/* TabsContent para cada formato */}
-              {selectedFormats.map(formatSlug => (
-                <TabsContent key={formatSlug} value={formatSlug}>
-                  {renderFormatTabContent(formatSlug)}
-                </TabsContent>
-              ))}
-            </Tabs>
-
-            {/* Botão de enviar apenas na aba de visão geral */}
-            {currentTab === "overview" && (
-              <div className="flex justify-end">
-                <Button 
-                  type="submit"
-                  disabled={submitMutation.isPending}
-                  className="px-8"
-                >
-                  {submitMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Salvar Arte
-                </Button>
+                )}
               </div>
             )}
           </form>
