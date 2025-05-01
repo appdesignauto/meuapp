@@ -376,43 +376,39 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
     }}>
       <DialogContent className="max-w-5xl pt-0 px-0 pb-0">
         <div className="overflow-y-auto max-h-[85vh]">
-          {/* Header com título e botão de fechar */}
+          {/* Header com título, diagrama de etapas e botão de fechar */}
           <div className="flex justify-between items-center p-6 border-b">
-            <div className="flex items-center gap-2">
-              <FileImage className="h-6 w-6 text-blue-600" />
-              <DialogTitle className="text-xl font-bold">Adicionar Arte Multi-Formato</DialogTitle>
-            </div>
-            <button onClick={onClose} className="text-gray-500 hover:text-gray-700 transition-colors">
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-          
-          {/* Indicador de progresso (etapas) */}
-          <div className="flex flex-col items-center border-b pb-4">
-            <div className="pt-5 pb-2">
-              <div className="flex items-center">
-                <div className={`flex items-center justify-center w-10 h-10 rounded-full text-white font-medium ${step === 1 ? 'bg-blue-600' : 'bg-green-600'}`}>
-                  {step > 1 ? <Check className="h-6 w-6" /> : 1}
-                </div>
-                <div className={`w-20 h-1.5 ${step > 1 ? 'bg-blue-600' : 'bg-gray-200'}`}></div>
-                <div className={`flex items-center justify-center w-10 h-10 rounded-full font-medium ${
-                  step === 2 ? 'bg-blue-600 text-white' : (step > 2 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700')
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2">
+                <FileImage className="h-6 w-6 text-blue-600" />
+                <DialogTitle className="text-xl font-bold">Adicionar Arte Multi-Formato</DialogTitle>
+              </div>
+              
+              {/* Diagrama minimalista horizontal de etapas */}
+              <div className="flex items-center gap-1">
+                <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-medium ${
+                  step === 1 ? 'bg-blue-600 text-white' : (step > 1 ? 'bg-green-100 text-green-600 border border-green-200' : 'bg-gray-100 text-gray-500 border border-gray-200')
                 }`}>
-                  {step > 2 ? <Check className="h-6 w-6" /> : 2}
+                  {step > 1 ? <Check className="h-4 w-4" /> : "1"}
                 </div>
-                <div className={`w-20 h-1.5 ${step > 2 ? 'bg-blue-600' : 'bg-gray-200'}`}></div>
-                <div className={`flex items-center justify-center w-10 h-10 rounded-full font-medium ${
-                  step === 3 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                <div className={`w-6 h-0.5 ${step > 1 ? 'bg-green-500' : 'bg-gray-200'}`}></div>
+                <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-medium ${
+                  step === 2 ? 'bg-blue-600 text-white' : (step > 2 ? 'bg-green-100 text-green-600 border border-green-200' : 'bg-gray-100 text-gray-500 border border-gray-200')
+                }`}>
+                  {step > 2 ? <Check className="h-4 w-4" /> : "2"}
+                </div>
+                <div className={`w-6 h-0.5 ${step > 2 ? 'bg-green-500' : 'bg-gray-200'}`}></div>
+                <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-medium ${
+                  step === 3 ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-500 border border-gray-200'
                 }`}>
                   3
                 </div>
               </div>
             </div>
-            <div className="flex justify-between w-full px-10 text-sm font-medium">
-              <div className={`${step === 1 ? 'text-blue-600' : (step > 1 ? 'text-green-600' : 'text-gray-500')}`}>Informações</div>
-              <div className={`${step === 2 ? 'text-blue-600' : (step > 2 ? 'text-green-600' : 'text-gray-500')}`}>Upload</div>
-              <div className={`${step === 3 ? 'text-blue-600' : 'text-gray-500'}`}>Revisão</div>
-            </div>
+            
+            <button onClick={onClose} className="text-gray-500 hover:text-gray-700 transition-colors">
+              <X className="h-5 w-5" />
+            </button>
           </div>
           
           <div className="p-6">
