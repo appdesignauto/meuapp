@@ -640,75 +640,240 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                   </button>
                   
                   <div className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium">
-                    Selecione os formatos para esta arte
+                    Preencha os detalhes de cada formato
                   </div>
                 </div>
-                
-                {/* Container para a seleção de formatos */}
-                <div className="mb-8">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <LayoutGrid className="h-5 w-5 mr-2 text-blue-600" />
-                    Formatos selecionados
-                  </h3>
-                  
-                  <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 mb-6">
-                    <div className="text-sm text-gray-600 mb-3">
-                      Você selecionou estes formatos para criar:
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-2">
-                      {step1Form.getValues().selectedFormats?.map(formatSlug => (
-                        <div
-                          key={formatSlug}
-                          className="px-3 py-1.5 rounded-full bg-blue-100 text-blue-700 text-sm font-medium flex items-center gap-1"
-                        >
-                          <FileType className="h-3.5 w-3.5" />
-                          {getFormatName(formatSlug)}
+
+                {/* Tabs para navegar entre formatos */}
+                <Tabs 
+                  value={currentTab} 
+                  onValueChange={setCurrentTab}
+                  className="w-full"
+                >
+                  <div className="bg-gray-50 p-4 rounded-xl mb-6">
+                    <h3 className="text-sm font-medium text-gray-500 mb-3">Navegue entre os formatos:</h3>
+                    <TabsList className="w-full flex gap-2 bg-transparent p-0">
+                      {Object.keys(formatDetails).map(formatSlug => {
+                        const formatName = getFormatName(formatSlug);
+                        const isComplete = formatsComplete[formatSlug];
+                        const isActive = currentTab === formatSlug;
+                        
+                        return (
+                          <TabsTrigger 
+                            key={formatSlug} 
+                            value={formatSlug}
+                            className={`
+                              flex items-center gap-1.5 py-2 px-4 rounded-lg 
+                              ${isActive ? 'bg-white shadow-sm border border-gray-200' : 'bg-transparent'} 
+                              ${isComplete 
+                                ? (isActive ? 'text-blue-700 font-medium' : 'text-green-600') 
+                                : (isActive ? 'text-gray-800' : 'text-gray-500')
+                              }
+                            `}
+                          >
+                            {formatName}
+                            {isComplete && <Check className="h-3.5 w-3.5 text-green-600" />}
+                          </TabsTrigger>
+                        );
+                      })}
+                    </TabsList>
+                  </div>
+
+                  {/* Conteúdo de cada tab/formato */}
+                  {Object.entries(formatDetails).map(([formatSlug, details]) => (
+                    <TabsContent key={formatSlug} value={formatSlug} className="mt-6">
+                      <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4">
+                          <h2 className="text-lg font-semibold flex items-center">
+                            <BookImage className="h-5 w-5 mr-2 text-white" />
+                            {getFormatName(formatSlug)}
+                          </h2>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  {/* Resumo das configurações */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                    <div className="p-4 border border-gray-200 rounded-lg bg-white">
-                      <div className="text-sm font-medium text-gray-700 mb-2">Título Global</div>
-                      <div className="text-gray-800">{step1Form.getValues().globalTitle}</div>
-                    </div>
-                    
-                    <div className="p-4 border border-gray-200 rounded-lg bg-white">
-                      <div className="text-sm font-medium text-gray-700 mb-2">Tipo de Arquivo</div>
-                      <div className="text-gray-800 capitalize">{step1Form.getValues().globalFileType}</div>
-                    </div>
-                    
-                    {step1Form.getValues().globalDescription && (
-                      <div className="p-4 border border-gray-200 rounded-lg bg-white col-span-1 md:col-span-2">
-                        <div className="text-sm font-medium text-gray-700 mb-2">Descrição Global</div>
-                        <div className="text-gray-800 text-sm">{step1Form.getValues().globalDescription}</div>
+
+                        <div className="p-6">
+                          {/* Formulário para detalhes do formato */}
+                          <div className="space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              {/* Título */}
+                              <div className="space-y-2">
+                                <Label htmlFor={`title-${formatSlug}`} className="text-sm font-medium">
+                                  Título <span className="text-red-500">*</span>
+                                </Label>
+                                <Input
+                                  id={`title-${formatSlug}`}
+                                  placeholder="Título específico para este formato"
+                                  value={details.title}
+                                  onChange={(e) => saveFormatDetails(formatSlug, { title: e.target.value })}
+                                  className="border-gray-300 focus:ring-blue-500"
+                                />
+                              </div>
+
+                              {/* URL de edição */}
+                              <div className="space-y-2">
+                                <Label htmlFor={`editUrl-${formatSlug}`} className="text-sm font-medium flex items-center">
+                                  <Link2 className="h-4 w-4 mr-1.5 text-blue-600" />
+                                  URL de Edição <span className="text-red-500">*</span>
+                                </Label>
+                                <Input
+                                  id={`editUrl-${formatSlug}`}
+                                  placeholder="URL do Canva, Google Drive, etc."
+                                  value={details.editUrl}
+                                  onChange={(e) => saveFormatDetails(formatSlug, { editUrl: e.target.value })}
+                                  className="border-gray-300 focus:ring-blue-500"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Upload de imagem */}
+                            <div className="space-y-2">
+                              <Label htmlFor={`image-${formatSlug}`} className="text-sm font-medium flex items-center">
+                                <UploadCloud className="h-4 w-4 mr-1.5 text-blue-600" />
+                                Imagem de Preview <span className="text-red-500">*</span>
+                              </Label>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="col-span-1 md:col-span-2">
+                                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 transition-all hover:border-blue-400">
+                                    <div className="flex flex-col items-center justify-center py-3">
+                                      <Upload className="h-8 w-8 text-gray-400 mb-2" />
+                                      <p className="text-sm text-gray-500">
+                                        Clique para selecionar ou arraste uma imagem
+                                      </p>
+                                      <input
+                                        id={`image-${formatSlug}`}
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => handleImageUpload(e, formatSlug)}
+                                        className="hidden"
+                                      />
+                                      <label
+                                        htmlFor={`image-${formatSlug}`}
+                                        className="mt-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-md cursor-pointer hover:bg-blue-100 transition-colors"
+                                      >
+                                        {uploading[`image-${formatSlug}`] ? (
+                                          <div className="flex items-center">
+                                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                            Enviando...
+                                          </div>
+                                        ) : (
+                                          "Selecionar imagem"
+                                        )}
+                                      </label>
+                                      {uploadError[`image-${formatSlug}`] && (
+                                        <div className="mt-2 flex items-center text-red-500 text-sm">
+                                          <AlertCircle className="h-4 w-4 mr-1" />
+                                          {uploadError[`image-${formatSlug}`]}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <div className="col-span-1">
+                                  {details.imageUrl ? (
+                                    <div className="border rounded-lg overflow-hidden h-full flex items-center justify-center bg-gray-50">
+                                      <img
+                                        src={details.imageUrl}
+                                        alt={`Preview de ${getFormatName(formatSlug)}`}
+                                        className="object-contain max-h-40 w-full"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div className="border rounded-lg overflow-hidden h-full flex items-center justify-center bg-gray-50 text-gray-400">
+                                      <p className="text-sm text-center px-4">
+                                        Preview da imagem <br />aparecerá aqui
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Descrição específica para o formato */}
+                            <div className="space-y-2">
+                              <Label htmlFor={`description-${formatSlug}`} className="text-sm font-medium flex items-center">
+                                Descrição <span className="text-gray-400 text-xs ml-1">(opcional)</span>
+                              </Label>
+                              <Textarea
+                                id={`description-${formatSlug}`}
+                                placeholder="Descrição específica para este formato"
+                                value={details.description || ''}
+                                onChange={(e) => saveFormatDetails(formatSlug, { description: e.target.value })}
+                                className="border-gray-300 focus:ring-blue-500 h-20"
+                              />
+                            </div>
+                          </div>
+                          
+                          {/* Status de conclusão */}
+                          <div className="mt-6 pt-4 border-t border-gray-200">
+                            <div className={`flex items-center ${
+                              formatsComplete[formatSlug] 
+                                ? 'text-green-600' 
+                                : 'text-amber-600'
+                            }`}>
+                              {formatsComplete[formatSlug] ? (
+                                <>
+                                  <Check className="h-5 w-5 mr-2" />
+                                  <span>Formato completo</span>
+                                </>
+                              ) : (
+                                <>
+                                  <AlertCircle className="h-5 w-5 mr-2" />
+                                  <span>Preencha todos os campos obrigatórios</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    )}
-                  </div>
-                </div>
-                
-                {/* Botão para avançar para a etapa de upload (etapa 3) */}
-                <div className="flex justify-end mt-8 pt-6 border-t border-gray-200">
-                  <Button 
-                    type="button"
-                    onClick={goToPreviousStep}
-                    className="px-4 py-2 text-blue-600 bg-white border border-blue-200 hover:bg-blue-50 rounded-lg flex items-center gap-2 mr-4"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                    Voltar
-                  </Button>
+                    </TabsContent>
+                  ))}
+                </Tabs>
+
+                {/* Navegação entre etapas */}
+                <div className="mt-8 pt-5 border-t border-gray-200">
+                  {Object.values(formatsComplete).some(complete => !complete) ? (
+                    <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 mb-4">
+                      <div className="flex items-center text-amber-700 mb-1">
+                        <AlertCircle className="h-5 w-5 mr-2" />
+                        <h3 className="font-medium">Faltam campos a preencher</h3>
+                      </div>
+                      <p className="text-sm text-amber-600 pl-7">
+                        Complete todos os campos obrigatórios em cada formato para poder avançar.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="rounded-xl bg-green-50 border border-green-200 p-4 mb-4">
+                      <div className="flex items-center text-green-700 mb-1">
+                        <Check className="h-5 w-5 mr-2" />
+                        <h3 className="font-medium">Tudo pronto!</h3>
+                      </div>
+                      <p className="text-sm text-green-600 pl-7">
+                        Todos os detalhes dos formatos foram preenchidos. Você pode avançar para a próxima etapa.
+                      </p>
+                    </div>
+                  )}
                   
-                  <Button 
-                    type="button"
-                    onClick={goToStep3}
-                    className="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
-                  >
-                    Prosseguir com upload
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
+                  <div className="flex space-x-4">
+                    <Button 
+                      type="button"
+                      onClick={goToPreviousStep}
+                      className="flex-1 py-2.5 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-1" />
+                      Voltar
+                    </Button>
+                    
+                    <Button 
+                      type="button"
+                      onClick={goToStep3}
+                      disabled={Object.values(formatsComplete).some(complete => !complete)}
+                      className="flex-1 py-2.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed"
+                    >
+                      Revisar
+                      <ArrowRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
