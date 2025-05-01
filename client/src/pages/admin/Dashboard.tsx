@@ -219,16 +219,26 @@ const AdminDashboard = () => {
                 />
               </div>
               {(activeTab === 'arts' || activeTab === 'categories' || activeTab === 'collections' || activeTab === 'formats' || activeTab === 'fileTypes') && (
-                <Button className="flex items-center">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar {
-                    activeTab === 'arts' ? 'Arte' : 
-                    activeTab === 'categories' ? 'Categoria' : 
-                    activeTab === 'collections' ? 'Coleção' :
-                    activeTab === 'formats' ? 'Formato' :
-                    'Tipo de Arquivo'
-                  }
-                </Button>
+                <div className="flex gap-2">
+                  {activeTab === 'arts' && (
+                    <Link href="/admin/add-art-multi">
+                      <Button variant="outline" className="flex items-center">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Arte Multi-Formato
+                      </Button>
+                    </Link>
+                  )}
+                  <Button className="flex items-center">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Adicionar {
+                      activeTab === 'arts' ? 'Arte' : 
+                      activeTab === 'categories' ? 'Categoria' : 
+                      activeTab === 'collections' ? 'Coleção' :
+                      activeTab === 'formats' ? 'Formato' :
+                      'Tipo de Arquivo'
+                    }
+                  </Button>
+                </div>
               )}
             </div>
           </div>

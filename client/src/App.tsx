@@ -25,6 +25,7 @@ import ProfilePage from "@/pages/profile-page";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import LogoUploadPage from "@/pages/admin/LogoUploadPage";
 import StorageTestPage from "@/pages/admin/StorageTestPage";
+import AddArtMultiFormatPage from "@/pages/admin/AddArtMultiFormat";
 import AuthPage from "@/pages/auth-page";
 import NotFound from "@/pages/not-found";
 import AvatarTestPage from "@/pages/AvatarTestPage";
@@ -183,6 +184,11 @@ function AppRoutes() {
       <ProtectedRoute 
         path="/admin/logo-upload" 
         component={LogoUploadPage}
+        roles={['admin', 'designer_adm']} 
+      />
+      <ProtectedRoute 
+        path="/admin/add-art-multi" 
+        component={AddArtMultiFormatPage}
         roles={['admin', 'designer_adm']} 
       />
       <ProtectedRoute 
