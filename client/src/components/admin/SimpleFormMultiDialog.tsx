@@ -743,21 +743,15 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                                         type="file"
                                         accept="image/*"
                                         onChange={(e) => handleImageUpload(e, formatSlug)}
-                                        className="hidden"
+                                        className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
                                       />
-                                      <label
-                                        htmlFor={`image-${formatSlug}`}
-                                        className="mt-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-md cursor-pointer hover:bg-blue-100 transition-colors"
-                                      >
-                                        {uploading[`image-${formatSlug}`] ? (
-                                          <div className="flex items-center">
-                                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                            Enviando...
-                                          </div>
-                                        ) : (
-                                          "Selecionar imagem"
-                                        )}
-                                      </label>
+                                      {/* Status de upload em tempo real */}
+                                      {uploading[`image-${formatSlug}`] && (
+                                        <div className="flex items-center justify-center mt-2 text-blue-600">
+                                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                          <span className="text-sm">Enviando imagem...</span>
+                                        </div>
+                                      )}
                                       {uploadError[`image-${formatSlug}`] && (
                                         <div className="mt-2 flex items-center text-red-500 text-sm">
                                           <AlertCircle className="h-4 w-4 mr-1" />
