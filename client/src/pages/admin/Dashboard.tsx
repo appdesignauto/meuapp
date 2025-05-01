@@ -159,21 +159,31 @@ const AdminDashboard = () => {
         </div>
         <div className="mt-auto p-4 border-t">
           {/* Ferramentas específicas de administração */}
-          {user?.role === 'admin' && (
+          {(user?.role === 'admin' || user?.role === 'designer_adm') && (
             <>
               <h3 className="text-sm uppercase font-semibold text-gray-500 mb-2">Ferramentas Avançadas</h3>
-              <Link href="/admin/logo-upload">
-                <Button variant="ghost" className="w-full justify-start text-gray-600 mb-2">
-                  <Image className="w-5 h-5 mr-3" />
-                  Gerenciar Logo
+              <Link href="/admin/add-art-multi">
+                <Button variant="ghost" className="w-full justify-start text-gray-600 mb-2 text-blue-600 font-medium">
+                  <Plus className="w-5 h-5 mr-3" />
+                  Arte Multi-Formato
                 </Button>
               </Link>
-              <Link href="/admin/storage-test">
-                <Button variant="ghost" className="w-full justify-start text-gray-600 mb-2">
-                  <HardDrive className="w-5 h-5 mr-3" />
-                  Testar Armazenamento
-                </Button>
-              </Link>
+              {user?.role === 'admin' && (
+                <>
+                  <Link href="/admin/logo-upload">
+                    <Button variant="ghost" className="w-full justify-start text-gray-600 mb-2">
+                      <Image className="w-5 h-5 mr-3" />
+                      Gerenciar Logo
+                    </Button>
+                  </Link>
+                  <Link href="/admin/storage-test">
+                    <Button variant="ghost" className="w-full justify-start text-gray-600 mb-2">
+                      <HardDrive className="w-5 h-5 mr-3" />
+                      Testar Armazenamento
+                    </Button>
+                  </Link>
+                </>
+              )}
               <div className="border-t my-2"></div>
             </>
           )}
@@ -222,7 +232,7 @@ const AdminDashboard = () => {
                 <div className="flex gap-2">
                   {activeTab === 'arts' && (
                     <Link href="/admin/add-art-multi">
-                      <Button variant="outline" className="flex items-center">
+                      <Button variant="default" className="flex items-center bg-blue-600 hover:bg-blue-700 mr-2">
                         <Plus className="w-4 h-4 mr-2" />
                         Arte Multi-Formato
                       </Button>
