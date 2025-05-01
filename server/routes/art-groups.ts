@@ -348,12 +348,10 @@ router.post('/', isAuthenticated, canCreateArt, upload.single('image'), async (r
     
     // Incrementar contadores do designer
     await db.execute(sql.raw(`
-      INSERT INTO "designerstats" ("designerid", "artcount", "downloadcount", "viewcount", "followerscount", "createdat", "updatedat")
-      VALUES (${req.user.id}, 1, 0, 0, 0, NOW(), NOW())
-      ON CONFLICT ("designerid") 
-      DO UPDATE SET 
-        "artcount" = "designerstats"."artcount" + 1,
-        "updatedat" = NOW()
+      UPDATE "designerStats" 
+      SET "viewCount" = "viewCount" + 1,
+          "updatedAt" = NOW()
+      WHERE "userId" = ${req.user.id}
     `));
     
     res.status(201).json({ 
@@ -694,10 +692,10 @@ router.delete('/:id', isAuthenticated, isAdmin, async (req, res) => {
     
     // Atualizar contador de artes do designer
     await db.execute(sql.raw(`
-      UPDATE "designerstats"
-      SET "artcount" = GREATEST("artcount" - 1, 0),
-          "updatedat" = NOW()
-      WHERE "designerid" = ${group.designerid}
+      UPDATE "designerStats" 
+      SET "viewCount" = "viewCount" - 1,
+          "updatedAt" = NOW()
+      WHERE "userId" = ${group.designerid}
     `));
     
     res.json({ message: 'Grupo de arte excluído com sucesso' });
