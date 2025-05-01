@@ -1,9 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import React, { useState, useEffect } from 'react';
+import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useFieldArray, useForm } from 'react-hook-form';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { z } from 'zod';
-import { X, Upload, Loader2, Plus, Trash2 } from 'lucide-react';
+import { apiRequest, queryClient } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
+import { Loader2, Plus, Trash2, Upload, Image } from 'lucide-react';
+
 import {
   Card,
   CardContent,
@@ -12,10 +16,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -24,587 +26,574 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { ArtFormatSchema, ArtGroupSchema } from '@shared/interfaces/art-groups';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
-// Esquema para cada formato
-const formatSchema = z.object({
-  format: z.string().min(1, 'Selecione um formato'),
-  imageUrl: z.string().optional(),
-  previewUrl: z.string().optional(),
-  editUrl: z.string().url('URL de edição inválida').optional().or(z.literal('')),
-  title: z.string().min(3, 'Título deve ter pelo menos 3 caracteres'),
-  description: z.string().min(5, 'Descrição deve ter pelo menos 5 caracteres'),
-  fileType: z.string().min(1, 'Selecione um tipo de arquivo'),
-});
-
-// Esquema principal
-const artMultiSchema = z.object({
-  categoryId: z.string().min(1, 'Selecione uma categoria'),
+// Esquema de formulário com validação
+const formSchema = z.object({
+  categoryId: z.string().min(1, "Por favor selecione uma categoria"),
   isPremium: z.boolean().default(false),
-  formats: z.array(formatSchema).min(1, 'Adicione pelo menos um formato'),
+  formats: z.array(
+    z.object({
+      format: z.string().min(1, "Formato é obrigatório"),
+      fileType: z.string().min(1, "Tipo de arquivo é obrigatório"),
+      title: z.string().min(3, "Título deve ter pelo menos 3 caracteres"),
+      description: z.string().optional(),
+      imageUrl: z.string().min(5, "URL da imagem é obrigatória"),
+      previewUrl: z.string().optional(),
+      editUrl: z.string().min(5, "URL de edição é obrigatória"),
+    })
+  ).min(1, "Adicione pelo menos um formato")
 });
 
-type FormatData = z.infer<typeof formatSchema>;
-type ArtMultiFormData = z.infer<typeof artMultiSchema>;
+type FormValues = z.infer<typeof formSchema>;
 
-interface AddArtFormMultiProps {
-  onSuccess?: () => void;
-}
-
-const AddArtFormMulti = ({ onSuccess }: AddArtFormMultiProps) => {
-  const queryClient = useQueryClient();
+export default function AddArtFormMulti() {
   const { toast } = useToast();
-  const [isPremium, setIsPremium] = useState(false);
-  const [uploadingMap, setUploadingMap] = useState<Record<number, boolean>>({});
-  const [uploadingPreviewMap, setUploadingPreviewMap] = useState<Record<number, boolean>>({});
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [showSubmitAlert, setShowSubmitAlert] = useState(false);
-  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
-  const previewInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
-  
-  // Fetch categories
-  const { data: categories } = useQuery<any[]>({
+  const { user } = useAuth();
+  const [selectedImage, setSelectedImage] = useState<{ data: any, index: number, isPreview: boolean } | undefined>(undefined);
+  const [images, setImages] = useState<{ [key: string]: string }>({});
+  const [previewImages, setPreviewImages] = useState<{ [key: string]: string }>({});
+  const [uploading, setUploading] = useState<{ [key: string]: boolean }>({});
+  const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
+
+  // Consultas para obter dados
+  const { data: categories, isLoading: isLoadingCategories } = useQuery({
     queryKey: ['/api/categories'],
   });
-  
-  // Fetch formats
-  const { data: formats } = useQuery<any[]>({
+
+  const { data: formats, isLoading: isLoadingFormats } = useQuery({
     queryKey: ['/api/formats'],
   });
-  
-  // Fetch fileTypes
-  const { data: fileTypes } = useQuery<any[]>({
+
+  const { data: fileTypes, isLoading: isLoadingFileTypes } = useQuery({
     queryKey: ['/api/fileTypes'],
   });
-  
-  const {
-    register,
-    handleSubmit,
-    control,
-    reset,
-    setValue,
-    watch,
-    formState: { errors, isSubmitting },
-  } = useForm<ArtMultiFormData>({
-    resolver: zodResolver(artMultiSchema),
+
+  // Configuração do formulário
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       categoryId: '',
       isPremium: false,
-      formats: [{ 
-        format: '', 
-        imageUrl: '', 
-        previewUrl: '',
-        editUrl: '', 
-        title: '', 
-        description: '', 
-        fileType: '' 
-      }]
+      formats: [
+        {
+          format: '',
+          fileType: '',
+          title: '',
+          description: '',
+          imageUrl: '',
+          previewUrl: '',
+          editUrl: '',
+        }
+      ]
     },
   });
-  
-  // Usar field array para gerenciar campos dinâmicos de formato
+
   const { fields, append, remove } = useFieldArray({
-    control,
-    name: "formats",
+    control: form.control,
+    name: 'formats',
   });
-  
-  // Mutation para upload de imagem
-  const uploadMutation = useMutation({
-    mutationFn: async ({ file, index, isPreview = false }: { file: File, index: number, isPreview?: boolean }) => {
-      if (isPreview) {
-        setUploadingPreviewMap(prev => ({ ...prev, [index]: true }));
-      } else {
-        setUploadingMap(prev => ({ ...prev, [index]: true }));
+
+  // Função para adicionar um novo formato
+  const addFormat = () => {
+    append({
+      format: '',
+      fileType: '',
+      title: '',
+      description: '',
+      imageUrl: '',
+      previewUrl: '',
+      editUrl: '',
+    });
+  };
+
+  // Manipuladores para upload de imagens
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>, index: number, isPreview: boolean = false) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const identifier = isPreview ? `preview-${index}` : `main-${index}`;
+    setUploading({ ...uploading, [identifier]: true });
+    setUploadProgress({ ...uploadProgress, [identifier]: 0 });
+
+    try {
+      // Garantir que a categoria foi selecionada
+      const categoryId = form.getValues('categoryId');
+      if (!categoryId) {
+        toast({
+          title: "Selecione uma categoria",
+          description: "Você precisa selecionar uma categoria antes de fazer upload de imagens.",
+          variant: "destructive",
+        });
+        setUploading({ ...uploading, [identifier]: false });
+        return;
       }
-      
+
+      // Encontrar o nome da categoria para uso na pasta
+      const category = categories?.find((cat: any) => cat.id.toString() === categoryId);
+      if (!category) {
+        toast({
+          title: "Categoria não encontrada",
+          description: "A categoria selecionada não foi encontrada.",
+          variant: "destructive",
+        });
+        setUploading({ ...uploading, [identifier]: false });
+        return;
+      }
+
+      // Criar FormData para upload
       const formData = new FormData();
       formData.append('image', file);
-      // Especificar o uso do Supabase Storage
-      formData.append('storage', 'supabase');
-      
-      // Adicionar a categoria selecionada para organização de pastas
-      if (selectedCategory) {
-        const selected = categories?.find(cat => cat.id.toString() === selectedCategory);
-        if (selected?.slug) {
-          console.log(`Usando categoria ${selected.name} (${selected.slug}) para organização`);
-          formData.append('categorySlug', selected.slug);
-        }
-      }
-      
-      // Obter usuário atual para o ID do designer
-      try {
-        const userData = queryClient.getQueryData<any>(['/api/user']);
-        if (userData && userData.id) {
-          console.log(`Usando ID do designer ${userData.id} para organização de pastas`);
-          formData.append('designerId', userData.id.toString());
-        }
-      } catch (error) {
-        console.warn("Não foi possível obter ID do usuário para organização de pastas");
-      }
-      
-      console.log(`Enviando imagem${isPreview ? ' de prévia' : ''}:`, file.name, file.type, Math.round(file.size/1024) + "KB");
-      console.log("Iniciando upload de imagem...");
-      
-      const response = await fetch('/api/admin/upload', {
+      formData.append('category', category.slug || 'default');
+
+      // Fazer upload da imagem
+      const response = await fetch('/api/upload-image', {
         method: 'POST',
         body: formData,
       });
-      
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Erro ao fazer upload da imagem');
+        throw new Error('Falha ao fazer upload da imagem');
       }
-      
-      const data = await response.json();
-      return { data, index, isPreview };
-    },
-    onSuccess: ({ data, index, isPreview }) => {
+
+      const result = await response.json();
+
+      // Atualizar estado com a URL da imagem
       if (isPreview) {
-        setValue(`formats.${index}.previewUrl`, data.imageUrl);
+        setPreviewImages({ ...previewImages, [index]: result.url });
+        form.setValue(`formats.${index}.previewUrl`, result.url);
       } else {
-        setValue(`formats.${index}.imageUrl`, data.imageUrl);
+        setImages({ ...images, [index]: result.url });
+        form.setValue(`formats.${index}.imageUrl`, result.url);
       }
-      
+
       toast({
-        title: 'Upload realizado com sucesso',
-        description: `Imagem ${isPreview ? 'de prévia ' : ''}enviada para o Supabase Storage`,
+        title: "Upload concluído",
+        description: "A imagem foi carregada com sucesso.",
       });
-    },
-    onError: (error: any) => {
-      console.error("Erro no upload da imagem:", error);
+    } catch (error) {
+      console.error('Erro ao fazer upload:', error);
       toast({
-        title: 'Erro no upload',
-        description: error.message || 'Não foi possível fazer o upload da imagem.',
-        variant: 'destructive',
+        title: "Erro no upload",
+        description: error instanceof Error ? error.message : "Falha ao carregar a imagem",
+        variant: "destructive",
       });
-    },
-    onSettled: ({ index, isPreview }) => {
-      if (isPreview) {
-        setUploadingPreviewMap(prev => ({ ...prev, [index]: false }));
-      } else {
-        setUploadingMap(prev => ({ ...prev, [index]: false }));
-      }
-    },
-  });
-  
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, index: number, isPreview = false) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      uploadMutation.mutate({ file, index, isPreview });
+    } finally {
+      setUploading({ ...uploading, [identifier]: false });
     }
   };
-  
-  // Mutation para salvar arte com múltiplos formatos
-  const saveArtMutation = useMutation({
-    mutationFn: async (data: ArtMultiFormData) => {
-      const transformedData = {
-        ...data,
+
+  // Visualizar imagem selecionada
+  const handleImagePreview = (index: number, isPreview: boolean = false) => {
+    const imageUrl = isPreview ? previewImages[index] : images[index];
+    if (imageUrl) {
+      setSelectedImage({ data: imageUrl, index, isPreview });
+    }
+  };
+
+  // Mutação para salvar a arte
+  const submitMutation = useMutation({
+    mutationFn: async (data: FormValues) => {
+      // Converter IDs para números e formatar dados
+      const formattedData = {
         categoryId: parseInt(data.categoryId),
-        isPremium,
+        isPremium: data.isPremium,
+        formats: data.formats.map(format => ({
+          ...format,
+          previewUrl: format.previewUrl || null,
+        })),
       };
-      
-      return apiRequest('POST', '/api/admin/arts/multi', transformedData);
+
+      const response = await apiRequest('POST', '/api/admin/arts/multi', formattedData);
+      return await response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
       toast({
-        title: 'Arte multi-formato criada',
-        description: 'A arte com múltiplos formatos foi criada com sucesso',
-        variant: 'default',
+        title: "Arte salva com sucesso",
+        description: "A arte com múltiplos formatos foi criada.",
       });
-      reset();
-      if (onSuccess) onSuccess();
+      form.reset({
+        categoryId: '',
+        isPremium: false,
+        formats: [
+          {
+            format: '',
+            fileType: '',
+            title: '',
+            description: '',
+            imageUrl: '',
+            previewUrl: '',
+            editUrl: '',
+          }
+        ]
+      });
+      setImages({});
+      setPreviewImages({});
+      queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
     },
     onError: (error: any) => {
       toast({
-        title: 'Erro',
-        description: error.message || 'Ocorreu um erro ao processar a arte.',
-        variant: 'destructive',
+        title: "Erro ao salvar",
+        description: error.message || "Não foi possível salvar a arte. Verifique os dados e tente novamente.",
+        variant: "destructive",
       });
     },
   });
-  
-  // Monitora mudanças na categoria selecionada
-  useEffect(() => {
-    const subscription = watch((value, { name }) => {
-      if (name === 'categoryId') {
-        setSelectedCategory(value.categoryId || '');
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, [watch]);
-  
-  // Verificar se pelo menos um formato tem imagem antes de submeter
-  const checkFormatImages = () => {
-    const formats = watch('formats');
-    const hasImages = formats.some(format => format.imageUrl);
-    
-    if (!hasImages) {
-      toast({
-        title: 'Imagens obrigatórias',
-        description: 'Adicione pelo menos uma imagem antes de salvar',
-        variant: 'destructive',
-      });
-      return false;
-    }
-    
-    return true;
+
+  // Manipulador de envio do formulário
+  const onSubmit = (data: FormValues) => {
+    submitMutation.mutate(data);
   };
-  
-  const onSubmit = (data: ArtMultiFormData) => {
-    if (!checkFormatImages()) return;
-    setShowSubmitAlert(true);
-  };
-  
-  const confirmSubmit = () => {
-    const data = watch();
-    saveArtMutation.mutate(data);
-    setShowSubmitAlert(false);
-  };
-  
-  const addFormatBlock = () => {
-    append({ 
-      format: '', 
-      imageUrl: '', 
-      previewUrl: '',
-      editUrl: '', 
-      title: '', 
-      description: '', 
-      fileType: '' 
-    });
-  };
-  
+
+  // Estado de carregamento
+  const isLoading = isLoadingCategories || isLoadingFormats || isLoadingFileTypes;
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Adicionar Arte Multi-Formato</CardTitle>
-        <CardDescription>
-          Crie uma arte com múltiplos formatos (Feed, Story, Cartaz, etc)
-        </CardDescription>
-      </CardHeader>
-      
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <CardContent className="space-y-6">
-          {/* Categoria (obrigatória, no topo) */}
-          <div className="space-y-2">
-            <Label htmlFor="categoryId">Categoria <span className="text-amber-600">*</span></Label>
-            <Select
-              value={watch('categoryId')}
-              onValueChange={(value) => setValue('categoryId', value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione uma categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories?.map((category) => (
-                  <SelectItem key={category.id} value={category.id.toString()}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.categoryId && (
-              <p className="text-sm text-red-500">{errors.categoryId.message}</p>
-            )}
-            {!selectedCategory && (
-              <p className="text-xs text-amber-600">
-                Selecione uma categoria antes de fazer upload das imagens
-              </p>
-            )}
-          </div>
-          
-          {/* Opção de Premium */}
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="isPremium"
-              checked={isPremium}
-              onCheckedChange={setIsPremium}
-            />
-            <Label htmlFor="isPremium">Arte Premium</Label>
-          </div>
-          
-          <Separator className="my-4" />
-          
-          {/* Blocos de formato */}
-          <div className="space-y-8">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium">Formatos</h3>
+    <div className="container mx-auto p-4 max-w-5xl">
+      <Card>
+        <CardHeader>
+          <CardTitle>Adicionar Arte Multi-Formato</CardTitle>
+          <CardDescription>
+            Crie uma arte com variações para diferentes formatos (feed, stories, etc.)
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Seção de Categoria e Premium (comum para todos os formatos) */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="category">Categoria <span className="text-red-500">*</span></Label>
+                <Controller
+                  control={form.control}
+                  name="categoryId"
+                  render={({ field }) => (
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma categoria" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories?.map((category: any) => (
+                          <SelectItem key={category.id} value={category.id.toString()}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {form.formState.errors.categoryId && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {form.formState.errors.categoryId.message}
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center space-x-2 pt-8">
+                <Controller
+                  control={form.control}
+                  name="isPremium"
+                  render={({ field }) => (
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      id="isPremium"
+                    />
+                  )}
+                />
+                <Label htmlFor="isPremium">Arte Premium</Label>
+              </div>
+            </div>
+
+            <Separator className="my-6" />
+
+            {/* Seção dinâmica para formatos */}
+            <div className="space-y-8">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-medium">Formatos da Arte</h3>
+                <Button 
+                  type="button" 
+                  onClick={addFormat} 
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" /> Adicionar Formato
+                </Button>
+              </div>
+
+              {fields.map((field, index) => (
+                <Card key={field.id} className="border-dashed">
+                  <CardHeader className="pb-2">
+                    <div className="flex justify-between">
+                      <CardTitle className="text-base">Formato {index + 1}</CardTitle>
+                      {fields.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => remove(index)}
+                          className="h-8 text-red-500 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor={`formats.${index}.format`}>Formato <span className="text-red-500">*</span></Label>
+                        <Controller
+                          control={form.control}
+                          name={`formats.${index}.format`}
+                          render={({ field }) => (
+                            <Select
+                              value={field.value}
+                              onValueChange={field.onChange}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione o formato" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {formats?.map((format: any) => (
+                                  <SelectItem key={format.id} value={format.slug}>
+                                    {format.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                        {form.formState.errors.formats?.[index]?.format && (
+                          <p className="text-sm text-red-500 mt-1">
+                            {form.formState.errors.formats?.[index]?.format?.message}
+                          </p>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`formats.${index}.fileType`}>Tipo de Arquivo <span className="text-red-500">*</span></Label>
+                        <Controller
+                          control={form.control}
+                          name={`formats.${index}.fileType`}
+                          render={({ field }) => (
+                            <Select
+                              value={field.value}
+                              onValueChange={field.onChange}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione o tipo" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {fileTypes?.map((type: any) => (
+                                  <SelectItem key={type.id} value={type.slug}>
+                                    {type.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                        {form.formState.errors.formats?.[index]?.fileType && (
+                          <p className="text-sm text-red-500 mt-1">
+                            {form.formState.errors.formats?.[index]?.fileType?.message}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor={`formats.${index}.title`}>Título <span className="text-red-500">*</span></Label>
+                      <Input
+                        {...form.register(`formats.${index}.title`)}
+                        placeholder="Título da arte"
+                      />
+                      {form.formState.errors.formats?.[index]?.title && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {form.formState.errors.formats?.[index]?.title?.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor={`formats.${index}.description`}>Descrição</Label>
+                      <Textarea
+                        {...form.register(`formats.${index}.description`)}
+                        placeholder="Descrição da arte"
+                        rows={3}
+                      />
+                      {form.formState.errors.formats?.[index]?.description && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {form.formState.errors.formats?.[index]?.description?.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Imagem Principal <span className="text-red-500">*</span></Label>
+                        <div className="flex flex-col space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <Input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleImageChange(e, index)}
+                              className="flex-1"
+                              disabled={uploading[`main-${index}`]}
+                            />
+                            {images[index] && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleImagePreview(index)}
+                              >
+                                <Image className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                          {uploading[`main-${index}`] && (
+                            <div className="w-full bg-gray-200 rounded-full h-2.5">
+                              <div
+                                className="bg-primary h-2.5 rounded-full"
+                                style={{ width: `${uploadProgress[`main-${index}`] || 0}%` }}
+                              ></div>
+                            </div>
+                          )}
+                          <Input
+                            {...form.register(`formats.${index}.imageUrl`)}
+                            placeholder="URL da imagem"
+                            value={images[index] || form.getValues(`formats.${index}.imageUrl`)}
+                            readOnly
+                            className="hidden"
+                          />
+                          {form.formState.errors.formats?.[index]?.imageUrl && (
+                            <p className="text-sm text-red-500 mt-1">
+                              {form.formState.errors.formats?.[index]?.imageUrl?.message}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Imagem de Pré-visualização (opcional)</Label>
+                        <div className="flex flex-col space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <Input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleImageChange(e, index, true)}
+                              className="flex-1"
+                              disabled={uploading[`preview-${index}`]}
+                            />
+                            {previewImages[index] && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleImagePreview(index, true)}
+                              >
+                                <Image className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                          {uploading[`preview-${index}`] && (
+                            <div className="w-full bg-gray-200 rounded-full h-2.5">
+                              <div
+                                className="bg-primary h-2.5 rounded-full"
+                                style={{ width: `${uploadProgress[`preview-${index}`] || 0}%` }}
+                              ></div>
+                            </div>
+                          )}
+                          <Input
+                            {...form.register(`formats.${index}.previewUrl`)}
+                            placeholder="URL da pré-visualização"
+                            value={previewImages[index] || form.getValues(`formats.${index}.previewUrl`)}
+                            readOnly
+                            className="hidden"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor={`formats.${index}.editUrl`}>URL de Edição <span className="text-red-500">*</span></Label>
+                      <Input
+                        {...form.register(`formats.${index}.editUrl`)}
+                        placeholder="URL para edição da arte (ex: link do Canva)"
+                      />
+                      {form.formState.errors.formats?.[index]?.editUrl && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {form.formState.errors.formats?.[index]?.editUrl?.message}
+                        </p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+
+              {form.formState.errors.formats && !Array.isArray(form.formState.errors.formats) && (
+                <Alert variant="destructive">
+                  <AlertTitle>Erro</AlertTitle>
+                  <AlertDescription>
+                    {form.formState.errors.formats.message}
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => form.reset()}>
+                Cancelar
+              </Button>
               <Button 
-                type="button" 
-                onClick={addFormatBlock}
-                className="flex gap-2 items-center"
+                type="submit" 
+                disabled={submitMutation.isPending}
+                className="flex items-center gap-2"
               >
-                <Plus className="h-4 w-4" />
-                Adicionar Formato
+                {submitMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                Salvar Arte
               </Button>
             </div>
-            
-            {fields.map((field, index) => (
-              <div key={field.id} className="p-4 border rounded-lg relative space-y-4">
-                {/* Botão para remover bloco */}
-                {fields.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-2 top-2"
-                    onClick={() => remove(index)}
-                  >
-                    <Trash2 className="h-4 w-4 text-red-500" />
-                  </Button>
-                )}
-                
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Formato */}
-                  <div className="space-y-2">
-                    <Label>Formato <span className="text-amber-600">*</span></Label>
-                    <Select
-                      value={watch(`formats.${index}.format`)}
-                      onValueChange={(value) => setValue(`formats.${index}.format`, value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um formato" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {formats?.map((format) => (
-                          <SelectItem key={format.id} value={format.name}>
-                            {format.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {errors.formats?.[index]?.format && (
-                      <p className="text-sm text-red-500">
-                        {errors.formats[index]?.format?.message}
-                      </p>
-                    )}
-                  </div>
-                  
-                  {/* Tipo de Arquivo */}
-                  <div className="space-y-2">
-                    <Label>Tipo de Arquivo <span className="text-amber-600">*</span></Label>
-                    <Select
-                      value={watch(`formats.${index}.fileType`)}
-                      onValueChange={(value) => setValue(`formats.${index}.fileType`, value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um tipo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {fileTypes?.map((type) => (
-                          <SelectItem key={type.id} value={type.name}>
-                            {type.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {errors.formats?.[index]?.fileType && (
-                      <p className="text-sm text-red-500">
-                        {errors.formats[index]?.fileType?.message}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                
-                {/* Upload da imagem */}
-                <div className="space-y-2">
-                  <Label>Upload de Imagem <span className="text-amber-600">*</span></Label>
-                  <div className="flex items-center gap-4">
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      ref={(el) => fileInputRefs.current[`format-${index}`] = el}
-                      onChange={(e) => handleFileChange(e, index)}
-                      className="hidden"
-                    />
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={() => fileInputRefs.current[`format-${index}`]?.click()}
-                      disabled={uploadingMap[index] || !selectedCategory}
-                      className="flex gap-2 items-center"
-                    >
-                      {uploadingMap[index] ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Enviando...
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="h-4 w-4" />
-                          Selecionar Imagem
-                        </>
-                      )}
-                    </Button>
-                    {!selectedCategory && (
-                      <p className="text-sm text-amber-600">
-                        Selecione uma categoria primeiro
-                      </p>
-                    )}
-                  </div>
-                  <input
-                    type="hidden"
-                    {...register(`formats.${index}.imageUrl`)}
-                  />
-                  {watch(`formats.${index}.imageUrl`) && (
-                    <div className="mt-2 w-full max-h-40 overflow-hidden rounded border">
-                      <img 
-                        src={watch(`formats.${index}.imageUrl`)} 
-                        alt="Preview" 
-                        className="w-full object-contain" 
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'https://placehold.co/400x300?text=Imagem+Inválida';
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
-                
-                {/* Título e descrição */}
-                <div className="space-y-2">
-                  <Label>Título <span className="text-amber-600">*</span></Label>
-                  <Input
-                    {...register(`formats.${index}.title`)}
-                    placeholder="Título do formato"
-                  />
-                  {errors.formats?.[index]?.title && (
-                    <p className="text-sm text-red-500">
-                      {errors.formats[index]?.title?.message}
-                    </p>
-                  )}
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Descrição <span className="text-amber-600">*</span></Label>
-                  <Textarea
-                    {...register(`formats.${index}.description`)}
-                    placeholder="Descrição do formato"
-                  />
-                  {errors.formats?.[index]?.description && (
-                    <p className="text-sm text-red-500">
-                      {errors.formats[index]?.description?.message}
-                    </p>
-                  )}
-                </div>
-                
-                {/* URL de edição (opcional) */}
-                <div className="space-y-2">
-                  <Label>URL de Edição (opcional)</Label>
-                  <Input
-                    {...register(`formats.${index}.editUrl`)}
-                    placeholder="URL para edição no Canva ou Google Drive"
-                  />
-                  {errors.formats?.[index]?.editUrl && (
-                    <p className="text-sm text-red-500">
-                      {errors.formats[index]?.editUrl?.message}
-                    </p>
-                  )}
-                </div>
-                
-                {/* Imagem de prévia (opcional) */}
-                <div className="space-y-2">
-                  <Label>Imagem de Prévia (opcional)</Label>
-                  <div className="flex items-center gap-4">
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      ref={(el) => previewInputRefs.current[`preview-${index}`] = el}
-                      onChange={(e) => handleFileChange(e, index, true)}
-                      className="hidden"
-                    />
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={() => previewInputRefs.current[`preview-${index}`]?.click()}
-                      disabled={uploadingPreviewMap[index] || !selectedCategory}
-                      className="flex gap-2 items-center"
-                    >
-                      {uploadingPreviewMap[index] ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Enviando prévia...
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="h-4 w-4" />
-                          Selecionar Prévia
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                  <input
-                    type="hidden"
-                    {...register(`formats.${index}.previewUrl`)}
-                  />
-                  {watch(`formats.${index}.previewUrl`) && (
-                    <div className="mt-2 w-full max-h-40 overflow-hidden rounded border">
-                      <img 
-                        src={watch(`formats.${index}.previewUrl`)} 
-                        alt="Preview" 
-                        className="w-full object-contain" 
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'https://placehold.co/400x300?text=Prévia+Inválida';
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
-                
-              </div>
-            ))}
-          </div>
+          </form>
         </CardContent>
-        
-        <CardFooter className="flex justify-between">
-          <Button variant="outline" type="button" onClick={() => reset()}>
-            Limpar
-          </Button>
-          <Button 
-            type="submit" 
-            disabled={isSubmitting || Object.values(uploadingMap).some(v => v) || Object.values(uploadingPreviewMap).some(v => v)}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                Salvando...
-              </>
-            ) : (
-              'Criar Arte Multi-Formato'
-            )}
-          </Button>
-        </CardFooter>
-      </form>
-      
-      {/* Diálogo de confirmação */}
-      <AlertDialog open={showSubmitAlert} onOpenChange={setShowSubmitAlert}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar criação de arte multi-formato</AlertDialogTitle>
-            <AlertDialogDescription>
-              Você está prestes a criar uma arte com {fields.length} formato(s).
-              Esta ação não pode ser desfeita facilmente.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmSubmit}>Continuar</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </Card>
-  );
-};
+      </Card>
 
-export default AddArtFormMulti;
+      {/* Modal de visualização de imagem */}
+      {selectedImage && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setSelectedImage(undefined)}>
+          <div className="bg-white p-4 rounded-lg max-w-4xl max-h-[90vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">
+                {selectedImage.isPreview ? 'Pré-visualização' : 'Imagem Principal'} - Formato {selectedImage.index + 1}
+              </h3>
+              <Button variant="ghost" size="sm" onClick={() => setSelectedImage(undefined)}>
+                ✕
+              </Button>
+            </div>
+            <div className="overflow-auto">
+              <img 
+                src={selectedImage.data} 
+                alt="Preview" 
+                className="max-w-full h-auto" 
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

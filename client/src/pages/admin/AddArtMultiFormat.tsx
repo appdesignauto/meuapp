@@ -1,82 +1,51 @@
+import React from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { useLocation } from 'wouter';
-import { ArrowLeft, Save } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Loader2, Home } from 'lucide-react';
+import { useLocation, Link } from 'wouter';
 import AddArtFormMulti from '@/components/admin/AddArtFormMulti';
-import { useToast } from '@/hooks/use-toast';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
+import { Button } from '@/components/ui/button';
 
-const AddArtMultiFormatPage = () => {
-  const { user } = useAuth();
-  const [, setLocation] = useLocation();
-  const { toast } = useToast();
-  
-  // Verifica se o usuário é admin ou designer_adm
-  const isAuthorized = user?.role === 'admin' || user?.role === 'designer_adm';
-  
-  if (!isAuthorized) {
-    // Redireciona para home se não for autorizado
-    toast({
-      title: "Acesso negado",
-      description: "Você não tem permissão para acessar esta página",
-      variant: "destructive",
-    });
-    setLocation('/');
+export default function AddArtMultiFormatPage() {
+  const { user, isLoading } = useAuth();
+  const [location, navigate] = useLocation();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Verificar se o usuário está autenticado e é admin ou designer_adm
+  if (!user || (user.nivelacesso !== 'admin' && user.nivelacesso !== 'designer_adm')) {
+    navigate('/login');
     return null;
   }
-  
-  const handleSuccess = () => {
-    toast({
-      title: "Sucesso!",
-      description: "Arte multi-formato adicionada com sucesso",
-    });
-    setLocation('/admin');
-  };
 
   return (
-    <div className="container mx-auto py-6 max-w-5xl">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink href="/">Início</BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbLink href="/admin">Painel Admin</BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbLink>Arte Multi-Formato</BreadcrumbLink>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-          <h1 className="text-2xl font-bold mt-2">Adicionar Arte Multi-Formato</h1>
-          <p className="text-muted-foreground">
-            Crie uma arte com múltiplas variações de formato no mesmo grupo
-          </p>
-        </div>
-        
-        <Button 
-          variant="outline" 
-          className="flex items-center gap-2"
-          onClick={() => setLocation('/admin')}
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Voltar
-        </Button>
+    <div className="flex h-screen bg-gray-100">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Cabeçalho */}
+        <header className="bg-white shadow-sm py-4 px-6">
+          <div className="flex justify-between items-center">
+            <h1 className="text-xl font-semibold">Adicionar Arte com Múltiplos Formatos</h1>
+            <div className="flex items-center space-x-2">
+              <Link href="/admin">
+                <Button variant="outline" className="flex items-center gap-2">
+                  <Home className="h-4 w-4" />
+                  Voltar para o Painel
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </header>
+
+        {/* Conteúdo principal */}
+        <main className="flex-1 overflow-auto bg-gray-50 p-6">
+          <AddArtFormMulti />
+        </main>
       </div>
-      
-      <AddArtFormMulti onSuccess={handleSuccess} />
     </div>
   );
-};
-
-export default AddArtMultiFormatPage;
+}
