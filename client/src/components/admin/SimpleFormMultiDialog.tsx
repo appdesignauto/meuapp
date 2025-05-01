@@ -434,260 +434,202 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                           <PenLine className="h-4 w-4 mr-1.5 text-blue-600" />
                           Informações da Arte
                         </h4>
-                        <div className="bg-blue-50 border border-blue-100 rounded-full px-2.5 py-0.5 text-xs text-blue-700">
-                          Aplicado automaticamente a todos os formatos
+                        <div className="bg-blue-50 border border-blue-100 rounded-full px-2 py-0.5 text-xs text-blue-600">
+                          Global
                         </div>
                       </div>
-                      <p className="text-xs text-gray-500 mb-4">
-                        Estas informações serão aplicadas automaticamente a todos os formatos que você selecionar.
-                      </p>
                       
-                      <div className="space-y-5">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Categoria */}
                         <div className="space-y-2">
-                          <Label htmlFor="globalTitle" className="text-sm font-medium text-gray-700">
-                            Título <span className="text-red-500 ml-1">*</span>
+                          <Label htmlFor="categoryId" className="text-sm font-medium">
+                            Categoria <span className="text-red-500">*</span>
                           </Label>
-                          <Controller
-                            control={step1Form.control}
-                            name="globalTitle"
-                            render={({ field }) => (
-                              <Input
-                                id="globalTitle"
-                                placeholder="Título principal da arte"
-                                className="bg-white border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-                                {...field}
-                              />
-                            )}
+                          <Select
+                            onValueChange={(value) => step1Form.setValue('categoryId', value, { shouldValidate: true })}
+                            value={step1Form.getValues().categoryId}
+                          >
+                            <SelectTrigger
+                              id="categoryId"
+                              className={`focus:ring-blue-500 ${
+                                step1Form.formState.errors.categoryId ? 'border-red-500' : 'border-gray-300'
+                              }`}
+                            >
+                              <SelectValue placeholder="Selecione uma categoria" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {categories.map((category: any) => (
+                                <SelectItem key={category.id} value={category.id.toString()}>
+                                  {category.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {step1Form.formState.errors.categoryId && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {step1Form.formState.errors.categoryId.message}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Tipo de Arquivo */}
+                        <div className="space-y-2">
+                          <Label htmlFor="globalFileType" className="text-sm font-medium">
+                            Tipo de Arquivo <span className="text-red-500">*</span>
+                          </Label>
+                          <Select
+                            onValueChange={(value) => step1Form.setValue('globalFileType', value, { shouldValidate: true })}
+                            value={step1Form.getValues().globalFileType}
+                          >
+                            <SelectTrigger
+                              id="globalFileType"
+                              className={`focus:ring-blue-500 ${
+                                step1Form.formState.errors.globalFileType ? 'border-red-500' : 'border-gray-300'
+                              }`}
+                            >
+                              <SelectValue placeholder="Selecione um tipo de arquivo" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {fileTypes.map((fileType: any) => (
+                                <SelectItem key={fileType.id} value={fileType.slug}>
+                                  {fileType.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {step1Form.formState.errors.globalFileType && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {step1Form.formState.errors.globalFileType.message}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="mt-6 space-y-6">
+                        {/* Título Global */}
+                        <div className="space-y-2">
+                          <Label htmlFor="globalTitle" className="text-sm font-medium">
+                            Título <span className="text-red-500">*</span>
+                          </Label>
+                          <Input
+                            id="globalTitle"
+                            placeholder="Título global da arte"
+                            {...step1Form.register('globalTitle')}
+                            className={`focus:ring-blue-500 ${
+                              step1Form.formState.errors.globalTitle ? 'border-red-500' : 'border-gray-300'
+                            }`}
                           />
                           {step1Form.formState.errors.globalTitle && (
-                            <p className="text-sm text-red-500">
+                            <p className="text-red-500 text-xs mt-1">
                               {step1Form.formState.errors.globalTitle.message}
                             </p>
                           )}
                         </div>
                         
+                        {/* Descrição Global */}
                         <div className="space-y-2">
-                          <Label htmlFor="globalDescription" className="text-sm font-medium text-gray-700 flex items-center">
+                          <Label htmlFor="globalDescription" className="text-sm font-medium flex items-center">
                             Descrição <span className="text-gray-400 text-xs ml-1">(opcional)</span>
                           </Label>
-                          <Controller
-                            control={step1Form.control}
-                            name="globalDescription"
-                            render={({ field }) => (
-                              <Textarea
-                                id="globalDescription"
-                                placeholder="Descrição geral da arte"
-                                className="bg-white border-gray-300 focus:ring-blue-500 focus:border-blue-500 h-24"
-                                {...field}
-                              />
-                            )}
+                          <Textarea
+                            id="globalDescription"
+                            placeholder="Descrição global que será aplicada a todos os formatos (opcional)"
+                            {...step1Form.register('globalDescription')}
+                            className="border-gray-300 focus:ring-blue-500 h-32"
                           />
                         </div>
                       </div>
                     </div>
-                  
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div className="space-y-4">
-                        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-                          <div className="flex justify-between items-center mb-3">
-                            <h4 className="text-md font-semibold flex items-center text-gray-700">
-                              <FolderOpen className="h-4 w-4 mr-1.5 text-blue-600" />
-                              Categoria & Visibilidade
-                            </h4>
-                          </div>
-                          <div className="space-y-4">
-                            <Label htmlFor="category" className="text-sm font-medium text-gray-700 flex items-center">
-                              Categoria <span className="text-red-500 ml-1">*</span>
-                            </Label>
-                            <Controller
-                              control={step1Form.control}
-                              name="categoryId"
-                              render={({ field }) => (
-                                <Select
-                                  value={field.value}
-                                  onValueChange={field.onChange}
-                                >
-                                  <SelectTrigger className="bg-white border-gray-300 focus:ring-blue-500">
-                                    <SelectValue placeholder="Selecione uma categoria" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {categories.map((category: any) => (
-                                      <SelectItem key={category.id} value={category.id.toString()}>
-                                        {category.name}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              )}
-                            />
-                            {step1Form.formState.errors.categoryId && (
-                              <p className="text-sm text-red-500">
-                                {step1Form.formState.errors.categoryId.message}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        
-                        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-                          <div className="space-y-4">
-                            <Label htmlFor="globalFileType" className="text-sm font-medium text-gray-700 flex items-center">
-                              <FileType className="h-4 w-4 mr-1.5 text-blue-600" />
-                              Tipo de Arquivo <span className="text-red-500 ml-1">*</span>
-                            </Label>
-                            <Controller
-                              control={step1Form.control}
-                              name="globalFileType"
-                              render={({ field }) => (
-                                <Select
-                                  value={field.value}
-                                  onValueChange={field.onChange}
-                                >
-                                  <SelectTrigger className="bg-white border-gray-300 focus:ring-blue-500">
-                                    <SelectValue placeholder="Selecione o tipo" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {fileTypes.map((type: any) => (
-                                      <SelectItem key={type.id} value={type.slug}>
-                                        {type.name}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              )}
-                            />
-                          </div>
+                    
+                    {/* Opções e Seleção de Formatos */}
+                    <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                      <div className="flex justify-between items-center mb-3">
+                        <h4 className="text-md font-semibold flex items-center text-gray-700">
+                          <LayoutGrid className="h-4 w-4 mr-1.5 text-blue-600" />
+                          Formatos
+                        </h4>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-500">
+                            Selecionados: {step1Form.getValues().selectedFormats?.length || 0}
+                          </span>
                         </div>
                       </div>
                       
-                      <div className="flex flex-col justify-center">
-                        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm h-full">
-                          <h4 className="text-sm font-medium text-gray-700 mb-6 flex items-center">
-                            <BadgePlus className="h-4 w-4 mr-1.5 text-blue-600" />
-                            Visibilidade da Arte
-                          </h4>
-                          <div className="flex items-center space-x-3">
-                            <Controller
-                              control={step1Form.control}
-                              name="isPremium"
-                              render={({ field }) => (
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                  id="isPremium"
-                                  className="data-[state=checked]:bg-blue-600"
-                                />
-                              )}
-                            />
-                            <Label htmlFor="isPremium" className="font-medium text-gray-700">Arte Premium</Label>
-                          </div>
+                      {/* Opções Adicionais */}
+                      <div className="mb-6 flex gap-4 p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            id="isPremium"
+                            checked={step1Form.getValues().isPremium}
+                            onCheckedChange={(checked) => {
+                              step1Form.setValue('isPremium', checked);
+                            }}
+                          />
+                          <Label htmlFor="isPremium" className="font-medium cursor-pointer">
+                            Arte Premium
+                          </Label>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                </div>
-
-                <Separator className="my-2" />
-
-                {/* Seleção de formatos - Etapa 1 */}
-                <div className="pt-2">
-                  <h3 className="text-lg font-semibold text-blue-700 mb-3 flex items-center">
-                    <LayoutGrid className="h-5 w-5 mr-2 text-blue-600" />
-                    Formatos Disponíveis<span className="text-red-500 ml-1">*</span>
-                  </h3>
-                  <p className="text-sm text-gray-500 mb-5">Selecione um ou mais formatos para criar sua arte</p>
-                  
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-4">
-                    {formats.map((format: any) => {
-                      const isSelected = step1Form.getValues().selectedFormats.includes(format.slug);
-                      return (
-                        <button
-                          key={format.id}
-                          type="button"
-                          onClick={() => toggleFormat(format.slug)}
-                          className={`
-                            relative overflow-hidden rounded-xl border border-gray-200 
-                            transition-all duration-200 shadow-sm hover:shadow
-                            ${isSelected 
-                              ? 'ring-2 ring-blue-400 shadow border-transparent' 
-                              : 'hover:border-blue-200'
-                            }
-                          `}
-                        >
-                          <div className={`
-                            py-4 px-2 text-center h-full flex flex-col items-center justify-center
-                            ${isSelected ? 'bg-gradient-to-br from-blue-50 to-blue-100' : 'bg-white'}
-                          `}>
-                            {isSelected && (
-                              <div className="absolute top-2 right-2 bg-blue-600 text-white p-1 rounded-full">
-                                <Check className="h-3 w-3" />
+                      
+                      <div className="space-y-4">
+                        <Label className="text-sm font-medium">
+                          Selecione os formatos <span className="text-red-500">*</span>
+                        </Label>
+                        
+                        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+                          {formats.map((format: any) => {
+                            const isSelected = step1Form.getValues().selectedFormats?.includes(format.slug);
+                            
+                            return (
+                              <div
+                                key={format.id}
+                                onClick={() => toggleFormat(format.slug)}
+                                className={`border-2 rounded-lg p-3 cursor-pointer transition-colors flex flex-col items-center
+                                  ${isSelected 
+                                    ? 'border-blue-500 bg-blue-50'
+                                    : 'border-gray-200 hover:border-blue-200 hover:bg-blue-50/30'
+                                  }`}
+                              >
+                                <FileImage className={`h-8 w-8 mb-2 ${isSelected ? 'text-blue-600' : 'text-gray-400'}`} />
+                                <span className={`text-sm font-medium ${isSelected ? 'text-blue-600' : 'text-gray-600'}`}>
+                                  {format.name}
+                                </span>
+                                {isSelected && (
+                                  <div className="mt-1 text-xs inline-flex items-center justify-center rounded-full bg-blue-100 text-blue-600 w-5 h-5">
+                                    <Check className="h-3 w-3" />
+                                  </div>
+                                )}
                               </div>
-                            )}
-                            <div className={`text-lg font-medium ${isSelected ? 'text-blue-700' : 'text-gray-700'}`}>
-                              {format.name}
-                            </div>
-                            <div className={`text-xs mt-1 ${isSelected ? 'text-blue-600' : 'text-gray-500'}`}>
-                              Clique para {isSelected ? 'remover' : 'selecionar'}
-                            </div>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {step1Form.formState.errors.selectedFormats && (
-                    <p className="text-sm text-red-500 mt-2">
-                      {step1Form.formState.errors.selectedFormats.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Resumo dos formatos selecionados - Etapa 1 */}
-                {step1Form.getValues().selectedFormats.length > 0 && (
-                  <div className="mt-6 bg-gradient-to-r from-blue-50 to-blue-100 p-5 rounded-xl border border-blue-200">
-                    <div className="flex items-center mb-3">
-                      <div className="bg-blue-500 text-white rounded-full p-1.5 mr-2">
-                        <Check className="h-4 w-4" />
+                            );
+                          })}
+                        </div>
+                        
+                        {step1Form.formState.errors.selectedFormats && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {step1Form.formState.errors.selectedFormats.message}
+                          </p>
+                        )}
                       </div>
-                      <h3 className="text-md font-semibold text-blue-700">Formatos selecionados</h3>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {step1Form.getValues().selectedFormats.map(formatSlug => {
-                        const formatName = getFormatName(formatSlug);
-                        return (
-                          <div 
-                            key={formatSlug} 
-                            className="px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 bg-white border border-blue-200 text-blue-800 shadow-sm"
-                          >
-                            {formatName}
-                            <Check className="h-3 w-3 text-blue-600" />
-                          </div>
-                        );
-                      })}
                     </div>
                   </div>
-                )}
-
-
-                {/* Botão para avançar para a etapa 2 */}
-                <div className="flex justify-end mt-8">
-                  <Button 
+                </div>
+                
+                {/* Botão de Continuar */}
+                <div className="flex justify-end mt-6 pt-6 border-t border-gray-200">
+                  <Button
                     type="submit"
-                    disabled={step1Form.getValues().selectedFormats.length === 0}
-                    className={`px-6 py-5 rounded-xl text-base flex items-center gap-2 ${
-                      step1Form.getValues().selectedFormats.length === 0 
-                        ? 'bg-gray-300 text-gray-600 cursor-not-allowed' 
-                        : 'bg-blue-600 hover:bg-blue-700 text-white'
-                    }`}
+                    className="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
                   >
-                    Continuar para Upload
+                    Continuar
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </div>
               </form>
             )}
-
+            
             {step === 2 && (
               <div className="space-y-6">
-                {/* Navegação da etapa 2 - Upload */}
+                {/* Navegação da etapa 2 */}
                 <div className="flex justify-between items-center mb-6">
                   <button 
                     onClick={goToPreviousStep}
@@ -698,173 +640,62 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                   </button>
                   
                   <div className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium">
-                    Faça o upload das imagens para cada formato
+                    Selecione os formatos para esta arte
                   </div>
-                </div>
-
-                {/* Cabeçalho da etapa 2 */}
-                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                  <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-                    <Upload className="h-5 w-5 mr-2 text-blue-600" />
-                    Upload de Imagens
-                  </h3>
-                  <p className="text-gray-600 text-sm">
-                    Faça o upload de imagens para cada formato selecionado. Todos os formatos precisam ter uma imagem de preview.
-                  </p>
-                  
-                  {/* Resumo dos formatos selecionados */}
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {step1Form.getValues().selectedFormats.map(formatSlug => {
-                      const formatName = getFormatName(formatSlug);
-                      const isComplete = formatsComplete[formatSlug];
-                      
-                      return (
-                        <div 
-                          key={formatSlug} 
-                          className={`px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 
-                            ${isComplete 
-                              ? 'bg-green-50 border border-green-200 text-green-700' 
-                              : 'bg-amber-50 border border-amber-200 text-amber-700'
-                            }`}
-                        >
-                          {formatName}
-                          {isComplete 
-                            ? <Check className="h-3.5 w-3.5" /> 
-                            : <AlertCircle className="h-3.5 w-3.5" />
-                          }
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Cards de upload para cada formato */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {step1Form.getValues().selectedFormats.map(formatSlug => {
-                    const formatName = getFormatName(formatSlug);
-                    const details = formatDetails[formatSlug] || {};
-                    const isComplete = formatsComplete[formatSlug];
-                    
-                    return (
-                      <div key={formatSlug} className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                        <div className={`p-4 text-white font-medium ${isComplete ? 'bg-gradient-to-r from-green-600 to-green-700' : 'bg-gradient-to-r from-blue-600 to-blue-700'}`}>
-                          <div className="flex justify-between items-center">
-                            <h4 className="flex items-center">
-                              <FileType className="h-4 w-4 mr-1.5" />
-                              {formatName}
-                            </h4>
-                            {isComplete && <Check className="h-4 w-4" />}
-                          </div>
-                        </div>
-                        
-                        <div className="p-4">
-                          <div className="space-y-4">
-                            {/* Título */}
-                            <div className="space-y-2">
-                              <Label htmlFor={`title-${formatSlug}`} className="text-sm font-medium">
-                                Título <span className="text-red-500">*</span>
-                              </Label>
-                              <Input
-                                id={`title-${formatSlug}`}
-                                placeholder="Título específico para este formato"
-                                value={details.title || step1Form.getValues().globalTitle}
-                                onChange={(e) => saveFormatDetails(formatSlug, { title: e.target.value })}
-                                className="border-gray-300 focus:ring-blue-500"
-                              />
-                            </div>
-                            
-                            {/* URL de edição */}
-                            <div className="space-y-2">
-                              <Label htmlFor={`editUrl-${formatSlug}`} className="text-sm font-medium flex items-center">
-                                <Link2 className="h-4 w-4 mr-1.5 text-blue-600" />
-                                URL de Edição <span className="text-red-500">*</span>
-                              </Label>
-                              <Input
-                                id={`editUrl-${formatSlug}`}
-                                placeholder="URL do Canva, Google Drive, etc."
-                                value={details.editUrl || ''}
-                                onChange={(e) => saveFormatDetails(formatSlug, { editUrl: e.target.value })}
-                                className="border-gray-300 focus:ring-blue-500"
-                              />
-                            </div>
-                            
-                            {/* Upload de imagem */}
-                            <div className="space-y-2">
-                              <Label htmlFor={`image-${formatSlug}`} className="text-sm font-medium flex items-center">
-                                <UploadCloud className="h-4 w-4 mr-1.5 text-blue-600" />
-                                Imagem de Preview <span className="text-red-500">*</span>
-                              </Label>
-                              
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="col-span-1 md:col-span-2">
-                                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 transition-all hover:border-blue-400">
-                                    <div className="flex flex-col items-center justify-center py-3">
-                                      <Upload className="h-8 w-8 text-gray-400 mb-2" />
-                                      <p className="text-sm text-gray-500">
-                                        Clique para selecionar ou arraste uma imagem
-                                      </p>
-                                      <input
-                                        id={`image-${formatSlug}`}
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={(e) => handleImageUpload(e, formatSlug)}
-                                        className="hidden"
-                                      />
-                                      <label
-                                        htmlFor={`image-${formatSlug}`}
-                                        className="mt-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-md cursor-pointer hover:bg-blue-100 transition-colors"
-                                      >
-                                        {uploading[`image-${formatSlug}`] ? (
-                                          <div className="flex items-center">
-                                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                            Enviando...
-                                          </div>
-                                        ) : (
-                                          "Selecionar imagem"
-                                        )}
-                                      </label>
-                                      {uploadError[`image-${formatSlug}`] && (
-                                        <div className="mt-2 flex items-center text-red-500 text-sm">
-                                          <AlertCircle className="h-4 w-4 mr-1" />
-                                          {uploadError[`image-${formatSlug}`]}
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                                
-                                <div className="col-span-1">
-                                  {details.imageUrl ? (
-                                    <div className="border rounded-lg overflow-hidden h-full flex items-center justify-center bg-gray-50">
-                                      <img
-                                        src={details.imageUrl}
-                                        alt={`Preview de ${formatName}`}
-                                        className="object-contain max-h-40 w-full"
-                                      />
-                                    </div>
-                                  ) : (
-                                    <div className="border rounded-lg overflow-hidden h-full flex items-center justify-center bg-gray-50 text-gray-400">
-                                      <p className="text-sm text-center px-4">
-                                        Preview da imagem <br />aparecerá aqui
-                                      </p>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
                 </div>
                 
-                {/* Botões de navegação */}
-                <div className="flex justify-between mt-8 pt-6 border-t border-gray-200">
+                {/* Container para a seleção de formatos */}
+                <div className="mb-8">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <LayoutGrid className="h-5 w-5 mr-2 text-blue-600" />
+                    Formatos selecionados
+                  </h3>
+                  
+                  <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 mb-6">
+                    <div className="text-sm text-gray-600 mb-3">
+                      Você selecionou estes formatos para criar:
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-2">
+                      {step1Form.getValues().selectedFormats?.map(formatSlug => (
+                        <div
+                          key={formatSlug}
+                          className="px-3 py-1.5 rounded-full bg-blue-100 text-blue-700 text-sm font-medium flex items-center gap-1"
+                        >
+                          <FileType className="h-3.5 w-3.5" />
+                          {getFormatName(formatSlug)}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* Resumo das configurações */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                    <div className="p-4 border border-gray-200 rounded-lg bg-white">
+                      <div className="text-sm font-medium text-gray-700 mb-2">Título Global</div>
+                      <div className="text-gray-800">{step1Form.getValues().globalTitle}</div>
+                    </div>
+                    
+                    <div className="p-4 border border-gray-200 rounded-lg bg-white">
+                      <div className="text-sm font-medium text-gray-700 mb-2">Tipo de Arquivo</div>
+                      <div className="text-gray-800 capitalize">{step1Form.getValues().globalFileType}</div>
+                    </div>
+                    
+                    {step1Form.getValues().globalDescription && (
+                      <div className="p-4 border border-gray-200 rounded-lg bg-white col-span-1 md:col-span-2">
+                        <div className="text-sm font-medium text-gray-700 mb-2">Descrição Global</div>
+                        <div className="text-gray-800 text-sm">{step1Form.getValues().globalDescription}</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Botão para avançar para a etapa de upload (etapa 3) */}
+                <div className="flex justify-end mt-8 pt-6 border-t border-gray-200">
                   <Button 
                     type="button"
                     onClick={goToPreviousStep}
-                    className="px-4 py-2 text-blue-600 bg-white border border-blue-200 hover:bg-blue-50 rounded-lg flex items-center gap-2"
+                    className="px-4 py-2 text-blue-600 bg-white border border-blue-200 hover:bg-blue-50 rounded-lg flex items-center gap-2 mr-4"
                   >
                     <ChevronLeft className="h-4 w-4" />
                     Voltar
@@ -872,264 +703,12 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                   
                   <Button 
                     type="button"
-                    onClick={() => {
-                      // Verificar se todos os formatos estão completos
-                      const allComplete = Object.values(formatsComplete).every(complete => complete);
-                      
-                      if (allComplete) {
-                        setStep(3);
-                        setCurrentTab(step1Form.getValues().selectedFormats[0]); // Definir a primeira aba como atual
-                      } else {
-                        toast({
-                          title: "Preencha todos os campos",
-                          description: "Todos os formatos precisam ter título, URL de edição e imagem",
-                          variant: "destructive",
-                        });
-                      }
-                    }}
+                    onClick={goToStep3}
                     className="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
                   >
-                    Continuar para Revisão
+                    Prosseguir com upload
                     <ArrowRight className="h-4 w-4" />
                   </Button>
-                </div>
-              </div>
-            )}
-
-                {/* Tabs para navegar entre formatos */}
-                <Tabs 
-                  value={currentTab} 
-                  onValueChange={setCurrentTab}
-                  className="w-full"
-                >
-                  <div className="bg-gray-50 p-4 rounded-xl mb-6">
-                    <h3 className="text-sm font-medium text-gray-500 mb-3">Navegue entre os formatos:</h3>
-                    <TabsList className="w-full flex gap-2 bg-transparent p-0">
-                      {Object.keys(formatDetails).map(formatSlug => {
-                        const formatName = getFormatName(formatSlug);
-                        const isComplete = formatsComplete[formatSlug];
-                        const isActive = currentTab === formatSlug;
-                        
-                        return (
-                          <TabsTrigger 
-                            key={formatSlug} 
-                            value={formatSlug}
-                            className={`
-                              flex items-center gap-1.5 py-2 px-4 rounded-lg 
-                              ${isActive ? 'bg-white shadow-sm border border-gray-200' : 'bg-transparent'} 
-                              ${isComplete 
-                                ? (isActive ? 'text-blue-700 font-medium' : 'text-green-600') 
-                                : (isActive ? 'text-gray-800' : 'text-gray-500')
-                              }
-                            `}
-                          >
-                            {formatName}
-                            {isComplete && <Check className="h-3.5 w-3.5 text-green-600" />}
-                          </TabsTrigger>
-                        );
-                      })}
-                    </TabsList>
-                  </div>
-
-                  {/* Conteúdo de cada tab/formato */}
-                  {Object.entries(formatDetails).map(([formatSlug, details]) => (
-                    <TabsContent key={formatSlug} value={formatSlug} className="mt-6">
-                      <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4">
-                          <h2 className="text-lg font-semibold flex items-center">
-                            <BookImage className="h-5 w-5 mr-2 text-white" />
-                            {getFormatName(formatSlug)}
-                          </h2>
-                        </div>
-
-                        <div className="p-6">
-                          {/* Formulário para detalhes do formato */}
-                          <div className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              {/* Título */}
-                              <div className="space-y-2">
-                                <Label htmlFor={`title-${formatSlug}`} className="text-sm font-medium">
-                                  Título <span className="text-red-500">*</span>
-                                </Label>
-                                <Input
-                                  id={`title-${formatSlug}`}
-                                  placeholder="Título específico para este formato"
-                                  value={details.title}
-                                  onChange={(e) => saveFormatDetails(formatSlug, { title: e.target.value })}
-                                  className="border-gray-300 focus:ring-blue-500"
-                                />
-                              </div>
-
-                              {/* URL de edição */}
-                              <div className="space-y-2">
-                                <Label htmlFor={`editUrl-${formatSlug}`} className="text-sm font-medium flex items-center">
-                                  <Link2 className="h-4 w-4 mr-1.5 text-blue-600" />
-                                  URL de Edição <span className="text-red-500">*</span>
-                                </Label>
-                                <Input
-                                  id={`editUrl-${formatSlug}`}
-                                  placeholder="URL do Canva, Google Drive, etc."
-                                  value={details.editUrl}
-                                  onChange={(e) => saveFormatDetails(formatSlug, { editUrl: e.target.value })}
-                                  className="border-gray-300 focus:ring-blue-500"
-                                />
-                              </div>
-                            </div>
-
-                            {/* Upload de imagem */}
-                            <div className="space-y-2">
-                              <Label htmlFor={`image-${formatSlug}`} className="text-sm font-medium flex items-center">
-                                <UploadCloud className="h-4 w-4 mr-1.5 text-blue-600" />
-                                Imagem de Preview <span className="text-red-500">*</span>
-                              </Label>
-                              
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="col-span-1 md:col-span-2">
-                                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 transition-all hover:border-blue-400">
-                                    <div className="flex flex-col items-center justify-center py-3">
-                                      <Upload className="h-8 w-8 text-gray-400 mb-2" />
-                                      <p className="text-sm text-gray-500">
-                                        Clique para selecionar ou arraste uma imagem
-                                      </p>
-                                      <input
-                                        id={`image-${formatSlug}`}
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={(e) => handleImageUpload(e, formatSlug)}
-                                        className="hidden"
-                                      />
-                                      <label
-                                        htmlFor={`image-${formatSlug}`}
-                                        className="mt-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-md cursor-pointer hover:bg-blue-100 transition-colors"
-                                      >
-                                        {uploading[`image-${formatSlug}`] ? (
-                                          <div className="flex items-center">
-                                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                            Enviando...
-                                          </div>
-                                        ) : (
-                                          "Selecionar imagem"
-                                        )}
-                                      </label>
-                                      {uploadError[`image-${formatSlug}`] && (
-                                        <div className="mt-2 flex items-center text-red-500 text-sm">
-                                          <AlertCircle className="h-4 w-4 mr-1" />
-                                          {uploadError[`image-${formatSlug}`]}
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                                
-                                <div className="col-span-1">
-                                  {details.imageUrl ? (
-                                    <div className="border rounded-lg overflow-hidden h-full flex items-center justify-center bg-gray-50">
-                                      <img
-                                        src={details.imageUrl}
-                                        alt={`Preview de ${getFormatName(formatSlug)}`}
-                                        className="object-contain max-h-40 w-full"
-                                      />
-                                    </div>
-                                  ) : (
-                                    <div className="border rounded-lg overflow-hidden h-full flex items-center justify-center bg-gray-50 text-gray-400">
-                                      <p className="text-sm text-center px-4">
-                                        Preview da imagem <br />aparecerá aqui
-                                      </p>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Descrição */}
-                            <div className="space-y-2">
-                              <Label htmlFor={`description-${formatSlug}`} className="text-sm font-medium flex items-center">
-                                Descrição <span className="text-gray-400 text-xs ml-1">(opcional)</span>
-                              </Label>
-                              <Textarea
-                                id={`description-${formatSlug}`}
-                                placeholder="Descrição específica para este formato"
-                                value={details.description || ''}
-                                onChange={(e) => saveFormatDetails(formatSlug, { description: e.target.value })}
-                                className="border-gray-300 focus:ring-blue-500 h-20"
-                              />
-                            </div>
-                          </div>
-                          
-                          {/* Status de conclusão */}
-                          <div className="mt-6 pt-4 border-t border-gray-200">
-                            <div className={`flex items-center ${
-                              formatsComplete[formatSlug] 
-                                ? 'text-green-600' 
-                                : 'text-amber-600'
-                            }`}>
-                              {formatsComplete[formatSlug] ? (
-                                <>
-                                  <Check className="h-5 w-5 mr-2" />
-                                  <span>Formato completo</span>
-                                </>
-                              ) : (
-                                <>
-                                  <AlertCircle className="h-5 w-5 mr-2" />
-                                  <span>Preencha todos os campos obrigatórios</span>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </TabsContent>
-                  ))}
-                </Tabs>
-
-                {/* Navegação entre etapas */}
-                <div className="mt-8 pt-5 border-t border-gray-200">
-                  {Object.values(formatsComplete).some(complete => !complete) ? (
-                    <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 mb-4">
-                      <div className="flex items-center text-amber-700 mb-1">
-                        <AlertCircle className="h-5 w-5 mr-2" />
-                        <h3 className="font-medium">Faltam campos a preencher</h3>
-                      </div>
-                      <p className="text-sm text-amber-600 pl-7">
-                        Complete todos os campos obrigatórios em cada formato para poder avançar.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="rounded-xl bg-green-50 border border-green-200 p-4 mb-4">
-                      <div className="flex items-center text-green-700 mb-1">
-                        <Check className="h-5 w-5 mr-2" />
-                        <h3 className="font-medium">Tudo pronto!</h3>
-                      </div>
-                      <p className="text-sm text-green-600 pl-7">
-                        Todos os detalhes dos formatos foram preenchidos. Você pode avançar para a próxima etapa.
-                      </p>
-                    </div>
-                  )}
-                  
-                  <div className="flex justify-between items-center">
-                    <button 
-                      type="button"
-                      onClick={goToPreviousStep}
-                      className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors flex items-center"
-                    >
-                      <ChevronLeft className="h-4 w-4 mr-1" />
-                      Voltar
-                    </button>
-                    
-                    <Button 
-                      type="button"
-                      onClick={goToStep3}
-                      disabled={Object.values(formatsComplete).some(complete => !complete)}
-                      className={`px-6 py-2 rounded-lg text-base font-medium flex items-center gap-2 ${
-                        Object.values(formatsComplete).some(complete => !complete)
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white'
-                      }`}
-                    >
-                      Continuar
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </div>
                 </div>
               </div>
             )}
@@ -1181,55 +760,56 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                           </div>
                           
                           {step1Form.getValues().globalDescription && (
-                            <div className="col-span-2">
+                            <div className="col-span-1 md:col-span-2">
                               <p className="text-sm text-gray-500">Descrição Global</p>
-                              <p>{step1Form.getValues().globalDescription}</p>
+                              <p className="text-sm">{step1Form.getValues().globalDescription}</p>
                             </div>
                           )}
                           
                           <div>
-                            <p className="text-sm text-gray-500">Categoria</p>
+                            <p className="text-sm text-gray-500">Arte Premium</p>
                             <p className="font-medium">
-                              {categories.find((cat: any) => cat.id.toString() === step1Form.getValues().categoryId)?.name || 'Categoria não encontrada'}
+                              {step1Form.getValues().isPremium ? 
+                                <span className="text-amber-600 flex items-center">
+                                  <Check className="h-4 w-4 mr-1 text-green-600" /> 
+                                  Sim
+                                </span> : 
+                                <span className="text-gray-600">Não</span>
+                              }
                             </p>
-                          </div>
-                          
-                          <div>
-                            <p className="text-sm text-gray-500">Tipo de Acesso</p>
-                            <p className="font-medium">{step1Form.getValues().isPremium ? 'Premium' : 'Gratuito'}</p>
                           </div>
                         </div>
                       </div>
                       
                       {/* Lista de formatos */}
                       <div>
-                        <h3 className="text-base font-medium text-gray-800 mb-3">Formatos Incluídos</h3>
+                        <h3 className="text-base font-medium text-gray-700 mb-3 flex items-center">
+                          <LayoutGrid className="h-4 w-4 mr-2 text-blue-600" />
+                          Formatos Incluídos
+                        </h3>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-3 mt-4">
                           {Object.entries(formatDetails).map(([formatSlug, details]) => (
-                            <div 
-                              key={formatSlug}
-                              className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm"
-                            >
-                              <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
-                                <h4 className="font-medium text-gray-700">{getFormatName(formatSlug)}</h4>
-                                <div className="text-green-600 flex items-center text-sm">
-                                  <Check className="h-4 w-4 mr-1" />
-                                  Completo
-                                </div>
+                            <div key={formatSlug} className="flex border border-gray-200 rounded-lg p-2 bg-white">
+                              <div className="h-16 w-16 rounded-md overflow-hidden border border-gray-200 flex-shrink-0">
+                                {details.imageUrl ? (
+                                  <img
+                                    src={details.imageUrl}
+                                    alt={`Preview de ${getFormatName(formatSlug)}`}
+                                    className="object-cover h-full w-full"
+                                  />
+                                ) : (
+                                  <div className="bg-gray-100 h-full w-full flex items-center justify-center text-gray-400">
+                                    <FileImage className="h-6 w-6" />
+                                  </div>
+                                )}
                               </div>
-                              
-                              <div className="p-4 grid grid-cols-3 gap-3">
-                                <div className="col-span-1">
-                                  {details.imageUrl && (
-                                    <img 
-                                      src={details.imageUrl} 
-                                      alt={details.title}
-                                      className="w-full h-24 object-cover rounded border border-gray-200"
-                                    />
-                                  )}
+                              <div className="ml-3 flex-grow">
+                                <div className="flex items-center">
+                                  <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-md text-xs font-medium">
+                                    {getFormatName(formatSlug)}
+                                  </span>
                                 </div>
-                                
                                 <div className="col-span-2 space-y-1">
                                   <p className="text-sm font-medium line-clamp-1">{details.title}</p>
                                   <p className="text-xs text-gray-500 line-clamp-1">
