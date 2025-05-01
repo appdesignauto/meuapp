@@ -153,8 +153,16 @@ export default function AddArtFormMulti() {
       const formData = new FormData();
       formData.append('image', file);
       formData.append('category', category.slug || 'default');
+      
+      // Adicionar informações do designer (usuário logado)
+      if (user && user.id) {
+        formData.append('designerId', user.id.toString());
+      }
 
-      // Fazer upload da imagem
+      // Fazer upload da imagem com feedback detalhado no console
+      console.log(`Iniciando upload para formato: ${formatSlug}, isPreview: ${isPreview}`);
+      console.log(`Dados do FormData: categoria=${category.slug}, designerId=${user?.id}`);
+      
       const response = await fetch('/api/upload-image', {
         method: 'POST',
         body: formData,
@@ -162,10 +170,12 @@ export default function AddArtFormMulti() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Falha ao fazer upload da imagem');
+        console.error(`Erro no upload: ${JSON.stringify(errorData)}`);
+        throw new Error(errorData.message || errorData.error || 'Falha ao fazer upload da imagem');
       }
 
       const result = await response.json();
+      console.log(`Upload concluído com sucesso: ${JSON.stringify(result)}`);
 
       // Atualizar estado com a URL da imagem
       const index = form.getValues().formats.findIndex(f => f.format === formatSlug);

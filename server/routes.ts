@@ -1916,32 +1916,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Nenhuma imagem fornecida" });
       }
       
-      // Upload para o Supabase storage
-      const result = await supabaseStorageService.uploadImageWithOptimization(
-        req.file, 
-        "artes", 
-        {
-          width: 800,
-          height: undefined, // mantém proporção original
-          quality: 85,
-          format: "webp"
-        }
-      );
+      // Extrair categoria para organização das pastas
+      const categorySlug = req.body.category;
       
-      if (!result.success) {
-        return res.status(500).json({ error: result.error || "Erro ao processar a imagem" });
-      }
+      // Extrair ID do designer (usuário logado)
+      const designerId = req.user ? req.user.id : undefined;
+      
+      // Configurações para otimização
+      const options = {
+        width: 800,
+        height: undefined, // mantém proporção original
+        quality: 85,
+        format: "webp" as const
+      };
+      
+      // Upload para o Supabase storage usando o método correto
+      const result = await supabaseStorageService.uploadImage(
+        req.file,
+        options,
+        categorySlug,
+        designerId
+      );
       
       return res.json({ 
         success: true, 
         imageUrl: result.imageUrl,
+        thumbnailUrl: result.thumbnailUrl,
         message: "Imagem enviada com sucesso" 
       });
     } catch (error) {
       console.error("Erro no upload de imagem:", error);
       return res.status(500).json({ 
         error: "Erro ao processar o upload da imagem",
-        details: error.message
+        details: error instanceof Error ? error.message : 'Erro desconhecido'
       });
     }
   });
