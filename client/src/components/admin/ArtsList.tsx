@@ -44,6 +44,7 @@ const ArtsList = () => {
   }>({});
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingArt, setEditingArt] = useState<Art | null>(null);
+  const [formType, setFormType] = useState<'single' | 'multi'>('single');
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -177,6 +178,13 @@ const ArtsList = () => {
   };
   
   const handleAddNew = () => {
+    if (formType === 'multi') {
+      // Redirecionar para o formulário de múltiplos formatos
+      window.location.href = '/admin/arts/add-multi';
+      return;
+    }
+    
+    // Formulário legado (formato único)
     setEditingArt(null);
     setIsFormOpen(true);
   };
@@ -221,9 +229,25 @@ const ArtsList = () => {
                 <UserCircle className="h-4 w-4 mr-2" />
                 {updateDesignersMutation.isPending ? 'Atualizando...' : 'Atribuir Designer'}
               </Button>
-              <Button onClick={handleAddNew}>
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  setFormType('single');
+                  handleAddNew();
+                }}
+                className="mr-2"
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Adicionar Arte
+              </Button>
+              <Button 
+                onClick={() => {
+                  setFormType('multi');
+                  handleAddNew();
+                }}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Múltiplos Formatos
               </Button>
             </div>
           </div>
