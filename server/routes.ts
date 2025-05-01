@@ -4347,6 +4347,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Registrar rotas para redefinição de senha
   app.use('/api/password-reset', passwordResetRouter);
+
+  // Registrar rotas para artes multi-formato
+  app.use(multiArtRouter);
   
   // Registrar rotas para diagnóstico de e-mail (administradores)
   app.use('/api/email-diagnostics', emailDiagnosticsRouter);
