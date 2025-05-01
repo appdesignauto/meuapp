@@ -68,7 +68,7 @@ router.get('/', async (req, res) => {
           LIMIT 1
         ) as "primaryImageUrl"
       FROM "artGroups" ag
-      LEFT JOIN users u ON ag."designerId" = u.id
+      LEFT JOIN users u ON ag."designerid" = u.id
       LEFT JOIN categories c ON ag."categoryId" = c.id
       WHERE 1=1
     `;
@@ -88,7 +88,7 @@ router.get('/', async (req, res) => {
     
     // Condição de designer
     if (designerId) {
-      conditions.push(`ag."designerId" = ${designerId}`);
+      conditions.push(`ag."designerid" = ${designerId}`);
     }
     
     // Condição de premium
@@ -170,7 +170,7 @@ router.get('/:id', async (req, res) => {
         c.name as "categoryName",
         c.slug as "categorySlug"
       FROM "artGroups" ag
-      LEFT JOIN users u ON ag."designerId" = u.id
+      LEFT JOIN users u ON ag."designerid" = u.id
       LEFT JOIN categories c ON ag."categoryId" = c.id
       WHERE ag.id = ${id}
     `;
@@ -348,12 +348,12 @@ router.post('/', isAuthenticated, canCreateArt, upload.single('image'), async (r
     
     // Incrementar contadores do designer
     await db.execute(sql.raw(`
-      INSERT INTO "designerStats" ("designerId", "artCount", "downloadCount", "viewCount", "followersCount", "createdAt", "updatedAt")
+      INSERT INTO "designerStats" ("designerid", "artcount", "downloadCount", "viewCount", "followersCount", "createdAt", "updatedat")
       VALUES (${req.user.id}, 1, 0, 0, 0, NOW(), NOW())
-      ON CONFLICT ("designerId") 
+      ON CONFLICT ("designerid") 
       DO UPDATE SET 
-        "artCount" = "designerStats"."artCount" + 1,
-        "updatedAt" = NOW()
+        "artcount" = "designerStats"."artcount" + 1,
+        "updatedat" = NOW()
     `));
     
     res.status(201).json({ 
@@ -609,7 +609,7 @@ router.patch('/:groupId/variations/:variationId', isAuthenticated, canCreateArt,
     let paramIndex = 1;
     
     if (editUrl !== undefined) {
-      updateFields.push(`"editUrl" = $${paramIndex++}`);
+      updateFields.push(`"editurl" = $${paramIndex++}`);
       params.push(editUrl);
     }
     
@@ -621,7 +621,7 @@ router.patch('/:groupId/variations/:variationId', isAuthenticated, canCreateArt,
         WHERE "groupid" = ${groupId}
       `));
       
-      updateFields.push(`"isPrimary" = true`);
+      updateFields.push(`"isprimary" = true`);
     }
     
     if (updateFields.length === 0) {
@@ -644,7 +644,7 @@ router.patch('/:groupId/variations/:variationId', isAuthenticated, canCreateArt,
     // Atualizar data de modificação do grupo
     await db.execute(sql.raw(`
       UPDATE "artGroups" 
-      SET "updatedAt" = NOW() 
+      SET "updatedat" = NOW() 
       WHERE id = ${groupId}
     `));
     
@@ -695,9 +695,9 @@ router.delete('/:id', isAuthenticated, isAdmin, async (req, res) => {
     // Atualizar contador de artes do designer
     await db.execute(sql.raw(`
       UPDATE "designerStats"
-      SET "artCount" = GREATEST("artCount" - 1, 0),
-          "updatedAt" = NOW()
-      WHERE "designerId" = ${group.designerId}
+      SET "artcount" = GREATEST("artcount" - 1, 0),
+          "updatedat" = NOW()
+      WHERE "designerid" = ${group.designerId}
     `));
     
     res.json({ message: 'Grupo de arte excluído com sucesso' });
@@ -773,7 +773,7 @@ router.delete('/:groupId/variations/:variationId', isAuthenticated, isAdmin, asy
     // Atualizar data de modificação do grupo
     await db.execute(sql.raw(`
       UPDATE "artGroups" 
-      SET "updatedAt" = NOW() 
+      SET "updatedat" = NOW() 
       WHERE id = ${groupId}
     `));
     
