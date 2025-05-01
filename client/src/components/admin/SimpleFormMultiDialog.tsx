@@ -46,14 +46,14 @@ const formatSchema = z.object({
   editUrl: z.string().min(5, "URL de edição é obrigatória"),
 });
 
-// Esquema para a primeira etapa (seleção de formatos)
+// Esquema para a primeira etapa (informações gerais)
 const step1Schema = z.object({
   categoryId: z.string().min(1, "Por favor selecione uma categoria"),
   globalFileType: z.string().min(1, "Por favor selecione um tipo de arquivo"),
-  isPremium: z.boolean().default(false),
+  isPremium: z.boolean().default(true),
   globalTitle: z.string().min(3, "Título deve ter pelo menos 3 caracteres"),
   globalDescription: z.string().optional(),
-  selectedFormats: z.array(z.string()).min(1, "Selecione pelo menos um formato")
+  selectedFormats: z.array(z.string()).default([])
 });
 
 // Esquema do formulário completo
@@ -588,7 +588,39 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
 
                 <Separator className="my-2" />
 
-                {/* Seleção de formatos - Etapa 1 */}
+
+
+                {/* Botão para avançar para a etapa 2 */}
+                <div className="flex justify-end mt-8">
+                  <Button 
+                    type="submit"
+                    className="px-6 py-5 rounded-xl text-base flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+                  >
+                    Continuar para Seleção de Formatos
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </form>
+            )}
+
+            {step === 2 && (
+              <div className="space-y-6">
+                {/* Navegação da etapa 2 */}
+                <div className="flex justify-between items-center mb-6">
+                  <button 
+                    onClick={goToPreviousStep}
+                    className="text-blue-600 hover:text-blue-800 flex items-center gap-1 px-3 py-1.5 border border-blue-200 rounded-lg transition-all hover:bg-blue-50"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Voltar
+                  </button>
+                  
+                  <div className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium">
+                    Selecione os formatos disponíveis
+                  </div>
+                </div>
+                
+                {/* Seleção de formatos - Etapa 2 */}
                 <div className="pt-2">
                   <h3 className="text-lg font-semibold text-blue-700 mb-3 flex items-center">
                     <LayoutGrid className="h-5 w-5 mr-2 text-blue-600" />
@@ -640,7 +672,7 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                   )}
                 </div>
 
-                {/* Resumo dos formatos selecionados - Etapa 1 */}
+                {/* Resumo dos formatos selecionados - Etapa 2 */}
                 {step1Form.getValues().selectedFormats.length > 0 && (
                   <div className="mt-6 bg-gradient-to-r from-blue-50 to-blue-100 p-5 rounded-xl border border-blue-200">
                     <div className="flex items-center mb-3">
@@ -665,11 +697,12 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                     </div>
                   </div>
                 )}
-
-                {/* Botão para avançar para a etapa 2 */}
+                
+                {/* Botão para avançar para a etapa 3 */}
                 <div className="flex justify-end mt-8">
                   <Button 
-                    type="submit"
+                    type="button"
+                    onClick={goToStep3}
                     disabled={step1Form.getValues().selectedFormats.length === 0}
                     className={`px-6 py-5 rounded-xl text-base flex items-center gap-2 ${
                       step1Form.getValues().selectedFormats.length === 0 
@@ -677,16 +710,16 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                         : 'bg-blue-600 hover:bg-blue-700'
                     }`}
                   >
-                    Continuar
+                    Continuar para Upload
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </div>
-              </form>
+              </div>
             )}
-
-            {step === 2 && currentTab && (
+            
+            {step === 3 && currentTab && (
               <div className="space-y-6">
-                {/* Navegação da etapa 2 */}
+                {/* Navegação da etapa 3 */}
                 <div className="flex justify-between items-center mb-6">
                   <button 
                     onClick={goToPreviousStep}
