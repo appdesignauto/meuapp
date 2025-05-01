@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/use-auth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import SimpleFormMultiDialog from "@/components/admin/SimpleFormMultiDialog";
 import ArtsList from '@/components/admin/ArtsList';
 import CategoriesList from '@/components/admin/CategoriesList';
 import UserManagement from '@/components/admin/UserManagement';
@@ -36,6 +37,7 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('arts');
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const [isMultiFormOpen, setIsMultiFormOpen] = useState(false);
 
   // Verifica se o usuário é admin ou designer_adm
   const isAuthorized = user?.role === 'admin' || user?.role === 'designer_adm';
@@ -162,12 +164,14 @@ const AdminDashboard = () => {
           {(user?.role === 'admin' || user?.role === 'designer_adm') && (
             <>
               <h3 className="text-sm uppercase font-semibold text-gray-500 mb-2">Ferramentas Avançadas</h3>
-              <Link href="/admin/add-art-multi">
-                <Button variant="ghost" className="w-full justify-start text-gray-600 mb-2 text-blue-600 font-medium">
-                  <Plus className="w-5 h-5 mr-3" />
-                  Arte Multi-Formato
-                </Button>
-              </Link>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start text-gray-600 mb-2 text-blue-600 font-medium"
+                onClick={() => setIsMultiFormOpen(true)}
+              >
+                <Plus className="w-5 h-5 mr-3" />
+                Arte Multi-Formato
+              </Button>
               {user?.role === 'admin' && (
                 <>
                   <Link href="/admin/logo-upload">
