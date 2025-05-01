@@ -44,6 +44,7 @@ import dateTestRouter from './date-test-router';
 import supabeDiagnosticsRouter from './routes/supabase-diagnostics';
 import artGroupsRouter from './routes/art-groups';
 
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Rota simples de verificação de saúde
   app.get('/health', (req, res) => {
@@ -4360,6 +4361,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Ferramenta de diagnóstico do Supabase Storage
   app.use(supabeDiagnosticsRouter);
+  
+  // Rotas para o sistema de artes com múltiplos formatos
+  app.use('/api/art-groups', artGroupsRouter);
 
   const httpServer = createServer(app);
   
