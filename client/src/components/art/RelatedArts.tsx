@@ -61,7 +61,7 @@ export default function RelatedArts({
     return (
       <>
         <h2 className="text-xl font-bold text-gray-800 mb-5">Artes relacionadas</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="masonry-grid">
           {Array(limit).fill(0).map((_, index) => (
             <div key={index} className="rounded-lg overflow-hidden bg-neutral-50 shadow-sm">
               <Skeleton className="w-full aspect-square" />
@@ -90,13 +90,14 @@ export default function RelatedArts({
   return (
     <>
       {getSectionTitle()}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <div className="masonry-grid">
         {relatedArts.map((art: any) => (
           <ArtCard 
             key={art.id}
             art={art}
             onClick={() => setLocation(`/arts/${art.id}`)}
             showEditAction={false}
+            showDesigner={false}
           />
         ))}
       </div>
