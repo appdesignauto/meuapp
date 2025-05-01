@@ -267,6 +267,11 @@ router.post('/', isAuthenticated, canCreateArt, upload.single('image'), async (r
       : null;
     
     // Inserir grupo na base de dados
+    // Em vez de usar parâmetros com $1, $2, etc. vamos inserir diretamente os valores na query
+    // já que estamos usando sql.raw
+    const isPremiumValue = isPremium === 'true' ? 'true' : 'false';
+    const designerId = req.user.id;
+    
     const groupInsertQuery = `
       INSERT INTO "artGroups" (
         "title", 
@@ -282,21 +287,33 @@ router.post('/', isAuthenticated, canCreateArt, upload.single('image'), async (r
         "updatedat"
       )
       VALUES (
-        $1, $2, $3, $4, true, 'active', 0, 0, 0, NOW(), NOW()
+        '${title.replace(/'/g, "''")}', 
+        ${categoryId}, 
+        ${designerId}, 
+        ${isPremiumValue}, 
+        true, 
+        'active', 
+        0, 
+        0, 
+        0, 
+        NOW(), 
+        NOW()
       )
       RETURNING id
     `;
     
-    const groupResult = await db.execute(sql.raw(groupInsertQuery, [
-      title,
-      categoryId,
-      req.user.id, // designerId
-      isPremium === 'true'
-    ]));
+    const groupResult = await db.execute(sql.raw(groupInsertQuery));
     
     const groupId = groupResult.rows[0].id;
     
-    // Inserir variação primária
+    // Inserir variação primária com valores diretamente na string SQL
+    // Escapar a URL da imagem e do editor para evitar problemas com aspas
+    const imageUrlEscaped = uploadResult.imageUrl.replace(/'/g, "''");
+    const editUrlEscaped = editUrl ? editUrl.replace(/'/g, "''") : 'NULL';
+    const widthValue = metadata.width ? metadata.width : 'NULL';
+    const heightValue = metadata.height ? metadata.height : 'NULL';
+    const aspectRatioValue = aspectRatio ? `'${aspectRatio}'` : 'NULL';
+    
     const variationInsertQuery = `
       INSERT INTO "artVariations" (
         "groupid",
@@ -312,21 +329,22 @@ router.post('/', isAuthenticated, canCreateArt, upload.single('image'), async (r
         "updatedat"
       )
       VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, true, NOW(), NOW()
+        ${groupId}, 
+        ${formatId}, 
+        ${fileTypeId}, 
+        '${imageUrlEscaped}', 
+        ${editUrlEscaped === 'NULL' ? 'NULL' : `'${editUrlEscaped}'`}, 
+        ${widthValue}, 
+        ${heightValue}, 
+        ${aspectRatioValue}, 
+        true, 
+        NOW(), 
+        NOW()
       )
       RETURNING id
     `;
     
-    await db.execute(sql.raw(variationInsertQuery, [
-      groupId,
-      formatId,
-      fileTypeId,
-      uploadResult.imageUrl,
-      editUrl || null,
-      metadata.width || null,
-      metadata.height || null,
-      aspectRatio,
-    ]));
+    await db.execute(sql.raw(variationInsertQuery));
     
     // Incrementar contadores do designer
     await db.execute(sql.raw(`
@@ -417,7 +435,15 @@ router.post('/:id/variations', isAuthenticated, canCreateArt, upload.single('ima
       `));
     }
     
-    // Inserir variação
+    // Inserir variação com valores diretamente na string SQL
+    // Escapar a URL da imagem e do editor para evitar problemas com aspas
+    const imageUrlEscaped = uploadResult.imageUrl.replace(/'/g, "''");
+    const editUrlEscaped = editUrl ? editUrl.replace(/'/g, "''") : 'NULL';
+    const widthValue = metadata.width ? metadata.width : 'NULL';
+    const heightValue = metadata.height ? metadata.height : 'NULL';
+    const aspectRatioValue = aspectRatio ? `'${aspectRatio}'` : 'NULL';
+    const isPrimaryValue = isPrimary === 'true' ? 'true' : 'false';
+    
     const variationInsertQuery = `
       INSERT INTO "artVariations" (
         "groupid",
@@ -433,22 +459,22 @@ router.post('/:id/variations', isAuthenticated, canCreateArt, upload.single('ima
         "updatedat"
       )
       VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW()
+        ${id},
+        ${formatId}, 
+        ${fileTypeId}, 
+        '${imageUrlEscaped}', 
+        ${editUrlEscaped === 'NULL' ? 'NULL' : `'${editUrlEscaped}'`}, 
+        ${widthValue}, 
+        ${heightValue}, 
+        ${aspectRatioValue}, 
+        ${isPrimaryValue}, 
+        NOW(), 
+        NOW()
       )
       RETURNING id
     `;
     
-    const variationResult = await db.execute(sql.raw(variationInsertQuery, [
-      id,
-      formatId,
-      fileTypeId,
-      uploadResult.imageUrl,
-      editUrl || null,
-      metadata.width || null,
-      metadata.height || null,
-      aspectRatio,
-      isPrimary === 'true'
-    ]));
+    const variationResult = await db.execute(sql.raw(variationInsertQuery));
     
     // Atualizar data de modificação do grupo
     await db.execute(sql.raw(`
@@ -525,7 +551,7 @@ router.patch('/:id', isAuthenticated, canCreateArt, async (req, res) => {
     }
     
     // Adicionar sempre o timestamp de atualização
-    updateFields.push(`"updatedAt" = NOW()`);
+    updateFields.push(`"updatedat" = NOW()`);
     
     // Executar a atualização
     const updateQuery = `
@@ -557,7 +583,7 @@ router.patch('/:groupId/variations/:variationId', isAuthenticated, canCreateArt,
     const checkQuery = `
       SELECT ag.*, av.id as "variationId"
       FROM "artGroups" ag
-      JOIN "artVariations" av ON av."groupId" = ag.id
+      JOIN "artVariations" av ON av."groupid" = ag.id
       WHERE ag.id = ${groupId} AND av.id = ${variationId}
     `;
     
@@ -603,7 +629,7 @@ router.patch('/:groupId/variations/:variationId', isAuthenticated, canCreateArt,
     }
     
     // Adicionar sempre o timestamp de atualização
-    updateFields.push(`"updatedAt" = NOW()`);
+    updateFields.push(`"updatedat" = NOW()`);
     
     // Executar a atualização
     const updateQuery = `
