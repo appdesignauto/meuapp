@@ -53,7 +53,7 @@ export default function RelatedArts({
         </div>
       );
     }
-    return <h2 className="text-xl font-bold text-gray-800 mb-5">Mais artes de {designerName}</h2>;
+    return <h2 className="text-xl font-bold text-gray-800 mb-5">Artes relacionadas</h2>;
   };
   
   // Loading state
