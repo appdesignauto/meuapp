@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { Loader2, Plus, Trash2, Upload, Image } from 'lucide-react';
+import { Loader2, Plus, Trash2, Upload, Image, Check } from 'lucide-react';
 
 import {
   Card,
@@ -32,6 +32,7 @@ import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ArtFormatSchema, ArtGroupSchema } from '@shared/interfaces/art-groups';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 // Esquema de formulário com validação
 const formSchema = z.object({
@@ -61,6 +62,10 @@ export default function AddArtFormMulti() {
   const [uploading, setUploading] = useState<{ [key: string]: boolean }>({});
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
 
+  // Estado para controlar os formatos selecionados
+  const [selectedFormats, setSelectedFormats] = useState<string[]>([]);
+  const [currentTab, setCurrentTab] = useState<string>("selection");
+
   // Consultas para obter dados
   const { data: categories, isLoading: isLoadingCategories } = useQuery({
     queryKey: ['/api/categories'],
@@ -80,35 +85,50 @@ export default function AddArtFormMulti() {
     defaultValues: {
       categoryId: '',
       isPremium: false,
-      formats: [
-        {
-          format: '',
+      formats: []
+    },
+  });
+
+  const { fields, append, remove, replace } = useFieldArray({
+    control: form.control,
+    name: 'formats',
+  });
+
+  // Efeito para sincronizar os formatos selecionados com o formulário
+  useEffect(() => {
+    const currentFormats = form.getValues().formats;
+    
+    // Adicionar novos formatos que foram selecionados
+    selectedFormats.forEach(formatSlug => {
+      const exists = currentFormats.some(f => f.format === formatSlug);
+      if (!exists) {
+        append({
+          format: formatSlug,
           fileType: '',
           title: '',
           description: '',
           imageUrl: '',
           previewUrl: '',
           editUrl: '',
-        }
-      ]
-    },
-  });
+        });
+      }
+    });
 
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: 'formats',
-  });
+    // Remover formatos que foram desmarcados
+    const newFormats = currentFormats.filter(f => selectedFormats.includes(f.format));
+    replace(newFormats);
+  }, [selectedFormats, append, replace]);
 
-  // Função para adicionar um novo formato
-  const addFormat = () => {
-    append({
-      format: '',
-      fileType: '',
-      title: '',
-      description: '',
-      imageUrl: '',
-      previewUrl: '',
-      editUrl: '',
+  // Manipuladores para seleção de formatos
+  const toggleFormat = (formatSlug: string) => {
+    setSelectedFormats(prev => {
+      if (prev.includes(formatSlug)) {
+        // Se já estiver selecionado, remova
+        return prev.filter(slug => slug !== formatSlug);
+      } else {
+        // Se não estiver selecionado, adicione
+        return [...prev, formatSlug];
+      }
     });
   };
 
@@ -196,6 +216,34 @@ export default function AddArtFormMulti() {
     }
   };
 
+  // Função para continuar para as abas de formatos
+  const proceedToFormatTabs = () => {
+    if (selectedFormats.length === 0) {
+      toast({
+        title: "Selecione pelo menos um formato",
+        description: "Você precisa selecionar pelo menos um formato para continuar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Verificar se a categoria foi selecionada
+    const categoryId = form.getValues('categoryId');
+    if (!categoryId) {
+      toast({
+        title: "Selecione uma categoria",
+        description: "Você precisa selecionar uma categoria antes de continuar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Definir a primeira aba como ativa
+    if (selectedFormats.length > 0) {
+      setCurrentTab(selectedFormats[0]);
+    }
+  };
+
   // Mutação para salvar a arte
   const submitMutation = useMutation({
     mutationFn: async (data: FormValues) => {
@@ -220,20 +268,12 @@ export default function AddArtFormMulti() {
       form.reset({
         categoryId: '',
         isPremium: false,
-        formats: [
-          {
-            format: '',
-            fileType: '',
-            title: '',
-            description: '',
-            imageUrl: '',
-            previewUrl: '',
-            editUrl: '',
-          }
-        ]
+        formats: []
       });
       setImages({});
       setPreviewImages({});
+      setSelectedFormats([]);
+      setCurrentTab("selection");
       queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
     },
     onError: (error: any) => {
@@ -260,6 +300,243 @@ export default function AddArtFormMulti() {
       </div>
     );
   }
+
+  // Encontrar o índice do formato atual no array de formatos do formulário
+  const getFormatIndex = (formatSlug: string) => {
+    return form.getValues().formats.findIndex(f => f.format === formatSlug);
+  };
+
+  // Função para renderizar o conteúdo de uma aba específica
+  const renderFormatTabContent = (formatSlug: string) => {
+    const index = getFormatIndex(formatSlug);
+    if (index === -1) return null;
+
+    const formatName = formats?.find((f: any) => f.slug === formatSlug)?.name || formatSlug;
+
+    return (
+      <Card key={formatSlug} className="border-solid border-gray-200">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">Detalhes do formato: {formatName}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor={`formats.${index}.fileType`}>Tipo de Arquivo <span className="text-red-500">*</span></Label>
+              <Controller
+                control={form.control}
+                name={`formats.${index}.fileType`}
+                render={({ field }) => (
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {fileTypes?.map((type: any) => (
+                        <SelectItem key={type.id} value={type.slug}>
+                          {type.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {form.formState.errors.formats?.[index]?.fileType && (
+                <p className="text-sm text-red-500 mt-1">
+                  {form.formState.errors.formats?.[index]?.fileType?.message}
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor={`formats.${index}.title`}>Título <span className="text-red-500">*</span></Label>
+              <Input
+                {...form.register(`formats.${index}.title`)}
+                placeholder="Título da arte"
+              />
+              {form.formState.errors.formats?.[index]?.title && (
+                <p className="text-sm text-red-500 mt-1">
+                  {form.formState.errors.formats?.[index]?.title?.message}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor={`formats.${index}.description`}>Descrição</Label>
+            <Textarea
+              {...form.register(`formats.${index}.description`)}
+              placeholder="Descrição da arte (opcional)"
+              rows={3}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor={`formats.${index}.editUrl`}>URL de Edição <span className="text-red-500">*</span></Label>
+            <Input
+              {...form.register(`formats.${index}.editUrl`)}
+              placeholder="URL para edição (Canva, Google Drive, etc)"
+            />
+            {form.formState.errors.formats?.[index]?.editUrl && (
+              <p className="text-sm text-red-500 mt-1">
+                {form.formState.errors.formats?.[index]?.editUrl?.message}
+              </p>
+            )}
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Imagem Principal <span className="text-red-500">*</span></Label>
+              <div className="flex items-center space-x-2">
+                <div 
+                  className={`border-2 border-dashed rounded-lg p-4 flex flex-col items-center justify-center w-full h-32 bg-gray-50 ${
+                    uploading[`main-${index}`] ? 'border-blue-300 bg-blue-50' : 'border-gray-300 hover:border-blue-400'
+                  }`}
+                >
+                  {images[index] ? (
+                    <div className="relative w-full h-full">
+                      <img 
+                        src={images[index]} 
+                        alt="Imagem carregada" 
+                        className="h-full mx-auto object-contain cursor-pointer"
+                        onClick={() => handleImagePreview(index)}
+                      />
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      {uploading[`main-${index}`] ? (
+                        <Loader2 className="h-8 w-8 mx-auto animate-spin text-blue-500" />
+                      ) : (
+                        <>
+                          <Upload className="h-8 w-8 mx-auto text-gray-400" />
+                          <p className="text-sm text-gray-500 mt-2">Clique para fazer upload</p>
+                        </>
+                      )}
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    onChange={(e) => handleImageChange(e, index)}
+                    disabled={uploading[`main-${index}`]}
+                    accept="image/*"
+                  />
+                  <input 
+                    type="hidden" 
+                    {...form.register(`formats.${index}.imageUrl`)}
+                    value={images[index] || ''}
+                  />
+                </div>
+              </div>
+              {form.formState.errors.formats?.[index]?.imageUrl && (
+                <p className="text-sm text-red-500 mt-1">
+                  {form.formState.errors.formats?.[index]?.imageUrl?.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label>Imagem de Pré-visualização (opcional)</Label>
+              <div className="flex items-center space-x-2">
+                <div 
+                  className={`border-2 border-dashed rounded-lg p-4 flex flex-col items-center justify-center w-full h-32 bg-gray-50 ${
+                    uploading[`preview-${index}`] ? 'border-blue-300 bg-blue-50' : 'border-gray-300 hover:border-blue-400'
+                  }`}
+                >
+                  {previewImages[index] ? (
+                    <div className="relative w-full h-full">
+                      <img 
+                        src={previewImages[index]} 
+                        alt="Pré-visualização" 
+                        className="h-full mx-auto object-contain cursor-pointer"
+                        onClick={() => handleImagePreview(index, true)}
+                      />
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      {uploading[`preview-${index}`] ? (
+                        <Loader2 className="h-8 w-8 mx-auto animate-spin text-blue-500" />
+                      ) : (
+                        <>
+                          <Image className="h-8 w-8 mx-auto text-gray-400" />
+                          <p className="text-sm text-gray-500 mt-2">Pré-visualização (opcional)</p>
+                        </>
+                      )}
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    onChange={(e) => handleImageChange(e, index, true)}
+                    disabled={uploading[`preview-${index}`]}
+                    accept="image/*"
+                  />
+                  <input 
+                    type="hidden" 
+                    {...form.register(`formats.${index}.previewUrl`)}
+                    value={previewImages[index] || ''}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  // Função para renderizar a tabela de visão geral
+  const renderOverview = () => {
+    return (
+      <Card className="border-solid border-gray-200">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">Visão Geral</CardTitle>
+          <CardDescription>
+            Verifique todos os formatos antes de salvar
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="text-left p-2 border">Formato</th>
+                  <th className="text-left p-2 border">Tipo</th>
+                  <th className="text-left p-2 border">Título</th>
+                  <th className="text-left p-2 border">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {form.getValues().formats.map((format, index) => {
+                  const formatName = formats?.find((f: any) => f.slug === format.format)?.name || format.format;
+                  const fileTypeName = fileTypes?.find((t: any) => t.slug === format.fileType)?.name || format.fileType;
+                  const isComplete = format.title && format.imageUrl && format.editUrl && format.fileType;
+                  
+                  return (
+                    <tr key={index} className="border-b">
+                      <td className="p-2 border">{formatName}</td>
+                      <td className="p-2 border">{fileTypeName}</td>
+                      <td className="p-2 border">{format.title || '—'}</td>
+                      <td className="p-2 border">
+                        {isComplete ? (
+                          <span className="flex items-center text-green-600">
+                            <Check className="w-4 h-4 mr-1" /> Completo
+                          </span>
+                        ) : (
+                          <span className="text-red-500">Incompleto</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
 
   return (
     <div className="container mx-auto p-4 max-w-5xl">
@@ -321,279 +598,96 @@ export default function AddArtFormMulti() {
 
             <Separator className="my-6" />
 
-            {/* Seção dinâmica para formatos */}
-            <div className="space-y-8">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Formatos da Arte</h3>
-                <Button 
-                  type="button" 
-                  onClick={addFormat} 
-                  variant="outline"
-                  className="flex items-center gap-2"
-                >
-                  <Plus className="h-4 w-4" /> Adicionar Formato
-                </Button>
-              </div>
+            {/* Tabs para o fluxo de trabalho */}
+            <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
+              {/* Tab de seleção de formatos */}
+              <TabsContent value="selection" className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-medium mb-4">Formatos<span className="text-red-500">*</span></h3>
+                  <p className="text-sm text-gray-500 mb-4">Selecione pelo menos um formato para sua coleção</p>
+                  
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                    {formats?.map((format: any) => (
+                      <button
+                        key={format.id}
+                        type="button"
+                        onClick={() => toggleFormat(format.slug)}
+                        className={`
+                          h-16 py-2 px-3 rounded flex items-center justify-center
+                          transition-colors duration-200 text-center
+                          ${selectedFormats.includes(format.slug) 
+                            ? 'bg-blue-600 text-white font-medium'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }
+                        `}
+                      >
+                        {format.name.toUpperCase()}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="mt-6 flex justify-end">
+                  <Button 
+                    type="button" 
+                    onClick={proceedToFormatTabs}
+                    className="flex items-center gap-2"
+                  >
+                    Continuar
+                  </Button>
+                </div>
+              </TabsContent>
 
-              {fields.map((field, index) => (
-                <Card key={field.id} className="border-dashed">
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between">
-                      <CardTitle className="text-base">Formato {index + 1}</CardTitle>
-                      {fields.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => remove(index)}
-                          className="h-8 text-red-500 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor={`formats.${index}.format`}>Formato <span className="text-red-500">*</span></Label>
-                        <Controller
-                          control={form.control}
-                          name={`formats.${index}.format`}
-                          render={({ field }) => (
-                            <Select
-                              value={field.value}
-                              onValueChange={field.onChange}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione o formato" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {formats?.map((format: any) => (
-                                  <SelectItem key={format.id} value={format.slug}>
-                                    {format.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          )}
-                        />
-                        {form.formState.errors.formats?.[index]?.format && (
-                          <p className="text-sm text-red-500 mt-1">
-                            {form.formState.errors.formats?.[index]?.format?.message}
-                          </p>
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor={`formats.${index}.fileType`}>Tipo de Arquivo <span className="text-red-500">*</span></Label>
-                        <Controller
-                          control={form.control}
-                          name={`formats.${index}.fileType`}
-                          render={({ field }) => (
-                            <Select
-                              value={field.value}
-                              onValueChange={field.onChange}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione o tipo" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {fileTypes?.map((type: any) => (
-                                  <SelectItem key={type.id} value={type.slug}>
-                                    {type.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          )}
-                        />
-                        {form.formState.errors.formats?.[index]?.fileType && (
-                          <p className="text-sm text-red-500 mt-1">
-                            {form.formState.errors.formats?.[index]?.fileType?.message}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor={`formats.${index}.title`}>Título <span className="text-red-500">*</span></Label>
-                      <Input
-                        {...form.register(`formats.${index}.title`)}
-                        placeholder="Título da arte"
-                      />
-                      {form.formState.errors.formats?.[index]?.title && (
-                        <p className="text-sm text-red-500 mt-1">
-                          {form.formState.errors.formats?.[index]?.title?.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor={`formats.${index}.description`}>Descrição</Label>
-                      <Textarea
-                        {...form.register(`formats.${index}.description`)}
-                        placeholder="Descrição da arte"
-                        rows={3}
-                      />
-                      {form.formState.errors.formats?.[index]?.description && (
-                        <p className="text-sm text-red-500 mt-1">
-                          {form.formState.errors.formats?.[index]?.description?.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Imagem Principal <span className="text-red-500">*</span></Label>
-                        <div className="flex flex-col space-y-2">
-                          <div className="flex items-center space-x-2">
-                            <Input
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) => handleImageChange(e, index)}
-                              className="flex-1"
-                              disabled={uploading[`main-${index}`]}
-                            />
-                            {images[index] && (
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleImagePreview(index)}
-                              >
-                                <Image className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-                          {uploading[`main-${index}`] && (
-                            <div className="w-full bg-gray-200 rounded-full h-2.5">
-                              <div
-                                className="bg-primary h-2.5 rounded-full"
-                                style={{ width: `${uploadProgress[`main-${index}`] || 0}%` }}
-                              ></div>
-                            </div>
-                          )}
-                          <Input
-                            {...form.register(`formats.${index}.imageUrl`)}
-                            placeholder="URL da imagem"
-                            value={images[index] || form.getValues(`formats.${index}.imageUrl`)}
-                            readOnly
-                            className="hidden"
-                          />
-                          {form.formState.errors.formats?.[index]?.imageUrl && (
-                            <p className="text-sm text-red-500 mt-1">
-                              {form.formState.errors.formats?.[index]?.imageUrl?.message}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>Imagem de Pré-visualização (opcional)</Label>
-                        <div className="flex flex-col space-y-2">
-                          <div className="flex items-center space-x-2">
-                            <Input
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) => handleImageChange(e, index, true)}
-                              className="flex-1"
-                              disabled={uploading[`preview-${index}`]}
-                            />
-                            {previewImages[index] && (
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleImagePreview(index, true)}
-                              >
-                                <Image className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-                          {uploading[`preview-${index}`] && (
-                            <div className="w-full bg-gray-200 rounded-full h-2.5">
-                              <div
-                                className="bg-primary h-2.5 rounded-full"
-                                style={{ width: `${uploadProgress[`preview-${index}`] || 0}%` }}
-                              ></div>
-                            </div>
-                          )}
-                          <Input
-                            {...form.register(`formats.${index}.previewUrl`)}
-                            placeholder="URL da pré-visualização"
-                            value={previewImages[index] || form.getValues(`formats.${index}.previewUrl`)}
-                            readOnly
-                            className="hidden"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor={`formats.${index}.editUrl`}>URL de Edição <span className="text-red-500">*</span></Label>
-                      <Input
-                        {...form.register(`formats.${index}.editUrl`)}
-                        placeholder="URL para edição da arte (ex: link do Canva)"
-                      />
-                      {form.formState.errors.formats?.[index]?.editUrl && (
-                        <p className="text-sm text-red-500 mt-1">
-                          {form.formState.errors.formats?.[index]?.editUrl?.message}
-                        </p>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+              {/* Tabs para cada formato */}
+              {selectedFormats.map(formatSlug => (
+                <TabsContent key={formatSlug} value={formatSlug}>
+                  {renderFormatTabContent(formatSlug)}
+                </TabsContent>
               ))}
 
-              {form.formState.errors.formats && !Array.isArray(form.formState.errors.formats) && (
-                <Alert variant="destructive">
-                  <AlertTitle>Erro</AlertTitle>
-                  <AlertDescription>
-                    {form.formState.errors.formats.message}
-                  </AlertDescription>
-                </Alert>
-              )}
-            </div>
+              {/* Tab de visão geral */}
+              <TabsContent value="overview">
+                {renderOverview()}
+              </TabsContent>
 
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => form.reset()}>
-                Cancelar
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={submitMutation.isPending}
-                className="flex items-center gap-2"
-              >
-                {submitMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-                Salvar Arte
-              </Button>
-            </div>
+              {/* Adicionar a TabsList apenas se houver formatos selecionados */}
+              {selectedFormats.length > 0 && currentTab !== "selection" && (
+                <div className="mt-6">
+                  <TabsList className="w-full overflow-x-auto whitespace-nowrap flex">
+                    <TabsTrigger value="selection" className="flex-shrink-0">
+                      Voltar
+                    </TabsTrigger>
+                    {selectedFormats.map(formatSlug => {
+                      const formatName = formats?.find((f: any) => f.slug === formatSlug)?.name || formatSlug;
+                      return (
+                        <TabsTrigger key={formatSlug} value={formatSlug} className="flex-shrink-0">
+                          {formatName}
+                        </TabsTrigger>
+                      );
+                    })}
+                    <TabsTrigger value="overview" className="flex-shrink-0">
+                      Visão Geral
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
+              )}
+            </Tabs>
+
+            {/* Botão de enviar apenas na aba de visão geral */}
+            {currentTab === "overview" && (
+              <div className="flex justify-end">
+                <Button 
+                  type="submit"
+                  disabled={submitMutation.isPending}
+                  className="px-8"
+                >
+                  {submitMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Salvar Arte
+                </Button>
+              </div>
+            )}
           </form>
         </CardContent>
       </Card>
-
-      {/* Modal de visualização de imagem */}
-      {selectedImage && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setSelectedImage(undefined)}>
-          <div className="bg-white p-4 rounded-lg max-w-4xl max-h-[90vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium">
-                {selectedImage.isPreview ? 'Pré-visualização' : 'Imagem Principal'} - Formato {selectedImage.index + 1}
-              </h3>
-              <Button variant="ghost" size="sm" onClick={() => setSelectedImage(undefined)}>
-                ✕
-              </Button>
-            </div>
-            <div className="overflow-auto">
-              <img 
-                src={selectedImage.data} 
-                alt="Preview" 
-                className="max-w-full h-auto" 
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
