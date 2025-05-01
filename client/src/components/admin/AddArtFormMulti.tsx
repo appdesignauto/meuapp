@@ -217,6 +217,10 @@ const AddArtFormMulti = () => {
   const uploadVariation = async (variation: Variation, index: number) => {
     if (!groupId || !variation.imageFile) return;
     
+    // Obter a categoria da arte principal
+    const categoryId = form.getValues('categoryId');
+    console.log(`Enviando variação ${index+1} com categoria ${categoryId}`);
+    
     // Atualizar status para uploading
     updateVariation(index, 'status', 'uploading');
     
@@ -225,6 +229,8 @@ const AddArtFormMulti = () => {
       const formData = new FormData();
       formData.append('formatId', variation.formatId);
       formData.append('fileTypeId', variation.fileTypeId);
+      // Adicionar a categoria da arte principal - IMPORTANTE
+      formData.append('categoryId', categoryId);
       if (variation.editUrl) formData.append('editUrl', variation.editUrl);
       if (variation.isPrimary) formData.append('isPrimary', 'true');
       formData.append('image', variation.imageFile);
@@ -252,18 +258,36 @@ const AddArtFormMulti = () => {
 
   // Enviar todas as variações
   const uploadAllVariations = async () => {
-    // Se não existirem variações, publicamos com a variação principal apenas
+    // Depuração para verificar o estado das variações
+    console.log("Estado das variações:", JSON.stringify(variations.map(v => ({
+      formatId: v.formatId,
+      fileTypeId: v.fileTypeId,
+      hasImage: v.imageFile !== null,
+      hasImagePreview: !!v.imagePreview,
+      isPrimary: v.isPrimary,
+      status: v.status
+    })), null, 2));
+
+    // Verifica se existem variações com imagem definida
     const hasValidVariations = variations.some(v => v.imageFile !== null);
     
-    // Seguir adiante mesmo se não houver variações adicionais
-    // A variação principal já foi criada no primeiro passo
-    if (variations.length > 0 && !hasValidVariations) {
+    // Remover as variações sem imagem antes de prosseguir
+    // Isso evita o erro de "Variações adicionadas sem imagem"
+    const filteredVariations = variations.filter(v => v.imageFile !== null);
+    
+    // Se existem variações mas nenhuma é válida, mostrar erro
+    if (variations.length > 0 && filteredVariations.length === 0) {
       toast({
         title: 'Variações adicionadas sem imagem',
         description: 'As variações devem ter uma imagem selecionada. Remova as variações vazias ou adicione imagens.',
         variant: 'destructive',
       });
       return;
+    }
+    
+    // Atualizar o array de variações para conter apenas as válidas
+    if (filteredVariations.length !== variations.length) {
+      setVariations(filteredVariations);
     }
     
     setIsSubmitting(true);
