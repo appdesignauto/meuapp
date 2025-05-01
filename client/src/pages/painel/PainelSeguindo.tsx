@@ -164,7 +164,7 @@ export default function PainelSeguindo() {
         </CardHeader>
         <CardContent className="pb-2">
           <p className="text-sm text-muted-foreground line-clamp-2">
-            {designer.bio || "Este designer ainda não adicionou uma bio."}
+            {designer.bio && designer.bio !== "" ? designer.bio : "Este designer ainda não adicionou uma bio."}
           </p>
         </CardContent>
         <CardFooter className="flex justify-between py-2">
