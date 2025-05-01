@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Search, SlidersHorizontal, Loader2, Filter, X } from "lucide-react";
+import { Search, SlidersHorizontal, Loader2, Filter, X, Plus, LayoutGrid } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import SimpleFormMultiDialog from "@/components/admin/SimpleFormMultiDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -90,6 +91,7 @@ export default function PainelArtes() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
+  const [isMultiFormOpen, setIsMultiFormOpen] = useState(false);
   const [filters, setFilters] = useState({
     category: "",
     format: "",
@@ -183,10 +185,34 @@ export default function PainelArtes() {
     filters.isPremium !== "" ||
     searchTerm !== "";
 
+  // Verifica se o usuário é um designer ou administrador para habilitar a adição de artes
+  const canAddArts = user && (
+    user.role === "designer" || 
+    user.role === "designer_adm" || 
+    user.role === "admin" ||
+    (user.nivelacesso && 
+     (user.nivelacesso === "design" || 
+      user.nivelacesso === "admin"))
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-3xl font-bold tracking-tight">Artes</h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-3xl font-bold tracking-tight">Artes</h1>
+          {canAddArts && (
+            <div className="flex items-center gap-2">
+              <Button 
+                onClick={() => setIsMultiFormOpen(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+                size="sm"
+              >
+                <LayoutGrid className="h-4 w-4 mr-2" />
+                Nova Arte Multi-Formato
+              </Button>
+            </div>
+          )}
+        </div>
         
         {/* Barra de pesquisa e filtros */}
         <div className="flex items-center w-full sm:w-auto gap-2">
@@ -424,6 +450,12 @@ export default function PainelArtes() {
           ))}
         </div>
       )}
+      
+      {/* Formulário Multi-Formato (como diálogo) */}
+      <SimpleFormMultiDialog 
+        isOpen={isMultiFormOpen} 
+        onClose={() => setIsMultiFormOpen(false)} 
+      />
     </div>
   );
 }
