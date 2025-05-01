@@ -7,9 +7,9 @@ import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { 
-  Loader2, Upload, X, Check, AlertCircle, 
+  Loader2, Upload, X, Check, AlertCircle, Image as ImageIcon,
   Settings2, FileImage, FolderOpen, FileType, LayoutGrid,
-  BadgePlus, Link2, PenLine, UploadCloud, BookImage,
+  BadgePlus, Link2, PenLine, UploadCloud, BookImage, Crown,
   ChevronLeft, ChevronRight, ArrowRight
 } from 'lucide-react';
 
@@ -861,7 +861,7 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                                           </>
                                         ) : (
                                           <>
-                                            <Image className="h-4 w-4" />
+                                            <ImageIcon className="h-4 w-4" />
                                             <span>Selecionar imagem</span>
                                           </>
                                         )}
@@ -1068,18 +1068,24 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                       
                       {/* Lista de formatos */}
                       <div>
-                        <h3 className="text-base font-medium text-gray-800 mb-3">Formatos Incluídos</h3>
+                        <h3 className="text-base font-medium text-gray-800 mb-3 flex items-center">
+                          <LayoutGrid className="h-4 w-4 mr-1.5 text-blue-600" />
+                          Formatos Incluídos
+                        </h3>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {Object.entries(formatDetails).map(([formatSlug, details]) => (
                             <div 
                               key={formatSlug}
-                              className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm"
+                              className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow"
                             >
-                              <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
-                                <h4 className="font-medium text-gray-700">{getFormatName(formatSlug)}</h4>
-                                <div className="text-green-600 flex items-center text-sm">
-                                  <Check className="h-4 w-4 mr-1" />
+                              <div className="bg-gradient-to-r from-blue-50 to-white border-b border-gray-200 px-4 py-2.5 flex justify-between items-center">
+                                <h4 className="font-medium text-blue-700 flex items-center">
+                                  <BookImage className="h-4 w-4 mr-1.5 text-blue-600" />
+                                  {getFormatName(formatSlug)}
+                                </h4>
+                                <div className="text-green-600 flex items-center text-xs bg-green-50 px-2 py-0.5 rounded-full border border-green-100">
+                                  <Check className="h-3 w-3 mr-1" />
                                   Completo
                                 </div>
                               </div>
@@ -1087,21 +1093,25 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                               <div className="p-4 grid grid-cols-3 gap-3">
                                 <div className="col-span-1">
                                   {details.imageUrl && (
-                                    <img 
-                                      src={details.imageUrl} 
-                                      alt={details.title}
-                                      className="w-full h-24 object-cover rounded border border-gray-200"
-                                    />
+                                    <div className="border rounded overflow-hidden shadow-sm">
+                                      <img 
+                                        src={details.imageUrl} 
+                                        alt={details.title}
+                                        className="w-full h-24 object-cover"
+                                      />
+                                    </div>
                                   )}
                                 </div>
                                 
-                                <div className="col-span-2 space-y-1">
-                                  <p className="text-sm font-medium line-clamp-1">{details.title}</p>
-                                  <p className="text-xs text-gray-500 line-clamp-1">
-                                    <span className="font-medium">Link:</span> {details.editUrl.substring(0, 30)}...
+                                <div className="col-span-2 space-y-1.5">
+                                  <p className="text-sm font-medium line-clamp-1 text-gray-800">{details.title}</p>
+                                  <p className="text-xs text-gray-500 line-clamp-1 flex items-center">
+                                    <Link2 className="h-3 w-3 mr-1 text-blue-600" />
+                                    <span className="font-medium mr-1">Link:</span> 
+                                    <span className="truncate">{details.editUrl.substring(0, 30)}{details.editUrl.length > 30 ? '...' : ''}</span>
                                   </p>
                                   {details.description && (
-                                    <p className="text-xs text-gray-600 line-clamp-2">{details.description}</p>
+                                    <p className="text-xs text-gray-600 line-clamp-2 pl-4 border-l-2 border-gray-200">{details.description}</p>
                                   )}
                                 </div>
                               </div>
@@ -1115,30 +1125,37 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                 
                 {/* Botão para salvar */}
                 <div className="mt-8 pt-5 border-t border-gray-200">
-                  <div className="rounded-xl bg-green-50 border border-green-200 p-4 mb-4">
+                  <div className="rounded-xl bg-green-50 border border-green-200 p-4 mb-4 shadow-sm">
                     <div className="flex items-center text-green-700 mb-1">
                       <Check className="h-5 w-5 mr-2" />
                       <h3 className="font-medium">Revisão concluída</h3>
                     </div>
-                    <p className="text-sm text-green-600 pl-7">
-                      Todos os detalhes estão preenchidos. Clique em Salvar para finalizar.
+                    <p className="text-sm text-green-600 pl-7 mb-2">
+                      Todos os dados estão preenchidos corretamente. Você está pronto para publicar!
                     </p>
+                    <div className="text-xs text-gray-600 bg-white rounded-lg p-3 border border-gray-100 pl-7 ml-7">
+                      <ul className="list-disc space-y-1 pl-4">
+                        <li>A arte será publicada com <strong>{Object.keys(formatDetails).length} formatos</strong></li>
+                        <li>Visibilidade: <strong className="text-blue-600">{step1Form.getValues().isPremium ? 'Premium' : 'Gratuita'}</strong></li>
+                        <li>Categoria: <strong>{categories.find((cat: any) => cat.id.toString() === step1Form.getValues().categoryId)?.name}</strong></li>
+                      </ul>
+                    </div>
                   </div>
                   
                   <Button 
                     type="button"
                     onClick={handleSubmit}
-                    className="w-full py-6 rounded-xl text-base font-medium flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
+                    className="w-full py-6 rounded-xl text-base font-medium flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transition-all"
                   >
                     {uploadAllComplete ? (
                       <>
-                        Upload Concluído
-                        <Check className="h-5 w-5 ml-1" />
+                        <Check className="h-5 w-5 mr-1.5" />
+                        Upload Concluído com Sucesso
                       </>
                     ) : (
                       <>
-                        Salvar Arte Multi-Formato
-                        <Check className="h-5 w-5 ml-1" />
+                        <Check className="h-5 w-5 mr-1.5" />
+                        Publicar Arte Multi-Formato
                       </>
                     )}
                   </Button>
