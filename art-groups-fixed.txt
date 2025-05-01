@@ -1,0 +1,40 @@
+// Versão modificada do código
+// Substituir arte principal em art-groups.ts linhas 254-267
+
+    // Upload para o serviço de armazenamento central (tentará Supabase, R2 e local)
+    console.log("Iniciando upload usando o serviço de armazenamento central...");
+    const uploadResult = await uploadToStorage({
+      buffer: optimizedImageBuffer,
+      originalname: filename,
+      mimetype: 'image/webp'
+    });
+    
+    if (!uploadResult.success) {
+      throw new Error('Falha ao fazer upload da imagem: ' + uploadResult.error);
+    }
+    
+    console.log(`Upload concluído com sucesso via ${uploadResult.storageType}. URL: ${uploadResult.imageUrl}`);
+
+// Substituir no código de variação em art-groups.ts linhas 420-433
+
+    // Upload para o serviço de armazenamento central (tentará Supabase, R2 e local)
+    console.log("Iniciando upload usando o serviço de armazenamento central...");
+    const uploadResult = await uploadToStorage({
+      buffer: optimizedImageBuffer,
+      originalname: filename,
+      mimetype: 'image/webp'
+    });
+    
+    if (!uploadResult.success) {
+      throw new Error('Falha ao fazer upload da imagem: ' + uploadResult.error);
+    }
+    
+    console.log(`Upload concluído com sucesso via ${uploadResult.storageType}. URL: ${uploadResult.imageUrl}`);
+
+// Correção para URL da imagem no código html de inserção de arte, linha 315
+
+    const imageUrlEscaped = uploadResult.imageUrl.replace(/'/g, "''");
+    
+// Correção para URL da imagem no código html de inserção de variação, linha 450
+
+    const imageUrlEscaped = uploadResult.imageUrl.replace(/'/g, "''");

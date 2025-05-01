@@ -42,7 +42,7 @@ import passwordResetRouter from './routes/password-reset';
 import { setupTestR2DirectRoute } from './routes/test-r2-direct';
 import dateTestRouter from './date-test-router';
 import supabeDiagnosticsRouter from './routes/supabase-diagnostics';
-import artGroupsRouter from './routes/art-groups';
+import artGroupsRouter from './routes/art-groups-fixed';
 
 
 export async function registerRoutes(app: Express): Promise<Server> {
