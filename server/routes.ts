@@ -16,6 +16,8 @@ import { SQL } from "drizzle-orm/sql";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+// Importações adicionais para o upload de imagem
+import uploadRouter from "./routes/upload-image";
 // Usando apenas Supabase Storage para armazenamento de imagens
 import { supabaseStorageService } from "./services/supabase-storage";
 import { SubscriptionService } from "./services/subscription-service";
@@ -1906,6 +1908,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Registrar rotas de upload de imagem
   app.use(imageUploadRoutes);
+  
+  // Rota para upload de imagens (usada no formulário multi-formato) 
+  app.use("/api/upload-image", isAuthenticated, uploadMemory.single("image"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "Nenhuma imagem fornecida" });
+      }
+      
+      // Upload para o Supabase storage
+      const result = await supabaseStorageService.uploadImageWithOptimization(
+        req.file, 
+        "artes", 
+        {
+          width: 800,
+          height: undefined, // mantém proporção original
+          quality: 85,
+          format: "webp"
+        }
+      );
+      
+      if (!result.success) {
+        return res.status(500).json({ error: result.error || "Erro ao processar a imagem" });
+      }
+      
+      return res.json({ 
+        success: true, 
+        imageUrl: result.imageUrl,
+        message: "Imagem enviada com sucesso" 
+      });
+    } catch (error) {
+      console.error("Erro no upload de imagem:", error);
+      return res.status(500).json({ 
+        error: "Erro ao processar o upload da imagem",
+        details: error.message
+      });
+    }
+  });
   
   // Configurar rotas de seguidores (following)
 
