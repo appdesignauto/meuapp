@@ -411,8 +411,8 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
             </div>
             <div className="flex justify-between w-full px-10 text-sm font-medium">
               <div className={`${step === 1 ? 'text-blue-600' : (step > 1 ? 'text-green-600' : 'text-gray-500')}`}>Informações</div>
-              <div className={`${step === 2 ? 'text-blue-600' : (step > 2 ? 'text-green-600' : 'text-gray-500')}`}>Formatos</div>
-              <div className={`${step === 3 ? 'text-blue-600' : 'text-gray-500'}`}>Upload</div>
+              <div className={`${step === 2 ? 'text-blue-600' : (step > 2 ? 'text-green-600' : 'text-gray-500')}`}>Upload</div>
+              <div className={`${step === 3 ? 'text-blue-600' : 'text-gray-500'}`}>Revisão</div>
             </div>
           </div>
           
@@ -588,15 +588,97 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
 
                 <Separator className="my-2" />
 
+                {/* Seleção de formatos - Etapa 1 */}
+                <div className="pt-2">
+                  <h3 className="text-lg font-semibold text-blue-700 mb-3 flex items-center">
+                    <LayoutGrid className="h-5 w-5 mr-2 text-blue-600" />
+                    Formatos Disponíveis<span className="text-red-500 ml-1">*</span>
+                  </h3>
+                  <p className="text-sm text-gray-500 mb-5">Selecione um ou mais formatos para criar sua arte</p>
+                  
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-4">
+                    {formats.map((format: any) => {
+                      const isSelected = step1Form.getValues().selectedFormats.includes(format.slug);
+                      return (
+                        <button
+                          key={format.id}
+                          type="button"
+                          onClick={() => toggleFormat(format.slug)}
+                          className={`
+                            relative overflow-hidden rounded-xl border border-gray-200 
+                            transition-all duration-200 shadow-sm hover:shadow
+                            ${isSelected 
+                              ? 'ring-2 ring-blue-400 shadow border-transparent' 
+                              : 'hover:border-blue-200'
+                            }
+                          `}
+                        >
+                          <div className={`
+                            py-4 px-2 text-center h-full flex flex-col items-center justify-center
+                            ${isSelected ? 'bg-gradient-to-br from-blue-50 to-blue-100' : 'bg-white'}
+                          `}>
+                            {isSelected && (
+                              <div className="absolute top-2 right-2 bg-blue-600 text-white p-1 rounded-full">
+                                <Check className="h-3 w-3" />
+                              </div>
+                            )}
+                            <div className={`text-lg font-medium ${isSelected ? 'text-blue-700' : 'text-gray-700'}`}>
+                              {format.name}
+                            </div>
+                            <div className={`text-xs mt-1 ${isSelected ? 'text-blue-600' : 'text-gray-500'}`}>
+                              Clique para {isSelected ? 'remover' : 'selecionar'}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {step1Form.formState.errors.selectedFormats && (
+                    <p className="text-sm text-red-500 mt-2">
+                      {step1Form.formState.errors.selectedFormats.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Resumo dos formatos selecionados - Etapa 1 */}
+                {step1Form.getValues().selectedFormats.length > 0 && (
+                  <div className="mt-6 bg-gradient-to-r from-blue-50 to-blue-100 p-5 rounded-xl border border-blue-200">
+                    <div className="flex items-center mb-3">
+                      <div className="bg-blue-500 text-white rounded-full p-1.5 mr-2">
+                        <Check className="h-4 w-4" />
+                      </div>
+                      <h3 className="text-md font-semibold text-blue-700">Formatos selecionados</h3>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {step1Form.getValues().selectedFormats.map(formatSlug => {
+                        const formatName = getFormatName(formatSlug);
+                        return (
+                          <div 
+                            key={formatSlug} 
+                            className="px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 bg-white border border-blue-200 text-blue-800 shadow-sm"
+                          >
+                            {formatName}
+                            <Check className="h-3 w-3 text-blue-600" />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
 
                 {/* Botão para avançar para a etapa 2 */}
                 <div className="flex justify-end mt-8">
                   <Button 
                     type="submit"
-                    className="px-6 py-5 rounded-xl text-base flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+                    disabled={step1Form.getValues().selectedFormats.length === 0}
+                    className={`px-6 py-5 rounded-xl text-base flex items-center gap-2 ${
+                      step1Form.getValues().selectedFormats.length === 0 
+                        ? 'bg-gray-300 text-gray-600 cursor-not-allowed' 
+                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    }`}
                   >
-                    Continuar para Seleção de Formatos
+                    Continuar para Upload
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </div>
