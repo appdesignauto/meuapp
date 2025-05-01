@@ -57,10 +57,10 @@ export default function AddArtFormMulti() {
   const { toast } = useToast();
   const { user } = useAuth();
   const [selectedImage, setSelectedImage] = useState<{ data: any, index: number, isPreview: boolean } | undefined>(undefined);
-  const [images, setImages] = useState<{ [key: string]: string }>({});
-  const [previewImages, setPreviewImages] = useState<{ [key: string]: string }>({});
-  const [uploading, setUploading] = useState<{ [key: string]: boolean }>({});
-  const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
+  const [images, setImages] = useState<Record<string, string>>({});
+  const [previewImages, setPreviewImages] = useState<Record<string, string>>({});
+  const [uploading, setUploading] = useState<Record<string, boolean>>({});
+  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
 
   // Estado para controlar os formatos selecionados
   const [selectedFormats, setSelectedFormats] = useState<string[]>([]);
@@ -598,10 +598,10 @@ export default function AddArtFormMulti() {
 
             <Separator className="my-6" />
 
-            {/* Tabs para o fluxo de trabalho */}
-            <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
-              {/* Tab de seleção de formatos */}
-              <TabsContent value="selection" className="space-y-4">
+            {/* Menu de tabs (sempre visível após seleção) */}
+            {currentTab === "selection" ? (
+              /* Passo 1: Seleção de formatos */
+              <div className="space-y-4">
                 <div>
                   <h3 className="text-lg font-medium mb-4">Formatos<span className="text-red-500">*</span></h3>
                   <p className="text-sm text-gray-500 mb-4">Selecione pelo menos um formato para sua coleção</p>
@@ -635,42 +635,50 @@ export default function AddArtFormMulti() {
                     Continuar
                   </Button>
                 </div>
-              </TabsContent>
-
-              {/* Tabs para cada formato */}
-              {selectedFormats.map(formatSlug => (
-                <TabsContent key={formatSlug} value={formatSlug}>
-                  {renderFormatTabContent(formatSlug)}
-                </TabsContent>
-              ))}
-
-              {/* Tab de visão geral */}
-              <TabsContent value="overview">
-                {renderOverview()}
-              </TabsContent>
-
-              {/* Adicionar a TabsList apenas se houver formatos selecionados */}
-              {selectedFormats.length > 0 && currentTab !== "selection" && (
-                <div className="mt-6">
+              </div>
+            ) : (
+              /* Passo 2: Formulário com tabs */
+              <>
+                <div className="mb-6">
                   <TabsList className="w-full overflow-x-auto whitespace-nowrap flex">
-                    <TabsTrigger value="selection" className="flex-shrink-0">
+                    <TabsTrigger 
+                      value="selection" 
+                      onClick={() => setCurrentTab("selection")} 
+                      className="flex-shrink-0"
+                    >
                       Voltar
                     </TabsTrigger>
                     {selectedFormats.map(formatSlug => {
                       const formatName = formats?.find((f: any) => f.slug === formatSlug)?.name || formatSlug;
                       return (
-                        <TabsTrigger key={formatSlug} value={formatSlug} className="flex-shrink-0">
+                        <TabsTrigger 
+                          key={formatSlug} 
+                          value={formatSlug}
+                          onClick={() => setCurrentTab(formatSlug)}
+                          className={`flex-shrink-0 ${currentTab === formatSlug ? "bg-blue-100" : ""}`}
+                        >
                           {formatName}
                         </TabsTrigger>
                       );
                     })}
-                    <TabsTrigger value="overview" className="flex-shrink-0">
+                    <TabsTrigger 
+                      value="overview"
+                      onClick={() => setCurrentTab("overview")}
+                      className={`flex-shrink-0 ${currentTab === "overview" ? "bg-blue-100" : ""}`}
+                    >
                       Visão Geral
                     </TabsTrigger>
                   </TabsList>
                 </div>
-              )}
-            </Tabs>
+                
+                {/* Conteúdo da aba atual */}
+                {currentTab === "overview" ? (
+                  renderOverview()
+                ) : (
+                  renderFormatTabContent(currentTab)
+                )}
+              </>
+            )}
 
             {/* Botão de enviar apenas na aba de visão geral */}
             {currentTab === "overview" && (
