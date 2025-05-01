@@ -5,7 +5,7 @@ import { db } from '../db';
 import { sql } from 'drizzle-orm';
 import path from 'path';
 import sharp from 'sharp';
-import { uploadToStorage } from '../services/storage-service';
+import { supabaseStorageService } from '../services/supabase-storage';
 import { generateRandomFilename } from '../utils/file-utils';
 
 const router = express.Router();
@@ -44,7 +44,7 @@ router.get('/', async (req, res) => {
     const shouldShowInvisible = (showInvisible === 'true' && isAdmin);
     
     // Calcular offset para paginação
-    const offset = (parseInt(page) - 1) * parseInt(limit);
+    const offset = (parseInt(page as string) - 1) * parseInt(limit as string);
     
     // Construir a query SQL base
     let baseQuery = `
@@ -58,18 +58,18 @@ router.get('/', async (req, res) => {
         (
           SELECT av.id 
           FROM "artVariations" av 
-          WHERE av."groupId" = ag.id AND av."isPrimary" = true
+          WHERE av."groupid" = ag.id AND av."isprimary" = true
           LIMIT 1
         ) as "primaryVariationId",
         (
-          SELECT av."imageUrl" 
+          SELECT av."imageurl" 
           FROM "artVariations" av 
-          WHERE av."groupId" = ag.id AND av."isPrimary" = true
+          WHERE av."groupid" = ag.id AND av."isprimary" = true
           LIMIT 1
         ) as "primaryImageUrl"
       FROM "artGroups" ag
       LEFT JOIN users u ON ag."designerid" = u.id
-      LEFT JOIN categories c ON ag."categoryId" = c.id
+      LEFT JOIN categories c ON ag."categoryid" = c.id
       WHERE 1=1
     `;
     
@@ -83,7 +83,7 @@ router.get('/', async (req, res) => {
     
     // Condição de categoria
     if (categoryId) {
-      conditions.push(`ag."categoryId" = ${categoryId}`);
+      conditions.push(`ag."categoryid" = ${categoryId}`);
     }
     
     // Condição de designer
@@ -93,19 +93,19 @@ router.get('/', async (req, res) => {
     
     // Condição de premium
     if (onlyPremium === 'true') {
-      conditions.push(`ag."isPremium" = true`);
+      conditions.push(`ag."ispremium" = true`);
     }
     
     // Condição de visibilidade
     if (!shouldShowInvisible) {
-      conditions.push(`ag."isVisible" = true`);
+      conditions.push(`ag."isvisible" = true`);
     }
     
     // Adicionar filtro de formato (via JOIN com variações)
     if (formatId) {
       conditions.push(`EXISTS (
         SELECT 1 FROM "artVariations" av 
-        WHERE av."groupId" = ag.id AND av."formatId" = ${formatId}
+        WHERE av."groupid" = ag.id AND av."formatid" = ${formatId}
       )`);
     }
     
@@ -117,8 +117,8 @@ router.get('/', async (req, res) => {
     // Query completa com ORDER BY e LIMIT
     const query = `
       ${baseQuery}
-      ORDER BY ag."createdAt" DESC
-      LIMIT ${parseInt(limit)} OFFSET ${offset}
+      ORDER BY ag."createdat" DESC
+      LIMIT ${parseInt(limit as string)} OFFSET ${offset}
     `;
     
     // Query para contar total
@@ -136,16 +136,16 @@ router.get('/', async (req, res) => {
     
     const groups = groupsResult.rows;
     const totalCount = parseInt(countResult.rows[0].value.toString());
-    const totalPages = Math.ceil(totalCount / parseInt(limit));
+    const totalPages = Math.ceil(totalCount / parseInt(limit as string));
     
     res.json({
       groups,
       pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
+        page: parseInt(page as string),
+        limit: parseInt(limit as string),
         total: totalCount,
         totalPages,
-        hasMore: parseInt(page) < totalPages
+        hasMore: parseInt(page as string) < totalPages
       }
     });
   } catch (error) {
@@ -171,7 +171,7 @@ router.get('/:id', async (req, res) => {
         c.slug as "categorySlug"
       FROM "artGroups" ag
       LEFT JOIN users u ON ag."designerid" = u.id
-      LEFT JOIN categories c ON ag."categoryId" = c.id
+      LEFT JOIN categories c ON ag."categoryid" = c.id
       WHERE ag.id = ${id}
     `;
     
@@ -184,10 +184,10 @@ router.get('/:id', async (req, res) => {
         ft.name as "fileTypeName",
         ft.slug as "fileTypeSlug"
       FROM "artVariations" av
-      LEFT JOIN formats f ON av."formatId" = f.id
-      LEFT JOIN "fileTypes" ft ON av."fileTypeId" = ft.id
-      WHERE av."groupId" = ${id}
-      ORDER BY av."isPrimary" DESC, av."createdAt" DESC
+      LEFT JOIN formats f ON av."formatid" = f.id
+      LEFT JOIN "fileTypes" ft ON av."filetypeid" = ft.id
+      WHERE av."groupid" = ${id}
+      ORDER BY av."isprimary" DESC, av."createdat" DESC
     `;
     
     // Executar as queries
@@ -207,14 +207,14 @@ router.get('/:id', async (req, res) => {
     const isAdmin = req.isAuthenticated() && (req.user.role === 'admin' || req.user.role === 'designer_adm');
     const isOwner = req.isAuthenticated() && req.user.id === group.designerid;
     
-    if (!group.isVisible && !isAdmin && !isOwner) {
+    if (!group.isvisible && !isAdmin && !isOwner) {
       return res.status(404).json({ message: 'Grupo de arte não encontrado' });
     }
     
     // Incrementar contador de visualizações
     await db.execute(sql.raw(`
       UPDATE "artGroups" 
-      SET "viewCount" = "viewCount" + 1 
+      SET "viewcount" = "viewcount" + 1 
       WHERE id = ${id}
     `));
     
@@ -250,16 +250,20 @@ router.post('/', isAuthenticated, canCreateArt, upload.single('image'), async (r
     // Gerar nome de arquivo aleatório com extensão .webp
     const filename = generateRandomFilename('webp');
     
-    // Upload para o storage (R2 ou Supabase)
-    const uploadResult = await uploadToStorage({
-      buffer: optimizedImageBuffer,
-      originalname: filename,
-      mimetype: 'image/webp'
-    });
+    // Upload para o Supabase Storage
+    console.log("Iniciando upload para Supabase Storage...");
+    const uploadResult = await supabaseStorageService.uploadFile(
+      'designautoimages',
+      filename,
+      optimizedImageBuffer,
+      'image/webp'
+    );
     
     if (!uploadResult.success) {
       throw new Error('Falha ao fazer upload da imagem: ' + uploadResult.error);
     }
+    
+    console.log(`Upload para Supabase concluído com sucesso. URL: ${uploadResult.url}`);
     
     // Calcular aspect ratio
     const aspectRatio = metadata.width && metadata.height 
@@ -308,7 +312,7 @@ router.post('/', isAuthenticated, canCreateArt, upload.single('image'), async (r
     
     // Inserir variação primária com valores diretamente na string SQL
     // Escapar a URL da imagem e do editor para evitar problemas com aspas
-    const imageUrlEscaped = uploadResult.imageUrl.replace(/'/g, "''");
+    const imageUrlEscaped = uploadResult.url.replace(/'/g, "''");
     const editUrlEscaped = editUrl ? editUrl.replace(/'/g, "''") : 'NULL';
     const widthValue = metadata.width ? metadata.width : 'NULL';
     const heightValue = metadata.height ? metadata.height : 'NULL';
@@ -347,12 +351,16 @@ router.post('/', isAuthenticated, canCreateArt, upload.single('image'), async (r
     await db.execute(sql.raw(variationInsertQuery));
     
     // Incrementar contadores do designer
-    await db.execute(sql.raw(`
-      UPDATE "designerStats" 
-      SET "viewCount" = "viewCount" + 1,
-          "updatedAt" = NOW()
-      WHERE "userId" = ${req.user.id}
-    `));
+    try {
+      await db.execute(sql.raw(`
+        UPDATE "designerStats" 
+        SET "viewCount" = "viewCount" + 1,
+            "updatedAt" = NOW()
+        WHERE "userId" = ${req.user.id}
+      `));
+    } catch (statsError) {
+      console.log("Aviso: Não foi possível atualizar estatísticas de designer:", statsError.message);
+    }
     
     res.status(201).json({ 
       id: groupId,
@@ -408,16 +416,20 @@ router.post('/:id/variations', isAuthenticated, canCreateArt, upload.single('ima
     // Gerar nome de arquivo aleatório com extensão .webp
     const filename = generateRandomFilename('webp');
     
-    // Upload para o storage (R2 ou Supabase)
-    const uploadResult = await uploadToStorage({
-      buffer: optimizedImageBuffer,
-      originalname: filename,
-      mimetype: 'image/webp'
-    });
+    // Upload para o Supabase Storage
+    console.log("Iniciando upload para Supabase Storage...");
+    const uploadResult = await supabaseStorageService.uploadFile(
+      'designautoimages',
+      filename,
+      optimizedImageBuffer,
+      'image/webp'
+    );
     
     if (!uploadResult.success) {
       throw new Error('Falha ao fazer upload da imagem: ' + uploadResult.error);
     }
+    
+    console.log(`Upload para Supabase concluído com sucesso. URL: ${uploadResult.url}`);
     
     // Calcular aspect ratio
     const aspectRatio = metadata.width && metadata.height 
@@ -435,7 +447,7 @@ router.post('/:id/variations', isAuthenticated, canCreateArt, upload.single('ima
     
     // Inserir variação com valores diretamente na string SQL
     // Escapar a URL da imagem e do editor para evitar problemas com aspas
-    const imageUrlEscaped = uploadResult.imageUrl.replace(/'/g, "''");
+    const imageUrlEscaped = uploadResult.url.replace(/'/g, "''");
     const editUrlEscaped = editUrl ? editUrl.replace(/'/g, "''") : 'NULL';
     const widthValue = metadata.width ? metadata.width : 'NULL';
     const heightValue = metadata.height ? metadata.height : 'NULL';
@@ -691,12 +703,16 @@ router.delete('/:id', isAuthenticated, isAdmin, async (req, res) => {
     `));
     
     // Atualizar contador de artes do designer
-    await db.execute(sql.raw(`
-      UPDATE "designerStats" 
-      SET "viewCount" = "viewCount" - 1,
-          "updatedAt" = NOW()
-      WHERE "userId" = ${group.designerid}
-    `));
+    try {
+      await db.execute(sql.raw(`
+        UPDATE "designerStats" 
+        SET "viewCount" = "viewCount" - 1,
+            "updatedAt" = NOW()
+        WHERE "userId" = ${group.designerid}
+      `));
+    } catch (statsError) {
+      console.log("Aviso: Não foi possível atualizar estatísticas de designer:", statsError.message);
+    }
     
     res.json({ message: 'Grupo de arte excluído com sucesso' });
   } catch (error) {
