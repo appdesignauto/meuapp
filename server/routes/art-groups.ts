@@ -205,7 +205,7 @@ router.get('/:id', async (req, res) => {
     
     // Verificar visibilidade
     const isAdmin = req.isAuthenticated() && (req.user.role === 'admin' || req.user.role === 'designer_adm');
-    const isOwner = req.isAuthenticated() && req.user.id === group.designerId;
+    const isOwner = req.isAuthenticated() && req.user.id === group.designerid;
     
     if (!group.isVisible && !isAdmin && !isOwner) {
       return res.status(404).json({ message: 'Grupo de arte não encontrado' });
@@ -348,11 +348,11 @@ router.post('/', isAuthenticated, canCreateArt, upload.single('image'), async (r
     
     // Incrementar contadores do designer
     await db.execute(sql.raw(`
-      INSERT INTO "designerStats" ("designerid", "artcount", "downloadCount", "viewCount", "followersCount", "createdAt", "updatedat")
+      INSERT INTO "designerstats" ("designerid", "artcount", "downloadcount", "viewcount", "followerscount", "createdat", "updatedat")
       VALUES (${req.user.id}, 1, 0, 0, 0, NOW(), NOW())
       ON CONFLICT ("designerid") 
       DO UPDATE SET 
-        "artcount" = "designerStats"."artcount" + 1,
+        "artcount" = "designerstats"."artcount" + 1,
         "updatedat" = NOW()
     `));
     
@@ -392,7 +392,7 @@ router.post('/:id/variations', isAuthenticated, canCreateArt, upload.single('ima
     
     // Verificar permissão (apenas admin ou o próprio designer)
     const isAdmin = req.user.role === 'admin' || req.user.role === 'designer_adm';
-    const isOwner = req.user.id === group.designerId;
+    const isOwner = req.user.id === group.designerid;
     
     if (!isAdmin && !isOwner) {
       return res.status(403).json({ message: 'Você não tem permissão para adicionar variações a este grupo' });
@@ -514,7 +514,7 @@ router.patch('/:id', isAuthenticated, canCreateArt, async (req, res) => {
     
     // Verificar permissão (apenas admin ou o próprio designer)
     const isAdmin = req.user.role === 'admin' || req.user.role === 'designer_adm';
-    const isOwner = req.user.id === group.designerId;
+    const isOwner = req.user.id === group.designerid;
     
     if (!isAdmin && !isOwner) {
       return res.status(403).json({ message: 'Você não tem permissão para editar este grupo' });
@@ -597,7 +597,7 @@ router.patch('/:groupId/variations/:variationId', isAuthenticated, canCreateArt,
     
     // Verificar permissão (apenas admin ou o próprio designer)
     const isAdmin = req.user.role === 'admin' || req.user.role === 'designer_adm';
-    const isOwner = req.user.id === group.designerId;
+    const isOwner = req.user.id === group.designerid;
     
     if (!isAdmin && !isOwner) {
       return res.status(403).json({ message: 'Você não tem permissão para editar esta variação' });
@@ -694,10 +694,10 @@ router.delete('/:id', isAuthenticated, isAdmin, async (req, res) => {
     
     // Atualizar contador de artes do designer
     await db.execute(sql.raw(`
-      UPDATE "designerStats"
+      UPDATE "designerstats"
       SET "artcount" = GREATEST("artcount" - 1, 0),
           "updatedat" = NOW()
-      WHERE "designerid" = ${group.designerId}
+      WHERE "designerid" = ${group.designerid}
     `));
     
     res.json({ message: 'Grupo de arte excluído com sucesso' });
@@ -744,7 +744,7 @@ router.delete('/:groupId/variations/:variationId', isAuthenticated, isAdmin, asy
     }
     
     // Se a variação for primária, definir outra como primária
-    if (variation.isPrimary) {
+    if (variation.isprimary) {
       // Encontrar outra variação para tornar primária
       const otherVariationQuery = `
         SELECT id FROM "artVariations" 
