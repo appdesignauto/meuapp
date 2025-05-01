@@ -238,6 +238,29 @@ export default function AddArtFormMulti() {
       return;
     }
 
+    // Sincronizar imediatamente os formatos no fieldArray
+    const currentFormats = form.getValues().formats;
+    
+    // Adicionar novos formatos que foram selecionados
+    selectedFormats.forEach(formatSlug => {
+      const exists = currentFormats.some(f => f.format === formatSlug);
+      if (!exists) {
+        append({
+          format: formatSlug,
+          fileType: '',
+          title: '',
+          description: '',
+          imageUrl: '',
+          previewUrl: '',
+          editUrl: '',
+        });
+      }
+    });
+
+    // Remover formatos que foram desmarcados
+    const newFormats = currentFormats.filter(f => selectedFormats.includes(f.format));
+    replace(newFormats);
+
     // Definir a primeira aba como ativa
     if (selectedFormats.length > 0) {
       setCurrentTab(selectedFormats[0]);
@@ -599,53 +622,50 @@ export default function AddArtFormMulti() {
             <Separator className="my-6" />
 
             {/* Menu de tabs (sempre visível após seleção) */}
-            {currentTab === "selection" ? (
-              /* Passo 1: Seleção de formatos */
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-lg font-medium mb-4">Formatos<span className="text-red-500">*</span></h3>
-                  <p className="text-sm text-gray-500 mb-4">Selecione pelo menos um formato para sua coleção</p>
-                  
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-                    {formats?.map((format: any) => (
-                      <button
-                        key={format.id}
-                        type="button"
-                        onClick={() => toggleFormat(format.slug)}
-                        className={`
-                          h-16 py-2 px-3 rounded flex items-center justify-center
-                          transition-colors duration-200 text-center
-                          ${selectedFormats.includes(format.slug) 
-                            ? 'bg-blue-600 text-white font-medium'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                          }
-                        `}
-                      >
-                        {format.name.toUpperCase()}
-                      </button>
-                    ))}
+            <Tabs value={currentTab} onValueChange={setCurrentTab}>
+              <TabsContent value="selection">
+                {/* Passo 1: Seleção de formatos */}
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-medium mb-4">Formatos<span className="text-red-500">*</span></h3>
+                    <p className="text-sm text-gray-500 mb-4">Selecione pelo menos um formato para sua coleção</p>
+                    
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                      {formats?.map((format: any) => (
+                        <button
+                          key={format.id}
+                          type="button"
+                          onClick={() => toggleFormat(format.slug)}
+                          className={`
+                            h-16 py-2 px-3 rounded flex items-center justify-center
+                            transition-colors duration-200 text-center
+                            ${selectedFormats.includes(format.slug) 
+                              ? 'bg-blue-600 text-white font-medium'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }
+                          `}
+                        >
+                          {format.name.toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mt-6 flex justify-end">
+                    <Button 
+                      type="button" 
+                      onClick={proceedToFormatTabs}
+                      className="flex items-center gap-2"
+                    >
+                      Continuar
+                    </Button>
                   </div>
                 </div>
-                <div className="mt-6 flex justify-end">
-                  <Button 
-                    type="button" 
-                    onClick={proceedToFormatTabs}
-                    className="flex items-center gap-2"
-                  >
-                    Continuar
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              /* Passo 2: Formulário com tabs */
-              <>
+              </TabsContent>
+              {/* TabsList só aparece quando há formatos selecionados */}
+              {selectedFormats.length > 0 && (
                 <div className="mb-6">
                   <TabsList className="w-full overflow-x-auto whitespace-nowrap flex">
-                    <TabsTrigger 
-                      value="selection" 
-                      onClick={() => setCurrentTab("selection")} 
-                      className="flex-shrink-0"
-                    >
+                    <TabsTrigger value="selection" className="flex-shrink-0">
                       Voltar
                     </TabsTrigger>
                     {selectedFormats.map(formatSlug => {
@@ -654,31 +674,31 @@ export default function AddArtFormMulti() {
                         <TabsTrigger 
                           key={formatSlug} 
                           value={formatSlug}
-                          onClick={() => setCurrentTab(formatSlug)}
-                          className={`flex-shrink-0 ${currentTab === formatSlug ? "bg-blue-100" : ""}`}
+                          className="flex-shrink-0"
                         >
                           {formatName}
                         </TabsTrigger>
                       );
                     })}
-                    <TabsTrigger 
-                      value="overview"
-                      onClick={() => setCurrentTab("overview")}
-                      className={`flex-shrink-0 ${currentTab === "overview" ? "bg-blue-100" : ""}`}
-                    >
+                    <TabsTrigger value="overview" className="flex-shrink-0">
                       Visão Geral
                     </TabsTrigger>
                   </TabsList>
                 </div>
-                
-                {/* Conteúdo da aba atual */}
-                {currentTab === "overview" ? (
-                  renderOverview()
-                ) : (
-                  renderFormatTabContent(currentTab)
-                )}
-              </>
-            )}
+              )}
+              
+              {/* Conteúdo da aba atual */}
+              <TabsContent value="overview">
+                {renderOverview()}
+              </TabsContent>
+              
+              {/* TabsContent para cada formato */}
+              {selectedFormats.map(formatSlug => (
+                <TabsContent key={formatSlug} value={formatSlug}>
+                  {renderFormatTabContent(formatSlug)}
+                </TabsContent>
+              ))}
+            </Tabs>
 
             {/* Botão de enviar apenas na aba de visão geral */}
             {currentTab === "overview" && (
