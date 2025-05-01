@@ -453,7 +453,7 @@ router.post('/:id/variations', isAuthenticated, canCreateArt, upload.single('ima
     // Atualizar data de modificação do grupo
     await db.execute(sql.raw(`
       UPDATE "artGroups" 
-      SET "updatedAt" = NOW() 
+      SET "updatedat" = NOW() 
       WHERE id = ${id}
     `));
     
@@ -650,7 +650,7 @@ router.delete('/:id', isAuthenticated, isAdmin, async (req, res) => {
     
     // Obter IDs das variações para decremento de contador
     const variationsQuery = `
-      SELECT * FROM "artVariations" WHERE "groupId" = ${id}
+      SELECT * FROM "artVariations" WHERE "groupid" = ${id}
     `;
     
     const variationsResult = await db.execute(sql.raw(variationsQuery));
@@ -658,7 +658,7 @@ router.delete('/:id', isAuthenticated, isAdmin, async (req, res) => {
     
     // Excluir variações
     await db.execute(sql.raw(`
-      DELETE FROM "artVariations" WHERE "groupId" = ${id}
+      DELETE FROM "artVariations" WHERE "groupid" = ${id}
     `));
     
     // Excluir grupo
@@ -688,9 +688,9 @@ router.delete('/:groupId/variations/:variationId', isAuthenticated, isAdmin, asy
     
     // Verificar se o grupo e a variação existem
     const checkQuery = `
-      SELECT ag.*, av.id as "variationId", av."isPrimary"
+      SELECT ag.*, av.id as "variationId", av."isprimary"
       FROM "artGroups" ag
-      JOIN "artVariations" av ON av."groupId" = ag.id
+      JOIN "artVariations" av ON av."groupid" = ag.id
       WHERE ag.id = ${groupId} AND av.id = ${variationId}
     `;
     
@@ -704,7 +704,7 @@ router.delete('/:groupId/variations/:variationId', isAuthenticated, isAdmin, asy
     
     // Verificar quantas variações existem no grupo
     const countQuery = `
-      SELECT COUNT(*) as count FROM "artVariations" WHERE "groupId" = ${groupId}
+      SELECT COUNT(*) as count FROM "artVariations" WHERE "groupid" = ${groupId}
     `;
     
     const countResult = await db.execute(sql.raw(countQuery));
@@ -722,7 +722,7 @@ router.delete('/:groupId/variations/:variationId', isAuthenticated, isAdmin, asy
       // Encontrar outra variação para tornar primária
       const otherVariationQuery = `
         SELECT id FROM "artVariations" 
-        WHERE "groupId" = ${groupId} AND id != ${variationId}
+        WHERE "groupid" = ${groupId} AND id != ${variationId}
         LIMIT 1
       `;
       
@@ -733,7 +733,7 @@ router.delete('/:groupId/variations/:variationId', isAuthenticated, isAdmin, asy
         
         await db.execute(sql.raw(`
           UPDATE "artVariations" 
-          SET "isPrimary" = true, "updatedAt" = NOW()
+          SET "isprimary" = true, "updatedat" = NOW()
           WHERE id = ${newPrimaryId}
         `));
       }
