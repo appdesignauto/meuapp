@@ -167,16 +167,16 @@
   
   /* Estilos para grid no estilo Pinterest (masonry) */
   .masonry-grid {
-    column-count: 2;
-    column-gap: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
     width: 100%;
   }
   
   .masonry-grid > * {
-    display: inline-block;
-    width: 100%;
+    flex: 1 0 calc(50% - 16px);
+    max-width: calc(50% - 16px);
     margin-bottom: 16px;
-    break-inside: avoid;
     transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
     border-radius: 8px;
     overflow: hidden;
@@ -190,22 +190,30 @@
   
   @media (min-width: 640px) {
     .masonry-grid {
-      column-count: 3;
-      column-gap: 20px;
+      gap: 20px;
+    }
+    
+    .masonry-grid > * {
+      flex: 1 0 calc(33.333% - 20px);
+      max-width: calc(33.333% - 20px);
     }
   }
   
   @media (min-width: 768px) {
     .masonry-grid {
-      column-count: 4;
-      column-gap: 24px;
+      gap: 24px;
+    }
+    
+    .masonry-grid > * {
+      flex: 1 0 calc(25% - 24px);
+      max-width: calc(25% - 24px);
     }
   }
   
   @media (min-width: 1024px) {
-    .masonry-grid {
-      column-count: 4;
-      column-gap: 24px;
+    .masonry-grid > * {
+      flex: 1 0 calc(20% - 24px);
+      max-width: calc(20% - 24px);
     }
   }
   
