@@ -387,31 +387,54 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
             </button>
           </div>
           
-          {/* Indicador de progresso (etapas) */}
+          {/* Indicador de progresso (etapas) com textos alinhados */}
           <div className="flex flex-col items-center border-b pb-4">
             <div className="pt-5 pb-2">
-              <div className="flex items-center">
-                <div className={`flex items-center justify-center w-10 h-10 rounded-full text-white font-medium ${step === 1 ? 'bg-blue-600' : 'bg-green-600'}`}>
-                  {step > 1 ? <Check className="h-6 w-6" /> : 1}
+              <div className="flex justify-center space-x-10">
+                {/* Etapa 1 */}
+                <div className="flex flex-col items-center">
+                  <div className={`flex items-center justify-center w-10 h-10 rounded-full text-white font-medium ${step === 1 ? 'bg-blue-600' : 'bg-green-600'} mb-2`}>
+                    {step > 1 ? <Check className="h-6 w-6" /> : 1}
+                  </div>
+                  <div className={`text-sm font-medium ${step === 1 ? 'text-blue-600' : (step > 1 ? 'text-green-600' : 'text-gray-500')}`}>
+                    Informações
+                  </div>
                 </div>
-                <div className={`w-20 h-1.5 ${step > 1 ? 'bg-blue-600' : 'bg-gray-200'}`}></div>
-                <div className={`flex items-center justify-center w-10 h-10 rounded-full font-medium ${
-                  step === 2 ? 'bg-blue-600 text-white' : (step > 2 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700')
-                }`}>
-                  {step > 2 ? <Check className="h-6 w-6" /> : 2}
+                
+                {/* Linha conectora 1-2 */}
+                <div className="flex items-center mt-5">
+                  <div className={`w-20 h-1.5 ${step > 1 ? 'bg-blue-600' : 'bg-gray-200'}`}></div>
                 </div>
-                <div className={`w-20 h-1.5 ${step > 2 ? 'bg-blue-600' : 'bg-gray-200'}`}></div>
-                <div className={`flex items-center justify-center w-10 h-10 rounded-full font-medium ${
-                  step === 3 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
-                }`}>
-                  3
+                
+                {/* Etapa 2 */}
+                <div className="flex flex-col items-center">
+                  <div className={`flex items-center justify-center w-10 h-10 rounded-full font-medium mb-2 ${
+                    step === 2 ? 'bg-blue-600 text-white' : (step > 2 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700')
+                  }`}>
+                    {step > 2 ? <Check className="h-6 w-6" /> : 2}
+                  </div>
+                  <div className={`text-sm font-medium ${step === 2 ? 'text-blue-600' : (step > 2 ? 'text-green-600' : 'text-gray-500')}`}>
+                    Upload
+                  </div>
+                </div>
+                
+                {/* Linha conectora 2-3 */}
+                <div className="flex items-center mt-5">
+                  <div className={`w-20 h-1.5 ${step > 2 ? 'bg-blue-600' : 'bg-gray-200'}`}></div>
+                </div>
+                
+                {/* Etapa 3 */}
+                <div className="flex flex-col items-center">
+                  <div className={`flex items-center justify-center w-10 h-10 rounded-full font-medium mb-2 ${
+                    step === 3 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                  }`}>
+                    3
+                  </div>
+                  <div className={`text-sm font-medium ${step === 3 ? 'text-blue-600' : 'text-gray-500'}`}>
+                    Revisão
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="flex justify-between w-full px-10 text-sm font-medium">
-              <div className={`${step === 1 ? 'text-blue-600' : (step > 1 ? 'text-green-600' : 'text-gray-500')}`}>Informações</div>
-              <div className={`${step === 2 ? 'text-blue-600' : (step > 2 ? 'text-green-600' : 'text-gray-500')}`}>Upload</div>
-              <div className={`${step === 3 ? 'text-blue-600' : 'text-gray-500'}`}>Revisão</div>
             </div>
           </div>
           
