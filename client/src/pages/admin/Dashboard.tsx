@@ -17,8 +17,7 @@ import {
   Database,
   HardDrive,
   FileType,
-  CreditCard,
-  Layers
+  CreditCard
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -159,15 +158,6 @@ const AdminDashboard = () => {
           </nav>
         </div>
         <div className="mt-auto p-4 border-t">
-          {/* Ações relacionadas a artes */}
-          <h3 className="text-sm uppercase font-semibold text-gray-500 mb-2">Ações</h3>
-          <Link href="/admin/arts/add-multi">
-            <Button variant="ghost" className="w-full justify-start text-gray-600 mb-2">
-              <Layers className="w-5 h-5 mr-3" />
-              Adicionar Arte Multi-Formato
-            </Button>
-          </Link>
-          
           {/* Ferramentas específicas de administração */}
           {user?.role === 'admin' && (
             <>

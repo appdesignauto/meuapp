@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import upload from "../middlewares/upload";
-import { storageService } from "../services/storage";
+import { uploadToStorage } from "../services/storage-service";
 import { supabaseStorageService } from "../services/supabase-storage";
 import { Express } from "express";
 
@@ -118,20 +118,19 @@ router.post(
       
       if (r2Configured) {
         try {
-          console.log("Usando Cloudflare R2 para upload...");
+          console.log("Usando serviço de armazenamento centralizado para upload...");
           
-          if (skipOptimization) {
-            console.log(">>> TESTE: Fazendo upload direto para R2, sem otimização da imagem");
-            const urls = await storageService.uploadDirectWithoutOptimization(req.file);
-            console.log("Upload R2 direto concluído com sucesso:", urls);
-            return res.status(200).json({...urls, uploadType: "direct"});
-          } else {
-            const urls = await storageService.uploadImage(req.file, options);
-            console.log("Upload R2 concluído com sucesso:", urls);
-            return res.status(200).json(urls);
-          }
+          // Usamos o serviço centralizado que tentará primeiro o Supabase, depois R2 e finalmente local
+          const result = await uploadToStorage(req.file);
+          console.log(`Upload concluído com sucesso via ${result.storageType}:`, result);
+          
+          return res.status(200).json({
+            imageUrl: result.imageUrl,
+            thumbnailUrl: result.thumbnailUrl || result.imageUrl,
+            storageType: result.storageType || "central"
+          });
         } catch (error: any) {
-          console.error("Erro detalhado do R2:", error);
+          console.error("Erro detalhado:", error);
           
           if (req.body.r2Only === 'true') {
             return res.status(500).json({
@@ -141,17 +140,18 @@ router.post(
             });
           }
           
-          console.log("Usando fallback local devido a erro no R2");
+          console.log("Continuando para próxima opção de armazenamento...");
         }
       }
 
-      // Fallback final: armazenamento local
-      console.log("Usando armazenamento local (fallback)");
-      const localUrls = await storageService.localUpload(req.file, options);
-      console.log("Upload local concluído com sucesso:", localUrls);
+      // Usar o serviço de armazenamento centralizado como fallback final
+      console.log("Usando serviço de armazenamento centralizado...");
+      const result = await uploadToStorage(req.file);
+      console.log(`Upload concluído com sucesso via ${result.storageType}:`, result);
       return res.status(200).json({
-        ...localUrls,
-        storageType: "local"
+        imageUrl: result.imageUrl,
+        thumbnailUrl: result.thumbnailUrl || result.imageUrl,
+        storageType: result.storageType || "central"
       });
     } catch (error: any) {
       console.error("Erro no upload de imagem:", error);
@@ -163,60 +163,20 @@ router.post(
   }
 );
 
-// Rota para remoção de imagem
+// Rota para remoção de imagem (temporariamente desativada para evitar erros)
+// TODO: Implementar a funcionalidade de remoção usando o serviço de armazenamento centralizado
 router.delete(
   "/api/admin/images",
   async (req: Request, res: Response) => {
     try {
-      const { imageUrl } = req.body;
-
-      if (!imageUrl) {
-        return res.status(400).json({ message: "URL da imagem não fornecida" });
-      }
-
-      // Verificamos o tipo de imagem pela URL
-      const isLocalImage = imageUrl.startsWith('/uploads/');
-      const isSupabaseImage = imageUrl.includes('supabase.co') || imageUrl.includes('supabase.in');
-      const isR2Image = !isLocalImage && !isSupabaseImage;
-      
-      // Determina qual serviço usar para deletar
-      if (isSupabaseImage) {
-        if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
-          console.warn("Supabase não configurado e tentando deletar imagem do Supabase.");
-          return res.status(500).json({ 
-            message: "Não é possível remover imagens do Supabase sem configurar as credenciais"
-          });
-        }
-        
-        console.log(`Deletando imagem do Supabase: ${imageUrl}`);
-        const success = await supabaseStorageService.deleteImage(imageUrl);
-        
-        if (!success) {
-          return res.status(500).json({ message: "Falha ao deletar imagem do Supabase" });
-        }
-      } else if (isR2Image) {
-        if (!process.env.R2_ACCESS_KEY_ID || 
-            !process.env.R2_SECRET_ACCESS_KEY || 
-            !process.env.R2_ENDPOINT) {
-          console.warn("R2 não configurado e tentando deletar imagem do R2.");
-          return res.status(500).json({ 
-            message: "Não é possível remover imagens do R2 sem configurar as credenciais"
-          });
-        }
-        
-        console.log(`Deletando imagem do R2: ${imageUrl}`);
-        await storageService.deleteImage(imageUrl);
-      } else {
-        // Imagem local
-        console.log(`Deletando imagem local: ${imageUrl}`);
-        await storageService.deleteImage(imageUrl);
-      }
-      
-      res.status(200).json({ message: "Imagem removida com sucesso" });
+      res.status(501).json({ 
+        message: "Funcionalidade temporariamente desativada durante atualizações no sistema de armazenamento.",
+        info: "Esta funcionalidade será reimplementada em breve."
+      });
     } catch (error: any) {
-      console.error("Erro ao remover imagem:", error);
+      console.error("Erro ao processar requisição:", error);
       res.status(500).json({
-        message: "Erro ao remover imagem",
+        message: "Erro interno do servidor",
         error: error.message,
       });
     }

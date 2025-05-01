@@ -1,108 +1,159 @@
 import { supabaseStorageService } from './supabase-storage';
 import { r2StorageService } from './r2-storage';
-import path from 'path';
-import fs from 'fs';
+import * as path from 'path';
+import * as fs from 'fs';
+import { randomUUID } from 'crypto';
+import sharp from 'sharp';
 
-// Tipo de arquivo para upload
-interface UploadFile {
-  buffer: Buffer;
-  originalname: string;
-  mimetype: string;
-}
-
-// Resultado do upload
+// Interface para resultado de upload
 interface UploadResult {
   success: boolean;
   imageUrl?: string;
-  error?: string;
+  thumbnailUrl?: string;
   storageType?: string;
-  bucket?: string;
-  logs: string[];
+  error?: string;
 }
 
-// Função principal para fazer upload de arquivos para o armazenamento
-export async function uploadToStorage(file: UploadFile): Promise<UploadResult> {
-  const logs: string[] = [];
-  logs.push(`Iniciando upload de arquivo: ${file.originalname} (${file.mimetype})`);
-  
+// Função para upload de arquivos usando diferentes serviços em cascata
+export async function uploadToStorage(
+  file: Express.Multer.File | { buffer: Buffer; originalname: string; mimetype: string }
+): Promise<UploadResult> {
   try {
-    // Tentar fazer upload para o Supabase Storage primeiro
-    logs.push('Tentando upload para Supabase Storage...');
+    console.log("Iniciando upload centralizado com estratégia em cascata...");
+
+    // 1. Tenta Supabase primeiro (principal)
+    if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
+      try {
+        console.log("Tentando upload via Supabase...");
+        
+        // Adaptamos para usar o método uploadFile que é mais compatível
+        const result = await supabaseStorageService.uploadFile(
+          'designauto-images',
+          file.originalname,
+          file.buffer,
+          file.mimetype
+        );
+        
+        if (result.success) {
+          console.log("Upload via Supabase realizado com sucesso");
+          return {
+            success: true,
+            imageUrl: result.url,
+            thumbnailUrl: result.url, // Mesmo URL para thumbnail
+            storageType: "supabase"
+          };
+        } else {
+          console.warn("Upload via Supabase falhou, tentando próximo serviço...", result.error);
+        }
+      } catch (supabaseError) {
+        console.error("Erro ao utilizar Supabase:", supabaseError);
+      }
+    }
+
+    // 2. Tenta R2 em segundo lugar
+    if (
+      process.env.R2_ACCESS_KEY_ID &&
+      process.env.R2_SECRET_ACCESS_KEY &&
+      process.env.R2_ENDPOINT
+    ) {
+      try {
+        console.log("Tentando upload via R2...");
+        const result = await r2StorageService.uploadFile(
+          process.env.R2_BUCKET_NAME || 'designautoimages',
+          file.originalname,
+          file.buffer,
+          file.mimetype
+        );
+
+        if (result.success) {
+          console.log("Upload via R2 realizado com sucesso");
+          return {
+            success: true,
+            imageUrl: result.url,
+            thumbnailUrl: result.url, // Mesmo URL para thumbnail
+            storageType: "r2"
+          };
+        } else {
+          console.warn("Upload via R2 falhou, tentando armazenamento local...", result.error);
+        }
+      } catch (r2Error) {
+        console.error("Erro ao utilizar R2:", r2Error);
+      }
+    }
+
+    // 3. Fallback final: armazenamento local
+    console.log("Utilizando armazenamento local como fallback final...");
+    const localResult = await localUpload(file);
     
-    const supabaseResult = await supabaseStorageService.uploadFile(
-      'designautoimages',
-      file.originalname,
-      file.buffer,
-      file.mimetype
-    );
-    
-    if (supabaseResult.success) {
-      logs.push('Upload para Supabase Storage concluído com sucesso');
+    if (localResult.success) {
+      console.log("Upload local realizado com sucesso");
       return {
         success: true,
-        imageUrl: supabaseResult.url,
-        storageType: 'supabase',
-        bucket: 'designautoimages',
-        logs
+        imageUrl: localResult.imageUrl,
+        thumbnailUrl: localResult.thumbnailUrl || localResult.imageUrl,
+        storageType: "local"
       };
+    } else {
+      throw new Error("Todos os métodos de armazenamento falharam");
     }
-    
-    logs.push(`Falha no upload para Supabase: ${supabaseResult.error}`);
-    
-    // Se o Supabase falhar, tentar o R2
-    logs.push('Tentando upload para Cloudflare R2...');
-    
-    const r2Result = await r2StorageService.uploadFile(
-      file.originalname,
-      file.buffer,
-      file.mimetype
-    );
-    
-    if (r2Result.success) {
-      logs.push('Upload para Cloudflare R2 concluído com sucesso');
-      return {
-        success: true,
-        imageUrl: r2Result.url,
-        storageType: 'r2',
-        bucket: r2Result.bucket,
-        logs
-      };
-    }
-    
-    logs.push(`Falha no upload para R2: ${r2Result.error}`);
-    
-    // Se ambos falharem, tenta fazer upload local
-    logs.push('Tentando upload para armazenamento local...');
-    
-    // Garantir que o diretório de uploads existe
-    const uploadDir = path.resolve('./public/uploads');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    
-    // Salvar arquivo localmente
-    const timestamp = Date.now();
-    const filename = `${timestamp}-${file.originalname}`;
-    const filePath = path.join(uploadDir, filename);
-    
-    fs.writeFileSync(filePath, file.buffer);
-    
-    const publicUrl = `/uploads/${filename}`;
-    logs.push(`Upload local concluído com sucesso: ${publicUrl}`);
-    
-    return {
-      success: true,
-      imageUrl: publicUrl,
-      storageType: 'local',
-      logs
-    };
-    
   } catch (error) {
-    logs.push(`Erro geral no processo de upload: ${error}`);
+    console.error("Erro fatal no serviço de armazenamento centralizado:", error);
     return {
       success: false,
-      error: `Falha em todos os métodos de upload: ${error}`,
-      logs
+      error: error.message || "Erro desconhecido no upload"
+    };
+  }
+}
+
+// Função para upload local
+async function localUpload(
+  file: Express.Multer.File | { buffer: Buffer; originalname: string; mimetype: string }
+): Promise<UploadResult> {
+  try {
+    // Criar estrutura de diretórios
+    const publicDir = path.join(process.cwd(), 'public');
+    const uploadsDir = path.join(publicDir, 'uploads');
+    const designautoImagesDir = path.join(uploadsDir, 'designautoimages');
+
+    if (!fs.existsSync(publicDir)) {
+      fs.mkdirSync(publicDir);
+    }
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir);
+    }
+    if (!fs.existsSync(designautoImagesDir)) {
+      fs.mkdirSync(designautoImagesDir);
+    }
+
+    // Gerar nome único
+    const uuid = randomUUID();
+    const fileExtension = '.webp'; // Sempre usamos WebP para otimização
+    const filename = `${uuid}${fileExtension}`;
+    const filepath = path.join(designautoImagesDir, filename);
+
+    // Otimizar imagem
+    const optimizedBuffer = await sharp(file.buffer)
+      .resize(1200, null, { withoutEnlargement: true })
+      .webp({ quality: 80 })
+      .toBuffer();
+
+    // Salvar arquivo
+    fs.writeFileSync(filepath, optimizedBuffer);
+
+    // URL relativa para o frontend
+    const relativeUrl = `/uploads/designautoimages/${filename}`;
+
+    return {
+      success: true,
+      imageUrl: relativeUrl,
+      thumbnailUrl: relativeUrl,
+      storageType: "local"
+    };
+  } catch (error) {
+    console.error("Erro no upload local:", error);
+    return {
+      success: false,
+      error: error.message || "Erro no upload local"
     };
   }
 }
