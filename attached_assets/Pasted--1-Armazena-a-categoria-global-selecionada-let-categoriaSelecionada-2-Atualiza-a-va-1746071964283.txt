@@ -1,0 +1,82 @@
+// 1. Armazena a categoria global selecionada
+let categoriaSelecionada = '';
+
+// 2. Atualiza a variável ao selecionar uma categoria
+document.getElementById('categoria-select').addEventListener('change', function (e) {
+  categoriaSelecionada = e.target.value;
+  habilitarUploads();
+});
+
+// 3. Função para habilitar uploads após seleção da categoria
+function habilitarUploads() {
+  document.querySelectorAll('.upload-campo').forEach(campo => {
+    campo.disabled = false;
+    campo.classList.remove('desabilitado');
+  });
+}
+
+// 4. Adicionar novo bloco de formato
+document.getElementById('btn-adicionar-formato').addEventListener('click', () => {
+  const container = document.getElementById('formatos-container');
+  const index = container.children.length;
+
+  const bloco = document.createElement('div');
+  bloco.className = 'formato-bloco';
+  bloco.innerHTML = `
+    <hr />
+    <label>Formato</label>
+    <select name="formatos[${index}][formato]">
+      <option value="Feed">Feed</option>
+      <option value="Story">Story</option>
+      <option value="Cartaz">Cartaz</option>
+      <option value="Carrossel">Carrossel</option>
+    </select>
+
+    <label>Upload de Imagem</label>
+    <input type="file" name="formatos[${index}][imagem]" class="upload-campo" disabled onchange="uploadImagem(this, '${index}')">
+
+    <label>URL de Edição (opcional)</label>
+    <input type="text" name="formatos[${index}][urlEdicao]">
+
+    <label>Título</label>
+    <input type="text" name="formatos[${index}][titulo]">
+
+    <label>Descrição</label>
+    <textarea name="formatos[${index}][descricao]"></textarea>
+
+    <label>Tipo de Arquivo</label>
+    <select name="formatos[${index}][tipoArquivo]">
+      <option value="JPG">JPG</option>
+      <option value="PNG">PNG</option>
+      <option value="WEBP">WEBP</option>
+    </select>
+
+    <label>Prévia (opcional)</label>
+    <input type="file" name="formatos[${index}][previa]" class="upload-campo" disabled onchange="uploadImagem(this, '${index}', true)">
+
+    <button type="button" onclick="this.parentElement.remove()">❌ Remover Formato</button>
+  `;
+
+  container.appendChild(bloco);
+});
+
+// 5. Upload para Supabase
+async function uploadImagem(input, index, isPrevia = false) {
+  if (!categoriaSelecionada) {
+    alert('Selecione uma categoria antes de fazer upload.');
+    return;
+  }
+
+  const file = input.files[0];
+  const formato = input.name.includes('previa') ? 'previas' : 'formatos';
+  const path = `${categoriaSelecionada}/${formato}-${index}-${file.name}`;
+
+  const { data, error } = await supabase.storage.from('artes').upload(path, file);
+  if (error) {
+    alert('Erro ao enviar imagem.');
+    console.error(error);
+  } else {
+    console.log('Upload completo:', data.path);
+    // opcional: preencher um campo oculto com a URL
+  }
+}
