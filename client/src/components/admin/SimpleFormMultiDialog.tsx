@@ -528,56 +528,105 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                         </div>
                         
                         <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                          <div className="flex justify-between items-center mb-3">
+                            <h4 className="text-md font-semibold flex items-center text-gray-700">
+                              <FolderOpen className="h-4 w-4 mr-1.5 text-blue-600" />
+                              Categoria & Tipo
+                            </h4>
+                          </div>
                           <div className="space-y-4">
-                            <Label htmlFor="globalFileType" className="text-sm font-medium text-gray-700 flex items-center">
-                              <FileType className="h-4 w-4 mr-1.5 text-blue-600" />
-                              Tipo de Arquivo <span className="text-red-500 ml-1">*</span>
+                            <Label htmlFor="category" className="text-sm font-medium text-gray-700 flex items-center">
+                              Categoria <span className="text-red-500 ml-1">*</span>
                             </Label>
                             <Controller
                               control={step1Form.control}
-                              name="globalFileType"
+                              name="categoryId"
                               render={({ field }) => (
                                 <Select
                                   value={field.value}
                                   onValueChange={field.onChange}
                                 >
                                   <SelectTrigger className="bg-white border-gray-300 focus:ring-blue-500">
-                                    <SelectValue placeholder="Selecione o tipo" />
+                                    <SelectValue placeholder="Selecione uma categoria" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    {fileTypes.map((type: any) => (
-                                      <SelectItem key={type.id} value={type.slug}>
-                                        {type.name}
+                                    {categories.map((category: any) => (
+                                      <SelectItem key={category.id} value={category.id.toString()}>
+                                        {category.name}
                                       </SelectItem>
                                     ))}
                                   </SelectContent>
                                 </Select>
                               )}
                             />
+                            {step1Form.formState.errors.categoryId && (
+                              <p className="text-sm text-red-500">
+                                {step1Form.formState.errors.categoryId.message}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </div>
                       
                       <div className="flex flex-col justify-center">
                         <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm h-full">
-                          <h4 className="text-sm font-medium text-gray-700 mb-6 flex items-center">
-                            <BadgePlus className="h-4 w-4 mr-1.5 text-blue-600" />
-                            Visibilidade da Arte
-                          </h4>
-                          <div className="flex items-center space-x-3">
-                            <Controller
-                              control={step1Form.control}
-                              name="isPremium"
-                              render={({ field }) => (
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                  id="isPremium"
-                                  className="data-[state=checked]:bg-blue-600"
+                          <div className="flex justify-between items-center mb-3">
+                            <h4 className="text-md font-semibold flex items-center text-gray-700">
+                              <FileType className="h-4 w-4 mr-1.5 text-blue-600" />
+                              Tipo & Visibilidade
+                            </h4>
+                          </div>
+                          <div className="space-y-6">
+                            <div className="space-y-3">
+                              <Label htmlFor="globalFileType" className="text-sm font-medium text-gray-700 flex items-center">
+                                Tipo de Arquivo <span className="text-red-500 ml-1">*</span>
+                              </Label>
+                              <Controller
+                                control={step1Form.control}
+                                name="globalFileType"
+                                render={({ field }) => (
+                                  <Select
+                                    value={field.value}
+                                    onValueChange={field.onChange}
+                                  >
+                                    <SelectTrigger className="bg-white border-gray-300 focus:ring-blue-500">
+                                      <SelectValue placeholder="Selecione o tipo" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {fileTypes.map((type: any) => (
+                                        <SelectItem key={type.id} value={type.slug}>
+                                          {type.name}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                )}
+                              />
+                            </div>
+                            
+                            <div className="space-y-3">
+                              <Label htmlFor="isPremium" className="text-sm font-medium text-gray-700 flex items-center">
+                                Visibilidade da Arte
+                              </Label>
+                              <div className="flex items-center space-x-2 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                <Controller
+                                  control={step1Form.control}
+                                  name="isPremium"
+                                  render={({ field }) => (
+                                    <Switch
+                                      checked={field.value}
+                                      onCheckedChange={field.onChange}
+                                      id="isPremium"
+                                      className="data-[state=checked]:bg-blue-600"
+                                    />
+                                  )}
                                 />
-                              )}
-                            />
-                            <Label htmlFor="isPremium" className="font-medium text-gray-700">Arte Premium</Label>
+                                <Label htmlFor="isPremium" className="font-medium text-gray-700">Arte Premium</Label>
+                                {step1Form.watch("isPremium") && (
+                                  <span className="ml-2 bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded-full">Premium</span>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -781,19 +830,18 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                             </div>
 
                             {/* Upload de imagem */}
-                            <div className="space-y-2">
-                              <Label htmlFor={`image-${formatSlug}`} className="text-sm font-medium flex items-center">
-                                <UploadCloud className="h-4 w-4 mr-1.5 text-blue-600" />
+                            <div className="space-y-3">
+                              <Label htmlFor={`image-${formatSlug}`} className="text-sm font-medium">
                                 Imagem de Preview <span className="text-red-500">*</span>
                               </Label>
                               
                               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div className="col-span-1 md:col-span-2">
                                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 transition-all hover:border-blue-400">
-                                    <div className="flex flex-col items-center justify-center py-3">
-                                      <Upload className="h-8 w-8 text-gray-400 mb-2" />
-                                      <p className="text-sm text-gray-500">
-                                        Clique para selecionar ou arraste uma imagem
+                                    <div className="flex flex-col items-center justify-center py-4">
+                                      <UploadCloud className="h-10 w-10 text-blue-300 mb-2" />
+                                      <p className="text-sm text-gray-500 text-center mb-2">
+                                        Clique para selecionar ou arraste uma imagem para upload
                                       </p>
                                       <input
                                         id={`image-${formatSlug}`}
@@ -804,15 +852,18 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                                       />
                                       <label
                                         htmlFor={`image-${formatSlug}`}
-                                        className="mt-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-md cursor-pointer hover:bg-blue-100 transition-colors"
+                                        className="mt-1 px-4 py-2 bg-blue-600 text-white rounded-md cursor-pointer hover:bg-blue-700 transition-colors flex items-center gap-1.5"
                                       >
                                         {uploading[`image-${formatSlug}`] ? (
-                                          <div className="flex items-center">
-                                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                            Enviando...
-                                          </div>
+                                          <>
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                            <span>Enviando...</span>
+                                          </>
                                         ) : (
-                                          "Selecionar imagem"
+                                          <>
+                                            <Image className="h-4 w-4" />
+                                            <span>Selecionar imagem</span>
+                                          </>
                                         )}
                                       </label>
                                       {uploadError[`image-${formatSlug}`] && (
@@ -827,18 +878,21 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                                 
                                 <div className="col-span-1">
                                   {details.imageUrl ? (
-                                    <div className="border rounded-lg overflow-hidden h-full flex items-center justify-center bg-gray-50">
+                                    <div className="border rounded-lg overflow-hidden h-full flex items-center justify-center bg-gray-50 p-1">
                                       <img
                                         src={details.imageUrl}
                                         alt={`Preview de ${getFormatName(formatSlug)}`}
-                                        className="object-contain max-h-40 w-full"
+                                        className="object-contain max-h-36 w-full"
                                       />
                                     </div>
                                   ) : (
                                     <div className="border rounded-lg overflow-hidden h-full flex items-center justify-center bg-gray-50 text-gray-400">
-                                      <p className="text-sm text-center px-4">
-                                        Preview da imagem <br />aparecerá aqui
-                                      </p>
+                                      <div className="text-center">
+                                        <ImageIcon className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                                        <p className="text-xs text-gray-400 px-2">
+                                          Preview da imagem <br />aparecerá aqui
+                                        </p>
+                                      </div>
                                     </div>
                                   )}
                                 </div>
@@ -1000,7 +1054,14 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                           
                           <div>
                             <p className="text-sm text-gray-500">Tipo de Acesso</p>
-                            <p className="font-medium">{step1Form.getValues().isPremium ? 'Premium' : 'Gratuito'}</p>
+                            <p className="font-medium flex items-center gap-1">
+                              {step1Form.getValues().isPremium ? (
+                                <>
+                                  <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded-full">Premium</span>
+                                  <Crown className="h-3.5 w-3.5 text-yellow-600" />
+                                </>
+                              ) : 'Gratuito'}
+                            </p>
                           </div>
                         </div>
                       </div>
