@@ -1,0 +1,69 @@
+Ao clicar em um formato (ex: Feed, Story...)
+→ Criar dinamicamente um bloco de campos para aquele formato, abaixo da seleção.
+Se desmarcar o formato, o bloco correspondente some.
+
+2. Cada bloco de formato deve conter:
+html
+Copiar
+Editar
+<div class="formato-feed">
+  <h4>Feed</h4>
+  <label>Upload da Imagem</label>
+  <input type="file" onchange="uploadSupabase(this, 'Feed')" required>
+
+  <label>Título</label>
+  <input type="text" name="titulo_feed">
+
+  <label>Descrição</label>
+  <textarea name="descricao_feed"></textarea>
+
+  <label>URL de Edição</label>
+  <input type="url" name="edicao_feed">
+
+  <label>Prévia (opcional)</label>
+  <input type="file" onchange="uploadSupabase(this, 'Feed', true)">
+</div>
+✅ Função de Upload para Supabase (JS)
+js
+Copiar
+Editar
+async function uploadSupabase(input, formato, isPreview = false) {
+  const categoria = document.querySelector('select[name="categoria"]').value;
+  if (!categoria) {
+    alert("Selecione uma categoria antes de fazer o upload.");
+    return;
+  }
+
+  const file = input.files[0];
+  const tipo = isPreview ? "preview" : "imagem";
+  const nomeLimpo = file.name.replace(/\s+/g, "-").toLowerCase();
+  const path = `${categoria}/${formato.toLowerCase()}-${tipo}-${Date.now()}-${nomeLimpo}`;
+
+  const { data, error } = await supabase.storage.from("artes").upload(path, file);
+  if (error) {
+    console.error("Erro no upload:", error.message);
+    alert("Falha ao enviar imagem.");
+    return;
+  }
+
+  console.log("Upload completo:", data.path);
+  // Opcional: salvar o path no campo oculto
+}
+✅ O que o Replit precisa fazer:
+Detectar formatos selecionados
+→ Crie um Set ou Array para manter os formatos ativos
+
+Renderizar blocos de formulário dinamicamente para cada formato → createFormatoBlock(formato) injeta o bloco HTML no DOM
+
+Fazer o upload com base na categoria + formato → Upload ocorre dentro da pasta ${categoria}/${formato} no Supabase
+
+Validar antes de prosseguir
+
+Pelo menos 1 formato precisa estar preenchido com imagem
+
+Categoria deve estar selecionada antes de habilitar uploads
+
+💡 Sugestão visual extra
+Coloque os blocos de formato renderizados dentro de uma <div id="blocos-formatos"></div>
+
+Ao clicar em "Feed", o Replit injeta o bloco dentro desse container
