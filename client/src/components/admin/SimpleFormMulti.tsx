@@ -14,13 +14,12 @@ import {
 } from 'lucide-react';
 
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardFooter
-} from '@/components/ui/card';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -69,7 +68,12 @@ type Step1Values = z.infer<typeof step1Schema>;
 type FormValues = z.infer<typeof formSchema>;
 type FormatValues = z.infer<typeof formatSchema>;
 
-export default function SimpleFormMulti() {
+interface SimpleFormMultiProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function SimpleFormMulti({ isOpen, onClose }: SimpleFormMultiProps) {
   const { toast } = useToast();
   const { user } = useAuth();
   const [step, setStep] = useState(1); // 1: Selecionar formatos, 2: Preencher detalhes
@@ -339,21 +343,31 @@ export default function SimpleFormMulti() {
     );
   }
 
+  if (!isOpen) return null;
+  
   return (
-    <div className="container mx-auto p-4 max-w-5xl">
-      <Card className="border-0 shadow-lg overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-800 text-white pb-8">
-          <div className="flex items-center mb-2">
-            <FileImage className="h-6 w-6 mr-2" />
-            <CardTitle>Adicionar Arte Multi-Formato</CardTitle>
-          </div>
-          <CardDescription className="text-blue-100">
-            Crie uma arte com variações para diferentes formatos (feed, stories, etc.)
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent className="pt-6 px-6">
-          {step === 1 && (
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) onClose();
+    }}>
+      <DialogContent className="max-w-5xl pt-0 px-0 pb-0">
+        <div className="overflow-y-auto max-h-[80vh]">
+          <DialogHeader className="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6 rounded-t-lg">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center">
+                <FileImage className="h-6 w-6 mr-2" />
+                <DialogTitle className="text-xl">Adicionar Arte Multi-Formato</DialogTitle>
+              </div>
+              <button onClick={onClose} className="text-white/80 hover:text-white transition-colors">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <DialogDescription className="text-blue-100">
+              Crie uma arte com variações para diferentes formatos (feed, stories, etc.)
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="p-6">
+            {step === 1 && (
             <form onSubmit={step1Form.handleSubmit(goToStep2)} className="space-y-8">
               {/* Configuração Global - Etapa 1 */}
               <div className="bg-blue-50/60 p-6 rounded-xl border border-blue-100">
@@ -778,8 +792,8 @@ export default function SimpleFormMulti() {
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
