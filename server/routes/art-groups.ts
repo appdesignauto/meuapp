@@ -270,16 +270,16 @@ router.post('/', isAuthenticated, canCreateArt, upload.single('image'), async (r
     const groupInsertQuery = `
       INSERT INTO "artGroups" (
         "title", 
-        "categoryId", 
-        "designerId", 
-        "isPremium", 
-        "isVisible", 
+        "categoryid", 
+        "designerid", 
+        "ispremium", 
+        "isvisible", 
         "status", 
-        "downloadCount", 
-        "viewCount", 
-        "likeCount", 
-        "createdAt", 
-        "updatedAt"
+        "downloadcount", 
+        "viewcount", 
+        "likecount", 
+        "createdat", 
+        "updatedat"
       )
       VALUES (
         $1, $2, $3, $4, true, 'active', 0, 0, 0, NOW(), NOW()
@@ -299,17 +299,17 @@ router.post('/', isAuthenticated, canCreateArt, upload.single('image'), async (r
     // Inserir variação primária
     const variationInsertQuery = `
       INSERT INTO "artVariations" (
-        "groupId",
-        "formatId",
-        "fileTypeId",
-        "imageUrl",
-        "editUrl",
+        "groupid",
+        "formatid",
+        "filetypeid",
+        "imageurl",
+        "editurl",
         "width",
         "height",
-        "aspectRatio",
-        "isPrimary",
-        "createdAt",
-        "updatedAt"
+        "aspectratio",
+        "isprimary",
+        "createdat",
+        "updatedat"
       )
       VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, true, NOW(), NOW()
@@ -412,25 +412,25 @@ router.post('/:id/variations', isAuthenticated, canCreateArt, upload.single('ima
     if (isPrimary === 'true') {
       await db.execute(sql.raw(`
         UPDATE "artVariations" 
-        SET "isPrimary" = false 
-        WHERE "groupId" = ${id}
+        SET "isprimary" = false 
+        WHERE "groupid" = ${id}
       `));
     }
     
     // Inserir variação
     const variationInsertQuery = `
       INSERT INTO "artVariations" (
-        "groupId",
-        "formatId",
-        "fileTypeId",
-        "imageUrl",
-        "editUrl",
+        "groupid",
+        "formatid",
+        "filetypeid",
+        "imageurl",
+        "editurl",
         "width",
         "height",
-        "aspectRatio",
-        "isPrimary",
-        "createdAt",
-        "updatedAt"
+        "aspectratio",
+        "isprimary",
+        "createdat",
+        "updatedat"
       )
       VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW()
@@ -505,18 +505,18 @@ router.patch('/:id', isAuthenticated, canCreateArt, async (req, res) => {
     }
     
     if (categoryId !== undefined) {
-      updateFields.push(`"categoryId" = $${paramIndex++}`);
+      updateFields.push(`"categoryid" = $${paramIndex++}`);
       params.push(categoryId);
     }
     
     if (isPremium !== undefined) {
-      updateFields.push(`"isPremium" = $${paramIndex++}`);
+      updateFields.push(`"ispremium" = $${paramIndex++}`);
       params.push(isPremium);
     }
     
     // Apenas admin pode alterar visibilidade
     if (isVisible !== undefined && isAdmin) {
-      updateFields.push(`"isVisible" = $${paramIndex++}`);
+      updateFields.push(`"isvisible" = $${paramIndex++}`);
       params.push(isVisible);
     }
     
@@ -591,8 +591,8 @@ router.patch('/:groupId/variations/:variationId', isAuthenticated, canCreateArt,
     if (isPrimary === true) {
       await db.execute(sql.raw(`
         UPDATE "artVariations" 
-        SET "isPrimary" = false 
-        WHERE "groupId" = ${groupId}
+        SET "isprimary" = false 
+        WHERE "groupid" = ${groupId}
       `));
       
       updateFields.push(`"isPrimary" = true`);
