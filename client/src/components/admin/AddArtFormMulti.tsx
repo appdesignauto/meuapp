@@ -115,6 +115,18 @@ const AddArtFormMulti = () => {
 
   // Adicionar variação à lista
   const addVariation = () => {
+    // Verificar se a última variação adicionada tem uma imagem
+    // Isso evita acumular variações vazias e causar o erro "sem imagem"
+    const lastVariation = variations[variations.length - 1];
+    
+    if (variations.length > 0 && !lastVariation.imageFile) {
+      toast({
+        title: 'Complete a variação atual primeiro',
+        description: 'Por favor, selecione uma imagem para a variação atual antes de adicionar outra.',
+      });
+      return;
+    }
+    
     const newVariation: Variation = {
       formatId: '',
       fileTypeId: '',
