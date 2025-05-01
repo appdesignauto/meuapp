@@ -895,23 +895,6 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                 </div>
               </div>
             )}
-            
-            {step === 3 && currentTab && (
-              <div className="space-y-6">
-                {/* Navegação da etapa 3 */}
-                <div className="flex justify-between items-center mb-6">
-                  <button 
-                    onClick={goToPreviousStep}
-                    className="text-blue-600 hover:text-blue-800 flex items-center gap-1 px-3 py-1.5 border border-blue-200 rounded-lg transition-all hover:bg-blue-50"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                    Voltar
-                  </button>
-                  
-                  <div className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium">
-                    Preencha os detalhes de cada formato
-                  </div>
-                </div>
 
                 {/* Tabs para navegar entre formatos */}
                 <Tabs 
