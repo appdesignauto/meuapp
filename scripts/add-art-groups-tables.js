@@ -4,7 +4,8 @@
  */
 
 import 'dotenv/config';
-import { Pool } from 'pg';
+import pkg from 'pg';
+const { Pool } = pkg;
 
 async function addArtGroupsTables() {
   const pool = new Pool({
