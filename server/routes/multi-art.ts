@@ -215,7 +215,7 @@ router.get('/api/admin/arts/group/:groupId', isAuthenticated, async (req: Reques
     // Buscar todas as artes do grupo usando SQL direto para evitar problemas
     const result = await db.execute(sql`
       SELECT * FROM arts 
-      WHERE groupId = ${groupId}
+      WHERE "groupId" = ${groupId}
     `);
     
     // Converter resultados para o formato esperado
@@ -258,10 +258,13 @@ router.put('/api/admin/arts/group/:groupId', isAuthenticated, async (req: Reques
     // Validar os dados recebidos
     const artGroupData = ArtGroupSchema.parse(req.body);
     
-    // Buscar todas as artes existentes do grupo
-    const existingArts = await db.select()
-      .from(arts)
-      .where(eq(arts.groupId, groupId));
+    // Buscar todas as artes existentes do grupo usando SQL direto para evitar problemas com o nome da coluna
+    const result = await db.execute(sql`
+      SELECT * FROM arts 
+      WHERE "groupId" = ${groupId}
+    `);
+    
+    const existingArts = result.rows || [];
     
     if (!existingArts || existingArts.length === 0) {
       return res.status(404).json({
@@ -348,7 +351,7 @@ router.put('/api/admin/arts/group/:groupId', isAuthenticated, async (req: Reques
             // Importante: no PostgreSQL, a sintaxe correta tem um WHERE separado por espaço
             const result = await db.execute(sql`
               UPDATE arts 
-              SET groupId = ${groupId}
+              SET "groupId" = ${groupId}
               WHERE id = ${newArt.id}
             `);
             

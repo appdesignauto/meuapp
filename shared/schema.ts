@@ -119,6 +119,7 @@ export const arts = pgTable("arts", {
   width: integer("width"),
   height: integer("height"),
   aspectratio: text("aspectratio"),
+  groupId: text("groupId"), // ID para agrupar artes relacionadas em diferentes formatos
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 });
