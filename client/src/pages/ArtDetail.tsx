@@ -807,12 +807,12 @@ export default function ArtDetail() {
                 </div>
               </div>
               
-              {/* Dropdown de formatos disponíveis minimalista */}
+              {/* Dropdown de formatos disponíveis mais intuitivo para leigos */}
               {groupArts && groupArts.arts && groupArts.arts.length > 1 && (
                 <div className="border-t border-neutral-200">
-                  {/* Estado inicial fechado - Header com dropdown */}
+                  {/* Estado inicial fechado - Header com dropdown claramente clicável */}
                   <div 
-                    className="p-3 bg-gradient-to-r from-blue-50 to-white hover:from-blue-100/60 hover:to-blue-50/60 transition-colors cursor-pointer flex items-center justify-between"
+                    className="p-3 bg-gradient-to-r from-blue-50 to-white border border-blue-100 rounded-md m-2 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer flex items-center justify-between"
                     onClick={() => {
                       const dropdown = document.getElementById('formatosDropdown');
                       if (dropdown) {
@@ -835,18 +835,32 @@ export default function ArtDetail() {
                       >
                         {groupArts.arts.findIndex(art => art.id === Number(id)) + 1} de {groupArts.arts.length}
                       </Badge>
-                      <ChevronRight id="dropdownIcon" className="h-4 w-4 text-blue-500 transition-transform duration-200" />
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="h-6 px-2 py-0 text-[10px] font-medium flex items-center gap-1 bg-blue-100 hover:bg-blue-200 text-blue-700 border border-blue-200 animate-pulse"
+                      >
+                        CLIQUE PARA VER OPÇÕES
+                        <ChevronRight id="dropdownIcon" className="h-3 w-3 text-blue-600 transition-transform duration-200" />
+                      </Button>
                     </div>
                   </div>
                   
                   {/* Conteúdo do dropdown - inicialmente oculto */}
-                  <div id="formatosDropdown" className="hidden bg-white border-t border-neutral-100 shadow-inner">
+                  <div id="formatosDropdown" className="hidden bg-white border border-blue-100 shadow-md m-2 mt-0 rounded-md">
                     <div className="p-3">
+                      {/* Cabeçalho explicativo */}
+                      <div className="bg-blue-50 p-2 rounded mb-3 border border-blue-100">
+                        <p className="text-xs text-blue-700">
+                          <span className="font-medium">Dica:</span> Escolha outra versão desta mesma arte em um formato diferente.
+                        </p>
+                      </div>
+                      
                       {/* Seletor de formatos estilizado */}
                       <div className="flex flex-col space-y-2">
                         {/* Navegação rápida - compacta */}
                         <div className="flex items-center justify-between mb-1 text-xs">
-                          <span className="text-neutral-500">Selecione um formato para navegar:</span>
+                          <span className="text-neutral-500">Clique em um formato para visualizar:</span>
                           <div className="flex space-x-1">
                             <Button
                               variant="ghost"
