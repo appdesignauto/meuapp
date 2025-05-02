@@ -108,6 +108,40 @@ export default function ArtsPage() {
   const totalCount = data?.totalCount || 0;
   const hasMore = page * limit < totalCount;
   
+  // Carregar parâmetros de busca da URL quando a página é carregada
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const searchParam = params.get('search');
+    
+    if (searchParam) {
+      setSearch(searchParam);
+    }
+
+    const categoryParam = params.get('categoryId');
+    if (categoryParam) {
+      setFilters(prev => ({
+        ...prev,
+        categoryId: parseInt(categoryParam)
+      }));
+    }
+    
+    const formatParam = params.get('formatId');
+    if (formatParam) {
+      setFilters(prev => ({
+        ...prev,
+        formatId: parseInt(formatParam)
+      }));
+    }
+    
+    const fileTypeParam = params.get('fileTypeId');
+    if (fileTypeParam) {
+      setFilters(prev => ({
+        ...prev,
+        fileTypeId: parseInt(fileTypeParam)
+      }));
+    }
+  }, []);
+  
   // Reset page when filters change
   useEffect(() => {
     setPage(1);

@@ -11,7 +11,8 @@ const Hero = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      setLocation(`/search?q=${encodeURIComponent(searchQuery)}`);
+      // Redirecionar para a página de artes com o parâmetro de pesquisa
+      setLocation(`/arts?search=${encodeURIComponent(searchQuery)}`);
     }
   };
 
