@@ -979,7 +979,19 @@ export default function ArtDetail() {
           <Button 
             variant="ghost" 
             className="text-blue-600 flex items-center group"
-            onClick={() => setLocation('/')}
+            onClick={() => {
+              // Redirecionar para a galeria com o termo de pesquisa preenchido
+              // Usamos o slug da categoria ou o nome da categoria, ou o título da arte para extrair palavras-chave
+              const searchTerm = art?.category?.name || 
+                                (art?.title && art.title.split(' ').filter((word: string) => word.length > 3)[0]) || 
+                                '';
+              
+              // Codificar o termo de pesquisa para URL
+              const encodedSearchTerm = encodeURIComponent(searchTerm);
+              
+              // Redirecionar para a página de artes com o termo de pesquisa como parâmetro
+              setLocation(`/arts?search=${encodedSearchTerm}`);
+            }}
           >
             Explorar mais artes
             <ChevronRight className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform" />
