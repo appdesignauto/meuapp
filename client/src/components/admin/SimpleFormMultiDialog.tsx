@@ -666,12 +666,7 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
             
             {step === 2 && (
               <div className="space-y-6">
-                {/* Cabeçalho da etapa 2 */}
-                <div className="flex justify-end items-center mb-6">
-                  <div className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium">
-                    Preencha os detalhes de cada formato
-                  </div>
-                </div>
+                {/* Espaço removido para área do formulário ser maior */}
 
                 {/* Tabs para navegar entre formatos */}
                 <Tabs 
@@ -680,7 +675,6 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                   className="w-full"
                 >
                   <div className="bg-gray-50 p-4 rounded-xl mb-6">
-                    <h3 className="text-sm font-medium text-gray-500 mb-3">Navegue entre os formatos:</h3>
                     <TabsList className="w-full flex gap-2 bg-transparent p-0">
                       {Object.keys(formatDetails).map(formatSlug => {
                         const formatName = getFormatName(formatSlug);
