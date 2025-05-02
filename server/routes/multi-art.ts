@@ -131,21 +131,24 @@ router.get('/api/arts/group/:groupId', async (req: Request, res: Response) => {
                         req.user?.nivelacesso === 'designer_adm' || 
                         req.user?.nivelacesso === 'designer';
     
-    // Buscar todas as artes do grupo
-    let query = db.select().from(arts);
+    // Buscar todas as artes do grupo usando SQL direto para evitar problemas com o nome da coluna
+    let querySQL;
     
     if (isUserAdmin) {
-      query = query.where(eq(arts.groupId, groupId));
+      querySQL = sql`
+        SELECT * FROM arts 
+        WHERE "groupId" = ${groupId}
+      `;
     } else {
-      query = query.where(
-        and(
-          eq(arts.groupId, groupId),
-          eq(arts.isVisible, true)
-        )
-      );
+      querySQL = sql`
+        SELECT * FROM arts 
+        WHERE "groupId" = ${groupId} AND "isVisible" = true
+      `;
     }
     
-    const groupArts = await query;
+    const result = await db.execute(querySQL);
+    
+    const groupArts = result.rows || [];
     
     if (!groupArts || groupArts.length === 0) {
       return res.status(404).json({

@@ -82,6 +82,7 @@ export interface Art {
   width: number;
   height: number;
   aspectRatio: string;
+  groupId?: string | null; // ID para agrupar artes relacionadas
   createdAt: Date;
   updatedAt: Date;
 }

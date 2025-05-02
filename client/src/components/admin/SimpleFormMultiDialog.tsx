@@ -63,7 +63,10 @@ const formSchema = z.object({
   categoryId: z.string().min(1, "Por favor selecione uma categoria"),
   globalFileType: z.string().min(1, "Por favor selecione um tipo de arquivo"),
   isPremium: z.boolean().default(false),
-  formats: z.array(formatSchema).min(1, "Adicione pelo menos um formato")
+  formats: z.array(formatSchema).min(1, "Adicione pelo menos um formato"),
+  groupId: z.string().optional(),
+  globalTitle: z.string().optional(),
+  globalDescription: z.string().optional(),
 });
 
 type Step1Values = z.infer<typeof step1Schema>;
