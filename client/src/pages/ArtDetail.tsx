@@ -63,6 +63,8 @@ interface Art {
   isPremium: boolean;
   isPremiumLocked?: boolean;
   createdAt: string;
+  groupId?: string; // ID do grupo para associar formatos relacionados
+  format?: string; // Slug do formato (feed, stories, etc.)
   category?: {
     id: number;
     name: string;
@@ -99,6 +101,22 @@ export default function ArtDetail() {
       return res.json();
     },
     retry: 1,
+  });
+  
+  // Buscar artes do mesmo grupo (para exibir outros formatos)
+  const { data: groupArts } = useQuery({
+    queryKey: ['/api/arts/group', art?.groupId],
+    queryFn: async () => {
+      if (!art?.groupId) return { arts: [] };
+      console.log(`Buscando artes do grupo: ${art.groupId}`);
+      const res = await fetch(`/api/arts/group/${art.groupId}`);
+      if (!res.ok) {
+        console.error('Erro ao buscar artes do grupo');
+        return { arts: [] };
+      }
+      return res.json();
+    },
+    enabled: !!art?.groupId,
   });
   
   // Verificar se a arte está favoritada
@@ -818,6 +836,61 @@ export default function ArtDetail() {
             )}
           </div>
         </div>
+      )}
+      
+      {/* Outros Formatos - Nova seção */}
+      {groupArts && groupArts.arts && groupArts.arts.length > 1 && (
+        <motion.div 
+          className="bg-white rounded-xl shadow-md p-6 mb-6"
+          initial={{ y: 40, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.4 }}
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-bold text-gray-800 flex items-center">
+              <Zap className="h-5 w-5 text-blue-600 mr-2" />
+              Outros Formatos
+            </h2>
+            <Badge 
+              variant="outline" 
+              className="px-3 py-0.5 text-xs font-normal text-neutral-600 border-neutral-200"
+            >
+              {groupArts.arts.length} formatos disponíveis
+            </Badge>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {groupArts.arts.map((groupArt: any) => (
+              <div 
+                key={groupArt.id}
+                className={`relative aspect-square rounded-lg overflow-hidden bg-neutral-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer ${groupArt.id === Number(id) ? 'ring-2 ring-blue-500' : ''}`}
+                onClick={() => {
+                  if (groupArt.id !== Number(id)) {
+                    setLocation(`/arts/${groupArt.id}`);
+                  }
+                }}
+              >
+                <img 
+                  src={groupArt.imageUrl} 
+                  alt={groupArt.title} 
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/70 to-transparent">
+                  <div className="flex justify-between items-center">
+                    <Badge className="capitalize bg-blue-600 text-white hover:bg-blue-700">
+                      {groupArt.format}
+                    </Badge>
+                    {groupArt.id === Number(id) && (
+                      <Badge variant="outline" className="bg-white/90 text-xs">
+                        Atual
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
       )}
       
       {/* Related Arts Section - Com animação */}
