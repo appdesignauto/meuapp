@@ -67,12 +67,15 @@ router.post('/api/admin/arts/multi', isAuthenticated, async (req: Request, res: 
         console.warn(`ALERTA: Arte ID ${newArt.id} foi criada sem groupId. Tentando atualizar...`);
         try {
           // Tentar atualizar o groupId usando SQL direto para evitar problemas com o nome da coluna
+          // Importante: no PostgreSQL, a sintaxe correta tem um WHERE separado por espaço
           const result = await db.execute(sql`
             UPDATE arts 
             SET "groupId" = ${artGroupId}
             WHERE id = ${newArt.id}
-            RETURNING *
           `);
+          
+          // Log de confirmação
+          console.log(`SQL executado para atualizar groupId da arte ${newArt.id}`);
           
           if (result.rowCount > 0) {
             console.log(`Arte ID ${newArt.id} atualizada com groupId ${artGroupId}`);
@@ -305,12 +308,15 @@ router.put('/api/admin/arts/group/:groupId', isAuthenticated, async (req: Reques
           console.warn(`ALERTA: Nova arte ID ${newArt.id} no grupo ${groupId} foi criada sem groupId. Tentando atualizar...`);
           try {
             // Tentar atualizar o groupId usando SQL direto para evitar problemas com o nome da coluna
+            // Importante: no PostgreSQL, a sintaxe correta tem um WHERE separado por espaço
             const result = await db.execute(sql`
               UPDATE arts 
               SET "groupId" = ${groupId}
               WHERE id = ${newArt.id}
-              RETURNING *
             `);
+            
+            // Log de confirmação
+            console.log(`SQL executado para atualizar groupId da nova arte ${newArt.id} no grupo ${groupId}`);
             
             if (result.rowCount > 0) {
               console.log(`Nova arte ID ${newArt.id} atualizada com groupId ${groupId}`);
