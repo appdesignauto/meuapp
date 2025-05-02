@@ -7,7 +7,7 @@ import { isAdmin, isAuthenticated } from '../middlewares/auth';
 import { ZodError } from 'zod';
 import { fromZodError } from 'zod-validation-error';
 import { v4 as uuidv4 } from 'uuid';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 
 const router = Router();
 
@@ -162,6 +162,37 @@ router.get('/api/arts/group/:groupId', async (req: Request, res: Response) => {
     console.error('Erro ao buscar grupo de artes:', error);
     return res.status(500).json({
       message: 'Erro ao buscar grupo de artes'
+    });
+  }
+});
+
+// Rota para verificar o groupId de uma arte específica
+router.get('/api/admin/arts/:id/check-group', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const id = parseInt(req.params.id);
+    console.log(`Verificando groupId para arte ${id}`);
+    
+    // Buscar diretamente do banco de dados para garantir que temos o valor atualizado
+    const [art] = await db
+      .select({ groupId: arts.groupId })
+      .from(arts)
+      .where(eq(arts.id, id));
+    
+    if (!art) {
+      return res.status(404).json({
+        message: 'Arte não encontrada'
+      });
+    }
+    
+    console.log(`Arte ${id} groupId: ${art.groupId}`);
+    return res.json({ 
+      id: id,
+      groupId: art.groupId 
+    });
+  } catch (error) {
+    console.error(`Erro ao verificar grupo da arte ${req.params.id}:`, error);
+    return res.status(500).json({
+      message: 'Erro ao verificar grupo da arte'
     });
   }
 });
