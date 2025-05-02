@@ -149,15 +149,29 @@ export default function SimpleFormMultiDialog({
       
       // Se a arte é parte de um grupo, buscar informações relacionadas
       if (editingArt.groupId) {
+        // Log detalhado para depuração
+        console.log(`Arte sendo editada é parte do grupo: ${editingArt.groupId}`);
+        
         // Buscar outras artes do mesmo grupo para edição
         // Usar a rota correta da API para buscar artes do grupo
+        console.log(`Buscando artes do grupo em: /api/admin/arts/group/${editingArt.groupId}`);
+        
         apiRequest('GET', `/api/admin/arts/group/${editingArt.groupId}`)
-          .then(res => res.json())
+          .then(res => {
+            console.log(`Resposta recebida, status: ${res.status}`);
+            return res.json();
+          })
           .then(data => {
+            console.log(`Dados recebidos do grupo:`, data);
             const groupArts = data.arts || [];
+            
+            console.log(`Artes encontradas no grupo: ${groupArts.length}`);
+            
             if (Array.isArray(groupArts) && groupArts.length > 0) {
               // Extrair os formatos das artes do grupo
               const formatSlugs = groupArts.map(art => art.format);
+              console.log(`Formatos encontrados: ${formatSlugs.join(', ')}`);
+              
               step1Form.setValue('selectedFormats', formatSlugs);
               
               // Preencher os detalhes de cada formato
@@ -172,6 +186,7 @@ export default function SimpleFormMultiDialog({
                   previewUrl: art.previewUrl || '',
                   editUrl: art.editUrl || '',
                 };
+                console.log(`Formato ${art.format} carregado: ${art.title}`);
               });
               
               setFormatDetails(initialDetails);
@@ -186,12 +201,22 @@ export default function SimpleFormMultiDialog({
               
               // Definir a aba da arte que está sendo editada como atual
               setCurrentTab(editingArt.format);
+              console.log(`Definindo aba ativa: ${editingArt.format}`);
+              
+              // Guardar as imagens
+              const imageMap: Record<string, string> = {};
+              groupArts.forEach(art => {
+                imageMap[art.format] = art.imageUrl || '';
+              });
+              setImages(imageMap);
               
               // Avançar direto para a etapa 2 (upload) depois de carregar os dados
+              console.log(`Avançando para etapa 2 após carregar dados do grupo`);
               setTimeout(() => {
                 setStep(2);
               }, 100);
             } else {
+              console.log(`Nenhuma arte encontrada no grupo, tratando como arte única`);
               // Se não encontrou artes do grupo, tratar como arte única
               handleSingleArtEdit();
             }
