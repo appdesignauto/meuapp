@@ -674,39 +674,64 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                   onValueChange={setCurrentTab}
                   className="w-full"
                 >
-                  {/* Integração de abas no cabeçalho */}
-                  <div className="bg-gradient-to-r from-gray-700 to-gray-800 text-white mb-6 rounded-t-lg">
-                    <TabsList className="w-full flex gap-0 bg-transparent p-0 border-b border-gray-600">
-                      {Object.keys(formatDetails).map(formatSlug => {
+                  {/* Integração de abas no cabeçalho - design aprimorado */}
+                  <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white mb-6 rounded-t-xl overflow-hidden shadow-md">
+                    <TabsList className="w-full flex gap-0 bg-transparent p-0 border-b border-gray-700">
+                      {Object.keys(formatDetails).map((formatSlug, index) => {
                         const formatName = getFormatName(formatSlug);
                         const isComplete = formatsComplete[formatSlug];
                         const isActive = currentTab === formatSlug;
+                        
+                        // Determinar qual ícone usar com base no formato
+                        let FormatIcon;
+                        switch(formatSlug) {
+                          case 'stories':
+                            FormatIcon = <div className="h-3.5 w-2 bg-gray-300 rounded-sm mr-2" />;
+                            break;
+                          case 'feed':
+                            FormatIcon = <div className="h-3 w-3 bg-gray-300 rounded-sm mr-2" />;
+                            break;
+                          case 'cartaz':
+                            FormatIcon = <div className="h-3 w-3.5 bg-gray-300 rounded-sm mr-2" />;
+                            break;
+                          case 'carrocel':
+                            FormatIcon = <div className="h-3 w-3.5 bg-gray-300 rounded-sm mr-2 relative">
+                              <div className="absolute -right-1 -top-1 h-1.5 w-1.5 bg-gray-300 rounded-full"></div>
+                            </div>;
+                            break;
+                          default:
+                            FormatIcon = null;
+                        }
                         
                         return (
                           <TabsTrigger 
                             key={formatSlug} 
                             value={formatSlug}
                             className={`
-                              flex items-center gap-1.5 py-3 px-6 border-0 rounded-none relative 
+                              flex items-center gap-1 py-3 px-4 border-0 rounded-none relative z-10
                               after:absolute after:w-[1px] after:h-2/3 after:-right-[1px] after:top-1/2 after:-translate-y-1/2 after:bg-gray-600 last:after:hidden
                               ${isActive ? 'bg-gray-800 text-white font-medium' : 'bg-transparent'} 
                               ${isComplete 
                                 ? (isActive ? 'text-white font-medium' : 'text-gray-200') 
                                 : (isActive ? 'text-white' : 'text-gray-400')
                               }
-                              hover:bg-gray-600 hover:text-white transition-colors
+                              hover:bg-gray-700 hover:text-white transition-colors
+                              ${isActive ? 'before:absolute before:bottom-0 before:left-0 before:right-0 before:h-0.5 before:bg-blue-500' : ''}
                             `}
                           >
-                            {formatName}
+                            <div className="flex items-center">
+                              {FormatIcon}
+                              <span className="text-sm">{formatName}</span>
+                            </div>
                             {isComplete && <Check className="h-3.5 w-3.5 text-green-400 ml-1" />}
                           </TabsTrigger>
                         );
                       })}
                     </TabsList>
                     
-                    <div className="p-4">
+                    <div className="p-4 bg-gradient-to-r from-gray-800 to-gray-900">
                       <h2 className="text-lg font-semibold flex items-center">
-                        <BookImage className="h-5 w-5 mr-2 text-white" />
+                        <BookImage className="h-5 w-5 mr-2 text-blue-400" />
                         {getFormatName(currentTab)}
                       </h2>
                     </div>
@@ -890,7 +915,7 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                       type="button"
                       onClick={goToStep3}
                       disabled={Object.values(formatsComplete).some(complete => !complete)}
-                      className="flex-1 py-2.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed"
+                      className="flex-1 py-2.5 rounded-lg bg-gray-800 text-white hover:bg-gray-900 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-all duration-200"
                     >
                       Revisar
                       <ArrowRight className="h-4 w-4 ml-1" />
@@ -912,16 +937,16 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                     Voltar para edição
                   </button>
                   
-                  <div className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium">
+                  <div className="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-sm font-medium">
                     Revisão final
                   </div>
                 </div>
                 
                 {/* Resumo da arte multi-formato */}
                 <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                  <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4">
+                  <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white p-4">
                     <h2 className="text-lg font-semibold flex items-center">
-                      <FileImage className="h-5 w-5 mr-2 text-white" />
+                      <FileImage className="h-5 w-5 mr-2 text-blue-400" />
                       Revisão - Resumo da Arte Multi-Formato
                     </h2>
                   </div>
@@ -1030,17 +1055,17 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                   <Button 
                     type="button"
                     onClick={handleSubmit}
-                    className="w-full py-6 rounded-xl text-base font-medium flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
+                    className="w-full py-6 rounded-xl text-base font-medium flex items-center justify-center gap-2 bg-gradient-to-r from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 text-white shadow-lg transition-all duration-200"
                   >
                     {uploadAllComplete ? (
                       <>
                         Upload Concluído
-                        <Check className="h-5 w-5 ml-1" />
+                        <Check className="h-5 w-5 ml-1 text-blue-400" />
                       </>
                     ) : (
                       <>
                         Salvar Arte Multi-Formato
-                        <Check className="h-5 w-5 ml-1" />
+                        <Check className="h-5 w-5 ml-1 text-blue-400" />
                       </>
                     )}
                   </Button>
