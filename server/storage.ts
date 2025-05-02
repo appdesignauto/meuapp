@@ -2157,11 +2157,47 @@ export class DatabaseStorage implements IStorage {
         console.log(`- Arte "${item.title}" (ID ${item.art.id}): Score ${item.score}, ${item.keywordMatches} palavras-chave correspondentes`);
       });
       
-      // Ordena por pontuação (maior para menor) e limita o número de resultados
-      const relatedArts = scoredArts
-        .sort((a, b) => b.score - a.score)
-        .slice(0, limit)
-        .map(item => item.art);
+      // Ordena por pontuação (maior para menor)
+      let sortedArts = scoredArts.sort((a, b) => b.score - a.score);
+      
+      // Obtém artes por correspondência de palavras-chave
+      let relatedArts = sortedArts.slice(0, limit).map(item => item.art);
+      
+      // Se não tiver suficientes artes relacionadas por palavras-chave, completa com artes da mesma categoria
+      if (relatedArts.length < limit && artRow.categoryId) {
+        console.log(`[getRelatedArts] Artes por palavras-chave insuficientes (${relatedArts.length}/${limit}). Completando com artes da mesma categoria.`);
+        
+        // Filtrar artes que já estão incluídas
+        const relatedArtIds = new Set(relatedArts.map(art => art.id));
+        
+        // Obter artes da mesma categoria que ainda não estão incluídas
+        const sameCategoryArts = allArts
+          .filter(a => 
+            a.categoryId === artRow.categoryId && // Mesma categoria
+            !relatedArtIds.has(a.id) // Não incluída ainda
+          )
+          .map(a => {
+            // Criar objeto arte com categoria embutida
+            const category = a.category_id ? {
+              id: a.category_id,
+              name: a.category_name,
+              slug: a.category_slug
+            } : null;
+            
+            return {
+              ...a,
+              designerId: a.designerid,
+              viewCount: a.viewcount,
+              aspectRatio: a.aspectratio,
+              category: category
+            } as Art;
+          });
+        
+        console.log(`[getRelatedArts] Encontradas ${sameCategoryArts.length} artes adicionais da mesma categoria.`);
+        
+        // Combinar artes, limitando ao número máximo
+        relatedArts = [...relatedArts, ...sameCategoryArts].slice(0, limit);
+      }
       
       return relatedArts;
     } catch (error) {
