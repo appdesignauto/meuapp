@@ -276,7 +276,7 @@ export default function SimpleFormMultiDialog({
           title: editingArt.title || '',
           description: editingArt.description || '',
           imageUrl: editingArt.imageUrl || '',
-          previewUrl: editingArt.previewUrl || '',
+          // Campo de previewUrl removido conforme solicitado
           editUrl: editingArt.editUrl || '',
         }
       };
@@ -334,7 +334,7 @@ export default function SimpleFormMultiDialog({
         // Usar a descrição global para cada formato, se disponível
         description: data.globalDescription || '',
         imageUrl: '',
-        previewUrl: '',
+        // Campo de previewUrl removido conforme solicitado
         editUrl: ''
       };
     });
@@ -813,15 +813,7 @@ export default function SimpleFormMultiDialog({
                               />
                             </div>
                             
-                            <div>
-                              <Label htmlFor={`${formatSlug}-previewUrl`}>URL de Pré-visualização</Label>
-                              <Input
-                                id={`${formatSlug}-previewUrl`}
-                                value={formatDetails[formatSlug]?.previewUrl || ''}
-                                onChange={(e) => saveFormatDetails(formatSlug, { previewUrl: e.target.value })}
-                                placeholder="URL opcional para pré-visualização"
-                              />
-                            </div>
+                            {/* Campo de URL de pré-visualização removido conforme solicitado */}
                           </div>
                           
                           <div className="space-y-6">
