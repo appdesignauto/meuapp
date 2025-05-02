@@ -451,11 +451,6 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                   <div className="space-y-8">
                     {/* Título e Descrição */}
                     <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-                      <div className="flex justify-end items-center mb-3">
-                        <div className="bg-blue-50 border border-blue-100 rounded-full px-2 py-0.5 text-xs text-blue-600">
-                          Global
-                        </div>
-                      </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Categoria */}
@@ -553,7 +548,7 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                             id="globalDescription"
                             placeholder="Descrição global que será aplicada a todos os formatos (opcional)"
                             {...step1Form.register('globalDescription')}
-                            className="border-gray-300 focus:ring-blue-500 h-32"
+                            className="border-gray-300 focus:ring-blue-500 h-20"
                           />
                         </div>
                       </div>
