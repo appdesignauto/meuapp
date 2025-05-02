@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { SHOW_SEARCHBAR_EVENT, HIDE_SEARCHBAR_EVENT } from '@/components/home/Hero';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -176,12 +177,12 @@ const Header = () => {
     };
     
     // Adicionar listeners para os eventos customizados
-    document.addEventListener('searchbar:showInHeader', handleShowSearch);
-    document.addEventListener('searchbar:hideInHeader', handleHideSearch);
+    document.addEventListener(SHOW_SEARCHBAR_EVENT, handleShowSearch);
+    document.addEventListener(HIDE_SEARCHBAR_EVENT, handleHideSearch);
     
     return () => {
-      document.removeEventListener('searchbar:showInHeader', handleShowSearch);
-      document.removeEventListener('searchbar:hideInHeader', handleHideSearch);
+      document.removeEventListener(SHOW_SEARCHBAR_EVENT, handleShowSearch);
+      document.removeEventListener(HIDE_SEARCHBAR_EVENT, handleHideSearch);
     };
   }, []);
   
@@ -221,10 +222,14 @@ const Header = () => {
           </div>
 
           {/* Barra de pesquisa flutuante - aparece quando rolar para baixo */}
-          {showHeaderSearch && (
+          <div className={`absolute left-1/2 transform -translate-x-1/2 w-[500px] max-w-[calc(100%-220px)] z-10 transition-all duration-300 ease-in-out ${
+            showHeaderSearch 
+              ? 'opacity-100 translate-y-0' 
+              : 'opacity-0 -translate-y-4 pointer-events-none'
+          }`}>
             <form 
               onSubmit={handleHeaderSearch}
-              className="hidden md:flex absolute left-1/2 transform -translate-x-1/2 w-[500px] max-w-[calc(100%-220px)] animate-slideIn z-10"
+              className="hidden md:flex w-full"
               id="header-search-bar"
             >
               <div className="relative w-full">
@@ -245,7 +250,7 @@ const Header = () => {
                 </button>
               </div>
             </form>
-          )}
+          </div>
           
           {/* Navigation - Desktop */}
           <nav className={`hidden md:flex items-center space-x-1 transition-opacity duration-300 ${showHeaderSearch ? 'opacity-0' : 'opacity-100'}`}>
@@ -268,7 +273,7 @@ const Header = () => {
             <Button 
               variant="ghost" 
               className="hidden md:flex w-9 h-9 rounded-full items-center justify-center p-0 text-neutral-600 hover:text-blue-600 hover:bg-blue-50"
-              onClick={() => window.location.href = '/search'}
+              onClick={() => setLocation('/arts')}
             >
               <Search className="h-[18px] w-[18px]" />
             </Button>
