@@ -107,14 +107,24 @@ export default function ArtDetail() {
   const { data: groupArts } = useQuery({
     queryKey: ['/api/arts/group', art?.groupId],
     queryFn: async () => {
-      if (!art?.groupId) return { arts: [] };
-      console.log(`Buscando artes do grupo: ${art.groupId}`);
-      const res = await fetch(`/api/arts/group/${art.groupId}`);
-      if (!res.ok) {
-        console.error('Erro ao buscar artes do grupo');
+      if (!art?.groupId) {
+        console.log('Arte não possui groupId, retornando array vazio');
         return { arts: [] };
       }
-      return res.json();
+      console.log(`Buscando artes do grupo: ${art.groupId}`);
+      try {
+        const res = await fetch(`/api/arts/group/${art.groupId}`);
+        if (!res.ok) {
+          console.error(`Erro ao buscar artes do grupo: ${res.status} ${res.statusText}`);
+          return { arts: [] };
+        }
+        const data = await res.json();
+        console.log('Dados do grupo recebidos:', data);
+        return data;
+      } catch (error) {
+        console.error('Exceção ao buscar artes do grupo:', error);
+        return { arts: [] };
+      }
     },
     enabled: !!art?.groupId,
   });
@@ -839,7 +849,15 @@ export default function ArtDetail() {
       )}
       
       {/* Outros Formatos - Nova seção */}
-      {groupArts && groupArts.arts && groupArts.arts.length > 1 && (
+      {(() => {
+        console.log('Verificando dados do grupo para exibição de Outros Formatos:');
+        console.log('groupArts existe?', !!groupArts);
+        console.log('groupArts?.arts existe?', !!(groupArts && groupArts.arts));
+        console.log('groupArts?.arts.length:', groupArts?.arts?.length);
+        const deveMostrarOutrosFormatos = groupArts && groupArts.arts && groupArts.arts.length > 1;
+        console.log('Deve mostrar Outros Formatos?', deveMostrarOutrosFormatos);
+        return deveMostrarOutrosFormatos;
+      })() && (
         <motion.div 
           className="bg-white rounded-xl shadow-md p-6 mb-6"
           initial={{ y: 40, opacity: 0 }}

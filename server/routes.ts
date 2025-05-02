@@ -44,6 +44,7 @@ import { setupTestR2DirectRoute } from './routes/test-r2-direct';
 import dateTestRouter from './date-test-router';
 import supabeDiagnosticsRouter from './routes/supabase-diagnostics';
 import multiArtRouter from './routes/multi-art'; // Rota para artes multi-formato
+import testCreateGroupRouter from './routes/test-create-group'; // Rota de teste para criar grupos
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Rota simples de verificação de saúde
