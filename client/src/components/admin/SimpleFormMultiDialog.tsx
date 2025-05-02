@@ -597,24 +597,37 @@ export default function SimpleFormMultiDialog({
           {/* Indicador de progresso (etapas) com textos alinhados */}
           <div className="flex flex-col items-center border-b pb-4">
             <div className="pt-5 pb-2">
-              <div className="flex justify-center space-x-10">
-                <div className="flex flex-col items-center">
-                  <div className={`rounded-full w-8 h-8 flex items-center justify-center mb-1 ${step >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'}`}>
+              <div className="flex justify-center space-x-6 md:space-x-12 relative py-3">
+                {/* Linhas de conexão entre os círculos */}
+                <div className="absolute top-1/2 left-[25%] right-[25%] h-[2px] bg-gray-200 -z-10"></div>
+                <div className="absolute top-1/2 left-[50%] right-[25%] h-[2px] bg-gray-200 -z-10"></div>
+                
+                {/* Linhas de progresso baseado na etapa atual */}
+                <div className={`absolute top-1/2 left-[25%] h-[2px] -z-5 transition-all duration-300 ease-in-out
+                  ${step >= 2 ? 'right-[25%] bg-blue-500' : 'right-[75%] bg-blue-500'}`}></div>
+                <div className={`absolute top-1/2 left-[50%] h-[2px] -z-5 transition-all duration-300 ease-in-out
+                  ${step >= 3 ? 'right-[25%] bg-blue-500' : 'right-[50%] bg-blue-500'}`}></div>
+                
+                <div className="flex flex-col items-center z-10">
+                  <div className={`rounded-full w-10 h-10 flex items-center justify-center mb-2 transition-all duration-300 
+                    ${step >= 1 ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'bg-gray-200 text-gray-600'}`}>
                     {step > 1 ? <Check className="h-5 w-5" /> : 1}
                   </div>
-                  <div className="text-sm font-medium">Informações Gerais</div>
+                  <div className={`text-sm font-medium ${step === 1 ? 'text-blue-600' : 'text-gray-600'}`}>Informações Gerais</div>
                 </div>
-                <div className="flex flex-col items-center">
-                  <div className={`rounded-full w-8 h-8 flex items-center justify-center mb-1 ${step >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'}`}>
+                <div className="flex flex-col items-center z-10">
+                  <div className={`rounded-full w-10 h-10 flex items-center justify-center mb-2 transition-all duration-300
+                    ${step >= 2 ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'bg-gray-200 text-gray-600'}`}>
                     {step > 2 ? <Check className="h-5 w-5" /> : 2}
                   </div>
-                  <div className="text-sm font-medium">Formatos e Uploads</div>
+                  <div className={`text-sm font-medium ${step === 2 ? 'text-blue-600' : 'text-gray-600'}`}>Formatos e Uploads</div>
                 </div>
-                <div className="flex flex-col items-center">
-                  <div className={`rounded-full w-8 h-8 flex items-center justify-center mb-1 ${step >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'}`}>
+                <div className="flex flex-col items-center z-10">
+                  <div className={`rounded-full w-10 h-10 flex items-center justify-center mb-2 transition-all duration-300
+                    ${step >= 3 ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'bg-gray-200 text-gray-600'}`}>
                     {step > 3 ? <Check className="h-5 w-5" /> : 3}
                   </div>
-                  <div className="text-sm font-medium">Revisão</div>
+                  <div className={`text-sm font-medium ${step === 3 ? 'text-blue-600' : 'text-gray-600'}`}>Revisão</div>
                 </div>
               </div>
             </div>
@@ -624,128 +637,184 @@ export default function SimpleFormMultiDialog({
           <div className="p-6">
             {/* Etapa 1: Informações gerais */}
             {step === 1 && (
-              <form onSubmit={step1Form.handleSubmit(goToStep2)} className="space-y-6">
-                <div>
-                  <Label htmlFor="categoryId">Categoria <span className="text-red-500">*</span></Label>
-                  <Controller
-                    name="categoryId"
-                    control={step1Form.control}
-                    render={({ field }) => (
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione uma categoria" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories.map((category: any) => (
-                            <SelectItem key={category.id} value={category.id.toString()}>
-                              {category.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  {step1Form.formState.errors.categoryId && (
-                    <p className="text-red-500 text-sm mt-1">{step1Form.formState.errors.categoryId.message}</p>
-                  )}
-                </div>
-                
-                <div>
-                  <Label htmlFor="globalFileType">Tipo de Arquivo <span className="text-red-500">*</span></Label>
-                  <Controller
-                    name="globalFileType"
-                    control={step1Form.control}
-                    render={({ field }) => (
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione um tipo de arquivo" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {fileTypes.map((fileType: any) => (
-                            <SelectItem key={fileType.id} value={fileType.slug}>
-                              {fileType.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  {step1Form.formState.errors.globalFileType && (
-                    <p className="text-red-500 text-sm mt-1">{step1Form.formState.errors.globalFileType.message}</p>
-                  )}
-                </div>
-                
-                <div>
-                  <Label htmlFor="globalTitle">Título Global <span className="text-red-500">*</span></Label>
-                  <Input
-                    {...step1Form.register("globalTitle")}
-                    placeholder="Título da arte"
-                  />
-                  {step1Form.formState.errors.globalTitle && (
-                    <p className="text-red-500 text-sm mt-1">{step1Form.formState.errors.globalTitle.message}</p>
-                  )}
-                </div>
-                
-                <div>
-                  <Label htmlFor="globalDescription">Descrição Global</Label>
-                  <Textarea
-                    {...step1Form.register("globalDescription")}
-                    placeholder="Descrição opcional da arte"
-                    rows={3}
-                  />
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Controller
-                    name="isPremium"
-                    control={step1Form.control}
-                    render={({ field }) => (
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        id="isPremium"
+              <form onSubmit={step1Form.handleSubmit(goToStep2)} className="space-y-8">
+                {/* Seção 1: Informações básicas */}
+                <div className="bg-gray-50 p-6 rounded-lg border border-gray-100 shadow-sm">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                    <InfoIcon className="h-5 w-5 mr-2 text-blue-500" />
+                    Informações Básicas
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <Label htmlFor="categoryId" className="flex items-center mb-1.5">
+                        <FolderIcon className="h-4 w-4 mr-1.5 text-gray-500" />
+                        Categoria <span className="text-red-500 ml-1">*</span>
+                      </Label>
+                      <Controller
+                        name="categoryId"
+                        control={step1Form.control}
+                        render={({ field }) => (
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
+                            <SelectTrigger className="bg-white">
+                              <SelectValue placeholder="Selecione uma categoria" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {categories.map((category: any) => (
+                                <SelectItem key={category.id} value={category.id.toString()}>
+                                  {category.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
                       />
+                      {step1Form.formState.errors.categoryId && (
+                        <p className="text-red-500 text-sm mt-1.5">{step1Form.formState.errors.categoryId.message}</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="globalFileType" className="flex items-center mb-1.5">
+                        <FileIcon className="h-4 w-4 mr-1.5 text-gray-500" />
+                        Tipo de Arquivo <span className="text-red-500 ml-1">*</span>
+                      </Label>
+                      <Controller
+                        name="globalFileType"
+                        control={step1Form.control}
+                        render={({ field }) => (
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
+                            <SelectTrigger className="bg-white">
+                              <SelectValue placeholder="Selecione um tipo de arquivo" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {fileTypes.map((fileType: any) => (
+                                <SelectItem key={fileType.id} value={fileType.slug}>
+                                  {fileType.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                      {step1Form.formState.errors.globalFileType && (
+                        <p className="text-red-500 text-sm mt-1.5">{step1Form.formState.errors.globalFileType.message}</p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="mt-6">
+                    <Label htmlFor="globalTitle" className="flex items-center mb-1.5">
+                      <Type className="h-4 w-4 mr-1.5 text-gray-500" />
+                      Título Global <span className="text-red-500 ml-1">*</span>
+                    </Label>
+                    <Input
+                      {...step1Form.register("globalTitle")}
+                      placeholder="Título da arte"
+                      className="bg-white"
+                    />
+                    {step1Form.formState.errors.globalTitle && (
+                      <p className="text-red-500 text-sm mt-1.5">{step1Form.formState.errors.globalTitle.message}</p>
                     )}
-                  />
-                  <Label htmlFor="isPremium">Arte Premium</Label>
+                  </div>
+                  
+                  <div className="mt-6">
+                    <Label htmlFor="globalDescription" className="flex items-center mb-1.5">
+                      <AlignLeft className="h-4 w-4 mr-1.5 text-gray-500" />
+                      Descrição Global
+                    </Label>
+                    <Textarea
+                      {...step1Form.register("globalDescription")}
+                      placeholder="Descrição opcional da arte"
+                      rows={3}
+                      className="bg-white"
+                    />
+                  </div>
+                  
+                  <div className="mt-6 p-3 bg-blue-50 rounded-md border border-blue-100 flex items-center">
+                    <div className="flex items-center mr-3">
+                      <Controller
+                        name="isPremium"
+                        control={step1Form.control}
+                        render={({ field }) => (
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            id="isPremium"
+                            className="data-[state=checked]:bg-blue-600"
+                          />
+                        )}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="isPremium" className="font-medium text-blue-700 cursor-pointer">Arte Premium</Label>
+                      <p className="text-xs text-blue-600 mt-0.5">Somente assinantes terão acesso a esta arte.</p>
+                    </div>
+                  </div>
                 </div>
                 
-                <div>
-                  <Label>Formatos <span className="text-red-500">*</span></Label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
+                {/* Seção 2: Seleção de formatos */}
+                <div className="bg-gray-50 p-6 rounded-lg border border-gray-100 shadow-sm">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                    <LayoutGrid className="h-5 w-5 mr-2 text-blue-500" />
+                    Formatos <span className="text-red-500 ml-1">*</span>
+                  </h3>
+                  
+                  <p className="text-sm text-gray-500 mb-4">
+                    Selecione os formatos disponíveis para esta arte. Você poderá personalizar cada formato na próxima etapa.
+                  </p>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
                     {formats.map((format: any) => (
                       <div
                         key={format.id}
                         className={`
-                          border rounded-md p-3 cursor-pointer transition-colors 
+                          border rounded-lg p-4 cursor-pointer transition-all 
                           ${step1Form.watch('selectedFormats')?.includes(format.slug) 
-                            ? 'border-blue-500 bg-blue-50 text-blue-700' 
-                            : 'border-gray-200 hover:border-gray-300'
+                            ? 'border-blue-500 bg-blue-50 shadow-md' 
+                            : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/50'
                           }
                         `}
                         onClick={() => toggleFormat(format.slug)}
                       >
-                        <div className="flex items-center space-x-2">
-                          {format.slug === 'feed' && <Smartphone className="h-4 w-4" />}
-                          {format.slug === 'stories' && <MonitorSmartphone className="h-4 w-4" />}
-                          {format.slug === 'web-banner' && <ScreenShare className="h-4 w-4" />}
-                          {format.slug === 'capa-fan-page' && <Image className="h-4 w-4" />}
-                          {format.slug === 'cartaz' && <BookImage className="h-4 w-4" />}
-                          {format.slug === 'carrocel' && <LayoutTemplate className="h-4 w-4" />}
-                          <span className="font-medium">{format.name}</span>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            {format.slug === 'feed' && <Smartphone className="h-5 w-5 text-blue-600" />}
+                            {format.slug === 'stories' && <MonitorSmartphone className="h-5 w-5 text-blue-600" />}
+                            {format.slug === 'web-banner' && <ScreenShare className="h-5 w-5 text-blue-600" />}
+                            {format.slug === 'capa-fan-page' && <Image className="h-5 w-5 text-blue-600" />}
+                            {format.slug === 'cartaz' && <BookImage className="h-5 w-5 text-blue-600" />}
+                            {format.slug === 'carrocel' && <LayoutTemplate className="h-5 w-5 text-blue-600" />}
+                            <span className="font-medium text-gray-800">{format.name}</span>
+                          </div>
+                          
+                          <div className={`w-5 h-5 rounded-full flex items-center justify-center border transition-colors
+                            ${step1Form.watch('selectedFormats')?.includes(format.slug)
+                              ? 'border-blue-600 bg-blue-600'
+                              : 'border-gray-300 bg-white'
+                            }`}
+                          >
+                            {step1Form.watch('selectedFormats')?.includes(format.slug) && (
+                              <Check className="h-3 w-3 text-white" />
+                            )}
+                          </div>
                         </div>
-                        <div className="text-xs text-gray-500 mt-1">{format.description}</div>
+                        
+                        <div className="text-xs text-gray-500 mt-2 pl-7">
+                          {format.description}
+                        </div>
                       </div>
                     ))}
                   </div>
+                  
                   {step1Form.formState.errors.selectedFormats && (
-                    <p className="text-red-500 text-sm mt-1">{step1Form.formState.errors.selectedFormats.message}</p>
+                    <p className="text-red-500 text-sm mt-3 pl-1">{step1Form.formState.errors.selectedFormats.message}</p>
                   )}
                 </div>
                 
