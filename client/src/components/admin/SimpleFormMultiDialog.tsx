@@ -614,14 +614,14 @@ export default function SimpleFormMultiDialog({
                     ${step >= 1 ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'bg-gray-200 text-gray-600'}`}>
                     {step > 1 ? <Check className="h-5 w-5" /> : 1}
                   </div>
-                  <div className={`text-sm font-medium ${step === 1 ? 'text-blue-600' : 'text-gray-600'}`}>Informações Gerais</div>
+                  <div className={`text-sm font-medium ${step === 1 ? 'text-blue-600' : 'text-gray-600'}`}>Informações</div>
                 </div>
                 <div className="flex flex-col items-center z-10">
                   <div className={`rounded-full w-10 h-10 flex items-center justify-center mb-2 transition-all duration-300
                     ${step >= 2 ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'bg-gray-200 text-gray-600'}`}>
                     {step > 2 ? <Check className="h-5 w-5" /> : 2}
                   </div>
-                  <div className={`text-sm font-medium ${step === 2 ? 'text-blue-600' : 'text-gray-600'}`}>Formatos e Uploads</div>
+                  <div className={`text-sm font-medium ${step === 2 ? 'text-blue-600' : 'text-gray-600'}`}>Uploads</div>
                 </div>
                 <div className="flex flex-col items-center z-10">
                   <div className={`rounded-full w-10 h-10 flex items-center justify-center mb-2 transition-all duration-300
