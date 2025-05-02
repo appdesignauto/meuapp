@@ -1074,143 +1074,247 @@ export default function SimpleFormMultiDialog({
             
             {/* Etapa 3: Revisão e confirmação */}
             {step === 3 && (
-              <div className="space-y-6">
+              <div className="space-y-8">
                 <div>
-                  <h3 className="text-lg font-medium mb-3">Revisão</h3>
-                  <div className="space-y-4">
-                    <div className="rounded-md border border-gray-200 p-4">
-                      <h4 className="font-medium text-blue-600 mb-2">Informações Gerais</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                        <div className="space-y-1">
-                          <div className="font-medium">Categoria:</div>
-                          <div>
-                            {categories.find((cat: any) => cat.id.toString() === step1Form.getValues().categoryId)?.name || 'Não selecionada'}
+                  <div className="flex items-center mb-5">
+                    <h3 className="text-xl font-semibold text-blue-800">Revisão e Confirmação</h3>
+                    <div className="ml-3 px-2.5 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+                      Etapa Final
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-6">
+                    {/* Card de informações gerais */}
+                    <div className="rounded-xl border border-blue-100 bg-blue-50/50 overflow-hidden">
+                      <div className="px-5 py-4 bg-blue-100/70 border-b border-blue-200 flex items-center">
+                        <FolderOpen className="h-5 w-5 text-blue-700 mr-2.5" />
+                        <h4 className="font-medium text-blue-800 text-lg">Informações Gerais</h4>
+                      </div>
+                      
+                      <div className="p-5">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="rounded-lg bg-white p-3 border border-blue-100 shadow-sm">
+                            <div className="flex items-center mb-2">
+                              <FolderOpen className="h-4 w-4 text-blue-500 mr-1.5" />
+                              <div className="font-medium text-gray-700">Categoria</div>
+                            </div>
+                            <div className="text-gray-800 font-medium">
+                              {categories.find((cat: any) => cat.id.toString() === step1Form.getValues().categoryId)?.name || 'Não selecionada'}
+                            </div>
                           </div>
-                        </div>
-                        <div className="space-y-1">
-                          <div className="font-medium">Tipo de Arquivo:</div>
-                          <div>
-                            {getFileTypeName(step1Form.getValues().globalFileType)}
+                          
+                          <div className="rounded-lg bg-white p-3 border border-blue-100 shadow-sm">
+                            <div className="flex items-center mb-2">
+                              <TypeIcon className="h-4 w-4 text-blue-500 mr-1.5" />
+                              <div className="font-medium text-gray-700">Tipo de Arquivo</div>
+                            </div>
+                            <div className="text-gray-800 font-medium">
+                              {getFileTypeName(step1Form.getValues().globalFileType)}
+                            </div>
                           </div>
-                        </div>
-                        <div className="space-y-1">
-                          <div className="font-medium">Título Global:</div>
-                          <div>{step1Form.getValues().globalTitle || 'Não definido'}</div>
-                        </div>
-                        <div className="space-y-1">
-                          <div className="font-medium">Arte Premium:</div>
-                          <div>{step1Form.getValues().isPremium ? 'Sim' : 'Não'}</div>
-                        </div>
-                        <div className="space-y-1 col-span-1 md:col-span-2">
-                          <div className="font-medium">Descrição Global:</div>
-                          <div>{step1Form.getValues().globalDescription || 'Não definida'}</div>
+                          
+                          <div className="rounded-lg bg-white p-3 border border-blue-100 shadow-sm">
+                            <div className="flex items-center mb-2">
+                              <TypeIcon className="h-4 w-4 text-blue-500 mr-1.5" />
+                              <div className="font-medium text-gray-700">Título Global</div>
+                            </div>
+                            <div className="text-gray-800 font-medium">
+                              {step1Form.getValues().globalTitle || 'Não definido'}
+                            </div>
+                          </div>
+                          
+                          <div className="rounded-lg bg-white p-3 border border-blue-100 shadow-sm">
+                            <div className="flex items-center mb-2">
+                              <BadgePlus className="h-4 w-4 text-blue-500 mr-1.5" />
+                              <div className="font-medium text-gray-700">Arte Premium</div>
+                            </div>
+                            <div className={step1Form.getValues().isPremium ? 
+                              "text-blue-600 font-medium flex items-center" : 
+                              "text-gray-600 font-medium flex items-center"
+                            }>
+                              {step1Form.getValues().isPremium ? 
+                                <><Check className="h-4 w-4 mr-1.5" /> Sim</> : 
+                                <><X className="h-4 w-4 mr-1.5" /> Não</>
+                              }
+                            </div>
+                          </div>
+                          
+                          {step1Form.getValues().globalDescription && (
+                            <div className="rounded-lg bg-white p-3 border border-blue-100 shadow-sm col-span-1 md:col-span-2">
+                              <div className="flex items-center mb-2">
+                                <AlignLeft className="h-4 w-4 text-blue-500 mr-1.5" />
+                                <div className="font-medium text-gray-700">Descrição Global</div>
+                              </div>
+                              <div className="text-gray-800">
+                                {step1Form.getValues().globalDescription || 'Não definida'}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
                     
-                    <div>
-                      <h4 className="font-medium text-blue-600 mb-2">Formatos ({Object.keys(formatDetails).length})</h4>
-                      <div className="space-y-3">
-                        {Object.entries(formatDetails).map(([formatSlug, details]) => (
-                          <div key={formatSlug} className="rounded-md border border-gray-200 p-4">
-                            <div className="flex justify-between items-center mb-3">
-                              <div className="flex items-center space-x-2">
-                                {formatSlug === 'feed' && <Smartphone className="h-4 w-4" />}
-                                {formatSlug === 'stories' && <MonitorSmartphone className="h-4 w-4" />}
-                                {formatSlug === 'web-banner' && <ScreenShare className="h-4 w-4" />}
-                                {formatSlug === 'capa-fan-page' && <Image className="h-4 w-4" />}
-                                {formatSlug === 'cartaz' && <BookImage className="h-4 w-4" />}
-                                {formatSlug === 'carrocel' && <LayoutTemplate className="h-4 w-4" />}
-                                <h5 className="font-medium">{getFormatName(formatSlug)}</h5>
-                              </div>
-                              {formatsComplete[formatSlug] && (
-                                <div className="flex items-center text-green-600 text-xs font-medium">
-                                  <Check className="h-3.5 w-3.5 mr-1" />
-                                  <span>Completo</span>
+                    {/* Card de formatos */}
+                    <div className="rounded-xl border border-blue-100 bg-blue-50/50 overflow-hidden">
+                      <div className="px-5 py-4 bg-blue-100/70 border-b border-blue-200 flex items-center justify-between">
+                        <div className="flex items-center">
+                          <LayoutGrid className="h-5 w-5 text-blue-700 mr-2.5" />
+                          <h4 className="font-medium text-blue-800 text-lg">Formatos ({Object.keys(formatDetails).length})</h4>
+                        </div>
+                        <div className="bg-blue-700 text-white text-xs font-medium px-2.5 py-1 rounded-full">
+                          Multi-formato
+                        </div>
+                      </div>
+                      
+                      <div className="p-5">
+                        <div className="grid grid-cols-1 gap-4">
+                          {Object.entries(formatDetails).map(([formatSlug, details]) => (
+                            <div key={formatSlug} 
+                              className="rounded-lg overflow-hidden border border-blue-100 bg-white shadow-sm hover:shadow-md transition-all"
+                            >
+                              <div className="flex justify-between items-center px-4 py-3 bg-gradient-to-r from-blue-50 to-white border-b border-blue-100">
+                                <div className="flex items-center">
+                                  {formatSlug === 'feed' && <Smartphone className="h-4 w-4 text-blue-600 mr-2" />}
+                                  {formatSlug === 'stories' && <MonitorSmartphone className="h-4 w-4 text-blue-600 mr-2" />}
+                                  {formatSlug === 'web-banner' && <ScreenShare className="h-4 w-4 text-blue-600 mr-2" />}
+                                  {formatSlug === 'capa-fan-page' && <Image className="h-4 w-4 text-blue-600 mr-2" />}
+                                  {formatSlug === 'cartaz' && <BookImage className="h-4 w-4 text-blue-600 mr-2" />}
+                                  {formatSlug === 'carrocel' && <LayoutTemplate className="h-4 w-4 text-blue-600 mr-2" />}
+                                  <h5 className="font-semibold text-gray-800">{getFormatName(formatSlug)}</h5>
                                 </div>
-                              )}
-                            </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                              <div className="space-y-1 col-span-1 md:col-span-2">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                                  <div className="space-y-1">
-                                    <div className="font-medium">Título:</div>
-                                    <div>{details.title || 'Não definido'}</div>
-                                  </div>
-                                  <div className="space-y-1">
-                                    <div className="font-medium">Tipo de Arquivo:</div>
-                                    <div>
-                                      {getFileTypeName(details.fileType)}
-                                    </div>
-                                  </div>
-                                  <div className="space-y-1 col-span-1 md:col-span-2">
-                                    <div className="font-medium">URL de Edição:</div>
-                                    <div className="truncate text-blue-600 hover:underline">
-                                      <a href={details.editUrl} target="_blank" rel="noopener noreferrer">
-                                        {details.editUrl || 'Não definida'}
-                                      </a>
-                                    </div>
-                                  </div>
-                                  {details.previewUrl && (
-                                    <div className="space-y-1 col-span-1 md:col-span-2">
-                                      <div className="font-medium">URL de Pré-visualização:</div>
-                                      <div className="truncate text-blue-600 hover:underline">
-                                        <a href={details.previewUrl} target="_blank" rel="noopener noreferrer">
-                                          {details.previewUrl}
-                                        </a>
-                                      </div>
-                                    </div>
-                                  )}
-                                  {details.description && (
-                                    <div className="space-y-1 col-span-1 md:col-span-2">
-                                      <div className="font-medium">Descrição:</div>
-                                      <div>{details.description}</div>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                              
-                              <div className="flex justify-center items-start">
-                                {images[formatSlug] ? (
-                                  <div className="relative max-w-[120px] overflow-hidden rounded border border-gray-200">
-                                    <img
-                                      src={images[formatSlug]}
-                                      alt={`Imagem para ${getFormatName(formatSlug)}`}
-                                      className="h-auto w-full object-cover"
-                                    />
-                                  </div>
-                                ) : (
-                                  <div className="flex h-20 w-20 items-center justify-center rounded-md border border-dashed border-gray-300 bg-gray-50">
-                                    <Image className="h-8 w-8 text-gray-300" />
+                                
+                                {formatsComplete[formatSlug] && (
+                                  <div className="flex items-center text-green-600 text-xs font-medium bg-green-50 px-2 py-1 rounded-full">
+                                    <Check className="h-3 w-3 mr-1" />
+                                    <span>Completo</span>
                                   </div>
                                 )}
                               </div>
+                              
+                              <div className="p-4 grid grid-cols-1 md:grid-cols-6 gap-4 items-start">
+                                {/* Imagem preview */}
+                                <div className="md:col-span-1 order-last md:order-first flex justify-center">
+                                  {images[formatSlug] ? (
+                                    <div className="relative shadow-md rounded-md overflow-hidden border border-gray-200 hover:border-blue-300 transition-all group">
+                                      <img
+                                        src={images[formatSlug]}
+                                        alt={`Imagem para ${getFormatName(formatSlug)}`}
+                                        className="h-auto w-full object-cover"
+                                      />
+                                      <div className="absolute inset-0 bg-blue-900/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <a 
+                                          href={images[formatSlug]} 
+                                          target="_blank" 
+                                          rel="noopener noreferrer"
+                                          className="text-white bg-blue-600 hover:bg-blue-700 rounded-full p-2"
+                                        >
+                                          <Eye className="h-4 w-4" />
+                                        </a>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div className="flex h-20 w-20 items-center justify-center rounded-md border border-dashed border-gray-300 bg-gray-50">
+                                      <Image className="h-8 w-8 text-gray-300" />
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                {/* Detalhes do formato */}
+                                <div className="md:col-span-5 space-y-3">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                      <div className="flex items-center text-gray-700">
+                                        <TypeIcon className="h-3.5 w-3.5 text-gray-500 mr-1.5" />
+                                        <span className="text-sm font-medium">Título</span>
+                                      </div>
+                                      <div className="text-gray-900 font-medium">{details.title || 'Não definido'}</div>
+                                    </div>
+                                    
+                                    <div className="space-y-1">
+                                      <div className="flex items-center text-gray-700">
+                                        <FileType className="h-3.5 w-3.5 text-gray-500 mr-1.5" />
+                                        <span className="text-sm font-medium">Tipo de Arquivo</span>
+                                      </div>
+                                      <div className="text-gray-900 font-medium">{getFileTypeName(details.fileType)}</div>
+                                    </div>
+                                    
+                                    <div className="space-y-1 col-span-1 md:col-span-2">
+                                      <div className="flex items-center text-gray-700">
+                                        <Link2 className="h-3.5 w-3.5 text-gray-500 mr-1.5" />
+                                        <span className="text-sm font-medium">URL de Edição</span>
+                                      </div>
+                                      <div className="bg-gray-50 px-3 py-2 rounded border border-gray-100 text-sm">
+                                        <a 
+                                          href={details.editUrl} 
+                                          target="_blank" 
+                                          rel="noopener noreferrer"
+                                          className="text-blue-600 hover:text-blue-800 hover:underline flex items-center"
+                                        >
+                                          {details.editUrl || 'Não definida'}
+                                          <ScreenShare className="h-3.5 w-3.5 ml-1.5 flex-shrink-0" />
+                                        </a>
+                                      </div>
+                                    </div>
+                                    
+                                    {details.previewUrl && (
+                                      <div className="space-y-1 col-span-1 md:col-span-2">
+                                        <div className="flex items-center text-gray-700">
+                                          <Eye className="h-3.5 w-3.5 text-gray-500 mr-1.5" />
+                                          <span className="text-sm font-medium">URL de Pré-visualização</span>
+                                        </div>
+                                        <div className="bg-gray-50 px-3 py-2 rounded border border-gray-100 text-sm">
+                                          <a 
+                                            href={details.previewUrl} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer" 
+                                            className="text-blue-600 hover:text-blue-800 hover:underline flex items-center"
+                                          >
+                                            {details.previewUrl}
+                                            <ScreenShare className="h-3.5 w-3.5 ml-1.5 flex-shrink-0" />
+                                          </a>
+                                        </div>
+                                      </div>
+                                    )}
+                                    
+                                    {details.description && (
+                                      <div className="space-y-1 col-span-1 md:col-span-2">
+                                        <div className="flex items-center text-gray-700">
+                                          <AlignLeft className="h-3.5 w-3.5 text-gray-500 mr-1.5" />
+                                          <span className="text-sm font-medium">Descrição</span>
+                                        </div>
+                                        <div className="bg-gray-50 px-3 py-2 rounded border border-gray-100">
+                                          {details.description}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
                 
-                <div className="pt-6 flex justify-between">
+                <div className="pt-6 flex flex-col sm:flex-row justify-between gap-3 sm:gap-0">
                   <Button 
                     type="button" 
                     variant="outline" 
                     onClick={goToPreviousStep}
-                    className="px-5"
+                    className="px-5 border-gray-300"
                   >
-                    <ChevronLeft className="mr-2 h-4 w-4" /> Voltar
+                    <ChevronLeft className="mr-2 h-4 w-4" /> Voltar para formatos
                   </Button>
                   
                   <Button 
                     type="button" 
                     onClick={handleSubmit} 
-                    className="bg-green-600 hover:bg-green-700 px-6"
+                    className="bg-green-600 hover:bg-green-700 px-6 shadow-sm"
                   >
-                    <SaveIcon className="mr-2 h-4 w-4" />
-                    <span>{isEditing ? 'Salvar Alterações' : 'Criar Arte'}</span>
+                    <SaveIcon className="mr-2 h-5 w-5" />
+                    <span className="font-medium">{isEditing ? 'Salvar Alterações' : 'Finalizar e Criar Arte'}</span>
                   </Button>
                 </div>
               </div>
