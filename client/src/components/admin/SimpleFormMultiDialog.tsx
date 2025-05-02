@@ -10,7 +10,9 @@ import {
   Loader2, Upload, X, Check, AlertCircle, 
   Settings2, FileImage, FolderOpen, FileType, LayoutGrid,
   BadgePlus, Link2, PenLine, UploadCloud, BookImage,
-  ChevronLeft, ChevronRight, ArrowRight
+  ChevronLeft, ChevronRight, ArrowRight, 
+  Square, Smartphone, MonitorSmartphone, LayoutTemplate, 
+  Columns, ScreenShare, Image
 } from 'lucide-react';
 
 import {
@@ -603,7 +605,29 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                                     : 'border-gray-200 hover:border-blue-200 hover:bg-blue-50/30'
                                   }`}
                               >
-                                <FileImage className={`h-8 w-8 mb-2 ${isSelected ? 'text-blue-600' : 'text-gray-400'}`} />
+                                {/* Ícones personalizados com base no formato */}
+                                {format.slug === 'stories' && (
+                                  <Smartphone className={`h-8 w-8 mb-2 ${isSelected ? 'text-blue-600' : 'text-gray-400'}`} />
+                                )}
+                                {format.slug === 'feed' && (
+                                  <Square className={`h-8 w-8 mb-2 ${isSelected ? 'text-blue-600' : 'text-gray-400'}`} />
+                                )}
+                                {format.slug === 'web-banner' && (
+                                  <LayoutTemplate className={`h-8 w-8 mb-2 ${isSelected ? 'text-blue-600' : 'text-gray-400'}`} />
+                                )}
+                                {format.slug === 'capa-fan-page' && (
+                                  <MonitorSmartphone className={`h-8 w-8 mb-2 ${isSelected ? 'text-blue-600' : 'text-gray-400'}`} />
+                                )}
+                                {format.slug === 'cartaz' && (
+                                  <Image className={`h-8 w-8 mb-2 ${isSelected ? 'text-blue-600' : 'text-gray-400'}`} />
+                                )}
+                                {format.slug === 'carrocel' && (
+                                  <Columns className={`h-8 w-8 mb-2 ${isSelected ? 'text-blue-600' : 'text-gray-400'}`} />
+                                )}
+                                {/* Ícone padrão para outros formatos não mapeados */}
+                                {!['stories', 'feed', 'web-banner', 'capa-fan-page', 'cartaz', 'carrocel'].includes(format.slug) && (
+                                  <FileImage className={`h-8 w-8 mb-2 ${isSelected ? 'text-blue-600' : 'text-gray-400'}`} />
+                                )}
                                 <span className={`text-sm font-medium ${isSelected ? 'text-blue-600' : 'text-gray-600'}`}>
                                   {format.name}
                                 </span>
