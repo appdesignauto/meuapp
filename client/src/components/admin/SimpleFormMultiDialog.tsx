@@ -675,8 +675,8 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                   className="w-full"
                 >
                   {/* Integração de abas no cabeçalho - design aprimorado */}
-                  <div className="bg-white text-gray-800 mb-6 rounded-t-xl overflow-hidden shadow-md">
-                    <TabsList className="w-full flex gap-0 bg-transparent p-0 border-b border-gray-200">
+                  <div className="bg-white text-gray-800 mb-6 rounded-t-xl overflow-hidden shadow-sm transition-all duration-300 border border-gray-100">
+                    <TabsList className="w-full flex gap-0 bg-gray-50 p-0 border-b border-gray-200 overflow-x-auto">
                       {Object.keys(formatDetails).map((formatSlug, index) => {
                         const formatName = getFormatName(formatSlug);
                         const isComplete = formatsComplete[formatSlug];
@@ -686,25 +686,25 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                         let FormatIcon;
                         switch(formatSlug) {
                           case 'stories':
-                            FormatIcon = <Smartphone className={`h-4 w-4 mr-2 ${isActive ? 'text-blue-400' : 'text-gray-300'}`} />;
+                            FormatIcon = <Smartphone className={`h-4 w-4 mr-2 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />;
                             break;
                           case 'feed':
-                            FormatIcon = <Square className={`h-4 w-4 mr-2 ${isActive ? 'text-blue-400' : 'text-gray-300'}`} />;
+                            FormatIcon = <Square className={`h-4 w-4 mr-2 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />;
                             break;
                           case 'web-banner':
-                            FormatIcon = <LayoutTemplate className={`h-4 w-4 mr-2 ${isActive ? 'text-blue-400' : 'text-gray-300'}`} />;
+                            FormatIcon = <LayoutTemplate className={`h-4 w-4 mr-2 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />;
                             break;
                           case 'capa-fan-page':
-                            FormatIcon = <MonitorSmartphone className={`h-4 w-4 mr-2 ${isActive ? 'text-blue-400' : 'text-gray-300'}`} />;
+                            FormatIcon = <MonitorSmartphone className={`h-4 w-4 mr-2 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />;
                             break;
                           case 'cartaz':
-                            FormatIcon = <Image className={`h-4 w-4 mr-2 ${isActive ? 'text-blue-400' : 'text-gray-300'}`} />;
+                            FormatIcon = <Image className={`h-4 w-4 mr-2 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />;
                             break;
                           case 'carrocel':
-                            FormatIcon = <Columns className={`h-4 w-4 mr-2 ${isActive ? 'text-blue-400' : 'text-gray-300'}`} />;
+                            FormatIcon = <Columns className={`h-4 w-4 mr-2 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />;
                             break;
                           default:
-                            FormatIcon = <FileImage className={`h-4 w-4 mr-2 ${isActive ? 'text-blue-400' : 'text-gray-300'}`} />;
+                            FormatIcon = <FileImage className={`h-4 w-4 mr-2 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />;
                         }
                         
                         return (
@@ -712,32 +712,44 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                             key={formatSlug} 
                             value={formatSlug}
                             className={`
-                              flex items-center gap-1 py-3 px-4 border-0 rounded-none relative z-10
+                              flex items-center gap-1 py-3 px-4 border-0 rounded-none relative z-10 min-w-max
                               after:absolute after:w-[1px] after:h-2/3 after:-right-[1px] after:top-1/2 after:-translate-y-1/2 after:bg-gray-200 last:after:hidden
-                              ${isActive ? 'bg-blue-50 text-blue-700 font-medium' : 'bg-transparent'} 
+                              ${isActive ? 'bg-white text-blue-700 font-medium shadow-sm' : 'bg-transparent'} 
                               ${isComplete 
-                                ? (isActive ? 'text-blue-700 font-medium' : 'text-gray-700') 
-                                : (isActive ? 'text-blue-700' : 'text-gray-500')
+                                ? (isActive ? 'text-blue-700 font-medium' : 'text-gray-800') 
+                                : (isActive ? 'text-blue-700' : 'text-gray-600')
                               }
-                              hover:bg-gray-50 hover:text-blue-600 transition-colors
-                              ${isActive ? 'before:absolute before:bottom-0 before:left-0 before:right-0 before:h-0.5 before:bg-blue-500' : ''}
+                              hover:bg-white hover:text-blue-600 transition-all duration-200 transform hover:-translate-y-0.5
+                              ${isActive 
+                                ? 'before:absolute before:bottom-0 before:left-0 before:right-0 before:h-0.5 before:bg-blue-500 before:animate-pulse' 
+                                : ''}
+                              ${isComplete 
+                                ? 'after:content-[""] after:absolute after:top-0 after:left-0 after:w-full after:h-0.5 after:bg-green-400' 
+                                : ''}
                             `}
                           >
                             <div className="flex items-center">
                               {FormatIcon}
-                              <span className="text-sm">{formatName}</span>
+                              <span className="text-sm font-medium">{formatName}</span>
                             </div>
-                            {isComplete && <Check className="h-3.5 w-3.5 text-green-400 ml-1" />}
+                            {isComplete && (
+                              <div className="ml-2 w-4 h-4 rounded-full bg-green-100 flex items-center justify-center">
+                                <Check className="h-3 w-3 text-green-600" />
+                              </div>
+                            )}
                           </TabsTrigger>
                         );
                       })}
                     </TabsList>
                     
-                    <div className="p-4 bg-blue-50 border-t border-blue-100">
+                    <div className="p-3.5 bg-gradient-to-r from-blue-50 to-white border-t border-blue-100 flex items-center justify-between">
                       <h2 className="text-lg font-semibold flex items-center text-blue-800">
                         <BookImage className="h-5 w-5 mr-2 text-blue-500" />
                         {getFormatName(currentTab)}
                       </h2>
+                      <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full border border-blue-100">
+                        {Object.values(formatsComplete).filter(Boolean).length} / {Object.keys(formatsComplete).length} completos
+                      </div>
                     </div>
                   </div>
 
@@ -884,22 +896,26 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                 {/* Navegação entre etapas */}
                 <div className="mt-8 pt-5 border-t border-gray-200">
                   {Object.values(formatsComplete).some(complete => !complete) ? (
-                    <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 mb-4">
+                    <div className="rounded-xl bg-gradient-to-r from-amber-50 to-amber-100 border border-amber-200 p-4 mb-4 shadow-sm">
                       <div className="flex items-center text-amber-700 mb-1">
-                        <AlertCircle className="h-5 w-5 mr-2" />
+                        <div className="bg-white p-1 rounded-full mr-2 shadow-sm">
+                          <AlertCircle className="h-5 w-5 text-amber-500" />
+                        </div>
                         <h3 className="font-medium">Faltam campos a preencher</h3>
                       </div>
-                      <p className="text-sm text-amber-600 pl-7">
+                      <p className="text-sm text-amber-600 pl-9">
                         Complete todos os campos obrigatórios em cada formato para poder avançar.
                       </p>
                     </div>
                   ) : (
-                    <div className="rounded-xl bg-green-50 border border-green-200 p-4 mb-4">
+                    <div className="rounded-xl bg-gradient-to-r from-green-50 to-green-100 border border-green-200 p-4 mb-4 shadow-sm">
                       <div className="flex items-center text-green-700 mb-1">
-                        <Check className="h-5 w-5 mr-2" />
+                        <div className="bg-white p-1 rounded-full mr-2 shadow-sm">
+                          <Check className="h-5 w-5 text-green-500" />
+                        </div>
                         <h3 className="font-medium">Tudo pronto!</h3>
                       </div>
-                      <p className="text-sm text-green-600 pl-7">
+                      <p className="text-sm text-green-600 pl-9">
                         Todos os detalhes dos formatos foram preenchidos. Você pode avançar para a próxima etapa.
                       </p>
                     </div>
@@ -941,16 +957,16 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                     Voltar para edição
                   </button>
                   
-                  <div className="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-sm font-medium">
+                  <div className="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg text-sm font-medium shadow-sm">
                     Revisão final
                   </div>
                 </div>
                 
                 {/* Resumo da arte multi-formato */}
                 <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                  <div className="bg-neutral-900 text-white p-4 border-b border-neutral-800 shadow-sm">
+                  <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 border-b border-blue-700 shadow-sm">
                     <h2 className="text-lg font-semibold flex items-center">
-                      <FileImage className="h-5 w-5 mr-2 text-blue-400" />
+                      <FileImage className="h-5 w-5 mr-2 text-white" />
                       Revisão - Resumo da Arte Multi-Formato
                     </h2>
                   </div>
