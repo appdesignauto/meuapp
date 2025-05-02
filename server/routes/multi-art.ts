@@ -92,7 +92,7 @@ router.post('/api/admin/arts/multi', isAuthenticated, async (req: Request, res: 
   }
 });
 
-// Rota para buscar artes por ID de grupo
+// Rota para buscar artes por ID de grupo (para todos os usuários)
 router.get('/api/arts/group/:groupId', async (req: Request, res: Response) => {
   try {
     const { groupId } = req.params;
@@ -126,6 +126,45 @@ router.get('/api/arts/group/:groupId', async (req: Request, res: Response) => {
     console.error('Erro ao buscar grupo de artes:', error);
     return res.status(500).json({
       message: 'Erro ao buscar grupo de artes'
+    });
+  }
+});
+
+// Rota administrativa para buscar artes por ID de grupo (somente admin)
+router.get('/api/admin/arts/group/:groupId', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    // Verificar se o usuário é admin ou designer autorizado
+    const userRole = req.user?.nivelacesso;
+    if (userRole !== 'admin' && userRole !== 'designer_adm' && userRole !== 'designer') {
+      return res.status(403).json({
+        message: 'Acesso negado. Você não tem permissão para acessar este recurso.'
+      });
+    }
+    
+    const { groupId } = req.params;
+    
+    // Buscar todas as artes do grupo (sem filtro de visibilidade para admin)
+    const groupArts = await db.select()
+      .from(arts)
+      .where(eq(arts.artGroupId, groupId));
+    
+    if (!groupArts || groupArts.length === 0) {
+      return res.status(404).json({
+        message: 'Grupo de artes não encontrado'
+      });
+    }
+    
+    console.log(`Buscando grupo ${groupId} para edição (${groupArts.length} artes encontradas)`);
+    
+    return res.json({
+      groupId,
+      totalArts: groupArts.length,
+      arts: groupArts
+    });
+  } catch (error) {
+    console.error('Erro ao buscar grupo de artes para edição:', error);
+    return res.status(500).json({
+      message: 'Erro ao buscar grupo de artes para edição'
     });
   }
 });

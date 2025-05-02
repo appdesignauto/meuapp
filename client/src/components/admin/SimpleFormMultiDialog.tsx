@@ -150,9 +150,11 @@ export default function SimpleFormMultiDialog({
       // Se a arte é parte de um grupo, buscar informações relacionadas
       if (editingArt.groupId) {
         // Buscar outras artes do mesmo grupo para edição
-        apiRequest('GET', `/api/arts/group/${editingArt.groupId}`)
+        // Usar a rota correta da API para buscar artes do grupo
+        apiRequest('GET', `/api/admin/arts/group/${editingArt.groupId}`)
           .then(res => res.json())
-          .then(groupArts => {
+          .then(data => {
+            const groupArts = data.arts || [];
             if (Array.isArray(groupArts) && groupArts.length > 0) {
               // Extrair os formatos das artes do grupo
               const formatSlugs = groupArts.map(art => art.format);
@@ -182,16 +184,20 @@ export default function SimpleFormMultiDialog({
               });
               setFormatsComplete(updatedFormatsComplete);
               
-              // Definir a primeira aba como atual
-              if (formatSlugs.length > 0) {
-                setCurrentTab(formatSlugs[0]);
-              }
+              // Definir a aba da arte que está sendo editada como atual
+              setCurrentTab(editingArt.format);
+              
+              // Avançar direto para a etapa 2 (upload) depois de carregar os dados
+              setTimeout(() => {
+                setStep(2);
+              }, 100);
             } else {
               // Se não encontrou artes do grupo, tratar como arte única
               handleSingleArtEdit();
             }
           })
-          .catch(() => {
+          .catch((error) => {
+            console.error("Erro ao carregar dados do grupo:", error);
             // Em caso de erro, tratar como arte única
             handleSingleArtEdit();
           });
@@ -231,6 +237,16 @@ export default function SimpleFormMultiDialog({
       setFormatsComplete({
         [formatSlug]: true
       });
+      
+      // Definir as imagens
+      setImages({
+        [formatSlug]: editingArt.imageUrl || ''
+      });
+      
+      // Avançar direto para a etapa 2 (upload) depois de carregar os dados
+      setTimeout(() => {
+        setStep(2);
+      }, 100);
     }
   };
 
