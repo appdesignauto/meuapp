@@ -77,10 +77,15 @@ interface SimpleFormMultiDialogProps {
   isEditing?: boolean; // Flag para indicar modo de edição
 }
 
-export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMultiDialogProps) {
+export default function SimpleFormMultiDialog({ 
+  isOpen, 
+  onClose, 
+  editingArt, 
+  isEditing = false 
+}: SimpleFormMultiDialogProps) {
   const { toast } = useToast();
   const { user } = useAuth();
-  const [step, setStep] = useState(1); // 1: Configurações globais, 2: Formatos, 3: Upload
+  const [step, setStep] = useState(isEditing ? 2 : 1); // 1: Configurações globais, 2: Formatos, 3: Upload
   const [currentTab, setCurrentTab] = useState<string>("");
   const [formatDetails, setFormatDetails] = useState<Record<string, FormatValues>>({});
   const [images, setImages] = useState<Record<string, string>>({});
@@ -131,6 +136,103 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
 
   // Estado de carregamento
   const isLoading = isLoadingCategories || isLoadingFormats || isLoadingFileTypes;
+
+  // Efeito para carregar dados da arte quando em modo de edição
+  useEffect(() => {
+    if (isEditing && editingArt && !isLoading) {
+      // Atualizar o formulário da etapa 1 com os dados da arte
+      step1Form.setValue('categoryId', editingArt.categoryId?.toString() || '');
+      step1Form.setValue('globalFileType', editingArt.fileType || 'canva');
+      step1Form.setValue('isPremium', editingArt.isPremium || true);
+      step1Form.setValue('globalTitle', editingArt.title || '');
+      step1Form.setValue('globalDescription', editingArt.description || '');
+      
+      // Se a arte é parte de um grupo, buscar informações relacionadas
+      if (editingArt.groupId) {
+        // Buscar outras artes do mesmo grupo para edição
+        apiRequest('GET', `/api/arts/group/${editingArt.groupId}`)
+          .then(res => res.json())
+          .then(groupArts => {
+            if (Array.isArray(groupArts) && groupArts.length > 0) {
+              // Extrair os formatos das artes do grupo
+              const formatSlugs = groupArts.map(art => art.format);
+              step1Form.setValue('selectedFormats', formatSlugs);
+              
+              // Preencher os detalhes de cada formato
+              const initialDetails: Record<string, FormatValues> = {};
+              groupArts.forEach(art => {
+                initialDetails[art.format] = {
+                  format: art.format,
+                  fileType: art.fileType || 'canva',
+                  title: art.title || '',
+                  description: art.description || '',
+                  imageUrl: art.imageUrl || '',
+                  previewUrl: art.previewUrl || '',
+                  editUrl: art.editUrl || '',
+                };
+              });
+              
+              setFormatDetails(initialDetails);
+              
+              // Verificar quais formatos estão completos
+              const updatedFormatsComplete: Record<string, boolean> = {};
+              Object.entries(initialDetails).forEach(([formatSlug, details]) => {
+                const isComplete = !!(details.title && details.editUrl && details.imageUrl);
+                updatedFormatsComplete[formatSlug] = isComplete;
+              });
+              setFormatsComplete(updatedFormatsComplete);
+              
+              // Definir a primeira aba como atual
+              if (formatSlugs.length > 0) {
+                setCurrentTab(formatSlugs[0]);
+              }
+            } else {
+              // Se não encontrou artes do grupo, tratar como arte única
+              handleSingleArtEdit();
+            }
+          })
+          .catch(() => {
+            // Em caso de erro, tratar como arte única
+            handleSingleArtEdit();
+          });
+      } else {
+        // Quando não é parte de um grupo, tratar como arte única
+        handleSingleArtEdit();
+      }
+    }
+  }, [isEditing, editingArt, isLoading]);
+
+  // Função para tratar edição de arte única
+  const handleSingleArtEdit = () => {
+    if (!editingArt) return;
+    
+    // Usar apenas o formato da arte atual
+    const formatSlug = editingArt.format;
+    if (formatSlug) {
+      step1Form.setValue('selectedFormats', [formatSlug]);
+      
+      // Configurar detalhes do formato
+      const initialDetails: Record<string, FormatValues> = {
+        [formatSlug]: {
+          format: formatSlug,
+          fileType: editingArt.fileType || 'canva',
+          title: editingArt.title || '',
+          description: editingArt.description || '',
+          imageUrl: editingArt.imageUrl || '',
+          previewUrl: editingArt.previewUrl || '',
+          editUrl: editingArt.editUrl || '',
+        }
+      };
+      
+      setFormatDetails(initialDetails);
+      setCurrentTab(formatSlug);
+      
+      // Marcar formato como completo
+      setFormatsComplete({
+        [formatSlug]: true
+      });
+    }
+  };
 
   // Obter o nome do formato a partir do slug
   const getFormatName = (slug: string) => {
@@ -329,13 +431,35 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
         formats: Object.values(formatDetails),
       };
 
-      // Enviar para a API
-      const response = await apiRequest('POST', '/api/admin/arts/multi', formattedData);
+      let response;
+      let successMessage;
+
+      // Verificar se estamos editando ou criando
+      if (isEditing && editingArt) {
+        // Adicionar ID da arte existente para edição
+        if (editingArt.groupId) {
+          // Se tem groupId, atualizar o grupo inteiro
+          formattedData.groupId = editingArt.groupId;
+          response = await apiRequest('PUT', `/api/admin/arts/group/${editingArt.groupId}`, formattedData);
+        } else {
+          // Se não tem groupId, mas estamos adicionando múltiplos formatos a uma arte existente
+          formattedData.artId = editingArt.id;
+          response = await apiRequest('PUT', `/api/admin/arts/multi/${editingArt.id}`, formattedData);
+        }
+        successMessage = "Arte atualizada com sucesso";
+      } else {
+        // Criar nova arte multi-formato
+        response = await apiRequest('POST', '/api/admin/arts/multi', formattedData);
+        successMessage = "Arte criada com sucesso";
+      }
+
       const result = await response.json();
 
       toast({
-        title: "Arte salva com sucesso",
-        description: "A arte com múltiplos formatos foi criada.",
+        title: successMessage,
+        description: isEditing 
+          ? "As alterações foram salvas."
+          : "A arte com múltiplos formatos foi criada.",
       });
 
       // Resetar o formulário
@@ -384,7 +508,9 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
           <div className="flex justify-between items-center p-6 border-b">
             <div className="flex items-center gap-2">
               <FileImage className="h-6 w-6 text-blue-600" />
-              <DialogTitle className="text-xl font-bold">Adicionar Arte Multi-Formato</DialogTitle>
+              <DialogTitle className="text-xl font-bold">
+                {isEditing ? 'Editar Arte Multi-Formato' : 'Adicionar Arte Multi-Formato'}
+              </DialogTitle>
             </div>
             <button onClick={onClose} className="text-gray-500 hover:text-gray-700 transition-colors">
               <X className="h-5 w-5" />
