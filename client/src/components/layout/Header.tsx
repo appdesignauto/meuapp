@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -70,8 +71,10 @@ const LogoImage = ({ siteSettings }: LogoImageProps) => {
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showHeaderSearch, setShowHeaderSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const { user, logoutMutation } = useAuth();
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   
   // Buscar estatísticas do usuário para exibir no dropdown
   const { data: userStats } = useQuery({
@@ -161,6 +164,34 @@ const Header = () => {
       document.removeEventListener('visibilitychange', forceRefreshSettings);
     };
   }, [refetchSettings]);
+  
+  // Adicionar os eventos para mostrar/ocultar a barra de pesquisa no cabeçalho
+  useEffect(() => {
+    const handleShowSearch = () => {
+      setShowHeaderSearch(true);
+    };
+    
+    const handleHideSearch = () => {
+      setShowHeaderSearch(false);
+    };
+    
+    // Adicionar listeners para os eventos customizados
+    document.addEventListener('searchbar:showInHeader', handleShowSearch);
+    document.addEventListener('searchbar:hideInHeader', handleHideSearch);
+    
+    return () => {
+      document.removeEventListener('searchbar:showInHeader', handleShowSearch);
+      document.removeEventListener('searchbar:hideInHeader', handleHideSearch);
+    };
+  }, []);
+  
+  // Função para lidar com a submissão do formulário de pesquisa no cabeçalho
+  const handleHeaderSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      setLocation(`/arts?search=${encodeURIComponent(searchQuery)}`);
+    }
+  };
 
   const navLinks = [
     { name: 'Início', path: '/' },
@@ -189,8 +220,32 @@ const Header = () => {
             </Link>
           </div>
 
+          {/* Barra de pesquisa flutuante - aparece quando rolar para baixo */}
+          {showHeaderSearch && (
+            <form 
+              onSubmit={handleHeaderSearch}
+              className="hidden md:flex absolute left-1/2 transform -translate-x-1/2 w-[500px] max-w-[calc(100%-220px)] transition-all duration-300 ease-in-out animate-fadeIn"
+            >
+              <div className="relative w-full">
+                <Input
+                  type="text"
+                  placeholder="Busque por artes, modelos, campanhas..."
+                  className="w-full pr-10 py-2 rounded-full border border-blue-200 shadow-md focus-visible:ring-blue-400"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <button 
+                  type="submit" 
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-blue-500 hover:text-blue-600"
+                >
+                  <Search className="h-4 w-4" />
+                </button>
+              </div>
+            </form>
+          )}
+          
           {/* Navigation - Desktop */}
-          <nav className="hidden md:flex items-center space-x-1">
+          <nav className={`hidden md:flex items-center space-x-1 transition-opacity duration-300 ${showHeaderSearch ? 'opacity-0' : 'opacity-100'}`}>
             {navLinks.map((link) => (
               <Link
                 key={link.path}

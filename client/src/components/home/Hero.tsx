@@ -1,12 +1,49 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Images, FileText, Laptop, RefreshCw, ChevronRight } from 'lucide-react';
 
+// Criando um evento personalizado para comunicação entre componentes
+export const searchBarEvents = {
+  showInHeader: new CustomEvent('searchbar:showInHeader', { bubbles: true }),
+  hideInHeader: new CustomEvent('searchbar:hideInHeader', { bubbles: true })
+};
+
 const Hero = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [, setLocation] = useLocation();
+  const searchFormRef = useRef<HTMLFormElement>(null);
+
+  // Configurar o Intersection Observer para detectar quando a barra de pesquisa sai da área visível
+  useEffect(() => {
+    if (!searchFormRef.current) return;
+
+    const options = {
+      root: null, // viewport como referência
+      rootMargin: '0px',
+      threshold: 0.1 // quando 10% do elemento estiver visível
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        // Quando o formulário de pesquisa sair da área visível
+        if (!entry.isIntersecting) {
+          document.dispatchEvent(searchBarEvents.showInHeader);
+        } else {
+          document.dispatchEvent(searchBarEvents.hideInHeader);
+        }
+      });
+    }, options);
+
+    observer.observe(searchFormRef.current);
+
+    return () => {
+      if (searchFormRef.current) {
+        observer.unobserve(searchFormRef.current);
+      }
+    };
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +81,12 @@ const Hero = () => {
           </div>
           
           {/* Search Bar */}
-          <form onSubmit={handleSearch} className="max-w-2xl mx-auto relative mb-8 sm:mb-10 px-3">
+          <form 
+            ref={searchFormRef}
+            onSubmit={handleSearch} 
+            className="max-w-2xl mx-auto relative mb-8 sm:mb-10 px-3"
+            id="hero-search-bar"
+          >
             <div className="relative shadow-lg rounded-xl overflow-hidden">
               <Input
                 type="text"
@@ -52,6 +94,7 @@ const Hero = () => {
                 className="w-full pl-3 sm:pl-5 pr-12 py-5 sm:py-7 rounded-xl border-0 focus-visible:ring-1 focus-visible:ring-secondary/50 text-sm"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                id="hero-search-input"
               />
               <button 
                 type="submit" 
