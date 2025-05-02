@@ -4,6 +4,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import useScrollTop from '@/hooks/useScrollTop';
 import { 
   ArrowLeft, 
+  ArrowRight,
   Eye, 
   Download, 
   Share2, 
@@ -16,7 +17,9 @@ import {
   Trophy,
   Clock,
   Zap,
-  ChevronRight
+  ChevronRight,
+  Grid,
+  LayoutGrid
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -64,14 +67,11 @@ interface Art {
   isPremiumLocked?: boolean;
   createdAt: string;
   groupId?: string; // ID do grupo para associar formatos relacionados
-  format?: string; // Slug do formato (feed, stories, etc.)
+  format?: string | { id: number; name: string; }; // Pode ser um slug ou um objeto de formato
   category?: {
     id: number;
     name: string;
-  };
-  format?: {
-    id: number;
-    name: string;
+    slug?: string;
   };
   fileType?: {
     id: number;
@@ -880,62 +880,88 @@ export default function ArtDetail() {
         </motion.div>
       )}
 
-      {/* Designer Other Arts Section - Se tiver designer */}
+      {/* Designer Other Arts Section - Vitrine Pinterest */}
       {art.designer && (
-        <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-bold text-gray-800">
-              Mais artes de {art.designer.name || art.designer.username}
+        <motion.div 
+          className="bg-white rounded-xl shadow-md p-6 mb-6"
+          initial={{ y: 40, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.35 }}
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-bold text-gray-800 flex items-center">
+              <LayoutGrid className="h-5 w-5 text-blue-600 mr-2" />
+              Artes relacionadas
             </h2>
             <Button
-              variant="ghost"
+              variant="outline" 
               size="sm"
-              className="text-blue-600 font-medium"
-              onClick={() => setLocation(`/designers/${art.designer.username}`)}
+              className="text-blue-600 border-blue-200 hover:bg-blue-50"
+              onClick={() => setLocation(`/categories/${art.category?.slug || 'todas'}`)}
             >
-              Ver todas
+              Ver mais
+              <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
           </div>
           
-          {/* Aqui virá um componente para listar as artes do designer */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {/* Implementar query para buscar outras artes do designer */}
-            {art.designer.recentArts && art.designer.recentArts.length > 0 ? (
-              art.designer.recentArts.map((recentArt: RecentArt) => (
-                <div 
-                  key={recentArt.id}
-                  className="relative aspect-square rounded-lg overflow-hidden bg-neutral-100 shadow-sm cursor-pointer"
-                  onClick={() => {
-                    if (recentArt.id !== art.id) {
-                      setLocation(`/arts/${recentArt.id}`);
-                    }
-                  }}
-                >
-                  <img 
-                    src={recentArt.imageUrl} 
-                    alt={recentArt.title} 
-                    className="w-full h-full object-cover"
-                  />
-                  {recentArt.id === art.id && (
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                      <span className="text-white text-xs font-medium">Arte atual</span>
+          {/* Layout estilo Pinterest com altura variada */}
+          {art.designer.recentArts && art.designer.recentArts.length > 0 ? (
+            <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
+              {art.designer.recentArts
+                .filter((recentArt: RecentArt) => recentArt.id !== art.id) // Não mostrar a arte atual
+                .map((recentArt: RecentArt, index: number) => {
+                  // Gerar uma altura dinâmica para criar efeito Pinterest
+                  // Mas manter consistência para cada item ao recarregar a página
+                  const heightClass = [`h-40`, `h-48`, `h-56`, `h-64`][index % 4];
+                  
+                  return (
+                    <div 
+                      key={recentArt.id}
+                      className="break-inside-avoid mb-4 group"
+                      onClick={() => setLocation(`/arts/${recentArt.id}`)}
+                    >
+                      <div className={`${heightClass} relative overflow-hidden rounded-lg shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer`}>
+                        <img 
+                          src={recentArt.imageUrl} 
+                          alt={recentArt.title} 
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                        
+                        {/* Overlay com título e informações adicionais */}
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-3">
+                          <h3 className="text-white font-medium text-sm truncate">{recentArt.title}</h3>
+                        </div>
+                      </div>
                     </div>
-                  )}
-                </div>
-              ))
-            ) : (
-              // Se não tiver artes recentes, mostrar placeholders
-              Array(4).fill(0).map((_, index) => (
+                  );
+                })
+              }
+            </div>
+          ) : (
+            // Placeholder para quando não houver artes
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {Array(4).fill(0).map((_, index) => (
                 <div key={index} 
-                  className={`${index > 1 ? 'hidden md:flex' : 'flex'} h-48 bg-neutral-100 rounded-lg items-center justify-center text-neutral-400 text-sm`}
-                  onClick={() => setLocation(`/designers/${art.designer.username}`)}
+                  className="h-48 bg-neutral-100 rounded-lg flex items-center justify-center text-neutral-400 text-sm p-4 text-center"
                 >
-                  <span className="text-center px-2">Ver mais artes no perfil</span>
+                  <span>Explore o catálogo para mais inspirações automotivas</span>
                 </div>
-              ))
-            )}
+              ))}
+            </div>
+          )}
+          
+          {/* Botão de explorar mais centralizado */}
+          <div className="mt-8 flex justify-center">
+            <Button 
+              variant="ghost" 
+              className="text-blue-600 flex items-center group border border-blue-100"
+              onClick={() => setLocation(`/categories/${art.category?.slug || 'todas'}`)}
+            >
+              Explorar mais {art.category?.name || 'artes'}
+              <ChevronRight className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            </Button>
           </div>
-        </div>
+        </motion.div>
       )}
       
       {/* Related Arts Section - Com animação */}
