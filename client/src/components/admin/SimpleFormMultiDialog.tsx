@@ -687,12 +687,12 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                             value={formatSlug}
                             className={`
                               flex items-center gap-1.5 py-3 px-6 border-0 rounded-none
-                              ${isActive ? 'border-b-2 border-blue-600 font-medium text-blue-700' : 'border-b-2 border-transparent'} 
+                              ${isActive ? 'border-b-2 border-gray-800 font-medium text-gray-800' : 'border-b-2 border-transparent'} 
                               ${isComplete 
-                                ? (isActive ? 'text-blue-700 font-medium' : 'text-green-600') 
+                                ? (isActive ? 'text-gray-800 font-medium' : 'text-green-600') 
                                 : (isActive ? 'text-gray-800' : 'text-gray-500')
                               }
-                              hover:bg-gray-50 hover:text-blue-600 transition-colors
+                              hover:bg-gray-50 hover:text-gray-900 transition-colors
                             `}
                           >
                             {formatName}
@@ -707,7 +707,7 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                   {Object.entries(formatDetails).map(([formatSlug, details]) => (
                     <TabsContent key={formatSlug} value={formatSlug} className="mt-6">
                       <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4">
+                        <div className="bg-gradient-to-r from-gray-700 to-gray-800 text-white p-4">
                           <h2 className="text-lg font-semibold flex items-center">
                             <BookImage className="h-5 w-5 mr-2 text-white" />
                             {getFormatName(formatSlug)}
