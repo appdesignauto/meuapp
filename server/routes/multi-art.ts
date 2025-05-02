@@ -212,10 +212,14 @@ router.get('/api/admin/arts/group/:groupId', isAuthenticated, async (req: Reques
     
     const { groupId } = req.params;
     
-    // Buscar todas as artes do grupo (sem filtro de visibilidade para admin)
-    const groupArts = await db.select()
-      .from(arts)
-      .where(eq(arts.groupId, groupId));
+    // Buscar todas as artes do grupo usando SQL direto para evitar problemas
+    const result = await db.execute(sql`
+      SELECT * FROM arts 
+      WHERE "groupId" = ${groupId}
+    `);
+    
+    // Converter resultados para o formato esperado
+    const groupArts = result.rows || [];
     
     if (!groupArts || groupArts.length === 0) {
       return res.status(404).json({

@@ -306,6 +306,13 @@ export default function SimpleFormMultiDialog({
     const format = formats.find((f: any) => f.slug === slug);
     return format ? format.name : slug;
   };
+  
+  // Obter o nome do tipo de arquivo a partir do slug
+  const getFileTypeName = (slug: string) => {
+    if (!fileTypes || !Array.isArray(fileTypes)) return slug;
+    const fileType = fileTypes.find((ft: any) => ft.slug === slug);
+    return fileType ? fileType.name : slug;
+  };
 
   // Avançar para a etapa 2 (Upload e detalhes de cada formato)
   const goToStep2 = (data: Step1Values) => {
@@ -956,7 +963,7 @@ export default function SimpleFormMultiDialog({
                         <div className="space-y-1">
                           <div className="font-medium">Tipo de Arquivo:</div>
                           <div>
-                            {fileTypes.find((ft: any) => ft.slug === step1Form.getValues().globalFileType)?.name || 'Não selecionado'}
+                            {getFileTypeName(step1Form.getValues().globalFileType)}
                           </div>
                         </div>
                         <div className="space-y-1">
@@ -1007,7 +1014,7 @@ export default function SimpleFormMultiDialog({
                                   <div className="space-y-1">
                                     <div className="font-medium">Tipo de Arquivo:</div>
                                     <div>
-                                      {fileTypes.find((ft: any) => ft.slug === details.fileType)?.name || 'Não selecionado'}
+                                      {getFileTypeName(details.fileType)}
                                     </div>
                                   </div>
                                   <div className="space-y-1 col-span-1 md:col-span-2">
