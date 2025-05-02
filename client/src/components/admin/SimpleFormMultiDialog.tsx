@@ -147,6 +147,9 @@ export default function SimpleFormMultiDialog({
       console.log(`Grupo da arte: ${editingArt.groupId}`);
       console.log(`Tipo de dados do groupId: ${typeof editingArt.groupId}`);
       
+      // Log para ajudar na depuração da API recém-implementada
+      console.log("DEPURAÇÃO: Nova API de grupo implementada - testando carregamento de artes do grupo");
+      
       // Atualizar o formulário da etapa 1 com os dados da arte
       step1Form.setValue('categoryId', editingArt.categoryId?.toString() || '');
       step1Form.setValue('globalFileType', editingArt.fileType || 'canva');
