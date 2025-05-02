@@ -1251,6 +1251,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/arts/:id/related", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const limit = parseInt(req.query.limit as string) || 12; // Usar 12 como padrão
+      
+      console.log(`[GET /api/arts/${id}/related] Buscando ${limit} artes relacionadas para arte ID ${id}`);
+      
+      const relatedArts = await storage.getRelatedArts(id, limit);
+      
+      console.log(`[GET /api/arts/${id}/related] Encontradas ${relatedArts.length} artes relacionadas`);
+      
+      // Se não houver artes relacionadas, retorna array vazio em vez de 404
+      // para que o frontend possa lidar com isso de maneira apropriada
+      res.json(relatedArts);
+    } catch (error) {
+      console.error("Erro ao buscar artes relacionadas:", error);
+      res.status(500).json({ message: "Erro ao buscar artes relacionadas" });
+    }
+  });
+
   app.get("/api/arts/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -1473,27 +1493,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/arts/:id/related", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : 4;
-      
-      const relatedArts = await storage.getRelatedArts(id, limit);
-      
-      // Filtrar artes premium se o usuário não estiver logado ou não for premium
-      const user = req.user as any;
-      let filteredArts = relatedArts;
-      
-      if (!user || user.role !== 'premium') {
-        filteredArts = relatedArts.filter(art => !art.isPremium);
-      }
-      
-      res.json(filteredArts);
-    } catch (error) {
-      console.error("Erro ao buscar artes relacionadas:", error);
-      res.status(500).json({ message: "Erro interno do servidor" });
-    }
-  });
+  // Esta rota já foi definida acima!
 
   // Testimonials API
   app.get("/api/testimonials", async (req, res) => {
