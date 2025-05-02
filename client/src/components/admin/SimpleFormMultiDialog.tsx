@@ -674,8 +674,9 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                   onValueChange={setCurrentTab}
                   className="w-full"
                 >
-                  <div className="border-b border-gray-200 mb-6">
-                    <TabsList className="w-full flex gap-0 bg-transparent p-0 relative">
+                  {/* Integração de abas no cabeçalho */}
+                  <div className="bg-gradient-to-r from-gray-700 to-gray-800 text-white mb-6 rounded-t-lg">
+                    <TabsList className="w-full flex gap-0 bg-transparent p-0 border-b border-gray-600">
                       {Object.keys(formatDetails).map(formatSlug => {
                         const formatName = getFormatName(formatSlug);
                         const isComplete = formatsComplete[formatSlug];
@@ -686,33 +687,36 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                             key={formatSlug} 
                             value={formatSlug}
                             className={`
-                              flex items-center gap-1.5 py-3 px-6 border-0 rounded-none
-                              ${isActive ? 'border-b-2 border-gray-800 font-medium text-gray-800' : 'border-b-2 border-transparent'} 
+                              flex items-center gap-1.5 py-3 px-6 border-0 rounded-none relative 
+                              after:absolute after:w-[1px] after:h-2/3 after:-right-[1px] after:top-1/2 after:-translate-y-1/2 after:bg-gray-600 last:after:hidden
+                              ${isActive ? 'bg-gray-800 text-white font-medium' : 'bg-transparent'} 
                               ${isComplete 
-                                ? (isActive ? 'text-gray-800 font-medium' : 'text-green-600') 
-                                : (isActive ? 'text-gray-800' : 'text-gray-500')
+                                ? (isActive ? 'text-white font-medium' : 'text-gray-200') 
+                                : (isActive ? 'text-white' : 'text-gray-400')
                               }
-                              hover:bg-gray-50 hover:text-gray-900 transition-colors
+                              hover:bg-gray-600 hover:text-white transition-colors
                             `}
                           >
                             {formatName}
-                            {isComplete && <Check className="h-3.5 w-3.5 text-green-600 ml-1" />}
+                            {isComplete && <Check className="h-3.5 w-3.5 text-green-400 ml-1" />}
                           </TabsTrigger>
                         );
                       })}
                     </TabsList>
+                    
+                    <div className="p-4">
+                      <h2 className="text-lg font-semibold flex items-center">
+                        <BookImage className="h-5 w-5 mr-2 text-white" />
+                        {getFormatName(currentTab)}
+                      </h2>
+                    </div>
                   </div>
 
                   {/* Conteúdo de cada tab/formato */}
                   {Object.entries(formatDetails).map(([formatSlug, details]) => (
                     <TabsContent key={formatSlug} value={formatSlug} className="mt-6">
                       <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                        <div className="bg-gradient-to-r from-gray-700 to-gray-800 text-white p-4">
-                          <h2 className="text-lg font-semibold flex items-center">
-                            <BookImage className="h-5 w-5 mr-2 text-white" />
-                            {getFormatName(formatSlug)}
-                          </h2>
-                        </div>
+                        {/* Cabeçalho removido pois já está na parte superior */}
 
                         <div className="p-6">
                           {/* Formulário para detalhes do formato */}
