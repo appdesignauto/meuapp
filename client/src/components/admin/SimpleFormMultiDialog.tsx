@@ -674,8 +674,8 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                   onValueChange={setCurrentTab}
                   className="w-full"
                 >
-                  <div className="bg-gray-50 p-4 rounded-xl mb-6">
-                    <TabsList className="w-full flex gap-2 bg-transparent p-0">
+                  <div className="border-b border-gray-200 mb-6">
+                    <TabsList className="w-full flex gap-0 bg-transparent p-0 relative">
                       {Object.keys(formatDetails).map(formatSlug => {
                         const formatName = getFormatName(formatSlug);
                         const isComplete = formatsComplete[formatSlug];
@@ -686,16 +686,17 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                             key={formatSlug} 
                             value={formatSlug}
                             className={`
-                              flex items-center gap-1.5 py-2 px-4 rounded-lg 
-                              ${isActive ? 'bg-white shadow-sm border border-gray-200' : 'bg-transparent'} 
+                              flex items-center gap-1.5 py-3 px-6 border-0 rounded-none
+                              ${isActive ? 'border-b-2 border-blue-600 font-medium text-blue-700' : 'border-b-2 border-transparent'} 
                               ${isComplete 
                                 ? (isActive ? 'text-blue-700 font-medium' : 'text-green-600') 
                                 : (isActive ? 'text-gray-800' : 'text-gray-500')
                               }
+                              hover:bg-gray-50 hover:text-blue-600 transition-colors
                             `}
                           >
                             {formatName}
-                            {isComplete && <Check className="h-3.5 w-3.5 text-green-600" />}
+                            {isComplete && <Check className="h-3.5 w-3.5 text-green-600 ml-1" />}
                           </TabsTrigger>
                         );
                       })}
