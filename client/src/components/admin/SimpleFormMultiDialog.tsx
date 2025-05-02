@@ -641,14 +641,14 @@ export default function SimpleFormMultiDialog({
                 {/* Seção 1: Informações básicas */}
                 <div className="bg-gray-50 p-6 rounded-lg border border-gray-100 shadow-sm">
                   <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                    <InfoIcon className="h-5 w-5 mr-2 text-blue-500" />
+                    <Settings2 className="h-5 w-5 mr-2 text-blue-500" />
                     Informações Básicas
                   </h3>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <Label htmlFor="categoryId" className="flex items-center mb-1.5">
-                        <FolderIcon className="h-4 w-4 mr-1.5 text-gray-500" />
+                        <FolderOpen className="h-4 w-4 mr-1.5 text-gray-500" />
                         Categoria <span className="text-red-500 ml-1">*</span>
                       </Label>
                       <Controller
@@ -679,7 +679,7 @@ export default function SimpleFormMultiDialog({
                     
                     <div>
                       <Label htmlFor="globalFileType" className="flex items-center mb-1.5">
-                        <FileIcon className="h-4 w-4 mr-1.5 text-gray-500" />
+                        <FileType className="h-4 w-4 mr-1.5 text-gray-500" />
                         Tipo de Arquivo <span className="text-red-500 ml-1">*</span>
                       </Label>
                       <Controller
@@ -818,11 +818,19 @@ export default function SimpleFormMultiDialog({
                   )}
                 </div>
                 
-                <div className="pt-4 flex justify-end space-x-2">
-                  <Button onClick={onClose} type="button" variant="outline">
+                <div className="pt-6 flex justify-end space-x-3">
+                  <Button 
+                    onClick={onClose} 
+                    type="button" 
+                    variant="outline" 
+                    className="px-5"
+                  >
                     Cancelar
                   </Button>
-                  <Button type="submit">
+                  <Button 
+                    type="submit" 
+                    className="bg-blue-600 hover:bg-blue-700 px-6"
+                  >
                     Continuar <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </div>
@@ -833,24 +841,37 @@ export default function SimpleFormMultiDialog({
             {step === 2 && (
               <div className="space-y-6">
                 <div>
-                  <Label>Selecione um formato para editar:</Label>
-                  <Tabs value={currentTab} onValueChange={setCurrentTab} className="mt-2">
-                    <TabsList className="w-full overflow-x-auto flex-wrap">
+                  <Label className="flex items-center text-lg font-medium">
+                    <LayoutGrid className="h-5 w-5 mr-2 text-blue-500" />
+                    Selecione um formato para editar:
+                  </Label>
+                  
+                  <Tabs value={currentTab} onValueChange={setCurrentTab} className="mt-3">
+                    <TabsList className="w-full flex overflow-x-auto flex-wrap bg-transparent border-b border-gray-200 p-0 mb-1 h-auto">
                       {step1Form.getValues().selectedFormats.map((formatSlug) => (
                         <TabsTrigger
                           key={formatSlug}
                           value={formatSlug}
-                          className="flex items-center space-x-1 min-w-[120px]"
+                          className={`
+                            flex items-center space-x-2 min-w-[140px] rounded-none px-4 py-3 
+                            font-medium relative bg-transparent text-gray-700 border-0
+                            hover:bg-gray-50 hover:text-blue-600 transition-colors
+                            data-[state=active]:text-blue-600 data-[state=active]:bg-transparent
+                            data-[state=active]:border-b-2 data-[state=active]:border-blue-600
+                            data-[state=active]:shadow-none data-[state=active]:after:absolute
+                            data-[state=active]:after:bottom-0 data-[state=active]:after:left-0
+                            data-[state=active]:after:right-0 data-[state=active]:after:h-0.5
+                          `}
                         >
-                          {formatSlug === 'feed' && <Smartphone className="h-4 w-4" />}
-                          {formatSlug === 'stories' && <MonitorSmartphone className="h-4 w-4" />}
-                          {formatSlug === 'web-banner' && <ScreenShare className="h-4 w-4" />}
-                          {formatSlug === 'capa-fan-page' && <Image className="h-4 w-4" />}
-                          {formatSlug === 'cartaz' && <BookImage className="h-4 w-4" />}
-                          {formatSlug === 'carrocel' && <LayoutTemplate className="h-4 w-4" />}
+                          {formatSlug === 'feed' && <Smartphone className="h-5 w-5" />}
+                          {formatSlug === 'stories' && <MonitorSmartphone className="h-5 w-5" />}
+                          {formatSlug === 'web-banner' && <ScreenShare className="h-5 w-5" />}
+                          {formatSlug === 'capa-fan-page' && <Image className="h-5 w-5" />}
+                          {formatSlug === 'cartaz' && <BookImage className="h-5 w-5" />}
+                          {formatSlug === 'carrocel' && <LayoutTemplate className="h-5 w-5" />}
                           <span>{getFormatName(formatSlug)}</span>
                           {formatsComplete[formatSlug] && (
-                            <Check className="h-3.5 w-3.5 text-green-500 ml-1" />
+                            <Check className="h-3.5 w-3.5 text-green-500" />
                           )}
                         </TabsTrigger>
                       ))}
@@ -924,33 +945,33 @@ export default function SimpleFormMultiDialog({
                           
                           <div className="space-y-6">
                             <Label>Upload de Imagem <span className="text-red-500">*</span></Label>
-                            <div className="border-2 border-dashed rounded-lg p-4 text-center">
+                            <div className="border-2 border-dashed border-blue-200 rounded-lg p-6 text-center bg-blue-50/30 transition-all hover:border-blue-300">
                               {images[formatSlug] ? (
-                                <div className="space-y-3">
-                                  <div className="relative mx-auto max-w-xs overflow-hidden rounded border border-gray-200">
+                                <div className="space-y-4">
+                                  <div className="relative mx-auto max-w-xs overflow-hidden rounded-lg border border-gray-200 shadow-md">
                                     <img
                                       src={images[formatSlug]}
                                       alt={`Preview de ${getFormatName(formatSlug)}`}
                                       className="h-auto w-full object-cover"
                                     />
                                   </div>
-                                  <div className="flex justify-center space-x-2">
+                                  <div className="flex justify-center space-x-3">
                                     <Button
                                       type="button"
                                       variant="outline"
                                       size="sm"
-                                      className="flex items-center"
+                                      className="flex items-center px-4"
                                       asChild
                                     >
                                       <a href={images[formatSlug]} target="_blank" rel="noopener noreferrer">
-                                        <Eye className="mr-1 h-4 w-4" /> Ver
+                                        <Eye className="mr-2 h-4 w-4" /> Visualizar
                                       </a>
                                     </Button>
                                     <Button
                                       type="button"
                                       variant="outline"
                                       size="sm"
-                                      className="flex items-center"
+                                      className="flex items-center text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600 hover:border-red-300 px-4"
                                       onClick={() => {
                                         setImages(prev => {
                                           const newImages = { ...prev };
@@ -960,22 +981,22 @@ export default function SimpleFormMultiDialog({
                                         saveFormatDetails(formatSlug, { imageUrl: '' });
                                       }}
                                     >
-                                      <Trash className="mr-1 h-4 w-4" /> Remover
+                                      <Trash className="mr-2 h-4 w-4" /> Remover
                                     </Button>
                                   </div>
                                 </div>
                               ) : (
-                                <div className="space-y-3">
-                                  <div className="mx-auto flex h-32 w-32 flex-col items-center justify-center rounded-full bg-gray-100">
-                                    <Upload className="h-10 w-10 text-gray-400" />
-                                    <div className="mt-1 text-sm font-medium text-gray-400">Carregar imagem</div>
+                                <div className="space-y-4">
+                                  <div className="mx-auto flex h-36 w-36 flex-col items-center justify-center rounded-full bg-blue-50 border-2 border-dashed border-blue-200">
+                                    <Upload className="h-12 w-12 text-blue-400" />
+                                    <div className="mt-2 text-sm font-medium text-blue-600">Upload de imagem</div>
                                   </div>
                                   <div className="flex justify-center">
                                     <Label
                                       htmlFor={`upload-${formatSlug}`}
-                                      className="cursor-pointer inline-flex items-center space-x-1 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                                      className="cursor-pointer inline-flex items-center rounded-md bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 shadow-sm"
                                     >
-                                      <UploadCloud className="h-4 w-4" />
+                                      <UploadCloud className="h-4 w-4 mr-2" />
                                       <span>Selecionar arquivo</span>
                                       <Input
                                         id={`upload-${formatSlug}`}
@@ -987,15 +1008,15 @@ export default function SimpleFormMultiDialog({
                                     </Label>
                                   </div>
                                   {uploading[`image-${formatSlug}`] && (
-                                    <div className="flex justify-center mt-2">
+                                    <div className="flex justify-center items-center mt-2 bg-blue-50 rounded-md p-2">
                                       <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
-                                      <span className="ml-2 text-sm text-gray-500">Enviando...</span>
+                                      <span className="ml-2 text-sm text-blue-600">Enviando arquivo...</span>
                                     </div>
                                   )}
                                   {uploadError[`image-${formatSlug}`] && (
-                                    <div className="flex justify-center mt-2 text-sm text-red-500">
-                                      <AlertCircle className="h-4 w-4 mr-1" />
-                                      {uploadError[`image-${formatSlug}`]}
+                                    <div className="flex justify-center items-center mt-2 bg-red-50 rounded-md p-2 text-sm text-red-600">
+                                      <AlertCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+                                      <span>{uploadError[`image-${formatSlug}`]}</span>
                                     </div>
                                   )}
                                 </div>
@@ -1024,12 +1045,26 @@ export default function SimpleFormMultiDialog({
                   </Tabs>
                 </div>
                 
-                <div className="pt-4 flex justify-between">
-                  <Button type="button" variant="outline" onClick={goToPreviousStep}>
+                <div className="pt-6 flex justify-between">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={goToPreviousStep}
+                    className="px-5"
+                  >
                     <ChevronLeft className="mr-2 h-4 w-4" /> Voltar
                   </Button>
                   
-                  <Button type="button" onClick={goToStep3} disabled={!Object.values(formatsComplete).every(Boolean)}>
+                  <Button 
+                    type="button" 
+                    onClick={goToStep3} 
+                    disabled={!Object.values(formatsComplete).every(Boolean)}
+                    className={`px-6 ${
+                      Object.values(formatsComplete).every(Boolean) 
+                        ? 'bg-blue-600 hover:bg-blue-700' 
+                        : ''
+                    }`}
+                  >
                     Continuar <ChevronRight className="ml-2 h-4 w-4" />
                   </Button>
                 </div>
@@ -1158,13 +1193,22 @@ export default function SimpleFormMultiDialog({
                   </div>
                 </div>
                 
-                <div className="pt-4 flex justify-between">
-                  <Button type="button" variant="outline" onClick={goToPreviousStep}>
+                <div className="pt-6 flex justify-between">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={goToPreviousStep}
+                    className="px-5"
+                  >
                     <ChevronLeft className="mr-2 h-4 w-4" /> Voltar
                   </Button>
                   
-                  <Button type="button" onClick={handleSubmit} className="space-x-1">
-                    <SaveIcon className="mr-1 h-4 w-4" />
+                  <Button 
+                    type="button" 
+                    onClick={handleSubmit} 
+                    className="bg-green-600 hover:bg-green-700 px-6"
+                  >
+                    <SaveIcon className="mr-2 h-4 w-4" />
                     <span>{isEditing ? 'Salvar Alterações' : 'Criar Arte'}</span>
                   </Button>
                 </div>
