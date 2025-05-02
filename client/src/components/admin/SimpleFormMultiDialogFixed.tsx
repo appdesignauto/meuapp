@@ -322,25 +322,47 @@ export default function SimpleFormMultiDialog({
       return;
     }
 
-    // Criar objetos iniciais para cada formato selecionado
-    const initialDetails: Record<string, FormatValues> = {};
+    // Atualizar os detalhes dos formatos, preservando dados já inseridos
+    const updatedDetails: Record<string, FormatValues> = { ...formatDetails };
     
     selectedFormats.forEach(formatSlug => {
-      initialDetails[formatSlug] = {
-        format: formatSlug,
-        fileType: data.globalFileType,
-        // Usar o título global para cada formato, se disponível
-        title: data.globalTitle || '',
-        // Usar a descrição global para cada formato, se disponível
-        description: data.globalDescription || '',
-        imageUrl: '',
-        // Campo de previewUrl removido conforme solicitado
-        editUrl: ''
-      };
+      // Se o formato já existe em formatDetails, atualizar apenas o que veio do form 
+      // (isso preserva imageUrl e editUrl que já foram preenchidos)
+      if (updatedDetails[formatSlug]) {
+        updatedDetails[formatSlug] = {
+          ...updatedDetails[formatSlug],
+          format: formatSlug,
+          fileType: data.globalFileType,
+          title: updatedDetails[formatSlug].title || data.globalTitle || '',
+          description: updatedDetails[formatSlug].description || data.globalDescription || '',
+        };
+      } else {
+        // Se é um novo formato, inicializar completamente
+        updatedDetails[formatSlug] = {
+          format: formatSlug,
+          fileType: data.globalFileType,
+          title: data.globalTitle || '',
+          description: data.globalDescription || '',
+          imageUrl: '',
+          editUrl: ''
+        };
+      }
     });
     
-    setFormatDetails(initialDetails);
-    setCurrentTab(selectedFormats[0]); // Definir a primeira aba como atual
+    // Remover formatos que não estão mais selecionados
+    Object.keys(updatedDetails).forEach(formatSlug => {
+      if (!selectedFormats.includes(formatSlug)) {
+        delete updatedDetails[formatSlug];
+      }
+    });
+    
+    setFormatDetails(updatedDetails);
+    
+    // Se o tab atual não está mais entre os selecionados, definir o primeiro como atual
+    if (!selectedFormats.includes(currentTab)) {
+      setCurrentTab(selectedFormats[0]);
+    }
+    
     setStep(2);
   };
   
