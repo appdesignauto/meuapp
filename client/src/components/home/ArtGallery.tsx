@@ -206,7 +206,7 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
         
         {isLoading ? (
           <div className="columns-2 xs:columns-2 sm:columns-2 md:columns-3 lg:columns-4 gap-2 xs:gap-3 md:gap-4 space-y-0">
-            {[...Array(8)].map((_, index) => (
+            {Array.from({ length: 8 }).map((_, index) => (
               <div 
                 key={index} 
                 className="block overflow-hidden animate-pulse break-inside-avoid mb-3 xs:mb-4 rounded-xl shadow-sm"

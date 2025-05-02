@@ -40,7 +40,7 @@ export default function RelatedArts({
   if (isLoading) {
     return (
       <div className="pinterest-grid">
-        {Array(limit).fill(0).map((_, index) => (
+        {Array.from({ length: limit }).map((_, index) => (
           <div key={`skeleton-${index}`} className="rounded-lg overflow-hidden bg-neutral-50 shadow-sm">
             <Skeleton className="w-full aspect-square" />
           </div>
