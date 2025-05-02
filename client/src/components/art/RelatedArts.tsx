@@ -16,7 +16,7 @@ interface RelatedArtsProps {
 
 export default function RelatedArts({ 
   artId, 
-  limit = 4, 
+  limit = 12, // Alterado para 12 por padrão
   originalCategory = null,
   designerName = "Design Auto" 
 }: RelatedArtsProps) {
@@ -37,7 +37,7 @@ export default function RelatedArts({
   // Loading state
   if (isLoading) {
     return (
-      <div className="masonry-grid">
+      <div className="pinterest-grid">
         {Array(limit).fill(0).map((_, index) => (
           <div key={index} className="rounded-lg overflow-hidden bg-neutral-50 shadow-sm">
             <Skeleton className="w-full aspect-square" />
@@ -58,9 +58,9 @@ export default function RelatedArts({
     );
   }
   
-  // Success state com o componente ArtCard reutilizado
+  // Success state com layout Pinterest
   return (
-    <div className="masonry-grid">
+    <div className="pinterest-grid">
       {relatedArts.map((art: any) => (
         <ArtCard 
           key={art.id}

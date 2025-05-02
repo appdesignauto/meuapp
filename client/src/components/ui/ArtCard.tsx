@@ -45,12 +45,12 @@ function ArtCard({ art, onClick, showEditAction = true, showDesigner = false }: 
 
   // Estilo Pinterest: sem rodapé com informações, apenas imagem com badges opcionais
   const renderCard = () => (
-    <div className="overflow-hidden rounded-xl transition-all duration-300 hover:shadow-md cursor-pointer h-full bg-muted">
-      <div className="relative overflow-hidden w-full h-full">
+    <div className="overflow-hidden rounded-xl shadow-sm transition-all duration-300 hover:shadow-md cursor-pointer bg-muted">
+      <div className="relative overflow-hidden w-full">
         <img
           src={art.imageUrl}
           alt={art.title}
-          className="object-cover w-full h-full transition-transform duration-300 hover:scale-105"
+          className="object-cover w-full transition-transform duration-300 hover:scale-105"
           loading="lazy"
           title={art.title} // Mostra o título no hover
         />
@@ -63,6 +63,15 @@ function ArtCard({ art, onClick, showEditAction = true, showDesigner = false }: 
             <Badge variant="default" className="flex items-center gap-1 shadow-sm">
               <Crown className="h-3 w-3" />
               <span>Premium</span>
+            </Badge>
+          </div>
+        )}
+        
+        {/* Formato da arte (se disponível) */}
+        {art.format && (
+          <div className="absolute bottom-2 left-2">
+            <Badge variant="secondary" className="text-xs bg-black/50 text-white border-none shadow-sm">
+              {art.format}
             </Badge>
           </div>
         )}
