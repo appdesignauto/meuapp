@@ -682,25 +682,29 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                         const isComplete = formatsComplete[formatSlug];
                         const isActive = currentTab === formatSlug;
                         
-                        // Determinar qual ícone usar com base no formato
+                        // Usar os mesmos ícones do formato de seleção para padronizar
                         let FormatIcon;
                         switch(formatSlug) {
                           case 'stories':
-                            FormatIcon = <div className="h-3.5 w-2 bg-gray-300 rounded-sm mr-2" />;
+                            FormatIcon = <Smartphone className={`h-4 w-4 mr-2 ${isActive ? 'text-blue-400' : 'text-gray-300'}`} />;
                             break;
                           case 'feed':
-                            FormatIcon = <div className="h-3 w-3 bg-gray-300 rounded-sm mr-2" />;
+                            FormatIcon = <Square className={`h-4 w-4 mr-2 ${isActive ? 'text-blue-400' : 'text-gray-300'}`} />;
+                            break;
+                          case 'web-banner':
+                            FormatIcon = <LayoutTemplate className={`h-4 w-4 mr-2 ${isActive ? 'text-blue-400' : 'text-gray-300'}`} />;
+                            break;
+                          case 'capa-fan-page':
+                            FormatIcon = <MonitorSmartphone className={`h-4 w-4 mr-2 ${isActive ? 'text-blue-400' : 'text-gray-300'}`} />;
                             break;
                           case 'cartaz':
-                            FormatIcon = <div className="h-3 w-3.5 bg-gray-300 rounded-sm mr-2" />;
+                            FormatIcon = <Image className={`h-4 w-4 mr-2 ${isActive ? 'text-blue-400' : 'text-gray-300'}`} />;
                             break;
                           case 'carrocel':
-                            FormatIcon = <div className="h-3 w-3.5 bg-gray-300 rounded-sm mr-2 relative">
-                              <div className="absolute -right-1 -top-1 h-1.5 w-1.5 bg-gray-300 rounded-full"></div>
-                            </div>;
+                            FormatIcon = <Columns className={`h-4 w-4 mr-2 ${isActive ? 'text-blue-400' : 'text-gray-300'}`} />;
                             break;
                           default:
-                            FormatIcon = null;
+                            FormatIcon = <FileImage className={`h-4 w-4 mr-2 ${isActive ? 'text-blue-400' : 'text-gray-300'}`} />;
                         }
                         
                         return (
