@@ -847,7 +847,7 @@ export default function ArtDetail() {
                   <div id="formatosDropdown" className="hidden transition-all duration-300">
                     <div className="px-3 py-2 bg-gradient-to-r from-blue-50 to-transparent border-y border-blue-100/50">
                       <p className="text-xs text-blue-600 font-medium flex items-center">
-                        <MessageCircleInfo className="h-3 w-3 mr-1.5" />
+                        <MessageCircle className="h-3 w-3 mr-1.5" />
                         Escolha outra versão desta mesma arte:
                       </p>
                     </div>
