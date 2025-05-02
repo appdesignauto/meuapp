@@ -801,28 +801,39 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                                 <div className="col-span-1 md:col-span-2">
                                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 transition-all hover:border-blue-400">
                                     <div className="flex flex-col items-center justify-center py-3">
-                                      <Upload className="h-8 w-8 text-gray-400 mb-2" />
-                                      <p className="text-sm text-gray-500">
-                                        Clique para selecionar ou arraste uma imagem
+                                      <Upload className="h-10 w-10 text-blue-400 mb-3" />
+                                      <p className="text-sm text-gray-600 font-medium mb-3">
+                                        Selecione uma imagem para este formato
                                       </p>
-                                      <input
-                                        id={`image-${formatSlug}`}
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={(e) => handleImageUpload(e, formatSlug)}
-                                        className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
-                                      />
+                                      
+                                      <div className="flex justify-center w-full">
+                                        <label 
+                                          htmlFor={`image-${formatSlug}`}
+                                          className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md font-medium cursor-pointer transition-colors"
+                                        >
+                                          <Upload className="h-4 w-4" />
+                                          Escolher arquivo
+                                        </label>
+                                        <input
+                                          id={`image-${formatSlug}`}
+                                          type="file"
+                                          accept="image/*"
+                                          onChange={(e) => handleImageUpload(e, formatSlug)}
+                                          className="hidden"
+                                        />
+                                      </div>
+                                      
                                       {/* Status de upload em tempo real */}
                                       {uploading[`image-${formatSlug}`] && (
-                                        <div className="flex items-center justify-center mt-2 text-blue-600">
-                                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                          <span className="text-sm">Enviando imagem...</span>
+                                        <div className="flex items-center justify-center mt-4 text-blue-600">
+                                          <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                                          <span className="text-sm font-medium">Enviando imagem...</span>
                                         </div>
                                       )}
                                       {uploadError[`image-${formatSlug}`] && (
-                                        <div className="mt-2 flex items-center text-red-500 text-sm">
-                                          <AlertCircle className="h-4 w-4 mr-1" />
-                                          {uploadError[`image-${formatSlug}`]}
+                                        <div className="mt-4 flex items-center text-red-500 text-sm">
+                                          <AlertCircle className="h-5 w-5 mr-2" />
+                                          <span className="font-medium">{uploadError[`image-${formatSlug}`]}</span>
                                         </div>
                                       )}
                                     </div>
