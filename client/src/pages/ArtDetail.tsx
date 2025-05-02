@@ -833,17 +833,6 @@ export default function ArtDetail() {
                   </div>
                 </div>
               )}
-              
-              {/* Categoria abaixo do seletor de formatos */}
-              {art.category && (
-                <div className="p-3 bg-white border-t border-neutral-200 hover:bg-blue-50/30 transition-colors">
-                  <p className="text-xs text-neutral-500 mb-1">Categoria</p>
-                  <div className="flex items-center">
-                    <Tag className="h-4 w-4 text-blue-600 mr-2" />
-                    <p className="font-medium text-sm">{art.category.name}</p>
-                  </div>
-                </div>
-              )}
             </motion.div>
           </div>
         </div>
