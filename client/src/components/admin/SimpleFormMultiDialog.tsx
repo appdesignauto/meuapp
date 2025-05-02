@@ -73,6 +73,8 @@ type FormatValues = z.infer<typeof formatSchema>;
 interface SimpleFormMultiDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  editingArt?: any; // Arte existente para edição
+  isEditing?: boolean; // Flag para indicar modo de edição
 }
 
 export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMultiDialogProps) {
