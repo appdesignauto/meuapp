@@ -446,7 +446,7 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                 {/* Configuração Global - Etapa 1 */}
                 <div className="p-2">
                   <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center">
-                    <PenLine className="h-5 w-5 mr-2 text-blue-600" />
+                    <PenLine className="h-5 w-5 mr-2 text-blue-500" />
                     Informações da Arte
                   </h3>
                   
@@ -560,7 +560,7 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                     <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
                       <div className="flex justify-between items-center mb-3">
                         <h4 className="text-md font-semibold flex items-center text-gray-700">
-                          <LayoutGrid className="h-4 w-4 mr-1.5 text-blue-600" />
+                          <LayoutGrid className="h-4 w-4 mr-1.5 text-blue-500" />
                           Formatos
                         </h4>
                         <div className="flex items-center gap-2">
@@ -675,7 +675,7 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                   className="w-full"
                 >
                   {/* Integração de abas no cabeçalho - design aprimorado */}
-                  <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white mb-6 rounded-t-xl overflow-hidden shadow-md">
+                  <div className="bg-neutral-900 text-white mb-6 rounded-t-xl overflow-hidden shadow-md">
                     <TabsList className="w-full flex gap-0 bg-transparent p-0 border-b border-gray-700">
                       {Object.keys(formatDetails).map((formatSlug, index) => {
                         const formatName = getFormatName(formatSlug);
@@ -729,7 +729,7 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                       })}
                     </TabsList>
                     
-                    <div className="p-4 bg-gradient-to-r from-gray-800 to-gray-900">
+                    <div className="p-4 bg-neutral-900 border-t border-neutral-800">
                       <h2 className="text-lg font-semibold flex items-center">
                         <BookImage className="h-5 w-5 mr-2 text-blue-400" />
                         {getFormatName(currentTab)}
@@ -944,7 +944,7 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                 
                 {/* Resumo da arte multi-formato */}
                 <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                  <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white p-4">
+                  <div className="bg-neutral-900 text-white p-4 border-b border-neutral-800 shadow-sm">
                     <h2 className="text-lg font-semibold flex items-center">
                       <FileImage className="h-5 w-5 mr-2 text-blue-400" />
                       Revisão - Resumo da Arte Multi-Formato
