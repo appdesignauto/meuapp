@@ -954,9 +954,9 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                   <div className="p-6">
                     <div className="space-y-6">
                       {/* Informações globais */}
-                      <div className="rounded-lg bg-blue-50 p-4 border border-blue-100">
-                        <h3 className="text-base font-medium text-blue-700 mb-3 flex items-center">
-                          <Settings2 className="h-4 w-4 mr-2" />
+                      <div className="rounded-lg bg-gray-50 p-4 border border-gray-200">
+                        <h3 className="text-base font-medium text-gray-700 mb-3 flex items-center">
+                          <Settings2 className="h-4 w-4 mr-2 text-gray-600" />
                           Informações Globais
                         </h3>
                         
@@ -1018,7 +1018,7 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                               </div>
                               <div className="ml-3 flex-grow">
                                 <div className="flex items-center">
-                                  <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-md text-xs font-medium">
+                                  <span className="px-2 py-0.5 bg-gray-100 text-gray-800 border border-gray-200 rounded-md text-xs font-medium">
                                     {getFormatName(formatSlug)}
                                   </span>
                                 </div>
@@ -1042,12 +1042,12 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                 
                 {/* Botão para salvar */}
                 <div className="mt-8 pt-5 border-t border-gray-200">
-                  <div className="rounded-xl bg-green-50 border border-green-200 p-4 mb-4">
-                    <div className="flex items-center text-green-700 mb-1">
-                      <Check className="h-5 w-5 mr-2" />
+                  <div className="rounded-xl bg-gray-50 border border-gray-200 p-4 mb-4">
+                    <div className="flex items-center text-gray-700 mb-1">
+                      <Check className="h-5 w-5 mr-2 text-blue-500" />
                       <h3 className="font-medium">Tudo pronto</h3>
                     </div>
-                    <p className="text-sm text-green-600 pl-7">
+                    <p className="text-sm text-gray-600 pl-7">
                       Clique em Salvar para publicar sua arte com todos os formatos.
                     </p>
                   </div>
