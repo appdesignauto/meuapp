@@ -172,22 +172,24 @@ router.get('/api/admin/arts/:id/check-group', isAuthenticated, async (req: Reque
     const id = parseInt(req.params.id);
     console.log(`Verificando groupId para arte ${id}`);
     
-    // Buscar diretamente do banco de dados para garantir que temos o valor atualizado
-    const [art] = await db
-      .select({ groupId: arts.groupId })
-      .from(arts)
-      .where(eq(arts.id, id));
+    // Usar SQL direto para evitar problemas com o método entries()
+    const result = await db.execute(sql`
+      SELECT "groupId" FROM arts WHERE id = ${id}
+    `);
     
-    if (!art) {
+    if (!result || !result.rows || result.rows.length === 0) {
       return res.status(404).json({
         message: 'Arte não encontrada'
       });
     }
     
-    console.log(`Arte ${id} groupId: ${art.groupId}`);
+    // Extrair o groupId do resultado
+    const groupId = result.rows[0]?.groupId;
+    
+    console.log(`Arte ${id} groupId: ${groupId}`);
     return res.json({ 
       id: id,
-      groupId: art.groupId 
+      groupId: groupId
     });
   } catch (error) {
     console.error(`Erro ao verificar grupo da arte ${req.params.id}:`, error);
