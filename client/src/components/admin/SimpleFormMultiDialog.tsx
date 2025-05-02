@@ -12,7 +12,8 @@ import {
   BadgePlus, Link2, PenLine, UploadCloud, BookImage,
   ChevronLeft, ChevronRight, ArrowRight, Save as SaveIcon,
   Square, Smartphone, MonitorSmartphone, LayoutTemplate, 
-  Columns, ScreenShare, Image, Eye, Trash
+  Columns, ScreenShare, Image, Eye, Trash, 
+  AlignLeft, Text as TypeIcon
 } from 'lucide-react';
 
 import {
@@ -679,7 +680,7 @@ export default function SimpleFormMultiDialog({
                     
                     <div>
                       <Label htmlFor="globalFileType" className="flex items-center mb-1.5">
-                        <FileType className="h-4 w-4 mr-1.5 text-gray-500" />
+                        <TypeIcon className="h-4 w-4 mr-1.5 text-gray-500" />
                         Tipo de Arquivo <span className="text-red-500 ml-1">*</span>
                       </Label>
                       <Controller
@@ -711,7 +712,7 @@ export default function SimpleFormMultiDialog({
                   
                   <div className="mt-6">
                     <Label htmlFor="globalTitle" className="flex items-center mb-1.5">
-                      <Type className="h-4 w-4 mr-1.5 text-gray-500" />
+                      <TypeIcon className="h-4 w-4 mr-1.5 text-gray-500" />
                       Título Global <span className="text-red-500 ml-1">*</span>
                     </Label>
                     <Input
