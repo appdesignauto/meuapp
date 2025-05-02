@@ -817,64 +817,6 @@ export default function ArtDetail() {
         </div>
       </div>
       
-      {/* Designer Other Arts Section - Se tiver designer */}
-      {art.designer && (
-        <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-bold text-gray-800">
-              Mais artes de {art.designer.name || art.designer.username}
-            </h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-blue-600 font-medium"
-              onClick={() => setLocation(`/designers/${art.designer.username}`)}
-            >
-              Ver todas
-            </Button>
-          </div>
-          
-          {/* Aqui virá um componente para listar as artes do designer */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {/* Implementar query para buscar outras artes do designer */}
-            {art.designer.recentArts && art.designer.recentArts.length > 0 ? (
-              art.designer.recentArts.map((recentArt: RecentArt) => (
-                <div 
-                  key={recentArt.id}
-                  className="relative aspect-square rounded-lg overflow-hidden bg-neutral-100 shadow-sm cursor-pointer"
-                  onClick={() => {
-                    if (recentArt.id !== art.id) {
-                      setLocation(`/arts/${recentArt.id}`);
-                    }
-                  }}
-                >
-                  <img 
-                    src={recentArt.imageUrl} 
-                    alt={recentArt.title} 
-                    className="w-full h-full object-cover"
-                  />
-                  {recentArt.id === art.id && (
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                      <span className="text-white text-xs font-medium">Arte atual</span>
-                    </div>
-                  )}
-                </div>
-              ))
-            ) : (
-              // Se não tiver artes recentes, mostrar placeholders
-              Array(4).fill(0).map((_, index) => (
-                <div key={index} 
-                  className={`${index > 1 ? 'hidden md:flex' : 'flex'} h-48 bg-neutral-100 rounded-lg items-center justify-center text-neutral-400 text-sm`}
-                  onClick={() => setLocation(`/designers/${art.designer.username}`)}
-                >
-                  <span className="text-center px-2">Ver mais artes no perfil</span>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
-      
       {/* Outros Formatos - Nova seção */}
       {(() => {
         console.log('Verificando dados do grupo para exibição de Outros Formatos:');
@@ -936,6 +878,64 @@ export default function ArtDetail() {
             ))}
           </div>
         </motion.div>
+      )}
+
+      {/* Designer Other Arts Section - Se tiver designer */}
+      {art.designer && (
+        <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-lg font-bold text-gray-800">
+              Mais artes de {art.designer.name || art.designer.username}
+            </h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-blue-600 font-medium"
+              onClick={() => setLocation(`/designers/${art.designer.username}`)}
+            >
+              Ver todas
+            </Button>
+          </div>
+          
+          {/* Aqui virá um componente para listar as artes do designer */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {/* Implementar query para buscar outras artes do designer */}
+            {art.designer.recentArts && art.designer.recentArts.length > 0 ? (
+              art.designer.recentArts.map((recentArt: RecentArt) => (
+                <div 
+                  key={recentArt.id}
+                  className="relative aspect-square rounded-lg overflow-hidden bg-neutral-100 shadow-sm cursor-pointer"
+                  onClick={() => {
+                    if (recentArt.id !== art.id) {
+                      setLocation(`/arts/${recentArt.id}`);
+                    }
+                  }}
+                >
+                  <img 
+                    src={recentArt.imageUrl} 
+                    alt={recentArt.title} 
+                    className="w-full h-full object-cover"
+                  />
+                  {recentArt.id === art.id && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <span className="text-white text-xs font-medium">Arte atual</span>
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              // Se não tiver artes recentes, mostrar placeholders
+              Array(4).fill(0).map((_, index) => (
+                <div key={index} 
+                  className={`${index > 1 ? 'hidden md:flex' : 'flex'} h-48 bg-neutral-100 rounded-lg items-center justify-center text-neutral-400 text-sm`}
+                  onClick={() => setLocation(`/designers/${art.designer.username}`)}
+                >
+                  <span className="text-center px-2">Ver mais artes no perfil</span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       )}
       
       {/* Related Arts Section - Com animação */}
