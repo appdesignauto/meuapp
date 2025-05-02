@@ -183,6 +183,8 @@ const ArtsList = () => {
   };
   
   const handleEdit = (art: Art) => {
+    console.log('Editando arte:', art);
+    console.log('Grupo ID da arte:', art.groupId);
     setEditingArt(art);
     setIsFormOpen(true);
   };

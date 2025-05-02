@@ -140,6 +140,13 @@ export default function SimpleFormMultiDialog({
   // Efeito para carregar dados da arte quando em modo de edição
   useEffect(() => {
     if (isEditing && editingArt && !isLoading) {
+      console.log("=== MODO DE EDIÇÃO INICIADO ===");
+      console.log("Dados completos da arte:", editingArt);
+      console.log(`ID da arte: ${editingArt.id}`);
+      console.log(`Título da arte: ${editingArt.title}`);
+      console.log(`Grupo da arte: ${editingArt.groupId}`);
+      console.log(`Tipo de dados do groupId: ${typeof editingArt.groupId}`);
+      
       // Atualizar o formulário da etapa 1 com os dados da arte
       step1Form.setValue('categoryId', editingArt.categoryId?.toString() || '');
       step1Form.setValue('globalFileType', editingArt.fileType || 'canva');
