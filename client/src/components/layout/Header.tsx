@@ -224,7 +224,8 @@ const Header = () => {
           {showHeaderSearch && (
             <form 
               onSubmit={handleHeaderSearch}
-              className="hidden md:flex absolute left-1/2 transform -translate-x-1/2 w-[500px] max-w-[calc(100%-220px)] transition-all duration-300 ease-in-out animate-fadeIn"
+              className="hidden md:flex absolute left-1/2 transform -translate-x-1/2 w-[500px] max-w-[calc(100%-220px)] animate-slideIn z-10"
+              id="header-search-bar"
             >
               <div className="relative w-full">
                 <Input
@@ -233,6 +234,8 @@ const Header = () => {
                   className="w-full pr-10 py-2 rounded-full border border-blue-200 shadow-md focus-visible:ring-blue-400"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  autoComplete="off"
+                  id="header-search-input"
                 />
                 <button 
                   type="submit" 

@@ -4,11 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Images, FileText, Laptop, RefreshCw, ChevronRight } from 'lucide-react';
 
-// Criando um evento personalizado para comunicação entre componentes
-export const searchBarEvents = {
-  showInHeader: new CustomEvent('searchbar:showInHeader', { bubbles: true }),
-  hideInHeader: new CustomEvent('searchbar:hideInHeader', { bubbles: true })
-};
+// Constantes para eventos personalizados
+export const SHOW_SEARCHBAR_EVENT = 'searchbar:showInHeader';
+export const HIDE_SEARCHBAR_EVENT = 'searchbar:hideInHeader';
 
 const Hero = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -29,9 +27,11 @@ const Hero = () => {
       entries.forEach(entry => {
         // Quando o formulário de pesquisa sair da área visível
         if (!entry.isIntersecting) {
-          document.dispatchEvent(searchBarEvents.showInHeader);
+          // Exibir a barra de pesquisa no cabeçalho quando a barra do hero não estiver visível
+          document.dispatchEvent(new CustomEvent(SHOW_SEARCHBAR_EVENT));
         } else {
-          document.dispatchEvent(searchBarEvents.hideInHeader);
+          // Esconder a barra de pesquisa do cabeçalho quando a barra do hero estiver visível
+          document.dispatchEvent(new CustomEvent(HIDE_SEARCHBAR_EVENT));
         }
       });
     }, options);
