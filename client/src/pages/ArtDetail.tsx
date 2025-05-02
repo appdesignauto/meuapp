@@ -21,9 +21,11 @@ import {
   ChevronLeft,
   Grid,
   LayoutGrid, 
+  Layout,
   Check,
   Layers,
-  Layout
+  Info,
+  MessageCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -807,11 +809,11 @@ export default function ArtDetail() {
                 </div>
               </div>
               
-              {/* Formatos Disponíveis - Versão Clean */}
+              {/* Dropdown de formatos disponíveis - Versão Moderna */}
               {groupArts && groupArts.arts && groupArts.arts.length > 1 && (
                 <div className="border-t border-neutral-200">
                   <div 
-                    className="p-3 hover:bg-blue-50/30 transition-colors cursor-pointer flex items-center justify-between"
+                    className="p-3 hover:bg-blue-50/30 transition-all duration-200 cursor-pointer flex items-center justify-between"
                     onClick={() => {
                       const dropdown = document.getElementById('formatosDropdown');
                       if (dropdown) {
@@ -824,8 +826,10 @@ export default function ArtDetail() {
                     }}
                   >
                     <div className="flex items-center">
-                      <Layers className="h-4 w-4 text-blue-600 mr-2" />
-                      <p className="text-xs font-medium text-blue-600 uppercase tracking-wide">Formatos Disponíveis</p>
+                      <div className="bg-blue-100 rounded-full p-1 mr-2">
+                        <Layers className="h-3.5 w-3.5 text-blue-600" />
+                      </div>
+                      <p className="text-xs font-medium text-blue-700 uppercase tracking-wide">Formatos Disponíveis</p>
                     </div>
                     <div className="flex items-center">
                       <Badge 
@@ -834,18 +838,21 @@ export default function ArtDetail() {
                       >
                         {groupArts.arts.findIndex((art: any) => art.id === Number(id)) + 1} de {groupArts.arts.length}
                       </Badge>
-                      <ChevronRight id="dropdownIcon" className="h-4 w-4 text-blue-500 transition-transform duration-200" />
+                      <div className="bg-blue-50 rounded-full p-1 transform transition-all duration-200">
+                        <ChevronRight id="dropdownIcon" className="h-3.5 w-3.5 text-blue-500 transition-transform duration-200" />
+                      </div>
                     </div>
                   </div>
                   
-                  <div id="formatosDropdown" className="hidden p-3 border-t border-neutral-100">
-                    <div className="mb-2 border-l-2 border-blue-400 pl-2">
-                      <p className="text-xs text-blue-600">
-                        Escolha outra versão desta mesma arte em formato diferente:
+                  <div id="formatosDropdown" className="hidden transition-all duration-300">
+                    <div className="px-3 py-2 bg-gradient-to-r from-blue-50 to-transparent border-y border-blue-100/50">
+                      <p className="text-xs text-blue-600 font-medium flex items-center">
+                        <MessageCircleInfo className="h-3 w-3 mr-1.5" />
+                        Escolha outra versão desta mesma arte:
                       </p>
                     </div>
                     
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 p-2">
                       {groupArts.arts.map((formatArt: any) => {
                         const isCurrentFormat = formatArt.id === Number(id);
                         
@@ -853,10 +860,10 @@ export default function ArtDetail() {
                           <div
                             key={formatArt.id}
                             className={`
-                              flex items-center p-2 rounded cursor-pointer transition-all duration-200
+                              flex items-center p-2 rounded-md cursor-pointer transition-all duration-200
                               ${isCurrentFormat 
-                                ? 'bg-blue-100/70 border border-blue-200' 
-                                : 'bg-gray-50 border border-transparent hover:bg-blue-50 hover:border-blue-100'}
+                                ? 'bg-gradient-to-r from-blue-100/80 to-blue-50/40 border border-blue-200 shadow-sm' 
+                                : 'hover:bg-blue-50/60 border border-transparent hover:border-blue-100/60'}
                             `}
                             onClick={(e) => {
                               e.stopPropagation();
@@ -865,33 +872,35 @@ export default function ArtDetail() {
                               }
                             }}
                           >
-                            <div className="relative h-8 w-8 bg-white rounded overflow-hidden border border-gray-200 shadow-sm mr-2 flex-shrink-0">
+                            <div className="relative h-8 w-8 rounded-md overflow-hidden border border-gray-100 shadow-sm mr-2 flex-shrink-0">
                               <img 
                                 src={formatArt.imageUrl} 
                                 alt={formatArt.format}
                                 className="w-full h-full object-cover"
                               />
                               {isCurrentFormat && (
-                                <div className="absolute inset-0 bg-blue-500/10 flex items-center justify-center">
-                                  <Check className="h-3 w-3 text-blue-600" />
+                                <div className="absolute inset-0 bg-blue-500/5 backdrop-blur-[1px] flex items-center justify-center">
+                                  <div className="bg-blue-600 rounded-full p-0.5">
+                                    <Check className="h-2.5 w-2.5 text-white" />
+                                  </div>
                                 </div>
                               )}
                             </div>
                             
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center">
-                                <span className="flex items-center text-xs font-medium text-gray-900 capitalize truncate">
-                                  {formatArt.format === 'feed' && <Grid className="h-3.5 w-3.5 mr-1" />}
-                                  {formatArt.format === 'stories' && <Layers className="h-3.5 w-3.5 mr-1" />}
-                                  {formatArt.format === 'cartaz' && <Layers className="h-3.5 w-3.5 mr-1" />}
-                                  {(formatArt.format === 'banner' || formatArt.format === 'web banner') && <LayoutGrid className="h-3.5 w-3.5 mr-1" />}
+                                <span className="flex items-center text-xs font-medium text-gray-800 capitalize truncate">
+                                  {formatArt.format === 'feed' && <Grid className="h-3 w-3 mr-1 text-blue-600" />}
+                                  {formatArt.format === 'stories' && <Layers className="h-3 w-3 mr-1 text-blue-600" />}
+                                  {formatArt.format === 'cartaz' && <Layers className="h-3 w-3 mr-1 text-blue-600" />}
+                                  {(formatArt.format === 'banner' || formatArt.format === 'web banner') && <LayoutGrid className="h-3 w-3 mr-1 text-blue-600" />}
                                   {formatArt.format}
                                 </span>
                               </div>
                             </div>
                             
                             {isCurrentFormat && (
-                              <Badge className="ml-1 bg-blue-600 text-white text-[10px] py-0 px-1.5 h-4">Atual</Badge>
+                              <Badge className="ml-1 bg-blue-600 text-white text-[10px] py-0 px-1.5 h-4 rounded-sm">Atual</Badge>
                             )}
                           </div>
                         );
