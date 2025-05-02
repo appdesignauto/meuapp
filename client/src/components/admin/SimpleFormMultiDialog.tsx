@@ -628,7 +628,7 @@ export default function SimpleFormMultiDialog({
                     ${step >= 3 ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'bg-gray-200 text-gray-600'}`}>
                     {step > 3 ? <Check className="h-5 w-5" /> : 3}
                   </div>
-                  <div className={`text-sm font-medium ${step === 3 ? 'text-blue-600' : 'text-gray-600'}`}>Revisão</div>
+                  <div className={`text-sm font-medium ${step === 3 ? 'text-blue-600' : 'text-gray-600'}`}>Publicação</div>
                 </div>
               </div>
             </div>
@@ -713,7 +713,7 @@ export default function SimpleFormMultiDialog({
                   <div className="mt-6">
                     <Label htmlFor="globalTitle" className="flex items-center mb-1.5">
                       <TypeIcon className="h-4 w-4 mr-1.5 text-gray-500" />
-                      Título Global <span className="text-red-500 ml-1">*</span>
+                      Título da Arte <span className="text-red-500 ml-1">*</span>
                     </Label>
                     <Input
                       {...step1Form.register("globalTitle")}
@@ -728,7 +728,7 @@ export default function SimpleFormMultiDialog({
                   <div className="mt-6">
                     <Label htmlFor="globalDescription" className="flex items-center mb-1.5">
                       <AlignLeft className="h-4 w-4 mr-1.5 text-gray-500" />
-                      Descrição Global
+                      Descrição da Arte
                     </Label>
                     <Textarea
                       {...step1Form.register("globalDescription")}
@@ -838,7 +838,7 @@ export default function SimpleFormMultiDialog({
               </form>
             )}
             
-            {/* Etapa 2: Formatos e uploads */}
+            {/* Etapa 2: Uploads */}
             {step === 2 && (
               <div className="space-y-6">
                 <div>
@@ -1077,7 +1077,7 @@ export default function SimpleFormMultiDialog({
               <div className="space-y-8">
                 <div>
                   <div className="flex items-center mb-5">
-                    <h3 className="text-xl font-semibold text-blue-800">Revisão e Confirmação</h3>
+                    <h3 className="text-xl font-semibold text-blue-800">Publicação</h3>
                     <div className="ml-3 px-2.5 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
                       Etapa Final
                     </div>
@@ -1088,7 +1088,7 @@ export default function SimpleFormMultiDialog({
                     <div className="rounded-xl border border-blue-100 bg-blue-50/50 overflow-hidden">
                       <div className="px-5 py-4 bg-blue-100/70 border-b border-blue-200 flex items-center">
                         <FolderOpen className="h-5 w-5 text-blue-700 mr-2.5" />
-                        <h4 className="font-medium text-blue-800 text-lg">Informações Gerais</h4>
+                        <h4 className="font-medium text-blue-800 text-lg">Informações</h4>
                       </div>
                       
                       <div className="p-5">
@@ -1116,7 +1116,7 @@ export default function SimpleFormMultiDialog({
                           <div className="rounded-lg bg-white p-3 border border-blue-100 shadow-sm">
                             <div className="flex items-center mb-2">
                               <TypeIcon className="h-4 w-4 text-blue-500 mr-1.5" />
-                              <div className="font-medium text-gray-700">Título Global</div>
+                              <div className="font-medium text-gray-700">Título da Arte</div>
                             </div>
                             <div className="text-gray-800 font-medium">
                               {step1Form.getValues().globalTitle || 'Não definido'}
@@ -1143,7 +1143,7 @@ export default function SimpleFormMultiDialog({
                             <div className="rounded-lg bg-white p-3 border border-blue-100 shadow-sm col-span-1 md:col-span-2">
                               <div className="flex items-center mb-2">
                                 <AlignLeft className="h-4 w-4 text-blue-500 mr-1.5" />
-                                <div className="font-medium text-gray-700">Descrição Global</div>
+                                <div className="font-medium text-gray-700">Descrição da Arte</div>
                               </div>
                               <div className="text-gray-800">
                                 {step1Form.getValues().globalDescription || 'Não definida'}
