@@ -972,14 +972,14 @@ export default function ArtDetail() {
       >
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-bold text-gray-800 flex items-center">
-            <ArrowUpRight className="h-5 w-5 text-blue-600 mr-2" />
-            Conheça artes similares
+            <Tag className="h-5 w-5 text-blue-600 mr-2" />
+            Artes relacionadas
           </h2>
           <Badge 
             variant="outline" 
             className="px-3 py-0.5 text-xs font-normal text-neutral-600 border-neutral-200"
           >
-            Baseadas na sua navegação
+            Baseadas em palavras-chave
           </Badge>
         </div>
         
