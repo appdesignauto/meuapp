@@ -7,7 +7,7 @@ import { isAdmin, isAuthenticated } from '../middlewares/auth';
 import { ZodError } from 'zod';
 import { fromZodError } from 'zod-validation-error';
 import { v4 as uuidv4 } from 'uuid';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 const router = Router();
 
@@ -165,6 +165,145 @@ router.get('/api/admin/arts/group/:groupId', isAuthenticated, async (req: Reques
     console.error('Erro ao buscar grupo de artes para edição:', error);
     return res.status(500).json({
       message: 'Erro ao buscar grupo de artes para edição'
+    });
+  }
+});
+
+// Nova rota para atualizar um grupo de artes (PUT)
+router.put('/api/admin/arts/group/:groupId', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    // Verificar se o usuário é admin ou designer autorizado
+    const userRole = req.user?.nivelacesso;
+    if (userRole !== 'admin' && userRole !== 'designer_adm') {
+      return res.status(403).json({
+        message: 'Acesso negado. Você não tem permissão para atualizar artes.'
+      });
+    }
+    
+    const { groupId } = req.params;
+    
+    // Validar os dados recebidos
+    const artGroupData = ArtGroupSchema.parse(req.body);
+    
+    // Buscar todas as artes existentes do grupo
+    const existingArts = await db.select()
+      .from(arts)
+      .where(eq(arts.groupId, groupId));
+    
+    if (!existingArts || existingArts.length === 0) {
+      return res.status(404).json({
+        message: 'Grupo de artes não encontrado'
+      });
+    }
+    
+    console.log(`Atualizando grupo ${groupId}. Artes existentes: ${existingArts.length}, Formatos novos: ${artGroupData.formats.length}`);
+    
+    // Criar um mapa de formatos existentes para facilitar atualizações
+    const existingFormats = new Map();
+    existingArts.forEach(art => {
+      existingFormats.set(art.format, art);
+    });
+    
+    // Arrays para rastrear mudanças
+    const updatedArts = [];
+    const newArts = [];
+    
+    // ID da coleção padrão (se necessário)
+    const defaultCollectionId = 1; // Altere conforme necessário
+    
+    // Atualizar artes existentes e criar novas quando necessário
+    for (const format of artGroupData.formats) {
+      // Verificar se esse formato já existe no grupo
+      const existingArt = existingFormats.get(format.format);
+      
+      if (existingArt) {
+        // Atualizar arte existente
+        const updateData = {
+          title: format.title,
+          description: format.description || '',
+          imageUrl: format.imageUrl,
+          previewUrl: format.previewUrl || null,
+          editUrl: format.editUrl,
+          categoryId: artGroupData.categoryId,
+          isPremium: artGroupData.isPremium,
+          fileType: format.fileType,
+          updatedAt: new Date().toISOString()
+        };
+        
+        // Realizar a atualização no banco de dados
+        const [updatedArt] = await db
+          .update(arts)
+          .set(updateData)
+          .where(eq(arts.id, existingArt.id))
+          .returning();
+        
+        updatedArts.push({
+          id: updatedArt.id,
+          format: format.format,
+          title: format.title,
+          action: 'updated'
+        });
+        
+        // Remover do mapa para rastrear o que foi atualizado
+        existingFormats.delete(format.format);
+      } else {
+        // Criar nova arte para o formato que não existia
+        const artData = {
+          title: format.title,
+          description: format.description || '',
+          imageUrl: format.imageUrl,
+          previewUrl: format.previewUrl || null,
+          editUrl: format.editUrl || null,
+          categoryId: artGroupData.categoryId,
+          isPremium: artGroupData.isPremium,
+          format: format.format,
+          fileType: format.fileType,
+          isVisible: true,
+          designerid: req.user?.id || 1,
+          collectionId: defaultCollectionId,
+          groupId: groupId
+        };
+        
+        // Criar a arte no banco de dados
+        const newArt = await storage.createArt(artData);
+        
+        newArts.push({
+          id: newArt.id,
+          format: format.format,
+          title: format.title,
+          action: 'created'
+        });
+      }
+    }
+    
+    // Opcional: lidar com formatos que existiam mas não foram atualizados
+    // Se desejar remover formatos que não estão mais na lista:
+    /*
+    for (const [format, art] of existingFormats.entries()) {
+      await db.delete(arts).where(eq(arts.id, art.id));
+    }
+    */
+    
+    return res.json({
+      message: 'Grupo de artes atualizado com sucesso',
+      groupId,
+      updated: updatedArts,
+      created: newArts
+    });
+  } catch (error) {
+    console.error('Erro ao atualizar grupo de artes:', error);
+    
+    // Tratar erros de validação do Zod
+    if (error instanceof ZodError) {
+      return res.status(400).json({
+        message: 'Dados inválidos',
+        errors: fromZodError(error).message
+      });
+    }
+    
+    // Erro genérico
+    return res.status(500).json({
+      message: 'Erro ao atualizar o grupo de artes'
     });
   }
 });
