@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/card';
 import { apiRequest } from '@/lib/queryClient';
 import ArtForm from './ArtForm';
+import SimpleFormMultiDialog from './SimpleFormMultiDialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -477,10 +478,12 @@ const ArtsList = () => {
       </Card>
 
       {/* Formulário para adicionar/editar artes */}
-      <ArtForm
+      {/* Utilizando o novo formulário multi-formato para qualquer operação de edição */}
+      <SimpleFormMultiDialog
         isOpen={isFormOpen}
         onClose={handleCloseForm}
         editingArt={editingArt}
+        isEditing={!!editingArt}
       />
     </>
   );
