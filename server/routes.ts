@@ -4412,6 +4412,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Registrar rotas para artes multi-formato
   app.use(multiArtRouter);
+  
+  // Registrar rota de teste para criar grupos de artes
+  app.use(testCreateGroupRouter);
 
   const httpServer = createServer(app);
   
