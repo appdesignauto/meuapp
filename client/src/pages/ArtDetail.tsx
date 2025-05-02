@@ -848,35 +848,67 @@ export default function ArtDetail() {
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {groupArts.arts.map((groupArt: any) => (
-              <div 
-                key={groupArt.id}
-                className={`relative aspect-square rounded-lg overflow-hidden bg-neutral-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer ${groupArt.id === Number(id) ? 'ring-2 ring-blue-500' : ''}`}
-                onClick={() => {
-                  if (groupArt.id !== Number(id)) {
-                    setLocation(`/arts/${groupArt.id}`);
-                  }
-                }}
-              >
-                <img 
-                  src={groupArt.imageUrl} 
-                  alt={groupArt.title} 
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/70 to-transparent">
-                  <div className="flex justify-between items-center">
-                    <Badge className="capitalize bg-blue-600 text-white hover:bg-blue-700">
+            {groupArts.arts.map((groupArt: any) => {
+              // Definir as proporções baseadas no formato
+              const getFormatStyles = (format: string) => {
+                switch(format.toLowerCase()) {
+                  case 'stories':
+                    return 'aspect-[9/16] max-w-[120px]'; // Formato vertical (9:16)
+                  case 'feed':
+                    return 'aspect-square max-w-[160px]'; // Formato quadrado (1:1)
+                  case 'cartaz':
+                    return 'aspect-[3/4] max-w-[140px]'; // Formato vertical (3:4)
+                  case 'web banner':
+                  case 'banner':
+                    return 'aspect-[16/5] max-w-[200px]'; // Formato horizontal largo (16:5)
+                  case 'capa fan page':
+                  case 'cover':
+                    return 'aspect-[2.7/1] max-w-[180px]'; // Formato horizontal (2.7:1)
+                  case 'carrocel':
+                    return 'aspect-square max-w-[160px]'; // Formato quadrado para carrossel
+                  default:
+                    return 'aspect-square max-w-[160px]'; // Padrão quadrado
+                }
+              };
+
+              const formatClasses = getFormatStyles(groupArt.format);
+              
+              return (
+                <div key={groupArt.id} className="flex flex-col items-center">
+                  <div 
+                    className={`relative ${formatClasses} rounded-lg overflow-hidden bg-neutral-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer w-full mx-auto ${groupArt.id === Number(id) ? 'ring-2 ring-blue-500' : ''}`}
+                    onClick={() => {
+                      if (groupArt.id !== Number(id)) {
+                        setLocation(`/arts/${groupArt.id}`);
+                      }
+                    }}
+                  >
+                    <img 
+                      src={groupArt.imageUrl} 
+                      alt={groupArt.title} 
+                      className="w-full h-full object-cover"
+                    />
+                    
+                    {/* Overlay para destacar o formato atual */}
+                    {groupArt.id === Number(id) && (
+                      <div className="absolute inset-0 bg-blue-500/10"></div>
+                    )}
+                  </div>
+                  
+                  {/* Badge de formato abaixo da imagem para melhor visualização */}
+                  <div className="mt-2 flex justify-center items-center space-x-2">
+                    <Badge className={`capitalize ${groupArt.id === Number(id) ? 'bg-blue-600' : 'bg-neutral-700'} text-white`}>
                       {groupArt.format}
                     </Badge>
                     {groupArt.id === Number(id) && (
-                      <Badge variant="outline" className="bg-white/90 text-xs">
+                      <Badge variant="outline" className="bg-blue-50 text-xs border-blue-200">
                         Atual
                       </Badge>
                     )}
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </motion.div>
       )}
