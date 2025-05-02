@@ -19,7 +19,8 @@ import {
   Zap,
   ChevronRight,
   Grid,
-  LayoutGrid
+  LayoutGrid, 
+  Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -890,7 +891,7 @@ export default function ArtDetail() {
         >
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-bold text-gray-800 flex items-center">
-              <LayoutGrid className="h-5 w-5 text-blue-600 mr-2" />
+              <Tag className="h-5 w-5 text-blue-600 mr-2" />
               Artes relacionadas
             </h2>
             <Button
