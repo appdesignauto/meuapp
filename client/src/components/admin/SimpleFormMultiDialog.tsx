@@ -451,11 +451,7 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                   <div className="space-y-8">
                     {/* Título e Descrição */}
                     <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-                      <div className="flex justify-between items-center mb-3">
-                        <h4 className="text-md font-semibold flex items-center text-gray-700">
-                          <PenLine className="h-4 w-4 mr-1.5 text-blue-600" />
-                          Informações da Arte
-                        </h4>
+                      <div className="flex justify-end items-center mb-3">
                         <div className="bg-blue-50 border border-blue-100 rounded-full px-2 py-0.5 text-xs text-blue-600">
                           Global
                         </div>
