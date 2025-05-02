@@ -66,11 +66,19 @@ router.post('/api/admin/arts/multi', isAuthenticated, async (req: Request, res: 
       if (!newArt.groupId) {
         console.warn(`ALERTA: Arte ID ${newArt.id} foi criada sem groupId. Tentando atualizar...`);
         try {
-          // Tentar atualizar o groupId diretamente no banco
-          await db.update(arts)
-            .set({ groupId: artGroupId })
-            .where(eq(arts.id, newArt.id));
-          console.log(`Arte ID ${newArt.id} atualizada com groupId ${artGroupId}`);
+          // Tentar atualizar o groupId usando SQL direto para evitar problemas com o nome da coluna
+          const result = await db.execute(sql`
+            UPDATE arts 
+            SET "groupId" = ${artGroupId}
+            WHERE id = ${newArt.id}
+            RETURNING *
+          `);
+          
+          if (result.rowCount > 0) {
+            console.log(`Arte ID ${newArt.id} atualizada com groupId ${artGroupId}`);
+          } else {
+            console.error(`Nenhuma linha atualizada para arte ${newArt.id}`);
+          }
         } catch (updateError) {
           console.error(`Erro ao atualizar groupId para arte ${newArt.id}:`, updateError);
         }
@@ -292,11 +300,34 @@ router.put('/api/admin/arts/group/:groupId', isAuthenticated, async (req: Reques
         // Criar a arte no banco de dados
         const newArt = await storage.createArt(artData);
         
+        // Verificar se o groupId foi salvo corretamente
+        if (!newArt.groupId) {
+          console.warn(`ALERTA: Nova arte ID ${newArt.id} no grupo ${groupId} foi criada sem groupId. Tentando atualizar...`);
+          try {
+            // Tentar atualizar o groupId usando SQL direto para evitar problemas com o nome da coluna
+            const result = await db.execute(sql`
+              UPDATE arts 
+              SET "groupId" = ${groupId}
+              WHERE id = ${newArt.id}
+              RETURNING *
+            `);
+            
+            if (result.rowCount > 0) {
+              console.log(`Nova arte ID ${newArt.id} atualizada com groupId ${groupId}`);
+            } else {
+              console.error(`Nenhuma linha atualizada para nova arte ${newArt.id}`);
+            }
+          } catch (updateError) {
+            console.error(`Erro ao atualizar groupId para nova arte ${newArt.id}:`, updateError);
+          }
+        }
+        
         newArts.push({
           id: newArt.id,
           format: format.format,
           title: format.title,
-          action: 'created'
+          action: 'created',
+          groupId: newArt.groupId || groupId
         });
       }
     }
