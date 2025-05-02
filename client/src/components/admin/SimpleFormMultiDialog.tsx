@@ -12,7 +12,7 @@ import {
   BadgePlus, Link2, PenLine, UploadCloud, BookImage,
   ChevronLeft, ChevronRight, ArrowRight, Save as SaveIcon,
   Square, Smartphone, MonitorSmartphone, LayoutTemplate, 
-  Columns, ScreenShare, Image
+  Columns, ScreenShare, Image, Eye, Trash
 } from 'lucide-react';
 
 import {
