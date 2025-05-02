@@ -45,7 +45,7 @@ export default function RelatedArts({
     if (originalCategory && hasSameCategoryArts) {
       return (
         <div className="flex items-center gap-2 mb-5">
-          <h2 className="text-xl font-bold text-gray-800">Artes relacionadas - Categoria </h2>
+          <h2 className="text-xl font-bold text-gray-800">Artes relacionadas por palavras-chave</h2>
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
             <Tag className="h-4 w-4 mr-1" />
             {originalCategory.name}
@@ -53,14 +53,14 @@ export default function RelatedArts({
         </div>
       );
     }
-    return <h2 className="text-xl font-bold text-gray-800 mb-5">Artes relacionadas</h2>;
+    return <h2 className="text-xl font-bold text-gray-800 mb-5">Artes relacionadas por palavras-chave</h2>;
   };
   
   // Loading state
   if (isLoading) {
     return (
       <>
-        <h2 className="text-xl font-bold text-gray-800 mb-5">Artes relacionadas</h2>
+        <h2 className="text-xl font-bold text-gray-800 mb-5">Artes relacionadas por palavras-chave</h2>
         <div className="masonry-grid">
           {Array(limit).fill(0).map((_, index) => (
             <div key={index} className="rounded-lg overflow-hidden bg-neutral-50 shadow-sm">
@@ -76,7 +76,7 @@ export default function RelatedArts({
   if (error || !relatedArts || relatedArts.length === 0) {
     return (
       <>
-        <h2 className="text-xl font-bold text-gray-800 mb-5">Artes relacionadas</h2>
+        <h2 className="text-xl font-bold text-gray-800 mb-5">Artes relacionadas por palavras-chave</h2>
         <div className="text-center py-8 bg-neutral-50 rounded-lg border border-neutral-100">
           <p className="text-neutral-500">
             {error ? 'Erro ao carregar artes relacionadas' : 'Nenhuma arte relacionada encontrada'}

@@ -2060,6 +2060,17 @@ export class DatabaseStorage implements IStorage {
       if (result.rows.length === 0) return [];
       const artRow = result.rows[0];
       
+      // Extrai palavras-chave do título da arte de referência
+      // Converte para minúsculas, remove caracteres especiais e dividi em palavras
+      const titleKeywords = artRow.title
+        .toLowerCase()
+        .replace(/[^\w\sÀ-ÿ]/g, '')
+        .split(/\s+/)
+        .filter(word => word.length > 3) // Apenas palavras com mais de 3 caracteres
+        .filter(word => !['para', 'com', 'que', 'das', 'dos', 'por', 'uma', 'nas', 'nos', 'loja'].includes(word)); // Remove palavras comuns
+      
+      console.log(`[getRelatedArts] Palavras-chave extraídas do título "${artRow.title}":`, titleKeywords);
+      
       // Busca todas as artes exceto a atual, incluindo suas categorias
       const artsResult = await db.execute(sql`
         SELECT 
@@ -2096,13 +2107,22 @@ export class DatabaseStorage implements IStorage {
         // Atribui pontuação baseada em diferentes critérios de similaridade
         let score = 0;
         
-        // Mesma categoria (maior peso)
+        // Mesma categoria (peso importante)
         if (a.categoryId === artRow.categoryId) score += 5;
         
-        // Mesma coleção (segundo maior peso)
+        // Correspondência de palavras-chave do título (maior peso)
+        const artTitleLower = a.title.toLowerCase();
+        const keywordMatches = titleKeywords.filter(keyword => 
+          artTitleLower.includes(keyword)
+        ).length;
+        
+        // Adicionar pontuação baseada na quantidade de palavras-chave correspondentes
+        score += keywordMatches * 7; // Dá mais peso às correspondências de palavras-chave
+        
+        // Mesma coleção (peso médio)
         if (a.collectionId === artRow.collectionId) score += 3;
         
-        // Mesmo formato (peso médio)
+        // Mesmo formato (peso menor)
         if (a.format === artRow.format) score += 2;
         
         // Mesmo designer (menor peso, mas ainda considerado)
@@ -2123,7 +2143,18 @@ export class DatabaseStorage implements IStorage {
           category: category
         } as Art;
         
-        return { art: mappedArt, score };
+        return { 
+          art: mappedArt, 
+          score,
+          keywordMatches, // Para debug
+          title: a.title // Para debug
+        };
+      });
+      
+      // Log para debug mostrando as correspondências de palavras-chave
+      console.log("[getRelatedArts] Análise de correspondência de palavras-chave:");
+      scoredArts.slice(0, 10).forEach(item => {
+        console.log(`- Arte "${item.title}" (ID ${item.art.id}): Score ${item.score}, ${item.keywordMatches} palavras-chave correspondentes`);
       });
       
       // Ordena por pontuação (maior para menor) e limita o número de resultados
