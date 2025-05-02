@@ -904,35 +904,37 @@ export default function ArtDetail() {
             </Button>
           </div>
           
-          {/* Grade organizada com 12 artes no máximo */}
+          {/* Vitrine estilo Pinterest com colunas múltiplas */}
           {art.designer.recentArts && art.designer.recentArts.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {art.designer.recentArts
-                .filter((recentArt: RecentArt) => recentArt.id !== art.id) // Não mostrar a arte atual
-                .slice(0, 12) // Limitar a 12 artes
-                .map((recentArt: RecentArt, index: number) => {
-                  return (
-                    <div 
-                      key={recentArt.id}
-                      className="group cursor-pointer"
-                      onClick={() => setLocation(`/arts/${recentArt.id}`)}
-                    >
-                      <div className="aspect-square relative overflow-hidden rounded-lg shadow-sm hover:shadow-md transition-all duration-300">
-                        <img 
-                          src={recentArt.imageUrl} 
-                          alt={recentArt.title} 
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
-                        
-                        {/* Overlay com título e informações adicionais */}
-                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-3">
-                          <h3 className="text-white font-medium text-sm truncate">{recentArt.title}</h3>
+            <div className="px-4 md:px-0">
+              <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
+                {art.designer.recentArts
+                  .filter((recentArt: RecentArt) => recentArt.id !== art.id) // Não mostrar a arte atual
+                  .slice(0, 12) // Limitar a 12 artes
+                  .map((recentArt: RecentArt, index: number) => {
+                    return (
+                      <div 
+                        key={recentArt.id}
+                        className="break-inside-avoid mb-4 group cursor-pointer rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
+                        onClick={() => setLocation(`/arts/${recentArt.id}`)}
+                      >
+                        <div className="relative">
+                          <img 
+                            src={recentArt.imageUrl} 
+                            alt={recentArt.title} 
+                            className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                          
+                          {/* Overlay com título - sempre visível */}
+                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-3">
+                            <h3 className="text-white font-medium text-sm truncate">{recentArt.title}</h3>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })
-              }
+                    );
+                  })
+                }
+              </div>
             </div>
           ) : (
             // Placeholder para quando não houver artes
