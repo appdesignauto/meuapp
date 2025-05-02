@@ -643,7 +643,7 @@ export default function SimpleFormMultiDialog({
                 <div className="bg-gray-50 p-6 rounded-lg border border-gray-100 shadow-sm">
                   <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
                     <Settings2 className="h-5 w-5 mr-2 text-blue-500" />
-                    Informações Básicas
+                    Informações
                   </h3>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1072,7 +1072,7 @@ export default function SimpleFormMultiDialog({
               </div>
             )}
             
-            {/* Etapa 3: Revisão e confirmação */}
+            {/* Etapa 3: Publicação */}
             {step === 3 && (
               <div className="space-y-8">
                 <div>
@@ -1305,7 +1305,7 @@ export default function SimpleFormMultiDialog({
                     onClick={goToPreviousStep}
                     className="px-5 border-gray-300"
                   >
-                    <ChevronLeft className="mr-2 h-4 w-4" /> Voltar para formatos
+                    <ChevronLeft className="mr-2 h-4 w-4" /> Voltar para uploads
                   </Button>
                   
                   <Button 
