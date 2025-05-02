@@ -675,8 +675,8 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                   className="w-full"
                 >
                   {/* Integração de abas no cabeçalho - design aprimorado */}
-                  <div className="bg-neutral-900 text-white mb-6 rounded-t-xl overflow-hidden shadow-md">
-                    <TabsList className="w-full flex gap-0 bg-transparent p-0 border-b border-gray-700">
+                  <div className="bg-white text-gray-800 mb-6 rounded-t-xl overflow-hidden shadow-md">
+                    <TabsList className="w-full flex gap-0 bg-transparent p-0 border-b border-gray-200">
                       {Object.keys(formatDetails).map((formatSlug, index) => {
                         const formatName = getFormatName(formatSlug);
                         const isComplete = formatsComplete[formatSlug];
@@ -713,13 +713,13 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                             value={formatSlug}
                             className={`
                               flex items-center gap-1 py-3 px-4 border-0 rounded-none relative z-10
-                              after:absolute after:w-[1px] after:h-2/3 after:-right-[1px] after:top-1/2 after:-translate-y-1/2 after:bg-gray-600 last:after:hidden
-                              ${isActive ? 'bg-gray-800 text-white font-medium' : 'bg-transparent'} 
+                              after:absolute after:w-[1px] after:h-2/3 after:-right-[1px] after:top-1/2 after:-translate-y-1/2 after:bg-gray-200 last:after:hidden
+                              ${isActive ? 'bg-blue-50 text-blue-700 font-medium' : 'bg-transparent'} 
                               ${isComplete 
-                                ? (isActive ? 'text-white font-medium' : 'text-gray-200') 
-                                : (isActive ? 'text-white' : 'text-gray-400')
+                                ? (isActive ? 'text-blue-700 font-medium' : 'text-gray-700') 
+                                : (isActive ? 'text-blue-700' : 'text-gray-500')
                               }
-                              hover:bg-gray-700 hover:text-white transition-colors
+                              hover:bg-gray-50 hover:text-blue-600 transition-colors
                               ${isActive ? 'before:absolute before:bottom-0 before:left-0 before:right-0 before:h-0.5 before:bg-blue-500' : ''}
                             `}
                           >
@@ -733,9 +733,9 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                       })}
                     </TabsList>
                     
-                    <div className="p-4 bg-neutral-900 border-t border-neutral-800">
-                      <h2 className="text-lg font-semibold flex items-center">
-                        <BookImage className="h-5 w-5 mr-2 text-blue-400" />
+                    <div className="p-4 bg-blue-50 border-t border-blue-100">
+                      <h2 className="text-lg font-semibold flex items-center text-blue-800">
+                        <BookImage className="h-5 w-5 mr-2 text-blue-500" />
                         {getFormatName(currentTab)}
                       </h2>
                     </div>
