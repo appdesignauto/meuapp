@@ -3,8 +3,16 @@
  * Uso: node scripts/add-group-id-column.js
  */
 
-const { Pool } = require('pg');
-require('dotenv').config();
+import pg from 'pg';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+dotenv.config();
+const { Pool } = pg;
 
 // Configuração da conexão com o banco de dados
 const pool = new Pool({
