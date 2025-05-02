@@ -2029,7 +2029,7 @@ export class DatabaseStorage implements IStorage {
   
   async getRelatedArts(artId: number, limit: number = 4): Promise<Art[]> {
     try {
-      // Primeiro obtém a arte de referência com sua categoria
+      // Primeiro obtém a arte de referência com sua categoria e groupId
       const result = await db.execute(sql`
         SELECT 
           a.id, 
@@ -2049,6 +2049,7 @@ export class DatabaseStorage implements IStorage {
           a."fileType", 
           a."editUrl", 
           a.aspectratio,
+          a."groupId",
           c.id as "category_id",
           c.name as "category_name",
           c.slug as "category_slug"
@@ -2059,6 +2060,70 @@ export class DatabaseStorage implements IStorage {
       
       if (result.rows.length === 0) return [];
       const artRow = result.rows[0];
+      
+      console.log(`[getRelatedArts] Arte de referência: ID ${artId}, groupId: ${artRow.groupId || 'null'}`);
+      
+      // Array para armazenar todas as artes relacionadas
+      const finalRelatedArts: Art[] = [];
+      
+      // PRIORIDADE MÁXIMA: Verificar se tem groupId e buscar outras artes do mesmo grupo
+      if (artRow.groupId) {
+        console.log(`[getRelatedArts] Buscando outras artes do mesmo grupo (groupId: ${artRow.groupId})`);
+        
+        // Busca artes do mesmo grupo, exceto a atual
+        const groupArtsResult = await db.execute(sql`
+          SELECT 
+            a.id, 
+            a."createdAt", 
+            a."updatedAt", 
+            a.designerid, 
+            a.viewcount,
+            a.width, 
+            a.height, 
+            a."isPremium",
+            a."isVisible", 
+            a."categoryId", 
+            a."collectionId", 
+            a.title, 
+            a."imageUrl", 
+            a.format, 
+            a."fileType", 
+            a."editUrl", 
+            a.aspectratio,
+            a."groupId",
+            c.id as "category_id",
+            c.name as "category_name",
+            c.slug as "category_slug"
+          FROM arts a
+          LEFT JOIN categories c ON a."categoryId" = c.id
+          WHERE a."groupId" = ${artRow.groupId} AND a.id != ${artId} AND a."isVisible" = true
+        `);
+        
+        if (groupArtsResult.rows.length > 0) {
+          console.log(`[getRelatedArts] Encontradas ${groupArtsResult.rows.length} artes do mesmo grupo`);
+          
+          // Mapear resultados para objetos Arte
+          const groupArts = groupArtsResult.rows.map(a => {
+            const category = a.category_id ? {
+              id: a.category_id,
+              name: a.category_name,
+              slug: a.category_slug
+            } : null;
+            
+            return {
+              ...a,
+              designerId: a.designerid,
+              viewCount: a.viewcount,
+              aspectRatio: a.aspectratio,
+              category: category
+            } as Art;
+          });
+          
+          // Adicionar artes do mesmo grupo com maior prioridade
+          finalRelatedArts.push(...groupArts);
+          console.log(`[getRelatedArts] Adicionadas ${groupArts.length} artes do mesmo grupo à lista de recomendação`);
+        }
+      }
       
       // Extrai palavras-chave do título da arte de referência
       // Converte para minúsculas, remove caracteres especiais e dividi em palavras
@@ -2161,17 +2226,34 @@ export class DatabaseStorage implements IStorage {
       let sortedArts = scoredArts.sort((a, b) => b.score - a.score);
       
       // Obtém artes por correspondência de palavras-chave
-      let relatedArts = sortedArts.slice(0, limit).map(item => item.art);
+      // Se já temos artes de mesmo grupo, precisamos pegar apenas as vagas restantes
+      const remainingKeywordLimit = limit - finalRelatedArts.length;
+      
+      if (remainingKeywordLimit > 0) {
+        console.log(`[getRelatedArts] Buscando ${remainingKeywordLimit} artes adicionais por correspondência de palavras-chave`);
+        
+        // Filtrar artes que já estão incluídas na lista final
+        const alreadyIncludedIds = new Set(finalRelatedArts.map(art => art.id));
+        
+        // Filtrar apenas artes que ainda não estão na lista
+        const filteredScoredArts = scoredArts.filter(item => !alreadyIncludedIds.has(item.art.id));
+        
+        // Adicionar artes por palavras-chave para completar o limite
+        const keywordArts = filteredScoredArts.slice(0, remainingKeywordLimit).map(item => item.art);
+        finalRelatedArts.push(...keywordArts);
+        
+        console.log(`[getRelatedArts] Adicionadas ${keywordArts.length} artes por palavras-chave à lista de recomendação`);
+      }
       
       // Se não tiver suficientes artes relacionadas, fazemos o preenchimento com outras estratégias
-      if (relatedArts.length < limit) {
-        console.log(`[getRelatedArts] Artes por palavras-chave insuficientes (${relatedArts.length}/${limit}). Buscando alternativas.`);
+      if (finalRelatedArts.length < limit) {
+        console.log(`[getRelatedArts] Artes por palavras-chave insuficientes (${finalRelatedArts.length}/${limit}). Buscando alternativas.`);
         
         // Filtrar artes que já estão incluídas
-        const relatedArtIds = new Set(relatedArts.map(art => art.id));
+        const relatedArtIds = new Set(finalRelatedArts.map(art => art.id));
         
         // ESTRATÉGIA 1: Obter artes da mesma categoria que ainda não estão incluídas
-        let additionalArts = [];
+        let additionalArts: Art[] = [];
         
         if (artRow.categoryId) {
           console.log(`[getRelatedArts] Tentando encontrar artes da mesma categoria (ID: ${artRow.categoryId}).`);
@@ -2203,8 +2285,8 @@ export class DatabaseStorage implements IStorage {
         }
         
         // ESTRATÉGIA 2: Se ainda não tiver suficientes, adiciona artes mais recentes
-        if (relatedArts.length + additionalArts.length < limit) {
-          console.log(`[getRelatedArts] Ainda insuficiente (${relatedArts.length + additionalArts.length}/${limit}). Adicionando artes recentes.`);
+        if (finalRelatedArts.length + additionalArts.length < limit) {
+          console.log(`[getRelatedArts] Ainda insuficiente (${finalRelatedArts.length + additionalArts.length}/${limit}). Adicionando artes recentes.`);
           
           // União dos IDs já incluídos
           const allIncludedIds = new Set([
@@ -2221,7 +2303,7 @@ export class DatabaseStorage implements IStorage {
               const dateB = new Date(b.createdAt as string).getTime();
               return dateB - dateA;
             })
-            .slice(0, limit - (relatedArts.length + additionalArts.length))
+            .slice(0, limit - (finalRelatedArts.length + additionalArts.length))
             .map(a => {
               // Criar objeto arte com categoria embutida
               const category = a.category_id ? {
@@ -2246,11 +2328,15 @@ export class DatabaseStorage implements IStorage {
         }
         
         // Combinar artes, limitando ao número máximo
-        relatedArts = [...relatedArts, ...additionalArts].slice(0, limit);
-        console.log(`[getRelatedArts] Total final de artes relacionadas: ${relatedArts.length}/${limit}`);
+        const missingCount = limit - finalRelatedArts.length;
+        if (missingCount > 0 && additionalArts.length > 0) {
+          finalRelatedArts.push(...additionalArts.slice(0, missingCount));
+        }
+        
+        console.log(`[getRelatedArts] Total final de artes relacionadas: ${finalRelatedArts.length}/${limit}`);
       }
       
-      return relatedArts;
+      return finalRelatedArts;
     } catch (error) {
       console.error("Erro em getRelatedArts:", error);
       return [];
