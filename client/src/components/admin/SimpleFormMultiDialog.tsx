@@ -104,7 +104,7 @@ export default function SimpleFormMultiDialog({
   });
 
   const { data: fileTypes = [], isLoading: isLoadingFileTypes } = useQuery({
-    queryKey: ['/api/file-types'],
+    queryKey: ['/api/fileTypes'],
   });
 
   // Formulário para etapa 1 (configurações globais)
