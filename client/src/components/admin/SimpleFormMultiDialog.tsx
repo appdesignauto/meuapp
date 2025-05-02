@@ -850,7 +850,7 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                               ) : (
                                 <>
                                   <AlertCircle className="h-5 w-5 mr-2" />
-                                  <span>Preencha todos os campos obrigatórios</span>
+                                  <span>Campos obrigatórios: título, URL e imagem</span>
                                 </>
                               )}
                             </div>
@@ -918,11 +918,11 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                     className="text-blue-600 hover:text-blue-800 flex items-center gap-1 px-3 py-1.5 border border-blue-200 rounded-lg transition-all hover:bg-blue-50"
                   >
                     <ChevronLeft className="h-4 w-4" />
-                    Voltar
+                    Voltar para edição
                   </button>
                   
                   <div className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium">
-                    Revisão - Confirme as informações antes de salvar
+                    Revisão final
                   </div>
                 </div>
                 
@@ -1029,10 +1029,10 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                   <div className="rounded-xl bg-green-50 border border-green-200 p-4 mb-4">
                     <div className="flex items-center text-green-700 mb-1">
                       <Check className="h-5 w-5 mr-2" />
-                      <h3 className="font-medium">Revisão concluída</h3>
+                      <h3 className="font-medium">Tudo pronto</h3>
                     </div>
                     <p className="text-sm text-green-600 pl-7">
-                      Todos os detalhes estão preenchidos. Clique em Salvar para finalizar.
+                      Clique em Salvar para publicar sua arte com todos os formatos.
                     </p>
                   </div>
                   
