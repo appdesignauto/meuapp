@@ -985,6 +985,7 @@ export default function ArtDetail() {
         
         <RelatedArts 
           artId={Number(id)} 
+          limit={12}
           originalCategory={art?.category} 
           designerName={art?.designer?.name || art?.designer?.username || "Design Auto"}
         />
