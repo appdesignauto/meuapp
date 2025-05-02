@@ -103,17 +103,44 @@ export default function ArtDetail() {
     retry: 1,
   });
   
+  // Verificar o ID do grupo usando a rota de admin
+  const { data: groupInfo } = useQuery({
+    queryKey: ['/api/admin/arts/check-group', id],
+    queryFn: async () => {
+      if (!id) {
+        console.log('ID da arte não disponível, não é possível verificar groupId');
+        return { groupId: null };
+      }
+      console.log(`Verificando groupId da arte ${id}`);
+      try {
+        const res = await fetch(`/api/admin/arts/${id}/check-group`);
+        if (!res.ok) {
+          console.error(`Erro ao verificar groupId: ${res.status} ${res.statusText}`);
+          return { groupId: null };
+        }
+        const data = await res.json();
+        console.log('Dados do groupId:', data);
+        return data;
+      } catch (error) {
+        console.error('Exceção ao verificar groupId:', error);
+        return { groupId: null };
+      }
+    },
+    enabled: !!id && !!user && (user.nivelacesso === 'admin' || user.nivelacesso === 'designer_adm' || user.nivelacesso === 'designer'),
+  });
+
   // Buscar artes do mesmo grupo (para exibir outros formatos)
   const { data: groupArts } = useQuery({
-    queryKey: ['/api/arts/group', art?.groupId],
+    queryKey: ['/api/admin/arts/group', groupInfo?.groupId],
     queryFn: async () => {
-      if (!art?.groupId) {
-        console.log('Arte não possui groupId, retornando array vazio');
+      if (!groupInfo?.groupId) {
+        console.log('Arte não possui groupId confirmado, retornando array vazio');
         return { arts: [] };
       }
-      console.log(`Buscando artes do grupo: ${art.groupId}`);
+      console.log(`Buscando artes do grupo: ${groupInfo.groupId}`);
       try {
-        const res = await fetch(`/api/arts/group/${art.groupId}`);
+        // Usar a rota de admin que sabemos que funciona
+        const res = await fetch(`/api/admin/arts/group/${groupInfo.groupId}`);
         if (!res.ok) {
           console.error(`Erro ao buscar artes do grupo: ${res.status} ${res.statusText}`);
           return { arts: [] };
@@ -126,7 +153,7 @@ export default function ArtDetail() {
         return { arts: [] };
       }
     },
-    enabled: !!art?.groupId,
+    enabled: !!groupInfo?.groupId && !!user && (user.nivelacesso === 'admin' || user.nivelacesso === 'designer_adm' || user.nivelacesso === 'designer'),
   });
   
   // Verificar se a arte está favoritada
