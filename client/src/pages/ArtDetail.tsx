@@ -807,151 +807,156 @@ export default function ArtDetail() {
                 </div>
               </div>
               
-              {/* Seção de formatos disponíveis aprimorada */}
+              {/* Dropdown de formatos disponíveis minimalista */}
               {groupArts && groupArts.arts && groupArts.arts.length > 1 && (
-                <div className="overflow-hidden border-t border-neutral-200 rounded-b-lg">
-                  {/* Cabeçalho com gradiente */}
-                  <div className="p-3 bg-gradient-to-r from-blue-50 to-white border-b border-neutral-200">
-                    <div className="flex items-center justify-between">
+                <div className="border-t border-neutral-200">
+                  {/* Estado inicial fechado - Header com dropdown */}
+                  <div 
+                    className="p-3 bg-gradient-to-r from-blue-50 to-white hover:from-blue-100/60 hover:to-blue-50/60 transition-colors cursor-pointer flex items-center justify-between"
+                    onClick={() => {
+                      const dropdown = document.getElementById('formatosDropdown');
+                      if (dropdown) {
+                        dropdown.classList.toggle('hidden');
+                      }
+                      const icon = document.getElementById('dropdownIcon');
+                      if (icon) {
+                        icon.classList.toggle('rotate-180');
+                      }
+                    }}
+                  >
+                    <div className="flex items-center">
+                      <Layers className="h-4 w-4 text-blue-600 mr-2" />
                       <p className="text-xs font-medium text-blue-600 uppercase tracking-wide">Formatos Disponíveis</p>
+                    </div>
+                    <div className="flex items-center">
                       <Badge 
                         variant="outline" 
-                        className="px-2 py-0.5 text-xs font-normal text-blue-600 border-blue-200 bg-blue-50/50"
+                        className="px-2 py-0.5 text-xs font-normal text-blue-600 border-blue-200 bg-blue-50/50 mr-2"
                       >
                         {groupArts.arts.findIndex(art => art.id === Number(id)) + 1} de {groupArts.arts.length}
                       </Badge>
+                      <ChevronRight id="dropdownIcon" className="h-4 w-4 text-blue-500 transition-transform duration-200" />
                     </div>
                   </div>
                   
-                  {/* Seletor de formatos estilizado */}
-                  <div className="p-3 bg-white">
-                    <div className="flex flex-col space-y-2">
-                      {/* Navegação rápida - botões anterior/próximo */}
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center">
-                          <Layers className="h-4 w-4 text-blue-600 mr-2" />
-                          <span className="text-sm font-medium text-gray-700">Navegue entre os formatos:</span>
-                        </div>
-                        <div className="flex space-x-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 rounded-full"
-                            onClick={() => {
-                              const currentIndex = groupArts.arts.findIndex(art => art.id === Number(id));
-                              const prevIndex = currentIndex > 0 ? currentIndex - 1 : groupArts.arts.length - 1;
-                              setLocation(`/arts/${groupArts.arts[prevIndex].id}`);
-                            }}
-                          >
-                            <ChevronLeft className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 rounded-full"
-                            onClick={() => {
-                              const currentIndex = groupArts.arts.findIndex(art => art.id === Number(id));
-                              const nextIndex = currentIndex < groupArts.arts.length - 1 ? currentIndex + 1 : 0;
-                              setLocation(`/arts/${groupArts.arts[nextIndex].id}`);
-                            }}
-                          >
-                            <ChevronRight className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                      
-                      {/* Lista estilizada de formatos */}
-                      <div className="grid gap-1.5">
-                        {groupArts.arts.map((formatArt: any) => {
-                          // Obter informações de dimensões para cada formato
-                          const getFormatDimensions = (format: string) => {
-                            switch(format.toLowerCase()) {
-                              case 'stories': return '1080×1920px';
-                              case 'feed': return '1080×1080px';
-                              case 'cartaz': return '768×1024px';
-                              case 'web banner': case 'banner': return '1200×628px';
-                              case 'capa fan page': case 'cover': return '820×312px';
-                              case 'carrocel': return '1080×1080px';
-                              default: return '';
-                            }
-                          };
-                          
-                          // Obter ícone representativo para cada formato
-                          const getFormatIcon = (format: string) => {
-                            switch(format.toLowerCase()) {
-                              case 'stories': return <Layers className="h-3.5 w-3.5" />;
-                              case 'feed': return <Grid className="h-3.5 w-3.5" />;
-                              case 'cartaz': return <Layers className="h-3.5 w-3.5" />;
-                              case 'web banner': case 'banner': return <LayoutGrid className="h-3.5 w-3.5" />;
-                              case 'capa fan page': case 'cover': return <Layout className="h-3.5 w-3.5" />;
-                              case 'carrocel': return <LayoutGrid className="h-3.5 w-3.5" />;
-                              default: return <Layout className="h-3.5 w-3.5" />;
-                            }
-                          };
-                          
-                          // Obter descrição para cada formato
-                          const getFormatDescription = (format: string) => {
-                            switch(format.toLowerCase()) {
-                              case 'stories': return 'Ideal para Instagram e Facebook Stories';
-                              case 'feed': return 'Perfeito para feed do Instagram';
-                              case 'cartaz': return 'Ótimo para impressão em tamanho A4';
-                              case 'web banner': case 'banner': return 'Para banners de sites e anúncios';
-                              case 'capa fan page': case 'cover': return 'Para capa de página no Facebook';
-                              case 'carrocel': return 'Para posts em carrossel no Instagram';
-                              default: return '';
-                            }
-                          };
-                          
-                          const isCurrentFormat = formatArt.id === Number(id);
-                          
-                          return (
-                            <div
-                              key={formatArt.id}
-                              className={`
-                                flex items-center p-2 rounded-lg cursor-pointer transition-all duration-200
-                                ${isCurrentFormat 
-                                  ? 'bg-blue-100/70 border border-blue-200' 
-                                  : 'bg-gray-50 border border-transparent hover:bg-blue-50 hover:border-blue-100'}
-                              `}
-                              onClick={() => {
-                                if (!isCurrentFormat) {
-                                  setLocation(`/arts/${formatArt.id}`);
-                                }
+                  {/* Conteúdo do dropdown - inicialmente oculto */}
+                  <div id="formatosDropdown" className="hidden bg-white border-t border-neutral-100 shadow-inner">
+                    <div className="p-3">
+                      {/* Seletor de formatos estilizado */}
+                      <div className="flex flex-col space-y-2">
+                        {/* Navegação rápida - compacta */}
+                        <div className="flex items-center justify-between mb-1 text-xs">
+                          <span className="text-neutral-500">Selecione um formato para navegar:</span>
+                          <div className="flex space-x-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 rounded-full"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const currentIndex = groupArts.arts.findIndex(art => art.id === Number(id));
+                                const prevIndex = currentIndex > 0 ? currentIndex - 1 : groupArts.arts.length - 1;
+                                setLocation(`/arts/${groupArts.arts[prevIndex].id}`);
                               }}
                             >
-                              {/* Miniatura do formato */}
-                              <div className="relative h-10 w-10 bg-white rounded overflow-hidden border border-gray-200 shadow-sm mr-3 flex-shrink-0">
-                                <img 
-                                  src={formatArt.imageUrl} 
-                                  alt={formatArt.format}
-                                  className="w-full h-full object-cover"
-                                />
-                                {isCurrentFormat && (
-                                  <div className="absolute inset-0 bg-blue-500/10 flex items-center justify-center">
-                                    <Check className="h-4 w-4 text-blue-600" />
+                              <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 rounded-full"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const currentIndex = groupArts.arts.findIndex(art => art.id === Number(id));
+                                const nextIndex = currentIndex < groupArts.arts.length - 1 ? currentIndex + 1 : 0;
+                                setLocation(`/arts/${groupArts.arts[nextIndex].id}`);
+                              }}
+                            >
+                              <ChevronRight className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        {/* Lista compacta de formatos */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                          {groupArts.arts.map((formatArt: any) => {
+                            // Obter informações de dimensões para cada formato
+                            const getFormatDimensions = (format: string) => {
+                              switch(format.toLowerCase()) {
+                                case 'stories': return '1080×1920px';
+                                case 'feed': return '1080×1080px';
+                                case 'cartaz': return '768×1024px';
+                                case 'web banner': case 'banner': return '1200×628px';
+                                case 'capa fan page': case 'cover': return '820×312px';
+                                case 'carrocel': return '1080×1080px';
+                                default: return '';
+                              }
+                            };
+                            
+                            // Obter ícone para cada formato
+                            const getFormatIcon = (format: string) => {
+                              switch(format.toLowerCase()) {
+                                case 'stories': return <Layers className="h-3.5 w-3.5" />;
+                                case 'feed': return <Grid className="h-3.5 w-3.5" />;
+                                case 'cartaz': return <Layers className="h-3.5 w-3.5" />;
+                                case 'web banner': case 'banner': return <LayoutGrid className="h-3.5 w-3.5" />;
+                                case 'capa fan page': case 'cover': return <Layout className="h-3.5 w-3.5" />;
+                                case 'carrocel': return <LayoutGrid className="h-3.5 w-3.5" />;
+                                default: return <Layout className="h-3.5 w-3.5" />;
+                              }
+                            };
+                            
+                            const isCurrentFormat = formatArt.id === Number(id);
+                            
+                            return (
+                              <div
+                                key={formatArt.id}
+                                className={`
+                                  flex items-center p-2 rounded cursor-pointer transition-all duration-200
+                                  ${isCurrentFormat 
+                                    ? 'bg-blue-100/70 border border-blue-200' 
+                                    : 'bg-gray-50 border border-transparent hover:bg-blue-50 hover:border-blue-100'}
+                                `}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (!isCurrentFormat) {
+                                    setLocation(`/arts/${formatArt.id}`);
+                                  }
+                                }}
+                              >
+                                {/* Miniatura do formato */}
+                                <div className="relative h-8 w-8 bg-white rounded overflow-hidden border border-gray-200 shadow-sm mr-2 flex-shrink-0">
+                                  <img 
+                                    src={formatArt.imageUrl} 
+                                    alt={formatArt.format}
+                                    className="w-full h-full object-cover"
+                                  />
+                                  {isCurrentFormat && (
+                                    <div className="absolute inset-0 bg-blue-500/10 flex items-center justify-center">
+                                      <Check className="h-3 w-3 text-blue-600" />
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                {/* Informações compactas do formato */}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center">
+                                    <span className="flex items-center text-xs font-medium text-gray-900 capitalize truncate">
+                                      {getFormatIcon(formatArt.format)}
+                                      <span className="ml-1 truncate">{formatArt.format}</span>
+                                    </span>
+                                    <span className="ml-1 text-[10px] text-gray-500 hidden sm:inline">{getFormatDimensions(formatArt.format)}</span>
                                   </div>
+                                </div>
+                                
+                                {/* Indicador de selecionado - versão compacta */}
+                                {isCurrentFormat && (
+                                  <Badge className="ml-1 bg-blue-600 text-white text-[10px] py-0 px-1.5 h-4">Atual</Badge>
                                 )}
                               </div>
-                              
-                              {/* Informações do formato */}
-                              <div className="flex-1">
-                                <div className="flex items-center">
-                                  <span className="flex items-center text-xs font-medium text-gray-900 capitalize">
-                                    {getFormatIcon(formatArt.format)}
-                                    <span className="ml-1">{formatArt.format}</span>
-                                  </span>
-                                  <span className="ml-2 text-xs text-gray-500">{getFormatDimensions(formatArt.format)}</span>
-                                </div>
-                                <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{getFormatDescription(formatArt.format)}</p>
-                              </div>
-                              
-                              {/* Indicador de selecionado */}
-                              {isCurrentFormat && (
-                                <Badge className="ml-2 bg-blue-600 text-white text-[10px] px-1.5">Atual</Badge>
-                              )}
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
                   </div>
