@@ -10,7 +10,7 @@ import {
   Loader2, Upload, X, Check, AlertCircle, 
   Settings2, FileImage, FolderOpen, FileType, LayoutGrid,
   BadgePlus, Link2, PenLine, UploadCloud, BookImage,
-  ChevronLeft, ChevronRight, ArrowRight, 
+  ChevronLeft, ChevronRight, ArrowRight, Save as SaveIcon,
   Square, Smartphone, MonitorSmartphone, LayoutTemplate, 
   Columns, ScreenShare, Image
 } from 'lucide-react';
@@ -1062,12 +1062,14 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                 
                 {/* Botão para salvar */}
                 <div className="mt-8 pt-5 border-t border-gray-200">
-                  <div className="rounded-xl bg-gray-50 border border-gray-200 p-4 mb-4">
-                    <div className="flex items-center text-gray-700 mb-1">
-                      <Check className="h-5 w-5 mr-2 text-blue-500" />
+                  <div className="rounded-xl bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 p-4 mb-4 shadow-sm">
+                    <div className="flex items-center text-blue-700 mb-1">
+                      <div className="bg-white p-1 rounded-full mr-2 shadow-sm">
+                        <Check className="h-5 w-5 text-blue-500" />
+                      </div>
                       <h3 className="font-medium">Tudo pronto</h3>
                     </div>
-                    <p className="text-sm text-gray-600 pl-7">
+                    <p className="text-sm text-blue-600 pl-9">
                       Clique em Salvar para publicar sua arte com todos os formatos.
                     </p>
                   </div>
@@ -1075,17 +1077,19 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                   <Button 
                     type="button"
                     onClick={handleSubmit}
-                    className="w-full py-6 rounded-xl text-base font-medium flex items-center justify-center gap-2 bg-gradient-to-r from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 text-white shadow-lg transition-all duration-200"
+                    className="w-full py-6 rounded-xl text-base font-medium flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white shadow-lg transition-all duration-200 hover:scale-[1.02]"
                   >
                     {uploadAllComplete ? (
                       <>
-                        Upload Concluído
-                        <Check className="h-5 w-5 ml-1 text-blue-400" />
+                        <div className="flex items-center bg-white/20 rounded-full py-1 px-3">
+                          <Check className="h-5 w-5 mr-2 text-white" />
+                          Upload Concluído
+                        </div>
                       </>
                     ) : (
                       <>
+                        <SaveIcon className="h-5 w-5 mr-2 animate-pulse" />
                         Salvar Arte Multi-Formato
-                        <Check className="h-5 w-5 ml-1 text-blue-400" />
                       </>
                     )}
                   </Button>
