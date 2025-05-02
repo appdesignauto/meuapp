@@ -53,7 +53,7 @@ router.post('/api/admin/arts/multi', isAuthenticated, async (req: Request, res: 
         isVisible: true, // Por padrão, visível
         designerid: req.user?.id || 1, // Usar ID do usuário logado ou padrão
         collectionId: defaultCollectionId,
-        artGroupId // ID do grupo para vincular as artes relacionadas
+        groupId: artGroupId // ID do grupo para vincular as artes relacionadas
       };
 
       // Criar a arte no banco de dados
@@ -107,8 +107,8 @@ router.get('/api/arts/group/:groupId', async (req: Request, res: Response) => {
       .from(arts)
       .where(
         isUserAdmin 
-          ? eq(arts.artGroupId, groupId)
-          : eq(arts.artGroupId, groupId) && eq(arts.isVisible, true)
+          ? eq(arts.groupId, groupId)
+          : eq(arts.groupId, groupId) && eq(arts.isVisible, true)
       );
     
     if (!groupArts || groupArts.length === 0) {
@@ -146,7 +146,7 @@ router.get('/api/admin/arts/group/:groupId', isAuthenticated, async (req: Reques
     // Buscar todas as artes do grupo (sem filtro de visibilidade para admin)
     const groupArts = await db.select()
       .from(arts)
-      .where(eq(arts.artGroupId, groupId));
+      .where(eq(arts.groupId, groupId));
     
     if (!groupArts || groupArts.length === 0) {
       return res.status(404).json({

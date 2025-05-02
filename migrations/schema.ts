@@ -86,6 +86,7 @@ export const arts = pgTable("arts", {
         likeCount: integer().default(0).notNull(),
         createdAt: timestamp({ mode: 'string' }).defaultNow().notNull(),
         updatedAt: timestamp({ mode: 'string' }).defaultNow().notNull(),
+        groupId: text(), // ID de grupo para vincular artes relacionadas
 }, (table) => [
         foreignKey({
                         columns: [table.categoryId],
