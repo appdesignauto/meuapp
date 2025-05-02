@@ -812,6 +812,11 @@ export default function ArtDetail() {
               {/* Dropdown de formatos disponíveis - Nova versão conforme solicitado */}
               {groupArts && groupArts.arts && groupArts.arts.length > 1 && (
                 <div className="border-t border-neutral-200">
+                  {/* Cabeçalho "Formatos disponíveis" */}
+                  <div className="px-3 py-2 bg-gradient-to-r from-blue-50 to-transparent border-b border-blue-100/50">
+                    <p className="text-sm text-blue-600 font-medium">Formatos disponíveis</p>
+                  </div>
+                  
                   {/* Botão com formato atual pré-selecionado */}
                   <div 
                     className="p-3 hover:bg-blue-50/30 transition-all duration-200 cursor-pointer"
@@ -828,8 +833,12 @@ export default function ArtDetail() {
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
-                        <div className="bg-blue-600 rounded-full p-2 mr-3">
-                          <Check className="h-4 w-4 text-white" />
+                        <div className="relative h-10 w-10 rounded-md overflow-hidden border border-gray-100 shadow-sm mr-3 flex-shrink-0">
+                          <img 
+                            src={art.imageUrl} 
+                            alt={art.format}
+                            className="w-full h-full object-cover"
+                          />
                         </div>
                         <p className="font-medium text-lg capitalize">{art.format}</p>
                       </div>
