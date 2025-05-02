@@ -809,21 +809,28 @@ export default function ArtDetail() {
                 </div>
               </div>
               
-              {/* Dropdown de formatos disponíveis - Nova versão conforme solicitado */}
+              {/* Dropdown de formatos disponíveis - Versão aprimorada */}
               {groupArts && groupArts.arts && groupArts.arts.length > 1 && (
                 <div className="border-t border-neutral-200">
-                  {/* Cabeçalho "Formatos disponíveis" */}
-                  <div className="px-3 py-2 bg-gradient-to-r from-blue-50 to-transparent border-b border-blue-100/50">
+                  {/* Cabeçalho "Formatos disponíveis" com contador */}
+                  <div className="px-3 py-2 bg-gradient-to-r from-blue-50 to-transparent border-b border-blue-100/50 flex items-center justify-between">
                     <p className="text-sm text-blue-600 font-medium">Formatos disponíveis</p>
+                    <Badge 
+                      variant="outline" 
+                      className="bg-blue-50 text-blue-600 text-[10px] border-blue-200"
+                    >
+                      {groupArts.arts.length} opções
+                    </Badge>
                   </div>
                   
                   {/* Botão com formato atual pré-selecionado */}
                   <div 
-                    className="p-3 hover:bg-blue-50/30 transition-all duration-200 cursor-pointer"
+                    className="p-3 hover:bg-blue-50/40 transition-all duration-300 cursor-pointer group"
                     onClick={() => {
                       const formatsPanel = document.getElementById('formatosPainel');
                       if (formatsPanel) {
                         formatsPanel.classList.toggle('hidden');
+                        formatsPanel.classList.toggle('animate-slideDown');
                       }
                       const chevron = document.getElementById('formatoChevron');
                       if (chevron) {
@@ -833,24 +840,40 @@ export default function ArtDetail() {
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
-                        <div className="relative h-10 w-10 rounded-md overflow-hidden border border-gray-100 shadow-sm mr-3 flex-shrink-0">
+                        <div className="relative h-10 w-10 rounded-md overflow-hidden border border-gray-100 shadow-sm mr-3 flex-shrink-0 group-hover:shadow-md transition-all duration-300">
                           <img 
                             src={art.imageUrl} 
                             alt={art.format}
                             className="w-full h-full object-cover"
                           />
                         </div>
-                        <p className="font-medium text-lg capitalize">{art.format}</p>
+                        <div>
+                          <p className="font-medium text-lg capitalize">{art.format}</p>
+                          {/* Dimensões do formato */}
+                          <p className="text-xs text-gray-500">
+                            {art.format === 'feed' && '1:1 • Quadrado'}
+                            {art.format === 'stories' && '9:16 • Vertical'}
+                            {art.format === 'cartaz' && '3:4 • Vertical'}
+                            {(art.format === 'banner' || art.format === 'web banner') && '16:5 • Horizontal'}
+                          </p>
+                        </div>
                       </div>
                       <ChevronRight 
                         id="formatoChevron" 
-                        className="h-5 w-5 text-blue-600 transition-transform duration-200" 
+                        className="h-5 w-5 text-blue-600 transition-transform duration-300 group-hover:text-blue-700" 
                       />
                     </div>
                   </div>
                   
-                  {/* Painel de seleção de formatos */}
-                  <div id="formatosPainel" className="hidden transition-all duration-300 bg-white border-t border-blue-100">
+                  {/* Painel de seleção de formatos com animação */}
+                  <div 
+                    id="formatosPainel" 
+                    className="hidden opacity-0 max-h-0 transition-all duration-300 ease-in-out overflow-hidden bg-white border-t border-blue-100"
+                    style={{
+                      animation: "slideDown 0.3s ease forwards",
+                      transformOrigin: "top",
+                    }}
+                  >
                     {groupArts.arts.map((formatArt: any) => {
                       const isCurrentFormat = formatArt.id === Number(id);
                       
@@ -858,10 +881,10 @@ export default function ArtDetail() {
                         <div
                           key={formatArt.id}
                           className={`
-                            flex items-center p-3 cursor-pointer transition-all duration-200
+                            flex items-center p-3 cursor-pointer transition-all duration-300
                             ${isCurrentFormat 
-                              ? 'bg-gradient-to-r from-blue-100/80 to-blue-50/40 border-y border-blue-100' 
-                              : 'hover:bg-blue-50/60 border-b border-blue-50'}
+                              ? 'bg-gradient-to-r from-blue-100/80 to-blue-50/40 border-y border-blue-100 shadow-sm' 
+                              : 'hover:bg-gradient-to-r hover:from-blue-50/60 hover:to-transparent border-b border-blue-50 hover:shadow-sm'}
                           `}
                           onClick={() => {
                             if (!isCurrentFormat) {
@@ -869,7 +892,7 @@ export default function ArtDetail() {
                             }
                           }}
                         >
-                          <div className="relative h-10 w-10 rounded-md overflow-hidden border border-gray-100 shadow-sm mr-3 flex-shrink-0">
+                          <div className="relative h-10 w-10 rounded-md overflow-hidden border border-gray-100 shadow-sm mr-3 flex-shrink-0 hover:shadow-md transition-all duration-300">
                             <img 
                               src={formatArt.imageUrl} 
                               alt={formatArt.format}
@@ -885,14 +908,23 @@ export default function ArtDetail() {
                           </div>
                           
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center">
-                              {formatArt.format === 'feed' && <Grid className="h-4 w-4 mr-2 text-blue-600" />}
-                              {formatArt.format === 'stories' && <Layers className="h-4 w-4 mr-2 text-blue-600" />}
-                              {formatArt.format === 'cartaz' && <Layers className="h-4 w-4 mr-2 text-blue-600" />}
-                              {(formatArt.format === 'banner' || formatArt.format === 'web banner') && <LayoutGrid className="h-4 w-4 mr-2 text-blue-600" />}
-                              <span className="text-base font-medium capitalize">
-                                {formatArt.format}
-                              </span>
+                            <div className="flex flex-col">
+                              <div className="flex items-center">
+                                {formatArt.format === 'feed' && <Grid className="h-4 w-4 mr-2 text-blue-600" />}
+                                {formatArt.format === 'stories' && <Layers className="h-4 w-4 mr-2 text-blue-600" />}
+                                {formatArt.format === 'cartaz' && <Layers className="h-4 w-4 mr-2 text-blue-600" />}
+                                {(formatArt.format === 'banner' || formatArt.format === 'web banner') && <LayoutGrid className="h-4 w-4 mr-2 text-blue-600" />}
+                                <span className="text-base font-medium capitalize">
+                                  {formatArt.format}
+                                </span>
+                              </div>
+                              {/* Dimensões do formato */}
+                              <p className="text-xs text-gray-500 mt-0.5 ml-6">
+                                {formatArt.format === 'feed' && '1:1 • Quadrado'}
+                                {formatArt.format === 'stories' && '9:16 • Vertical'}
+                                {formatArt.format === 'cartaz' && '3:4 • Vertical'}
+                                {(formatArt.format === 'banner' || formatArt.format === 'web banner') && '16:5 • Horizontal'}
+                              </p>
                             </div>
                           </div>
                           
