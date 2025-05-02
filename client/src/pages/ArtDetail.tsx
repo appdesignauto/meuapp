@@ -809,103 +809,90 @@ export default function ArtDetail() {
                 </div>
               </div>
               
-              {/* Dropdown de formatos disponíveis - Versão Moderna */}
+              {/* Dropdown de formatos disponíveis - Nova versão conforme solicitado */}
               {groupArts && groupArts.arts && groupArts.arts.length > 1 && (
                 <div className="border-t border-neutral-200">
+                  {/* Botão com formato atual pré-selecionado */}
                   <div 
-                    className="p-3 hover:bg-blue-50/30 transition-all duration-200 cursor-pointer flex items-center justify-between"
+                    className="p-3 hover:bg-blue-50/30 transition-all duration-200 cursor-pointer"
                     onClick={() => {
-                      const dropdown = document.getElementById('formatosDropdown');
-                      if (dropdown) {
-                        dropdown.classList.toggle('hidden');
+                      const formatsPanel = document.getElementById('formatosPainel');
+                      if (formatsPanel) {
+                        formatsPanel.classList.toggle('hidden');
                       }
-                      const icon = document.getElementById('dropdownIcon');
-                      if (icon) {
-                        icon.classList.toggle('rotate-180');
+                      const chevron = document.getElementById('formatoChevron');
+                      if (chevron) {
+                        chevron.classList.toggle('rotate-180');
                       }
                     }}
                   >
-                    <div className="flex items-center">
-                      <div className="bg-blue-100 rounded-full p-1 mr-2">
-                        <Layers className="h-3.5 w-3.5 text-blue-600" />
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <div className="bg-blue-600 rounded-full p-2 mr-3">
+                          <Check className="h-4 w-4 text-white" />
+                        </div>
+                        <p className="font-medium text-lg capitalize">{art.format}</p>
                       </div>
-                      <p className="text-xs font-medium text-blue-700 uppercase tracking-wide">Formatos Disponíveis</p>
-                    </div>
-                    <div className="flex items-center">
-                      <Badge 
-                        variant="outline" 
-                        className="px-2 py-0.5 text-xs font-normal text-blue-600 border-blue-200 bg-blue-50/50 mr-2"
-                      >
-                        {groupArts.arts.findIndex((art: any) => art.id === Number(id)) + 1} de {groupArts.arts.length}
-                      </Badge>
-                      <div className="bg-blue-50 rounded-full p-1 transform transition-all duration-200">
-                        <ChevronRight id="dropdownIcon" className="h-3.5 w-3.5 text-blue-500 transition-transform duration-200" />
-                      </div>
+                      <ChevronRight 
+                        id="formatoChevron" 
+                        className="h-5 w-5 text-blue-600 transition-transform duration-200" 
+                      />
                     </div>
                   </div>
                   
-                  <div id="formatosDropdown" className="hidden transition-all duration-300">
-                    <div className="px-3 py-2 bg-gradient-to-r from-blue-50 to-transparent border-y border-blue-100/50">
-                      <p className="text-xs text-blue-600 font-medium flex items-center">
-                        <MessageCircle className="h-3 w-3 mr-1.5" />
-                        Escolha outra versão desta mesma arte:
-                      </p>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 p-2">
-                      {groupArts.arts.map((formatArt: any) => {
-                        const isCurrentFormat = formatArt.id === Number(id);
-                        
-                        return (
-                          <div
-                            key={formatArt.id}
-                            className={`
-                              flex items-center p-2 rounded-md cursor-pointer transition-all duration-200
-                              ${isCurrentFormat 
-                                ? 'bg-gradient-to-r from-blue-100/80 to-blue-50/40 border border-blue-200 shadow-sm' 
-                                : 'hover:bg-blue-50/60 border border-transparent hover:border-blue-100/60'}
-                            `}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (!isCurrentFormat) {
-                                setLocation(`/arts/${formatArt.id}`);
-                              }
-                            }}
-                          >
-                            <div className="relative h-8 w-8 rounded-md overflow-hidden border border-gray-100 shadow-sm mr-2 flex-shrink-0">
-                              <img 
-                                src={formatArt.imageUrl} 
-                                alt={formatArt.format}
-                                className="w-full h-full object-cover"
-                              />
-                              {isCurrentFormat && (
-                                <div className="absolute inset-0 bg-blue-500/5 backdrop-blur-[1px] flex items-center justify-center">
-                                  <div className="bg-blue-600 rounded-full p-0.5">
-                                    <Check className="h-2.5 w-2.5 text-white" />
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                            
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center">
-                                <span className="flex items-center text-xs font-medium text-gray-800 capitalize truncate">
-                                  {formatArt.format === 'feed' && <Grid className="h-3 w-3 mr-1 text-blue-600" />}
-                                  {formatArt.format === 'stories' && <Layers className="h-3 w-3 mr-1 text-blue-600" />}
-                                  {formatArt.format === 'cartaz' && <Layers className="h-3 w-3 mr-1 text-blue-600" />}
-                                  {(formatArt.format === 'banner' || formatArt.format === 'web banner') && <LayoutGrid className="h-3 w-3 mr-1 text-blue-600" />}
-                                  {formatArt.format}
-                                </span>
-                              </div>
-                            </div>
-                            
+                  {/* Painel de seleção de formatos */}
+                  <div id="formatosPainel" className="hidden transition-all duration-300 bg-white border-t border-blue-100">
+                    {groupArts.arts.map((formatArt: any) => {
+                      const isCurrentFormat = formatArt.id === Number(id);
+                      
+                      return (
+                        <div
+                          key={formatArt.id}
+                          className={`
+                            flex items-center p-3 cursor-pointer transition-all duration-200
+                            ${isCurrentFormat 
+                              ? 'bg-gradient-to-r from-blue-100/80 to-blue-50/40 border-y border-blue-100' 
+                              : 'hover:bg-blue-50/60 border-b border-blue-50'}
+                          `}
+                          onClick={() => {
+                            if (!isCurrentFormat) {
+                              setLocation(`/arts/${formatArt.id}`);
+                            }
+                          }}
+                        >
+                          <div className="relative h-10 w-10 rounded-md overflow-hidden border border-gray-100 shadow-sm mr-3 flex-shrink-0">
+                            <img 
+                              src={formatArt.imageUrl} 
+                              alt={formatArt.format}
+                              className="w-full h-full object-cover"
+                            />
                             {isCurrentFormat && (
-                              <Badge className="ml-1 bg-blue-600 text-white text-[10px] py-0 px-1.5 h-4 rounded-sm">Atual</Badge>
+                              <div className="absolute inset-0 bg-blue-500/5 backdrop-blur-[1px] flex items-center justify-center">
+                                <div className="bg-blue-600 rounded-full p-0.5">
+                                  <Check className="h-4 w-4 text-white" />
+                                </div>
+                              </div>
                             )}
                           </div>
-                        );
-                      })}
-                    </div>
+                          
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center">
+                              {formatArt.format === 'feed' && <Grid className="h-4 w-4 mr-2 text-blue-600" />}
+                              {formatArt.format === 'stories' && <Layers className="h-4 w-4 mr-2 text-blue-600" />}
+                              {formatArt.format === 'cartaz' && <Layers className="h-4 w-4 mr-2 text-blue-600" />}
+                              {(formatArt.format === 'banner' || formatArt.format === 'web banner') && <LayoutGrid className="h-4 w-4 mr-2 text-blue-600" />}
+                              <span className="text-base font-medium capitalize">
+                                {formatArt.format}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          {isCurrentFormat && (
+                            <Badge className="bg-blue-600 text-white px-3 py-1">Atual</Badge>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
