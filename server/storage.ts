@@ -2163,40 +2163,91 @@ export class DatabaseStorage implements IStorage {
       // Obtém artes por correspondência de palavras-chave
       let relatedArts = sortedArts.slice(0, limit).map(item => item.art);
       
-      // Se não tiver suficientes artes relacionadas por palavras-chave, completa com artes da mesma categoria
-      if (relatedArts.length < limit && artRow.categoryId) {
-        console.log(`[getRelatedArts] Artes por palavras-chave insuficientes (${relatedArts.length}/${limit}). Completando com artes da mesma categoria.`);
+      // Se não tiver suficientes artes relacionadas, fazemos o preenchimento com outras estratégias
+      if (relatedArts.length < limit) {
+        console.log(`[getRelatedArts] Artes por palavras-chave insuficientes (${relatedArts.length}/${limit}). Buscando alternativas.`);
         
         // Filtrar artes que já estão incluídas
         const relatedArtIds = new Set(relatedArts.map(art => art.id));
         
-        // Obter artes da mesma categoria que ainda não estão incluídas
-        const sameCategoryArts = allArts
-          .filter(a => 
-            a.categoryId === artRow.categoryId && // Mesma categoria
-            !relatedArtIds.has(a.id) // Não incluída ainda
-          )
-          .map(a => {
-            // Criar objeto arte com categoria embutida
-            const category = a.category_id ? {
-              id: a.category_id,
-              name: a.category_name,
-              slug: a.category_slug
-            } : null;
-            
-            return {
-              ...a,
-              designerId: a.designerid,
-              viewCount: a.viewcount,
-              aspectRatio: a.aspectratio,
-              category: category
-            } as Art;
-          });
+        // ESTRATÉGIA 1: Obter artes da mesma categoria que ainda não estão incluídas
+        let additionalArts = [];
         
-        console.log(`[getRelatedArts] Encontradas ${sameCategoryArts.length} artes adicionais da mesma categoria.`);
+        if (artRow.categoryId) {
+          console.log(`[getRelatedArts] Tentando encontrar artes da mesma categoria (ID: ${artRow.categoryId}).`);
+          
+          const sameCategoryArts = allArts
+            .filter(a => 
+              a.categoryId === artRow.categoryId && // Mesma categoria
+              !relatedArtIds.has(a.id) // Não incluída ainda
+            )
+            .map(a => {
+              // Criar objeto arte com categoria embutida
+              const category = a.category_id ? {
+                id: a.category_id,
+                name: a.category_name,
+                slug: a.category_slug
+              } : null;
+              
+              return {
+                ...a,
+                designerId: a.designerid,
+                viewCount: a.viewcount,
+                aspectRatio: a.aspectratio,
+                category: category
+              } as Art;
+            });
+          
+          console.log(`[getRelatedArts] Encontradas ${sameCategoryArts.length} artes adicionais da mesma categoria.`);
+          additionalArts = sameCategoryArts;
+        }
+        
+        // ESTRATÉGIA 2: Se ainda não tiver suficientes, adiciona artes mais recentes
+        if (relatedArts.length + additionalArts.length < limit) {
+          console.log(`[getRelatedArts] Ainda insuficiente (${relatedArts.length + additionalArts.length}/${limit}). Adicionando artes recentes.`);
+          
+          // União dos IDs já incluídos
+          const allIncludedIds = new Set([
+            ...relatedArtIds,
+            ...additionalArts.map(art => art.id)
+          ]);
+          
+          // Pegar artes mais recentes que ainda não foram incluídas
+          const recentArts = allArts
+            .filter(a => !allIncludedIds.has(a.id))
+            .sort((a, b) => {
+              // Ordenar por data de criação mais recente
+              const dateA = new Date(a.createdAt as string).getTime();
+              const dateB = new Date(b.createdAt as string).getTime();
+              return dateB - dateA;
+            })
+            .slice(0, limit - (relatedArts.length + additionalArts.length))
+            .map(a => {
+              // Criar objeto arte com categoria embutida
+              const category = a.category_id ? {
+                id: a.category_id,
+                name: a.category_name,
+                slug: a.category_slug
+              } : null;
+              
+              return {
+                ...a,
+                designerId: a.designerid,
+                viewCount: a.viewcount,
+                aspectRatio: a.aspectratio,
+                category: category
+              } as Art;
+            });
+          
+          console.log(`[getRelatedArts] Encontradas ${recentArts.length} artes recentes para completar.`);
+          
+          // Adicionar às artes adicionais
+          additionalArts = [...additionalArts, ...recentArts];
+        }
         
         // Combinar artes, limitando ao número máximo
-        relatedArts = [...relatedArts, ...sameCategoryArts].slice(0, limit);
+        relatedArts = [...relatedArts, ...additionalArts].slice(0, limit);
+        console.log(`[getRelatedArts] Total final de artes relacionadas: ${relatedArts.length}/${limit}`);
       }
       
       return relatedArts;
