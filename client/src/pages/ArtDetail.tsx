@@ -20,7 +20,8 @@ import {
   ChevronRight,
   Grid,
   LayoutGrid, 
-  Check
+  Check,
+  Layers
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -804,6 +805,36 @@ export default function ArtDetail() {
                 </div>
               </div>
               
+              {/* Dropdown de formatos disponíveis */}
+              {groupArts && groupArts.arts && groupArts.arts.length > 1 && (
+                <div className="p-3 bg-white border-t border-neutral-200 hover:bg-blue-50/30 transition-colors">
+                  <p className="text-xs text-neutral-500 mb-1">Formatos Disponíveis</p>
+                  <div className="flex items-center">
+                    <Layers className="h-4 w-4 text-blue-600 mr-2" />
+                    <select 
+                      className="font-medium text-sm border border-neutral-200 rounded px-2 py-1 bg-white hover:border-blue-300 focus:border-blue-400 focus:ring-1 focus:ring-blue-300 focus:outline-none transition-colors"
+                      value={id}
+                      onChange={(e) => {
+                        if (e.target.value !== id) {
+                          setLocation(`/arts/${e.target.value}`);
+                        }
+                      }}
+                    >
+                      {groupArts.arts.map((formatArt: any) => (
+                        <option 
+                          key={formatArt.id} 
+                          value={formatArt.id}
+                          className="capitalize"
+                        >
+                          {formatArt.format} {formatArt.id === Number(id) ? '(Atual)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
+              
+              {/* Categoria abaixo do seletor de formatos */}
               {art.category && (
                 <div className="p-3 bg-white border-t border-neutral-200 hover:bg-blue-50/30 transition-colors">
                   <p className="text-xs text-neutral-500 mb-1">Categoria</p>
