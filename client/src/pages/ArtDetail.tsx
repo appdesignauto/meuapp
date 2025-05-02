@@ -847,27 +847,27 @@ export default function ArtDetail() {
             </Badge>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="flex flex-wrap justify-center gap-8 p-4">
             {groupArts.arts.map((groupArt: any) => {
               // Definir as proporções baseadas no formato
               const getFormatStyles = (format: string) => {
                 switch(format.toLowerCase()) {
                   case 'stories':
-                    return 'aspect-[9/16] max-w-[120px]'; // Formato vertical (9:16)
+                    return 'aspect-[9/16] w-[120px]'; // Formato vertical (9:16)
                   case 'feed':
-                    return 'aspect-square max-w-[160px]'; // Formato quadrado (1:1)
+                    return 'aspect-square w-[180px]'; // Formato quadrado (1:1)
                   case 'cartaz':
-                    return 'aspect-[3/4] max-w-[140px]'; // Formato vertical (3:4)
+                    return 'aspect-[3/4] w-[150px]'; // Formato vertical (3:4)
                   case 'web banner':
                   case 'banner':
-                    return 'aspect-[16/5] max-w-[200px]'; // Formato horizontal largo (16:5)
+                    return 'aspect-[16/5] w-[280px]'; // Formato horizontal largo (16:5)
                   case 'capa fan page':
                   case 'cover':
-                    return 'aspect-[2.7/1] max-w-[180px]'; // Formato horizontal (2.7:1)
+                    return 'aspect-[2.7/1] w-[240px]'; // Formato horizontal (2.7:1)
                   case 'carrocel':
-                    return 'aspect-square max-w-[160px]'; // Formato quadrado para carrossel
+                    return 'aspect-square w-[180px]'; // Formato quadrado para carrossel
                   default:
-                    return 'aspect-square max-w-[160px]'; // Padrão quadrado
+                    return 'aspect-square w-[180px]'; // Padrão quadrado
                 }
               };
 
@@ -876,7 +876,7 @@ export default function ArtDetail() {
               return (
                 <div key={groupArt.id} className="flex flex-col items-center">
                   <div 
-                    className={`relative ${formatClasses} rounded-lg overflow-hidden bg-neutral-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer w-full mx-auto ${groupArt.id === Number(id) ? 'ring-2 ring-blue-500' : ''}`}
+                    className={`relative ${formatClasses} rounded-lg overflow-hidden bg-neutral-100 shadow-md hover:shadow-lg transition-all cursor-pointer ${groupArt.id === Number(id) ? 'ring-2 ring-blue-500' : ''}`}
                     onClick={() => {
                       if (groupArt.id !== Number(id)) {
                         setLocation(`/arts/${groupArt.id}`);
@@ -895,16 +895,17 @@ export default function ArtDetail() {
                     )}
                   </div>
                   
-                  {/* Badge de formato abaixo da imagem para melhor visualização */}
-                  <div className="mt-2 flex justify-center items-center space-x-2">
-                    <Badge className={`capitalize ${groupArt.id === Number(id) ? 'bg-blue-600' : 'bg-neutral-700'} text-white`}>
+                  {/* Badge de formato abaixo da imagem para melhor visualização - estilo semelhante à imagem enviada */}
+                  <div className="mt-2">
+                    <Badge 
+                      className={`capitalize px-3 py-1 ${
+                        groupArt.id === Number(id) 
+                          ? 'bg-blue-600 hover:bg-blue-700' 
+                          : 'bg-neutral-700 hover:bg-neutral-800'
+                      } text-white`}
+                    >
                       {groupArt.format}
                     </Badge>
-                    {groupArt.id === Number(id) && (
-                      <Badge variant="outline" className="bg-blue-50 text-xs border-blue-200">
-                        Atual
-                      </Badge>
-                    )}
                   </div>
                 </div>
               );
