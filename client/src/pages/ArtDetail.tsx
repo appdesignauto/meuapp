@@ -891,7 +891,7 @@ export default function ArtDetail() {
         >
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-bold text-gray-800 flex items-center">
-              <Tag className="h-5 w-5 text-blue-600 mr-2" />
+              <LayoutGrid className="h-5 w-5 text-blue-600 mr-2" />
               Artes relacionadas
             </h2>
             <Button
@@ -973,7 +973,7 @@ export default function ArtDetail() {
       >
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-bold text-gray-800 flex items-center">
-            <Tag className="h-5 w-5 text-blue-600 mr-2" />
+            <LayoutGrid className="h-5 w-5 text-blue-600 mr-2" />
             Artes relacionadas
           </h2>
           <Badge 
