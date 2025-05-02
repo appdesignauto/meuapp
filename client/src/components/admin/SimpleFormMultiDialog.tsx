@@ -800,6 +800,25 @@ export default function SimpleFormMultiDialog({
                             </div>
                             
                             <div>
+                              <Label htmlFor={`${formatSlug}-fileType`}>Tipo de Arquivo <span className="text-red-500">*</span></Label>
+                              <Select
+                                value={formatDetails[formatSlug]?.fileType || step1Form.getValues().globalFileType}
+                                onValueChange={(value) => saveFormatDetails(formatSlug, { fileType: value })}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecione um tipo de arquivo" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {fileTypes && Array.isArray(fileTypes) && fileTypes.map((fileType: any) => (
+                                    <SelectItem key={fileType.id} value={fileType.slug}>
+                                      {fileType.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            <div>
                               <Label htmlFor={`${formatSlug}-description`}>Descrição</Label>
                               <Textarea
                                 id={`${formatSlug}-description`}

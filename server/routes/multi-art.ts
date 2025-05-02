@@ -215,7 +215,7 @@ router.get('/api/admin/arts/group/:groupId', isAuthenticated, async (req: Reques
     // Buscar todas as artes do grupo usando SQL direto para evitar problemas
     const result = await db.execute(sql`
       SELECT * FROM arts 
-      WHERE "groupId" = ${groupId}
+      WHERE groupId = ${groupId}
     `);
     
     // Converter resultados para o formato esperado
@@ -348,7 +348,7 @@ router.put('/api/admin/arts/group/:groupId', isAuthenticated, async (req: Reques
             // Importante: no PostgreSQL, a sintaxe correta tem um WHERE separado por espaço
             const result = await db.execute(sql`
               UPDATE arts 
-              SET "groupId" = ${groupId}
+              SET groupId = ${groupId}
               WHERE id = ${newArt.id}
             `);
             
