@@ -714,14 +714,14 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                             className={`
                               flex items-center gap-1 py-3 px-4 border-0 rounded-none relative z-10 min-w-max
                               after:absolute after:w-[1px] after:h-2/3 after:-right-[1px] after:top-1/2 after:-translate-y-1/2 after:bg-gray-200 last:after:hidden
-                              ${isActive ? 'bg-white text-blue-700 font-medium shadow-sm' : 'bg-transparent'} 
+                              ${isActive ? 'bg-blue-50 text-blue-700 font-medium shadow-sm border-b-2 border-blue-500 translate-y-0.5' : 'bg-transparent'} 
                               ${isComplete 
                                 ? (isActive ? 'text-blue-700 font-medium' : 'text-gray-800') 
                                 : (isActive ? 'text-blue-700' : 'text-gray-600')
                               }
-                              hover:bg-white hover:text-blue-600 transition-all duration-200 transform hover:-translate-y-0.5
+                              hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 transform hover:-translate-y-0.5
                               ${isActive 
-                                ? 'before:absolute before:bottom-0 before:left-0 before:right-0 before:h-0.5 before:bg-blue-500 before:animate-pulse' 
+                                ? 'before:absolute before:bottom-0 before:left-0 before:right-0 before:h-0.5 before:bg-blue-500' 
                                 : ''}
                               ${isComplete 
                                 ? 'after:content-[""] after:absolute after:top-0 after:left-0 after:w-full after:h-0.5 after:bg-green-400' 
@@ -729,8 +729,11 @@ export default function SimpleFormMultiDialog({ isOpen, onClose }: SimpleFormMul
                             `}
                           >
                             <div className="flex items-center">
-                              {FormatIcon}
-                              <span className="text-sm font-medium">{formatName}</span>
+                              {isActive 
+                                ? <div className="mr-1.5 p-0.5 bg-blue-500 rounded-full text-white">{FormatIcon}</div>
+                                : <div className="mr-1.5">{FormatIcon}</div>
+                              }
+                              <span className={`text-sm ${isActive ? 'font-medium' : ''}`}>{formatName}</span>
                             </div>
                             {isComplete && (
                               <div className="ml-2 w-4 h-4 rounded-full bg-green-100 flex items-center justify-center">
