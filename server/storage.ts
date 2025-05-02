@@ -2141,6 +2141,9 @@ export class DatabaseStorage implements IStorage {
   
   async createArt(art: InsertArt): Promise<Art> {
     try {
+      // Adicionar logs para depuração
+      console.log(`[createArt] Criando arte com groupId: ${art.groupId}`);
+      
       // Mapeando os nomes das propriedades para os nomes corretos das colunas
       const artData: any = { ...art };
       
@@ -2162,7 +2165,17 @@ export class DatabaseStorage implements IStorage {
         delete artData.aspectRatio;
       }
       
+      // Certificar que groupId está sendo passado corretamente
+      console.log(`[createArt] Dados da arte antes da inserção:`, {
+        title: artData.title,
+        format: artData.format,
+        groupId: artData.groupId
+      });
+      
       const [newArt] = await db.insert(arts).values(artData).returning();
+      
+      // Log para verificar o resultado da inserção
+      console.log(`[createArt] Arte criada com ID ${newArt.id}, groupId: ${newArt.groupId}`);
       
       // Garantir que o objeto retornado tenha as propriedades em camelCase
       const result = {

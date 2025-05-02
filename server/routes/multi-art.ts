@@ -28,8 +28,9 @@ router.post('/api/admin/arts/multi', isAuthenticated, async (req: Request, res: 
     // Gerar um ID de grupo único para vincular as artes
     const artGroupId = uuidv4();
     
-    // Registrar o início do processo
+    // Registrar o início do processo com log detalhado
     console.log(`Criando grupo de arte ${artGroupId} com ${artGroupData.formats.length} formatos`);
+    console.log(`Categoria: ${artGroupData.categoryId}, Usuário: ${req.user?.id}`);
 
     // Array para armazenar os IDs das artes criadas
     const createdArts = [];
@@ -56,14 +57,31 @@ router.post('/api/admin/arts/multi', isAuthenticated, async (req: Request, res: 
         groupId: artGroupId // ID do grupo para vincular as artes relacionadas
       };
 
+      console.log(`Criando arte formato: ${format.format}, groupId: ${artGroupId}`);
+
       // Criar a arte no banco de dados
       const newArt = await storage.createArt(artData);
+      
+      // Verificar se o groupId foi salvo corretamente
+      if (!newArt.groupId) {
+        console.warn(`ALERTA: Arte ID ${newArt.id} foi criada sem groupId. Tentando atualizar...`);
+        try {
+          // Tentar atualizar o groupId diretamente no banco
+          await db.update(arts)
+            .set({ groupId: artGroupId })
+            .where(eq(arts.id, newArt.id));
+          console.log(`Arte ID ${newArt.id} atualizada com groupId ${artGroupId}`);
+        } catch (updateError) {
+          console.error(`Erro ao atualizar groupId para arte ${newArt.id}:`, updateError);
+        }
+      }
       
       // Adicionar ao array de artes criadas
       createdArts.push({
         id: newArt.id,
         format: format.format,
-        title: format.title
+        title: format.title,
+        groupId: newArt.groupId || artGroupId // Garantir que o groupId seja retornado
       });
     }
 
@@ -103,13 +121,20 @@ router.get('/api/arts/group/:groupId', async (req: Request, res: Response) => {
                         req.user?.nivelacesso === 'designer';
     
     // Buscar todas as artes do grupo
-    const groupArts = await db.select()
-      .from(arts)
-      .where(
-        isUserAdmin 
-          ? eq(arts.groupId, groupId)
-          : eq(arts.groupId, groupId) && eq(arts.isVisible, true)
+    let query = db.select().from(arts);
+    
+    if (isUserAdmin) {
+      query = query.where(eq(arts.groupId, groupId));
+    } else {
+      query = query.where(
+        and(
+          eq(arts.groupId, groupId),
+          eq(arts.isVisible, true)
+        )
       );
+    }
+    
+    const groupArts = await query;
     
     if (!groupArts || groupArts.length === 0) {
       return res.status(404).json({
