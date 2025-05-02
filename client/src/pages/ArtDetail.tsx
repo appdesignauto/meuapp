@@ -904,23 +904,20 @@ export default function ArtDetail() {
             </Button>
           </div>
           
-          {/* Layout estilo Pinterest com altura variada */}
+          {/* Grade organizada com 12 artes no máximo */}
           {art.designer.recentArts && art.designer.recentArts.length > 0 ? (
-            <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {art.designer.recentArts
                 .filter((recentArt: RecentArt) => recentArt.id !== art.id) // Não mostrar a arte atual
+                .slice(0, 12) // Limitar a 12 artes
                 .map((recentArt: RecentArt, index: number) => {
-                  // Gerar uma altura dinâmica para criar efeito Pinterest
-                  // Mas manter consistência para cada item ao recarregar a página
-                  const heightClass = [`h-40`, `h-48`, `h-56`, `h-64`][index % 4];
-                  
                   return (
                     <div 
                       key={recentArt.id}
-                      className="break-inside-avoid mb-4 group"
+                      className="group cursor-pointer"
                       onClick={() => setLocation(`/arts/${recentArt.id}`)}
                     >
-                      <div className={`${heightClass} relative overflow-hidden rounded-lg shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer`}>
+                      <div className="aspect-square relative overflow-hidden rounded-lg shadow-sm hover:shadow-md transition-all duration-300">
                         <img 
                           src={recentArt.imageUrl} 
                           alt={recentArt.title} 
