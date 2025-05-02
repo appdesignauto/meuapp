@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
-import { Crown, User } from "lucide-react";
+import { Copy, Crown, Layers, User } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface Art {
@@ -16,6 +16,7 @@ interface Art {
   aspectRatio?: string;
   fileType?: string;
   editUrl?: string;
+  groupId?: string | null;
   designer?: {
     id: number;
     username: string;
@@ -29,9 +30,16 @@ interface ArtCardProps {
   onClick?: () => void;
   showEditAction?: boolean;
   showDesigner?: boolean;
+  isSameGroup?: boolean; // Nova prop para indicar se pertence ao mesmo grupo
 }
 
-function ArtCard({ art, onClick, showEditAction = true, showDesigner = false }: ArtCardProps) {
+function ArtCard({ 
+  art, 
+  onClick, 
+  showEditAction = true, 
+  showDesigner = false,
+  isSameGroup = false 
+}: ArtCardProps) {
   // Função para obter as iniciais do nome do designer
   const getInitials = (name: string) => {
     if (!name) return "?";
@@ -45,7 +53,7 @@ function ArtCard({ art, onClick, showEditAction = true, showDesigner = false }: 
 
   // Estilo Pinterest: sem rodapé com informações, apenas imagem com badges opcionais
   const renderCard = () => (
-    <div className="overflow-hidden rounded-xl shadow-sm transition-all duration-300 hover:shadow-md cursor-pointer bg-muted">
+    <div className={`overflow-hidden rounded-xl shadow-sm transition-all duration-300 hover:shadow-md cursor-pointer bg-muted ${isSameGroup ? 'ring-2 ring-blue-500' : ''}`}>
       <div className="relative overflow-hidden w-full">
         <img
           src={art.imageUrl}
@@ -58,19 +66,28 @@ function ArtCard({ art, onClick, showEditAction = true, showDesigner = false }: 
         {/* Overlay escuro sutil no hover para melhorar legibilidade */}
         <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors duration-300"></div>
         
-        {art.isPremium && (
-          <div className="absolute top-2 right-2">
+        {/* Badges no canto superior direito */}
+        <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
+          {art.isPremium && (
             <Badge variant="default" className="flex items-center gap-1 shadow-sm">
               <Crown className="h-3 w-3" />
               <span>Premium</span>
             </Badge>
-          </div>
-        )}
+          )}
+          
+          {/* Indicador de mesmo grupo */}
+          {isSameGroup && (
+            <Badge variant="default" className="flex items-center gap-1 shadow-sm bg-blue-500 hover:bg-blue-700">
+              <Layers className="h-3 w-3" />
+              <span>Mesmo Grupo</span>
+            </Badge>
+          )}
+        </div>
         
         {/* Formato da arte (se disponível) */}
         {art.format && (
           <div className="absolute bottom-2 left-2">
-            <Badge variant="secondary" className="text-xs bg-black/50 text-white border-none shadow-sm">
+            <Badge variant="secondary" className={`text-xs ${isSameGroup ? 'bg-blue-500/70' : 'bg-black/50'} text-white border-none shadow-sm`}>
               {art.format}
             </Badge>
           </div>

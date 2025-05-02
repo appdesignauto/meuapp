@@ -12,13 +12,15 @@ interface RelatedArtsProps {
     slug?: string;
   } | null;
   designerName?: string;
+  currentGroupId?: string | null; // Adicionar groupId atual para comparação
 }
 
 export default function RelatedArts({ 
   artId, 
   limit = 12, // Alterado para 12 por padrão
   originalCategory = null,
-  designerName = "Design Auto" 
+  designerName = "Design Auto",
+  currentGroupId = null // Valor padrão null
 }: RelatedArtsProps) {
   const [, setLocation] = useLocation();
   
@@ -39,7 +41,7 @@ export default function RelatedArts({
     return (
       <div className="pinterest-grid">
         {Array(limit).fill(0).map((_, index) => (
-          <div key={index} className="rounded-lg overflow-hidden bg-neutral-50 shadow-sm">
+          <div key={`skeleton-${index}`} className="rounded-lg overflow-hidden bg-neutral-50 shadow-sm">
             <Skeleton className="w-full aspect-square" />
           </div>
         ))}
@@ -63,11 +65,12 @@ export default function RelatedArts({
     <div className="pinterest-grid">
       {relatedArts.map((art: any) => (
         <ArtCard 
-          key={art.id}
+          key={`art-${art.id}`}
           art={art}
           onClick={() => setLocation(`/arts/${art.id}`)}
           showEditAction={false}
           showDesigner={false}
+          isSameGroup={currentGroupId !== null && art.groupId === currentGroupId}
         />
       ))}
     </div>
