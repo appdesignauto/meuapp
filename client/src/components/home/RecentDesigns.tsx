@@ -27,7 +27,7 @@ export default function RecentDesigns() {
   const [, setLocation] = useLocation();
   
   // Fetch downloads (o que representa os designs editados pelo usuário)
-  const { data: downloadsData, isLoading } = useQuery({
+  const { data: downloadsData, isLoading } = useQuery<{ downloads: RecentDesign[]; totalCount: number }>({
     queryKey: ['/api/downloads'],
     enabled: !!user?.id, // Só busca se o usuário estiver logado
   });

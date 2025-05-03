@@ -57,6 +57,7 @@ const Home = () => {
   return (
     <>
       <Hero />
+      <RecentDesigns />
       <FeaturedCategories selectedCategory={selectedCategory} onCategorySelect={handleCategoryChange} />
       <div id="art-gallery">
         <ArtGallery 
