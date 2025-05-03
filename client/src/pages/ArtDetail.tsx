@@ -27,6 +27,7 @@ import {
   Info,
   MessageCircle
 } from 'lucide-react';
+import { SiCanva, SiAdobephotoshop, SiFigma, SiAdobeillustrator, SiGoogle } from 'react-icons/si';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -85,6 +86,62 @@ interface Art {
   };
   designer?: Designer;
 }
+
+// Função auxiliar para obter o ícone do software com base no tipo de arquivo
+const getFileTypeIcon = (fileType: string | null | undefined) => {
+  // Normaliza o tipo de arquivo para comparação (minúsculas e sem espaços)
+  const normalizedType = (typeof fileType === 'string' ? fileType : '').toLowerCase().trim();
+  
+  // Retorna o ícone apropriado com base no tipo de arquivo
+  switch (normalizedType) {
+    case 'canva':
+      return <SiCanva className="h-5 w-5" />;
+    case 'photoshop':
+    case 'psd':
+      return <SiAdobephotoshop className="h-5 w-5" />;
+    case 'corel':
+    case 'cdr':
+      return <ExternalLink className="h-5 w-5" />;
+    case 'figma':
+      return <SiFigma className="h-5 w-5" />;
+    case 'illustrator':
+    case 'ai':
+      return <SiAdobeillustrator className="h-5 w-5" />;
+    case 'google':
+    case 'google docs':
+    case 'google slides':
+      return <SiGoogle className="h-5 w-5" />;
+    default:
+      return <ExternalLink className="h-5 w-5" />;
+  }
+};
+
+// Função auxiliar para obter o nome amigável do software
+const getFileTypeName = (fileType: string | null | undefined) => {
+  const normalizedType = (typeof fileType === 'string' ? fileType : '').toLowerCase().trim();
+  
+  switch (normalizedType) {
+    case 'canva':
+      return 'NO CANVA';
+    case 'photoshop':
+    case 'psd':
+      return 'NO PHOTOSHOP';
+    case 'corel':
+    case 'cdr':
+      return 'NO COREL';
+    case 'figma':
+      return 'NO FIGMA';
+    case 'illustrator':
+    case 'ai':
+      return 'NO ILLUSTRATOR';
+    case 'google':
+    case 'google docs':
+    case 'google slides':
+      return 'NO GOOGLE';
+    default:
+      return 'ONLINE';
+  }
+};
 
 export default function ArtDetail() {
   // Garantir rolagem para o topo ao navegar para esta página
@@ -705,10 +762,12 @@ export default function ArtDetail() {
                     size="lg"
                     className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-amber-500 hover:to-amber-600 py-5 shadow-md hover:text-white group"
                   >
-                    <ExternalLink className="h-5 w-5 group-hover:hidden" />
+                    <span className="group-hover:hidden">
+                      {getFileTypeIcon(typeof art.fileType === 'string' ? art.fileType : art.fileType?.name)}
+                    </span>
                     <Sparkles className="h-5 w-5 hidden group-hover:block" />
                     <span className="flex items-center font-semibold">
-                      <span className="group-hover:hidden">EDITAR NO CANVA</span>
+                      <span className="group-hover:hidden">EDITAR {getFileTypeName(typeof art.fileType === 'string' ? art.fileType : art.fileType?.name)}</span>
                       <span className="hidden group-hover:inline-block">FAÇA UPGRADE PARA PREMIUM</span>
                     </span>
                   </Button>
@@ -718,9 +777,9 @@ export default function ArtDetail() {
                     size="lg"
                     className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 py-5 shadow-md"
                   >
-                    <ExternalLink className="h-5 w-5" />
+                    {getFileTypeIcon(typeof art.fileType === 'string' ? art.fileType : art.fileType?.name)}
                     <span className="flex items-center font-semibold">
-                      EDITAR ARTE
+                      EDITAR {getFileTypeName(typeof art.fileType === 'string' ? art.fileType : art.fileType?.name)}
                       {art.downloadCount > 0 && (
                         <span className="ml-2 bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full font-normal">
                           {art.downloadCount} {art.downloadCount === 1 ? 'download' : 'downloads'}
