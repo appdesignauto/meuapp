@@ -488,23 +488,23 @@ export default function ArtDetail() {
         <div className="grid grid-cols-1 lg:grid-cols-6 gap-0">
           {/* Art Image - Container com altura mínima e padding otimizado */}
           <motion.div 
-            className="relative bg-white flex items-center justify-center p-4 md:p-8 lg:col-span-4 border-r border-gray-100 min-h-[60vh]"
+            className="relative bg-white flex items-center justify-center p-5 md:p-8 lg:col-span-4 border-r border-gray-100 min-h-[50vh] md:min-h-[60vh]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="w-full h-full flex items-center justify-center relative group max-w-3xl mx-auto">
+            <div className="w-full h-full flex items-center justify-center relative group max-w-3xl mx-auto pt-4 md:pt-0">
               <motion.img 
                 src={art.imageUrl} 
                 alt={art.title} 
-                className="max-w-full max-h-[80vh] object-contain transition-all duration-300 rounded-md"
+                className="max-w-[94%] md:max-w-full max-h-[75vh] md:max-h-[80vh] object-contain transition-all duration-300 rounded-md"
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5 }}
               />
               
               {/* Badges de status */}
-              <div className="absolute top-4 right-4 flex flex-col space-y-2">
+              <div className="absolute top-5 right-5 md:top-4 md:right-4 flex flex-col space-y-2">
                 {art.isPremium && (
                   <motion.div
                     initial={{ x: 20, opacity: 0 }}
