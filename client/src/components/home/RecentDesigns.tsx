@@ -196,8 +196,8 @@ export default function RecentDesigns() {
                     
                     <div className="p-2">
                       <p className="text-xs font-medium text-gray-900 truncate">{download.art.title}</p>
-                      <div className="flex items-center justify-center mt-1.5">
-                        <span className="text-[10px] bg-gray-50 text-gray-500 px-2 py-0.5 rounded-full">{getRelativeTimeString(download.createdAt)}</span>
+                      <div className="mt-1.5">
+                        <span className="text-[10px] text-gray-500">{getRelativeTimeString(download.createdAt)}</span>
                       </div>
                     </div>
                   </motion.div>
@@ -233,8 +233,8 @@ export default function RecentDesigns() {
                 
                 <div className="p-3">
                   <p className="text-sm font-medium text-gray-900 truncate">{download.art.title}</p>
-                  <div className="flex items-center justify-center mt-1.5">
-                    <span className="text-xs bg-gray-50 text-gray-500 px-2 py-0.5 rounded-full">{getRelativeTimeString(download.createdAt)}</span>
+                  <div className="mt-1.5">
+                    <span className="text-xs text-gray-500">{getRelativeTimeString(download.createdAt)}</span>
                   </div>
                 </div>
                 
