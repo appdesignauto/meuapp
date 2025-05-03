@@ -25,8 +25,7 @@ import {
   Check,
   Layers,
   Info,
-  MessageCircle,
-  Edit
+  MessageCircle
 } from 'lucide-react';
 import { SiCanva, SiAdobephotoshop, SiFigma, SiAdobeillustrator, SiGoogle } from 'react-icons/si';
 import { Button } from '@/components/ui/button';
@@ -96,13 +95,13 @@ const getFileTypeIcon = (fileType: string | null | undefined) => {
   // Retorna o ícone apropriado com base no tipo de arquivo
   switch (normalizedType) {
     case 'canva':
-      return <Edit className="h-6 w-6 text-[#00C4CC] fill-[#00C4CC]" />;
+      return <SiCanva className="h-6 w-6 text-[#00C4CC]" />;
     case 'photoshop':
     case 'psd':
       return <SiAdobephotoshop className="h-6 w-6 text-[#31A8FF]" />;
     case 'corel':
     case 'cdr':
-      return <ExternalLink className="h-6 w-6 text-[#E21760] fill-[#E21760]" />;
+      return <ExternalLink className="h-6 w-6 text-[#E21760]" />;
     case 'figma':
       return <SiFigma className="h-6 w-6 text-[#F24E1E]" />;
     case 'illustrator':
@@ -113,7 +112,7 @@ const getFileTypeIcon = (fileType: string | null | undefined) => {
     case 'google slides':
       return <SiGoogle className="h-6 w-6 text-[#4285F4]" />;
     default:
-      return <ExternalLink className="h-6 w-6 fill-current" />;
+      return <ExternalLink className="h-6 w-6" />;
   }
 };
 
@@ -761,17 +760,17 @@ export default function ArtDetail() {
                   <Button 
                     onClick={handleOpenPremiumEdit} 
                     size="lg"
-                    className="w-full flex items-center justify-center bg-gradient-to-r from-blue-600 to-blue-700 hover:from-amber-500 hover:to-amber-600 py-6 shadow-md hover:text-white group rounded-xl border-0 transition-all duration-300"
+                    className="w-full flex items-center justify-center bg-gradient-to-r from-blue-600 to-blue-700 hover:from-amber-500 hover:to-amber-600 py-5 shadow-md hover:text-white group"
                   >
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
                       {/* Ícone com destaque */}
-                      <div className="bg-white/20 rounded-lg p-2 group-hover:hidden">
+                      <div className="bg-white/20 rounded-md p-1.5 group-hover:hidden">
                         {getFileTypeIcon(typeof art.fileType === 'string' ? art.fileType : art.fileType?.name)}
                       </div>
-                      <Sparkles className="h-6 w-6 hidden group-hover:block bg-white/20 rounded-lg p-1" />
+                      <Sparkles className="h-6 w-6 hidden group-hover:block bg-white/20 rounded-md p-1" />
                       
                       {/* Texto */}
-                      <span className="flex items-center text-base font-bold tracking-wide">
+                      <span className="flex items-center font-semibold">
                         <span className="group-hover:hidden">EDITAR {getFileTypeName(typeof art.fileType === 'string' ? art.fileType : art.fileType?.name)}</span>
                         <span className="hidden group-hover:inline-block">FAÇA UPGRADE PARA PREMIUM</span>
                       </span>
@@ -781,16 +780,16 @@ export default function ArtDetail() {
                   <Button 
                     onClick={handleOpenEdit} 
                     size="lg"
-                    className="w-full flex items-center justify-center bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 py-6 shadow-lg rounded-xl border-0 transform transition-all duration-200 active:scale-[0.98] hover:shadow-blue-900/20"
+                    className="w-full flex items-center justify-center bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 py-5 shadow-md"
                   >
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
                       {/* Ícone com destaque */}
-                      <div className="bg-white/20 rounded-lg p-2">
+                      <div className="bg-white/20 rounded-md p-1.5">
                         {getFileTypeIcon(typeof art.fileType === 'string' ? art.fileType : art.fileType?.name)}
                       </div>
                       
                       {/* Texto */}
-                      <span className="flex items-center text-base font-bold tracking-wide">
+                      <span className="flex items-center font-semibold">
                         EDITAR {getFileTypeName(typeof art.fileType === 'string' ? art.fileType : art.fileType?.name)}
                         {art.downloadCount > 0 && (
                           <span className="ml-2 bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full font-normal">
