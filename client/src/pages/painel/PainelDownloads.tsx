@@ -33,7 +33,7 @@ export default function PainelDownloads() {
       user.nivelacesso !== "usuario"));
 
   // Consultar histórico de downloads
-  const { data: downloadsData, isLoading: downloadsLoading } = useQuery({
+  const { data: downloadsData, isLoading: downloadsLoading } = useQuery<{ downloads: any[]; totalCount: number }>({
     queryKey: ["/api/downloads"],
     enabled: !!user?.id,
   });
@@ -79,6 +79,26 @@ export default function PainelDownloads() {
       hour: '2-digit',
       minute: '2-digit'
     }).format(date);
+  };
+  
+  // Cálculo de tempo relativo (Editado há X dias/horas)
+  const getRelativeTimeString = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+    const diffMinutes = Math.floor(diffTime / (1000 * 60));
+    
+    if (diffDays > 0) {
+      return `Editado há ${diffDays} ${diffDays === 1 ? 'dia' : 'dias'}`;
+    } else if (diffHours > 0) {
+      return `Editado há ${diffHours} ${diffHours === 1 ? 'hora' : 'horas'}`;
+    } else if (diffMinutes > 0) {
+      return `Editado há ${diffMinutes} ${diffMinutes === 1 ? 'minuto' : 'minutos'}`;
+    } else {
+      return 'Editado agora';
+    }
   };
 
   return (
@@ -147,6 +167,7 @@ export default function PainelDownloads() {
               download={download}
               isPremium={!!isPremium}
               formatDate={formatDate}
+              getRelativeTimeString={getRelativeTimeString}
             />
           ))}
         </div>
@@ -160,9 +181,10 @@ interface DownloadItemProps {
   download: any;
   isPremium: boolean;
   formatDate: (date: string) => string;
+  getRelativeTimeString?: (date: string) => string;
 }
 
-function DownloadItem({ download, isPremium, formatDate }: DownloadItemProps) {
+function DownloadItem({ download, isPremium, formatDate, getRelativeTimeString }: DownloadItemProps) {
   const { toast } = useToast();
   const art = download.art;
   
@@ -207,9 +229,16 @@ function DownloadItem({ download, isPremium, formatDate }: DownloadItemProps) {
               </div>
             </div>
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 gap-2">
-              <div className="flex items-center text-sm text-muted-foreground">
-                <Calendar className="mr-1 h-4 w-4" />
-                <span>Baixado em: {formatDate(download.createdAt)}</span>
+              <div className="flex flex-col text-sm text-muted-foreground">
+                <div className="flex items-center">
+                  <Calendar className="mr-1 h-4 w-4" />
+                  <span>Baixado em: {formatDate(download.createdAt)}</span>
+                </div>
+                {getRelativeTimeString && (
+                  <span className="text-xs mt-1 text-blue-600">
+                    {getRelativeTimeString(download.createdAt)}
+                  </span>
+                )}
               </div>
               <Button
                 variant="outline"
