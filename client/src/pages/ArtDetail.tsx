@@ -776,14 +776,8 @@ export default function ArtDetail() {
                     size="lg"
                     className="w-full flex items-center justify-center bg-gradient-to-r from-blue-600 to-blue-700 hover:from-amber-500 hover:to-amber-600 py-5 shadow-md hover:text-white group"
                   >
-                    <div className="flex items-center gap-3">
-                      {/* Ícone com destaque */}
-                      <div className="bg-white/20 rounded-md p-1.5 group-hover:hidden">
-                        {getFileTypeIcon(typeof art.fileType === 'string' ? art.fileType : art.fileType?.name)}
-                      </div>
-                      <Sparkles className="h-6 w-6 hidden group-hover:block bg-white/20 rounded-md p-1" />
-                      
-                      {/* Texto */}
+                    <div className="flex items-center justify-center">
+                      {/* Apenas o texto sem ícone */}
                       <span className="flex items-center font-semibold">
                         <span className="group-hover:hidden">EDITAR {getFileTypeName(typeof art.fileType === 'string' ? art.fileType : art.fileType?.name)}</span>
                         <span className="hidden group-hover:inline-block">FAÇA UPGRADE PARA PREMIUM</span>
