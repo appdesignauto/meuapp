@@ -96,13 +96,13 @@ const getFileTypeIcon = (fileType: string | null | undefined) => {
   // Retorna o ícone apropriado com base no tipo de arquivo
   switch (normalizedType) {
     case 'canva':
-      return <Edit className="h-6 w-6 text-[#00C4CC]" />;
+      return <Edit className="h-6 w-6 text-[#00C4CC] fill-[#00C4CC]" />;
     case 'photoshop':
     case 'psd':
       return <SiAdobephotoshop className="h-6 w-6 text-[#31A8FF]" />;
     case 'corel':
     case 'cdr':
-      return <ExternalLink className="h-6 w-6 text-[#E21760]" />;
+      return <ExternalLink className="h-6 w-6 text-[#E21760] fill-[#E21760]" />;
     case 'figma':
       return <SiFigma className="h-6 w-6 text-[#F24E1E]" />;
     case 'illustrator':
@@ -113,7 +113,7 @@ const getFileTypeIcon = (fileType: string | null | undefined) => {
     case 'google slides':
       return <SiGoogle className="h-6 w-6 text-[#4285F4]" />;
     default:
-      return <ExternalLink className="h-6 w-6" />;
+      return <ExternalLink className="h-6 w-6 fill-current" />;
   }
 };
 
