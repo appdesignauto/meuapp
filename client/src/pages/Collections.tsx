@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Collection } from '../types';
 import CollectionCard from '../components/ui/CollectionCard';
@@ -26,6 +26,12 @@ const Collections = () => {
   const collections = data?.collections || [];
   const totalCount = data?.totalCount || 0;
   const hasMore = page * limit < totalCount;
+
+  // Armazenar a URL atual para navegação de retorno
+  useEffect(() => {
+    const currentUrl = window.location.pathname + window.location.search;
+    localStorage.setItem('lastGalleryPage', currentUrl);
+  }, [page, searchQuery]);
 
   const loadMore = () => {
     if (!isFetching && hasMore) {

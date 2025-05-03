@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, Link } from "wouter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -56,6 +56,12 @@ export default function DesignerProfile() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   // Estado para o filtro ativo (todos, favoritas, recentes, emalta)
   const [activeFilter, setActiveFilter] = useState<'todos' | 'favoritas' | 'recentes' | 'emalta'>('todos');
+  
+  // Armazenar a URL atual para navegação de retorno
+  useEffect(() => {
+    const currentUrl = window.location.pathname + window.location.search;
+    localStorage.setItem('lastGalleryPage', currentUrl);
+  }, [username, artsPage, activeFilter]);
   
   // Função para filtrar artes com base no filtro selecionado
   const filterArts = (arts: Designer['arts']) => {
