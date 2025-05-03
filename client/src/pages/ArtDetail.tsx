@@ -606,7 +606,11 @@ export default function ArtDetail() {
                 <div className="mt-0.5 bg-blue-100 text-blue-700 rounded-full p-1 group-hover:scale-110 transition-transform">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 </div>
-                <span>Arquivo em formato <span className="font-medium text-blue-700">{art.fileType?.name || 'editável'}</span></span>
+                <span>Arquivo em formato <span className="font-medium text-blue-700">
+                  {typeof art.fileType === 'string' 
+                    ? art.fileType.charAt(0).toUpperCase() + art.fileType.slice(1) 
+                    : art.fileType?.name || 'Editável'}
+                </span></span>
               </div>
               
               <div className="flex items-start gap-2 text-sm group cursor-default hover:bg-blue-50/40 p-2 rounded-md transition-colors">
@@ -852,7 +856,11 @@ export default function ArtDetail() {
                           />
                         </div>
                         <div>
-                          <p className="font-medium text-lg capitalize">{art.format}</p>
+                          <p className="font-medium text-lg capitalize">
+                            {typeof art.format === 'string' 
+                              ? art.format.charAt(0).toUpperCase() + art.format.slice(1) 
+                              : art.format?.name || 'Não especificado'}
+                          </p>
                           {/* Dimensões do formato */}
                           <p className="text-xs text-gray-500">
                             {art.format === 'feed' && '1:1 • Quadrado'}
@@ -919,7 +927,9 @@ export default function ArtDetail() {
                                 {formatArt.format === 'cartaz' && <Layers className="h-4 w-4 mr-2 text-blue-600" />}
                                 {(formatArt.format === 'banner' || formatArt.format === 'web banner') && <LayoutGrid className="h-4 w-4 mr-2 text-blue-600" />}
                                 <span className="text-base font-medium capitalize">
-                                  {formatArt.format}
+                                  {typeof formatArt.format === 'string' 
+                                    ? formatArt.format.charAt(0).toUpperCase() + formatArt.format.slice(1) 
+                                    : formatArt.format}
                                 </span>
                               </div>
                               {/* Dimensões do formato */}
