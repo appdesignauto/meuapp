@@ -325,6 +325,12 @@ export default function ArtDetail() {
            user.nivelacesso === 'admin' || 
            user.nivelacesso === 'designer_adm';
   };
+  
+  // Função para determinar se a arte deve ser bloqueada para edição
+  const shouldLockPremiumContent = (artItem: any) => {
+    if (!artItem?.isPremium) return false; // Se não for premium, não bloqueia
+    return !userHasPremiumAccess(); // Bloqueia apenas se for premium e usuário não for premium
+  };
 
   // Função para lidar com o clique no botão de edição para conteúdo premium
   const handleOpenPremiumEdit = () => {
