@@ -44,14 +44,24 @@ export default function RecentDesigns() {
     return null;
   }
   
-  // Formatação simples de data
-  const formatDate = (dateString: string) => {
+  // Cálculo de tempo relativo (Editado há X dias/horas)
+  const getRelativeTimeString = (dateString: string) => {
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    }).format(date);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+    const diffMinutes = Math.floor(diffTime / (1000 * 60));
+    
+    if (diffDays > 0) {
+      return `Editado há ${diffDays} ${diffDays === 1 ? 'dia' : 'dias'}`;
+    } else if (diffHours > 0) {
+      return `Editado há ${diffHours} ${diffHours === 1 ? 'hora' : 'horas'}`;
+    } else if (diffMinutes > 0) {
+      return `Editado há ${diffMinutes} ${diffMinutes === 1 ? 'minuto' : 'minutos'}`;
+    } else {
+      return 'Editado agora';
+    }
   };
   
   // Handler para clicar em um design
@@ -112,7 +122,7 @@ export default function RecentDesigns() {
                   <Badge variant="outline" className="text-xs px-2 py-0 bg-blue-50 text-blue-700 border-blue-200">
                     {download.art.format}
                   </Badge>
-                  <span className="text-xs text-gray-500">{formatDate(download.createdAt)}</span>
+                  <span className="text-xs text-gray-500">{getRelativeTimeString(download.createdAt)}</span>
                 </div>
               </div>
               
