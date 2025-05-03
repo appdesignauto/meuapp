@@ -1,20 +1,27 @@
-import { useEffect, useState } from "react";
-import { useRoute, Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
-import { Helmet } from "react-helmet";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/use-auth";
-import { 
-  Loader2, ArrowLeft, Crown, BookOpen, Lock, 
-  Clock, CheckCircle, Play, Star, ChevronRight 
-} from "lucide-react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Link, useParams, useLocation } from 'wouter';
+import { Helmet } from 'react-helmet';
+import { useAuth } from '@/hooks/use-auth';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import {
+  ArrowLeft,
+  Crown,
+  ChevronRight,
+  Video,
+  Clock,
+  AlertTriangle,
+  CheckCircle,
+  Loader2,
+  Calendar,
+  PlayCircle,
+  LockKeyhole,
+  BookOpen
+} from 'lucide-react';
 
-// Tipos
+// Interfaces
 interface CourseModule {
   id: number;
   title: string;
@@ -52,347 +59,435 @@ interface CourseProgress {
   updatedAt: string;
 }
 
-const CursoDetalhesPage = () => {
-  const [, params] = useRoute("/cursos/:id");
-  const moduleId = parseInt(params?.id || "0");
-  const { user } = useAuth();
-  const { toast } = useToast();
-  
-  // Buscar dados do módulo
-  const { 
-    data: module, 
-    isLoading: moduleLoading, 
-    error: moduleError 
-  } = useQuery<CourseModule>({
-    queryKey: [`/api/courses/modules/${moduleId}`],
-    enabled: !!moduleId,
-    staleTime: 1000 * 60 * 5, // 5 minutos
-  });
-  
-  // Buscar aulas do módulo
-  const { 
-    data: lessons, 
-    isLoading: lessonsLoading, 
-    error: lessonsError 
-  } = useQuery<CourseLesson[]>({
-    queryKey: [`/api/courses/modules/${moduleId}/lessons`],
-    enabled: !!moduleId,
-    staleTime: 1000 * 60 * 5, // 5 minutos
-  });
-  
-  // Buscar progresso do usuário neste módulo
-  const { 
-    data: moduleProgress,
-    isLoading: progressLoading
-  } = useQuery<{lesson: CourseLesson, progress: CourseProgress}[]>({
-    queryKey: [`/api/courses/modules/${moduleId}/progress`],
-    enabled: !!moduleId && !!user,
-    staleTime: 1000 * 60, // 1 minuto
-  });
-  
-  // Calcular progresso geral do módulo
-  const overallProgress = moduleProgress && lessons?.length
-    ? Math.round((moduleProgress.filter(p => p.progress?.isCompleted).length / lessons.length) * 100)
-    : 0;
-  
-  // Verificar se o usuário tem acesso ao conteúdo premium
-  const hasPremiumAccess = !!user && (
-    user.nivelacesso === "premium" || 
-    user.nivelacesso === "admin" ||
-    user.acessovitalicio === true
-  );
+// Componente para exibir duração em formato legível
+const formatDuration = (seconds: number) => {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+};
 
-  // Função para formatar a duração do vídeo em minutos
-  const formatDuration = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    return `${minutes} min`;
-  };
-
-  // Renderizar o nível do curso de forma legível
-  const formatLevel = (level: string) => {
-    switch (level) {
-      case "iniciante": return "Iniciante";
-      case "intermediario": return "Intermediário";
-      case "avancado": return "Avançado";
-      default: return level;
-    }
-  };
-
-  // Função para verificar se uma aula está bloqueada
-  const isLessonLocked = (lesson: CourseLesson) => {
-    return lesson.isPremium && !hasPremiumAccess;
-  };
-
-  // Renderizar badges de nível
-  const getLevelColor = (level: string) => {
-    switch (level) {
-      case "iniciante": return "bg-green-500";
-      case "intermediario": return "bg-blue-500";
-      case "avancado": return "bg-purple-500";
-      default: return "bg-gray-500";
-    }
-  };
-
-  if (moduleLoading || lessonsLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[70vh]">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (moduleError || !module) {
-    return (
-      <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-red-500 mb-2">Módulo não encontrado</h2>
-        <p className="text-gray-600 mb-4">O módulo solicitado não existe ou você não tem permissão para acessá-lo.</p>
-        <Link href="/cursos">
-          <Button>
-            <ArrowLeft size={16} className="mr-2" />
-            Voltar para Cursos
-          </Button>
-        </Link>
-      </div>
-    );
-  }
-
-  if (lessonsError || !lessons) {
-    return (
-      <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-red-500 mb-2">Erro ao carregar aulas</h2>
-        <p className="text-gray-600 mb-4">Ocorreu um erro ao carregar as aulas deste módulo.</p>
-        <Link href="/cursos">
-          <Button>
-            <ArrowLeft size={16} className="mr-2" />
-            Voltar para Cursos
-          </Button>
-        </Link>
-      </div>
-    );
-  }
-
-  // Ordenar aulas por ordem
-  const sortedLessons = [...lessons].sort((a, b) => a.order - b.order);
+// Componente de cartão de lição
+const LessonCard = ({ 
+  lesson, 
+  progress, 
+  isLocked,
+  moduleId,
+  index
+}: { 
+  lesson: CourseLesson;
+  progress?: CourseProgress;
+  isLocked: boolean;
+  moduleId: number;
+  index: number;
+}) => {
+  // Verificar se a lição está completa
+  const isCompleted = progress?.isCompleted || false;
 
   return (
-    <>
-      <Helmet>
-        <title>{module.title} | Videoaulas | DesignAuto</title>
-      </Helmet>
-      
-      <div className="container mx-auto px-4 py-8">
-        {/* Breadcrumb e Voltar */}
-        <div className="flex flex-wrap items-center gap-2 mb-6 text-sm">
-          <Link href="/cursos">
-            <Button variant="ghost" size="sm" className="h-8">
-              <ArrowLeft size={16} className="mr-1" />
-              Voltar para Cursos
-            </Button>
-          </Link>
-          <div className="flex items-center">
-            <Link href="/cursos">
-              <span className="text-gray-500 hover:text-primary cursor-pointer">Cursos</span>
-            </Link>
-            <ChevronRight size={16} className="mx-1 text-gray-400" />
-            <span className="font-medium">{module.title}</span>
+    <div className={`relative p-4 border rounded-lg mb-3 transition-all duration-200 ${
+      isLocked 
+        ? 'bg-neutral-50 border-neutral-200' 
+        : isCompleted 
+          ? 'bg-green-50 border-green-200 hover:border-green-300 hover:shadow-sm'
+          : 'bg-white border-neutral-200 hover:border-blue-300 hover:shadow-sm'
+    }`}>
+      <div className="flex items-start">
+        {/* Numeração e status */}
+        <div className="flex-shrink-0 mr-4">
+          <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium ${
+            isLocked 
+              ? 'bg-neutral-200 text-neutral-500'
+              : isCompleted
+                ? 'bg-green-100 text-green-700'
+                : 'bg-blue-100 text-blue-700'
+          }`}>
+            {isCompleted ? <CheckCircle className="h-5 w-5" /> : index + 1}
           </div>
         </div>
-        
-        {/* Cabeçalho do módulo */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-          {/* Imagem */}
-          <div className="lg:col-span-1">
-            <div className="relative rounded-lg overflow-hidden aspect-video">
-              <img 
-                src={module.thumbnailUrl || "/images/placeholder-course.jpg"} 
-                alt={module.title}
-                className="w-full h-full object-cover"
-              />
-              
-              {module.isPremium && (
-                <div className="absolute top-3 right-3 bg-amber-500 text-white px-3 py-1 rounded-md flex items-center">
-                  <Crown size={16} className="mr-1" />
-                  <span className="text-sm font-medium">Premium</span>
-                </div>
-              )}
-              
-              <Badge 
-                className={`absolute bottom-3 left-3 ${getLevelColor(module.level)}`}
-              >
-                {formatLevel(module.level)}
-              </Badge>
-            </div>
-          </div>
-          
-          {/* Informações */}
-          <div className="lg:col-span-2">
-            <h1 className="text-3xl font-bold mb-3">{module.title}</h1>
-            
-            {user && lessons.length > 0 && (
-              <div className="mb-4">
-                <div className="flex justify-between text-sm mb-1">
-                  <span>Progresso do módulo</span>
-                  <span>{overallProgress}%</span>
-                </div>
-                <Progress value={overallProgress} className="h-2 mb-2" />
-                <p className="text-sm text-gray-600">
-                  {moduleProgress?.filter(p => p.progress?.isCompleted).length || 0} de {lessons.length} aulas concluídas
-                </p>
-              </div>
-            )}
-            
-            <p className="text-gray-700 mb-6">{module.description}</p>
-            
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-              <div className="flex flex-col">
-                <span className="text-sm text-gray-500">Nível</span>
-                <span className="font-medium">{formatLevel(module.level)}</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm text-gray-500">Aulas</span>
-                <span className="font-medium">{lessons.length} aulas</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm text-gray-500">Duração total</span>
-                <span className="font-medium">
-                  {formatDuration(lessons.reduce((acc, lesson) => acc + lesson.videoDuration, 0))}
-                </span>
-              </div>
-            </div>
-            
-            {module.isPremium && !hasPremiumAccess && (
-              <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg">
-                <h3 className="flex items-center text-amber-800 font-semibold mb-2">
-                  <Lock size={16} className="mr-2" />
-                  Conteúdo Premium
-                </h3>
-                <p className="text-amber-700 text-sm mb-3">
-                  Este módulo contém conteúdo exclusivo para assinantes premium.
-                  Faça upgrade do seu plano para acessar todas as aulas.
-                </p>
-                <Link href="/planos">
-                  <Button className="bg-amber-600 hover:bg-amber-700">
-                    Ver planos premium
-                  </Button>
-                </Link>
-              </div>
-            )}
-          </div>
-        </div>
-        
-        {/* Lista de aulas */}
-        <div>
-          <h2 className="text-2xl font-bold mb-6">Aulas deste módulo</h2>
-          
-          {sortedLessons.length === 0 ? (
-            <div className="text-center py-8 bg-gray-50 rounded-lg">
-              <h3 className="text-xl font-semibold mb-2">Nenhuma aula disponível</h3>
-              <p className="text-gray-600">
-                Este módulo ainda não possui aulas disponíveis. Volte em breve!
+
+        {/* Conteúdo */}
+        <div className="flex-grow">
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className={`font-medium text-lg ${isLocked ? 'text-neutral-500' : ''}`}>
+                {lesson.title}
+              </h3>
+              <p className={`text-sm mt-1 ${isLocked ? 'text-neutral-500' : 'text-neutral-600'}`}>
+                {lesson.description}
               </p>
             </div>
-          ) : (
-            <div className="space-y-4">
-              {sortedLessons.map((lesson, index) => {
-                const lessonProgress = moduleProgress?.find(p => p.lesson.id === lesson.id)?.progress;
-                const isCompleted = !!lessonProgress?.isCompleted;
-                const isLocked = isLessonLocked(lesson);
-                
-                return (
-                  <Link key={lesson.id} href={isLocked ? "#" : `/cursos/aula/${lesson.id}`}>
-                    <Card 
-                      className={`hover:shadow transition-shadow cursor-pointer overflow-hidden border ${
-                        isLocked ? 'opacity-80' : ''
-                      } ${isCompleted ? 'border-l-4 border-l-green-500' : ''}`}
-                      onClick={(e) => {
-                        if (isLocked) {
-                          e.preventDefault();
-                          toast({
-                            title: "Conteúdo Premium",
-                            description: "Esta aula é exclusiva para assinantes premium.",
-                            variant: "destructive",
-                          });
-                        }
-                      }}
-                    >
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        {/* Thumbnail */}
-                        <div className="md:col-span-1 relative">
-                          <div className="relative aspect-video md:aspect-auto md:h-full">
-                            <img 
-                              src={lesson.thumbnailUrl || "/images/placeholder-lesson.jpg"} 
-                              alt={lesson.title}
-                              className="w-full h-full object-cover"
-                            />
-                            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20">
-                              <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center">
-                                <Play size={24} className="text-primary ml-1" />
-                              </div>
-                            </div>
-                            
-                            {isLocked && (
-                              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                                <div className="bg-white p-2 rounded-full">
-                                  <Lock size={24} className="text-amber-500" />
-                                </div>
-                              </div>
-                            )}
-                            
-                            {isCompleted && (
-                              <div className="absolute top-2 right-2">
-                                <div className="bg-green-500 text-white p-1 rounded-full">
-                                  <CheckCircle size={16} />
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        
-                        {/* Conteúdo */}
-                        <div className="md:col-span-3 p-4 md:p-6 flex flex-col justify-between">
-                          <div>
-                            <h3 className="text-lg font-semibold mb-2 flex items-center">
-                              <span>{index + 1}. {lesson.title}</span>
-                              {lesson.isPremium && (
-                                <Badge className="ml-2 bg-amber-500">
-                                  <Crown size={12} className="mr-1" />
-                                  Premium
-                                </Badge>
-                              )}
-                            </h3>
-                            <p className="text-gray-600 text-sm line-clamp-2 mb-2">{lesson.description}</p>
-                          </div>
-                          
-                          <div className="flex items-center text-sm text-gray-500 mt-2">
-                            <div className="flex items-center mr-4">
-                              <Clock size={16} className="mr-1" />
-                              <span>{formatDuration(lesson.videoDuration)}</span>
-                            </div>
-                            
-                            {isCompleted ? (
-                              <div className="flex items-center text-green-600">
-                                <CheckCircle size={16} className="mr-1" />
-                                <span>Concluída</span>
-                              </div>
-                            ) : lessonProgress?.progress ? (
-                              <div className="flex items-center text-blue-600">
-                                <BookOpen size={16} className="mr-1" />
-                                <span>Em andamento ({lessonProgress.progress}%)</span>
-                              </div>
-                            ) : null}
-                          </div>
-                        </div>
-                      </div>
-                    </Card>
-                  </Link>
-                );
-              })}
+            
+            {/* Badge de Premium */}
+            {lesson.isPremium && (
+              <Badge variant="outline" className="bg-amber-100 border-amber-200 text-amber-700 flex items-center gap-1 font-medium ml-2 flex-shrink-0">
+                <Crown className="h-3 w-3" />
+                <span>Premium</span>
+              </Badge>
+            )}
+          </div>
+
+          <div className="flex items-center mt-3 justify-between">
+            <div className="flex items-center space-x-4">
+              {/* Duração */}
+              <div className="flex items-center text-xs text-neutral-500">
+                <Clock className="h-3.5 w-3.5 mr-1.5" />
+                <span>{formatDuration(lesson.videoDuration)}</span>
+              </div>
+              
+              {/* Plataforma de vídeo */}
+              <div className="flex items-center text-xs text-neutral-500 capitalize">
+                <Video className="h-3.5 w-3.5 mr-1.5" />
+                <span>{lesson.videoProvider}</span>
+              </div>
             </div>
-          )}
+            
+            {/* Botão de acesso */}
+            {isLocked ? (
+              <div className="flex items-center text-neutral-500 text-sm">
+                <LockKeyhole className="h-4 w-4 mr-1.5" /> 
+                <span>Bloqueado</span>
+              </div>
+            ) : (
+              <Link 
+                href={`/cursos/aula/${lesson.id}`}
+                className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-700"
+              >
+                {isCompleted ? 'Rever aula' : 'Assistir'} <ChevronRight className="h-4 w-4 ml-1" />
+              </Link>
+            )}
+          </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
-export default CursoDetalhesPage;
+// Componente de estatísticas de progresso
+const ProgressStats = ({ 
+  totalLessons, 
+  completedLessons
+}: { 
+  totalLessons: number; 
+  completedLessons: number;
+}) => {
+  // Calcular porcentagem de conclusão
+  const completionPercentage = Math.round((completedLessons / totalLessons) * 100);
+  
+  return (
+    <div className="bg-white rounded-lg border border-neutral-200 p-5 mb-6 shadow-sm">
+      <h3 className="font-medium text-lg mb-3">Seu progresso</h3>
+      
+      <div className="flex items-center justify-between text-sm text-neutral-600 mb-2">
+        <span>{completionPercentage}% concluído</span>
+        <span>{completedLessons}/{totalLessons} aulas</span>
+      </div>
+      
+      <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+        <div 
+          className="h-full bg-blue-500 rounded-full" 
+          style={{ width: `${completionPercentage}%` }}
+        ></div>
+      </div>
+      
+      <div className="grid grid-cols-3 gap-4 mt-4 text-center">
+        <div className="p-2 bg-blue-50 rounded-md">
+          <p className="text-sm text-neutral-600">Total de aulas</p>
+          <p className="font-bold text-xl text-blue-700">{totalLessons}</p>
+        </div>
+        <div className="p-2 bg-green-50 rounded-md">
+          <p className="text-sm text-neutral-600">Concluídas</p>
+          <p className="font-bold text-xl text-green-700">{completedLessons}</p>
+        </div>
+        <div className="p-2 bg-amber-50 rounded-md">
+          <p className="text-sm text-neutral-600">Pendentes</p>
+          <p className="font-bold text-xl text-amber-700">{totalLessons - completedLessons}</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Página principal de detalhes do módulo
+export default function CursoDetalhesPage() {
+  const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
+  const [_, setLocation] = useLocation();
+  
+  // Função para verificar se uma lição premium deve ser bloqueada
+  const isLessonLocked = (lesson: CourseLesson) => {
+    if (!lesson.isPremium) return false;
+    if (!user) return true;
+    if (user.role === 'admin' || user.role === 'designer_adm') return false;
+    return !['premium', 'mensal', 'anual', 'lifetime'].includes(user.role);
+  };
+
+  // Buscar detalhes do módulo
+  const { data: moduleData, isLoading: isLoadingModule, error: moduleError } = useQuery({
+    queryKey: [`/api/cursos/modules/${id}`],
+    queryFn: async () => {
+      const res = await fetch(`/api/cursos/modules/${id}`);
+      if (!res.ok) throw new Error('Falha ao carregar detalhes do módulo');
+      return res.json();
+    }
+  });
+
+  // Buscar lições e progresso
+  const { data: lessonData, isLoading: isLoadingLessons, error: lessonsError } = useQuery<{lesson: CourseLesson, progress: CourseProgress}[]>({
+    queryKey: [`/api/cursos/modules/${id}/lessons`],
+    queryFn: async () => {
+      const res = await fetch(`/api/cursos/modules/${id}/lessons`);
+      if (!res.ok) throw new Error('Falha ao carregar lições');
+      return res.json();
+    }
+  });
+
+  // Loading state
+  const isLoading = isLoadingModule || isLoadingLessons;
+  
+  // Error state
+  const error = moduleError || lessonsError;
+
+  // Processar estatísticas
+  const totalLessons = lessonData?.length || 0;
+  const completedLessons = lessonData?.filter(item => item.progress?.isCompleted).length || 0;
+
+  // Se estiver carregando, mostrar indicador
+  if (isLoading) {
+    return (
+      <div className="container mx-auto py-12 px-4">
+        <div className="flex flex-col items-center justify-center">
+          <Loader2 className="h-12 w-12 text-blue-500 animate-spin mb-4" />
+          <p className="text-neutral-600">Carregando detalhes do curso...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Se ocorrer um erro, mostrar mensagem
+  if (error) {
+    return (
+      <div className="container mx-auto py-12 px-4">
+        <div className="flex flex-col items-center justify-center text-red-600">
+          <AlertTriangle className="h-12 w-12 mb-4" />
+          <p className="font-medium">Erro ao carregar detalhes do curso</p>
+          <p className="text-sm mt-1">Por favor, tente novamente mais tarde</p>
+          <Button 
+            variant="outline" 
+            className="mt-4"
+            onClick={() => setLocation('/cursos')}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" /> Voltar para cursos
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Se o módulo não for encontrado
+  if (!moduleData) {
+    return (
+      <div className="container mx-auto py-12 px-4">
+        <div className="flex flex-col items-center justify-center text-neutral-600">
+          <BookOpen className="h-12 w-12 mb-4" />
+          <p className="font-medium">Módulo não encontrado</p>
+          <Button 
+            variant="outline" 
+            className="mt-4"
+            onClick={() => setLocation('/cursos')}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" /> Voltar para cursos
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto py-8 px-4">
+      <Helmet>
+        <title>{moduleData.title} | DesignAuto</title>
+      </Helmet>
+      
+      <div className="max-w-4xl mx-auto">
+        {/* Navegação superior */}
+        <div className="mb-6">
+          <Button 
+            variant="ghost" 
+            className="pl-0 hover:bg-transparent hover:text-blue-700 -ml-2"
+            onClick={() => setLocation('/cursos')}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" /> Voltar para cursos
+          </Button>
+        </div>
+        
+        {/* Cabeçalho do módulo */}
+        <div className="relative rounded-xl overflow-hidden mb-8">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/90 to-blue-800/90">
+            <img 
+              src={moduleData.thumbnailUrl || '/images/placeholder-course.jpg'} 
+              alt={moduleData.title}
+              className="w-full h-full object-cover opacity-30 mix-blend-overlay"
+            />
+          </div>
+          
+          <div className="relative z-10 p-8 text-white">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+              <Badge 
+                variant="outline" 
+                className={`
+                  ${moduleData.level === 'iniciante' ? 'bg-green-500/20 text-green-50 border-green-400/30' : 
+                    moduleData.level === 'intermediario' ? 'bg-blue-500/20 text-blue-50 border-blue-400/30' : 
+                    'bg-purple-500/20 text-purple-50 border-purple-400/30'}
+                `}
+              >
+                {moduleData.level === 'iniciante' ? 'Iniciante' : 
+                 moduleData.level === 'intermediario' ? 'Intermediário' : 'Avançado'}
+              </Badge>
+              
+              {moduleData.isPremium && (
+                <Badge variant="outline" className="bg-amber-500/20 border-amber-400/30 text-amber-50 flex items-center gap-1 mt-2 md:mt-0">
+                  <Crown className="h-3 w-3" />
+                  <span>Conteúdo Premium</span>
+                </Badge>
+              )}
+            </div>
+            
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">{moduleData.title}</h1>
+            <p className="text-lg text-white/90 mb-6">{moduleData.description}</p>
+            
+            <div className="flex flex-wrap items-center gap-4 text-sm text-white/80">
+              <div className="flex items-center">
+                <Video className="h-4 w-4 mr-2" />
+                <span>{totalLessons} aulas</span>
+              </div>
+              
+              <div className="flex items-center">
+                <Calendar className="h-4 w-4 mr-2" />
+                <span>Atualizado em {new Date(moduleData.updatedAt).toLocaleDateString('pt-BR')}</span>
+              </div>
+              
+              {user && completedLessons > 0 && (
+                <div className="flex items-center">
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  <span>{completedLessons} de {totalLessons} aulas concluídas</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        {/* Conteúdo principal */}
+        <div className="grid grid-cols-1 lg:grid-cols-7 gap-6">
+          {/* Lista de lições */}
+          <div className="lg:col-span-5">
+            <h2 className="text-2xl font-bold mb-4">Conteúdo do módulo</h2>
+            
+            {lessonData && lessonData.length > 0 ? (
+              <div>
+                {/* Progresso apenas para usuários autenticados */}
+                {user && completedLessons > 0 && (
+                  <div className="mb-6">
+                    <div className="flex justify-between text-sm text-neutral-600 mb-2">
+                      <span>{Math.round((completedLessons / totalLessons) * 100)}% concluído</span>
+                      <span>{completedLessons}/{totalLessons} aulas</span>
+                    </div>
+                    <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-blue-500 rounded-full" 
+                        style={{ width: `${Math.round((completedLessons / totalLessons) * 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Lições */}
+                <div>
+                  {lessonData.map((item, index) => (
+                    <LessonCard 
+                      key={item.lesson.id}
+                      lesson={item.lesson}
+                      progress={item.progress}
+                      isLocked={isLessonLocked(item.lesson)}
+                      moduleId={parseInt(id)}
+                      index={index}
+                    />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center p-12 text-neutral-600 bg-white rounded-lg border border-neutral-200">
+                <BookOpen className="h-12 w-12 mb-4" />
+                <p className="font-medium">Nenhuma aula disponível</p>
+                <p className="text-sm mt-1">Novas aulas serão adicionadas em breve</p>
+              </div>
+            )}
+          </div>
+          
+          {/* Sidebar */}
+          <div className="lg:col-span-2">
+            {/* Progresso (apenas para usuários autenticados com progresso) */}
+            {user && completedLessons > 0 && (
+              <ProgressStats 
+                totalLessons={totalLessons} 
+                completedLessons={completedLessons} 
+              />
+            )}
+            
+            {/* Começar/Continuar curso */}
+            {lessonData && lessonData.length > 0 && (
+              <div className="bg-white rounded-lg border border-neutral-200 p-5 shadow-sm">
+                <h3 className="font-medium text-lg mb-3">
+                  {completedLessons > 0 ? 'Continue de onde parou' : 'Comece agora'}
+                </h3>
+                
+                {completedLessons > 0 && completedLessons < totalLessons ? (
+                  // Continue para a próxima aula não concluída
+                  <Button 
+                    className="w-full flex items-center justify-center gap-2"
+                    onClick={() => {
+                      const nextLesson = lessonData.find(item => !item.progress?.isCompleted && !isLessonLocked(item.lesson));
+                      if (nextLesson) {
+                        setLocation(`/cursos/aula/${nextLesson.lesson.id}`);
+                      }
+                    }}
+                  >
+                    <PlayCircle className="h-4 w-4" />
+                    <span>Continuar curso</span>
+                  </Button>
+                ) : completedLessons === totalLessons ? (
+                  // Curso concluído, opção para revisitar a primeira aula
+                  <Button 
+                    variant="outline"
+                    className="w-full flex items-center justify-center gap-2"
+                    onClick={() => {
+                      if (lessonData && lessonData.length > 0) {
+                        setLocation(`/cursos/aula/${lessonData[0].lesson.id}`);
+                      }
+                    }}
+                  >
+                    <CheckCircle className="h-4 w-4" />
+                    <span>Curso concluído</span>
+                  </Button>
+                ) : (
+                  // Começar com a primeira aula
+                  <Button 
+                    className="w-full flex items-center justify-center gap-2"
+                    onClick={() => {
+                      const firstAvailableLesson = lessonData.find(item => !isLessonLocked(item.lesson));
+                      if (firstAvailableLesson) {
+                        setLocation(`/cursos/aula/${firstAvailableLesson.lesson.id}`);
+                      }
+                    }}
+                  >
+                    <PlayCircle className="h-4 w-4" />
+                    <span>Começar curso</span>
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

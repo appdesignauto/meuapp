@@ -1,23 +1,30 @@
-import { useEffect, useState, useRef } from "react";
-import { useRoute, Link } from "wouter";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Helmet } from "react-helmet";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/use-auth";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { apiRequest } from "@/lib/queryClient";
-import { 
-  Loader2, ArrowLeft, Crown, BookOpen, CheckCircle,
-  Play, Star, ChevronRight, ChevronLeft, MessageSquare
-} from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { Link, useParams, useLocation } from 'wouter';
+import { Helmet } from 'react-helmet';
+import { useAuth } from '@/hooks/use-auth';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  ArrowLeft,
+  Crown,
+  CheckCircle,
+  Loader2,
+  Clock,
+  Edit,
+  Star,
+  StarHalf,
+  MessageSquare,
+  PlayCircle,
+  Calendar,
+  ThumbsUp
+} from 'lucide-react';
+import { apiRequest, queryClient } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
 
-// Tipos
+// Interfaces
 interface CourseModule {
   id: number;
   title: string;
@@ -67,64 +74,42 @@ interface CourseRating {
   name: string | null;
 }
 
-const VideoPlayer = ({ 
-  lesson, 
-  onProgress, 
-  onComplete 
-}: { 
-  lesson: CourseLesson, 
-  onProgress: (progress: number) => void,
-  onComplete: () => void 
-}) => {
-  const videoRef = useRef<HTMLIFrameElement>(null);
-  
-  // Função para incorporar diferentes provedores de vídeo
-  const getEmbedUrl = (url: string, provider: string) => {
-    switch (provider) {
-      case "youtube":
-        // Extrair ID do vídeo do YouTube
-        const youtubeMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
-        const youtubeId = youtubeMatch ? youtubeMatch[1] : url;
-        return `https://www.youtube.com/embed/${youtubeId}?enablejsapi=1`;
-        
-      case "vimeo":
-        // Extrair ID do vídeo do Vimeo
-        const vimeoMatch = url.match(/(?:vimeo\.com\/(?:video\/)?|player\.vimeo\.com\/video\/)([0-9]+)/);
-        const vimeoId = vimeoMatch ? vimeoMatch[1] : url;
-        return `https://player.vimeo.com/video/${vimeoId}?autoplay=0`;
-        
-      case "vturb":
-        // Assumindo que o URL já é o ID ou URL completo para embedar
-        return url;
-        
-      case "panda":
-        // Assumindo que o URL já é o ID ou URL completo para embedar
-        return url;
-        
+// Componente de player de vídeo
+const VideoPlayer = ({ lesson }: { lesson: CourseLesson }) => {
+  // Função para criar URL de embed com base no provider
+  const getEmbedUrl = () => {
+    switch (lesson.videoProvider) {
+      case 'youtube':
+        // Extrair ID do vídeo do YouTube da URL
+        const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+        const youtubeMatch = lesson.videoUrl.match(youtubeRegex);
+        const youtubeId = youtubeMatch ? youtubeMatch[1] : null;
+        return youtubeId ? `https://www.youtube.com/embed/${youtubeId}?autoplay=0&modestbranding=1&rel=0` : lesson.videoUrl;
+      
+      case 'vimeo':
+        // Extrair ID do vídeo do Vimeo da URL
+        const vimeoRegex = /vimeo\.com\/(?:video\/)?(\d+)/i;
+        const vimeoMatch = lesson.videoUrl.match(vimeoRegex);
+        const vimeoId = vimeoMatch ? vimeoMatch[1] : null;
+        return vimeoId ? `https://player.vimeo.com/video/${vimeoId}` : lesson.videoUrl;
+      
+      case 'vturb':
+      case 'panda':
+        // Nestes casos, assumimos que a URL já está pronta para embed
+        return lesson.videoUrl;
+      
       default:
-        return url;
+        return lesson.videoUrl;
     }
   };
-  
-  const embedUrl = getEmbedUrl(lesson.videoUrl, lesson.videoProvider);
-
-  // Simular evento de progresso para demonstração
-  useEffect(() => {
-    // Na vida real, você conectaria aos eventos de cada player via suas respectivas APIs
-    const progressInterval = setInterval(() => {
-      const randomProgress = Math.floor(Math.random() * 10);
-      onProgress(randomProgress);
-    }, 30000);
-
-    return () => clearInterval(progressInterval);
-  }, []);
 
   return (
-    <div className="w-full aspect-video mb-6 bg-black rounded-lg overflow-hidden shadow-lg">
+    <div className="w-full aspect-video bg-black rounded-lg overflow-hidden shadow-lg">
       <iframe
-        ref={videoRef}
-        src={embedUrl}
+        src={getEmbedUrl()}
         className="w-full h-full"
+        frameBorder="0"
+        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
         title={lesson.title}
       ></iframe>
@@ -132,529 +117,470 @@ const VideoPlayer = ({
   );
 };
 
-const AulaDetalhesPage = () => {
-  const [, params] = useRoute("/cursos/aula/:id");
-  const lessonId = parseInt(params?.id || "0");
-  const { user } = useAuth();
+// Componente para exibir duração em formato legível
+const formatDuration = (seconds: number) => {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+};
+
+// Componente de avaliação por estrelas
+const RatingStars = ({ 
+  value, 
+  onChange, 
+  readOnly = false
+}: { 
+  value: number; 
+  onChange?: (rating: number) => void;
+  readOnly?: boolean;
+}) => {
+  return (
+    <div className="flex items-center">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type="button"
+          disabled={readOnly}
+          onClick={() => !readOnly && onChange && onChange(star)}
+          className={`${readOnly ? 'cursor-default' : 'cursor-pointer'} ${
+            star <= value ? 'text-amber-400' : 'text-neutral-300'
+          }`}
+        >
+          <Star className="w-5 h-5 fill-current" />
+        </button>
+      ))}
+    </div>
+  );
+};
+
+// Componente de comentário
+const Comment = ({ rating }: { rating: CourseRating }) => {
+  return (
+    <div className="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+      <div className="flex justify-between items-start mb-2">
+        <div className="flex items-center">
+          <div className="font-medium">{rating.name || rating.username}</div>
+          <span className="mx-2 text-neutral-400">•</span>
+          <div className="text-sm text-neutral-500">
+            {new Date(rating.createdAt).toLocaleDateString('pt-BR')}
+          </div>
+        </div>
+        <RatingStars value={rating.rating} readOnly />
+      </div>
+      {rating.comment && (
+        <p className="text-neutral-700 text-sm mt-2">{rating.comment}</p>
+      )}
+    </div>
+  );
+};
+
+// Componente de formulário de avaliação
+const RatingForm = ({ 
+  lessonId, 
+  userRating,
+  onSuccess 
+}: { 
+  lessonId: number; 
+  userRating: CourseRating | null;
+  onSuccess: () => void;
+}) => {
+  const [rating, setRating] = useState(userRating?.rating || 0);
+  const [comment, setComment] = useState(userRating?.comment || '');
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState("descricao");
-  const [userRating, setUserRating] = useState(0);
-  const [comment, setComment] = useState("");
-  const [userNotes, setUserNotes] = useState("");
-  
-  // Buscar dados da aula
-  const { 
-    data: lesson, 
-    isLoading: lessonLoading, 
-    error: lessonError 
-  } = useQuery<CourseLesson>({
-    queryKey: [`/api/courses/lessons/${lessonId}`],
-    enabled: !!lessonId,
-    staleTime: 1000 * 60 * 5, // 5 minutos
-  });
-  
-  // Buscar módulo da aula
-  const { 
-    data: module,
-    isLoading: moduleLoading
-  } = useQuery<CourseModule>({
-    queryKey: [`/api/courses/modules/${lesson?.moduleId}`],
-    enabled: !!lesson?.moduleId,
-    staleTime: 1000 * 60 * 5, // 5 minutos
-  });
-  
-  // Buscar progresso do usuário nesta aula
-  const { 
-    data: progressData,
-    isLoading: progressLoading
-  } = useQuery<CourseProgress>({
-    queryKey: [`/api/courses/lessons/${lessonId}/progress`],
-    enabled: !!lessonId && !!user,
-    staleTime: 1000 * 60, // 1 minuto
-    onSuccess: (data) => {
-      if (data?.notes) {
-        setUserNotes(data.notes);
+
+  // Mutation para salvar avaliação
+  const ratingMutation = useMutation({
+    mutationFn: async (data: { rating: number; comment: string }) => {
+      if (userRating) {
+        // Atualizar avaliação existente
+        return apiRequest('PUT', `/api/cursos/lessons/${lessonId}/ratings/${userRating.id}`, data);
+      } else {
+        // Criar nova avaliação
+        return apiRequest('POST', `/api/cursos/lessons/${lessonId}/ratings`, data);
       }
-    }
-  });
-  
-  // Buscar avaliações da aula
-  const { 
-    data: ratings,
-    isLoading: ratingsLoading
-  } = useQuery<CourseRating[]>({
-    queryKey: [`/api/courses/lessons/${lessonId}/ratings`],
-    enabled: !!lessonId,
-    staleTime: 1000 * 60 * 5, // 5 minutos
-  });
-  
-  // Buscar a avaliação do usuário atual
-  const { 
-    data: userRatingData
-  } = useQuery<CourseRating>({
-    queryKey: [`/api/courses/lessons/${lessonId}/user-rating`],
-    enabled: !!lessonId && !!user,
-    staleTime: 1000 * 60 * 5, // 5 minutos
-    onSuccess: (data) => {
-      if (data) {
-        setUserRating(data.rating);
-        setComment(data.comment || "");
-      }
-    }
-  });
-  
-  // Buscar aulas adjacentes do mesmo módulo (anterior e próxima)
-  const {
-    data: moduleLessons
-  } = useQuery<CourseLesson[]>({
-    queryKey: [`/api/courses/modules/${lesson?.moduleId}/lessons`],
-    enabled: !!lesson?.moduleId,
-    staleTime: 1000 * 60 * 5, // 5 minutos
-  });
-  
-  // Determinar aula anterior e próxima
-  const sortedLessons = moduleLessons 
-    ? [...moduleLessons].sort((a, b) => a.order - b.order)
-    : [];
-  
-  const currentIndex = lesson 
-    ? sortedLessons.findIndex(l => l.id === lesson.id)
-    : -1;
-  
-  const previousLesson = currentIndex > 0 
-    ? sortedLessons[currentIndex - 1]
-    : null;
-    
-  const nextLesson = currentIndex < sortedLessons.length - 1
-    ? sortedLessons[currentIndex + 1]
-    : null;
-  
-  // Mutação para atualizar o progresso
-  const updateProgressMutation = useMutation({
-    mutationFn: async (data: { progress?: number, isCompleted?: boolean, notes?: string }) => {
-      const response = await apiRequest(
-        "PUT", 
-        `/api/courses/lessons/${lessonId}/progress`,
-        data
-      );
-      return await response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/courses/lessons/${lessonId}/progress`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/courses/modules/${lesson?.moduleId}/progress`] });
-    },
-    onError: (error) => {
       toast({
-        title: "Erro ao atualizar progresso",
-        description: "Não foi possível salvar seu progresso. Tente novamente mais tarde.",
-        variant: "destructive",
-      });
-    }
-  });
-  
-  // Mutação para avaliar a aula
-  const rateLessonMutation = useMutation({
-    mutationFn: async (data: { rating: number, comment?: string }) => {
-      const response = await apiRequest(
-        "POST", 
-        `/api/courses/lessons/${lessonId}/rate`,
-        data
-      );
-      return await response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/courses/lessons/${lessonId}/ratings`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/courses/lessons/${lessonId}/user-rating`] });
-      
-      toast({
-        title: "Avaliação enviada",
-        description: "Sua avaliação foi registrada com sucesso. Obrigado pelo feedback!",
+        title: userRating ? "Avaliação atualizada" : "Avaliação enviada",
+        description: "Obrigado pelo seu feedback!",
         variant: "default",
       });
+      // Invalida a consulta para recarregar os dados
+      queryClient.invalidateQueries({ queryKey: [`/api/cursos/lessons/${lessonId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/cursos/lessons/${lessonId}/ratings`] });
+      onSuccess();
     },
     onError: (error) => {
       toast({
         title: "Erro ao enviar avaliação",
-        description: "Não foi possível registrar sua avaliação. Tente novamente mais tarde.",
+        description: "Tente novamente mais tarde",
         variant: "destructive",
       });
-    }
+    },
   });
-  
-  // Função para atualizar o progresso
-  const handleUpdateProgress = (newProgress: number) => {
-    if (!user) return;
-    
-    // Só atualiza se o progresso for maior que o atual
-    if (!progressData || newProgress > progressData.progress) {
-      updateProgressMutation.mutate({ progress: newProgress });
-    }
-  };
-  
-  // Função para marcar aula como concluída
-  const handleMarkComplete = () => {
-    if (!user) return;
-    
-    updateProgressMutation.mutate({ 
-      isCompleted: true,
-      progress: 100
-    });
-    
-    toast({
-      title: "Aula concluída",
-      description: "Esta aula foi marcada como concluída. Parabéns pelo progresso!",
-    });
-  };
-  
-  // Função para salvar notas
-  const handleSaveNotes = () => {
-    if (!user) return;
-    
-    updateProgressMutation.mutate({ notes: userNotes });
-    
-    toast({
-      title: "Notas salvas",
-      description: "Suas anotações foram salvas com sucesso.",
-    });
-  };
-  
-  // Função para enviar avaliação
-  const handleSubmitRating = () => {
-    if (!user || userRating === 0) {
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (rating === 0) {
       toast({
         title: "Avaliação inválida",
-        description: "Por favor, selecione uma classificação de 1 a 5 estrelas.",
+        description: "Por favor, selecione uma classificação por estrelas",
         variant: "destructive",
       });
       return;
     }
-    
-    rateLessonMutation.mutate({
-      rating: userRating,
-      comment: comment.trim() || undefined
-    });
+    ratingMutation.mutate({ rating, comment });
   };
-  
-  // Renderizar estrelas para avaliação
-  const renderStars = (rating: number, isInteractive = false) => {
-    return (
-      <div className="flex">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <Star
-            key={star}
-            size={isInteractive ? 24 : 16}
-            className={`${star <= rating
-              ? 'text-amber-500 fill-amber-500'
-              : 'text-gray-300'
-            } ${isInteractive ? 'cursor-pointer' : ''}`}
-            onClick={isInteractive ? () => setUserRating(star) : undefined}
-          />
-        ))}
-      </div>
-    );
-  };
-  
-  if (lessonLoading || moduleLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[70vh]">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (lessonError || !lesson) {
-    return (
-      <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-red-500 mb-2">Aula não encontrada</h2>
-        <p className="text-gray-600 mb-4">A aula solicitada não existe ou você não tem permissão para acessá-la.</p>
-        <Link href="/cursos">
-          <Button>
-            <ArrowLeft size={16} className="mr-2" />
-            Voltar para Cursos
-          </Button>
-        </Link>
-      </div>
-    );
-  }
 
   return (
-    <>
+    <form onSubmit={handleSubmit} className="mt-4">
+      <div className="mb-4">
+        <label className="block text-sm font-medium mb-2">Sua avaliação</label>
+        <RatingStars value={rating} onChange={setRating} />
+      </div>
+      
+      <div className="mb-4">
+        <label htmlFor="comment" className="block text-sm font-medium mb-2">Comentário (opcional)</label>
+        <Textarea
+          id="comment"
+          placeholder="Compartilhe sua opinião sobre esta aula..."
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          rows={3}
+        />
+      </div>
+      
+      <Button 
+        type="submit" 
+        disabled={ratingMutation.isPending}
+        className="w-full"
+      >
+        {ratingMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        {userRating ? "Atualizar avaliação" : "Enviar avaliação"}
+      </Button>
+    </form>
+  );
+};
+
+// Página de visualização de aula
+export default function AulaPage() {
+  const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
+  const [_, setLocation] = useLocation();
+  const { toast } = useToast();
+  const [showRatingForm, setShowRatingForm] = useState(false);
+  const [notes, setNotes] = useState("");
+  
+  // Buscar detalhes da lição
+  const { 
+    data: lessonData, 
+    isLoading: isLoadingLesson, 
+    error: lessonError 
+  } = useQuery({
+    queryKey: [`/api/cursos/lessons/${id}`],
+    queryFn: async () => {
+      const res = await fetch(`/api/cursos/lessons/${id}`);
+      if (!res.ok) throw new Error('Falha ao carregar detalhes da aula');
+      return res.json();
+    }
+  });
+  
+  // Buscar avaliações
+  const { 
+    data: ratingsData, 
+    isLoading: isLoadingRatings, 
+    error: ratingsError 
+  } = useQuery({
+    queryKey: [`/api/cursos/lessons/${id}/ratings`],
+    queryFn: async () => {
+      const res = await fetch(`/api/cursos/lessons/${id}/ratings`);
+      if (!res.ok) throw new Error('Falha ao carregar avaliações');
+      return res.json();
+    },
+    enabled: !!lessonData
+  });
+  
+  // Mutation para marcar aula como concluída
+  const markCompletedMutation = useMutation({
+    mutationFn: async (data: { isCompleted: boolean; notes?: string }) => {
+      return apiRequest('PUT', `/api/cursos/lessons/${id}/progress`, data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Progresso atualizado",
+        description: "Seu progresso foi salvo com sucesso!",
+        variant: "default",
+      });
+      // Invalidar queries para atualizar dados
+      queryClient.invalidateQueries({ queryKey: [`/api/cursos/lessons/${id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/cursos/modules/${lessonData?.module?.id}/lessons`] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao atualizar progresso",
+        description: "Tente novamente mais tarde",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Atualizar estado de notas quando dados da lição forem carregados
+  useEffect(() => {
+    if (lessonData?.progress?.notes) {
+      setNotes(lessonData.progress.notes);
+    }
+  }, [lessonData]);
+
+  // Processar dados de avaliação
+  const userRating = ratingsData?.find((rating: CourseRating) => rating.userId === user?.id) || null;
+  const publicRatings = ratingsData?.filter((rating: CourseRating) => rating.userId !== user?.id) || [];
+  const averageRating = ratingsData?.length > 0 
+    ? Math.round(ratingsData.reduce((acc: number, curr: CourseRating) => acc + curr.rating, 0) / ratingsData.length * 10) / 10
+    : 0;
+
+  // Loading state
+  const isLoading = isLoadingLesson || isLoadingRatings;
+  
+  // Error state
+  const error = lessonError || ratingsError;
+
+  // Se estiver carregando, mostrar indicador
+  if (isLoading) {
+    return (
+      <div className="container mx-auto py-12 px-4">
+        <div className="flex flex-col items-center justify-center">
+          <Loader2 className="h-12 w-12 text-blue-500 animate-spin mb-4" />
+          <p className="text-neutral-600">Carregando aula...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Se ocorrer um erro, mostrar mensagem
+  if (error || !lessonData) {
+    return (
+      <div className="container mx-auto py-12 px-4">
+        <div className="flex flex-col items-center justify-center text-red-600">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <p className="font-medium text-lg">Erro ao carregar a aula</p>
+          <p className="text-sm mt-1 mb-4">Não foi possível encontrar esta aula ou você não tem permissão para acessá-la</p>
+          <Button 
+            variant="outline" 
+            className="mt-2"
+            onClick={() => setLocation('/cursos')}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" /> Voltar para cursos
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const { lesson, module, progress } = lessonData;
+
+  return (
+    <div className="container mx-auto py-8 px-4">
       <Helmet>
-        <title>{lesson.title} | Videoaulas | DesignAuto</title>
+        <title>{lesson.title} | DesignAuto</title>
       </Helmet>
       
-      <div className="container mx-auto px-4 py-8">
-        {/* Breadcrumb e Navegação */}
-        <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
-          <div className="flex items-center text-sm">
-            <Link href="/cursos">
-              <span className="text-gray-500 hover:text-primary cursor-pointer">Cursos</span>
-            </Link>
-            <ChevronRight size={16} className="mx-1 text-gray-400" />
-            
-            {module && (
-              <>
-                <Link href={`/cursos/${module.id}`}>
-                  <span className="text-gray-500 hover:text-primary cursor-pointer">{module.title}</span>
-                </Link>
-                <ChevronRight size={16} className="mx-1 text-gray-400" />
-              </>
-            )}
-            
-            <span className="font-medium line-clamp-1">{lesson.title}</span>
-          </div>
+      <div className="max-w-4xl mx-auto">
+        {/* Navegação superior */}
+        <div className="mb-6 flex flex-wrap justify-between items-center">
+          <Button 
+            variant="ghost" 
+            className="pl-0 hover:bg-transparent hover:text-blue-700 -ml-2"
+            onClick={() => setLocation(`/cursos/${module.id}`)}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" /> Voltar para o módulo
+          </Button>
           
-          <div className="flex items-center gap-2">
-            {previousLesson && (
-              <Link href={`/cursos/aula/${previousLesson.id}`}>
-                <Button variant="ghost" size="sm" className="h-8">
-                  <ChevronLeft size={16} className="mr-1" />
-                  Aula anterior
+          {/* Status de progresso */}
+          {user && (
+            <div className="flex items-center ml-auto">
+              {progress?.isCompleted ? (
+                <Badge variant="outline" className="bg-green-100 border-green-200 text-green-700 flex items-center gap-1">
+                  <CheckCircle className="h-3.5 w-3.5" />
+                  <span>Aula concluída</span>
+                </Badge>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                  onClick={() => markCompletedMutation.mutate({ isCompleted: true })}
+                  disabled={markCompletedMutation.isPending}
+                >
+                  {markCompletedMutation.isPending ? (
+                    <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                  ) : (
+                    <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
+                  )}
+                  <span>Marcar como concluída</span>
                 </Button>
-              </Link>
-            )}
-            
-            {module && (
-              <Link href={`/cursos/${module.id}`}>
-                <Button variant="outline" size="sm" className="h-8">
-                  Voltar ao módulo
-                </Button>
-              </Link>
-            )}
-            
-            {nextLesson && (
-              <Link href={`/cursos/aula/${nextLesson.id}`}>
-                <Button variant="default" size="sm" className="h-8">
-                  Próxima aula
-                  <ChevronRight size={16} className="ml-1" />
-                </Button>
-              </Link>
-            )}
-          </div>
-        </div>
-        
-        {/* Título da aula */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold">{lesson.title}</h1>
-          
-          {/* Progresso da aula */}
-          {user && progressData && (
-            <div className="mt-2">
-              <div className="flex justify-between text-sm mb-1">
-                <span>Seu progresso</span>
-                <span>{progressData.progress}%</span>
-              </div>
-              <Progress value={progressData.progress} className="h-2" />
+              )}
             </div>
           )}
         </div>
         
-        {/* Player de vídeo */}
-        <VideoPlayer 
-          lesson={lesson} 
-          onProgress={handleUpdateProgress}
-          onComplete={handleMarkComplete}
-        />
+        {/* Título da aula */}
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold mb-3">{lesson.title}</h1>
+          <div className="flex flex-wrap items-center gap-3 text-sm text-neutral-600">
+            <div className="flex items-center">
+              <Clock className="h-4 w-4 mr-1.5" />
+              <span>{formatDuration(lesson.videoDuration)}</span>
+            </div>
+            <div className="flex items-center">
+              <Calendar className="h-4 w-4 mr-1.5" />
+              <span>{new Date(lesson.createdAt).toLocaleDateString('pt-BR')}</span>
+            </div>
+            {ratingsData && ratingsData.length > 0 && (
+              <div className="flex items-center">
+                <Star className={`h-4 w-4 mr-1.5 ${averageRating > 0 ? 'text-amber-400 fill-amber-400' : 'text-neutral-400'}`} />
+                <span>{averageRating} ({ratingsData.length} avaliações)</span>
+              </div>
+            )}
+            {lesson.isPremium && (
+              <Badge variant="outline" className="bg-amber-100 border-amber-200 text-amber-700 flex items-center gap-1">
+                <Crown className="h-3 w-3" />
+                <span>Premium</span>
+              </Badge>
+            )}
+          </div>
+        </div>
         
-        {/* Botão de marcar como concluído */}
+        {/* Player de vídeo */}
+        <VideoPlayer lesson={lesson} />
+        
+        {/* Descrição da aula */}
+        <div className="mt-6 mb-8">
+          <h2 className="text-xl font-bold mb-3">Sobre esta aula</h2>
+          <p className="text-neutral-700">{lesson.description}</p>
+        </div>
+        
+        <Separator className="my-8" />
+        
+        {/* Seção de anotações - apenas para usuários logados */}
         {user && (
-          <div className="mb-8 flex justify-end">
+          <div className="mb-8">
+            <h2 className="text-xl font-bold mb-3">Suas anotações</h2>
+            <Textarea
+              placeholder="Adicione suas anotações sobre esta aula aqui..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={5}
+              className="mb-3"
+            />
             <Button 
-              onClick={handleMarkComplete}
-              disabled={progressData?.isCompleted}
-              className={progressData?.isCompleted ? "bg-green-500 hover:bg-green-600" : ""}
+              onClick={() => markCompletedMutation.mutate({ 
+                isCompleted: progress?.isCompleted || false, 
+                notes 
+              })}
+              disabled={markCompletedMutation.isPending}
             >
-              {progressData?.isCompleted ? (
-                <>
-                  <CheckCircle size={16} className="mr-2" />
-                  Aula concluída
-                </>
-              ) : (
-                <>
-                  <BookOpen size={16} className="mr-2" />
-                  Marcar como concluída
-                </>
-              )}
+              {markCompletedMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Salvar anotações
             </Button>
           </div>
         )}
         
-        {/* Tabs de conteúdo */}
-        <Tabs defaultValue="descricao" value={activeTab} onValueChange={setActiveTab} className="mb-8">
-          <TabsList className="grid grid-cols-3 w-full md:w-auto">
-            <TabsTrigger value="descricao">Descrição</TabsTrigger>
-            <TabsTrigger value="anotacoes">Suas anotações</TabsTrigger>
-            <TabsTrigger value="avaliacoes">Avaliações</TabsTrigger>
-          </TabsList>
-          
-          {/* Tab Descrição */}
-          <TabsContent value="descricao" className="mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Sobre esta aula</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-700 whitespace-pre-line">{lesson.description}</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          {/* Tab Anotações */}
-          <TabsContent value="anotacoes" className="mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Suas anotações</CardTitle>
-                <CardDescription>
-                  Registre suas observações e insights sobre esta aula para consultar depois.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {!user ? (
-                  <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <p className="text-gray-600 mb-3">
-                      Faça login para registrar suas anotações sobre esta aula.
-                    </p>
-                    <Link href="/login">
-                      <Button>Fazer login</Button>
-                    </Link>
-                  </div>
+        <Separator className="my-8" />
+        
+        {/* Seção de avaliações */}
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">Avaliações</h2>
+            {user && !showRatingForm && (
+              <Button 
+                variant="outline" 
+                onClick={() => setShowRatingForm(true)}
+                className="text-blue-600 border-blue-200 hover:bg-blue-50"
+              >
+                {userRating ? (
+                  <>
+                    <Edit className="h-4 w-4 mr-1.5" />
+                    <span>Editar sua avaliação</span>
+                  </>
                 ) : (
                   <>
-                    <Textarea
-                      placeholder="Escreva suas anotações sobre esta aula..."
-                      className="min-h-[200px] mb-4"
-                      value={userNotes}
-                      onChange={(e) => setUserNotes(e.target.value)}
-                    />
-                    <Button 
-                      onClick={handleSaveNotes}
-                      disabled={updateProgressMutation.isPending}
-                    >
-                      {updateProgressMutation.isPending ? (
-                        <>
-                          <Loader2 size={16} className="mr-2 animate-spin" />
-                          Salvando...
-                        </>
-                      ) : "Salvar anotações"}
-                    </Button>
+                    <Star className="h-4 w-4 mr-1.5" />
+                    <span>Avaliar esta aula</span>
                   </>
                 )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+              </Button>
+            )}
+          </div>
           
-          {/* Tab Avaliações */}
-          <TabsContent value="avaliacoes" className="mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Avaliações</CardTitle>
-                <CardDescription>
-                  Veja o que outros alunos acharam desta aula ou deixe sua avaliação.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {/* Seção para avaliação do usuário */}
-                {user && (
-                  <div className="bg-gray-50 p-4 rounded-lg mb-6">
-                    <h3 className="font-semibold mb-3">Sua avaliação</h3>
-                    <div className="mb-3">
-                      {renderStars(userRating, true)}
-                    </div>
-                    <Textarea
-                      placeholder="Compartilhe sua opinião sobre esta aula (opcional)..."
-                      className="mb-3"
-                      value={comment}
-                      onChange={(e) => setComment(e.target.value)}
-                    />
-                    <Button 
-                      onClick={handleSubmitRating}
-                      disabled={userRating === 0 || rateLessonMutation.isPending}
-                    >
-                      {rateLessonMutation.isPending ? (
-                        <>
-                          <Loader2 size={16} className="mr-2 animate-spin" />
-                          Enviando...
-                        </>
-                      ) : "Enviar avaliação"}
-                    </Button>
-                  </div>
-                )}
-                
-                {/* Lista de avaliações */}
-                <div>
-                  <h3 className="font-semibold mb-4">
-                    {ratings?.length 
-                      ? `${ratings.length} avaliação${ratings.length !== 1 ? 's' : ''}` 
-                      : "Nenhuma avaliação ainda"}
-                  </h3>
-                  
-                  {ratings?.length === 0 && (
-                    <div className="text-center py-8">
-                      <MessageSquare size={32} className="mx-auto mb-2 text-gray-400" />
-                      <p className="text-gray-600">
-                        Seja o primeiro a avaliar esta aula!
-                      </p>
-                    </div>
-                  )}
-                  
-                  <div className="space-y-4">
-                    {ratings?.map((rating) => (
-                      <div key={rating.id} className="border-b pb-4 last:border-0">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="font-medium">{rating.name || rating.username}</div>
-                          <div className="text-sm text-gray-500">
-                            {new Date(rating.createdAt).toLocaleDateString('pt-BR')}
-                          </div>
-                        </div>
-                        <div className="mb-2">
-                          {renderStars(rating.rating)}
-                        </div>
-                        {rating.comment && (
-                          <p className="text-gray-700">{rating.comment}</p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+          {/* Formulário de avaliação */}
+          {user && showRatingForm && (
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="font-medium">
+                  {userRating ? "Editar sua avaliação" : "Avaliar esta aula"}
+                </h3>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setShowRatingForm(false)}
+                >
+                  Cancelar
+                </Button>
+              </div>
+              
+              <RatingForm 
+                lessonId={parseInt(id)} 
+                userRating={userRating} 
+                onSuccess={() => setShowRatingForm(false)}
+              />
+            </div>
+          )}
+          
+          {/* Lista de avaliações */}
+          {ratingsData && ratingsData.length > 0 ? (
+            <div>
+              {/* Exibe a avaliação do usuário primeiro, se existir */}
+              {userRating && !showRatingForm && (
+                <div className="mb-6">
+                  <h3 className="text-sm font-medium mb-2">Sua avaliação</h3>
+                  <Comment rating={userRating} />
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-        
-        {/* Navegação entre aulas (bottom) */}
-        <div className="flex items-center justify-between mt-8">
-          <div>
-            {previousLesson && (
-              <Link href={`/cursos/aula/${previousLesson.id}`}>
-                <Button variant="outline" className="flex items-center">
-                  <ChevronLeft size={16} className="mr-2" />
-                  <div className="text-left">
-                    <div className="text-xs text-gray-500">Aula anterior</div>
-                    <div className="font-medium line-clamp-1">{previousLesson.title}</div>
-                  </div>
-                </Button>
-              </Link>
-            )}
-          </div>
-          
-          <div>
-            {nextLesson && (
-              <Link href={`/cursos/aula/${nextLesson.id}`}>
-                <Button variant="outline" className="flex items-center">
-                  <div className="text-right">
-                    <div className="text-xs text-gray-500">Próxima aula</div>
-                    <div className="font-medium line-clamp-1">{nextLesson.title}</div>
-                  </div>
-                  <ChevronRight size={16} className="ml-2" />
-                </Button>
-              </Link>
-            )}
-          </div>
+              )}
+              
+              {/* Exibe as outras avaliações */}
+              {publicRatings.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium mb-2">
+                    {publicRatings.length} {publicRatings.length === 1 ? 'avaliação' : 'avaliações'} de outros usuários
+                  </h3>
+                  {publicRatings.map((rating) => (
+                    <Comment key={rating.id} rating={rating} />
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-10 text-neutral-500">
+              <MessageSquare className="h-10 w-10 mb-3 opacity-40" />
+              <p className="text-center">
+                Ainda não há avaliações para esta aula.
+                {user && !showRatingForm && (
+                  <button 
+                    onClick={() => setShowRatingForm(true)}
+                    className="ml-1 text-blue-600 hover:underline"
+                  >
+                    Seja o primeiro a avaliar!
+                  </button>
+                )}
+              </p>
+            </div>
+          )}
         </div>
       </div>
-    </>
+    </div>
   );
-};
-
-export default AulaDetalhesPage;
+}
