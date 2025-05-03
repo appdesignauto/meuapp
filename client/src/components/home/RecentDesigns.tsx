@@ -30,10 +30,12 @@ export default function RecentDesigns() {
   
   // Configuração do carrossel Embla 
   const [emblaRef, emblaApi] = useEmblaCarousel({ 
-    loop: false,
+    loop: true,
     align: 'start',
     slidesToScroll: 1,
-    containScroll: 'trimSnaps'
+    containScroll: 'trimSnaps',
+    dragFree: true,
+    speed: 10
   });
   
   const [prevBtnEnabled, setPrevBtnEnabled] = useState(false);
@@ -125,7 +127,8 @@ export default function RecentDesigns() {
   }
   
   return (
-    <section className="py-8 bg-gradient-to-r from-blue-50 to-purple-50">
+    <section className="py-5 bg-gradient-to-b from-white via-white to-blue-50/30 relative">
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center">
@@ -139,7 +142,7 @@ export default function RecentDesigns() {
                   onClick={scrollPrev}
                   variant="ghost" 
                   size="icon"
-                  className={`w-8 h-8 rounded-full flex items-center justify-center bg-white shadow-sm ${!prevBtnEnabled ? 'opacity-40 cursor-not-allowed' : ''}`}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center bg-white shadow-sm border border-gray-100 ${!prevBtnEnabled ? 'opacity-40 cursor-not-allowed' : 'hover:bg-blue-50 hover:border-blue-100'}`}
                   disabled={!prevBtnEnabled}
                 >
                   <ChevronLeft className="h-4 w-4 text-blue-600" />
@@ -148,7 +151,7 @@ export default function RecentDesigns() {
                   onClick={scrollNext}
                   variant="ghost" 
                   size="icon"
-                  className={`w-8 h-8 rounded-full flex items-center justify-center bg-white shadow-sm ${!nextBtnEnabled ? 'opacity-40 cursor-not-allowed' : ''}`}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center bg-white shadow-sm border border-gray-100 ${!nextBtnEnabled ? 'opacity-40 cursor-not-allowed' : 'hover:bg-blue-50 hover:border-blue-100'}`}
                   disabled={!nextBtnEnabled}
                 >
                   <ChevronRight className="h-4 w-4 text-blue-600" />
@@ -158,7 +161,7 @@ export default function RecentDesigns() {
             <Button 
               onClick={handleViewAll}
               variant="ghost" 
-              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-2 py-1 h-auto flex items-center gap-1 text-xs font-medium"
+              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-2 py-1 h-auto flex items-center gap-1 text-xs font-medium rounded-full border border-transparent hover:border-blue-100"
             >
               Ver todos
               <ChevronRight className="h-3 w-3" />
@@ -171,11 +174,11 @@ export default function RecentDesigns() {
           <div className="overflow-hidden" ref={emblaRef}>
             <div className="flex">
               {recentDesigns.map((download: RecentDesign) => (
-                <div className="flex-[0_0_40%] min-w-0 mr-3 last:mr-0" key={download.id}>
+                <div className="flex-[0_0_36%] min-w-0 mr-3 last:mr-0" key={download.id}>
                   <motion.div
                     whileHover={{ y: -5, scale: 1.02 }}
                     transition={{ duration: 0.2 }}
-                    className="bg-white rounded-lg shadow-sm overflow-hidden cursor-pointer relative group h-full"
+                    className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden cursor-pointer relative group h-full"
                     onClick={() => handleClickDesign(download.art.id)}
                   >
                     <div className="relative aspect-square overflow-hidden">
@@ -215,7 +218,7 @@ export default function RecentDesigns() {
                 key={download.id}
                 whileHover={{ y: -5, scale: 1.02 }}
                 transition={{ duration: 0.2 }}
-                className="bg-white rounded-lg shadow-sm overflow-hidden cursor-pointer relative group"
+                className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden cursor-pointer relative group"
                 onClick={() => handleClickDesign(download.art.id)}
               >
                 <div className="relative aspect-square overflow-hidden">
