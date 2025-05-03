@@ -67,11 +67,11 @@ const Testimonials = () => {
         
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[...Array(3)].map((_, index) => (
+            {Array.from({ length: 3 }).map((_, index) => (
               <div key={index} className="bg-white p-6 rounded-lg shadow-sm border border-neutral-200 animate-pulse">
                 <div className="flex items-center mb-4">
                   <div className="flex">
-                    {[...Array(5)].map((_, i) => (
+                    {Array.from({ length: 5 }).map((_, i) => (
                       <div key={i} className="h-4 w-4 mr-1 bg-neutral-200 rounded-full" />
                     ))}
                   </div>

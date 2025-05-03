@@ -136,7 +136,7 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
           {/* Carrossel de categorias */}
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {[...Array(4)].map((_, index) => (
+              {Array.from({ length: 4 }).map((_, index) => (
                 <div key={index} className="rounded-xl overflow-hidden shadow-sm animate-pulse">
                   <div className="aspect-square bg-neutral-200">
                     <div className="grid grid-cols-2 h-full">

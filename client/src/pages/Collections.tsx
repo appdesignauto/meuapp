@@ -76,7 +76,7 @@ const Collections = () => {
 
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[...Array(8)].map((_, index) => (
+            {Array.from({ length: 8 }).map((_, index) => (
               <div 
                 key={index} 
                 className="rounded-lg overflow-hidden shadow-sm border border-neutral-200 animate-pulse"
