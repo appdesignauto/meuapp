@@ -493,7 +493,49 @@ export default function ArtDetail() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            {/* Container da imagem sem badges no mobile */}
+            {/* Tags minimalistas acima da imagem (apenas mobile) */}
+            <div className="md:hidden w-full flex items-center justify-end mb-3 gap-2 flex-wrap">
+              {art.isPremium && (
+                <motion.div
+                  initial={{ y: -10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.3, delay: 0.2 }}
+                >
+                  <Badge className="bg-transparent border border-purple-300 text-purple-600 px-3 py-1 rounded-full font-medium flex items-center">
+                    <Sparkles className="h-3.5 w-3.5 mr-1" />
+                    Premium
+                  </Badge>
+                </motion.div>
+              )}
+              
+              {art.viewCount && art.viewCount > 10 && (
+                <motion.div
+                  initial={{ y: -10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.3, delay: 0.3 }}
+                >
+                  <Badge className="bg-transparent border border-blue-300 text-blue-600 px-3 py-1 rounded-full font-medium flex items-center">
+                    <Trophy className="h-3.5 w-3.5 mr-1" />
+                    Popular
+                  </Badge>
+                </motion.div>
+              )}
+              
+              {new Date(art.createdAt).getTime() > new Date().getTime() - 7 * 24 * 60 * 60 * 1000 && (
+                <motion.div
+                  initial={{ y: -10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.3, delay: 0.4 }}
+                >
+                  <Badge className="bg-transparent border border-green-300 text-green-600 px-3 py-1 rounded-full font-medium flex items-center">
+                    <Zap className="h-3.5 w-3.5 mr-1" />
+                    Novidade
+                  </Badge>
+                </motion.div>
+              )}
+            </div>
+            
+            {/* Container da imagem */}
             <div className="w-full h-full relative group">
               <motion.img 
                 src={art.imageUrl} 
@@ -561,48 +603,6 @@ export default function ArtDetail() {
               </div>
               
 
-            </div>
-            
-            {/* Tags minimalistas para mobile abaixo da imagem */}
-            <div className="md:hidden flex items-center justify-center mt-4 gap-2 flex-wrap">
-              {art.isPremium && (
-                <motion.div
-                  initial={{ y: 10, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.3, delay: 0.2 }}
-                >
-                  <Badge className="bg-transparent border border-purple-300 text-purple-600 px-3 py-1 rounded-full font-medium flex items-center">
-                    <Sparkles className="h-3.5 w-3.5 mr-1" />
-                    Premium
-                  </Badge>
-                </motion.div>
-              )}
-              
-              {art.viewCount && art.viewCount > 10 && (
-                <motion.div
-                  initial={{ y: 10, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.3, delay: 0.3 }}
-                >
-                  <Badge className="bg-transparent border border-blue-300 text-blue-600 px-3 py-1 rounded-full font-medium flex items-center">
-                    <Trophy className="h-3.5 w-3.5 mr-1" />
-                    Popular
-                  </Badge>
-                </motion.div>
-              )}
-              
-              {new Date(art.createdAt).getTime() > new Date().getTime() - 7 * 24 * 60 * 60 * 1000 && (
-                <motion.div
-                  initial={{ y: 10, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.3, delay: 0.4 }}
-                >
-                  <Badge className="bg-transparent border border-green-300 text-green-600 px-3 py-1 rounded-full font-medium flex items-center">
-                    <Zap className="h-3.5 w-3.5 mr-1" />
-                    Novidade
-                  </Badge>
-                </motion.div>
-              )}
             </div>
           </motion.div>
           
