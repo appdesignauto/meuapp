@@ -9,7 +9,7 @@ import {
   insertCourseRatingSchema
 } from "@shared/schema";
 import multer from "multer";
-import supabaseStorageService from "../services/supabaseStorageService";
+import { supabaseStorageService } from "../services/supabase-storage";
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });

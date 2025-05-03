@@ -33,6 +33,7 @@ import logoUploadRouter from './routes/logo-upload';
 import removeLogoRouter from './routes/remove-logo';
 import supabaseRegisterTestRouter from './routes/supabase-register-test';
 import avatarUploadRouter from './routes/avatar-upload';
+import courseRoutes from './routes/courseRoutes';
 import directAvatarRouter from './routes/direct-avatar'; // Nova rota direta de avatar
 import usersProfileImageRouter from './routes/users-profile-image'; // Compatibilidade frontend/produção
 import userProfileRouter from './routes/user-profile';
@@ -4409,6 +4410,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Ferramenta de diagnóstico do Supabase Storage
   app.use(supabeDiagnosticsRouter);
+  
+  // Registrar rotas de videoaulas/cursos
+  app.use('/api/courses', courseRoutes);
   
   // Registrar rotas para artes multi-formato
   app.use(multiArtRouter);
