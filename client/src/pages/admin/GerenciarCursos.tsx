@@ -843,7 +843,7 @@ export default function GerenciarCursosPage() {
   // Mutação para excluir lição
   const deleteLessonMutation = useMutation({
     mutationFn: async (id: number) => {
-      const res = await apiRequest('DELETE', `/api/cursos/lessons/${id}`);
+      const res = await apiRequest('DELETE', `/api/courses/lessons/${id}`);
       return await res.json();
     },
     onSuccess: () => {
@@ -852,7 +852,7 @@ export default function GerenciarCursosPage() {
         description: 'A aula foi removida corretamente.',
       });
       if (selectedModuleId) {
-        queryClient.invalidateQueries({ queryKey: ['/api/cursos/modules', selectedModuleId, 'lessons'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/courses/modules', selectedModuleId, 'lessons'] });
       }
     },
     onError: (error: any) => {
@@ -1042,7 +1042,7 @@ export default function GerenciarCursosPage() {
               <Button 
                 variant="outline" 
                 className="mt-4"
-                onClick={() => queryClient.invalidateQueries({ queryKey: ['/api/cursos/modules/admin'] })}
+                onClick={() => queryClient.invalidateQueries({ queryKey: ['/api/courses/modules'] })}
               >
                 Tentar novamente
               </Button>
