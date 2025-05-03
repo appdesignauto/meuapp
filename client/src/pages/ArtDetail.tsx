@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import useScrollTop from '@/hooks/useScrollTop';
@@ -251,6 +251,16 @@ export default function ArtDetail() {
     }
   }, [favoriteStatus]);
   
+  // Verifica e aplica a propriedade isPremiumLocked para a arte atual
+  const artWithPremiumStatus = React.useMemo(() => {
+    if (!art) return null;
+    
+    return {
+      ...art,
+      isPremiumLocked: shouldLockPremiumContent(art)
+    };
+  }, [art, user]);
+  
   // Mutação para adicionar aos favoritos
   const addFavoriteMutation = useMutation({
     mutationFn: async () => {
@@ -355,7 +365,7 @@ export default function ArtDetail() {
 
   const handleOpenEdit = () => {
     // Para conteúdo premium bloqueado, tratar de forma diferente
-    if (art.isPremiumLocked) {
+    if (artWithPremiumStatus?.isPremiumLocked) {
       handleOpenPremiumEdit();
       return;
     }
@@ -815,11 +825,11 @@ export default function ArtDetail() {
               transition={{ duration: 0.3, delay: 0.4 }}
             >
               <motion.div
-                whileHover={{ scale: art.isPremiumLocked ? 1 : 1.02 }}
-                whileTap={{ scale: art.isPremiumLocked ? 1 : 0.98 }}
+                whileHover={{ scale: artWithPremiumStatus.isPremiumLocked ? 1 : 1.02 }}
+                whileTap={{ scale: artWithPremiumStatus.isPremiumLocked ? 1 : 0.98 }}
                 transition={{ type: "spring", stiffness: 400, damping: 15 }}
               >
-                {art.isPremiumLocked ? (
+                {artWithPremiumStatus.isPremiumLocked ? (
                   <Button 
                     onClick={handleOpenPremiumEdit} 
                     size="lg"
@@ -934,7 +944,7 @@ export default function ArtDetail() {
             {/* Designer Section já está posicionada após o título e metadados */}
             
             {/* Notificação Premium sem botão - apenas informativa */}
-            {art.isPremiumLocked && (
+            {artWithPremiumStatus?.isPremiumLocked && (
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-2">
                 <h3 className="text-amber-800 font-semibold flex items-center gap-2 mb-2 text-sm">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
