@@ -486,25 +486,26 @@ export default function ArtDetail() {
       
       <div className="bg-white rounded-xl shadow-md overflow-hidden mb-6">
         <div className="grid grid-cols-1 lg:grid-cols-6 gap-0">
-          {/* Art Image - Container com altura mínima e padding otimizado */}
+          {/* Art Image - Container com design limpo e adaptado para mobile */}
           <motion.div 
-            className="relative bg-white flex items-center justify-center p-5 md:p-8 lg:col-span-4 border-r border-gray-100 min-h-[50vh] md:min-h-[60vh]"
+            className="relative bg-white flex flex-col items-center justify-center p-4 md:p-6 lg:col-span-4 border-r border-gray-100"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="w-full h-full flex items-center justify-center relative group max-w-3xl mx-auto pt-4 md:pt-0">
+            {/* Container da imagem sem badges no mobile */}
+            <div className="w-full h-full relative group">
               <motion.img 
                 src={art.imageUrl} 
                 alt={art.title} 
-                className="max-w-[94%] md:max-w-full max-h-[75vh] md:max-h-[80vh] object-contain transition-all duration-300 rounded-md"
+                className="w-full h-full object-contain max-h-[72vh] sm:max-h-[80vh] transition-all duration-300 rounded-md shadow-sm"
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5 }}
               />
               
-              {/* Badges de status */}
-              <div className="absolute top-5 right-5 md:top-4 md:right-4 flex flex-col space-y-2">
+              {/* Badges de status - Versão desktop (visível apenas em telas MD+) */}
+              <div className="hidden md:flex absolute top-4 right-4 flex-col space-y-2">
                 {art.isPremium && (
                   <motion.div
                     initial={{ x: 20, opacity: 0 }}
@@ -560,6 +561,48 @@ export default function ArtDetail() {
               </div>
               
 
+            </div>
+            
+            {/* Tags minimalistas para mobile abaixo da imagem */}
+            <div className="md:hidden flex items-center justify-center mt-4 gap-2 flex-wrap">
+              {art.isPremium && (
+                <motion.div
+                  initial={{ y: 10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.3, delay: 0.2 }}
+                >
+                  <Badge className="bg-transparent border border-purple-300 text-purple-600 px-3 py-1 rounded-full font-medium flex items-center">
+                    <Sparkles className="h-3.5 w-3.5 mr-1" />
+                    Premium
+                  </Badge>
+                </motion.div>
+              )}
+              
+              {art.viewCount && art.viewCount > 10 && (
+                <motion.div
+                  initial={{ y: 10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.3, delay: 0.3 }}
+                >
+                  <Badge className="bg-transparent border border-blue-300 text-blue-600 px-3 py-1 rounded-full font-medium flex items-center">
+                    <Trophy className="h-3.5 w-3.5 mr-1" />
+                    Popular
+                  </Badge>
+                </motion.div>
+              )}
+              
+              {new Date(art.createdAt).getTime() > new Date().getTime() - 7 * 24 * 60 * 60 * 1000 && (
+                <motion.div
+                  initial={{ y: 10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.3, delay: 0.4 }}
+                >
+                  <Badge className="bg-transparent border border-green-300 text-green-600 px-3 py-1 rounded-full font-medium flex items-center">
+                    <Zap className="h-3.5 w-3.5 mr-1" />
+                    Novidade
+                  </Badge>
+                </motion.div>
+              )}
             </div>
           </motion.div>
           

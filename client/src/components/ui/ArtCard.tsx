@@ -66,28 +66,32 @@ function ArtCard({
         {/* Overlay escuro sutil no hover para melhorar legibilidade */}
         <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors duration-300"></div>
         
-        {/* Badges no canto superior direito - versão minimalista */}
+        {/* Badges no canto superior direito */}
         <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
-          {/* Coroa Premium minimalista - versão aprimorada */}
           {art.isPremium && (
-            <div className="relative group">
-              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-600 blur-[1px] opacity-70 group-hover:opacity-100 transition-all duration-300"></div>
-              <div className="relative bg-gradient-to-br from-amber-400 to-amber-600 rounded-full p-1.5 shadow-md transition-all duration-300 hover:scale-110 border border-amber-300/50">
-                <Crown className="h-2.5 w-2.5 text-white drop-shadow-sm" />
-              </div>
-            </div>
+            <Badge variant="default" className="flex items-center gap-1 shadow-sm">
+              <Crown className="h-3 w-3" />
+              <span>Premium</span>
+            </Badge>
           )}
           
-          {/* Indicador de mesmo grupo - versão mais sutil e consistente */}
+          {/* Indicador de mesmo grupo */}
           {isSameGroup && (
-            <div className="relative group">
-              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-300 via-blue-400 to-blue-600 blur-[1px] opacity-70 group-hover:opacity-100 transition-all duration-300"></div>
-              <div className="relative bg-gradient-to-br from-blue-400 to-blue-600 rounded-full p-1.5 shadow-md transition-all duration-300 hover:scale-110 border border-blue-300/50">
-                <Layers className="h-2.5 w-2.5 text-white drop-shadow-sm" />
-              </div>
-            </div>
+            <Badge variant="default" className="flex items-center gap-1 shadow-sm bg-blue-500 hover:bg-blue-700">
+              <Layers className="h-3 w-3" />
+              <span>Mesmo Grupo</span>
+            </Badge>
           )}
         </div>
+        
+        {/* Formato da arte (se disponível) */}
+        {art.format && (
+          <div className="absolute bottom-2 left-2">
+            <Badge variant="secondary" className={`text-xs ${isSameGroup ? 'bg-blue-500/70' : 'bg-black/50'} text-white border-none shadow-sm`}>
+              {art.format}
+            </Badge>
+          </div>
+        )}
         
         {/* Mostrar informações do designer no canto inferior */}
         {showDesigner && art.designer && (
