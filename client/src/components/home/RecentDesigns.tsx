@@ -81,18 +81,17 @@ export default function RecentDesigns() {
   return (
     <section className="py-8 bg-gradient-to-r from-blue-50 to-purple-50">
       <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-blue-600" />
-            <h2 className="text-xl font-bold text-gray-800">Seus designs recentes</h2>
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center">
+            <h2 className="text-xs sm:text-sm font-medium text-neutral-800">Seus designs recentes</h2>
           </div>
           <Button 
             onClick={handleViewAll}
             variant="ghost" 
-            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-4 py-2 flex items-center gap-1"
+            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-2 py-1 h-auto flex items-center gap-1 text-xs font-medium"
           >
             Ver todos
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-3 w-3" />
           </Button>
         </div>
         
