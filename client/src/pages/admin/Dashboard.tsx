@@ -17,7 +17,9 @@ import {
   Database,
   HardDrive,
   FileType,
-  CreditCard
+  CreditCard,
+  BookOpen,
+  Video
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -184,6 +186,12 @@ const AdminDashboard = () => {
                     <Button variant="ghost" className="w-full justify-start text-gray-600 mb-2">
                       <HardDrive className="w-5 h-5 mr-3" />
                       Testar Armazenamento
+                    </Button>
+                  </Link>
+                  <Link href="/admin/gerenciar-cursos">
+                    <Button variant="ghost" className="w-full justify-start text-gray-600 mb-2">
+                      <Video className="w-5 h-5 mr-3" />
+                      Gerenciar Videoaulas
                     </Button>
                   </Link>
                 </>
