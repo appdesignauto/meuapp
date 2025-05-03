@@ -802,7 +802,7 @@ export default function ArtDetail() {
                 )}
               </motion.div>
               
-              <div className="flex gap-3 mt-3">
+              <div className="flex gap-1.5 mt-1">
                 <motion.div className="flex-1"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -811,13 +811,13 @@ export default function ArtDetail() {
                   <Button 
                     variant="outline" 
                     size="default"
-                    className="w-full flex items-center justify-center gap-3 border-2 border-blue-200 text-blue-600 py-4 hover:bg-blue-50 rounded-xl font-medium transition-all duration-200"
+                    className="w-full flex items-center justify-center gap-1 border-blue-200 text-blue-600 py-5 hover:bg-blue-50"
                     onClick={handleLike}
                     disabled={addFavoriteMutation.isPending || removeFavoriteMutation.isPending}
                   >
                     {addFavoriteMutation.isPending || removeFavoriteMutation.isPending ? (
                       <>
-                        <svg className="animate-spin h-5 w-5 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <svg className="animate-spin h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
@@ -825,18 +825,16 @@ export default function ArtDetail() {
                       </>
                     ) : (
                       <>
-                        <div className="bg-blue-100 rounded-lg p-1.5">
-                          <motion.div
-                            animate={liked ? { scale: [1, 1.5, 1] } : {}}
-                            transition={{ duration: 0.4 }}
-                          >
-                            <Heart className={`h-5 w-5 ${liked ? 'fill-blue-600 text-blue-600' : 'text-blue-600'}`} />
-                          </motion.div>
-                        </div>
-                        <span className="flex items-center font-semibold">
+                        <motion.div
+                          animate={liked ? { scale: [1, 1.5, 1] } : {}}
+                          transition={{ duration: 0.4 }}
+                        >
+                          <Heart className={`h-4 w-4 ${liked ? 'fill-blue-600 text-blue-600' : ''}`} />
+                        </motion.div>
+                        <span className="flex items-center">
                           {liked ? 'Favoritado' : 'Favoritar'}
                           {art.favoriteCount > 0 && (
-                            <span className="ml-2 bg-blue-100 text-blue-700 text-xs px-1.5 py-0.5 rounded-full">
+                            <span className="ml-1.5 bg-blue-100 text-blue-700 text-xs px-1.5 py-0.5 rounded-full">
                               {art.favoriteCount}
                             </span>
                           )}
@@ -854,16 +852,14 @@ export default function ArtDetail() {
                   <Button 
                     variant="outline" 
                     size="default"
-                    className="w-full flex items-center justify-center gap-3 border-2 border-blue-200 text-blue-600 py-4 hover:bg-blue-50 rounded-xl font-medium transition-all duration-200"
+                    className="w-full flex items-center justify-center gap-1 border-blue-200 text-blue-600 py-5 hover:bg-blue-50"
                     onClick={handleShare}
                   >
-                    <div className="bg-blue-100 rounded-lg p-1.5">
-                      <Share2 className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <span className="flex items-center font-semibold">
+                    <Share2 className="h-4 w-4" />
+                    <span className="flex items-center">
                       Compartilhar
                       {art.shareCount > 0 && (
-                        <span className="ml-2 bg-blue-100 text-blue-700 text-xs px-1.5 py-0.5 rounded-full">
+                        <span className="ml-1.5 bg-blue-100 text-blue-700 text-xs px-1.5 py-0.5 rounded-full">
                           {art.shareCount}
                         </span>
                       )}
