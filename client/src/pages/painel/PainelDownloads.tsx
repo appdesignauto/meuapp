@@ -52,16 +52,39 @@ export default function PainelDownloads() {
         // Filtro de data
         if (dateFilter !== "all") {
           const downloadDate = new Date(download.createdAt);
-          const today = new Date();
-          const diffTime = Math.abs(today.getTime() - downloadDate.getTime());
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-          if (dateFilter === "week" && diffDays > 7) {
-            return false;
-          } else if (dateFilter === "month" && diffDays > 30) {
-            return false;
-          } else if (dateFilter === "year" && diffDays > 365) {
-            return false;
+          const now = new Date();
+          const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          const yesterday = new Date(today);
+          yesterday.setDate(yesterday.getDate() - 1);
+          
+          const diffTime = Math.abs(now.getTime() - downloadDate.getTime());
+          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+          
+          // Início do mês atual
+          const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+          
+          switch(dateFilter) {
+            case 'today':
+              if (!(downloadDate >= today)) return false;
+              break;
+            case 'yesterday':
+              if (!(downloadDate >= yesterday && downloadDate < today)) return false;
+              break;
+            case 'last3days':
+              if (!(diffDays < 3)) return false;
+              break;
+            case 'last7days':
+              if (!(diffDays < 7)) return false;
+              break;
+            case 'last14days':
+              if (!(diffDays < 14)) return false;
+              break;
+            case 'lastMonth':
+              if (!(diffDays < 30)) return false;
+              break;
+            case 'thisMonth':
+              if (!(downloadDate >= startOfMonth)) return false;
+              break;
           }
         }
 
@@ -80,6 +103,26 @@ export default function PainelDownloads() {
       minute: '2-digit'
     }).format(date);
   };
+  
+  // Cálculo de tempo relativo (Editado há X dias/horas)
+  const getRelativeTimeString = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+    const diffMinutes = Math.floor(diffTime / (1000 * 60));
+    
+    if (diffDays > 0) {
+      return `Editado há ${diffDays} ${diffDays === 1 ? 'dia' : 'dias'}`;
+    } else if (diffHours > 0) {
+      return `Editado há ${diffHours} ${diffHours === 1 ? 'hora' : 'horas'}`;
+    } else if (diffMinutes > 0) {
+      return `Editado há ${diffMinutes} ${diffMinutes === 1 ? 'minuto' : 'minutos'}`;
+    } else {
+      return 'Editado agora';
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -94,9 +137,13 @@ export default function PainelDownloads() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos os períodos</SelectItem>
-              <SelectItem value="week">Última semana</SelectItem>
-              <SelectItem value="month">Último mês</SelectItem>
-              <SelectItem value="year">Último ano</SelectItem>
+              <SelectItem value="today">Hoje</SelectItem>
+              <SelectItem value="yesterday">Ontem</SelectItem>
+              <SelectItem value="last3days">Últimos 3 dias</SelectItem>
+              <SelectItem value="last7days">Últimos 7 dias</SelectItem>
+              <SelectItem value="last14days">Últimos 14 dias</SelectItem>
+              <SelectItem value="lastMonth">Último mês</SelectItem>
+              <SelectItem value="thisMonth">Este mês</SelectItem>
             </SelectContent>
           </Select>
           
@@ -147,6 +194,7 @@ export default function PainelDownloads() {
               download={download}
               isPremium={!!isPremium}
               formatDate={formatDate}
+              getRelativeTimeString={getRelativeTimeString}
             />
           ))}
         </div>
@@ -160,9 +208,10 @@ interface DownloadItemProps {
   download: any;
   isPremium: boolean;
   formatDate: (date: string) => string;
+  getRelativeTimeString: (date: string) => string;
 }
 
-function DownloadItem({ download, isPremium, formatDate }: DownloadItemProps) {
+function DownloadItem({ download, isPremium, formatDate, getRelativeTimeString }: DownloadItemProps) {
   const { toast } = useToast();
   const art = download.art;
   
@@ -207,9 +256,14 @@ function DownloadItem({ download, isPremium, formatDate }: DownloadItemProps) {
               </div>
             </div>
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 gap-2">
-              <div className="flex items-center text-sm text-muted-foreground">
-                <Calendar className="mr-1 h-4 w-4" />
-                <span>Baixado em: {formatDate(download.createdAt)}</span>
+              <div className="flex flex-col text-sm text-muted-foreground">
+                <div className="flex items-center">
+                  <Calendar className="mr-1 h-4 w-4" />
+                  <span>Baixado em: {formatDate(download.createdAt)}</span>
+                </div>
+                <span className="text-xs mt-1 text-blue-600">
+                  {getRelativeTimeString(download.createdAt)}
+                </span>
               </div>
               <Button
                 variant="outline"

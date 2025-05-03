@@ -1,18 +1,11 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
-import { Clock, ExternalLink, ChevronRight, Filter } from 'lucide-react';
+import { Clock, ExternalLink, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 interface RecentDesign {
   id: number;
@@ -32,7 +25,6 @@ interface RecentDesign {
 export default function RecentDesigns() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
-  const [timeFilter, setTimeFilter] = useState<string>("all");
   
   // Event handlers
   const handleViewAll = () => {
@@ -74,153 +66,34 @@ export default function RecentDesigns() {
     return null;
   }
   
-  // Filtragem por período de tempo
-  const filteredDesigns = downloadsData?.downloads
-    ? [...downloadsData.downloads].filter(download => {
-        const downloadDate = new Date(download.createdAt);
-        const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-        
-        // Cálculo de datas para comparações
-        const diffTime = Math.abs(now.getTime() - downloadDate.getTime());
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        
-        // Início do mês atual
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        
-        switch(timeFilter) {
-          case 'today':
-            return downloadDate >= today;
-          case 'yesterday':
-            return downloadDate >= yesterday && downloadDate < today;
-          case 'last3days':
-            return diffDays < 3;
-          case 'last7days':
-            return diffDays < 7;
-          case 'last14days':
-            return diffDays < 14;
-          case 'lastMonth':
-            return diffDays < 30;
-          case 'thisMonth':
-            return downloadDate >= startOfMonth;
-          case 'all':
-          default:
-            return true;
-        }
-      })
-    : [];
-  
   // Ordenar por data de download mais recente e limitar a 6 itens
-  const recentDesigns = filteredDesigns
-    ? [...filteredDesigns]
+  const recentDesigns = downloadsData?.downloads
+    ? [...downloadsData.downloads]
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         .slice(0, 6)
     : [];
     
-  // Se não houver designs após aplicar todos os filtros e a API já tiver carregado
-  if (!isLoading && downloadsData?.downloads && downloadsData.downloads.length > 0 && recentDesigns.length === 0) {
-    return (
-      <section className="py-8 bg-gradient-to-r from-blue-50 to-purple-50">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <div className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-blue-600" />
-              <h2 className="text-xl font-bold text-gray-800">Seus designs recentes</h2>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-gray-500" />
-                <Select value={timeFilter} onValueChange={setTimeFilter}>
-                  <SelectTrigger className="w-[150px] h-9 text-sm">
-                    <SelectValue placeholder="Período" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os períodos</SelectItem>
-                    <SelectItem value="today">Hoje</SelectItem>
-                    <SelectItem value="yesterday">Ontem</SelectItem>
-                    <SelectItem value="last3days">Últimos 3 dias</SelectItem>
-                    <SelectItem value="last7days">Últimos 7 dias</SelectItem>
-                    <SelectItem value="last14days">Últimos 14 dias</SelectItem>
-                    <SelectItem value="lastMonth">Último mês</SelectItem>
-                    <SelectItem value="thisMonth">Este mês</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button 
-                onClick={handleViewAll}
-                variant="ghost" 
-                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-4 py-2 flex items-center gap-1"
-              >
-                Ver todos
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-          
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="bg-gray-100 p-6 rounded-full mb-4">
-              <Clock className="h-10 w-10 text-gray-400" />
-            </div>
-            <h3 className="text-xl font-medium text-gray-900 mb-2">Nenhum design encontrado</h3>
-            <p className="text-gray-500 max-w-md">
-              Você não tem designs editados neste período.
-            </p>
-            <Button 
-              onClick={() => setTimeFilter('all')}
-              variant="outline" 
-              className="mt-4"
-            >
-              Ver todos os períodos
-            </Button>
-          </div>
-        </div>
-      </section>
-    );
-  }
-  
-  // Se não houver designs recentes (e não está filtrando), não renderiza nada
-  if (downloadsData?.downloads?.length === 0 || recentDesigns.length === 0) {
+  // Se não houver designs recentes, não renderiza nada
+  if (!downloadsData?.downloads || downloadsData.downloads.length === 0 || recentDesigns.length === 0) {
     return null;
   }
   
   return (
     <section className="py-8 bg-gradient-to-r from-blue-50 to-purple-50">
       <div className="container mx-auto px-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-2">
             <Clock className="h-5 w-5 text-blue-600" />
             <h2 className="text-xl font-bold text-gray-800">Seus designs recentes</h2>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-gray-500" />
-              <Select value={timeFilter} onValueChange={setTimeFilter}>
-                <SelectTrigger className="w-[150px] h-9 text-sm">
-                  <SelectValue placeholder="Período" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os períodos</SelectItem>
-                  <SelectItem value="today">Hoje</SelectItem>
-                  <SelectItem value="yesterday">Ontem</SelectItem>
-                  <SelectItem value="last3days">Últimos 3 dias</SelectItem>
-                  <SelectItem value="last7days">Últimos 7 dias</SelectItem>
-                  <SelectItem value="last14days">Últimos 14 dias</SelectItem>
-                  <SelectItem value="lastMonth">Último mês</SelectItem>
-                  <SelectItem value="thisMonth">Este mês</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Button 
-              onClick={handleViewAll}
-              variant="ghost" 
-              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-4 py-2 flex items-center gap-1"
-            >
-              Ver todos
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+          <Button 
+            onClick={handleViewAll}
+            variant="ghost" 
+            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-4 py-2 flex items-center gap-1"
+          >
+            Ver todos
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
         
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
