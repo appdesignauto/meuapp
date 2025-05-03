@@ -66,32 +66,22 @@ function ArtCard({
         {/* Overlay escuro sutil no hover para melhorar legibilidade */}
         <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors duration-300"></div>
         
-        {/* Badges no canto superior direito */}
+        {/* Badges no canto superior direito - versão minimalista */}
         <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
+          {/* Coroa Premium minimalista */}
           {art.isPremium && (
-            <Badge variant="default" className="flex items-center gap-1 shadow-sm">
-              <Crown className="h-3 w-3" />
-              <span>Premium</span>
-            </Badge>
+            <div className="bg-amber-500/90 hover:bg-amber-500 rounded-full p-1.5 shadow-md backdrop-blur-sm transition-all duration-300 hover:scale-110">
+              <Crown className="h-3 w-3 text-white" />
+            </div>
           )}
           
-          {/* Indicador de mesmo grupo */}
+          {/* Indicador de mesmo grupo - versão mais sutil */}
           {isSameGroup && (
-            <Badge variant="default" className="flex items-center gap-1 shadow-sm bg-blue-500 hover:bg-blue-700">
-              <Layers className="h-3 w-3" />
-              <span>Mesmo Grupo</span>
-            </Badge>
+            <div className="bg-blue-500/90 hover:bg-blue-500 rounded-full p-1.5 shadow-md backdrop-blur-sm transition-all duration-300 hover:scale-110">
+              <Layers className="h-3 w-3 text-white" />
+            </div>
           )}
         </div>
-        
-        {/* Formato da arte (se disponível) */}
-        {art.format && (
-          <div className="absolute bottom-2 left-2">
-            <Badge variant="secondary" className={`text-xs ${isSameGroup ? 'bg-blue-500/70' : 'bg-black/50'} text-white border-none shadow-sm`}>
-              {art.format}
-            </Badge>
-          </div>
-        )}
         
         {/* Mostrar informações do designer no canto inferior */}
         {showDesigner && art.designer && (
