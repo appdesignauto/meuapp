@@ -486,21 +486,33 @@ export default function ArtDetail() {
       
       <div className="bg-white rounded-xl shadow-md overflow-hidden mb-6">
         <div className="grid grid-cols-1 lg:grid-cols-6 gap-0">
-          {/* Art Image - Ocupando 4/6 para manter proporção original da imagem */}
+          {/* Art Image - Com fundo melhorado e adaptação inteligente ao formato */}
           <motion.div 
-            className="relative bg-neutral-50 flex items-center justify-center p-4 md:p-6 lg:col-span-4 border-r border-gray-100"
+            className="relative bg-gradient-to-br from-blue-50 via-gray-50 to-slate-100 flex items-center justify-center p-4 md:p-6 lg:col-span-4 border-r border-gray-100 min-h-[60vh]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="w-full h-full relative group">
+            <div className="w-full h-full flex items-center justify-center relative group max-w-4xl mx-auto">
               <motion.img 
                 src={art.imageUrl} 
                 alt={art.title} 
-                className="w-full h-full object-contain max-h-[80vh] transition-all duration-300 rounded-md"
+                className="max-w-full max-h-[75vh] object-contain rounded-md shadow-sm transition-all duration-300"
+                style={{ 
+                  filter: 'drop-shadow(0 8px 12px rgba(0, 0, 0, 0.08))',
+                  maxWidth: '95%',
+                }}
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5 }}
+              />
+              
+              {/* Sutis reflexos */}
+              <div 
+                className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-[85%] h-4 bg-black/5 blur-xl rounded-full"
+                style={{
+                  opacity: 0.4,
+                }}
               />
               
               {/* Badges de status */}
