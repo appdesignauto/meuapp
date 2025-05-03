@@ -95,7 +95,7 @@ const getFileTypeIcon = (fileType: string | null | undefined) => {
   // Retorna o ícone apropriado com base no tipo de arquivo
   switch (normalizedType) {
     case 'canva':
-      return <SiCanva className="h-6 w-6 text-[#00C4CC]" />;
+      return <Edit2 className="h-6 w-6 text-[#00C4CC]" />;
     case 'photoshop':
     case 'psd':
       return <SiAdobephotoshop className="h-6 w-6 text-[#31A8FF]" />;
