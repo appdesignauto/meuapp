@@ -95,24 +95,38 @@ const getFileTypeIcon = (fileType: string | null | undefined) => {
   // Retorna o ícone apropriado com base no tipo de arquivo
   switch (normalizedType) {
     case 'canva':
-      return <ExternalLink className="h-6 w-6 text-[#00C4CC]" />;
+      // Solução definitiva: usar um SVG direto para garantir 100% de visibilidade
+      return (
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M6 12h12M12 6v12" stroke="#00C4CC" strokeWidth="2" strokeLinecap="round"/>
+          <path d="M3 19V5a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke="#00C4CC" strokeWidth="2" />
+        </svg>
+      );
     case 'photoshop':
     case 'psd':
-      return <SiAdobephotoshop className="h-6 w-6 text-[#31A8FF]" />;
+      return <SiAdobephotoshop style={{ color: '#31A8FF', height: '24px', width: '24px' }} />;
     case 'corel':
     case 'cdr':
-      return <ExternalLink className="h-6 w-6 text-[#E21760]" />;
+      return (
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 12L21 8V16L12 20L3 16V8L12 4L17 6.5" stroke="#E21760" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      );
     case 'figma':
-      return <SiFigma className="h-6 w-6 text-[#F24E1E]" />;
+      return <SiFigma style={{ color: '#F24E1E', height: '24px', width: '24px' }} />;
     case 'illustrator':
     case 'ai':
-      return <SiAdobeillustrator className="h-6 w-6 text-[#FF9A00]" />;
+      return <SiAdobeillustrator style={{ color: '#FF9A00', height: '24px', width: '24px' }} />;
     case 'google':
     case 'google docs':
     case 'google slides':
-      return <SiGoogle className="h-6 w-6 text-[#4285F4]" />;
+      return <SiGoogle style={{ color: '#4285F4', height: '24px', width: '24px' }} />;
     default:
-      return <ExternalLink className="h-6 w-6" />;
+      return (
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" stroke="#1E69FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      );
   }
 };
 
