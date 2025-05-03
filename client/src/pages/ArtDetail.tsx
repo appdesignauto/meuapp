@@ -244,6 +244,26 @@ export default function ArtDetail() {
     enabled: !!user && !!id,
   });
   
+  // Função para verificar se o usuário tem acesso ao conteúdo premium
+  const userHasPremiumAccess = () => {
+    if (!user) return false;
+    
+    // Verificar se o usuário tem acesso premium
+    return user.tipoplano === 'mensal' || 
+           user.tipoplano === 'anual' || 
+           user.tipoplano === 'vitalicio' || 
+           user.tipoplano === 'personalizado' || 
+           user.acessovitalicio || 
+           user.nivelacesso === 'admin' || 
+           user.nivelacesso === 'designer_adm';
+  };
+  
+  // Função para determinar se a arte deve ser bloqueada para edição
+  const shouldLockPremiumContent = (artItem: any) => {
+    if (!artItem?.isPremium) return false; // Se não for premium, não bloqueia
+    return !userHasPremiumAccess(); // Bloqueia apenas se for premium e usuário não for premium
+  };
+
   // Efeito para sincronizar o estado liked com o resultado da API
   useEffect(() => {
     if (favoriteStatus) {
@@ -322,26 +342,6 @@ export default function ArtDetail() {
     },
   });
   
-  // Função para verificar se o usuário tem acesso ao conteúdo premium
-  const userHasPremiumAccess = () => {
-    if (!user) return false;
-    
-    // Verificar se o usuário tem acesso premium
-    return user.tipoplano === 'mensal' || 
-           user.tipoplano === 'anual' || 
-           user.tipoplano === 'vitalicio' || 
-           user.tipoplano === 'personalizado' || 
-           user.acessovitalicio || 
-           user.nivelacesso === 'admin' || 
-           user.nivelacesso === 'designer_adm';
-  };
-  
-  // Função para determinar se a arte deve ser bloqueada para edição
-  const shouldLockPremiumContent = (artItem: any) => {
-    if (!artItem?.isPremium) return false; // Se não for premium, não bloqueia
-    return !userHasPremiumAccess(); // Bloqueia apenas se for premium e usuário não for premium
-  };
-
   // Função para lidar com o clique no botão de edição para conteúdo premium
   const handleOpenPremiumEdit = () => {
     // Verificar se o usuário é premium
