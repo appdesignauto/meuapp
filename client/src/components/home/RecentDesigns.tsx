@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
-import { Clock, ExternalLink, ChevronRight } from 'lucide-react';
+import { Clock, ExternalLink, ChevronRight, ChevronLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
+import useEmblaCarousel from 'embla-carousel-react';
 
 interface RecentDesign {
   id: number;
@@ -25,6 +26,51 @@ interface RecentDesign {
 export default function RecentDesigns() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Configuração do carrossel Embla 
+  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+    loop: false,
+    align: 'start',
+    slidesToScroll: 1,
+    containScroll: 'trimSnaps'
+  });
+  
+  const [prevBtnEnabled, setPrevBtnEnabled] = useState(false);
+  const [nextBtnEnabled, setNextBtnEnabled] = useState(true);
+  
+  // Callbacks para navegação
+  const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
+  const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
+  
+  // Atualiza os estados dos botões de navegação
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setPrevBtnEnabled(emblaApi.canScrollPrev());
+    setNextBtnEnabled(emblaApi.canScrollNext());
+  }, [emblaApi]);
+  
+  // Detecta se está em mobile
+  useEffect(() => {
+    const checkSize = () => {
+      setIsMobile(window.innerWidth < 768); // md breakpoint
+    };
+    
+    checkSize();
+    window.addEventListener('resize', checkSize);
+    return () => window.removeEventListener('resize', checkSize);
+  }, []);
+  
+  // Inicializa embla
+  useEffect(() => {
+    if (emblaApi) {
+      emblaApi.on('select', onSelect);
+      onSelect();
+    }
+    return () => {
+      if (emblaApi) emblaApi.off('select', onSelect);
+    };
+  }, [emblaApi, onSelect]);
   
   // Event handlers
   const handleViewAll = () => {
@@ -85,59 +131,128 @@ export default function RecentDesigns() {
           <div className="flex items-center">
             <h2 className="text-xs sm:text-sm font-medium text-neutral-800">Seus designs recentes</h2>
           </div>
-          <Button 
-            onClick={handleViewAll}
-            variant="ghost" 
-            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-2 py-1 h-auto flex items-center gap-1 text-xs font-medium"
-          >
-            Ver todos
-            <ChevronRight className="h-3 w-3" />
-          </Button>
+          <div className="flex items-center gap-2">
+            {/* Botões de navegação no mobile */}
+            {isMobile && (
+              <>
+                <Button 
+                  onClick={scrollPrev}
+                  variant="ghost" 
+                  size="icon"
+                  className={`w-8 h-8 rounded-full flex items-center justify-center bg-white shadow-sm ${!prevBtnEnabled ? 'opacity-40 cursor-not-allowed' : ''}`}
+                  disabled={!prevBtnEnabled}
+                >
+                  <ChevronLeft className="h-4 w-4 text-blue-600" />
+                </Button>
+                <Button 
+                  onClick={scrollNext}
+                  variant="ghost" 
+                  size="icon"
+                  className={`w-8 h-8 rounded-full flex items-center justify-center bg-white shadow-sm ${!nextBtnEnabled ? 'opacity-40 cursor-not-allowed' : ''}`}
+                  disabled={!nextBtnEnabled}
+                >
+                  <ChevronRight className="h-4 w-4 text-blue-600" />
+                </Button>
+              </>
+            )}
+            <Button 
+              onClick={handleViewAll}
+              variant="ghost" 
+              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-2 py-1 h-auto flex items-center gap-1 text-xs font-medium"
+            >
+              Ver todos
+              <ChevronRight className="h-3 w-3" />
+            </Button>
+          </div>
         </div>
         
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {recentDesigns.map((download: RecentDesign) => (
-            <motion.div
-              key={download.id}
-              whileHover={{ y: -5, scale: 1.02 }}
-              transition={{ duration: 0.2 }}
-              className="bg-white rounded-lg shadow-sm overflow-hidden cursor-pointer relative group"
-              onClick={() => handleClickDesign(download.art.id)}
-            >
-              <div className="relative aspect-square overflow-hidden">
-                <img 
-                  src={download.art.imageUrl} 
-                  alt={download.art.title}
-                  className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
-                />
-                {download.art.isPremium && (
-                  <div className="absolute top-2 right-2">
-                    <svg className="w-5 h-5 text-amber-400 drop-shadow-md" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M20.59 9.35L15.83 8.35L13.5 4.1C13.34 3.78 13.01 3.58 12.65 3.58C12.29 3.58 11.96 3.78 11.81 4.1L9.5 8.35L4.72 9.35C4.1 9.47 3.56 9.92 3.5 10.56C3.46 10.94 3.61 11.32 3.89 11.59L7.33 14.95L6.67 19.77C6.58 20.17 6.68 20.54 6.93 20.82C7.18 21.1 7.56 21.26 7.95 21.26C8.21 21.26 8.46 21.19 8.66 21.06L13 18.68L17.32 21.05C17.52 21.18 17.77 21.25 18.03 21.25H18.04C18.42 21.25 18.79 21.09 19.04 20.82C19.29 20.55 19.39 20.17 19.3 19.79L18.63 14.97L22.07 11.61C22.35 11.34 22.5 10.96 22.46 10.58C22.39 9.93 21.85 9.47 20.59 9.35Z" />
-                    </svg>
-                  </div>
-                )}
-              </div>
-              
-              <div className="p-3">
-                <p className="text-sm font-medium text-gray-900 truncate">{download.art.title}</p>
-                <div className="flex items-center justify-between mt-1">
-                  <Badge variant="outline" className="text-xs px-2 py-0 bg-blue-50 text-blue-700 border-blue-200">
-                    {download.art.format}
-                  </Badge>
-                  <span className="text-xs text-gray-500">{getRelativeTimeString(download.createdAt)}</span>
+        {/* Carrossel para mobile */}
+        {isMobile ? (
+          <div className="overflow-hidden" ref={emblaRef}>
+            <div className="flex">
+              {recentDesigns.map((download: RecentDesign) => (
+                <div className="flex-[0_0_40%] min-w-0 mr-3 last:mr-0" key={download.id}>
+                  <motion.div
+                    whileHover={{ y: -5, scale: 1.02 }}
+                    transition={{ duration: 0.2 }}
+                    className="bg-white rounded-lg shadow-sm overflow-hidden cursor-pointer relative group h-full"
+                    onClick={() => handleClickDesign(download.art.id)}
+                  >
+                    <div className="relative aspect-square overflow-hidden">
+                      <img 
+                        src={download.art.imageUrl} 
+                        alt={download.art.title}
+                        className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+                      />
+                      {download.art.isPremium && (
+                        <div className="absolute top-2 right-2">
+                          <svg className="w-4 h-4 text-amber-400 drop-shadow-md" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M20.59 9.35L15.83 8.35L13.5 4.1C13.34 3.78 13.01 3.58 12.65 3.58C12.29 3.58 11.96 3.78 11.81 4.1L9.5 8.35L4.72 9.35C4.1 9.47 3.56 9.92 3.5 10.56C3.46 10.94 3.61 11.32 3.89 11.59L7.33 14.95L6.67 19.77C6.58 20.17 6.68 20.54 6.93 20.82C7.18 21.1 7.56 21.26 7.95 21.26C8.21 21.26 8.46 21.19 8.66 21.06L13 18.68L17.32 21.05C17.52 21.18 17.77 21.25 18.03 21.25H18.04C18.42 21.25 18.79 21.09 19.04 20.82C19.29 20.55 19.39 20.17 19.3 19.79L18.63 14.97L22.07 11.61C22.35 11.34 22.5 10.96 22.46 10.58C22.39 9.93 21.85 9.47 20.59 9.35Z" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="p-2">
+                      <p className="text-xs font-medium text-gray-900 truncate">{download.art.title}</p>
+                      <div className="flex items-center justify-between mt-1">
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200">
+                          {download.art.format}
+                        </Badge>
+                        <span className="text-[10px] text-gray-500">{getRelativeTimeString(download.createdAt)}</span>
+                      </div>
+                    </div>
+                  </motion.div>
                 </div>
-              </div>
-              
-              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                <Button variant="secondary" size="sm" className="shadow-md">
-                  <ExternalLink className="h-4 w-4 mr-1" />
-                  Editar
-                </Button>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          // Grade normal para desktop
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {recentDesigns.map((download: RecentDesign) => (
+              <motion.div
+                key={download.id}
+                whileHover={{ y: -5, scale: 1.02 }}
+                transition={{ duration: 0.2 }}
+                className="bg-white rounded-lg shadow-sm overflow-hidden cursor-pointer relative group"
+                onClick={() => handleClickDesign(download.art.id)}
+              >
+                <div className="relative aspect-square overflow-hidden">
+                  <img 
+                    src={download.art.imageUrl} 
+                    alt={download.art.title}
+                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+                  />
+                  {download.art.isPremium && (
+                    <div className="absolute top-2 right-2">
+                      <svg className="w-5 h-5 text-amber-400 drop-shadow-md" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M20.59 9.35L15.83 8.35L13.5 4.1C13.34 3.78 13.01 3.58 12.65 3.58C12.29 3.58 11.96 3.78 11.81 4.1L9.5 8.35L4.72 9.35C4.1 9.47 3.56 9.92 3.5 10.56C3.46 10.94 3.61 11.32 3.89 11.59L7.33 14.95L6.67 19.77C6.58 20.17 6.68 20.54 6.93 20.82C7.18 21.1 7.56 21.26 7.95 21.26C8.21 21.26 8.46 21.19 8.66 21.06L13 18.68L17.32 21.05C17.52 21.18 17.77 21.25 18.03 21.25H18.04C18.42 21.25 18.79 21.09 19.04 20.82C19.29 20.55 19.39 20.17 19.3 19.79L18.63 14.97L22.07 11.61C22.35 11.34 22.5 10.96 22.46 10.58C22.39 9.93 21.85 9.47 20.59 9.35Z" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="p-3">
+                  <p className="text-sm font-medium text-gray-900 truncate">{download.art.title}</p>
+                  <div className="flex items-center justify-between mt-1">
+                    <Badge variant="outline" className="text-xs px-2 py-0 bg-blue-50 text-blue-700 border-blue-200">
+                      {download.art.format}
+                    </Badge>
+                    <span className="text-xs text-gray-500">{getRelativeTimeString(download.createdAt)}</span>
+                  </div>
+                </div>
+                
+                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                  <Button variant="secondary" size="sm" className="shadow-md">
+                    <ExternalLink className="h-4 w-4 mr-1" />
+                    Editar
+                  </Button>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
