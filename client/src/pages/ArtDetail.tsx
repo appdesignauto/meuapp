@@ -486,33 +486,21 @@ export default function ArtDetail() {
       
       <div className="bg-white rounded-xl shadow-md overflow-hidden mb-6">
         <div className="grid grid-cols-1 lg:grid-cols-6 gap-0">
-          {/* Art Image - Com fundo melhorado e adaptação inteligente ao formato */}
+          {/* Art Image - Container com altura mínima e padding otimizado */}
           <motion.div 
-            className="relative bg-gradient-to-br from-blue-50 via-gray-50 to-slate-100 flex items-center justify-center p-4 md:p-6 lg:col-span-4 border-r border-gray-100 min-h-[60vh]"
+            className="relative bg-white flex items-center justify-center p-4 md:p-8 lg:col-span-4 border-r border-gray-100 min-h-[60vh]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="w-full h-full flex items-center justify-center relative group max-w-4xl mx-auto">
+            <div className="w-full h-full flex items-center justify-center relative group max-w-3xl mx-auto">
               <motion.img 
                 src={art.imageUrl} 
                 alt={art.title} 
-                className="max-w-full max-h-[75vh] object-contain rounded-md shadow-sm transition-all duration-300"
-                style={{ 
-                  filter: 'drop-shadow(0 8px 12px rgba(0, 0, 0, 0.08))',
-                  maxWidth: '95%',
-                }}
+                className="max-w-full max-h-[80vh] object-contain transition-all duration-300 rounded-md"
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5 }}
-              />
-              
-              {/* Sutis reflexos */}
-              <div 
-                className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-[85%] h-4 bg-black/5 blur-xl rounded-full"
-                style={{
-                  opacity: 0.4,
-                }}
               />
               
               {/* Badges de status */}
