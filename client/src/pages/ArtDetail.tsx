@@ -434,7 +434,7 @@ export default function ArtDetail() {
         <div className="mt-16">
           <Skeleton className="h-8 w-64 mb-6" />
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => (
+            {Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} className="w-full aspect-square rounded-xl" />
             ))}
           </div>
