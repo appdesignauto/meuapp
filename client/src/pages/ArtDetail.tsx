@@ -796,13 +796,8 @@ export default function ArtDetail() {
                     size="lg"
                     className="w-full flex items-center justify-center bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 py-5 shadow-md"
                   >
-                    <div className="flex items-center gap-3">
-                      {/* Ícone sem fundo para maior clareza */}
-                      <div className="p-1.5">
-                        {getFileTypeIcon(typeof art.fileType === 'string' ? art.fileType : art.fileType?.name)}
-                      </div>
-                      
-                      {/* Texto */}
+                    <div className="flex items-center justify-center">
+                      {/* Apenas o texto sem ícone */}
                       <span className="flex items-center font-semibold">
                         EDITAR {getFileTypeName(typeof art.fileType === 'string' ? art.fileType : art.fileType?.name)}
                         {art.downloadCount > 0 && (
