@@ -95,7 +95,7 @@ const getFileTypeIcon = (fileType: string | null | undefined) => {
   // Retorna o ícone apropriado com base no tipo de arquivo
   switch (normalizedType) {
     case 'canva':
-      return <SiCanva className="h-6 w-6 text-[#00C4CC]" />;
+      return <SiCanva className="h-6 w-6 text-[#00C4CC]" style={{ filter: 'none' }} />;
     case 'photoshop':
     case 'psd':
       return <SiAdobephotoshop className="h-6 w-6 text-[#31A8FF]" />;
@@ -764,10 +764,10 @@ export default function ArtDetail() {
                   >
                     <div className="flex items-center gap-4">
                       {/* Ícone com destaque */}
-                      <div className="bg-white/25 rounded-lg p-2 group-hover:hidden">
+                      <div className="bg-white/10 rounded-lg p-2 group-hover:hidden">
                         {getFileTypeIcon(typeof art.fileType === 'string' ? art.fileType : art.fileType?.name)}
                       </div>
-                      <Sparkles className="h-6 w-6 hidden group-hover:block bg-white/25 rounded-lg p-1" />
+                      <Sparkles className="h-6 w-6 hidden group-hover:block bg-white/10 rounded-lg p-1" />
                       
                       {/* Texto */}
                       <span className="flex items-center text-base font-bold tracking-wide">
@@ -784,7 +784,7 @@ export default function ArtDetail() {
                   >
                     <div className="flex items-center gap-4">
                       {/* Ícone com destaque */}
-                      <div className="bg-white/25 rounded-lg p-2">
+                      <div className="bg-white/10 rounded-lg p-2">
                         {getFileTypeIcon(typeof art.fileType === 'string' ? art.fileType : art.fileType?.name)}
                       </div>
                       
