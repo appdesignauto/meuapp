@@ -68,17 +68,23 @@ function ArtCard({
         
         {/* Badges no canto superior direito - versão minimalista */}
         <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
-          {/* Coroa Premium minimalista */}
+          {/* Coroa Premium minimalista - versão aprimorada */}
           {art.isPremium && (
-            <div className="bg-amber-500/90 hover:bg-amber-500 rounded-full p-1.5 shadow-md backdrop-blur-sm transition-all duration-300 hover:scale-110">
-              <Crown className="h-3 w-3 text-white" />
+            <div className="relative group">
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-600 blur-[1px] opacity-70 group-hover:opacity-100 transition-all duration-300"></div>
+              <div className="relative bg-gradient-to-br from-amber-400 to-amber-600 rounded-full p-1.5 shadow-md transition-all duration-300 hover:scale-110 border border-amber-300/50">
+                <Crown className="h-2.5 w-2.5 text-white drop-shadow-sm" />
+              </div>
             </div>
           )}
           
-          {/* Indicador de mesmo grupo - versão mais sutil */}
+          {/* Indicador de mesmo grupo - versão mais sutil e consistente */}
           {isSameGroup && (
-            <div className="bg-blue-500/90 hover:bg-blue-500 rounded-full p-1.5 shadow-md backdrop-blur-sm transition-all duration-300 hover:scale-110">
-              <Layers className="h-3 w-3 text-white" />
+            <div className="relative group">
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-300 via-blue-400 to-blue-600 blur-[1px] opacity-70 group-hover:opacity-100 transition-all duration-300"></div>
+              <div className="relative bg-gradient-to-br from-blue-400 to-blue-600 rounded-full p-1.5 shadow-md transition-all duration-300 hover:scale-110 border border-blue-300/50">
+                <Layers className="h-2.5 w-2.5 text-white drop-shadow-sm" />
+              </div>
             </div>
           )}
         </div>
