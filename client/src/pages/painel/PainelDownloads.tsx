@@ -1,12 +1,13 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
-import { Download, Calendar, Search } from "lucide-react";
-import { useState } from "react";
+import { Download, Calendar, Search, Grid, List, ExternalLink } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { motion } from "framer-motion";
 import {
   Select,
   SelectContent,
@@ -15,12 +16,32 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function PainelDownloads() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [dateFilter, setDateFilter] = useState("all");
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+  
+  // Restaurar a preferência de visualização do localStorage
+  useEffect(() => {
+    const savedViewMode = localStorage.getItem("downloadsViewMode");
+    if (savedViewMode === "grid" || savedViewMode === "list") {
+      setViewMode(savedViewMode);
+    }
+  }, []);
+  
+  // Salvar preferência de visualização no localStorage
+  useEffect(() => {
+    localStorage.setItem("downloadsViewMode", viewMode);
+  }, [viewMode]);
 
   // Verificar se o usuário é premium
   const isPremium = user && 
@@ -130,6 +151,45 @@ export default function PainelDownloads() {
         <h1 className="text-3xl font-bold tracking-tight">Meus Downloads</h1>
         
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          {/* Alternar visualização */}
+          <div className="flex items-center border rounded-md p-1 mb-2 sm:mb-0 bg-background">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant={viewMode === "list" ? "default" : "ghost"} 
+                    size="icon" 
+                    className="h-8 w-8 rounded-sm"
+                    onClick={() => setViewMode("list")}
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Visualização em lista</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant={viewMode === "grid" ? "default" : "ghost"} 
+                    size="icon" 
+                    className="h-8 w-8 rounded-sm"
+                    onClick={() => setViewMode("grid")}
+                  >
+                    <Grid className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Visualização em grade</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          
           {/* Filtro de data */}
           <Select value={dateFilter} onValueChange={setDateFilter}>
             <SelectTrigger className="w-full sm:w-[180px]">
@@ -177,27 +237,56 @@ export default function PainelDownloads() {
 
       {/* Lista de downloads */}
       {downloadsLoading ? (
-        <div className="space-y-3">
-          {Array.from({ length: 5 }).map((_, index) => (
-            <Card key={index}>
-              <CardContent className="p-4">
-                <Skeleton className="h-16 w-full" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        viewMode === "list" ? (
+          // Esqueleto para visualização em lista
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <Card key={index}>
+                <CardContent className="p-4">
+                  <Skeleton className="h-16 w-full" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          // Esqueleto para visualização em grade
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {Array.from({ length: 10 }).map((_, index) => (
+              <Card key={index} className="h-64 overflow-hidden">
+                <CardContent className="p-0 h-full">
+                  <Skeleton className="w-full h-full" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )
       ) : (
-        <div className="space-y-3">
-          {filteredDownloads.map((download: any) => (
-            <DownloadItem
-              key={download.id}
-              download={download}
-              isPremium={!!isPremium}
-              formatDate={formatDate}
-              getRelativeTimeString={getRelativeTimeString}
-            />
-          ))}
-        </div>
+        viewMode === "list" ? (
+          // Visualização em lista
+          <div className="space-y-3">
+            {filteredDownloads.map((download: any) => (
+              <DownloadItem
+                key={download.id}
+                download={download}
+                isPremium={!!isPremium}
+                formatDate={formatDate}
+                getRelativeTimeString={getRelativeTimeString}
+              />
+            ))}
+          </div>
+        ) : (
+          // Visualização em grade
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {filteredDownloads.map((download: any) => (
+              <GridDownloadItem
+                key={download.id}
+                download={download}
+                isPremium={!!isPremium}
+                getRelativeTimeString={getRelativeTimeString}
+              />
+            ))}
+          </div>
+        )
       )}
     </div>
   );
@@ -277,5 +366,87 @@ function DownloadItem({ download, isPremium, formatDate, getRelativeTimeString }
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+// Componente para visualização em grade
+interface GridDownloadItemProps {
+  download: any;
+  isPremium: boolean;
+  getRelativeTimeString: (date: string) => string;
+}
+
+function GridDownloadItem({ download, isPremium, getRelativeTimeString }: GridDownloadItemProps) {
+  const { toast } = useToast();
+  const art = download.art;
+  
+  // Função para lidar com o clique no botão de uso
+  const handleUseArt = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!isPremium && art.isPremium) {
+      toast({
+        title: "Acesso restrito",
+        description: "Faça upgrade para o plano Premium para usar esta arte.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Aqui seria o código para download ou redirecionamento
+    window.open(art.editUrl, '_blank');
+  };
+
+  return (
+    <motion.div
+      whileHover={{ y: -5, scale: 1.02 }}
+      transition={{ duration: 0.2 }}
+      className="group"
+    >
+      <Card className="overflow-hidden h-full">
+        <CardContent className="p-0 flex flex-col h-full">
+          <div className="relative aspect-square overflow-hidden">
+            <img
+              src={art.imageUrl}
+              alt={art.title}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+            {art.isPremium && (
+              <div className="absolute top-2 right-2">
+                <svg className="w-5 h-5 text-amber-400 drop-shadow-md" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M20.59 9.35L15.83 8.35L13.5 4.1C13.34 3.78 13.01 3.58 12.65 3.58C12.29 3.58 11.96 3.78 11.81 4.1L9.5 8.35L4.72 9.35C4.1 9.47 3.56 9.92 3.5 10.56C3.46 10.94 3.61 11.32 3.89 11.59L7.33 14.95L6.67 19.77C6.58 20.17 6.68 20.54 6.93 20.82C7.18 21.1 7.56 21.26 7.95 21.26C8.21 21.26 8.46 21.19 8.66 21.06L13 18.68L17.32 21.05C17.52 21.18 17.77 21.25 18.03 21.25H18.04C18.42 21.25 18.79 21.09 19.04 20.82C19.29 20.55 19.39 20.17 19.3 19.79L18.63 14.97L22.07 11.61C22.35 11.34 22.5 10.96 22.46 10.58C22.39 9.93 21.85 9.47 20.59 9.35Z" />
+                </svg>
+              </div>
+            )}
+            
+            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                className="shadow-md"
+                onClick={handleUseArt}
+              >
+                <ExternalLink className="h-4 w-4 mr-1" />
+                Editar
+              </Button>
+            </div>
+          </div>
+          
+          <div className="p-3 flex-1 flex flex-col">
+            <h3 className="font-medium text-sm line-clamp-2">{art.title}</h3>
+            
+            <div className="mt-auto pt-2 flex items-center justify-between">
+              <Badge variant="outline" className="text-xs px-2 py-0 bg-blue-50 text-blue-700 border-blue-200">
+                {art.format}
+              </Badge>
+              
+              <span className="text-xs text-gray-500">
+                {getRelativeTimeString(download.createdAt)}
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
