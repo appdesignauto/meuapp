@@ -5,7 +5,7 @@ import { ArrowLeft, Search, Bookmark, ChevronRight, Eye, FilterX, Star, Clock, S
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDate } from '@/lib/utils';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import useScrollTop from '@/hooks/useScrollTop';
 import { Badge } from '@/components/ui/badge';
 
@@ -28,6 +28,12 @@ const Categories = () => {
   const { data: categories, isLoading } = useQuery<EnhancedCategory[]>({
     queryKey: ['/api/categories'],
   });
+  
+  // Armazenar a URL atual para navegação de retorno
+  useEffect(() => {
+    const currentUrl = window.location.pathname + window.location.search;
+    localStorage.setItem('lastGalleryPage', currentUrl);
+  }, [searchQuery, activeFilter]);
 
   // Função para obter imagens relacionadas à categoria específica (usando imagens locais)
   const getCategoryImagePaths = (category: EnhancedCategory): string[] => {
