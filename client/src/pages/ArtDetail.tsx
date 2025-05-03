@@ -783,8 +783,8 @@ export default function ArtDetail() {
                     className="w-full flex items-center justify-center bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 py-5 shadow-md"
                   >
                     <div className="flex items-center gap-3">
-                      {/* Ícone com destaque */}
-                      <div className="bg-white/20 rounded-md p-1.5">
+                      {/* Ícone sem fundo para maior clareza */}
+                      <div className="p-1.5">
                         {getFileTypeIcon(typeof art.fileType === 'string' ? art.fileType : art.fileType?.name)}
                       </div>
                       
