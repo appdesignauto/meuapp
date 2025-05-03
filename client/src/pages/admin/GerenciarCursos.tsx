@@ -648,9 +648,9 @@ export default function GerenciarCursosPage() {
     isLoading: isLoadingModules,
     error: modulesError
   } = useQuery({
-    queryKey: ['/api/cursos/modules/admin'],
+    queryKey: ['/api/courses/modules'],
     queryFn: async () => {
-      const res = await apiRequest('GET', '/api/cursos/modules/admin');
+      const res = await apiRequest('GET', '/api/courses/modules');
       return await res.json();
     }
   });
@@ -662,10 +662,10 @@ export default function GerenciarCursosPage() {
     error: lessonsError,
     refetch: refetchLessons
   } = useQuery({
-    queryKey: ['/api/cursos/modules', selectedModuleId, 'lessons'],
+    queryKey: ['/api/courses/modules', selectedModuleId, 'lessons'],
     queryFn: async () => {
       if (!selectedModuleId) return [];
-      const res = await apiRequest('GET', `/api/cursos/modules/${selectedModuleId}/lessons/admin`);
+      const res = await apiRequest('GET', `/api/courses/modules/${selectedModuleId}/lessons`);
       return await res.json();
     },
     enabled: !!selectedModuleId
@@ -676,7 +676,7 @@ export default function GerenciarCursosPage() {
     mutationFn: async (data: FormData) => {
       const res = await apiRequest(
         'POST',
-        '/api/cursos/modules',
+        '/api/courses/modules',
         data,
         {
           'Content-Type': 'multipart/form-data',
@@ -690,7 +690,7 @@ export default function GerenciarCursosPage() {
         description: 'O novo módulo foi adicionado corretamente.',
       });
       setIsAddModuleOpen(false);
-      queryClient.invalidateQueries({ queryKey: ['/api/cursos/modules/admin'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/courses/modules'] });
     },
     onError: (error: any) => {
       toast({
@@ -706,7 +706,7 @@ export default function GerenciarCursosPage() {
     mutationFn: async ({ id, data }: { id: number; data: FormData }) => {
       const res = await apiRequest(
         'PUT',
-        `/api/cursos/modules/${id}`,
+        `/api/courses/modules/${id}`,
         data,
         {
           'Content-Type': 'multipart/form-data',
@@ -720,7 +720,7 @@ export default function GerenciarCursosPage() {
         description: 'As alterações foram salvas corretamente.',
       });
       setEditingModule(null);
-      queryClient.invalidateQueries({ queryKey: ['/api/cursos/modules/admin'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/courses/modules'] });
     },
     onError: (error: any) => {
       toast({
@@ -734,7 +734,7 @@ export default function GerenciarCursosPage() {
   // Mutação para excluir módulo
   const deleteModuleMutation = useMutation({
     mutationFn: async (id: number) => {
-      const res = await apiRequest('DELETE', `/api/cursos/modules/${id}`);
+      const res = await apiRequest('DELETE', `/api/courses/modules/${id}`);
       return await res.json();
     },
     onSuccess: () => {
@@ -742,7 +742,7 @@ export default function GerenciarCursosPage() {
         title: 'Módulo excluído com sucesso',
         description: 'O módulo foi removido corretamente.',
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/cursos/modules/admin'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/courses/modules'] });
     },
     onError: (error: any) => {
       toast({
@@ -756,7 +756,7 @@ export default function GerenciarCursosPage() {
   // Toggle ativação/desativação de módulo
   const toggleModuleActiveMutation = useMutation({
     mutationFn: async ({ id, isActive }: { id: number; isActive: boolean }) => {
-      const res = await apiRequest('PUT', `/api/cursos/modules/${id}`, { isActive });
+      const res = await apiRequest('PUT', `/api/courses/modules/${id}`, { isActive });
       return await res.json();
     },
     onSuccess: () => {
@@ -764,7 +764,7 @@ export default function GerenciarCursosPage() {
         title: 'Status do módulo alterado com sucesso',
         description: 'O status de ativação do módulo foi alterado corretamente.',
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/cursos/modules/admin'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/courses/modules'] });
     },
     onError: (error: any) => {
       toast({
@@ -781,7 +781,7 @@ export default function GerenciarCursosPage() {
       const moduleId = data.get('moduleId');
       const res = await apiRequest(
         'POST',
-        `/api/cursos/modules/${moduleId}/lessons`,
+        `/api/courses/modules/${moduleId}/lessons`,
         data,
         {
           'Content-Type': 'multipart/form-data',
@@ -796,7 +796,7 @@ export default function GerenciarCursosPage() {
       });
       setIsAddLessonOpen(false);
       if (selectedModuleId) {
-        queryClient.invalidateQueries({ queryKey: ['/api/cursos/modules', selectedModuleId, 'lessons'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/courses/modules', selectedModuleId, 'lessons'] });
       }
     },
     onError: (error: any) => {
@@ -813,7 +813,7 @@ export default function GerenciarCursosPage() {
     mutationFn: async ({ id, data }: { id: number; data: FormData }) => {
       const res = await apiRequest(
         'PUT',
-        `/api/cursos/lessons/${id}`,
+        `/api/courses/lessons/${id}`,
         data,
         {
           'Content-Type': 'multipart/form-data',
@@ -828,7 +828,7 @@ export default function GerenciarCursosPage() {
       });
       setEditingLesson(null);
       if (selectedModuleId) {
-        queryClient.invalidateQueries({ queryKey: ['/api/cursos/modules', selectedModuleId, 'lessons'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/courses/modules', selectedModuleId, 'lessons'] });
       }
     },
     onError: (error: any) => {
