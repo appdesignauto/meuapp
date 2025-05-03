@@ -776,8 +776,13 @@ export default function ArtDetail() {
                     size="lg"
                     className="w-full flex items-center justify-center bg-gradient-to-r from-blue-600 to-blue-700 hover:from-amber-500 hover:to-amber-600 py-5 shadow-md hover:text-white group"
                   >
-                    <div className="flex items-center justify-center">
-                      {/* Apenas o texto sem ícone */}
+                    <div className="flex items-center justify-center gap-2">
+                      {/* Ícone SVG inline garantido */}
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-white">
+                        <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      
+                      {/* Texto */}
                       <span className="flex items-center font-semibold">
                         <span className="group-hover:hidden">EDITAR {getFileTypeName(typeof art.fileType === 'string' ? art.fileType : art.fileType?.name)}</span>
                         <span className="hidden group-hover:inline-block">FAÇA UPGRADE PARA PREMIUM</span>
@@ -790,8 +795,13 @@ export default function ArtDetail() {
                     size="lg"
                     className="w-full flex items-center justify-center bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 py-5 shadow-md"
                   >
-                    <div className="flex items-center justify-center">
-                      {/* Apenas o texto sem ícone */}
+                    <div className="flex items-center justify-center gap-2">
+                      {/* Ícone SVG inline garantido */}
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-white">
+                        <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      
+                      {/* Texto */}
                       <span className="flex items-center font-semibold">
                         EDITAR {getFileTypeName(typeof art.fileType === 'string' ? art.fileType : art.fileType?.name)}
                         {art.downloadCount > 0 && (
