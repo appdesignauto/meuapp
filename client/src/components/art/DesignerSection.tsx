@@ -119,7 +119,7 @@ export function DesignerSection({ designer: initialDesigner, userId }: DesignerS
   
   return (
     <motion.div 
-      className="mb-0 py-3 px-1 border-t border-b border-neutral-100 bg-gradient-to-r from-white to-blue-50/20"
+      className="mb-0 py-3 px-3 bg-gradient-to-r from-white to-blue-50/20"
       initial={{ opacity: 0.8 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.2 }}

@@ -477,12 +477,19 @@ export default function ArtDetail() {
       <Button 
         variant="ghost" 
         size="sm"
-        className="mb-6 text-blue-600"
+        className="mb-4 text-blue-600"
         onClick={handleBack}
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
         Voltar para a galeria
       </Button>
+      
+      {/* Perfil do designer Mobile - Posicionado abaixo do botão voltar (apenas mobile) */}
+      {art?.designer && (
+        <div className="md:hidden mb-4 rounded-xl bg-white border border-gray-100 shadow-sm overflow-hidden">
+          <DesignerSection designer={art.designer} userId={user?.id} />
+        </div>
+      )}
       
       <div className="bg-white rounded-xl shadow-md overflow-hidden mb-6">
         <div className="grid grid-cols-1 lg:grid-cols-6 gap-0">
@@ -626,13 +633,13 @@ export default function ArtDetail() {
               </div>
             </div>
             
-            {/* Designer Section - Posicionada estrategicamente após metadados */}
+            {/* Designer Section - Apenas visível em desktop */}
             {art.designer && (
               <motion.div
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.3, delay: 0.2 }}
-                className="mb-1"
+                className="mb-1 hidden md:block"
               >
                 <DesignerSection designer={art.designer} userId={user?.id} />
               </motion.div>
