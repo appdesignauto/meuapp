@@ -285,6 +285,12 @@ export default function CategoryPage() {
   useEffect(() => {
     setPage(1);
   }, [filters, search]);
+  
+  // Armazenar a URL atual para navegação de retorno
+  useEffect(() => {
+    const currentUrl = window.location.pathname + window.location.search;
+    localStorage.setItem('lastGalleryPage', currentUrl);
+  }, [page, filters, search, slug]);
 
   const loadMore = () => {
     if (!isFetching && hasMore) {
