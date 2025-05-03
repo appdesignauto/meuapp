@@ -468,15 +468,28 @@ export default function ArtDetail() {
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-12">
-        <Button 
-          variant="ghost" 
-          size="sm"
-          className="mb-8 text-blue-600"
-          onClick={handleBack}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Voltar para a galeria
-        </Button>
+        <div className="flex items-center mb-8">
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+          >
+            <Button 
+              variant="outline" 
+              size="default"
+              className="group relative overflow-hidden bg-white border border-blue-200 hover:border-blue-400 text-blue-600 hover:text-blue-700 rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-all duration-300"
+              onClick={handleBack}
+            >
+              <div className="flex items-center">
+                <div className="flex items-center justify-center bg-blue-50 group-hover:bg-blue-100 rounded-full p-1 transition-colors duration-300 mr-2">
+                  <ArrowLeft className="h-4 w-4" />
+                </div>
+                <span className="font-medium">Voltar para a galeria</span>
+              </div>
+              <div className="absolute inset-0 -z-10 bg-gradient-to-r from-blue-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            </Button>
+          </motion.div>
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="rounded-xl overflow-hidden bg-neutral-100">
@@ -525,9 +538,26 @@ export default function ArtDetail() {
           <p className="text-gray-600 mb-8">
             Não foi possível carregar os detalhes desta arte. Por favor, tente novamente mais tarde.
           </p>
-          <Button onClick={handleBack}>
-            Voltar para a galeria
-          </Button>
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+          >
+            <Button 
+              variant="outline" 
+              size="default"
+              className="group relative overflow-hidden bg-white border border-blue-200 hover:border-blue-400 text-blue-600 hover:text-blue-700 rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-all duration-300"
+              onClick={handleBack}
+            >
+              <div className="flex items-center">
+                <div className="flex items-center justify-center bg-blue-50 group-hover:bg-blue-100 rounded-full p-1 transition-colors duration-300 mr-2">
+                  <ArrowLeft className="h-4 w-4" />
+                </div>
+                <span className="font-medium">Voltar para a galeria</span>
+              </div>
+              <div className="absolute inset-0 -z-10 bg-gradient-to-r from-blue-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            </Button>
+          </motion.div>
         </div>
       </div>
     );
@@ -545,15 +575,28 @@ export default function ArtDetail() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Button 
-        variant="ghost" 
-        size="sm"
-        className="mb-4 text-blue-600"
-        onClick={handleBack}
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Voltar para a galeria
-      </Button>
+      <div className="flex items-center mb-6">
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          transition={{ type: "spring", stiffness: 400, damping: 17 }}
+        >
+          <Button 
+            variant="outline" 
+            size="default"
+            className="group relative overflow-hidden bg-white border border-blue-200 hover:border-blue-400 text-blue-600 hover:text-blue-700 rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-all duration-300"
+            onClick={handleBack}
+          >
+            <div className="flex items-center">
+              <div className="flex items-center justify-center bg-blue-50 group-hover:bg-blue-100 rounded-full p-1 transition-colors duration-300 mr-2">
+                <ArrowLeft className="h-4 w-4" />
+              </div>
+              <span className="font-medium">Voltar para a galeria</span>
+            </div>
+            <div className="absolute inset-0 -z-10 bg-gradient-to-r from-blue-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          </Button>
+        </motion.div>
+      </div>
       
       {/* Perfil do designer Mobile - Posicionado abaixo do botão voltar (apenas mobile) */}
       {art?.designer && (
