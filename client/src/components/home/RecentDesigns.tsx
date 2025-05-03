@@ -33,9 +33,7 @@ export default function RecentDesigns() {
     loop: true,
     align: 'start',
     slidesToScroll: 1,
-    containScroll: 'trimSnaps',
-    dragFree: true,
-    speed: 10
+    containScroll: 'trimSnaps'
   });
   
   const [prevBtnEnabled, setPrevBtnEnabled] = useState(false);
@@ -198,10 +196,7 @@ export default function RecentDesigns() {
                     
                     <div className="p-2">
                       <p className="text-xs font-medium text-gray-900 truncate">{download.art.title}</p>
-                      <div className="flex items-center justify-between mt-1">
-                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200">
-                          {download.art.format}
-                        </Badge>
+                      <div className="flex justify-end mt-1">
                         <span className="text-[10px] text-gray-500">{getRelativeTimeString(download.createdAt)}</span>
                       </div>
                     </div>
@@ -238,10 +233,7 @@ export default function RecentDesigns() {
                 
                 <div className="p-3">
                   <p className="text-sm font-medium text-gray-900 truncate">{download.art.title}</p>
-                  <div className="flex items-center justify-between mt-1">
-                    <Badge variant="outline" className="text-xs px-2 py-0 bg-blue-50 text-blue-700 border-blue-200">
-                      {download.art.format}
-                    </Badge>
+                  <div className="flex justify-end mt-1">
                     <span className="text-xs text-gray-500">{getRelativeTimeString(download.createdAt)}</span>
                   </div>
                 </div>
