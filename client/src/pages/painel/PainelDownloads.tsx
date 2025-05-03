@@ -33,7 +33,7 @@ export default function PainelDownloads() {
       user.nivelacesso !== "usuario"));
 
   // Consultar histórico de downloads
-  const { data: downloadsData, isLoading: downloadsLoading } = useQuery({
+  const { data: downloadsData, isLoading: downloadsLoading } = useQuery<{ downloads: any[]; totalCount: number }>({
     queryKey: ["/api/downloads"],
     enabled: !!user?.id,
   });
