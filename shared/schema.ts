@@ -459,3 +459,150 @@ export const insertPasswordResetTokenSchema = createInsertSchema(passwordResetTo
 
 export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
 export type InsertPasswordResetToken = z.infer<typeof insertPasswordResetTokenSchema>;
+
+// Videoaulas: Módulos
+export const courseModules = pgTable("courseModules", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  thumbnailUrl: text("thumbnailUrl").notNull(),
+  level: text("level").notNull().default("iniciante"), // iniciante, intermediario, avancado
+  order: integer("order").notNull(),
+  isActive: boolean("isActive").notNull().default(true),
+  isPremium: boolean("isPremium").notNull().default(false),
+  createdBy: integer("createdBy").notNull().references(() => users.id),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+// Videoaulas: Aulas
+export const courseLessons = pgTable("courseLessons", {
+  id: serial("id").primaryKey(),
+  moduleId: integer("moduleId").notNull().references(() => courseModules.id),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  videoUrl: text("videoUrl").notNull(),
+  videoProvider: text("videoProvider").notNull(), // youtube, vimeo, vturb, panda
+  duration: integer("duration"), // em segundos
+  thumbnailUrl: text("thumbnailUrl"),
+  order: integer("order").notNull(),
+  isPremium: boolean("isPremium").notNull().default(false),
+  additionalMaterialsUrl: text("additionalMaterialsUrl"),
+  createdBy: integer("createdBy").notNull().references(() => users.id),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+// Videoaulas: Progresso do usuário
+export const courseProgress = pgTable("courseProgress", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().references(() => users.id),
+  lessonId: integer("lessonId").notNull().references(() => courseLessons.id),
+  progress: integer("progress").notNull().default(0), // 0-100 (porcentagem)
+  isCompleted: boolean("isCompleted").notNull().default(false),
+  lastWatchedAt: timestamp("lastWatchedAt").notNull().defaultNow(),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+}, (table) => {
+  return {
+    uniqueUserLesson: primaryKey({ columns: [table.userId, table.lessonId] }),
+  };
+});
+
+// Videoaulas: Avaliações
+export const courseRatings = pgTable("courseRatings", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().references(() => users.id),
+  lessonId: integer("lessonId").notNull().references(() => courseLessons.id),
+  rating: integer("rating").notNull(), // 1-5 estrelas
+  comment: text("comment"),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+}, (table) => {
+  return {
+    uniqueUserLessonRating: primaryKey({ columns: [table.userId, table.lessonId] }),
+  };
+});
+
+// Definindo relações após todas as tabelas estarem criadas
+export const courseModulesRelations = relations(courseModules, ({ one, many }) => ({
+  creator: one(users, {
+    fields: [courseModules.createdBy],
+    references: [users.id],
+  }),
+  lessons: many(courseLessons),
+}));
+
+export const courseLessonsRelations = relations(courseLessons, ({ one, many }) => ({
+  module: one(courseModules, {
+    fields: [courseLessons.moduleId],
+    references: [courseModules.id],
+  }),
+  creator: one(users, {
+    fields: [courseLessons.createdBy],
+    references: [users.id],
+  }),
+  progress: many(courseProgress),
+  ratings: many(courseRatings),
+}));
+
+export const courseProgressRelations = relations(courseProgress, ({ one }) => ({
+  user: one(users, {
+    fields: [courseProgress.userId],
+    references: [users.id],
+  }),
+  lesson: one(courseLessons, {
+    fields: [courseProgress.lessonId],
+    references: [courseLessons.id],
+  }),
+}));
+
+export const courseRatingsRelations = relations(courseRatings, ({ one }) => ({
+  user: one(users, {
+    fields: [courseRatings.userId],
+    references: [users.id],
+  }),
+  lesson: one(courseLessons, {
+    fields: [courseRatings.lessonId],
+    references: [courseLessons.id],
+  }),
+}));
+
+// Schemas de inserção
+export const insertCourseModuleSchema = createInsertSchema(courseModules).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertCourseLessonSchema = createInsertSchema(courseLessons).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertCourseProgressSchema = createInsertSchema(courseProgress).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertCourseRatingSchema = createInsertSchema(courseRatings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Tipos para videoaulas
+export type CourseModule = typeof courseModules.$inferSelect;
+export type InsertCourseModule = z.infer<typeof insertCourseModuleSchema>;
+
+export type CourseLesson = typeof courseLessons.$inferSelect;
+export type InsertCourseLesson = z.infer<typeof insertCourseLessonSchema>;
+
+export type CourseProgress = typeof courseProgress.$inferSelect;
+export type InsertCourseProgress = z.infer<typeof insertCourseProgressSchema>;
+
+export type CourseRating = typeof courseRatings.$inferSelect;
+export type InsertCourseRating = z.infer<typeof insertCourseRatingSchema>;
