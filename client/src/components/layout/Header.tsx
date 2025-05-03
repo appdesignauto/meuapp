@@ -198,6 +198,7 @@ const Header = () => {
     { name: 'Início', path: '/' },
     { name: 'Categorias', path: '/categories' },
     { name: 'Designers', path: '/designers' },
+    { name: 'Videoaulas', path: '/cursos' },
     { name: 'Formatos', path: '/formats' },
     { name: 'Tutoriais', path: '/tutorials' },
     { name: 'Suporte', path: '/support' },
