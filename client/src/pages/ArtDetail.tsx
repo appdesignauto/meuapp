@@ -508,7 +508,7 @@ export default function ArtDetail() {
                 <div className="flex items-center justify-center bg-blue-50 group-hover:bg-blue-100 rounded-full p-1 transition-colors duration-300 mr-2">
                   <ArrowLeft className="h-4 w-4" />
                 </div>
-                <span className="font-medium">Voltar para a galeria</span>
+                <span className="font-medium">Voltar</span>
               </div>
               <div className="absolute inset-0 -z-10 bg-gradient-to-r from-blue-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </Button>
@@ -577,7 +577,7 @@ export default function ArtDetail() {
                 <div className="flex items-center justify-center bg-blue-50 group-hover:bg-blue-100 rounded-full p-1 transition-colors duration-300 mr-2">
                   <ArrowLeft className="h-4 w-4" />
                 </div>
-                <span className="font-medium">Voltar para a galeria</span>
+                <span className="font-medium">Voltar</span>
               </div>
               <div className="absolute inset-0 -z-10 bg-gradient-to-r from-blue-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </Button>
@@ -615,7 +615,7 @@ export default function ArtDetail() {
               <div className="flex items-center justify-center bg-blue-50 group-hover:bg-blue-100 rounded-full p-1 transition-colors duration-300 mr-2">
                 <ArrowLeft className="h-4 w-4" />
               </div>
-              <span className="font-medium">Voltar para a galeria</span>
+              <span className="font-medium">Voltar</span>
             </div>
             <div className="absolute inset-0 -z-10 bg-gradient-to-r from-blue-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           </Button>
