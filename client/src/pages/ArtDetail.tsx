@@ -322,7 +322,15 @@ export default function ArtDetail() {
   });
 
   const handleBack = () => {
-    setLocation('/');
+    // Verificar se existe uma página de origem
+    const referrer = localStorage.getItem('lastGalleryPage');
+    
+    if (referrer) {
+      setLocation(referrer);
+    } else {
+      // Padrão: ir para a página de artes em vez da home
+      setLocation('/arts');
+    }
   };
 
   // Mutação para registrar download
