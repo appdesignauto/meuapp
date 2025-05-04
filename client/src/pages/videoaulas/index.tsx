@@ -408,19 +408,19 @@ export default function VideoaulasPage() {
                 </div>
               
                 {/* Modulos organizados por categorias estilo Shark Tank */}
-                {tutoriaisPorCategoria.map((categoria: TutorialCategoria) => (
+                {moduleData && moduleData.map((categoria) => (
                   <div key={categoria.id} className="mb-10 sm:mb-16 relative">
                     <div className="flex items-center mb-4 sm:mb-6">
                       <div className="bg-blue-100 h-8 sm:h-10 w-8 sm:w-10 rounded-lg flex items-center justify-center mr-2 sm:mr-3 text-blue-600">
-                        <span>{categoria.icon}</span>
+                        <span>📚</span>
                       </div>
                       <div>
                         <h2 className="text-lg sm:text-xl font-bold text-blue-800">{categoria.title}</h2>
-                        <p className="text-blue-600 text-xs sm:text-sm">{categoria.subtitle}</p>
+                        <p className="text-blue-600 text-xs sm:text-sm">{categoria.description || "Módulo de aprendizado"}</p>
                       </div>
                     </div>
                     
-                    {categoria.tutoriais.length > 0 ? (
+                    {categoria.lessons && categoria.lessons.length > 0 ? (
                       <Carousel
                         opts={{
                           align: "start",
@@ -432,7 +432,7 @@ export default function VideoaulasPage() {
                         className="w-full overflow-visible"
                       >
                         <CarouselContent className="-ml-3 sm:-ml-4">
-                          {categoria.tutoriais.map((tutorial: Tutorial, moduleIdx: number) => (
+                          {categoria.lessons && categoria.lessons.map((tutorial, moduleIdx: number) => (
                             <CarouselItem key={tutorial.id} className="pl-3 sm:pl-4 basis-3/4 sm:basis-2/5 md:basis-1/3 lg:basis-1/5 xl:basis-[19.5%]">
                               <Link href={`/videoaulas/${tutorial.id}`} className="block h-full">
                                 <div className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 hover:shadow-lg hover:border-blue-300 transition-all group h-full">
@@ -482,7 +482,7 @@ export default function VideoaulasPage() {
                                       </span>
                                       <div className="text-xs text-gray-500 flex items-center">
                                         <Eye className="h-3.5 w-3.5 mr-1 text-gray-400" />
-                                        {tutorial.views.toLocaleString()}
+                                        {(tutorial.views || 0).toLocaleString()}
                                       </div>
                                     </div>
                                   </div>
