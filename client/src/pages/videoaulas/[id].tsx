@@ -587,65 +587,49 @@ const VideoLessonPage: React.FC = () => {
                 </div>
               </div>
               
-              {/* Tutoriais relacionados - estilo clean */}
+              {/* Tutoriais relacionados - estilo minimalista */}
               <div className="bg-white rounded-lg border border-blue-100 p-5 shadow-sm">
                 <h3 className="text-gray-800 font-bold text-lg mb-4 flex items-center">
                   <BookOpen className="h-5 w-5 mr-2 text-blue-600" />
                   Tutoriais Relacionados
                 </h3>
-                <div className="space-y-4">
-                  {tutoriaisRelacionados.slice(0, 3).map((t) => (
+                <div className="space-y-3">
+                  {tutoriaisRelacionados.slice(0, 5).map((t) => (
                     <Link key={t.id} href={`/videoaulas/${t.id}`}>
-                      <div className="group border border-blue-100 hover:border-blue-300 rounded-md overflow-hidden transition-colors cursor-pointer shadow-sm">
-                        {/* Thumbnail */}
-                        <div className="relative aspect-video">
+                      <div className="group flex items-center gap-3 p-2 hover:bg-blue-50 rounded-md transition-colors cursor-pointer">
+                        {/* Thumbnail pequena */}
+                        <div className="relative w-16 h-16 flex-shrink-0 rounded-md overflow-hidden shadow-sm">
                           <img 
                             src={t.thumbnailUrl} 
                             alt={t.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            className="w-full h-full object-cover"
                           />
-                          {/* Overlay gradiente mais suave */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 to-transparent"></div>
                           
-                          {/* Duração */}
-                          <div className="absolute bottom-2 right-2">
-                            <Badge className="bg-blue-600 text-white border-0 shadow-sm">
-                              {t.duration}
-                            </Badge>
+                          {/* Indicador de Play hover */}
+                          <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Play className="h-4 w-4 text-white" fill="white" />
                           </div>
                           
-                          {/* Status (assistido/premium) */}
+                          {/* Indicadores de status */}
                           {t.isWatched && (
-                            <div className="absolute top-2 left-2">
-                              <Badge className="bg-green-600 text-white border-0 shadow-sm flex items-center">
-                                <CheckCircle2 className="h-3 w-3 mr-1" />
-                                Assistido
-                              </Badge>
-                            </div>
+                            <div className="absolute bottom-0 right-0 bg-green-500 h-3 w-3 rounded-full border border-white"></div>
                           )}
-                          
                           {t.isPremium && !t.isWatched && (
-                            <div className="absolute top-2 left-2">
-                              <Badge className="bg-gradient-to-r from-yellow-500 to-amber-500 text-white border-0 shadow-sm flex items-center">
-                                <Lock className="h-3 w-3 mr-1" />
-                                Premium
-                              </Badge>
-                            </div>
+                            <div className="absolute bottom-0 right-0 bg-yellow-500 h-3 w-3 rounded-full border border-white"></div>
                           )}
-                          
-                          {/* Play button no centro */}
-                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <div className="bg-white/20 backdrop-blur-sm p-2 rounded-full shadow-md">
-                              <Play className="h-6 w-6 text-white" fill="white" />
-                            </div>
-                          </div>
                         </div>
                         
-                        {/* Título */}
-                        <div className="p-3 bg-white">
-                          <h4 className="text-gray-800 text-sm font-medium group-hover:text-blue-700 transition-colors line-clamp-2">
+                        {/* Informações */}
+                        <div className="min-w-0 flex-1">
+                          <h4 className="text-gray-800 text-sm font-medium group-hover:text-blue-700 transition-colors truncate">
                             {t.title}
                           </h4>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-gray-500 text-xs flex items-center">
+                              <Clock className="h-3 w-3 mr-1 inline-block" />
+                              {t.duration}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </Link>
