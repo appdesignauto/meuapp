@@ -272,14 +272,14 @@ export default function VideoaulasPage() {
                       align: "start",
                       loop: false,
                       skipSnaps: false,
-                      containScroll: "keepSnaps",
+                      containScroll: "trimSnaps",
                       dragFree: true
                     }}
                     className="w-full overflow-visible relative"
                   >
                     <CarouselContent className="-ml-3 sm:-ml-4">
                       {tutoriaisPopulares.slice(0, 8).map((tutorial, index) => (
-                        <CarouselItem key={tutorial.id} className="pl-3 sm:pl-4 basis-3/4 sm:basis-2/5 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                        <CarouselItem key={tutorial.id} className="pl-3 sm:pl-4 basis-3/4 sm:basis-2/5 md:basis-1/3 lg:basis-1/4 xl:basis-[19%]">
                           <Link href={`/videoaulas/${tutorial.id}`} className="block h-full">
                             <div className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 hover:shadow-lg hover:border-blue-300 transition-all group">
                               <div className="relative">
@@ -329,23 +329,7 @@ export default function VideoaulasPage() {
                         </CarouselItem>
                       ))}
                     </CarouselContent>
-                    {/* Indicador minimalista de navegação */}
-                    <div className="absolute right-2 bottom-2 flex items-center z-10">
-                      <div className="flex items-center gap-1 mt-3">
-                        {Array.from({ length: Math.min(5, tutoriaisPopulares.length) }).map((_, i) => (
-                          <div 
-                            key={i} 
-                            className={`h-1.5 rounded-full transition-all duration-300 
-                              ${i === 0 ? 'w-5 bg-blue-600' : 'w-1.5 bg-blue-300'}`}
-                          />
-                        ))}
-                      </div>
-                      <div className="ml-3">
-                        <div className="rounded-full bg-blue-100 p-1.5 text-blue-600 hover:bg-blue-200 transition-colors cursor-pointer">
-                          <ChevronRight size={16} />
-                        </div>
-                      </div>
-                    </div>
+                    {/* Netflix style: último card parcialmente visível */}
                   </Carousel>
                 </div>
               
@@ -367,14 +351,14 @@ export default function VideoaulasPage() {
                         align: "start",
                         loop: false,
                         skipSnaps: false,
-                        containScroll: "keepSnaps",
+                        containScroll: "trimSnaps",
                         dragFree: true
                       }}
                       className="w-full overflow-visible"
                     >
                       <CarouselContent className="-ml-3 sm:-ml-4">
                         {categoria.modules.map((tutorial, moduleIdx) => (
-                          <CarouselItem key={tutorial.id} className="pl-3 sm:pl-4 basis-3/4 sm:basis-2/5 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                          <CarouselItem key={tutorial.id} className="pl-3 sm:pl-4 basis-3/4 sm:basis-2/5 md:basis-1/3 lg:basis-1/4 xl:basis-[19%]">
                             <Link href={`/videoaulas/${tutorial.id}`} className="block h-full">
                               <div className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 hover:shadow-lg hover:border-blue-300 transition-all group">
                                 <div className="relative">
@@ -432,23 +416,7 @@ export default function VideoaulasPage() {
                           </CarouselItem>
                         ))}
                       </CarouselContent>
-                      {/* Indicador minimalista de navegação */}
-                      <div className="absolute right-2 bottom-2 flex items-center z-10">
-                        <div className="flex items-center gap-1 mt-3">
-                          {Array.from({ length: Math.min(5, categoria.modules.length) }).map((_, i) => (
-                            <div 
-                              key={i} 
-                              className={`h-1.5 rounded-full transition-all duration-300 
-                                ${i === 0 ? 'w-5 bg-blue-600' : 'w-1.5 bg-blue-300'}`}
-                            />
-                          ))}
-                        </div>
-                        <div className="ml-3">
-                          <div className="rounded-full bg-blue-100 p-1.5 text-blue-600 hover:bg-blue-200 transition-colors cursor-pointer">
-                            <ChevronRight size={16} />
-                          </div>
-                        </div>
-                      </div>
+                      {/* Netflix style: último card parcialmente visível */}
                     </Carousel>
                   </div>
                 ))}
