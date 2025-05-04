@@ -1070,11 +1070,12 @@ const VideoLessonPage: React.FC = () => {
                 </div>
                 
                 {/* Navegação de tutoriais (anterior/próximo) */}
-                <div className="mt-4 pt-4 border-t border-blue-100">
-                  <div className="flex gap-3">
+                <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-blue-100">
+                  <div className="flex gap-2 sm:gap-3">
                     <Button 
                       variant="outline" 
-                      className="flex-1 text-blue-700 border-blue-200 hover:bg-blue-50 shadow-sm"
+                      size="sm"
+                      className="flex-1 text-blue-700 border-blue-200 hover:bg-blue-50 shadow-sm text-xs sm:text-sm h-8 sm:h-10"
                       onClick={() => {
                         // Navegar para o tutorial anterior (simulado)
                         // Na implementação real, usaria id - 1 ou encontraria o tutorial anterior baseado em ordem
@@ -1082,13 +1083,14 @@ const VideoLessonPage: React.FC = () => {
                         navigate(`/videoaulas/${prevId}`);
                       }}
                     >
-                      <ChevronLeft className="mr-2 h-4 w-4" />
-                      Tutorial Anterior
+                      <ChevronLeft className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                      <span className="hidden xs:inline">Tutorial</span> Anterior
                     </Button>
                     
                     <Button 
                       variant="outline" 
-                      className="flex-1 text-blue-700 border-blue-200 hover:bg-blue-50 shadow-sm"
+                      size="sm"
+                      className="flex-1 text-blue-700 border-blue-200 hover:bg-blue-50 shadow-sm text-xs sm:text-sm h-8 sm:h-10"
                       onClick={() => {
                         // Navegar para o próximo tutorial (simulado)
                         // Na implementação real, usaria id + 1 ou encontraria o próximo tutorial baseado em ordem
@@ -1096,18 +1098,19 @@ const VideoLessonPage: React.FC = () => {
                         navigate(`/videoaulas/${nextId}`);
                       }}
                     >
-                      Próximo Tutorial
-                      <ChevronRight className="ml-2 h-4 w-4" />
+                      <span className="hidden xs:inline">Próximo</span> Tutorial
+                      <ChevronRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
                     </Button>
                   </div>
                   
                   <Button 
                     variant="outline" 
-                    className="w-full mt-3 text-blue-700 border-blue-200 hover:bg-blue-50 shadow-sm"
+                    size="sm"
+                    className="w-full mt-2 sm:mt-3 text-blue-700 border-blue-200 hover:bg-blue-50 shadow-sm text-xs sm:text-sm h-8 sm:h-10"
                     onClick={() => navigate("/videoaulas")}
                   >
                     Ver todos os tutoriais
-                    <ChevronRight className="ml-2 h-4 w-4" />
+                    <ChevronRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
                   </Button>
                 </div>
               </div>
