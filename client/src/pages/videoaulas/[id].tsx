@@ -469,16 +469,33 @@ const VideoLessonPage: React.FC = () => {
                     
                     {/* Container para estrelas e setas de navegação */}
                     <div className="flex items-center gap-4">
-                      {/* Avaliação com estrelas (apenas para avaliar, sem contador) */}
-                      <div className="flex space-x-1">
+                      {/* Avaliação com estrelas interativa */}
+                      <div 
+                        className="flex space-x-1" 
+                        onMouseLeave={handleLeaveStars}
+                      >
                         {[1, 2, 3, 4, 5].map((star) => (
                           <button 
                             key={star} 
-                            className="text-[#434756] hover:text-yellow-400 focus:outline-none"
+                            className="text-[#434756] focus:outline-none transition-all duration-150"
+                            onClick={() => handleRate(star)}
+                            onMouseEnter={() => handleHoverStar(star)}
+                            aria-label={`Avaliação ${star} estrelas`}
                           >
-                            <Star className={`h-5 w-5 ${star <= (tutorial.rating || 0) ? "text-yellow-400 fill-yellow-400" : "text-[#434756]"}`} />
+                            <Star 
+                              className={`h-5 w-5 transform hover:scale-110 ${
+                                (hoverRating >= star || (!hoverRating && userRating >= star)) 
+                                  ? "text-yellow-400 fill-yellow-400" 
+                                  : "text-[#434756]"
+                              }`} 
+                            />
                           </button>
                         ))}
+                        {hasRated && (
+                          <span className="ml-1 text-xs text-gray-500 self-center">
+                            {userRating}/5
+                          </span>
+                        )}
                       </div>
                       
                       {/* Setas de navegação - estilo minimalista com botões quadrados, sempre mostrando anterior e próximo */}
