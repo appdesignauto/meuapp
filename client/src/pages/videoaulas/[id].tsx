@@ -388,20 +388,7 @@ const VideoLessonPage: React.FC = () => {
                 {/* Informações do tutorial */}
                 <div className="p-5">
                   <h1 className="text-2xl font-bold text-gray-800 mb-2">{tutorial.title}</h1>
-                  <p className="text-gray-600 mb-4">{tutorial.description}</p>
-                  
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-2 mb-5">
-                    {tutorial.tags.map((tag, index) => (
-                      <Badge 
-                        key={index} 
-                        variant="outline" 
-                        className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 transition-colors"
-                      >
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
+                  <p className="text-gray-600 mb-5">{tutorial.description}</p>
                   
                   {/* Ações */}
                   <div className="flex flex-wrap gap-3">
