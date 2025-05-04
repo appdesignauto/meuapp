@@ -30,6 +30,7 @@ import AuthPage from "@/pages/auth-page";
 import NotFound from "@/pages/not-found";
 import AvatarTestPage from "@/pages/AvatarTestPage";
 import SupabaseAuthTestPage from "@/pages/SupabaseAuthTestPage";
+import VideoaulasPage from "@/pages/videoaulas";
 
 // Páginas do Painel do Usuário
 import { ProtectedPainelRoute } from "@/components/painel/ProtectedPainelRoute";
@@ -137,6 +138,7 @@ function AppRoutes() {
       <Route path="/designers" component={Designers} />
       <Route path="/designers/:username" component={DesignerProfile} />
       <Route path="/planos" component={PlanosPage} />
+      <Route path="/videoaulas" component={VideoaulasPage} />
       
       {/* Rota de perfil do usuário */}
       <ProtectedRoute path="/profile" component={ProfilePage} />

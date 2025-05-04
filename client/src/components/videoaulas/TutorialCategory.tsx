@@ -35,22 +35,29 @@ const TutorialCategory: React.FC<TutorialCategoryProps> = ({
   const sortedTutorials = [...tutorials].sort((a, b) => a.order - b.order);
 
   return (
-    <Carousel
-      title={title}
-      subtitle={subtitle}
-      titleIcon={icon}
-      slidesPerView={slidesPerView}
-      spacing={12}
-      gradient={true}
-    >
-      {sortedTutorials.map((tutorial) => (
-        <TutorialCard
-          key={tutorial.id}
-          tutorial={tutorial}
-          isPremiumLocked={shouldLockPremiumContent(tutorial.isPremium)}
-        />
-      ))}
-    </Carousel>
+    <div className="mb-12">
+      <div className="flex items-center mb-4">
+        {icon && <span className="mr-2">{icon}</span>}
+        <h2 className="text-xl font-bold text-white">{title}</h2>
+      </div>
+      {subtitle && (
+        <p className="text-sm text-blue-200/80 mb-4">{subtitle}</p>
+      )}
+      
+      <Carousel
+        slidesPerView={slidesPerView}
+        spacing={12}
+        gradient={true}
+      >
+        {sortedTutorials.map((tutorial) => (
+          <TutorialCard
+            key={tutorial.id}
+            tutorial={tutorial}
+            isPremiumLocked={shouldLockPremiumContent(tutorial.isPremium)}
+          />
+        ))}
+      </Carousel>
+    </div>
   );
 };
 
