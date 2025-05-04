@@ -648,9 +648,9 @@ export default function GerenciarCursosPage() {
     isLoading: isLoadingModules,
     error: modulesError
   } = useQuery({
-    queryKey: ['/api/courses/modules'],
+    queryKey: ['/api/cursos/modules'],
     queryFn: async () => {
-      const res = await apiRequest('GET', '/api/courses/modules');
+      const res = await apiRequest('GET', '/api/cursos/modules');
       return await res.json();
     }
   });
@@ -662,10 +662,10 @@ export default function GerenciarCursosPage() {
     error: lessonsError,
     refetch: refetchLessons
   } = useQuery({
-    queryKey: ['/api/courses/modules', selectedModuleId, 'lessons'],
+    queryKey: ['/api/cursos/modules', selectedModuleId, 'lessons'],
     queryFn: async () => {
       if (!selectedModuleId) return [];
-      const res = await apiRequest('GET', `/api/courses/modules/${selectedModuleId}/lessons`);
+      const res = await apiRequest('GET', `/api/cursos/modules/${selectedModuleId}/lessons`);
       return await res.json();
     },
     enabled: !!selectedModuleId
@@ -676,7 +676,7 @@ export default function GerenciarCursosPage() {
     mutationFn: async (data: FormData) => {
       const res = await apiRequest(
         'POST',
-        '/api/courses/modules',
+        '/api/cursos/modules',
         data,
         {
           'Content-Type': 'multipart/form-data',
@@ -690,7 +690,7 @@ export default function GerenciarCursosPage() {
         description: 'O novo módulo foi adicionado corretamente.',
       });
       setIsAddModuleOpen(false);
-      queryClient.invalidateQueries({ queryKey: ['/api/courses/modules'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/cursos/modules'] });
     },
     onError: (error: any) => {
       toast({
