@@ -146,7 +146,7 @@ const GerenciarCursos = () => {
   
   const updateModuleMutation = useMutation({
     mutationFn: async (data: CourseModule) => {
-      const response = await apiRequest('PUT', `/api/course-modules/${data.id}`, data);
+      const response = await apiRequest('PUT', `/api/courses/modules/${data.id}`, data);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Erro ao atualizar módulo');
@@ -154,7 +154,7 @@ const GerenciarCursos = () => {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/course-modules'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/courses/modules'] });
       setIsModuleDialogOpen(false);
       toast({
         title: 'Módulo atualizado com sucesso',
@@ -172,7 +172,7 @@ const GerenciarCursos = () => {
   
   const deleteModuleMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await apiRequest('DELETE', `/api/course-modules/${id}`);
+      const response = await apiRequest('DELETE', `/api/courses/modules/${id}`);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Erro ao excluir módulo');
@@ -180,7 +180,7 @@ const GerenciarCursos = () => {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/course-modules'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/courses/modules'] });
       setIsConfirmDeleteModuleOpen(false);
       toast({
         title: 'Módulo excluído com sucesso',
@@ -199,7 +199,7 @@ const GerenciarCursos = () => {
   // Mutations para aulas
   const createLessonMutation = useMutation({
     mutationFn: async (data: CourseLesson) => {
-      const response = await apiRequest('POST', '/api/course-lessons', data);
+      const response = await apiRequest('POST', '/api/courses/lessons', data);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Erro ao criar aula');
@@ -207,7 +207,7 @@ const GerenciarCursos = () => {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/course-lessons'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/courses/lessons'] });
       setIsLessonDialogOpen(false);
       toast({
         title: 'Aula criada com sucesso',
@@ -225,7 +225,7 @@ const GerenciarCursos = () => {
   
   const updateLessonMutation = useMutation({
     mutationFn: async (data: CourseLesson) => {
-      const response = await apiRequest('PUT', `/api/course-lessons/${data.id}`, data);
+      const response = await apiRequest('PUT', `/api/courses/lessons/${data.id}`, data);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Erro ao atualizar aula');
@@ -233,7 +233,7 @@ const GerenciarCursos = () => {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/course-lessons'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/courses/lessons'] });
       setIsLessonDialogOpen(false);
       toast({
         title: 'Aula atualizada com sucesso',
@@ -251,7 +251,7 @@ const GerenciarCursos = () => {
   
   const deleteLessonMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await apiRequest('DELETE', `/api/course-lessons/${id}`);
+      const response = await apiRequest('DELETE', `/api/courses/lessons/${id}`);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Erro ao excluir aula');
@@ -259,7 +259,7 @@ const GerenciarCursos = () => {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/course-lessons'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/courses/lessons'] });
       setIsConfirmDeleteLessonOpen(false);
       toast({
         title: 'Aula excluída com sucesso',
