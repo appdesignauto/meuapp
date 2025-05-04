@@ -1,5 +1,5 @@
 import React from 'react';
-import { Carousel } from '@/components/ui/carousel';
+import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/netflix-carousel';
 import TutorialCard from './TutorialCard';
 import { Tutorial } from './TutorialData';
 
@@ -49,13 +49,16 @@ const TutorialCategory: React.FC<TutorialCategoryProps> = ({
         spacing={12}
         gradient={true}
       >
-        {sortedTutorials.map((tutorial) => (
-          <TutorialCard
-            key={tutorial.id}
-            tutorial={tutorial}
-            isPremiumLocked={shouldLockPremiumContent(tutorial.isPremium)}
-          />
-        ))}
+        <CarouselContent>
+          {sortedTutorials.map((tutorial) => (
+            <CarouselItem key={tutorial.id}>
+              <TutorialCard
+                tutorial={tutorial}
+                isPremiumLocked={shouldLockPremiumContent(tutorial.isPremium)}
+              />
+            </CarouselItem>
+          ))}
+        </CarouselContent>
       </Carousel>
     </div>
   );
