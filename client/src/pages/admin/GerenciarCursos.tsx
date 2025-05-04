@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Link } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
@@ -109,6 +109,19 @@ const GerenciarCursos = () => {
     isPremium: false
   });
   
+  // Estados para configurações da página
+  const [pageSettings, setPageSettings] = useState({
+    courseHeroTitle: '',
+    courseHeroSubtitle: '',
+    courseHeroImageUrl: '',
+    courseRating: '',
+    courseReviewCount: 0,
+    courseTotalHours: '',
+    courseTotalModules: 0
+  });
+  
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+  
   // Consultas para obter módulos e aulas
   const { 
     data: modules = [], 
@@ -127,6 +140,31 @@ const GerenciarCursos = () => {
     queryKey: ['/api/courses/lessons'],
     queryFn: () => fetch('/api/courses/lessons').then(res => res.json()),
   });
+  
+  // Consulta para obter configurações do site
+  const {
+    data: siteSettings,
+    isLoading: isLoadingSettings,
+    isError: isSettingsError
+  } = useQuery({
+    queryKey: ['/api/site-settings'],
+    queryFn: () => fetch('/api/site-settings').then(res => res.json()),
+  });
+  
+  // Atualiza as configurações da página quando os dados do site são carregados
+  useEffect(() => {
+    if (siteSettings) {
+      setPageSettings({
+        courseHeroTitle: siteSettings.courseHeroTitle || '',
+        courseHeroSubtitle: siteSettings.courseHeroSubtitle || '',
+        courseHeroImageUrl: siteSettings.courseHeroImageUrl || '',
+        courseRating: siteSettings.courseRating || '',
+        courseReviewCount: siteSettings.courseReviewCount || 0,
+        courseTotalHours: siteSettings.courseTotalHours || '',
+        courseTotalModules: siteSettings.courseTotalModules || 0
+      });
+    }
+  }, [siteSettings]);
 
   // Mutations para módulos
   const createModuleMutation = useMutation({
@@ -414,6 +452,47 @@ const GerenciarCursos = () => {
       default:
         return <Badge>Direto</Badge>;
     }
+  };
+
+  // Handlers para configurações da página
+  const handlePageSettingsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type } = e.target;
+    setPageSettings(prev => ({ 
+      ...prev, 
+      [name]: type === 'number' ? parseInt(value) || 0 : value 
+    }));
+  };
+  
+  const updateSettingsMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest('PATCH', '/api/site-settings', data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao atualizar configurações');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/site-settings'] });
+      toast({
+        title: 'Configurações salvas com sucesso',
+        description: 'As alterações foram aplicadas à página de videoaulas',
+      });
+      setIsSavingSettings(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro ao salvar configurações',
+        description: error.message,
+        variant: 'destructive',
+      });
+      setIsSavingSettings(false);
+    }
+  });
+  
+  const handleSavePageSettings = () => {
+    setIsSavingSettings(true);
+    updateSettingsMutation.mutate(pageSettings);
   };
 
   const handleLogout = () => {
@@ -853,6 +932,138 @@ const GerenciarCursos = () => {
                     </Table>
                   </div>
                 )}
+              </TabsContent>
+              
+              {/* Tab de Configurações da Página */}
+              <TabsContent value="config" className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl font-semibold">Configurações da Página de Videoaulas</h2>
+                </div>
+                
+                <div className="bg-white border rounded-lg shadow-sm">
+                  <div className="p-6 border-b">
+                    <h3 className="text-base font-medium">Hero Banner</h3>
+                    <p className="text-sm text-gray-500">
+                      Configure como o banner principal da página de videoaulas será exibido
+                    </p>
+                  </div>
+                  
+                  <div className="p-6 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="courseHeroTitle">Título do Banner</Label>
+                        <Input 
+                          id="courseHeroTitle"
+                          name="courseHeroTitle"
+                          placeholder="DesignAuto Videoaulas"
+                          value={pageSettings.courseHeroTitle}
+                          onChange={handlePageSettingsChange}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="courseHeroSubtitle">Subtítulo do Banner</Label>
+                        <Input 
+                          id="courseHeroSubtitle"
+                          name="courseHeroSubtitle"
+                          placeholder="A formação completa para você criar designs profissionais..."
+                          value={pageSettings.courseHeroSubtitle}
+                          onChange={handlePageSettingsChange}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="courseHeroImageUrl">URL da Imagem de Fundo</Label>
+                        <Input 
+                          id="courseHeroImageUrl"
+                          name="courseHeroImageUrl"
+                          placeholder="https://example.com/image.jpg"
+                          value={pageSettings.courseHeroImageUrl}
+                          onChange={handlePageSettingsChange}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-white border rounded-lg shadow-sm">
+                  <div className="p-6 border-b">
+                    <h3 className="text-base font-medium">Estatísticas do Curso</h3>
+                    <p className="text-sm text-gray-500">
+                      Configure as estatísticas exibidas na página de videoaulas
+                    </p>
+                  </div>
+                  
+                  <div className="p-6 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="courseRating">Avaliação do Curso</Label>
+                        <Input 
+                          id="courseRating"
+                          name="courseRating"
+                          placeholder="4.8"
+                          value={pageSettings.courseRating}
+                          onChange={handlePageSettingsChange}
+                        />
+                        <p className="text-xs text-gray-500">Número de 0 a 5, pode incluir decimais (ex: 4.8)</p>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="courseReviewCount">Número de Avaliações</Label>
+                        <Input 
+                          id="courseReviewCount"
+                          name="courseReviewCount"
+                          type="number"
+                          placeholder="287"
+                          value={pageSettings.courseReviewCount}
+                          onChange={handlePageSettingsChange}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="courseTotalHours">Total de Horas</Label>
+                        <Input 
+                          id="courseTotalHours"
+                          name="courseTotalHours"
+                          placeholder="42 horas"
+                          value={pageSettings.courseTotalHours}
+                          onChange={handlePageSettingsChange}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="courseTotalModules">Total de Módulos</Label>
+                        <Input 
+                          id="courseTotalModules"
+                          name="courseTotalModules"
+                          type="number"
+                          placeholder="18"
+                          value={pageSettings.courseTotalModules}
+                          onChange={handlePageSettingsChange}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end">
+                  <Button 
+                    onClick={handleSavePageSettings}
+                    disabled={isSavingSettings}
+                  >
+                    {isSavingSettings ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Salvando...
+                      </>
+                    ) : (
+                      'Salvar Configurações'
+                    )}
+                  </Button>
+                </div>
               </TabsContent>
             </Tabs>
           </div>
