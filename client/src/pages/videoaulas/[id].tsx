@@ -258,13 +258,18 @@ const VideoLessonPage: React.FC = () => {
     return !isPremiumUser;
   };
   
-  // Função para marcar a aula como concluída e ir para a próxima
+  // Função para alternar o estado de conclusão da aula (marcar/desmarcar)
   const handleComplete = () => {
-    // Salvar o estado imediatamente no localStorage
-    const newWatchedLessons = [...watchedLessons];
+    let newWatchedLessons = [...watchedLessons];
     
-    // Verificar se esta aula já está como concluída
-    if (!isCompleted) {
+    if (isCompleted) {
+      // Se já está concluída, remover da lista de concluídas
+      newWatchedLessons = newWatchedLessons.filter(lessonId => lessonId !== id);
+      setWatchedLessons(newWatchedLessons);
+      localStorage.setItem('watchedLessons', JSON.stringify(newWatchedLessons));
+      // Não navegamos para nenhum lugar, apenas desmarcamos
+    } else {
+      // Se não está concluída, adicionar à lista e navegar para a próxima
       newWatchedLessons.push(id);
       setWatchedLessons(newWatchedLessons);
       localStorage.setItem('watchedLessons', JSON.stringify(newWatchedLessons));
@@ -276,11 +281,6 @@ const VideoLessonPage: React.FC = () => {
           navigate(`/videoaulas/${id + 1}`);
         }
       }, 300);
-    } else {
-      // Mesmo que já esteja concluída, vamos para a próxima aula
-      if (id < tutoriais.length) {
-        navigate(`/videoaulas/${id + 1}`);
-      }
     }
   };
 
