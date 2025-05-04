@@ -18,6 +18,7 @@ import {
   Bookmark,
   ListChecks,
   CheckCircle2,
+  CheckCircle,
   Lock,
   ExternalLink,
   BookOpen,
@@ -443,9 +444,9 @@ const VideoLessonPage: React.FC = () => {
                   {/* Ações */}
                   <div className="flex flex-wrap gap-3">
                     {!isLocked && (
-                      <Button variant="outline" className="text-blue-700 border-blue-200 hover:bg-blue-50 transition-colors">
-                        <Download className="mr-2 h-4 w-4" />
-                        Baixar materiais
+                      <Button variant="outline" className="text-green-700 border-green-200 hover:bg-green-50 transition-colors">
+                        <CheckCircle className="mr-2 h-4 w-4" />
+                        Concluir
                       </Button>
                     )}
                     
