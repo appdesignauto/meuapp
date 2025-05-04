@@ -563,13 +563,13 @@ const VideoLessonPage: React.FC = () => {
               
               {/* Abas de conteúdo adicional - estilo clean */}
               <div className="mt-6">
-                <Tabs defaultValue="conteudo" className="w-full">
+                <Tabs defaultValue="comentarios" className="w-full">
                   <TabsList className="bg-white border border-blue-100 rounded-md shadow-sm">
                     <TabsTrigger 
-                      value="conteudo" 
+                      value="comentarios" 
                       className="data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-colors"
                     >
-                      Conteúdo
+                      Comentários
                     </TabsTrigger>
                     <TabsTrigger 
                       value="materiais" 
@@ -585,26 +585,135 @@ const VideoLessonPage: React.FC = () => {
                     </TabsTrigger>
                   </TabsList>
                   
-                  <TabsContent value="conteudo" className="mt-4 bg-white p-5 rounded-lg border border-blue-100 shadow-sm">
-                    <h3 className="text-xl font-bold text-gray-800 mb-4">O que você vai aprender</h3>
-                    <div className="space-y-4">
-                      <div className="flex items-start gap-3 bg-blue-50 p-3 rounded-md">
-                        <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                        <p className="text-gray-700">Técnicas avançadas de design para o setor automotivo</p>
+                  <TabsContent value="comentarios" className="mt-4 bg-white p-5 rounded-lg border border-blue-100 shadow-sm">
+                    <h3 className="text-xl font-bold text-gray-800 mb-4">Comentários</h3>
+                    {user ? (
+                      <div>
+                        <div className="flex items-start gap-3 mb-5">
+                          <div className="w-10 h-10 rounded-full bg-blue-100 overflow-hidden flex-shrink-0">
+                            {user.profileimageurl ? (
+                              <img 
+                                src={user.profileimageurl} 
+                                alt={user.name || user.username} 
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-blue-200 text-blue-600 font-bold">
+                                {(user.name?.[0] || user.username[0]).toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <textarea 
+                              className="w-full p-3 bg-white border border-blue-200 text-gray-700 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-sm"
+                              placeholder="Deixe seu comentário sobre este tutorial..."
+                              rows={3}
+                            ></textarea>
+                            <div className="flex justify-end mt-2">
+                              <Button className="bg-blue-600 hover:bg-blue-700 shadow-sm text-sm px-4">
+                                Comentar
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-6 mt-8">
+                          <h4 className="text-gray-500 text-sm font-medium border-b border-gray-100 pb-2">Todos os comentários (3)</h4>
+                          
+                          {/* Comentário exemplo 1 */}
+                          <div className="flex items-start gap-3">
+                            <div className="w-8 h-8 rounded-full bg-indigo-100 overflow-hidden flex-shrink-0">
+                              <div className="w-full h-full flex items-center justify-center bg-indigo-200 text-indigo-600 font-bold text-xs">
+                                M
+                              </div>
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h5 className="font-medium text-gray-800">Maria Silva</h5>
+                                <span className="text-gray-400 text-xs">2 dias atrás</span>
+                              </div>
+                              <p className="text-gray-600 text-sm mt-1">
+                                Ótimo tutorial! Estou aplicando essas técnicas nos anúncios da minha oficina e já notei um aumento nas conversões.
+                              </p>
+                              <div className="flex items-center gap-4 mt-2">
+                                <button className="text-xs text-gray-500 hover:text-blue-600 flex items-center gap-1">
+                                  <ThumbsUp className="h-3 w-3" />
+                                  <span>12</span>
+                                </button>
+                                <button className="text-xs text-gray-500 hover:text-blue-600">
+                                  Responder
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Comentário exemplo 2 */}
+                          <div className="flex items-start gap-3">
+                            <div className="w-8 h-8 rounded-full bg-green-100 overflow-hidden flex-shrink-0">
+                              <div className="w-full h-full flex items-center justify-center bg-green-200 text-green-600 font-bold text-xs">
+                                J
+                              </div>
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h5 className="font-medium text-gray-800">João Costa</h5>
+                                <span className="text-gray-400 text-xs">5 dias atrás</span>
+                              </div>
+                              <p className="text-gray-600 text-sm mt-1">
+                                Você poderia fazer um tutorial específico sobre posts para Instagram? Tenho dificuldade em adaptar os designs para o formato do Stories.
+                              </p>
+                              <div className="flex items-center gap-4 mt-2">
+                                <button className="text-xs text-gray-500 hover:text-blue-600 flex items-center gap-1">
+                                  <ThumbsUp className="h-3 w-3" />
+                                  <span>8</span>
+                                </button>
+                                <button className="text-xs text-gray-500 hover:text-blue-600">
+                                  Responder
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Comentário exemplo 3 */}
+                          <div className="flex items-start gap-3">
+                            <div className="w-8 h-8 rounded-full bg-amber-100 overflow-hidden flex-shrink-0">
+                              <div className="w-full h-full flex items-center justify-center bg-amber-200 text-amber-600 font-bold text-xs">
+                                C
+                              </div>
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h5 className="font-medium text-gray-800">Carlos Mendes</h5>
+                                <span className="text-gray-400 text-xs">1 semana atrás</span>
+                              </div>
+                              <p className="text-gray-600 text-sm mt-1">
+                                Consegui aplicar as dicas de tipografia em todos os meus designs. Os resultados foram impressionantes! Obrigado pelo conteúdo de qualidade.
+                              </p>
+                              <div className="flex items-center gap-4 mt-2">
+                                <button className="text-xs text-gray-500 hover:text-blue-600 flex items-center gap-1">
+                                  <ThumbsUp className="h-3 w-3" />
+                                  <span>15</span>
+                                </button>
+                                <button className="text-xs text-gray-500 hover:text-blue-600">
+                                  Responder
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex items-start gap-3 bg-blue-50 p-3 rounded-md">
-                        <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                        <p className="text-gray-700">Como escolher as cores e tipografia corretas para seus anúncios</p>
+                    ) : (
+                      <div className="text-center p-6 bg-blue-50 rounded-md">
+                        <p className="text-gray-700 mb-3">
+                          Faça login para ver e adicionar comentários.
+                        </p>
+                        <Link href="/auth">
+                          <Button className="bg-blue-600 hover:bg-blue-700 shadow-sm">
+                            Entrar
+                          </Button>
+                        </Link>
                       </div>
-                      <div className="flex items-start gap-3 bg-blue-50 p-3 rounded-md">
-                        <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                        <p className="text-gray-700">Estratégias comprovadas para aumentar o engajamento nas redes sociais</p>
-                      </div>
-                      <div className="flex items-start gap-3 bg-blue-50 p-3 rounded-md">
-                        <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                        <p className="text-gray-700">Como criar fluxos de trabalho eficientes para produção rápida</p>
-                      </div>
-                    </div>
+                    )}
                   </TabsContent>
                   
                   <TabsContent value="materiais" className="mt-4 bg-white p-5 rounded-lg border border-blue-100 shadow-sm">
