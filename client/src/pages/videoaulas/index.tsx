@@ -107,7 +107,7 @@ export default function VideoaulasPage() {
           
           {/* Conteúdo sobreposto */}
           <div className="container mx-auto h-full flex flex-col justify-center relative z-10">
-            <div className="max-w-3xl px-4 md:px-8 lg:px-10 xl:px-12">
+            <div className="max-w-6xl px-6 w-full">
               <h1 className="text-4xl md:text-5xl font-bold mb-4 text-blue-800">
                 DesignAuto Videoaulas
               </h1>
@@ -133,9 +133,9 @@ export default function VideoaulasPage() {
           </div>
         </div>
         
-        <div className="container mx-auto py-8 max-w-7xl">
+        <div className="container mx-auto py-8 max-w-6xl">
           {/* Barra de pesquisa clean com filtros em formato de pills */}
-          <div className="px-4 md:px-8 lg:px-10 xl:px-12">
+          <div className="px-6 w-full">
             <div className="mb-6 sticky top-16 z-20">
               <div className="flex flex-col md:flex-row items-center gap-3 p-3 rounded-lg bg-white shadow-sm border border-gray-100">
                 {/* Barra de busca estilo clean */}
@@ -223,7 +223,7 @@ export default function VideoaulasPage() {
           </div>
           
           {/* Conteúdo principal baseado na filtragem */}
-          <div className="px-4 md:px-8 lg:px-10 xl:px-12 mt-6">
+          <div className="px-6 w-full mt-6">
             {/* Resultados de pesquisa */}
             {searchTerm && (
               <div className="mb-10">
