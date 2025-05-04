@@ -398,7 +398,7 @@ const VideoLessonPage: React.FC = () => {
                         variant="outline" 
                         className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 transition-colors"
                       >
-                        #{tag}
+                        {tag}
                       </Badge>
                     ))}
                   </div>
