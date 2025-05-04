@@ -403,47 +403,24 @@ const VideoLessonPage: React.FC = () => {
                     ))}
                   </div>
                   
-                  {/* Ações com tooltips */}
+                  {/* Ações */}
                   <div className="flex flex-wrap gap-3">
-                    <TooltipProvider>
-                      {!isLocked && (
-                        <Tooltip delayDuration={300}>
-                          <TooltipTrigger asChild>
-                            <Button variant="outline" className="text-blue-700 border-blue-200 hover:bg-blue-50 transition-colors">
-                              <Download className="mr-2 h-4 w-4" />
-                              Baixar materiais
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent className="bg-gray-800 text-white">
-                            <p>Baixe todos os materiais de apoio deste tutorial</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                      
-                      <Tooltip delayDuration={300}>
-                        <TooltipTrigger asChild>
-                          <Button variant="outline" className="text-blue-700 border-blue-200 hover:bg-blue-50 transition-colors">
-                            <Share2 className="mr-2 h-4 w-4" />
-                            Compartilhar
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent className="bg-gray-800 text-white">
-                          <p>Compartilhe este tutorial com seus colegas</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      
-                      <Tooltip delayDuration={300}>
-                        <TooltipTrigger asChild>
-                          <Button variant="outline" className="text-blue-700 border-blue-200 hover:bg-blue-50 transition-colors">
-                            <Bookmark className="mr-2 h-4 w-4" />
-                            Salvar
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent className="bg-gray-800 text-white">
-                          <p>Salve este tutorial para assistir mais tarde</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    {!isLocked && (
+                      <Button variant="outline" className="text-blue-700 border-blue-200 hover:bg-blue-50 transition-colors">
+                        <Download className="mr-2 h-4 w-4" />
+                        Baixar materiais
+                      </Button>
+                    )}
+                    
+                    <Button variant="outline" className="text-blue-700 border-blue-200 hover:bg-blue-50 transition-colors">
+                      <Share2 className="mr-2 h-4 w-4" />
+                      Compartilhar
+                    </Button>
+                    
+                    <Button variant="outline" className="text-blue-700 border-blue-200 hover:bg-blue-50 transition-colors">
+                      <Bookmark className="mr-2 h-4 w-4" />
+                      Salvar
+                    </Button>
                   </div>
                 </div>
               </div>
