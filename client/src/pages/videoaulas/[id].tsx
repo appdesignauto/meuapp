@@ -266,14 +266,14 @@ const VideoLessonPage: React.FC = () => {
         <meta name="description" content={tutorial.description} />
       </Helmet> */}
       
-      <div className="min-h-screen bg-gray-950 pb-12">
-        {/* Cabeçalho com navegação e título */}
-        <div className="bg-gray-900 py-4 border-b border-gray-800">
+      <div className="min-h-screen bg-white pb-12">
+        {/* Cabeçalho com navegação e título - estilo clean */}
+        <div className="bg-gradient-to-r from-blue-50 to-white py-4 border-b border-blue-100 shadow-sm">
           <div className="container mx-auto px-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div>
               <Button 
                 variant="ghost" 
-                className="text-gray-400 hover:text-white hover:bg-gray-800 -ml-3"
+                className="text-blue-700 hover:text-blue-900 hover:bg-blue-50 -ml-3 transition-colors"
                 onClick={() => navigate("/videoaulas")}
               >
                 <ChevronLeft className="mr-1 h-4 w-4" />
@@ -283,13 +283,13 @@ const VideoLessonPage: React.FC = () => {
             
             <div className="flex items-center gap-2">
               {tutorial.isPremium && (
-                <Badge className="bg-yellow-600 text-white border-0">
+                <Badge className="bg-gradient-to-r from-yellow-500 to-amber-500 text-white border-0 shadow-sm font-medium px-3 py-1">
                   <Lock className="h-3 w-3 mr-1" />
                   Premium
                 </Badge>
               )}
               
-              <Badge className="bg-blue-600 text-white border-0">
+              <Badge className="bg-blue-600 text-white border-0 shadow-sm font-medium px-3 py-1">
                 <Clock className="h-3 w-3 mr-1" />
                 {tutorial.duration}
               </Badge>
@@ -303,30 +303,30 @@ const VideoLessonPage: React.FC = () => {
             {/* Coluna do vídeo e detalhes */}
             <div className="lg:col-span-2">
               {/* Player de vídeo */}
-              <div className="rounded-lg overflow-hidden bg-gray-900 border border-gray-800">
+              <div className="rounded-lg overflow-hidden bg-white border border-blue-100 shadow-sm">
                 {isLocked ? (
-                  <div className="aspect-video relative flex items-center justify-center bg-gray-900">
+                  <div className="aspect-video relative flex items-center justify-center bg-blue-50">
                     <img 
                       src={tutorial.thumbnailUrl} 
                       alt={tutorial.title} 
-                      className="w-full h-full object-cover opacity-20 absolute inset-0"
+                      className="w-full h-full object-cover opacity-30 absolute inset-0"
                     />
-                    <div className="absolute inset-0 bg-black/70"></div>
+                    <div className="absolute inset-0 bg-blue-900/10"></div>
                     <div className="text-center z-10 p-6">
                       <div className="flex justify-center mb-4">
-                        <div className="bg-yellow-600/20 p-4 rounded-full">
+                        <div className="bg-gradient-to-r from-amber-50 to-yellow-100 p-4 rounded-full shadow-sm">
                           <Lock className="h-12 w-12 text-yellow-500" />
                         </div>
                       </div>
-                      <h3 className="text-xl font-bold text-white mb-2">
+                      <h3 className="text-xl font-bold text-gray-800 mb-2">
                         Conteúdo Premium
                       </h3>
-                      <p className="text-gray-400 mb-6 max-w-md mx-auto">
+                      <p className="text-gray-600 mb-6 max-w-md mx-auto">
                         Este tutorial está disponível apenas para assinantes do plano premium.
                         Assine agora para desbloquear este e todos os outros conteúdos exclusivos.
                       </p>
                       <Link href="/planos">
-                        <Button className="bg-yellow-600 hover:bg-yellow-700 text-white">
+                        <Button className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white shadow-sm transition-all">
                           Ver Planos de Assinatura
                         </Button>
                       </Link>
@@ -341,8 +341,8 @@ const VideoLessonPage: React.FC = () => {
                 
                 {/* Informações do tutorial */}
                 <div className="p-5">
-                  <h1 className="text-2xl font-bold text-white mb-2">{tutorial.title}</h1>
-                  <p className="text-gray-400 mb-4">{tutorial.description}</p>
+                  <h1 className="text-2xl font-bold text-gray-800 mb-2">{tutorial.title}</h1>
+                  <p className="text-gray-600 mb-4">{tutorial.description}</p>
                   
                   {/* Tags */}
                   <div className="flex flex-wrap gap-2 mb-5">
@@ -350,7 +350,7 @@ const VideoLessonPage: React.FC = () => {
                       <Badge 
                         key={index} 
                         variant="outline" 
-                        className="bg-gray-800/50 text-gray-300 border-gray-700 hover:bg-gray-700"
+                        className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 transition-colors"
                       >
                         #{tag}
                       </Badge>
@@ -360,18 +360,18 @@ const VideoLessonPage: React.FC = () => {
                   {/* Ações */}
                   <div className="flex flex-wrap gap-3">
                     {!isLocked && (
-                      <Button variant="outline" className="text-gray-300 border-gray-700 hover:bg-gray-800">
+                      <Button variant="outline" className="text-blue-700 border-blue-200 hover:bg-blue-50 transition-colors">
                         <Download className="mr-2 h-4 w-4" />
                         Baixar materiais
                       </Button>
                     )}
                     
-                    <Button variant="outline" className="text-gray-300 border-gray-700 hover:bg-gray-800">
+                    <Button variant="outline" className="text-blue-700 border-blue-200 hover:bg-blue-50 transition-colors">
                       <Share2 className="mr-2 h-4 w-4" />
                       Compartilhar
                     </Button>
                     
-                    <Button variant="outline" className="text-gray-300 border-gray-700 hover:bg-gray-800">
+                    <Button variant="outline" className="text-blue-700 border-blue-200 hover:bg-blue-50 transition-colors">
                       <Bookmark className="mr-2 h-4 w-4" />
                       Salvar
                     </Button>
@@ -379,113 +379,115 @@ const VideoLessonPage: React.FC = () => {
                 </div>
               </div>
               
-              {/* Abas de conteúdo adicional */}
+              {/* Abas de conteúdo adicional - estilo clean */}
               <div className="mt-6">
                 <Tabs defaultValue="conteudo" className="w-full">
-                  <TabsList className="bg-gray-900 border border-gray-800">
+                  <TabsList className="bg-white border border-blue-100 rounded-md shadow-sm">
                     <TabsTrigger 
                       value="conteudo" 
-                      className="data-[state=active]:bg-blue-600 data-[state=active]:text-white"
+                      className="data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-colors"
                     >
                       Conteúdo
                     </TabsTrigger>
                     <TabsTrigger 
                       value="materiais" 
-                      className="data-[state=active]:bg-blue-600 data-[state=active]:text-white"
+                      className="data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-colors"
                     >
                       Materiais
                     </TabsTrigger>
                     <TabsTrigger 
                       value="notas" 
-                      className="data-[state=active]:bg-blue-600 data-[state=active]:text-white"
+                      className="data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-colors"
                     >
                       Minhas Notas
                     </TabsTrigger>
                   </TabsList>
                   
-                  <TabsContent value="conteudo" className="mt-4 bg-gray-900 p-4 rounded-lg border border-gray-800">
-                    <h3 className="text-xl font-bold text-white mb-3">O que você vai aprender</h3>
-                    <div className="space-y-3">
-                      <div className="flex items-start gap-3">
-                        <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                        <p className="text-gray-300">Técnicas avançadas de design para o setor automotivo</p>
+                  <TabsContent value="conteudo" className="mt-4 bg-white p-5 rounded-lg border border-blue-100 shadow-sm">
+                    <h3 className="text-xl font-bold text-gray-800 mb-4">O que você vai aprender</h3>
+                    <div className="space-y-4">
+                      <div className="flex items-start gap-3 bg-blue-50 p-3 rounded-md">
+                        <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                        <p className="text-gray-700">Técnicas avançadas de design para o setor automotivo</p>
                       </div>
-                      <div className="flex items-start gap-3">
-                        <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                        <p className="text-gray-300">Como escolher as cores e tipografia corretas para seus anúncios</p>
+                      <div className="flex items-start gap-3 bg-blue-50 p-3 rounded-md">
+                        <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                        <p className="text-gray-700">Como escolher as cores e tipografia corretas para seus anúncios</p>
                       </div>
-                      <div className="flex items-start gap-3">
-                        <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                        <p className="text-gray-300">Estratégias comprovadas para aumentar o engajamento nas redes sociais</p>
+                      <div className="flex items-start gap-3 bg-blue-50 p-3 rounded-md">
+                        <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                        <p className="text-gray-700">Estratégias comprovadas para aumentar o engajamento nas redes sociais</p>
                       </div>
-                      <div className="flex items-start gap-3">
-                        <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                        <p className="text-gray-300">Como criar fluxos de trabalho eficientes para produção rápida</p>
+                      <div className="flex items-start gap-3 bg-blue-50 p-3 rounded-md">
+                        <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                        <p className="text-gray-700">Como criar fluxos de trabalho eficientes para produção rápida</p>
                       </div>
                     </div>
                   </TabsContent>
                   
-                  <TabsContent value="materiais" className="mt-4 bg-gray-900 p-4 rounded-lg border border-gray-800">
+                  <TabsContent value="materiais" className="mt-4 bg-white p-5 rounded-lg border border-blue-100 shadow-sm">
                     {isLocked ? (
                       <div className="text-center p-8">
-                        <Lock className="h-12 w-12 text-yellow-500 mx-auto mb-3" />
-                        <h3 className="text-xl font-bold text-white mb-2">
+                        <div className="bg-gradient-to-r from-amber-50 to-yellow-100 p-4 rounded-full shadow-sm inline-flex mb-3">
+                          <Lock className="h-12 w-12 text-yellow-500" />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-800 mb-2">
                           Materiais Premium
                         </h3>
-                        <p className="text-gray-400 mb-4 max-w-md mx-auto">
+                        <p className="text-gray-600 mb-4 max-w-md mx-auto">
                           Os materiais deste tutorial estão disponíveis apenas para assinantes premium.
                         </p>
                         <Link href="/planos">
-                          <Button className="bg-yellow-600 hover:bg-yellow-700 text-white">
+                          <Button className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white shadow-sm transition-all">
                             Ver Planos de Assinatura
                           </Button>
                         </Link>
                       </div>
                     ) : (
                       <div className="space-y-4">
-                        <h3 className="text-xl font-bold text-white mb-3">Materiais de apoio</h3>
+                        <h3 className="text-xl font-bold text-gray-800 mb-3">Materiais de apoio</h3>
                         
-                        <div className="border border-gray-800 rounded-md p-3 hover:bg-gray-800/50 transition-colors flex justify-between items-center">
-                          <div className="flex items-center gap-3">
-                            <div className="bg-blue-900/50 p-2 rounded">
-                              <Download className="h-5 w-5 text-blue-400" />
+                        <div className="border border-blue-100 rounded-md p-4 hover:bg-blue-50 transition-colors flex justify-between items-center shadow-sm">
+                          <div className="flex items-center gap-4">
+                            <div className="bg-blue-100 p-2 rounded-md">
+                              <Download className="h-5 w-5 text-blue-600" />
                             </div>
                             <div>
-                              <h4 className="text-white font-medium">Guia de Referência</h4>
-                              <p className="text-gray-400 text-sm">PDF • 2.4 MB</p>
+                              <h4 className="text-gray-800 font-medium">Guia de Referência</h4>
+                              <p className="text-gray-500 text-sm">PDF • 2.4 MB</p>
                             </div>
                           </div>
-                          <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/50">
+                          <Button variant="outline" size="sm" className="text-blue-700 border-blue-200 hover:bg-blue-50">
                             Baixar
                           </Button>
                         </div>
                         
-                        <div className="border border-gray-800 rounded-md p-3 hover:bg-gray-800/50 transition-colors flex justify-between items-center">
-                          <div className="flex items-center gap-3">
-                            <div className="bg-purple-900/50 p-2 rounded">
-                              <Download className="h-5 w-5 text-purple-400" />
+                        <div className="border border-blue-100 rounded-md p-4 hover:bg-blue-50 transition-colors flex justify-between items-center shadow-sm">
+                          <div className="flex items-center gap-4">
+                            <div className="bg-purple-100 p-2 rounded-md">
+                              <Download className="h-5 w-5 text-purple-600" />
                             </div>
                             <div>
-                              <h4 className="text-white font-medium">Templates</h4>
-                              <p className="text-gray-400 text-sm">ZIP • 5.8 MB</p>
+                              <h4 className="text-gray-800 font-medium">Templates</h4>
+                              <p className="text-gray-500 text-sm">ZIP • 5.8 MB</p>
                             </div>
                           </div>
-                          <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/50">
+                          <Button variant="outline" size="sm" className="text-blue-700 border-blue-200 hover:bg-blue-50">
                             Baixar
                           </Button>
                         </div>
                         
-                        <div className="border border-gray-800 rounded-md p-3 hover:bg-gray-800/50 transition-colors flex justify-between items-center">
-                          <div className="flex items-center gap-3">
-                            <div className="bg-green-900/50 p-2 rounded">
-                              <ExternalLink className="h-5 w-5 text-green-400" />
+                        <div className="border border-blue-100 rounded-md p-4 hover:bg-blue-50 transition-colors flex justify-between items-center shadow-sm">
+                          <div className="flex items-center gap-4">
+                            <div className="bg-green-100 p-2 rounded-md">
+                              <ExternalLink className="h-5 w-5 text-green-600" />
                             </div>
                             <div>
-                              <h4 className="text-white font-medium">Link para template Canva</h4>
-                              <p className="text-gray-400 text-sm">Link externo • Canva</p>
+                              <h4 className="text-gray-800 font-medium">Link para template Canva</h4>
+                              <p className="text-gray-500 text-sm">Link externo • Canva</p>
                             </div>
                           </div>
-                          <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/50">
+                          <Button variant="outline" size="sm" className="text-blue-700 border-blue-200 hover:bg-blue-50">
                             Abrir link
                           </Button>
                         </div>
@@ -493,27 +495,27 @@ const VideoLessonPage: React.FC = () => {
                     )}
                   </TabsContent>
                   
-                  <TabsContent value="notas" className="mt-4 bg-gray-900 p-4 rounded-lg border border-gray-800">
-                    <h3 className="text-xl font-bold text-white mb-3">Minhas anotações</h3>
+                  <TabsContent value="notas" className="mt-4 bg-white p-5 rounded-lg border border-blue-100 shadow-sm">
+                    <h3 className="text-xl font-bold text-gray-800 mb-3">Minhas anotações</h3>
                     {user ? (
                       <div>
                         <textarea 
-                          className="w-full h-40 p-3 bg-gray-800 border border-gray-700 text-gray-200 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                          className="w-full h-40 p-4 bg-white border border-blue-200 text-gray-700 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-sm"
                           placeholder="Faça suas anotações sobre este tutorial aqui..."
                         ></textarea>
                         <div className="flex justify-end mt-3">
-                          <Button className="bg-blue-600 hover:bg-blue-700">
+                          <Button className="bg-blue-600 hover:bg-blue-700 shadow-sm">
                             Salvar notas
                           </Button>
                         </div>
                       </div>
                     ) : (
-                      <div className="text-center p-4">
-                        <p className="text-gray-400 mb-3">
+                      <div className="text-center p-6 bg-blue-50 rounded-md">
+                        <p className="text-gray-700 mb-3">
                           Faça login para adicionar notas a este tutorial.
                         </p>
                         <Link href="/auth">
-                          <Button className="bg-blue-600 hover:bg-blue-700">
+                          <Button className="bg-blue-600 hover:bg-blue-700 shadow-sm">
                             Entrar
                           </Button>
                         </Link>
@@ -524,48 +526,48 @@ const VideoLessonPage: React.FC = () => {
               </div>
             </div>
             
-            {/* Sidebar com tutoriais relacionados e progresso */}
+            {/* Sidebar com tutoriais relacionados e progresso - estilo clean */}
             <div className="space-y-6">
               {/* Progresso do módulo */}
-              <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
-                <h3 className="text-white font-bold text-lg mb-3 flex items-center">
-                  <ListChecks className="h-5 w-5 mr-2 text-blue-400" />
+              <div className="bg-white rounded-lg border border-blue-100 p-5 shadow-sm">
+                <h3 className="text-gray-800 font-bold text-lg mb-4 flex items-center">
+                  <ListChecks className="h-5 w-5 mr-2 text-blue-600" />
                   Progresso do Módulo
                 </h3>
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   {tutoriaisRelacionados.slice(0, 5).map((t, index) => (
                     <div 
                       key={t.id}
                       className={`${
                         t.id === id 
-                          ? 'bg-blue-900/40 border-blue-500' 
-                          : 'border-gray-800 hover:bg-gray-800/50'
-                      } border rounded-md p-3 transition-colors flex items-center justify-between`}
+                          ? 'bg-blue-50 border-blue-400' 
+                          : 'border-blue-100 hover:bg-blue-50/50'
+                      } border rounded-md p-3 transition-colors flex items-center justify-between shadow-sm`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="bg-gray-800 h-7 w-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-medium text-gray-300">
+                        <div className={`${t.id === id ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700'} h-7 w-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-medium transition-colors shadow-sm`}>
                           {index + 1}
                         </div>
                         <div className="min-w-0">
-                          <h4 className="text-white font-medium text-sm truncate">
+                          <h4 className={`${t.id === id ? 'text-blue-700' : 'text-gray-800'} font-medium text-sm truncate`}>
                             {t.title}
                           </h4>
-                          <p className="text-gray-400 text-xs">{t.duration}</p>
+                          <p className="text-gray-500 text-xs">{t.duration}</p>
                         </div>
                       </div>
                       
                       {t.id === id ? (
-                        <div className="bg-blue-600 h-6 w-6 rounded-full flex items-center justify-center flex-shrink-0">
+                        <div className="bg-blue-600 h-6 w-6 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
                           <Play fill="white" className="h-3.5 w-3.5 text-white ml-0.5" />
                         </div>
                       ) : t.isWatched ? (
-                        <div className="bg-green-500/20 h-6 w-6 rounded-full flex items-center justify-center flex-shrink-0">
-                          <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                        <div className="bg-green-100 h-6 w-6 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
                         </div>
                       ) : (
                         <Link href={`/videoaulas/${t.id}`} className="flex">
-                          <div className="bg-gray-800 hover:bg-gray-700 h-6 w-6 rounded-full flex items-center justify-center flex-shrink-0 transition-colors">
-                            <Play fill="white" className="h-3.5 w-3.5 text-white ml-0.5" />
+                          <div className="bg-blue-100 hover:bg-blue-200 h-6 w-6 rounded-full flex items-center justify-center flex-shrink-0 transition-colors shadow-sm">
+                            <Play fill="#2563EB" className="h-3.5 w-3.5 text-blue-600 ml-0.5" />
                           </div>
                         </Link>
                       )}
@@ -573,26 +575,27 @@ const VideoLessonPage: React.FC = () => {
                   ))}
                 </div>
                 
-                <div className="mt-4 pt-4 border-t border-gray-800">
+                <div className="mt-5 pt-4 border-t border-blue-100">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-gray-400 text-sm">Progresso do módulo</span>
-                    <span className="text-white text-sm font-medium">2/8</span>
+                    <span className="text-gray-600 text-sm">Progresso do módulo</span>
+                    <span className="text-blue-700 text-sm font-medium">2/8</span>
                   </div>
-                  <div className="w-full h-2 bg-gray-800 rounded-full">
+                  <div className="w-full h-2.5 bg-blue-100 rounded-full overflow-hidden">
                     <div className="h-full bg-blue-600 rounded-full" style={{ width: '25%' }}></div>
                   </div>
                 </div>
               </div>
               
-              {/* Tutoriais relacionados */}
-              <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
-                <h3 className="text-white font-bold text-lg mb-3">
+              {/* Tutoriais relacionados - estilo clean */}
+              <div className="bg-white rounded-lg border border-blue-100 p-5 shadow-sm">
+                <h3 className="text-gray-800 font-bold text-lg mb-4 flex items-center">
+                  <BookOpen className="h-5 w-5 mr-2 text-blue-600" />
                   Tutoriais Relacionados
                 </h3>
-                <div className="space-y-3">
-                  {tutoriaisRelacionados.map((t) => (
+                <div className="space-y-4">
+                  {tutoriaisRelacionados.slice(0, 3).map((t) => (
                     <Link key={t.id} href={`/videoaulas/${t.id}`}>
-                      <div className="group border border-gray-800 hover:border-gray-700 rounded-md overflow-hidden transition-colors cursor-pointer">
+                      <div className="group border border-blue-100 hover:border-blue-300 rounded-md overflow-hidden transition-colors cursor-pointer shadow-sm">
                         {/* Thumbnail */}
                         <div className="relative aspect-video">
                           <img 
@@ -600,40 +603,46 @@ const VideoLessonPage: React.FC = () => {
                             alt={t.title}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
-                          {/* Overlay gradiente */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                          {/* Overlay gradiente mais suave */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 to-transparent"></div>
                           
                           {/* Duração */}
-                          <div className="absolute bottom-2 right-2 text-xs bg-black/60 text-white px-1.5 py-0.5 rounded">
-                            {t.duration}
+                          <div className="absolute bottom-2 right-2">
+                            <Badge className="bg-blue-600 text-white border-0 shadow-sm">
+                              {t.duration}
+                            </Badge>
                           </div>
                           
                           {/* Status (assistido/premium) */}
                           {t.isWatched && (
-                            <div className="absolute top-2 left-2 text-xs bg-green-500/90 text-white px-1.5 py-0.5 rounded-sm flex items-center">
-                              <CheckCircle2 className="h-3 w-3 mr-1" />
-                              Assistido
+                            <div className="absolute top-2 left-2">
+                              <Badge className="bg-green-600 text-white border-0 shadow-sm flex items-center">
+                                <CheckCircle2 className="h-3 w-3 mr-1" />
+                                Assistido
+                              </Badge>
                             </div>
                           )}
                           
                           {t.isPremium && !t.isWatched && (
-                            <div className="absolute top-2 left-2 text-xs bg-yellow-600/90 text-white px-1.5 py-0.5 rounded-sm flex items-center">
-                              <Lock className="h-3 w-3 mr-1" />
-                              Premium
+                            <div className="absolute top-2 left-2">
+                              <Badge className="bg-gradient-to-r from-yellow-500 to-amber-500 text-white border-0 shadow-sm flex items-center">
+                                <Lock className="h-3 w-3 mr-1" />
+                                Premium
+                              </Badge>
                             </div>
                           )}
                           
                           {/* Play button no centro */}
                           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <div className="bg-white/20 backdrop-blur-sm p-2 rounded-full">
+                            <div className="bg-white/20 backdrop-blur-sm p-2 rounded-full shadow-md">
                               <Play className="h-6 w-6 text-white" fill="white" />
                             </div>
                           </div>
                         </div>
                         
                         {/* Título */}
-                        <div className="p-2">
-                          <h4 className="text-gray-300 text-sm font-medium group-hover:text-white transition-colors line-clamp-2">
+                        <div className="p-3 bg-white">
+                          <h4 className="text-gray-800 text-sm font-medium group-hover:text-blue-700 transition-colors line-clamp-2">
                             {t.title}
                           </h4>
                         </div>
@@ -642,10 +651,10 @@ const VideoLessonPage: React.FC = () => {
                   ))}
                 </div>
                 
-                <div className="mt-4">
+                <div className="mt-4 pt-4 border-t border-blue-100">
                   <Button 
                     variant="outline" 
-                    className="w-full text-gray-300 border-gray-700 hover:bg-gray-800"
+                    className="w-full text-blue-700 border-blue-200 hover:bg-blue-50 shadow-sm"
                     onClick={() => navigate("/videoaulas")}
                   >
                     Ver todos os tutoriais
