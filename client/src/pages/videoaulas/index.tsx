@@ -86,83 +86,51 @@ export default function VideoaulasPage() {
       </Helmet>
       
       <div className="bg-gradient-to-b from-blue-950 to-neutral-950 min-h-screen">
-        {/* Seção Hero com visual clean em tons de branco */}
-        <div className="relative w-full bg-white/5">
-          {/* Fundo com gradiente sutíl */}
-          <div className="absolute inset-0 z-0 bg-gradient-to-b from-blue-50/5 to-white/5 opacity-20" />
+        {/* Seção Hero estilo MBA com imagem de fundo/shark */}
+        <div className="relative w-full h-[450px] overflow-hidden">
+          {/* Fundo com imagem ou gradiente */}
+          <div className="absolute inset-0 z-0 bg-gradient-to-r from-blue-950 via-blue-900 to-blue-800">
+            <div className="absolute inset-0 opacity-20 bg-[url('/images/backgrounds/auto-pattern.png')] bg-center"></div>
+          </div>
+          
+          {/* Overlay gradiente para melhorar contraste */}
+          <div className="absolute inset-0 bg-gradient-to-t from-blue-950/90 via-blue-950/70 to-transparent z-1"></div>
           
           {/* Conteúdo sobreposto */}
-          <div className="container mx-auto px-4 py-12 md:py-16 relative z-10 flex flex-col md:flex-row items-center">
-            <div className="w-full md:w-3/5 text-white mb-8 md:mb-0 md:pr-8">
-              <h1 className="text-3xl md:text-4xl font-bold mb-4 text-white">
-                Videoaulas do DesignAuto
+          <div className="container mx-auto px-4 h-full flex flex-col justify-center relative z-10">
+            <div className="max-w-3xl">
+              <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white">
+                DesignAuto Videoaulas
               </h1>
-              <p className="text-lg text-gray-100 mb-6">
-                Aprenda a criar designs profissionais para seu negócio automotivo com tutoriais práticos.
+              <div className="h-1 w-24 bg-yellow-500 mb-6"></div>
+              <p className="text-xl text-gray-100 mb-8 max-w-2xl">
+                A formação completa para você criar designs profissionais para seu negócio automotivo
               </p>
               
-              <div className="flex gap-3">
+              <div className="flex gap-4">
                 <Link href={`/videoaulas/${tutorialDestaque.id}`}>
-                  <Button className="bg-white hover:bg-gray-100 text-blue-900 hover:text-blue-950 border border-white/20">
-                    <Play className="h-4 w-4 mr-2" />
-                    Tutorial em destaque
+                  <Button className="bg-yellow-500 hover:bg-yellow-600 text-blue-950 border-0 py-6 px-8 text-lg font-medium">
+                    <Play className="h-5 w-5 mr-2" />
+                    Começar Agora
+                  </Button>
+                </Link>
+                <Link href="#categorias">
+                  <Button variant="outline" className="bg-transparent border-white text-white hover:bg-white/10 py-6 px-8 text-lg font-medium">
+                    Ver Categorias
                   </Button>
                 </Link>
               </div>
             </div>
-            
-            <div className="w-full md:w-2/5 flex justify-center md:justify-end">
-              <div className="relative w-full max-w-md">
-                {/* Card do tutorial em destaque */}
-                <div className="rounded-xl overflow-hidden shadow-lg border border-white/10 hover:shadow-white/10 hover:border-white/20 transition-all duration-300 bg-white/5">
-                  <div className="relative group">
-                    <img 
-                      src={tutorialDestaque.thumbnailUrl} 
-                      alt={tutorialDestaque.title} 
-                      className="w-full aspect-video object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    
-                    {/* Badge de destaque no canto superior */}
-                    <div className="absolute top-3 left-3 bg-white text-blue-900 text-xs font-medium px-2 py-1 rounded-md flex items-center">
-                      <Star className="h-3 w-3 mr-1 fill-blue-900" />
-                      Em Destaque
-                    </div>
-                    
-                    {/* Duração no canto */}
-                    <div className="absolute top-3 right-3 bg-black/50 text-white text-xs font-medium px-2 py-1 rounded-md flex items-center">
-                      <Clock className="h-3 w-3 mr-1" />
-                      {tutorialDestaque.duration}
-                    </div>
-                    
-                    {/* Play button on hover */}
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <div className="bg-white rounded-full p-4">
-                        <Play className="h-8 w-8 text-blue-900" />
-                      </div>
-                    </div>
-                    
-                    {/* Gradiente na parte inferior */}
-                    <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black to-transparent"></div>
-                  </div>
-                  
-                  <div className="bg-white/10 p-4">
-                    <h3 className="text-lg font-bold text-white mb-2">{tutorialDestaque.title}</h3>
-                    <p className="text-gray-200 text-sm mb-3 line-clamp-2">{tutorialDestaque.description}</p>
-                    
-                    <div className="flex items-center justify-between">
-                      <Badge className="bg-white/20 text-white border-0">
-                        {tutorialDestaque.level === "iniciante" ? "Iniciante" : 
-                         tutorialDestaque.level === "intermediario" ? "Intermediário" : "Avançado"}
-                      </Badge>
-                      
-                      <div className="flex items-center text-gray-300 text-xs">
-                        <Eye className="h-3.5 w-3.5 mr-1" />
-                        {tutorialDestaque.views.toLocaleString()} visualizações
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          </div>
+          
+          {/* Imagem/Logo flutuante à direita (semelhante ao MBA Shark na imagem de referência) */}
+          <div className="absolute right-0 bottom-0 md:right-10 md:top-1/2 md:transform md:-translate-y-1/2 z-10 hidden md:block">
+            <div className="bg-white/10 p-3 rounded-xl backdrop-blur-sm border border-white/20">
+              <img 
+                src={tutorialDestaque.thumbnailUrl} 
+                alt="DesignAuto Academy" 
+                className="w-full max-w-[220px] h-auto rounded shadow-2xl"
+              />
             </div>
           </div>
         </div>
@@ -292,33 +260,127 @@ export default function VideoaulasPage() {
             {!searchTerm && (
               <>
                 {/* Tutoriais em destaque ou recomendados - sempre visíveis */}
-                <div className="mb-12">
-                  <h2 className="text-xl font-bold text-white mb-4 flex items-center">
-                    <Star className="mr-2 h-5 w-5 text-white fill-white/80" />
-                    Tutoriais Recomendados
+                {/* Lista de reprodução estilo Shark Tank */}
+                <div className="mb-12" id="categorias">
+                  <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
+                    Lista de Reprodução
                   </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {tutoriaisPopulares.slice(0, 4).map(tutorial => (
-                      <TutorialCard
-                        key={tutorial.id}
-                        tutorial={tutorial}
-                        isPremiumLocked={isPremiumLocked(tutorial.isPremium)}
-                      />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {tutoriaisPopulares.slice(0, 8).map((tutorial, index) => (
+                      <Link key={tutorial.id} href={`/videoaulas/${tutorial.id}`}>
+                        <div className="bg-gradient-to-br from-blue-900 to-blue-950 rounded-lg overflow-hidden shadow-lg border border-blue-800/30 hover:border-blue-700/50 transition-all group">
+                          <div className="relative">
+                            {/* Numeração de módulo estilo Shark Tank */}
+                            <div className="absolute bottom-0 left-0 right-0 p-3 flex justify-between items-end z-10">
+                              <div className="text-3xl font-black text-white drop-shadow-[0_2px_3px_rgba(0,0,0,0.7)] flex items-center">
+                                <span className="text-yellow-500">Módulo</span>
+                                <span className="ml-2 text-4xl text-white">{index}</span>
+                              </div>
+                              <div className="bg-black/50 text-white text-xs px-2 py-1 rounded">
+                                {tutorial.duration}
+                              </div>
+                            </div>
+                            
+                            {/* Imagem do tutorial */}
+                            <img 
+                              src={tutorial.thumbnailUrl} 
+                              alt={tutorial.title} 
+                              className="w-full aspect-[3/2] object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                            />
+                            
+                            {/* Overlay gradiente */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-blue-950 via-blue-950/40 to-transparent"></div>
+                          </div>
+                          
+                          <div className="p-4">
+                            <h3 className="font-bold text-white mb-1 group-hover:text-yellow-400 transition-colors">
+                              {tutorial.title}
+                            </h3>
+                            <p className="text-blue-200 text-sm line-clamp-2 mb-3">
+                              {tutorial.description || "Aprenda técnicas avançadas de design automotivo neste tutorial completo."}
+                            </p>
+                            
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs text-yellow-500 font-medium">
+                                {tutorial.level === "iniciante" ? "INICIE AQUI" : 
+                                 tutorial.level === "intermediario" ? "DESENVOLVIMENTO" : "AVANÇADO"}
+                              </span>
+                              <div className="text-xs text-blue-300 flex items-center">
+                                <Eye className="h-3.5 w-3.5 mr-1 text-blue-300/80" />
+                                {tutorial.views.toLocaleString()}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </Link>
                     ))}
                   </div>
                 </div>
               
-                {/* Conteúdo principal organizado por categorias */}
-                {tutoriaisPorCategoria.map((categoria) => (
-                  <TutorialCategory
-                    key={categoria.id}
-                    title={categoria.title}
-                    subtitle={categoria.subtitle}
-                    icon={categoria.icon}
-                    tutorials={categoria.modules}
-                    isPremiumUser={!!isPremiumUser}
-                    slidesPerView={4}
-                  />
+                {/* Modulos organizados por categorias estilo Shark Tank */}
+                {tutoriaisPorCategoria.map((categoria, idx) => (
+                  <div key={categoria.id} className="mb-16 relative">
+                    <div className="flex items-center mb-6">
+                      <div className="bg-blue-800/30 h-10 w-10 rounded-lg flex items-center justify-center mr-3">
+                        {categoria.icon}
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-bold text-white">{categoria.title}</h2>
+                        <p className="text-blue-200 text-sm">{categoria.subtitle}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                      {categoria.modules.map((tutorial, moduleIdx) => (
+                        <Link key={tutorial.id} href={`/videoaulas/${tutorial.id}`}>
+                          <div className="bg-gradient-to-br from-blue-800 to-blue-900 rounded-lg overflow-hidden shadow-lg border border-blue-800/30 hover:border-blue-700/50 transition-all group">
+                            <div className="relative">
+                              {/* Numeração de módulo estilo Shark Tank */}
+                              <div className="absolute bottom-0 left-0 right-0 p-3 flex justify-between items-end z-10">
+                                <div className="text-3xl font-black text-white drop-shadow-[0_2px_3px_rgba(0,0,0,0.7)] flex items-center">
+                                  <span className="text-yellow-500">Módulo</span>
+                                  <span className="ml-2 text-4xl text-white">{idx + moduleIdx + 1}</span>
+                                </div>
+                                <div className="bg-black/50 text-white text-xs px-2 py-1 rounded">
+                                  {tutorial.duration}
+                                </div>
+                              </div>
+                              
+                              {/* Imagem do tutorial */}
+                              <img 
+                                src={tutorial.thumbnailUrl} 
+                                alt={tutorial.title} 
+                                className="w-full aspect-[3/2] object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                              />
+                              
+                              {/* Overlay gradiente */}
+                              <div className="absolute inset-0 bg-gradient-to-t from-blue-950 via-blue-950/40 to-transparent"></div>
+                            </div>
+                            
+                            <div className="p-4">
+                              <h3 className="font-bold text-white mb-1 group-hover:text-yellow-400 transition-colors">
+                                {tutorial.title}
+                              </h3>
+                              <p className="text-blue-200 text-sm line-clamp-2 mb-3">
+                                {tutorial.description || `${categoria.title}: Aprenda técnicas avançadas neste módulo.`}
+                              </p>
+                              
+                              <div className="flex justify-between items-center">
+                                <span className="text-xs text-yellow-500 font-medium uppercase">
+                                  {tutorial.level === "iniciante" ? "Base" : 
+                                   tutorial.level === "intermediario" ? "Desenvolvimento" : "Avançado"}
+                                </span>
+                                <div className="text-xs text-blue-300 flex items-center">
+                                  <Eye className="h-3.5 w-3.5 mr-1 text-blue-300/80" />
+                                  {tutorial.views.toLocaleString()}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
                 ))}
                 
                 {/* Seção "Precisa de ajuda?" */}
