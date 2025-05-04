@@ -653,7 +653,7 @@ export default function CursoDetalhesPage() {
   const viewModuleMutation = useMutation({
     mutationFn: async () => {
       if (!user || !id) return null;
-      return await apiRequest('POST', `/api/courses/modules/${id}/view`);
+      return await apiRequest('POST', `/api/cursos/modules/${id}/view`);
     },
     onSuccess: () => {
       // Não precisamos fazer nada especial aqui, apenas registrar a visualização
