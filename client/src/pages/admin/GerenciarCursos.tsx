@@ -104,8 +104,8 @@ const GerenciarCursos = () => {
     isLoading: isLoadingModules,
     isError: isModulesError
   } = useQuery({
-    queryKey: ['/api/course-modules'],
-    queryFn: () => fetch('/api/course-modules').then(res => res.json()),
+    queryKey: ['/api/courses/modules'],
+    queryFn: () => fetch('/api/courses/modules').then(res => res.json()),
   });
   
   const { 
@@ -113,14 +113,14 @@ const GerenciarCursos = () => {
     isLoading: isLoadingLessons,
     isError: isLessonsError
   } = useQuery({
-    queryKey: ['/api/course-lessons'],
-    queryFn: () => fetch('/api/course-lessons').then(res => res.json()),
+    queryKey: ['/api/courses/lessons'],
+    queryFn: () => fetch('/api/courses/lessons').then(res => res.json()),
   });
 
   // Mutations para módulos
   const createModuleMutation = useMutation({
     mutationFn: async (data: CourseModule) => {
-      const response = await apiRequest('POST', '/api/course-modules', data);
+      const response = await apiRequest('POST', '/api/courses/modules', data);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Erro ao criar módulo');
@@ -128,7 +128,7 @@ const GerenciarCursos = () => {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/course-modules'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/courses/modules'] });
       setIsModuleDialogOpen(false);
       toast({
         title: 'Módulo criado com sucesso',

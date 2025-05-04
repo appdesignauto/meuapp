@@ -160,13 +160,16 @@ router.get('/lessons', async (req, res) => {
   try {
     const moduleId = req.query.moduleId ? parseInt(req.query.moduleId as string) : undefined;
     
-    let query = db.select().from(courseLessons).orderBy(asc(courseLessons.order));
+    let lessons;
     
     if (moduleId && !isNaN(moduleId)) {
-      query = query.where(eq(courseLessons.moduleId, moduleId));
+      lessons = await db.select().from(courseLessons)
+        .where(eq(courseLessons.moduleId, moduleId))
+        .orderBy(asc(courseLessons.order));
+    } else {
+      lessons = await db.select().from(courseLessons)
+        .orderBy(asc(courseLessons.order));
     }
-    
-    const lessons = await query;
     
     return res.json(lessons);
   } catch (error) {
