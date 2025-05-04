@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { db } from '../db';
 import { courseModules, courseLessons, insertCourseModuleSchema, insertCourseLessonSchema } from '@shared/schema';
-import { eq, asc, desc } from 'drizzle-orm';
+import { eq, asc, desc, sql } from 'drizzle-orm';
 import { ZodError } from 'zod';
 import { fromZodError } from 'zod-validation-error';
 
@@ -58,12 +58,27 @@ router.get('/modules/:id', async (req, res) => {
 // Criar um novo módulo
 router.post('/modules', async (req, res) => {
   try {
+    // Validar os dados de entrada com zod
     const moduleData = insertCourseModuleSchema.parse({
       ...req.body,
       createdBy: req.user?.id
     });
     
-    const [newModule] = await db.insert(courseModules).values(moduleData).returning();
+    // Remover o ID se foi fornecido, para evitar violação de chave primária
+    const { id, ...safeModuleData } = moduleData;
+    
+    // Encontrar o maior ID existente para garantir um novo ID único
+    const maxIdResult = await db.select({ maxId: sql`MAX(id)` }).from(courseModules);
+    const nextId = (maxIdResult[0]?.maxId || 0) + 1;
+    
+    console.log(`Próximo ID disponível para módulo: ${nextId}`);
+    
+    // Inserir o novo módulo com um ID seguro
+    const [newModule] = await db.insert(courseModules)
+      .values({
+        ...safeModuleData
+      })
+      .returning();
     
     return res.status(201).json(newModule);
   } catch (error) {
@@ -208,21 +223,34 @@ router.get('/lessons/:id', async (req, res) => {
 // Criar uma nova lição
 router.post('/lessons', async (req, res) => {
   try {
+    // Validar dados de entrada
     const lessonData = insertCourseLessonSchema.parse({
       ...req.body,
       createdBy: req.user?.id
     });
     
+    // Remover o ID se foi fornecido, para evitar violação de chave primária
+    const { id, ...safeLessonData } = lessonData as any;
+    
     // Verificar se o módulo existe
     const moduleExists = await db.query.courseModules.findFirst({
-      where: eq(courseModules.id, lessonData.moduleId)
+      where: eq(courseModules.id, safeLessonData.moduleId)
     });
     
     if (!moduleExists) {
       return res.status(400).json({ message: 'Módulo não encontrado' });
     }
     
-    const [newLesson] = await db.insert(courseLessons).values(lessonData).returning();
+    // Encontrar o maior ID existente para garantir um novo ID único
+    const maxIdResult = await db.select({ maxId: sql`MAX(id)` }).from(courseLessons);
+    const nextId = (maxIdResult[0]?.maxId || 0) + 1;
+    
+    console.log(`Próximo ID disponível para lição: ${nextId}`);
+    
+    // Inserir a nova lição
+    const [newLesson] = await db.insert(courseLessons)
+      .values(safeLessonData)
+      .returning();
     
     return res.status(201).json(newLesson);
   } catch (error) {
