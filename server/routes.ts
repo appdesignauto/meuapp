@@ -2068,7 +2068,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Endpoint para atualizar campos específicos das configurações do site (requer admin)
-  app.post("/api/site-settings/update", isAdmin, async (req, res) => {
+  app.patch("/api/site-settings", isAdmin, async (req, res) => {
     try {
       console.log("Requisição de atualização de configurações recebida");
       console.log("Corpo da requisição:", req.body);
