@@ -365,20 +365,9 @@ const VideoLessonPage: React.FC = () => {
           </div>
         </div>
         
-        {/* Cabeçalho com navegação, breadcrumbs e título - estilo clean */}
+        {/* Cabeçalho com navegação - estilo clean, sem breadcrumbs */}
         <div className="bg-gradient-to-r from-blue-50 to-white py-4 border-b border-blue-100 shadow-sm">
           <div className="container mx-auto px-4">
-            {/* Breadcrumbs */}
-            <div className="flex items-center text-sm text-gray-500 mb-2">
-              <Link href="/videoaulas" className="hover:text-blue-600 transition-colors">
-                Videoaulas
-              </Link>
-              <ChevronRight className="h-3.5 w-3.5 mx-1.5" />
-              <span className="text-blue-700 font-medium truncate max-w-[200px]">
-                {tutorial.title}
-              </span>
-            </div>
-            
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
               <div>
                 <Button 
