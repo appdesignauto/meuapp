@@ -388,6 +388,14 @@ export const siteSettings = pgTable("siteSettings", {
   footerText: text("footerText").notNull().default("© DesignAuto App. Todos os direitos reservados."),
   metaDescription: text("metaDescription").notNull().default("Plataforma de designs automotivos personalizáveis"),
   contactEmail: text("contactEmail").notNull().default("contato@designauto.app"),
+  // Configurações da página de videoaulas
+  courseHeroTitle: text("courseHeroTitle").default("DesignAuto Videoaulas"),
+  courseHeroSubtitle: text("courseHeroSubtitle").default("A formação completa para você criar designs profissionais para seu negócio automotivo"),
+  courseHeroImageUrl: text("courseHeroImageUrl").default("https://images.unsplash.com/photo-1617651823081-270acchia626?q=80&w=1970&auto=format&fit=crop"),
+  courseRating: text("courseRating").default("4.8"),
+  courseReviewCount: integer("courseReviewCount").default(287),
+  courseTotalHours: text("courseTotalHours").default("42 horas"),
+  courseTotalModules: integer("courseTotalModules").default(18),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
   updatedBy: integer("updatedBy").references(() => users.id),
 });
