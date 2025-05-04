@@ -35,12 +35,21 @@ const TutorialCard: React.FC<TutorialCardProps> = ({
 
   return (
     <motion.div
-      className={`relative rounded-md overflow-hidden shadow-md ${isWide ? 'h-60' : 'h-[200px]'}`}
+      className={`relative rounded-md overflow-hidden ${isWide ? 'h-60' : 'h-[220px]'}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
+      whileHover={{ 
+        y: -5,
+        transition: { duration: 0.2 }
+      }}
+      style={{
+        boxShadow: isHovered 
+          ? '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2)' 
+          : '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+      }}
     >
       {/* Thumbnail com efeito de zoom */}
       <div className="w-full h-full absolute inset-0 overflow-hidden">

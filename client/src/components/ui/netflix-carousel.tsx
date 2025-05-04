@@ -150,10 +150,10 @@ export function Carousel({
         {gradient && (
           <>
             {canScrollPrev && (
-              <div className="absolute top-0 left-0 bottom-0 w-16 bg-gradient-to-r from-black/80 to-transparent z-10 pointer-events-none" />
+              <div className="absolute top-0 left-0 bottom-0 w-16 bg-gradient-to-r from-black/90 to-transparent z-10 pointer-events-none" />
             )}
             {canScrollNext && (
-              <div className="absolute top-0 right-0 bottom-0 w-16 bg-gradient-to-l from-black/80 to-transparent z-10 pointer-events-none" />
+              <div className="absolute top-0 right-0 bottom-0 w-16 bg-gradient-to-l from-black/90 to-transparent z-10 pointer-events-none" />
             )}
           </>
         )}
@@ -161,8 +161,8 @@ export function Carousel({
         {/* Botões de navegação */}
         <button
           className={cn(
-            "absolute left-2 top-1/2 -translate-y-1/2 flex items-center justify-center w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 text-white z-20 transition-opacity duration-300",
-            !canScrollPrev ? "opacity-0 cursor-default" : "opacity-0 group-hover:opacity-100"
+            "absolute left-2 top-1/2 -translate-y-1/2 flex items-center justify-center w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white z-20 transition-all duration-300",
+            !canScrollPrev ? "opacity-0 cursor-default scale-75" : "opacity-0 group-hover:opacity-100 hover:scale-110"
           )}
           disabled={!canScrollPrev}
           onClick={scrollPrev}
@@ -173,8 +173,8 @@ export function Carousel({
         
         <button
           className={cn(
-            "absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 text-white z-20 transition-opacity duration-300",
-            !canScrollNext ? "opacity-0 cursor-default" : "opacity-0 group-hover:opacity-100"
+            "absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white z-20 transition-all duration-300",
+            !canScrollNext ? "opacity-0 cursor-default scale-75" : "opacity-0 group-hover:opacity-100 hover:scale-110"
           )}
           disabled={!canScrollNext}
           onClick={scrollNext}
