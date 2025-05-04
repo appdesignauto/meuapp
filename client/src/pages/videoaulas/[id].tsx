@@ -247,6 +247,19 @@ const VideoLessonPage: React.FC = () => {
   
   // Estado para controlar se a aula atual está concluída
   const isCompleted = watchedLessons.includes(id);
+  
+  // Estados para o sistema de avaliação
+  const [userRating, setUserRating] = useState<number>(() => {
+    // Carregar avaliação atual do localStorage
+    const savedRatings = localStorage.getItem('videoRatings');
+    if (savedRatings) {
+      const parsedRatings = JSON.parse(savedRatings);
+      return parsedRatings[id] || 0;
+    }
+    return 0;
+  });
+  const [hoverRating, setHoverRating] = useState<number>(0);
+  const [hasRated, setHasRated] = useState<boolean>(userRating > 0);
 
   // Encontrar o tutorial pelo ID
   const tutorial = tutoriais.find(t => t.id === id);
@@ -256,6 +269,32 @@ const VideoLessonPage: React.FC = () => {
   const isPremiumLocked = (isPremium: boolean) => {
     if (!isPremium) return false;
     return !isPremiumUser;
+  };
+  
+  // Funções para o sistema de avaliação
+  const handleRate = (rating: number) => {
+    setUserRating(rating);
+    setHasRated(true);
+    
+    // Aqui você pode implementar a lógica para enviar a avaliação para o backend
+    // Por exemplo, salvar no localStorage ou fazer uma requisição API
+    console.log(`Usuário avaliou a aula com ${rating} estrelas`);
+    
+    // Exemplo de salvar no localStorage
+    const savedRatings = localStorage.getItem('videoRatings') 
+      ? JSON.parse(localStorage.getItem('videoRatings') || '{}') 
+      : {};
+    
+    savedRatings[id] = rating;
+    localStorage.setItem('videoRatings', JSON.stringify(savedRatings));
+  };
+  
+  const handleHoverStar = (rating: number) => {
+    setHoverRating(rating);
+  };
+  
+  const handleLeaveStars = () => {
+    setHoverRating(0);
   };
   
   // Função para alternar o estado de conclusão da aula (marcar/desmarcar)
