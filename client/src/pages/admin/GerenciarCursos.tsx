@@ -677,10 +677,7 @@ export default function GerenciarCursosPage() {
       const res = await apiRequest(
         'POST',
         '/api/cursos/modules',
-        data,
-        {
-          'Content-Type': 'multipart/form-data',
-        }
+        data
       );
       return await res.json();
     },
@@ -707,10 +704,7 @@ export default function GerenciarCursosPage() {
       const res = await apiRequest(
         'PUT',
         `/api/cursos/modules/${id}`,
-        data,
-        {
-          'Content-Type': 'multipart/form-data',
-        }
+        data
       );
       return await res.json();
     },
@@ -782,10 +776,7 @@ export default function GerenciarCursosPage() {
       const res = await apiRequest(
         'POST',
         `/api/cursos/modules/${moduleId}/lessons`,
-        data,
-        {
-          'Content-Type': 'multipart/form-data',
-        }
+        data
       );
       return await res.json();
     },
@@ -814,10 +805,7 @@ export default function GerenciarCursosPage() {
       const res = await apiRequest(
         'PUT',
         `/api/cursos/lessons/${id}`,
-        data,
-        {
-          'Content-Type': 'multipart/form-data',
-        }
+        data
       );
       return await res.json();
     },
