@@ -132,16 +132,7 @@ export default function VideoaulasPage() {
             </div>
           </div>
           
-          {/* Imagem/Logo flutuante à direita (semelhante ao MBA Shark na imagem de referência) */}
-          <div className="absolute right-0 bottom-0 md:right-10 md:top-1/2 md:transform md:-translate-y-1/2 z-10 hidden md:block">
-            <div className="bg-white p-3 rounded-xl shadow-lg border border-blue-100">
-              <img 
-                src="/images/logos/logo_1745018863742_qi7bf4.png" 
-                alt="DesignAuto Academy" 
-                className="w-full max-w-[220px] h-auto rounded shadow-lg"
-              />
-            </div>
-          </div>
+          {/* Removido logo flutuante à direita por solicitação do usuário */}
         </div>
         
         <div className="container mx-auto px-4 py-8 max-w-7xl">
