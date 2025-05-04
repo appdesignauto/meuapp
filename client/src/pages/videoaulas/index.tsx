@@ -20,7 +20,6 @@ import {
   Eye
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -131,8 +130,6 @@ export default function VideoaulasPage() {
               </div>
             </div>
           </div>
-          
-          {/* Removido logo flutuante à direita por solicitação do usuário */}
         </div>
         
         <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -265,33 +262,16 @@ export default function VideoaulasPage() {
                   <h2 className="text-2xl font-bold text-blue-800 mb-6 flex items-center">
                     Lista de Reprodução
                   </h2>
-                  <Carousel
-                    opts={{
-                      align: "start",
-                      loop: false,
-                      containScroll: "trimSnaps",
-                      dragFree: true
-                    }}
-                    slidesPerView={{
-                      base: 1.2,
-                      sm: 2.2, 
-                      md: 3.2,
-                      lg: 4.2
-                    }}
-                    spacing={12}
-                    className="w-full"
-                  >
-                    <CarouselContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
                     {tutoriaisPopulares.slice(0, 8).map((tutorial, index) => (
-                      <CarouselItem key={tutorial.id}>
-                      <Link href={`/videoaulas/${tutorial.id}`}>
+                      <Link key={tutorial.id} href={`/videoaulas/${tutorial.id}`}>
                         <div className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 hover:shadow-lg hover:border-blue-300 transition-all group">
                           <div className="relative">
                             {/* Numeração de módulo estilo Shark Tank */}
                             <div className="absolute bottom-0 left-0 right-0 p-3 flex justify-between items-end z-10">
                               <div className="text-3xl font-black text-white drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)] flex items-center">
                                 <span className="text-yellow-500">Módulo</span>
-                                <span className="ml-2 text-4xl text-white">{index}</span>
+                                <span className="ml-2 text-4xl text-white">{index + 1}</span>
                               </div>
                               <div className="bg-blue-600 text-white text-xs px-2 py-1 rounded shadow-sm">
                                 {tutorial.duration}
@@ -330,10 +310,8 @@ export default function VideoaulasPage() {
                           </div>
                         </div>
                       </Link>
-                      </CarouselItem>
                     ))}
-                    </CarouselContent>
-                  </Carousel>
+                  </div>
                 </div>
               
                 {/* Modulos organizados por categorias estilo Shark Tank */}
