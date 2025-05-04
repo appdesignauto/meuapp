@@ -382,34 +382,44 @@ export default function VideoaulasPage() {
                   </div>
                 ))}
                 
-                {/* Seção "Precisa de ajuda?" */}
-                <div className="bg-blue-50 border border-blue-100 rounded-xl p-8 text-blue-900 mt-12 shadow-sm">
+                {/* Seção "Bem-vindo" com imagem adicionada */}
+                <div className="bg-gradient-to-r from-blue-50 to-white border border-blue-100 rounded-xl p-8 text-blue-900 mt-12 shadow-sm">
                   <div className="flex flex-col md:flex-row md:items-center justify-between">
                     <div className="mb-6 md:mb-0 md:mr-8">
-                      <h2 className="text-2xl font-bold mb-3 text-blue-800">Precisa de ajuda adicional?</h2>
+                      <h2 className="text-2xl font-bold mb-3 text-blue-800">Bem-vindo às Videoaulas</h2>
                       <p className="text-blue-700 mb-4">
-                        Entre em contato com nosso suporte técnico caso tenha alguma dificuldade que não tenha sido abordada nos vídeos.
+                        Aprenda tudo sobre designs automotivos com nossas videoaulas exclusivas. Comece agora sua jornada de aprendizado.
                       </p>
                       <ul className="space-y-2 mb-6">
                         <li className="flex items-center">
                           <CheckCircle className="h-5 w-5 mr-2 text-blue-500" />
-                          <span>Suporte rápido e atencioso</span>
+                          <span>Tutoriais organizados por módulos</span>
                         </li>
                         <li className="flex items-center">
                           <CheckCircle className="h-5 w-5 mr-2 text-blue-500" />
-                          <span>Assistência por e-mail ou WhatsApp</span>
+                          <span>Conteúdo atualizado constantemente</span>
                         </li>
                         <li className="flex items-center">
                           <CheckCircle className="h-5 w-5 mr-2 text-blue-500" />
-                          <span>Atendimento personalizado</span>
+                          <span>Suporte técnico especializado</span>
                         </li>
                       </ul>
                     </div>
                     <div className="flex-shrink-0">
-                      <Button size="lg" className="bg-blue-600 text-white hover:bg-blue-700 shadow-md">
-                        <span className="mr-2">💬</span>
-                        Falar com o Suporte
-                      </Button>
+                      <div className="relative w-48 h-48 overflow-hidden rounded-lg shadow-md border border-blue-100">
+                        <img 
+                          src="https://images.unsplash.com/photo-1550855034-3ab03877a364?q=80&w=1974&auto=format&fit=crop" 
+                          alt="DesignAuto Academy" 
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-blue-900/40 to-transparent"></div>
+                        <div className="absolute bottom-0 left-0 right-0 p-3">
+                          <Button size="sm" className="bg-blue-600 text-white hover:bg-blue-700 shadow-md w-full">
+                            <Play className="h-4 w-4 mr-1" />
+                            Assistir Aulas
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
