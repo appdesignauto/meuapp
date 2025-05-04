@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useParams, Link, useLocation } from "wouter";
-import { Helmet } from "react-helmet-async";
+// Helmet comentado temporariamente para evitar erros
+// import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { 
