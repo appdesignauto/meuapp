@@ -11,6 +11,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { apiRequest } from '@/lib/queryClient';
+import NetflixCard from '@/components/cursos/NetflixCard';
+import CourseCategory from '@/components/cursos/CourseCategory';
+import CourseHero from '@/components/cursos/CourseHero';
 import {
   BookOpen,
   Crown,
@@ -33,7 +36,10 @@ import {
   Info,
   HelpCircle,
   BookOpenCheck,
-  LucideInfo
+  Filter,
+  Sparkles,
+  FlaskConical,
+  Zap
 } from 'lucide-react';
 
 // Interfaces para os dados
