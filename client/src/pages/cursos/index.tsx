@@ -82,24 +82,39 @@ export default function CursosPage() {
   const { data: modules, error, isLoading } = useQuery({
     queryKey: ['/api/cursos/modules'],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/cursos/modules');
-      const data = await response.json();
+      console.log("Iniciando requisição para /api/cursos/modules");
       
-      // Obter informações de progresso quando o usuário está logado
-      if (user) {
-        // Buscar progresso do usuário para cada módulo (em um cenário real)
-        // Aqui estamos apenas simulando com dados aleatórios
-        return data.map((module: CourseModule) => ({
-          ...module,
-          completedLessons: Math.floor(Math.random() * (module.totalLessons || 0)),
-          // Marcar alguns módulos como recém atualizados para exemplo
-          lastUpdateDate: Math.random() > 0.7 ? new Date().toISOString() : null
-        }));
+      try {
+        const response = await apiRequest('GET', '/api/cursos/modules');
+        const data = await response.json();
+        console.log("Dados recebidos da API:", data);
+        
+        // Obter informações de progresso quando o usuário está logado
+        if (user) {
+          // Buscar progresso do usuário para cada módulo (em um cenário real)
+          // Aqui estamos apenas simulando com dados aleatórios
+          return data.map((module: CourseModule) => ({
+            ...module,
+            completedLessons: Math.floor(Math.random() * (module.totalLessons || 0)),
+            // Marcar alguns módulos como recém atualizados para exemplo
+            lastUpdateDate: Math.random() > 0.7 ? new Date().toISOString() : null
+          }));
+        }
+        
+        return data;
+      } catch (error) {
+        console.error("Erro ao buscar módulos:", error);
+        throw error;
       }
-      
-      return data;
     }
   });
+
+  // Verificar se temos dados e imprimir para debug
+  useEffect(() => {
+    if (modules) {
+      console.log("Módulos disponíveis:", modules.length);
+    }
+  }, [modules]);
   
   // Filtrar módulos com base na tab ativa e no termo de busca
   const filteredModules = modules ? modules.filter((module: CourseModule) => {
@@ -116,12 +131,14 @@ export default function CursosPage() {
     if (activeTab === 'premium') return module.isPremium && module.isActive !== false;
     if (activeTab === 'gratuito') return !module.isPremium && module.isActive !== false;
     if (activeTab === 'em-andamento') {
-      return module.completedLessons > 0 && 
+      return module.completedLessons && module.totalLessons &&
+             module.completedLessons > 0 && 
              module.completedLessons < module.totalLessons && 
              module.isActive !== false;
     }
     if (activeTab === 'concluidos') {
-      return module.completedLessons === module.totalLessons && 
+      return module.completedLessons && module.totalLessons &&
+             module.completedLessons === module.totalLessons && 
              module.totalLessons > 0 && 
              module.isActive !== false;
     }
@@ -135,11 +152,13 @@ export default function CursosPage() {
     premium: modules?.filter((m: CourseModule) => m.isPremium && m.isActive !== false).length || 0,
     free: modules?.filter((m: CourseModule) => !m.isPremium && m.isActive !== false).length || 0,
     inProgress: modules?.filter((m: CourseModule) => 
+      m.completedLessons && m.totalLessons &&
       m.completedLessons > 0 && 
       m.completedLessons < m.totalLessons && 
       m.isActive !== false
     ).length || 0,
     completed: modules?.filter((m: CourseModule) => 
+      m.completedLessons && m.totalLessons &&
       m.completedLessons === m.totalLessons && 
       m.totalLessons > 0 && 
       m.isActive !== false
@@ -209,6 +228,7 @@ export default function CursosPage() {
   
   // Módulos em andamento (para usuários logados)
   const inProgressModules = user ? modules?.filter((m: CourseModule) => 
+    m.completedLessons && m.totalLessons &&
     m.completedLessons > 0 && 
     m.completedLessons < m.totalLessons && 
     m.isActive !== false

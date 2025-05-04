@@ -42,8 +42,9 @@ const CourseCategory: React.FC<CourseCategoryProps> = ({
     return !isPremiumUser;
   };
 
-  // Apenas exibir categorias com módulos
-  if (modules.length === 0) {
+  // Apenas exibir categorias com módulos - adicionar log para debug
+  console.log(`Categoria ${title}: ${modules.length} módulos encontrados`);
+  if (!modules || modules.length === 0) {
     return null;
   }
   
