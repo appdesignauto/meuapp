@@ -2067,7 +2067,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Endpoint para atualizar configurações do site (requer admin)
+  // Endpoint para atualizar campos específicos das configurações do site (requer admin)
+  app.post("/api/site-settings/update", isAdmin, async (req, res) => {
+    try {
+      console.log("Requisição de atualização de configurações recebida");
+      console.log("Corpo da requisição:", req.body);
+      
+      // Definir cabeçalhos anti-cache
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      
+      // Verificar se as configurações existem
+      const existingSettings = await db.select().from(siteSettings).limit(1);
+      if (existingSettings.length === 0) {
+        return res.status(404).json({ message: "Configurações não encontradas" });
+      }
+      
+      // Atualizar apenas os campos enviados no corpo da requisição
+      const fieldsToUpdate = req.body;
+      const [updatedSettings] = await db
+        .update(siteSettings)
+        .set({
+          ...fieldsToUpdate,
+          updatedAt: new Date(),
+          updatedBy: req.user?.id || null
+        })
+        .where(eq(siteSettings.id, existingSettings[0].id))
+        .returning();
+      
+      return res.status(200).json(updatedSettings);
+    } catch (error) {
+      console.error("Erro ao atualizar configurações do site:", error);
+      return res.status(500).json({ 
+        message: "Erro ao atualizar configurações do site",
+        error: error instanceof Error ? error.message : "Erro desconhecido"
+      });
+    }
+  });
+  
+  // Endpoint para upload de logo do site (requer admin)
   app.put("/api/site-settings", isAdmin, logoUpload.single('logo'), async (req, res) => {
     try {
       console.log("Solicitação de atualização de logo recebida");
