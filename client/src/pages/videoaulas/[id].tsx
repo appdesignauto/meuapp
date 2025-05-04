@@ -241,6 +241,23 @@ const VideoLessonPage: React.FC = () => {
   const { user } = useAuth();
   const isPremiumUser = user && (user.nivelacesso === 'premium' || user.nivelacesso === 'admin');
   const [, navigate] = useLocation();
+  const [isDesktop, setIsDesktop] = useState(false);
+  
+  // Detectar se é desktop após montagem do componente
+  useEffect(() => {
+    setIsDesktop(window.innerWidth >= 768);
+    
+    // Adicionar event listener para responsividade
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+  
   const [watchedLessons, setWatchedLessons] = useState<number[]>(() => {
     // Recuperar aulas assistidas do localStorage
     const saved = localStorage.getItem('watchedLessons');
@@ -685,26 +702,51 @@ const VideoLessonPage: React.FC = () => {
               
               {/* Abas de conteúdo adicional - estilo clean */}
               <div className="mt-4 sm:mt-6">
-                <Tabs defaultValue="aulas" className="w-full">
+                <Tabs defaultValue={isDesktop ? "comentarios" : "aulas"} className="w-full">
                   <TabsList className="bg-white border border-blue-100 rounded-md shadow-sm w-full mb-0 h-auto p-0.5 sm:p-1">
-                    <TabsTrigger 
-                      value="aulas" 
-                      className="data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-colors text-xs sm:text-sm py-1 px-2 sm:px-3 sm:py-1.5 flex-1"
-                    >
-                      Aulas
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="comentarios" 
-                      className="data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-colors text-xs sm:text-sm py-1 px-2 sm:px-3 sm:py-1.5 flex-1"
-                    >
-                      Comentários
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="materiais" 
-                      className="data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-colors text-xs sm:text-sm py-1 px-2 sm:px-3 sm:py-1.5 flex-1"
-                    >
-                      Materiais
-                    </TabsTrigger>
+                    {isDesktop ? (
+                      <>
+                        <TabsTrigger 
+                          value="comentarios" 
+                          className="data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-colors text-xs sm:text-sm py-1 px-2 sm:px-3 sm:py-1.5 flex-1"
+                        >
+                          Comentários
+                        </TabsTrigger>
+                        <TabsTrigger 
+                          value="aulas" 
+                          className="data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-colors text-xs sm:text-sm py-1 px-2 sm:px-3 sm:py-1.5 flex-1"
+                        >
+                          Aulas
+                        </TabsTrigger>
+                        <TabsTrigger 
+                          value="materiais" 
+                          className="data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-colors text-xs sm:text-sm py-1 px-2 sm:px-3 sm:py-1.5 flex-1"
+                        >
+                          Materiais
+                        </TabsTrigger>
+                      </>
+                    ) : (
+                      <>
+                        <TabsTrigger 
+                          value="aulas" 
+                          className="data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-colors text-xs sm:text-sm py-1 px-2 sm:px-3 sm:py-1.5 flex-1"
+                        >
+                          Aulas
+                        </TabsTrigger>
+                        <TabsTrigger 
+                          value="comentarios" 
+                          className="data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-colors text-xs sm:text-sm py-1 px-2 sm:px-3 sm:py-1.5 flex-1"
+                        >
+                          Comentários
+                        </TabsTrigger>
+                        <TabsTrigger 
+                          value="materiais" 
+                          className="data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-colors text-xs sm:text-sm py-1 px-2 sm:px-3 sm:py-1.5 flex-1"
+                        >
+                          Materiais
+                        </TabsTrigger>
+                      </>
+                    )}
                   </TabsList>
                   
                   <TabsContent value="comentarios" className="mt-3 sm:mt-4 bg-white p-3 sm:p-5 rounded-lg border border-blue-100 shadow-sm">
