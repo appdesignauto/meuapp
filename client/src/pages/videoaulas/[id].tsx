@@ -400,28 +400,28 @@ const VideoLessonPage: React.FC = () => {
                         {[1, 2, 3, 4, 5].map((star) => (
                           <button 
                             key={star} 
-                            className="text-gray-300 hover:text-yellow-400 focus:outline-none"
+                            className="text-[#434756] hover:text-yellow-400 focus:outline-none"
                           >
-                            <Star className={`h-5 w-5 ${star <= (tutorial.rating || 0) ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`} />
+                            <Star className={`h-5 w-5 ${star <= (tutorial.rating || 0) ? "text-yellow-400 fill-yellow-400" : "text-[#434756]"}`} />
                           </button>
                         ))}
                       </div>
                       
-                      {/* Setas de navegação */}
-                      <div className="flex gap-1">
+                      {/* Setas de navegação - estilo como na referência */}
+                      <div className="flex gap-2">
                         {id > 1 && (
                           <Link href={`/videoaulas/${id - 1}`} className="inline-flex">
-                            <button className="text-gray-500 hover:text-blue-600 focus:outline-none transition-colors">
-                              <ArrowLeft className="h-5 w-5" />
-                            </button>
+                            <div className="w-10 h-10 bg-[#434756] rounded-md flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
+                              <ChevronLeft className="h-5 w-5" />
+                            </div>
                           </Link>
                         )}
                         
                         {id < tutoriais.length && (
                           <Link href={`/videoaulas/${id + 1}`} className="inline-flex">
-                            <button className="text-gray-500 hover:text-blue-600 focus:outline-none transition-colors">
-                              <ArrowRight className="h-5 w-5" />
-                            </button>
+                            <div className="w-10 h-10 bg-[#434756] rounded-md flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
+                              <ChevronRight className="h-5 w-5" />
+                            </div>
                           </Link>
                         )}
                       </div>
@@ -598,7 +598,7 @@ const VideoLessonPage: React.FC = () => {
                 </Tabs>
               </div>
               
-              {/* Navegação entre aulas (estilo minimalista como na referência) */}
+              {/* Navegação entre aulas (estilo como na primeira referência - círculos com ícones) */}
               <div className="mt-8 border-t border-gray-200 pt-4">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center space-x-3">
@@ -606,20 +606,20 @@ const VideoLessonPage: React.FC = () => {
                     <h3 className="text-gray-800 font-medium text-sm">{tutorial.title}</h3>
                   </div>
                   
-                  <div className="flex gap-1">
+                  <div className="flex gap-2">
                     {id > 1 && (
                       <Link href={`/videoaulas/${id - 1}`} className="inline-flex">
-                        <button className="text-gray-500 hover:text-blue-600 focus:outline-none transition-colors">
-                          <ArrowLeft className="h-5 w-5" />
-                        </button>
+                        <div className="w-10 h-10 bg-[#434756] rounded-full flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
+                          <ChevronLeft className="h-5 w-5" />
+                        </div>
                       </Link>
                     )}
                     
                     {id < tutoriais.length && (
                       <Link href={`/videoaulas/${id + 1}`} className="inline-flex">
-                        <button className="text-gray-500 hover:text-blue-600 focus:outline-none transition-colors">
-                          <ArrowRight className="h-5 w-5" />
-                        </button>
+                        <div className="w-10 h-10 bg-[#434756] rounded-full flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
+                          <ChevronRight className="h-5 w-5" />
+                        </div>
                       </Link>
                     )}
                   </div>
