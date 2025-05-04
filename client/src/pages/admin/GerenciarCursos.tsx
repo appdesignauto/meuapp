@@ -129,7 +129,16 @@ const GerenciarCursos = () => {
     isError: isModulesError
   } = useQuery({
     queryKey: ['/api/courses/modules'],
-    queryFn: () => fetch('/api/courses/modules').then(res => res.json()),
+    queryFn: async () => {
+      const res = await fetch('/api/courses/modules');
+      if (!res.ok) {
+        console.error('Erro ao buscar módulos:', res.status, res.statusText);
+        throw new Error('Falha ao carregar módulos');
+      }
+      const data = await res.json();
+      console.log('Módulos carregados:', data);
+      return data;
+    },
   });
   
   const { 
@@ -138,7 +147,16 @@ const GerenciarCursos = () => {
     isError: isLessonsError
   } = useQuery({
     queryKey: ['/api/courses/lessons'],
-    queryFn: () => fetch('/api/courses/lessons').then(res => res.json()),
+    queryFn: async () => {
+      const res = await fetch('/api/courses/lessons');
+      if (!res.ok) {
+        console.error('Erro ao buscar aulas:', res.status, res.statusText);
+        throw new Error('Falha ao carregar aulas');
+      }
+      const data = await res.json();
+      console.log('Aulas carregadas:', data);
+      return data;
+    },
   });
   
   // Consulta para obter configurações do site
