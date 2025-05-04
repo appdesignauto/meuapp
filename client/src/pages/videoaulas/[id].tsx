@@ -259,10 +259,11 @@ const VideoLessonPage: React.FC = () => {
 
   return (
     <>
+      {/* Helmet temporariamente desativado para corrigir erro
       <Helmet>
         <title>{tutorial.title} | DesignAuto Videoaulas</title>
         <meta name="description" content={tutorial.description} />
-      </Helmet>
+      </Helmet> */}
       
       <div className="min-h-screen bg-gray-950 pb-12">
         {/* Cabeçalho com navegação e título */}

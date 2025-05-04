@@ -39,17 +39,9 @@ import {
   iniciantes,
   intermediarios,
   avancados,
-  Tutorial
+  Tutorial,
+  TutorialCategoria
 } from '@/components/videoaulas/TutorialData';
-
-// Interface para categorias
-interface CategoriaTutorial {
-  id: number;
-  title: string;
-  subtitle: string;
-  icon: string;
-  tutoriais: Tutorial[];
-}
 
 export default function VideoaulasPage() {
   const { user } = useAuth();
@@ -367,7 +359,7 @@ export default function VideoaulasPage() {
                 </div>
               
                 {/* Modulos organizados por categorias estilo Shark Tank */}
-                {tutoriaisPorCategoria.map((categoria: CategoriaTutorial) => (
+                {tutoriaisPorCategoria.map((categoria: TutorialCategoria) => (
                   <div key={categoria.id} className="mb-10 sm:mb-16 relative">
                     <div className="flex items-center mb-4 sm:mb-6">
                       <div className="bg-blue-100 h-8 sm:h-10 w-8 sm:w-10 rounded-lg flex items-center justify-center mr-2 sm:mr-3 text-blue-600">
