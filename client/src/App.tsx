@@ -26,16 +26,10 @@ import AdminDashboard from "@/pages/admin/Dashboard";
 import LogoUploadPage from "@/pages/admin/LogoUploadPage";
 import StorageTestPage from "@/pages/admin/StorageTestPage";
 import AddArtMultiFormatPage from "@/pages/admin/AddArtMultiFormat";
-import GerenciarCursosPage from "@/pages/admin/GerenciarCursos";
 import AuthPage from "@/pages/auth-page";
 import NotFound from "@/pages/not-found";
 import AvatarTestPage from "@/pages/AvatarTestPage";
 import SupabaseAuthTestPage from "@/pages/SupabaseAuthTestPage";
-
-// Páginas de Cursos/Videoaulas
-import CursosPage from "@/pages/cursos/index";
-import CursoDetalhesPage from "@/pages/cursos/[id]";
-import AulaDetalhesPage from "@/pages/cursos/aula/[id]";
 
 // Páginas do Painel do Usuário
 import { ProtectedPainelRoute } from "@/components/painel/ProtectedPainelRoute";
@@ -144,11 +138,6 @@ function AppRoutes() {
       <Route path="/designers/:username" component={DesignerProfile} />
       <Route path="/planos" component={PlanosPage} />
       
-      {/* Rotas de Cursos/Videoaulas */}
-      <Route path="/cursos" component={CursosPage} />
-      <Route path="/cursos/:id" component={CursoDetalhesPage} />
-      <Route path="/cursos/aula/:id" component={AulaDetalhesPage} />
-      
       {/* Rota de perfil do usuário */}
       <ProtectedRoute path="/profile" component={ProfilePage} />
       
@@ -200,11 +189,6 @@ function AppRoutes() {
       <ProtectedRoute 
         path="/admin/add-art-multi" 
         component={AddArtMultiFormatPage}
-        roles={['admin', 'designer_adm']} 
-      />
-      <ProtectedRoute 
-        path="/admin/gerenciar-cursos" 
-        component={GerenciarCursosPage}
         roles={['admin', 'designer_adm']} 
       />
       <ProtectedRoute 
