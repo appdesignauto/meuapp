@@ -693,30 +693,36 @@ const VideoLessonPage: React.FC = () => {
                         {/* Setas de navegação */}
                         <div className="flex gap-2">
                           {/* Botão anterior */}
-                          {id > 1 ? (
-                            <Link href={`/videoaulas/${id - 1}`} className="inline-flex">
-                              <div className="w-10 h-10 bg-[#434756] rounded-md flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
+                          {(() => {
+                            const prevLesson = lessonsData?.find(l => l.moduleId === currentLesson?.moduleId && l.id < id);
+                            return prevLesson ? (
+                              <Link href={`/videoaulas/${prevLesson.id}`} className="inline-flex">
+                                <div className="w-10 h-10 bg-[#434756] rounded-md flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
+                                  <ChevronLeft className="h-5 w-5" />
+                                </div>
+                              </Link>
+                            ) : (
+                              <div className="w-10 h-10 bg-gray-300 rounded-md flex items-center justify-center text-white cursor-not-allowed">
                                 <ChevronLeft className="h-5 w-5" />
                               </div>
-                            </Link>
-                          ) : (
-                            <div className="w-10 h-10 bg-gray-300 rounded-md flex items-center justify-center text-white cursor-not-allowed">
-                              <ChevronLeft className="h-5 w-5" />
-                            </div>
-                          )}
+                            );
+                          })()}
                           
                           {/* Botão próximo */}
-                          {id < tutoriais.length ? (
-                            <Link href={`/videoaulas/${id + 1}`} className="inline-flex">
-                              <div className="w-10 h-10 bg-[#434756] rounded-md flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
+                          {(() => {
+                            const nextLesson = lessonsData?.find(l => l.moduleId === currentLesson?.moduleId && l.id > id);
+                            return nextLesson ? (
+                              <Link href={`/videoaulas/${nextLesson.id}`} className="inline-flex">
+                                <div className="w-10 h-10 bg-[#434756] rounded-md flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
+                                  <ChevronRight className="h-5 w-5" />
+                                </div>
+                              </Link>
+                            ) : (
+                              <div className="w-10 h-10 bg-gray-300 rounded-md flex items-center justify-center text-white cursor-not-allowed">
                                 <ChevronRight className="h-5 w-5" />
                               </div>
-                            </Link>
-                          ) : (
-                            <div className="w-10 h-10 bg-gray-300 rounded-md flex items-center justify-center text-white cursor-not-allowed">
-                              <ChevronRight className="h-5 w-5" />
-                            </div>
-                          )}
+                            );
+                          })()}
                         </div>
                       </div>
                     </div>
@@ -1038,7 +1044,7 @@ const VideoLessonPage: React.FC = () => {
                   <TabsContent value="aulas" className="mt-3 sm:mt-4 bg-white p-3 sm:p-5 rounded-lg border border-blue-100 shadow-sm">
                     <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Lista de Aulas</h3>
                     <div className="space-y-2 sm:space-y-3">
-                      {tutoriais.map((aula, indice) => (
+                      {lessonsData?.filter(lesson => lesson.moduleId === currentLesson?.moduleId).map((aula, indice) => (
                         <Link 
                           key={indice + 1} 
                           href={`/videoaulas/${indice + 1}`}
@@ -1270,10 +1276,11 @@ const VideoLessonPage: React.FC = () => {
                       size="sm"
                       className="flex-1 text-blue-700 border-blue-200 hover:bg-blue-50 shadow-sm text-xs sm:text-sm h-8 sm:h-10"
                       onClick={() => {
-                        // Navegar para o tutorial anterior (simulado)
-                        // Na implementação real, usaria id - 1 ou encontraria o tutorial anterior baseado em ordem
-                        const prevId = Math.max(1, id - 1);
-                        navigate(`/videoaulas/${prevId}`);
+                        // Navegar para o tutorial anterior com base nos dados da API
+                        const prevLesson = lessonsData?.find(l => l.moduleId === currentLesson?.moduleId && l.id < id);
+                        if (prevLesson) {
+                          navigate(`/videoaulas/${prevLesson.id}`);
+                        }
                       }}
                     >
                       <ChevronLeft className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
@@ -1285,10 +1292,11 @@ const VideoLessonPage: React.FC = () => {
                       size="sm"
                       className="flex-1 text-blue-700 border-blue-200 hover:bg-blue-50 shadow-sm text-xs sm:text-sm h-8 sm:h-10"
                       onClick={() => {
-                        // Navegar para o próximo tutorial (simulado)
-                        // Na implementação real, usaria id + 1 ou encontraria o próximo tutorial baseado em ordem
-                        const nextId = Math.min(tutoriais.length, id + 1);
-                        navigate(`/videoaulas/${nextId}`);
+                        // Navegar para o próximo tutorial com base nos dados da API
+                        const nextLesson = lessonsData?.find(l => l.moduleId === currentLesson?.moduleId && l.id > id);
+                        if (nextLesson) {
+                          navigate(`/videoaulas/${nextLesson.id}`);
+                        }
                       }}
                     >
                       <span className="hidden xs:inline">Próximo</span> Tutorial
