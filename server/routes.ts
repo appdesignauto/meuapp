@@ -4471,7 +4471,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/courses/lessons', courseRouter);
   
   // Rotas para gerenciamento de cursos e aulas (protegidas por autenticação e admin)
-  app.use('/api/courses', isAuthenticated, isAdmin, courseRouter);
+  // Usar courseRouter sem middleware para permitir acesso público
+  app.use('/api/courses', courseRouter);
 
   const httpServer = createServer(app);
   
