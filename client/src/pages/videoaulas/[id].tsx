@@ -490,7 +490,10 @@ const VideoLessonPage: React.FC = () => {
                       </div>
                     </div>
                     
-                    {/* Avaliação com estrelas abaixo do título */}
+                    {/* Descrição do tutorial */}
+                    <p className="text-gray-600 text-sm mb-3">{tutorial.description}</p>
+                    
+                    {/* Avaliação com estrelas abaixo da descrição */}
                     <div className="mb-3 flex items-center">
                       <div className="mr-2 text-xs text-gray-600">Avalie:</div>
                       <div 
@@ -521,8 +524,6 @@ const VideoLessonPage: React.FC = () => {
                         )}
                       </div>
                     </div>
-                    
-                    <p className="text-gray-600 text-sm mb-3">{tutorial.description}</p>
                     
                     {/* Botões de ação na mesma linha em mobile - distribuídos igualmente */}
                     <div className="grid grid-cols-3 gap-1.5">
