@@ -456,12 +456,43 @@ const VideoLessonPage: React.FC = () => {
                 <div className="p-4 sm:p-5">
                   {/* Versão Mobile - Layout Otimizado */}
                   <div className="block sm:hidden">
-                    {/* Título em versão mobile */}
-                    <h1 className="text-xl font-bold text-gray-800 mb-2">{tutorial.title}</h1>
+                    {/* Cabeçalho com título e botões de navegação */}
+                    <div className="flex justify-between items-start mb-2">
+                      <h1 className="text-xl font-bold text-gray-800 pr-3">{tutorial.title}</h1>
+                      
+                      {/* Botões de navegação mobile - agora ao lado do título */}
+                      <div className="flex gap-1.5 flex-shrink-0 mt-0.5">
+                        {/* Botão anterior */}
+                        {id > 1 ? (
+                          <Link href={`/videoaulas/${id - 1}`} className="inline-flex">
+                            <div className="w-8 h-8 bg-[#434756] rounded-md flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
+                              <ChevronLeft className="h-4 w-4" />
+                            </div>
+                          </Link>
+                        ) : (
+                          <div className="w-8 h-8 bg-gray-300 rounded-md flex items-center justify-center text-white cursor-not-allowed">
+                            <ChevronLeft className="h-4 w-4" />
+                          </div>
+                        )}
+                        
+                        {/* Botão próximo */}
+                        {id < tutoriais.length ? (
+                          <Link href={`/videoaulas/${id + 1}`} className="inline-flex">
+                            <div className="w-8 h-8 bg-[#434756] rounded-md flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
+                              <ChevronRight className="h-4 w-4" />
+                            </div>
+                          </Link>
+                        ) : (
+                          <div className="w-8 h-8 bg-gray-300 rounded-md flex items-center justify-center text-white cursor-not-allowed">
+                            <ChevronRight className="h-4 w-4" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
                     
-                    {/* Avaliação com estrelas e botões de navegação em uma linha */}
-                    <div className="flex justify-between items-center mb-3">
-                      {/* Avaliação com estrelas interativa */}
+                    {/* Avaliação com estrelas abaixo do título */}
+                    <div className="mb-3 flex items-center">
+                      <div className="mr-2 text-xs text-gray-600">Avalie:</div>
                       <div 
                         className="flex space-x-1" 
                         onMouseLeave={handleLeaveStars}
@@ -487,35 +518,6 @@ const VideoLessonPage: React.FC = () => {
                           <span className="ml-1 text-xs text-gray-500 self-center">
                             {userRating}/5
                           </span>
-                        )}
-                      </div>
-                      
-                      {/* Botões de navegação mobile */}
-                      <div className="flex gap-1.5">
-                        {/* Botão anterior */}
-                        {id > 1 ? (
-                          <Link href={`/videoaulas/${id - 1}`} className="inline-flex">
-                            <div className="w-8 h-8 bg-[#434756] rounded-md flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
-                              <ChevronLeft className="h-4 w-4" />
-                            </div>
-                          </Link>
-                        ) : (
-                          <div className="w-8 h-8 bg-gray-300 rounded-md flex items-center justify-center text-white cursor-not-allowed">
-                            <ChevronLeft className="h-4 w-4" />
-                          </div>
-                        )}
-                        
-                        {/* Botão próximo */}
-                        {id < tutoriais.length ? (
-                          <Link href={`/videoaulas/${id + 1}`} className="inline-flex">
-                            <div className="w-8 h-8 bg-[#434756] rounded-md flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
-                              <ChevronRight className="h-4 w-4" />
-                            </div>
-                          </Link>
-                        ) : (
-                          <div className="w-8 h-8 bg-gray-300 rounded-md flex items-center justify-center text-white cursor-not-allowed">
-                            <ChevronRight className="h-4 w-4" />
-                          </div>
                         )}
                       </div>
                     </div>
