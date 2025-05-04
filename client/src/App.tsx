@@ -139,6 +139,16 @@ function AppRoutes() {
       <Route path="/designers/:username" component={DesignerProfile} />
       <Route path="/planos" component={PlanosPage} />
       <Route path="/videoaulas" component={VideoaulasPage} />
+      <Route path="/videoaulas/:id">
+        {() => {
+          const VideoLessonPage = lazy(() => import("@/pages/videoaulas/[id]"));
+          return (
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+              <VideoLessonPage />
+            </Suspense>
+          );
+        }}
+      </Route>
       
       {/* Rota de perfil do usuário */}
       <ProtectedRoute path="/profile" component={ProfilePage} />
