@@ -69,341 +69,40 @@ interface CategoryMetric {
   color: string;
 }
 
-// Componente de cartão de módulo com explicações mais claras para o usuário
-const ModuleCard = ({ module, isPremiumLocked }: { 
-  module: CourseModule; 
-  isPremiumLocked: boolean;
-}) => {
-  const levelColors = {
-    iniciante: "bg-green-100 text-green-700 border-green-200",
-    intermediario: "bg-blue-100 text-blue-700 border-blue-200",
-    avancado: "bg-purple-100 text-purple-700 border-purple-200"
-  };
-
-  const levelLabels = {
-    iniciante: "Iniciante",
-    intermediario: "Intermediário",
-    avancado: "Avançado"
-  };
-
-  const levelIcons = {
-    iniciante: <GraduationCap className="h-3 w-3 mr-1" />,
-    intermediario: <Award className="h-3 w-3 mr-1" />,
-    avancado: <Star className="h-3 w-3 mr-1" />
-  };
-
-  // Calcular porcentagem de conclusão
-  const completionPercentage = module.completedLessons && module.totalLessons 
-    ? Math.round((module.completedLessons / module.totalLessons) * 100) 
-    : 0;
-    
-  // Verificar se o módulo foi atualizado recentemente (últimos 7 dias)
-  const isRecentlyUpdated = module.lastUpdateDate && (
-    new Date().getTime() - new Date(module.lastUpdateDate).getTime() < 7 * 24 * 60 * 60 * 1000
-  );
-
-  return (
-    <div className="group relative bg-white rounded-xl border border-neutral-200 overflow-hidden shadow-sm transition-all duration-300 hover:shadow-md">
-      <div className="relative">
-        <img 
-          src={module.thumbnailUrl || '/images/placeholder-course.jpg'} 
-          alt={module.title}
-          className="w-full h-44 object-cover transition-transform duration-500 group-hover:scale-105"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-70"></div>
-        
-        {/* Badges no topo com explicações em tooltip */}
-        <div className="absolute top-3 right-3 flex flex-col gap-2">
-          {module.isPremium && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge 
-                    variant="secondary" 
-                    className="bg-gradient-to-r from-amber-500 to-amber-600 text-white border-0 shadow-sm flex items-center gap-1 font-medium cursor-help"
-                  >
-                    <Crown className="h-3 w-3" />
-                    <span>Premium</span>
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent side="left">
-                  <p className="text-sm">Conteúdo exclusivo para assinantes Premium</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-          
-          {isRecentlyUpdated && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge 
-                    variant="outline" 
-                    className="bg-blue-100 border-blue-200 text-blue-700 flex items-center gap-1 font-medium cursor-help"
-                  >
-                    <TrendingUp className="h-3 w-3" />
-                    <span>Novo</span>
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent side="left">
-                  <p className="text-sm">Conteúdo recém-adicionado ou atualizado</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-        </div>
-        
-        {/* Nível do curso (em baixo) com explicações em tooltip */}
-        <div className="absolute bottom-3 left-3 flex items-center gap-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Badge 
-                  variant="outline" 
-                  className={`flex items-center ${levelColors[module.level]} cursor-help`}
-                >
-                  {levelIcons[module.level]}
-                  {levelLabels[module.level]}
-                </Badge>
-              </TooltipTrigger>
-              <TooltipContent side="top">
-                <p className="text-sm">
-                  {module.level === 'iniciante' && 'Para quem está começando - conteúdo básico e introdutório'}
-                  {module.level === 'intermediario' && 'Para quem já tem conhecimentos básicos - conteúdo moderadamente avançado'}
-                  {module.level === 'avancado' && 'Para usuários experientes - conteúdo técnico e detalhado'}
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          
-          {module.viewCount && module.viewCount > 0 && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge variant="outline" className="bg-white/70 border-white/30 text-neutral-700 flex items-center gap-1 font-medium backdrop-blur-sm cursor-help">
-                    <Users className="h-3 w-3" />
-                    <span>{module.viewCount}</span>
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent side="top">
-                  <p className="text-sm">Número de alunos que acessaram este curso</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-        </div>
-        
-        {/* Botão Play hover com feedback visual claro */}
-        {!isPremiumLocked && (
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <div className="bg-white/20 backdrop-blur-sm p-4 rounded-full">
-              <Play className="h-12 w-12 text-white drop-shadow-lg" />
-              <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-white/90 text-blue-700 text-xs font-bold py-1 px-3 rounded-full shadow-lg whitespace-nowrap">
-                Clique para assistir
-              </span>
-            </div>
-          </div>
-        )}
-        
-        {/* Overlay para conteúdo premium bloqueado - com mensagem mais amigável */}
-        {isPremiumLocked && (
-          <div className="absolute inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center flex-col text-white">
-            <Crown className="h-12 w-12 mb-3 text-amber-400" />
-            <p className="text-lg font-semibold mb-1">Conteúdo Premium</p>
-            <p className="text-sm text-white/90 max-w-[80%] text-center mb-3">
-              Desbloqueie este módulo e todos os outros conteúdos exclusivos com uma assinatura
-            </p>
-            <Button variant="secondary" className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white border-0 animate-pulse">
-              Conhecer Planos
-            </Button>
-          </div>
-        )}
-      </div>
-      
-      <div className="p-5">
-        <h3 className="font-bold text-lg mb-2 line-clamp-1 group-hover:text-blue-600 transition-colors">{module.title}</h3>
-        <p className="text-neutral-600 text-sm mb-4 line-clamp-2">{module.description}</p>
-        
-        {/* Status de progresso - Mostrar para todos com explicação clara */}
-        {module.completedLessons !== undefined && module.totalLessons !== undefined && (
-          <div className="mb-4">
-            <div className="flex justify-between text-xs text-neutral-600 mb-1.5">
-              <span className="font-medium">
-                {module.completedLessons > 0 ? (
-                  <span className="flex items-center text-blue-600">
-                    <CheckCircle className="h-3 w-3 mr-1" />
-                    {completionPercentage}% concluído
-                  </span>
-                ) : (
-                  <span className="flex items-center">
-                    <Info className="h-3 w-3 mr-1 text-neutral-400" />
-                    Comece este curso
-                  </span>
-                )}
-              </span>
-              <span>{module.completedLessons}/{module.totalLessons} aulas</span>
-            </div>
-            <div className="w-full h-2.5 bg-neutral-100 rounded-full overflow-hidden">
-              <div 
-                className={`h-full rounded-full ${
-                  completionPercentage === 100 
-                    ? 'bg-green-500' 
-                    : completionPercentage > 0
-                      ? 'bg-blue-500'
-                      : 'bg-neutral-200'
-                }`}
-                style={{ width: `${completionPercentage || 5}%` }}
-              ></div>
-            </div>
-          </div>
-        )}
-        
-        <div className="flex justify-between items-center">
-          <div className="flex items-center text-sm text-neutral-500">
-            <Video className="h-4 w-4 mr-1.5" />
-            <span>{module.totalLessons || 0} aulas</span>
-          </div>
-          <Link 
-            href={`/cursos/${module.id}`}
-            className={`inline-flex items-center text-sm font-medium rounded-md py-1.5 px-3 transition-colors ${
-              isPremiumLocked 
-                ? 'pointer-events-none text-neutral-400' 
-                : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50 border border-transparent hover:border-blue-100'
-            }`}
-          >
-            {module.completedLessons && module.completedLessons > 0 
-              ? "Continuar curso" 
-              : "Iniciar curso"} 
-            <ChevronRight className="h-4 w-4 ml-1" />
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Componente de estatísticas com tooltips explicativos
-const CourseStatistics = ({ metrics }: { metrics: CategoryMetric[] }) => {
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-      {metrics.map((metric, index) => (
-        <TooltipProvider key={index}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Card className="border border-neutral-200 hover:border-neutral-300 transition-colors cursor-help">
-                <CardContent className="p-4 flex items-center">
-                  <div className={`flex-shrink-0 mr-4 w-12 h-12 rounded-lg flex items-center justify-center ${metric.color}`}>
-                    {metric.icon}
-                  </div>
-                  <div>
-                    <p className="text-sm text-neutral-500 font-medium">{metric.label}</p>
-                    <p className="text-2xl font-bold">{metric.count}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p className="text-sm">
-                {metric.category === 'total' && 'Número total de módulos disponíveis para você'}
-                {metric.category === 'premium' && 'Conteúdos exclusivos para assinantes premium'}
-                {metric.category === 'gratuito' && 'Módulos disponíveis para todos os usuários'}
-                {metric.category === 'progress' && 'Cursos que você já começou, mas ainda não concluiu'}
-              </p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      ))}
-    </div>
-  );
-};
-
-// Componente de Guia Introdutório
-const IntroGuide = ({ onDismiss }: { onDismiss: () => void }) => {
-  return (
-    <div className="relative mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200 p-5 shadow-sm">
-      <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
-        <div className="bg-blue-100 rounded-full p-3 flex-shrink-0">
-          <HelpCircle className="h-8 w-8 text-blue-600" />
-        </div>
-        <div className="flex-1">
-          <h3 className="text-lg font-semibold text-blue-800 mb-1">Como funciona a área de cursos</h3>
-          <p className="text-blue-700 mb-3">
-            Este é o ambiente de aprendizado do DesignAuto. Aqui você encontra todo o conteúdo educacional 
-            disponível na plataforma, organizado por módulos.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
-            <div className="flex items-start gap-2">
-              <Play className="h-5 w-5 text-blue-600 mt-0.5" />
-              <div>
-                <p className="font-medium text-blue-800">Assistir aulas</p>
-                <p className="text-sm text-blue-600">Clique em qualquer curso para acessar suas aulas</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <CheckCircle className="h-5 w-5 text-blue-600 mt-0.5" />
-              <div>
-                <p className="font-medium text-blue-800">Progresso automático</p>
-                <p className="text-sm text-blue-600">Seu progresso é salvo automaticamente enquanto estuda</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <Search className="h-5 w-5 text-blue-600 mt-0.5" />
-              <div>
-                <p className="font-medium text-blue-800">Encontre o que precisa</p>
-                <p className="text-sm text-blue-600">Use a busca para encontrar conteúdos específicos</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <BookOpenCheck className="h-5 w-5 text-blue-600 mt-0.5" />
-              <div>
-                <p className="font-medium text-blue-800">Aprenda no seu ritmo</p>
-                <p className="text-sm text-blue-600">Acesse as aulas quando e onde quiser</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <Button
-        variant="outline"
-        size="sm"
-        className="absolute top-2 right-2 h-8 w-8 p-0 rounded-full"
-        onClick={onDismiss}
-      >
-        <span className="sr-only">Fechar</span>
-        <span aria-hidden="true">×</span>
-      </Button>
-    </div>
-  );
-};
-
-// Página principal de cursos (redesenhada com foco em UX)
+// Página principal de cursos (redesenhada com estilo Netflix)
 export default function CursosPage() {
   const { user } = useAuth();
   const [location, setLocation] = useLocation();
+  const isPremiumUser = user && user.nivelacesso === 'premium';
   const [activeTab, setActiveTab] = useState<string>("todos");
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [showGuide, setShowGuide] = useState<boolean>(true);
   const searchInputRef = useRef<HTMLInputElement>(null);
   
-  // Função para verificar se o conteúdo premium deve ser bloqueado
-  const shouldLockPremiumContent = (isPremium: boolean) => {
-    if (!isPremium) return false;
-    if (!user) return true;
-    if (user.role === 'admin' || user.role === 'designer_adm') return false;
-    return !['premium', 'mensal', 'anual', 'lifetime'].includes(user.role);
-  };
-
-  // Buscar todos os módulos
-  const { data: modules, isLoading, error } = useQuery({
+  // Query para buscar os módulos do curso
+  const { data: modules, error, isLoading } = useQuery({
     queryKey: ['/api/cursos/modules'],
     queryFn: async () => {
-      const res = await apiRequest('GET', '/api/cursos/modules');
-      return await res.json();
+      const response = await apiRequest('GET', '/api/cursos/modules');
+      const data = await response.json();
+      
+      // Obter informações de progresso quando o usuário está logado
+      if (user) {
+        // Buscar progresso do usuário para cada módulo (em um cenário real)
+        // Aqui estamos apenas simulando com dados aleatórios
+        return data.map((module: CourseModule) => ({
+          ...module,
+          completedLessons: Math.floor(Math.random() * (module.totalLessons || 0)),
+          // Marcar alguns módulos como recém atualizados para exemplo
+          lastUpdateDate: Math.random() > 0.7 ? new Date().toISOString() : null
+        }));
+      }
+      
+      return data;
     }
   });
-
-  // Filtrar módulos por categoria (tab) e por busca
-  const filteredModules = modules ? modules.filter(module => {
+  
+  // Filtrar módulos com base na tab ativa e no termo de busca
+  const filteredModules = modules ? modules.filter((module: CourseModule) => {
     // Filtrar por termo de busca primeiro
     const matchesSearch = searchTerm === "" || (
       module.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -427,359 +126,379 @@ export default function CursosPage() {
              module.isActive !== false;
     }
     
-    return module.isActive !== false;
+    return true;
   }) : [];
   
-  // Calcular estatísticas para exibição
-  const stats: CategoryMetric[] = [
-    { 
-      category: 'total', 
-      count: modules?.filter(m => m.isActive !== false).length || 0,
-      label: 'Total de Módulos',
+  // Calcular estatísticas
+  const statistics = {
+    total: modules?.filter((m: CourseModule) => m.isActive !== false).length || 0,
+    premium: modules?.filter((m: CourseModule) => m.isPremium && m.isActive !== false).length || 0,
+    free: modules?.filter((m: CourseModule) => !m.isPremium && m.isActive !== false).length || 0,
+    inProgress: modules?.filter((m: CourseModule) => 
+      m.completedLessons > 0 && 
+      m.completedLessons < m.totalLessons && 
+      m.isActive !== false
+    ).length || 0,
+    completed: modules?.filter((m: CourseModule) => 
+      m.completedLessons === m.totalLessons && 
+      m.totalLessons > 0 && 
+      m.isActive !== false
+    ).length || 0
+  };
+  
+  // Métricas para mostrar no painel
+  const metrics: CategoryMetric[] = [
+    {
+      category: 'total',
+      count: statistics.total,
+      label: 'Cursos Disponíveis',
       icon: <BookOpen className="h-6 w-6 text-blue-600" />,
       color: 'bg-blue-50'
     },
-    { 
-      category: 'premium', 
-      count: modules?.filter(m => m.isPremium && m.isActive !== false).length || 0,
-      label: 'Conteúdo Premium',
-      icon: <Crown className="h-6 w-6 text-amber-600" />,
+    {
+      category: 'premium',
+      count: statistics.premium,
+      label: 'Cursos Premium',
+      icon: <Crown className="h-6 w-6 text-amber-500" />,
       color: 'bg-amber-50'
     },
-    { 
-      category: 'gratuito', 
-      count: modules?.filter(m => !m.isPremium && m.isActive !== false).length || 0,
-      label: 'Módulos Gratuitos',
-      icon: <Heart className="h-6 w-6 text-red-600" />,
-      color: 'bg-red-50'
-    },
-    { 
-      category: 'progress', 
-      count: user ? (modules?.filter(m => 
-        m.completedLessons > 0 && 
-        m.completedLessons < m.totalLessons &&
-        m.isActive !== false
-      ).length || 0) : 0,
-      label: 'Em Progresso',
-      icon: <BarChart className="h-6 w-6 text-green-600" />,
+    {
+      category: 'free',
+      count: statistics.free,
+      label: 'Cursos Gratuitos',
+      icon: <BookOpenCheck className="h-6 w-6 text-green-600" />,
       color: 'bg-green-50'
+    },
+    {
+      category: user ? 'inProgress' : 'total',
+      count: user ? statistics.inProgress : statistics.total,
+      label: user ? 'Em Andamento' : 'Total de Módulos',
+      icon: user ? <Clock className="h-6 w-6 text-purple-600" /> : <BookOpen className="h-6 w-6 text-blue-600" />,
+      color: user ? 'bg-purple-50' : 'bg-blue-50'
     }
   ];
   
-  // Focar no campo de busca quando pressionar Ctrl+K
+  // Função para verificar se o conteúdo premium deve ser bloqueado
+  const isPremiumLocked = (isPremium: boolean) => {
+    if (!isPremium) return false;
+    return !isPremiumUser;
+  };
+  
+  // Habilitar busca com tecla "/"
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === '/' && document.activeElement !== searchInputRef.current) {
+      e.preventDefault();
+      searchInputRef.current?.focus();
+    }
+  };
+  
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        e.preventDefault();
-        searchInputRef.current?.focus();
-      }
-    };
-    
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
+  // Encontrar um módulo em destaque (para o herói)
+  const featuredModule = modules?.find((m: CourseModule) => m.isPremium && m.isActive !== false) || modules?.[0];
+
+  // Organizar módulos por nível
+  const initiateModules = modules?.filter((m: CourseModule) => m.level === 'iniciante' && m.isActive !== false) || [];
+  const intermediateModules = modules?.filter((m: CourseModule) => m.level === 'intermediario' && m.isActive !== false) || [];
+  const advancedModules = modules?.filter((m: CourseModule) => m.level === 'avancado' && m.isActive !== false) || [];
+  
+  // Módulos em andamento (para usuários logados)
+  const inProgressModules = user ? modules?.filter((m: CourseModule) => 
+    m.completedLessons > 0 && 
+    m.completedLessons < m.totalLessons && 
+    m.isActive !== false
+  ) || [] : [];
+  
+  // Módulos recém atualizados
+  const recentlyUpdatedModules = modules?.filter((m: CourseModule) => 
+    m.lastUpdateDate && 
+    new Date().getTime() - new Date(m.lastUpdateDate).getTime() < 7 * 24 * 60 * 60 * 1000 &&
+    m.isActive !== false
+  ) || [];
+  
+  // Módulos populares (com maior contagem de visualizações)
+  const popularModules = modules ? [...modules]
+    .filter((m: CourseModule) => m.isActive !== false)
+    .sort((a: CourseModule, b: CourseModule) => (b.viewCount || 0) - (a.viewCount || 0))
+    .slice(0, 10) : [];
+  
   return (
-    <div className="bg-white min-h-screen pb-12">
-      {/* Header com imagem de fundo e gradiente de sobreposição */}
-      <div className="relative bg-gradient-to-r from-blue-900 to-indigo-900 text-white">
-        {/* Padrão de fundo */}
-        <div className="absolute inset-0 opacity-60 bg-blue-800"></div>
-        
-        {/* Conteúdo do header */}
-        <div className="relative container mx-auto py-16 px-4">
-          <Helmet>
-            <title>Videoaulas | DesignAuto</title>
-          </Helmet>
-          
-          <div className="max-w-6xl mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-              <div>
-                <div className="flex items-center gap-2">
-                  <GraduationCap className="h-8 w-8 text-blue-300" />
-                  <h1 className="text-3xl font-bold">Área de Cursos</h1>
-                </div>
-                <p className="text-blue-100 text-lg mt-2">
-                  Aprenda com videoaulas exclusivas e melhore suas habilidades
-                </p>
-              </div>
-              
-              {/* Exibir upgrade premium apenas para usuários free com destacue visual */}
-              {user && user.role !== 'premium' && user.role !== 'admin' && (
-                <Button 
-                  className="mt-6 md:mt-0 flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-lg transition-transform hover:scale-105"
-                  size="lg"
-                >
-                  <Crown className="h-5 w-5" />
-                  <span>Desbloquear Premium</span>
-                </Button>
-              )}
-            </div>
-            
-            {/* Campo de busca com shortcut e dica */}
-            <div className="mt-6 relative">
-              <Search className="absolute left-4 top-3.5 h-5 w-5 text-blue-300" />
-              <Input
-                ref={searchInputRef}
-                type="text"
-                placeholder="Digite aqui para buscar cursos por título ou assunto..."
-                className="pl-12 py-6 bg-white/10 border-white/20 text-white placeholder:text-blue-300 rounded-xl focus-visible:border-blue-300 focus-visible:ring-blue-300"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <div className="absolute right-4 top-3 flex items-center gap-2 text-blue-200 text-sm">
-                <span>Atalho:</span>
-                <div className="bg-blue-800/70 rounded-md py-1 px-2 text-xs font-bold">
-                  Ctrl+K
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <>
+      <Helmet>
+        <title>Cursos e Videoaulas | DesignAuto</title>
+      </Helmet>
       
-      <div className="container mx-auto px-4 py-10">
-        <div className="max-w-6xl mx-auto">
-          {/* Guia Introdutório para Novos Usuários */}
-          {showGuide && (
-            <IntroGuide onDismiss={() => setShowGuide(false)} />
-          )}
-          
-          {/* Estastísticas */}
-          <CourseStatistics metrics={stats} />
-          
-          {/* Tabs de filtro com design moderno */}
-          <div className="mb-12">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Explore nossos cursos</h2>
-              {!showGuide && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="text-blue-600 flex items-center gap-1"
-                  onClick={() => setShowGuide(true)}
-                >
-                  <HelpCircle className="h-4 w-4" />
-                  <span>Como funciona?</span>
-                </Button>
-              )}
-            </div>
+      <div className="bg-neutral-950">
+        {/* Seção Hero */}
+        {featuredModule && !isLoading && !error && (
+          <CourseHero
+            title={featuredModule.title}
+            description={featuredModule.description}
+            imageUrl={featuredModule.thumbnailUrl || '/images/placeholder-course.jpg'}
+            courseId={featuredModule.id}
+            isPremium={featuredModule.isPremium}
+            isPremiumUser={!!isPremiumUser}
+            totalLessons={featuredModule.totalLessons}
+            level={featuredModule.level}
+          />
+        )}
+        
+        <div className="container mx-auto px-4 py-8 max-w-7xl">
+          {/* Barra de pesquisa e filtros */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <h2 className="text-2xl font-bold text-white">Cursos e Videoaulas</h2>
             
-            <Tabs 
-              defaultValue="todos" 
-              value={activeTab} 
-              onValueChange={setActiveTab}
-              className="w-full"
-            >
-              <TabsList className="w-full flex p-1 bg-gray-100 rounded-xl mb-8">
-                <TabsTrigger 
-                  value="todos" 
-                  className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:shadow-none"
-                >
-                  <BookOpen className="h-4 w-4 mr-1.5" />
-                  Todos
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="premium"
-                  className="data-[state=active]:bg-amber-50 data-[state=active]:text-amber-700 data-[state=active]:shadow-none"
-                >
-                  <Crown className="h-4 w-4 mr-1.5" />
-                  Premium
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="gratuito"
-                  className="data-[state=active]:bg-green-50 data-[state=active]:text-green-700 data-[state=active]:shadow-none"
-                >
-                  <Bookmark className="h-4 w-4 mr-1.5" />
-                  Gratuitos
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="em-andamento"
-                  className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:shadow-none"
-                >
-                  <Play className="h-4 w-4 mr-1.5" />
-                  Em andamento
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="concluidos"
-                  className="data-[state=active]:bg-green-50 data-[state=active]:text-green-700 data-[state=active]:shadow-none"
-                >
-                  <CheckCircle className="h-4 w-4 mr-1.5" />
-                  Concluídos
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-          
-          {/* Loading com animação e mensagem amigável */}
-          {isLoading && (
-            <div className="flex flex-col items-center justify-center py-16 bg-white rounded-xl shadow-sm border">
-              <div className="relative">
-                <Loader2 className="h-16 w-16 text-blue-500 animate-spin mb-4" />
-                <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center">
-                  <BookOpen className="h-6 w-6 text-blue-700" />
-                </div>
-              </div>
-              <p className="text-neutral-700 font-medium text-lg">Carregando seus cursos...</p>
-              <p className="text-neutral-500 text-sm">Estamos preparando tudo para você</p>
-            </div>
-          )}
-          
-          {/* Erro com opção de retry e explicação clara */}
-          {error && (
-            <div className="flex flex-col items-center justify-center py-12 bg-white rounded-xl shadow-sm border">
-              <AlertTriangle className="h-12 w-12 text-amber-500 mb-4" />
-              <p className="font-medium text-lg">Ops! Não conseguimos carregar os cursos</p>
-              <p className="text-neutral-600 mb-6 text-center max-w-md">
-                Parece que houve um problema ao buscar os cursos. 
-                Isso pode ser devido a uma conexão instável ou um problema temporário no servidor.
-              </p>
-              <Button 
-                variant="default" 
-                onClick={() => window.location.reload()}
-                className="flex items-center gap-2"
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-neutral-800 text-neutral-300 hover:bg-neutral-800 hover:text-white"
+                onClick={() => setActiveTab(activeTab === 'todos' ? 'premium' : 'todos')}
               >
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Tentar novamente
+                <Filter className="h-4 w-4 mr-2" />
+                Filtros
               </Button>
-            </div>
-          )}
-          
-          {/* Admin Tools com explicações claras */}
-          {user && (user.role === 'admin' || user.role === 'designer_adm') && (
-            <div className="mb-8 p-5 bg-white border-l-4 border-l-blue-600 rounded-md shadow-sm">
-              <h3 className="font-semibold mb-3 flex items-center text-blue-800 text-lg">
-                <GraduationCap className="mr-2 h-5 w-5" />
-                Ferramentas de Administração
-              </h3>
-              <p className="text-neutral-600 mb-4">
-                Como administrador, você pode gerenciar todo o conteúdo educacional da plataforma. 
-                Use as ferramentas abaixo para adicionar, editar ou remover cursos.
-              </p>
-              <div className="flex flex-wrap gap-3">
-                <Button 
-                  variant="default" 
-                  onClick={() => setLocation('/admin/gerenciar-cursos')}
-                  className="flex items-center bg-blue-600 hover:bg-blue-700"
-                >
-                  <Play className="mr-2 h-5 w-5" />
-                  Gerenciar Cursos
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setLocation('/admin')}
-                  className="flex items-center"
-                >
-                  <BarChart className="mr-2 h-5 w-5" />
-                  Dashboard Admin
-                </Button>
-              </div>
-            </div>
-          )}
-          
-          {/* Grid de módulos com layout aprimorado */}
-          {!isLoading && !error && filteredModules && filteredModules.length > 0 && (
-            <>
-              <div className="mb-6">
-                <h2 className="text-xl font-semibold text-neutral-800 mb-1 flex items-center">
-                  <BookOpenCheck className="mr-2 h-5 w-5 text-blue-600" />
-                  {activeTab === 'todos' && 'Todos os cursos disponíveis'}
-                  {activeTab === 'premium' && 'Cursos Premium'}
-                  {activeTab === 'gratuito' && 'Cursos Gratuitos'}
-                  {activeTab === 'em-andamento' && 'Seus cursos em andamento'}
-                  {activeTab === 'concluidos' && 'Cursos que você concluiu'}
-                  {searchTerm && ` - Resultados para "${searchTerm}"`}
-                </h2>
-                <p className="text-neutral-600 mb-4">
-                  {activeTab === 'todos' && 'Explore todos os cursos disponíveis na plataforma'}
-                  {activeTab === 'premium' && 'Conteúdo exclusivo com técnicas avançadas'}
-                  {activeTab === 'gratuito' && 'Cursos gratuitos para todos os usuários'}
-                  {activeTab === 'em-andamento' && 'Continue de onde parou - cursos que você já começou'}
-                  {activeTab === 'concluidos' && 'Cursos que você completou com sucesso'}
-                </p>
-              </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredModules
-                  .sort((a, b) => a.order - b.order)
-                  .map(module => (
-                  <ModuleCard 
-                    key={module.id} 
-                    module={module} 
-                    isPremiumLocked={shouldLockPremiumContent(module.isPremium)}
-                  />
-                ))}
-              </div>
-            </>
-          )}
-          
-          {/* Estado vazio com ilustração amigável e orientação clara */}
-          {!isLoading && !error && (!filteredModules || filteredModules.length === 0) && (
-            <div className="flex flex-col items-center justify-center py-16 bg-white rounded-xl shadow-sm border text-center">
-              <div className="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center mb-6">
-                {searchTerm ? (
-                  <Search className="h-12 w-12 text-blue-500" />
-                ) : activeTab === 'em-andamento' ? (
-                  <Play className="h-12 w-12 text-blue-500" />
-                ) : activeTab === 'concluidos' ? (
-                  <CheckCircle className="h-12 w-12 text-blue-500" />
-                ) : (
-                  <BookOpen className="h-12 w-12 text-blue-500" />
+              <div className="relative w-full md:w-56">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500" size={16} />
+                <Input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Buscar cursos... (/ )"
+                  className="pl-9 bg-neutral-900 border-neutral-800 text-white placeholder:text-neutral-500"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                {searchTerm && (
+                  <button
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-500 hover:text-neutral-300"
+                    onClick={() => setSearchTerm('')}
+                  >
+                    &times;
+                  </button>
                 )}
               </div>
+            </div>
+          </div>
+          
+          {/* Menu de categorias (tabs) - Versão Netflix */}
+          <Tabs defaultValue="todos" value={activeTab} onValueChange={setActiveTab} className="mb-8">
+            <TabsList className="mb-5 bg-transparent flex gap-1">
+              <TabsTrigger 
+                value="todos" 
+                className="data-[state=active]:bg-white data-[state=active]:text-neutral-900 data-[state=inactive]:bg-transparent data-[state=inactive]:text-neutral-300 hover:text-white"
+              >
+                <BookOpen className="h-4 w-4 mr-2" />
+                Todos
+              </TabsTrigger>
+              <TabsTrigger 
+                value="premium" 
+                className="data-[state=active]:bg-white data-[state=active]:text-neutral-900 data-[state=inactive]:bg-transparent data-[state=inactive]:text-neutral-300 hover:text-white"
+              >
+                <Crown className="h-4 w-4 mr-2" />
+                Premium
+              </TabsTrigger>
+              <TabsTrigger 
+                value="gratuito" 
+                className="data-[state=active]:bg-white data-[state=active]:text-neutral-900 data-[state=inactive]:bg-transparent data-[state=inactive]:text-neutral-300 hover:text-white"
+              >
+                <BookOpenCheck className="h-4 w-4 mr-2" />
+                Gratuitos
+              </TabsTrigger>
+              {user && (
+                <>
+                  <TabsTrigger 
+                    value="em-andamento" 
+                    className="data-[state=active]:bg-white data-[state=active]:text-neutral-900 data-[state=inactive]:bg-transparent data-[state=inactive]:text-neutral-300 hover:text-white"
+                  >
+                    <Clock className="h-4 w-4 mr-2" />
+                    Em Andamento
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="concluidos" 
+                    className="data-[state=active]:bg-white data-[state=active]:text-neutral-900 data-[state=inactive]:bg-transparent data-[state=inactive]:text-neutral-300 hover:text-white"
+                  >
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Concluídos
+                  </TabsTrigger>
+                </>
+              )}
+            </TabsList>
+        
+            <TabsContent value={activeTab} className="mt-0">
+              {isLoading && (
+                <div className="flex justify-center items-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-neutral-400" />
+                  <span className="ml-3 text-neutral-400">Carregando cursos...</span>
+                </div>
+              )}
               
-              <p className="font-semibold text-xl mb-2">
-                {searchTerm 
-                  ? `Nenhum resultado para "${searchTerm}"` 
-                  : activeTab === 'em-andamento'
-                  ? "Você ainda não iniciou nenhum curso"
-                  : activeTab === 'concluidos'
-                  ? "Você ainda não concluiu nenhum curso"
-                  : "Nenhum curso disponível no momento"
-                }
-              </p>
+              {error && (
+                <div className="bg-red-950 border border-red-800 text-red-300 p-4 rounded-lg flex items-start">
+                  <AlertTriangle className="h-5 w-5 mr-3 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h3 className="font-medium">Erro ao carregar cursos</h3>
+                    <p className="text-sm text-red-400">
+                      Ocorreu um erro ao carregar os cursos. Por favor, tente novamente mais tarde.
+                    </p>
+                  </div>
+                </div>
+              )}
               
-              <p className="text-neutral-600 text-center max-w-md mb-6">
-                {searchTerm
-                  ? "Tente usar termos mais gerais ou verifique a ortografia."
-                  : activeTab === 'em-andamento'
-                  ? "Explore os cursos disponíveis e comece a aprender agora mesmo!"
-                  : activeTab === 'concluidos'
-                  ? "Continue estudando para concluir seus cursos em andamento."
-                  : activeTab === 'premium'
-                  ? "Novos cursos premium serão adicionados em breve. Fique atento!"
-                  : activeTab === 'gratuito'
-                  ? "Novos cursos gratuitos serão adicionados em breve."
-                  : "Estamos preparando conteúdos incríveis para você. Volte em breve!"
-                }
-              </p>
+              {/* Resultados de pesquisa */}
+              {searchTerm && !isLoading && !error && (
+                <div className="mb-10">
+                  <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+                    <Search className="mr-2 h-5 w-5 text-blue-500" />
+                    Resultados para: "{searchTerm}"
+                  </h3>
+                  
+                  {filteredModules.length === 0 ? (
+                    <div className="bg-blue-950/50 border border-blue-900/50 text-blue-300 p-4 rounded-lg flex items-start">
+                      <Info className="h-5 w-5 mr-3 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <h3 className="font-medium">Nenhum curso encontrado</h3>
+                        <p className="text-sm text-blue-400">
+                          Não encontramos cursos com o termo "{searchTerm}". Tente outra busca.
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      {filteredModules
+                        .sort((a: CourseModule, b: CourseModule) => a.order - b.order)
+                        .map((module: CourseModule) => (
+                          <NetflixCard
+                            key={module.id}
+                            module={module}
+                            isPremiumLocked={isPremiumLocked(module.isPremium)}
+                          />
+                        ))}
+                    </div>
+                  )}
+                </div>
+              )}
               
-              {searchTerm ? (
-                <Button 
-                  variant="default" 
-                  onClick={() => setSearchTerm("")}
-                  className="flex items-center"
-                >
-                  <AlertTriangle className="mr-2 h-4 w-4" />
-                  Limpar busca
-                </Button>
-              ) : activeTab !== 'todos' ? (
-                <Button 
-                  variant="default" 
-                  onClick={() => setActiveTab('todos')}
-                  className="flex items-center"
-                >
-                  <BookOpen className="mr-2 h-4 w-4" />
-                  Ver todos os cursos
-                </Button>
-              ) : null}
+              {/* Visualização estilo Netflix quando não está pesquisando */}
+              {!searchTerm && !isLoading && !error && (
+                <>
+                  {/* Seção de Continuar Assistindo para usuários logados */}
+                  {user && inProgressModules.length > 0 && (
+                    <CourseCategory
+                      title="Continue de onde parou"
+                      subtitle="Cursos que você já começou a assistir"
+                      icon={<Clock className="h-5 w-5 text-blue-500" />}
+                      modules={inProgressModules}
+                      isPremiumUser={!!isPremiumUser}
+                      slidesPerView={4}
+                    />
+                  )}
+                  
+                  {/* Novos cursos / Adicionados recentemente */}
+                  {recentlyUpdatedModules.length > 0 && (
+                    <CourseCategory
+                      title="Novidades"
+                      subtitle="Cursos recém adicionados ou atualizados"
+                      icon={<Sparkles className="h-5 w-5 text-amber-500" />}
+                      modules={recentlyUpdatedModules}
+                      isPremiumUser={!!isPremiumUser}
+                      slidesPerView={4}
+                    />
+                  )}
+                  
+                  {/* Cursos em destaque / Populares */}
+                  {popularModules.length > 0 && (
+                    <CourseCategory
+                      title="Mais populares"
+                      subtitle="Os cursos mais assistidos da plataforma"
+                      icon={<TrendingUp className="h-5 w-5 text-red-500" />}
+                      modules={popularModules}
+                      isPremiumUser={!!isPremiumUser}
+                      slidesPerView={4}
+                    />
+                  )}
+                  
+                  {/* Cursos por nível de dificuldade */}
+                  {initiateModules.length > 0 && (
+                    <CourseCategory
+                      title="Para iniciantes"
+                      subtitle="Recomendados para quem está começando"
+                      icon={<GraduationCap className="h-5 w-5 text-green-500" />}
+                      modules={initiateModules}
+                      isPremiumUser={!!isPremiumUser}
+                      slidesPerView={4}
+                    />
+                  )}
+                  
+                  {intermediateModules.length > 0 && (
+                    <CourseCategory
+                      title="Nível intermediário"
+                      subtitle="Para quem já possui conhecimentos básicos"
+                      icon={<Award className="h-5 w-5 text-blue-500" />}
+                      modules={intermediateModules}
+                      isPremiumUser={!!isPremiumUser}
+                      slidesPerView={4}
+                    />
+                  )}
+                  
+                  {advancedModules.length > 0 && (
+                    <CourseCategory
+                      title="Nível avançado"
+                      subtitle="Técnicas avançadas para profissionais"
+                      icon={<Star className="h-5 w-5 text-purple-500" />}
+                      modules={advancedModules}
+                      isPremiumUser={!!isPremiumUser}
+                      slidesPerView={4}
+                    />
+                  )}
+                </>
+              )}
+            </TabsContent>
+          </Tabs>
+          
+          {/* CTA para planos premium (apenas para não assinantes) */}
+          {!isPremiumUser && (
+            <div className="bg-gradient-to-r from-blue-900 to-indigo-900 rounded-xl p-8 text-white">
+              <div className="flex flex-col md:flex-row md:items-center justify-between">
+                <div className="mb-6 md:mb-0 md:mr-8">
+                  <h2 className="text-2xl font-bold mb-3">Desbloqueie todos os cursos Premium</h2>
+                  <p className="text-blue-200 mb-4">
+                    Tenha acesso ilimitado a todos os nossos cursos e conteúdos exclusivos com um plano premium.
+                    Aprenda no seu ritmo e desenvolva suas habilidades.
+                  </p>
+                  <ul className="space-y-2 mb-6">
+                    <li className="flex items-center">
+                      <CheckCircle className="h-5 w-5 mr-2 text-blue-300" />
+                      <span>Acesso a todos os cursos premium</span>
+                    </li>
+                    <li className="flex items-center">
+                      <CheckCircle className="h-5 w-5 mr-2 text-blue-300" />
+                      <span>Novos cursos mensais</span>
+                    </li>
+                    <li className="flex items-center">
+                      <CheckCircle className="h-5 w-5 mr-2 text-blue-300" />
+                      <span>Certificados de conclusão</span>
+                    </li>
+                  </ul>
+                </div>
+                <div className="flex-shrink-0">
+                  <Link href="/planos">
+                    <Button size="lg" className="bg-white text-blue-900 hover:bg-blue-50">
+                      <Crown className="h-5 w-5 mr-2 text-amber-500" />
+                      Conheça nossos planos
+                    </Button>
+                  </Link>
+                </div>
+              </div>
             </div>
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 }
