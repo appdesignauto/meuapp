@@ -20,6 +20,7 @@ import {
   CheckCircle2,
   CheckCircle,
   Circle,
+  Check,
   Lock,
   ExternalLink,
   BookOpen,
@@ -532,7 +533,10 @@ const VideoLessonPage: React.FC = () => {
                       >
                         {isCompleted ? (
                           <div className="flex items-center">
-                            <CheckCircle2 className="mr-2 h-4 w-4 text-blue-600 fill-blue-100" />
+                            <div className="relative mr-2 flex-shrink-0">
+                              <Check className="h-4 w-4 text-blue-600" />
+                              <Check className="h-4 w-4 text-blue-600 absolute -top-0.5 -left-0.5" />
+                            </div>
                             <span>Concluído</span>
                           </div>
                         ) : (
