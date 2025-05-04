@@ -407,8 +407,21 @@ const VideoLessonPage: React.FC = () => {
                         ))}
                       </div>
                       
-                      {/* Setas de navegação - estilo como na referência */}
+                      {/* Setas de navegação - estilo como nas referências */}
                       <div className="flex gap-2">
+                        {/* Botão de "Skip Previous" (como na primeira imagem) */}
+                        {id > 1 && (
+                          <Link href={`/videoaulas/${id - 1}`} className="inline-flex">
+                            <div className="w-10 h-10 bg-[#434756] rounded-full flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M19 20L9 12L19 4V20Z" fill="white"/>
+                                <path d="M5 4H9V20H5V4Z" fill="white"/>
+                              </svg>
+                            </div>
+                          </Link>
+                        )}
+                        
+                        {/* Botões de navegação padrão */}
                         {id > 1 && (
                           <Link href={`/videoaulas/${id - 1}`} className="inline-flex">
                             <div className="w-10 h-10 bg-[#434756] rounded-md flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
@@ -421,6 +434,18 @@ const VideoLessonPage: React.FC = () => {
                           <Link href={`/videoaulas/${id + 1}`} className="inline-flex">
                             <div className="w-10 h-10 bg-[#434756] rounded-md flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
                               <ChevronRight className="h-5 w-5" />
+                            </div>
+                          </Link>
+                        )}
+                        
+                        {/* Botão de "Skip Next" (como na primeira imagem) */}
+                        {id < tutoriais.length && (
+                          <Link href={`/videoaulas/${id + 1}`} className="inline-flex">
+                            <div className="w-10 h-10 bg-[#434756] rounded-full flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M5 4L15 12L5 20V4Z" fill="white"/>
+                                <path d="M19 4H15V20H19V4Z" fill="white"/>
+                              </svg>
                             </div>
                           </Link>
                         )}
@@ -607,6 +632,18 @@ const VideoLessonPage: React.FC = () => {
                   </div>
                   
                   <div className="flex gap-2">
+                    {/* Botão de "Skip Previous" (como na primeira imagem) */}
+                    {id > 1 && (
+                      <Link href={`/videoaulas/${id - 1}`} className="inline-flex">
+                        <div className="w-10 h-10 bg-[#434756] rounded-full flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19 20L9 12L19 4V20Z" fill="white"/>
+                            <path d="M5 4H9V20H5V4Z" fill="white"/>
+                          </svg>
+                        </div>
+                      </Link>
+                    )}
+                  
                     {id > 1 && (
                       <Link href={`/videoaulas/${id - 1}`} className="inline-flex">
                         <div className="w-10 h-10 bg-[#434756] rounded-full flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
@@ -619,6 +656,18 @@ const VideoLessonPage: React.FC = () => {
                       <Link href={`/videoaulas/${id + 1}`} className="inline-flex">
                         <div className="w-10 h-10 bg-[#434756] rounded-full flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
                           <ChevronRight className="h-5 w-5" />
+                        </div>
+                      </Link>
+                    )}
+                    
+                    {/* Botão de "Skip Next" (como na primeira imagem) */}
+                    {id < tutoriais.length && (
+                      <Link href={`/videoaulas/${id + 1}`} className="inline-flex">
+                        <div className="w-10 h-10 bg-[#434756] rounded-full flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M5 4L15 12L5 20V4Z" fill="white"/>
+                            <path d="M19 4H15V20H19V4Z" fill="white"/>
+                          </svg>
                         </div>
                       </Link>
                     )}
