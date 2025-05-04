@@ -20,12 +20,20 @@ import {
   CheckCircle2,
   Lock,
   ExternalLink,
-  BookOpen
+  BookOpen,
+  PlayCircle,
+  ThumbsUp
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+// import { 
+//   Tooltip, 
+//   TooltipContent, 
+//   TooltipProvider, 
+//   TooltipTrigger 
+// } from "@/components/ui/tooltip";
 import { Tutorial } from "@/components/videoaulas/TutorialData";
 
 // Importar os dados simulados
@@ -268,32 +276,69 @@ const VideoLessonPage: React.FC = () => {
       </Helmet> */}
       
       <div className="min-h-screen bg-white pb-12">
-        {/* Cabeçalho com navegação e título - estilo clean */}
+        {/* Barra de progresso do tutorial */}
+        <div className="bg-white border-b border-blue-100">
+          <div className="container mx-auto px-4">
+            <div className="h-1 bg-blue-100 w-full rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-blue-600 rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${tutorial.progress || 15}%` }} 
+              />
+            </div>
+          </div>
+        </div>
+        
+        {/* Cabeçalho com navegação, breadcrumbs e título - estilo clean */}
         <div className="bg-gradient-to-r from-blue-50 to-white py-4 border-b border-blue-100 shadow-sm">
-          <div className="container mx-auto px-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-            <div>
-              <Button 
-                variant="ghost" 
-                className="text-blue-700 hover:text-blue-900 hover:bg-blue-50 -ml-3 transition-colors"
-                onClick={() => navigate("/videoaulas")}
-              >
-                <ChevronLeft className="mr-1 h-4 w-4" />
-                Voltar para Videoaulas
-              </Button>
+          <div className="container mx-auto px-4">
+            {/* Breadcrumbs */}
+            <div className="flex items-center text-sm text-gray-500 mb-2">
+              <Link href="/videoaulas" className="hover:text-blue-600 transition-colors">
+                Videoaulas
+              </Link>
+              <ChevronRight className="h-3.5 w-3.5 mx-1.5" />
+              <span className="text-blue-700 font-medium truncate max-w-[200px]">
+                {tutorial.title}
+              </span>
             </div>
             
-            <div className="flex items-center gap-2">
-              {tutorial.isPremium && (
-                <Badge className="bg-gradient-to-r from-yellow-500 to-amber-500 text-white border-0 shadow-sm font-medium px-3 py-1">
-                  <Lock className="h-3 w-3 mr-1" />
-                  Premium
-                </Badge>
-              )}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <div>
+                <Button 
+                  variant="ghost" 
+                  className="text-blue-700 hover:text-blue-900 hover:bg-blue-50 -ml-3 transition-colors"
+                  onClick={() => navigate("/videoaulas")}
+                >
+                  <ChevronLeft className="mr-1 h-4 w-4" />
+                  Voltar para Videoaulas
+                </Button>
+              </div>
               
-              <Badge className="bg-blue-600 text-white border-0 shadow-sm font-medium px-3 py-1">
-                <Clock className="h-3 w-3 mr-1" />
-                {tutorial.duration}
-              </Badge>
+              <div className="flex items-center gap-2">
+                {tutorial.isPremium && (
+                  <Badge className="bg-gradient-to-r from-yellow-500 to-amber-500 text-white border-0 shadow-sm font-medium px-3 py-1">
+                    <Lock className="h-3 w-3 mr-1" />
+                    Premium
+                  </Badge>
+                )}
+                
+                <Badge className="bg-blue-600 text-white border-0 shadow-sm font-medium px-3 py-1">
+                  <Clock className="h-3 w-3 mr-1" />
+                  {tutorial.duration}
+                </Badge>
+                
+                {tutorial.isWatched ? (
+                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 font-medium px-3 py-1">
+                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                    Assistido
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 font-medium px-3 py-1">
+                    <PlayCircle className="h-3 w-3 mr-1" />
+                    Em andamento
+                  </Badge>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -358,24 +403,47 @@ const VideoLessonPage: React.FC = () => {
                     ))}
                   </div>
                   
-                  {/* Ações */}
+                  {/* Ações com tooltips */}
                   <div className="flex flex-wrap gap-3">
-                    {!isLocked && (
-                      <Button variant="outline" className="text-blue-700 border-blue-200 hover:bg-blue-50 transition-colors">
-                        <Download className="mr-2 h-4 w-4" />
-                        Baixar materiais
-                      </Button>
-                    )}
-                    
-                    <Button variant="outline" className="text-blue-700 border-blue-200 hover:bg-blue-50 transition-colors">
-                      <Share2 className="mr-2 h-4 w-4" />
-                      Compartilhar
-                    </Button>
-                    
-                    <Button variant="outline" className="text-blue-700 border-blue-200 hover:bg-blue-50 transition-colors">
-                      <Bookmark className="mr-2 h-4 w-4" />
-                      Salvar
-                    </Button>
+                    <TooltipProvider>
+                      {!isLocked && (
+                        <Tooltip delayDuration={300}>
+                          <TooltipTrigger asChild>
+                            <Button variant="outline" className="text-blue-700 border-blue-200 hover:bg-blue-50 transition-colors">
+                              <Download className="mr-2 h-4 w-4" />
+                              Baixar materiais
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-gray-800 text-white">
+                            <p>Baixe todos os materiais de apoio deste tutorial</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      
+                      <Tooltip delayDuration={300}>
+                        <TooltipTrigger asChild>
+                          <Button variant="outline" className="text-blue-700 border-blue-200 hover:bg-blue-50 transition-colors">
+                            <Share2 className="mr-2 h-4 w-4" />
+                            Compartilhar
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-gray-800 text-white">
+                          <p>Compartilhe este tutorial com seus colegas</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      
+                      <Tooltip delayDuration={300}>
+                        <TooltipTrigger asChild>
+                          <Button variant="outline" className="text-blue-700 border-blue-200 hover:bg-blue-50 transition-colors">
+                            <Bookmark className="mr-2 h-4 w-4" />
+                            Salvar
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-gray-800 text-white">
+                          <p>Salve este tutorial para assistir mais tarde</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
                 </div>
               </div>
@@ -593,53 +661,150 @@ const VideoLessonPage: React.FC = () => {
                   <BookOpen className="h-5 w-5 mr-2 text-blue-600" />
                   Tutoriais Relacionados
                 </h3>
-                <div className="space-y-3">
-                  {tutoriaisRelacionados.slice(0, 5).map((t) => (
-                    <Link key={t.id} href={`/videoaulas/${t.id}`}>
-                      <div className="group flex items-center gap-3 p-2 hover:bg-blue-50 rounded-md transition-colors cursor-pointer">
-                        {/* Thumbnail pequena */}
-                        <div className="relative w-16 h-16 flex-shrink-0 rounded-md overflow-hidden shadow-sm">
-                          <img 
-                            src={t.thumbnailUrl} 
-                            alt={t.title}
-                            className="w-full h-full object-cover"
-                          />
-                          
-                          {/* Indicador de Play hover */}
-                          <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Play className="h-4 w-4 text-white" fill="white" />
+                
+                {/* Mesma série */}
+                <div className="mb-4">
+                  <h4 className="text-sm font-medium text-gray-500 mb-3 flex items-center">
+                    <PlayCircle className="h-4 w-4 mr-1.5 text-blue-500" />
+                    Mesma série
+                  </h4>
+                  <div className="space-y-2.5">
+                    {tutoriaisRelacionados.slice(0, 2).map((t) => (
+                      <Link key={t.id} href={`/videoaulas/${t.id}`}>
+                        <div className="group flex items-center gap-3 p-2 hover:bg-blue-50 rounded-md transition-colors cursor-pointer">
+                          {/* Thumbnail pequena melhorada */}
+                          <div className="relative w-20 h-20 flex-shrink-0 rounded-md overflow-hidden shadow-sm">
+                            <img 
+                              src={t.thumbnailUrl} 
+                              alt={t.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            
+                            {/* Indicador de Play hover */}
+                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Play className="h-5 w-5 text-white" fill="white" />
+                            </div>
+                            
+                            {/* Indicadores de status */}
+                            {t.isWatched && (
+                              <div className="absolute bottom-1 right-1 bg-green-500 h-3.5 w-3.5 rounded-full border border-white flex items-center justify-center">
+                                <CheckCircle2 className="h-2 w-2 text-white" />
+                              </div>
+                            )}
+                            {t.isPremium && !t.isWatched && (
+                              <div className="absolute bottom-1 right-1 bg-yellow-500 h-3.5 w-3.5 rounded-full border border-white flex items-center justify-center">
+                                <Lock className="h-2 w-2 text-white" />
+                              </div>
+                            )}
                           </div>
                           
-                          {/* Indicadores de status */}
-                          {t.isWatched && (
-                            <div className="absolute bottom-0 right-0 bg-green-500 h-3 w-3 rounded-full border border-white"></div>
-                          )}
-                          {t.isPremium && !t.isWatched && (
-                            <div className="absolute bottom-0 right-0 bg-yellow-500 h-3 w-3 rounded-full border border-white"></div>
-                          )}
-                        </div>
-                        
-                        {/* Informações */}
-                        <div className="min-w-0 flex-1">
-                          <h4 className="text-gray-800 text-sm font-medium group-hover:text-blue-700 transition-colors truncate">
-                            {t.title}
-                          </h4>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-gray-500 text-xs flex items-center">
-                              <Clock className="h-3 w-3 mr-1 inline-block" />
-                              {t.duration}
-                            </span>
+                          {/* Informações */}
+                          <div className="min-w-0 flex-1">
+                            <h4 className="text-gray-800 text-sm font-medium group-hover:text-blue-700 transition-colors line-clamp-2">
+                              {t.title}
+                            </h4>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-gray-500 text-xs flex items-center">
+                                <Clock className="h-3 w-3 mr-1 inline-block" />
+                                {t.duration}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </Link>
-                  ))}
+                      </Link>
+                    ))}
+                  </div>
                 </div>
                 
+                {/* Recomendados para você */}
+                <div className="pt-3 border-t border-blue-100">
+                  <h4 className="text-sm font-medium text-gray-500 mb-3 flex items-center">
+                    <ThumbsUp className="h-4 w-4 mr-1.5 text-blue-500" />
+                    Recomendados para você
+                  </h4>
+                  <div className="space-y-2.5">
+                    {tutoriaisRelacionados.slice(2, 5).map((t) => (
+                      <Link key={t.id} href={`/videoaulas/${t.id}`}>
+                        <div className="group flex items-center gap-3 p-2 hover:bg-blue-50 rounded-md transition-colors cursor-pointer">
+                          {/* Thumbnail pequena */}
+                          <div className="relative w-20 h-20 flex-shrink-0 rounded-md overflow-hidden shadow-sm">
+                            <img 
+                              src={t.thumbnailUrl} 
+                              alt={t.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            
+                            {/* Indicador de Play hover */}
+                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Play className="h-5 w-5 text-white" fill="white" />
+                            </div>
+                            
+                            {/* Indicadores de status */}
+                            {t.isWatched && (
+                              <div className="absolute bottom-1 right-1 bg-green-500 h-3.5 w-3.5 rounded-full border border-white flex items-center justify-center">
+                                <CheckCircle2 className="h-2 w-2 text-white" />
+                              </div>
+                            )}
+                            {t.isPremium && !t.isWatched && (
+                              <div className="absolute bottom-1 right-1 bg-yellow-500 h-3.5 w-3.5 rounded-full border border-white flex items-center justify-center">
+                                <Lock className="h-2 w-2 text-white" />
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Informações */}
+                          <div className="min-w-0 flex-1">
+                            <h4 className="text-gray-800 text-sm font-medium group-hover:text-blue-700 transition-colors line-clamp-2">
+                              {t.title}
+                            </h4>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-gray-500 text-xs flex items-center">
+                                <Clock className="h-3 w-3 mr-1 inline-block" />
+                                {t.duration}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Navegação de tutoriais (anterior/próximo) */}
                 <div className="mt-4 pt-4 border-t border-blue-100">
+                  <div className="flex gap-3">
+                    <Button 
+                      variant="outline" 
+                      className="flex-1 text-blue-700 border-blue-200 hover:bg-blue-50 shadow-sm"
+                      onClick={() => {
+                        // Navegar para o tutorial anterior (simulado)
+                        // Na implementação real, usaria id - 1 ou encontraria o tutorial anterior baseado em ordem
+                        const prevId = Math.max(1, id - 1);
+                        navigate(`/videoaulas/${prevId}`);
+                      }}
+                    >
+                      <ChevronLeft className="mr-2 h-4 w-4" />
+                      Tutorial Anterior
+                    </Button>
+                    
+                    <Button 
+                      variant="outline" 
+                      className="flex-1 text-blue-700 border-blue-200 hover:bg-blue-50 shadow-sm"
+                      onClick={() => {
+                        // Navegar para o próximo tutorial (simulado)
+                        // Na implementação real, usaria id + 1 ou encontraria o próximo tutorial baseado em ordem
+                        const nextId = Math.min(tutoriais.length, id + 1);
+                        navigate(`/videoaulas/${nextId}`);
+                      }}
+                    >
+                      Próximo Tutorial
+                      <ChevronRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </div>
+                  
                   <Button 
                     variant="outline" 
-                    className="w-full text-blue-700 border-blue-200 hover:bg-blue-50 shadow-sm"
+                    className="w-full mt-3 text-blue-700 border-blue-200 hover:bg-blue-50 shadow-sm"
                     onClick={() => navigate("/videoaulas")}
                   >
                     Ver todos os tutoriais
