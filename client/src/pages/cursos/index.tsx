@@ -474,14 +474,19 @@ export default function CursosPage() {
   }, []);
 
   return (
-    <div className="bg-neutral-50 min-h-screen pb-12">
-      <div className="bg-gradient-to-br from-blue-800 via-blue-700 to-blue-800 text-white">
-        <div className="container mx-auto pt-8 pb-10 px-4">
+    <div className="bg-white min-h-screen pb-12">
+      {/* Header com imagem de fundo e gradiente de sobreposição */}
+      <div className="relative bg-gradient-to-r from-blue-900 to-indigo-900 text-white">
+        {/* Padrão de fundo */}
+        <div className="absolute inset-0 opacity-60 bg-blue-800"></div>
+        
+        {/* Conteúdo do header */}
+        <div className="relative container mx-auto py-16 px-4">
           <Helmet>
-            <title>Área de Cursos | DesignAuto</title>
+            <title>Videoaulas | DesignAuto</title>
           </Helmet>
           
-          <div className="max-w-5xl mx-auto">
+          <div className="max-w-6xl mx-auto">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
               <div>
                 <div className="flex items-center gap-2">
@@ -527,8 +532,8 @@ export default function CursosPage() {
         </div>
       </div>
       
-      <div className="container mx-auto px-4 -mt-6">
-        <div className="max-w-5xl mx-auto">
+      <div className="container mx-auto px-4 py-10">
+        <div className="max-w-6xl mx-auto">
           {/* Guia Introdutório para Novos Usuários */}
           {showGuide && (
             <IntroGuide onDismiss={() => setShowGuide(false)} />
@@ -537,28 +542,30 @@ export default function CursosPage() {
           {/* Estastísticas */}
           <CourseStatistics metrics={stats} />
           
-          {/* Tabs de filtro com legendas explicativas */}
-          <div className="mb-8">
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="text-lg font-semibold text-neutral-800">Filtrar cursos por:</h2>
+          {/* Tabs de filtro com design moderno */}
+          <div className="mb-12">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Explore nossos cursos</h2>
               {!showGuide && (
                 <Button 
-                  variant="ghost" 
+                  variant="outline" 
                   size="sm" 
                   className="text-blue-600 flex items-center gap-1"
                   onClick={() => setShowGuide(true)}
                 >
                   <HelpCircle className="h-4 w-4" />
-                  <span>Ajuda</span>
+                  <span>Como funciona?</span>
                 </Button>
               )}
             </div>
+            
             <Tabs 
               defaultValue="todos" 
               value={activeTab} 
               onValueChange={setActiveTab}
+              className="w-full"
             >
-              <TabsList className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1 p-1 bg-white rounded-xl border shadow-sm">
+              <TabsList className="w-full flex p-1 bg-gray-100 rounded-xl mb-8">
                 <TabsTrigger 
                   value="todos" 
                   className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:shadow-none"
