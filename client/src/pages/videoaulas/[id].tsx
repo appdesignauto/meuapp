@@ -452,13 +452,15 @@ const VideoLessonPage: React.FC = () => {
                   />
                 )}
                 
-                {/* Informações do tutorial */}
-                <div className="p-5">
-                  <div className="flex justify-between items-center mb-2">
-                    <h1 className="text-2xl font-bold text-gray-800">{tutorial.title}</h1>
+                {/* Informações do tutorial - layout responsivo */}
+                <div className="p-4 sm:p-5">
+                  {/* Versão Mobile - Layout Otimizado */}
+                  <div className="block sm:hidden">
+                    {/* Título em versão mobile */}
+                    <h1 className="text-xl font-bold text-gray-800 mb-2">{tutorial.title}</h1>
                     
-                    {/* Container para estrelas e setas de navegação */}
-                    <div className="flex items-center gap-4">
+                    {/* Avaliação com estrelas e botões de navegação em uma linha */}
+                    <div className="flex justify-between items-center mb-3">
                       {/* Avaliação com estrelas interativa */}
                       <div 
                         className="flex space-x-1" 
@@ -488,75 +490,192 @@ const VideoLessonPage: React.FC = () => {
                         )}
                       </div>
                       
-                      {/* Setas de navegação - estilo minimalista com botões quadrados, sempre mostrando anterior e próximo */}
-                      <div className="flex gap-2">
-                        {/* Botão anterior - sempre visível, desabilitado se for a primeira aula */}
+                      {/* Botões de navegação mobile */}
+                      <div className="flex gap-1.5">
+                        {/* Botão anterior */}
                         {id > 1 ? (
                           <Link href={`/videoaulas/${id - 1}`} className="inline-flex">
-                            <div className="w-10 h-10 bg-[#434756] rounded-md flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
-                              <ChevronLeft className="h-5 w-5" />
+                            <div className="w-8 h-8 bg-[#434756] rounded-md flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
+                              <ChevronLeft className="h-4 w-4" />
                             </div>
                           </Link>
                         ) : (
-                          <div className="w-10 h-10 bg-gray-300 rounded-md flex items-center justify-center text-white cursor-not-allowed">
-                            <ChevronLeft className="h-5 w-5" />
+                          <div className="w-8 h-8 bg-gray-300 rounded-md flex items-center justify-center text-white cursor-not-allowed">
+                            <ChevronLeft className="h-4 w-4" />
                           </div>
                         )}
                         
-                        {/* Botão próximo - sempre visível, desabilitado se for a última aula */}
+                        {/* Botão próximo */}
                         {id < tutoriais.length ? (
                           <Link href={`/videoaulas/${id + 1}`} className="inline-flex">
-                            <div className="w-10 h-10 bg-[#434756] rounded-md flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
-                              <ChevronRight className="h-5 w-5" />
+                            <div className="w-8 h-8 bg-[#434756] rounded-md flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
+                              <ChevronRight className="h-4 w-4" />
                             </div>
                           </Link>
                         ) : (
-                          <div className="w-10 h-10 bg-gray-300 rounded-md flex items-center justify-center text-white cursor-not-allowed">
-                            <ChevronRight className="h-5 w-5" />
+                          <div className="w-8 h-8 bg-gray-300 rounded-md flex items-center justify-center text-white cursor-not-allowed">
+                            <ChevronRight className="h-4 w-4" />
                           </div>
                         )}
                       </div>
                     </div>
-                  </div>
-                  
-                  <p className="text-gray-600 mb-5">{tutorial.description}</p>
-                  
-                  {/* Ações */}
-                  <div className="flex flex-wrap gap-3">
-                    {!isLocked && (
-                      <Button 
-                        onClick={handleComplete}
-                        variant="outline"
-                        className={isCompleted 
-                          ? "text-blue-700 border-blue-300 hover:bg-blue-50 transition-all" 
-                          : "text-blue-700 border-blue-200 hover:bg-blue-50 transition-all"}
-                      >
-                        {isCompleted ? (
-                          <div className="flex items-center">
-                            <div className="relative mr-2 flex-shrink-0">
-                              <Check className="h-4 w-4 text-blue-600" />
-                              <Check className="h-4 w-4 text-blue-600 absolute -top-0.5 -left-0.5" />
+                    
+                    <p className="text-gray-600 text-sm mb-3">{tutorial.description}</p>
+                    
+                    {/* Botões de ação na mesma linha em mobile - distribuídos igualmente */}
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {!isLocked && (
+                        <Button 
+                          onClick={handleComplete}
+                          variant="outline"
+                          size="sm"
+                          className={`text-xs px-2 py-1 h-9 ${isCompleted 
+                            ? "text-blue-700 border-blue-300 hover:bg-blue-50 transition-all" 
+                            : "text-blue-700 border-blue-200 hover:bg-blue-50 transition-all"}`}
+                        >
+                          {isCompleted ? (
+                            <div className="flex items-center">
+                              <div className="relative mr-1 flex-shrink-0">
+                                <Check className="h-3.5 w-3.5 text-blue-600" />
+                                <Check className="h-3.5 w-3.5 text-blue-600 absolute -top-0.5 -left-0.5" />
+                              </div>
+                              <span>Concluído</span>
                             </div>
-                            <span>Concluído</span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center">
-                            <Circle className="mr-2 h-4 w-4" />
-                            <span>Concluir</span>
-                          </div>
-                        )}
+                          ) : (
+                            <div className="flex items-center">
+                              <Circle className="mr-1 h-3.5 w-3.5" />
+                              <span>Concluir</span>
+                            </div>
+                          )}
+                        </Button>
+                      )}
+                      
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-xs px-2 py-1 h-9 text-blue-700 border-blue-200 hover:bg-blue-50 transition-colors"
+                      >
+                        <Share2 className="mr-1 h-3.5 w-3.5" />
+                        <span>Compartilhar</span>
                       </Button>
-                    )}
+                      
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-xs px-2 py-1 h-9 text-blue-700 border-blue-200 hover:bg-blue-50 transition-colors"
+                      >
+                        <Bookmark className="mr-1 h-3.5 w-3.5" />
+                        <span>Salvar</span>
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Versão Desktop - Layout Original */}
+                  <div className="hidden sm:block">
+                    <div className="flex justify-between items-center mb-2">
+                      <h1 className="text-2xl font-bold text-gray-800">{tutorial.title}</h1>
+                      
+                      {/* Container para estrelas e setas de navegação */}
+                      <div className="flex items-center gap-4">
+                        {/* Avaliação com estrelas interativa */}
+                        <div 
+                          className="flex space-x-1" 
+                          onMouseLeave={handleLeaveStars}
+                        >
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button 
+                              key={star} 
+                              className="text-[#434756] focus:outline-none transition-all duration-150"
+                              onClick={() => handleRate(star)}
+                              onMouseEnter={() => handleHoverStar(star)}
+                              aria-label={`Avaliação ${star} estrelas`}
+                            >
+                              <Star 
+                                className={`h-5 w-5 transform hover:scale-110 ${
+                                  (hoverRating >= star || (!hoverRating && userRating >= star)) 
+                                    ? "text-yellow-400 fill-yellow-400" 
+                                    : "text-[#434756]"
+                                }`} 
+                              />
+                            </button>
+                          ))}
+                          {hasRated && (
+                            <span className="ml-1 text-xs text-gray-500 self-center">
+                              {userRating}/5
+                            </span>
+                          )}
+                        </div>
+                        
+                        {/* Setas de navegação */}
+                        <div className="flex gap-2">
+                          {/* Botão anterior */}
+                          {id > 1 ? (
+                            <Link href={`/videoaulas/${id - 1}`} className="inline-flex">
+                              <div className="w-10 h-10 bg-[#434756] rounded-md flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
+                                <ChevronLeft className="h-5 w-5" />
+                              </div>
+                            </Link>
+                          ) : (
+                            <div className="w-10 h-10 bg-gray-300 rounded-md flex items-center justify-center text-white cursor-not-allowed">
+                              <ChevronLeft className="h-5 w-5" />
+                            </div>
+                          )}
+                          
+                          {/* Botão próximo */}
+                          {id < tutoriais.length ? (
+                            <Link href={`/videoaulas/${id + 1}`} className="inline-flex">
+                              <div className="w-10 h-10 bg-[#434756] rounded-md flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
+                                <ChevronRight className="h-5 w-5" />
+                              </div>
+                            </Link>
+                          ) : (
+                            <div className="w-10 h-10 bg-gray-300 rounded-md flex items-center justify-center text-white cursor-not-allowed">
+                              <ChevronRight className="h-5 w-5" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                     
-                    <Button variant="outline" className="text-blue-700 border-blue-200 hover:bg-blue-50 transition-colors">
-                      <Share2 className="mr-2 h-4 w-4" />
-                      Compartilhar
-                    </Button>
+                    <p className="text-gray-600 mb-5">{tutorial.description}</p>
                     
-                    <Button variant="outline" className="text-blue-700 border-blue-200 hover:bg-blue-50 transition-colors">
-                      <Bookmark className="mr-2 h-4 w-4" />
-                      Salvar
-                    </Button>
+                    {/* Ações */}
+                    <div className="flex flex-wrap gap-3">
+                      {!isLocked && (
+                        <Button 
+                          onClick={handleComplete}
+                          variant="outline"
+                          className={isCompleted 
+                            ? "text-blue-700 border-blue-300 hover:bg-blue-50 transition-all" 
+                            : "text-blue-700 border-blue-200 hover:bg-blue-50 transition-all"}
+                        >
+                          {isCompleted ? (
+                            <div className="flex items-center">
+                              <div className="relative mr-2 flex-shrink-0">
+                                <Check className="h-4 w-4 text-blue-600" />
+                                <Check className="h-4 w-4 text-blue-600 absolute -top-0.5 -left-0.5" />
+                              </div>
+                              <span>Concluído</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center">
+                              <Circle className="mr-2 h-4 w-4" />
+                              <span>Concluir</span>
+                            </div>
+                          )}
+                        </Button>
+                      )}
+                      
+                      <Button variant="outline" className="text-blue-700 border-blue-200 hover:bg-blue-50 transition-colors">
+                        <Share2 className="mr-2 h-4 w-4" />
+                        Compartilhar
+                      </Button>
+                      
+                      <Button variant="outline" className="text-blue-700 border-blue-200 hover:bg-blue-50 transition-colors">
+                        <Bookmark className="mr-2 h-4 w-4" />
+                        Salvar
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
