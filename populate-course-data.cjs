@@ -3,11 +3,50 @@
  * 
  * Este script insere os módulos e aulas de exemplo no banco de dados
  * para que possam ser visualizados e editados no painel administrativo
+ * 
+ * Versão CJS para compatibilidade
  */
 
-import { db } from './server/db.ts';
-import { courseModules, courseLessons } from './shared/schema.ts';
-import { sql, desc, eq } from 'drizzle-orm';
+const { Pool } = require('@neondatabase/serverless');
+const { drizzle } = require('drizzle-orm/neon-serverless');
+const { eq } = require('drizzle-orm');
+const ws = require('ws');
+
+// Configure o objeto neonConfig para usar WebSockets
+const { neonConfig } = require('@neondatabase/serverless');
+neonConfig.webSocketConstructor = ws;
+
+// Obtém a URL do banco de dados da variável de ambiente
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const db = drizzle(pool);
+
+// Esquema simplificado
+const { courseModules, courseLessons } = {
+  courseModules: {
+    id: 'id',
+    title: 'title',
+    description: 'description',
+    thumbnailUrl: 'thumbnailUrl',
+    level: 'level',
+    order: 'order',
+    isActive: 'isActive',
+    isPremium: 'isPremium',
+    createdBy: 'createdBy'
+  },
+  courseLessons: {
+    id: 'id',
+    moduleId: 'moduleId',
+    title: 'title',
+    description: 'description',
+    videoUrl: 'videoUrl',
+    videoProvider: 'videoProvider',
+    duration: 'duration',
+    thumbnailUrl: 'thumbnailUrl',
+    order: 'order',
+    isPremium: 'isPremium',
+    createdBy: 'createdBy'
+  }
+};
 
 // Adaptado dos dados de TutorialData.ts para o esquema do banco
 const modulos = [
@@ -173,7 +212,7 @@ async function populateCourseData() {
     console.log('Iniciando população de dados de curso...');
     
     // Verificar se já existem módulos no banco
-    const existingModules = await db.select().from(courseModules);
+    const existingModules = await db.select().from({ courseModules: 'courseModules' });
     console.log(`Encontrados ${existingModules.length} módulos existentes`);
     
     // Se já tiver dados suficientes, não faz nada
@@ -184,16 +223,16 @@ async function populateCourseData() {
     
     // Deletar todas as aulas existentes
     console.log('Limpando aulas existentes...');
-    await db.delete(courseLessons);
+    await db.delete({ courseLessons: 'courseLessons' });
     
     // Deletar todos os módulos existentes
     console.log('Limpando módulos existentes...');
-    await db.delete(courseModules);
+    await db.delete({ courseModules: 'courseModules' });
     
     // Inserir os módulos
     console.log('Inserindo módulos...');
     for (const modulo of modulos) {
-      await db.insert(courseModules).values({
+      await db.insert({ courseModules: 'courseModules' }).values({
         ...modulo
       });
       console.log(`Módulo "${modulo.title}" inserido`);
@@ -202,7 +241,7 @@ async function populateCourseData() {
     // Inserir as aulas
     console.log('Inserindo aulas...');
     for (const aula of aulas) {
-      await db.insert(courseLessons).values({
+      await db.insert({ courseLessons: 'courseLessons' }).values({
         ...aula
       });
       console.log(`Aula "${aula.title}" inserida`);
