@@ -1,8 +1,9 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 // Helmet comentado temporariamente para evitar erros
 // import { Helmet } from 'react-helmet-async';
 import { Link } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
+import { useQuery } from '@tanstack/react-query';
 import { 
   Search, 
   Play, 
@@ -32,16 +33,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import TutorialCard from '@/components/videoaulas/TutorialCard';
 import TutorialCategory from '@/components/videoaulas/TutorialCategory';
 import { 
-  tutoriais,
-  tutoriaisPorCategoria,
-  tutoriaisRecentes,
-  tutoriaisPopulares,
-  tutorialDestaque,
-  iniciantes,
-  intermediarios,
-  avancados,
-  Tutorial,
-  TutorialCategoria
+  Tutorial 
 } from '@/components/videoaulas/TutorialData';
 
 export default function VideoaulasPage() {
@@ -51,6 +43,62 @@ export default function VideoaulasPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
   
+  // Buscar módulos e lições do banco de dados
+  const { data: moduleData, isLoading: isLoadingModules } = useQuery({
+    queryKey: ['/api/courses/modules'],
+    retry: 1,
+  });
+  
+  const { data: lessonsData, isLoading: isLoadingLessons } = useQuery({
+    queryKey: ['/api/courses/lessons'],
+    retry: 1,
+  });
+  
+  // Buscar dados de site settings para informações do hero
+  const { data: siteSettings, isLoading: isLoadingSiteSettings } = useQuery({
+    queryKey: ['/api/site-settings'],
+    retry: 1,
+  });
+  
+  // Transformar dados do banco para o formato esperado pelos componentes
+  const transformarLicoesParaTutoriais = (modules = [], lessons = []) => {
+    if (!modules.length || !lessons.length) return [];
+    
+    return lessons.map(lesson => ({
+      id: lesson.id,
+      title: lesson.title,
+      description: lesson.description,
+      thumbnailUrl: lesson.thumbnailUrl,
+      videoUrl: lesson.videoUrl,
+      videoProvider: lesson.videoProvider,
+      duration: formatarDuracao(lesson.duration),
+      level: modules.find(m => m.id === lesson.moduleId)?.level || 'iniciante',
+      isPremium: lesson.isPremium,
+      isWatched: false, // Será implementado com histórico do usuário no futuro
+      views: 0, // Será implementado no futuro
+      moduleId: lesson.moduleId,
+      tags: [] // Será implementado no futuro
+    }));
+  };
+  
+  // Formatar duração de segundos para string "MM:SS"
+  const formatarDuracao = (segundos) => {
+    if (!segundos) return "00:00";
+    const minutos = Math.floor(segundos / 60);
+    const segsRestantes = segundos % 60;
+    return `${minutos}:${segsRestantes.toString().padStart(2, '0')}`;
+  };
+  
+  // Preparar dados
+  const tutoriais = transformarLicoesParaTutoriais(moduleData, lessonsData);
+  const tutoriaisPopulares = tutoriais.slice(0, 8);
+  const tutorialDestaque = tutoriais[0] || { id: 1, title: 'Carregando...' };
+  
+  // Agrupar por níveis
+  const iniciantes = tutoriais.filter(t => t.level === 'iniciante');
+  const intermediarios = tutoriais.filter(t => t.level === 'intermediario');
+  const avancados = tutoriais.filter(t => t.level === 'avancado');
+  
   // Função para verificar se o conteúdo premium deve ser bloqueado
   const isPremiumLocked = (isPremium: boolean) => {
     if (!isPremium) return false;
@@ -58,11 +106,11 @@ export default function VideoaulasPage() {
   };
   
   // Filtrar tutoriais com base na busca
-  const filteredTutoriais = searchTerm 
+  const filteredTutoriais = searchTerm && tutoriais
     ? tutoriais.filter(tutorial => 
         tutorial.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         tutorial.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        tutorial.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+        (tutorial.tags && tutorial.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())))
       )
     : [];
     
