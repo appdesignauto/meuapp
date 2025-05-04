@@ -12,19 +12,12 @@ type UseCarouselParameters = Parameters<typeof useEmblaCarousel>
 type CarouselOptions = UseCarouselParameters[0]
 type CarouselPlugin = UseCarouselParameters[1]
 
-type SlidesPerViewType = number | { 
-  base: number;
-  sm?: number;
-  md?: number;
-  lg?: number; 
-}
-
 type NetflixCarouselProps = {
   opts?: CarouselOptions
   plugins?: CarouselPlugin
   orientation?: "horizontal" | "vertical"
   setApi?: (api: CarouselApi) => void
-  slidesPerView?: SlidesPerViewType
+  slidesPerView?: number
   spacing?: number
   gradient?: boolean
 }
@@ -36,7 +29,7 @@ type NetflixCarouselContextProps = {
   scrollNext: () => void
   canScrollPrev: boolean
   canScrollNext: boolean
-  slidesPerView: SlidesPerViewType
+  slidesPerView: number
   spacing: number
   gradient: boolean
 } & NetflixCarouselProps
@@ -229,28 +222,7 @@ export const CarouselItem = React.forwardRef<
   const { orientation, slidesPerView } = useNetflixCarousel()
   
   // Calcular a largura baseada em slidesPerView
-  let slidesNum = 3;
-  
-  if (typeof slidesPerView === 'number') {
-    slidesNum = slidesPerView;
-  } else if (typeof slidesPerView === 'object' && slidesPerView.base) {
-    // Para dispositivos móveis, usamos base
-    slidesNum = slidesPerView.base;
-    
-    // Verificamos o tamanho da tela para usar breakpoints
-    if (typeof window !== 'undefined') {
-      const width = window.innerWidth;
-      if (width >= 1024 && slidesPerView.lg) {
-        slidesNum = slidesPerView.lg;
-      } else if (width >= 768 && slidesPerView.md) {
-        slidesNum = slidesPerView.md;
-      } else if (width >= 640 && slidesPerView.sm) {
-        slidesNum = slidesPerView.sm;
-      }
-    }
-  }
-  
-  const flexBasis = `${100 / Number(slidesNum)}%`
+  const flexBasis = `${100 / slidesPerView}%`
   const itemStyle = {
     flexBasis,
     flexGrow: 0,
