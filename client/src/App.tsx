@@ -26,6 +26,7 @@ import AdminDashboard from "@/pages/admin/Dashboard";
 import LogoUploadPage from "@/pages/admin/LogoUploadPage";
 import StorageTestPage from "@/pages/admin/StorageTestPage";
 import AddArtMultiFormatPage from "@/pages/admin/AddArtMultiFormat";
+import GerenciarCursosPage from "@/pages/admin/GerenciarCursos";
 import AuthPage from "@/pages/auth-page";
 import NotFound from "@/pages/not-found";
 import AvatarTestPage from "@/pages/AvatarTestPage";
@@ -202,6 +203,11 @@ function AppRoutes() {
         path="/admin/add-art-multi" 
         component={AddArtMultiFormatPage}
         roles={['admin', 'designer_adm']} 
+      />
+      <ProtectedRoute 
+        path="/admin/gerenciar-cursos" 
+        component={GerenciarCursosPage}
+        roles={['admin']} 
       />
       <ProtectedRoute 
         path="/admin/:page" 

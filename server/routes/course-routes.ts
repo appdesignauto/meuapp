@@ -1,306 +1,311 @@
 import { Router } from 'express';
 import { db } from '../db';
-import { eq } from 'drizzle-orm';
-import { z } from 'zod';
-import { courseModules, courseLessons } from '@shared/schema';
+import { courseModules, courseLessons, insertCourseModuleSchema, insertCourseLessonSchema } from '@shared/schema';
+import { eq, asc, desc } from 'drizzle-orm';
+import { ZodError } from 'zod';
+import { fromZodError } from 'zod-validation-error';
 
 const router = Router();
 
-// Schema para validação de módulos
-const moduleSchema = z.object({
-  title: z.string().min(3, 'O título deve ter pelo menos 3 caracteres'),
-  description: z.string().min(10, 'A descrição deve ter pelo menos 10 caracteres'),
-  thumbnailUrl: z.string().url('URL de miniatura inválida'),
-  level: z.enum(['iniciante', 'intermediario', 'avancado']),
-  order: z.number().int().positive(),
-  isActive: z.boolean(),
-  isPremium: z.boolean()
-});
-
-// Schema para validação de aulas
-const lessonSchema = z.object({
-  moduleId: z.number().int().positive(),
-  title: z.string().min(3, 'O título deve ter pelo menos 3 caracteres'),
-  description: z.string().min(10, 'A descrição deve ter pelo menos 10 caracteres'),
-  videoUrl: z.string().url('URL de vídeo inválida'),
-  videoProvider: z.enum(['youtube', 'vimeo', 'vturb', 'panda', 'direct']),
-  duration: z.number().int().positive().nullable().optional(),
-  thumbnailUrl: z.string().url('URL de miniatura inválida').nullable().optional(),
-  order: z.number().int().positive(),
-  isPremium: z.boolean(),
-  additionalMaterialsUrl: z.string().url('URL de materiais inválida').nullable().optional()
-});
-
-// ===== Rotas de Módulos =====
-
-// Listar todos os módulos
-router.get('/course-modules', async (req, res) => {
+// Buscar todos os módulos
+router.get('/modules', async (req, res) => {
   try {
-    const modules = await db.select().from(courseModules).orderBy(courseModules.order);
+    const modules = await db.query.courseModules.findMany({
+      orderBy: [asc(courseModules.order)],
+      with: {
+        lessons: {
+          orderBy: [asc(courseLessons.order)]
+        }
+      }
+    });
     
-    res.json(modules);
-  } catch (error: any) {
+    return res.json(modules);
+  } catch (error) {
     console.error('Erro ao buscar módulos:', error);
-    res.status(500).json({ message: 'Erro ao buscar módulos', error: error.message });
+    return res.status(500).json({ message: 'Erro ao buscar módulos', error: String(error) });
   }
 });
 
-// Buscar módulo por ID
-router.get('/course-modules/:id', async (req, res) => {
+// Buscar um módulo específico
+router.get('/modules/:id', async (req, res) => {
   try {
-    const { id } = req.params;
-    const module = await db.select().from(courseModules).where(eq(courseModules.id, parseInt(id))).limit(1);
+    const moduleId = parseInt(req.params.id);
     
-    if (module.length === 0) {
+    if (isNaN(moduleId)) {
+      return res.status(400).json({ message: 'ID inválido' });
+    }
+    
+    const moduleData = await db.query.courseModules.findFirst({
+      where: eq(courseModules.id, moduleId),
+      with: {
+        lessons: {
+          orderBy: [asc(courseLessons.order)]
+        }
+      }
+    });
+    
+    if (!moduleData) {
       return res.status(404).json({ message: 'Módulo não encontrado' });
     }
     
-    res.json(module[0]);
-  } catch (error: any) {
+    return res.json(moduleData);
+  } catch (error) {
     console.error('Erro ao buscar módulo:', error);
-    res.status(500).json({ message: 'Erro ao buscar módulo', error: error.message });
+    return res.status(500).json({ message: 'Erro ao buscar módulo', error: String(error) });
   }
 });
 
-// Criar novo módulo
-router.post('/course-modules', async (req, res) => {
+// Criar um novo módulo
+router.post('/modules', async (req, res) => {
   try {
-    const validation = moduleSchema.safeParse(req.body);
+    const moduleData = insertCourseModuleSchema.parse({
+      ...req.body,
+      createdBy: req.user?.id
+    });
     
-    if (!validation.success) {
-      return res.status(400).json({ 
-        message: 'Dados inválidos', 
-        errors: validation.error.errors 
-      });
+    const [newModule] = await db.insert(courseModules).values(moduleData).returning();
+    
+    return res.status(201).json(newModule);
+  } catch (error) {
+    if (error instanceof ZodError) {
+      const validationError = fromZodError(error);
+      return res.status(400).json({ message: 'Dados inválidos', errors: validationError.message });
     }
     
-    // Adiciona ID do usuário que criou o módulo
-    const userId = req.user?.id || 1; // Fallback para usuário 1 se não estiver logado
-    
-    const result = await db.insert(courseModules).values({
-      ...validation.data,
-      createdBy: userId
-    }).returning();
-    
-    res.status(201).json(result[0]);
-  } catch (error: any) {
     console.error('Erro ao criar módulo:', error);
-    res.status(500).json({ message: 'Erro ao criar módulo', error: error.message });
+    return res.status(500).json({ message: 'Erro ao criar módulo', error: String(error) });
   }
 });
 
-// Atualizar módulo existente
-router.put('/course-modules/:id', async (req, res) => {
+// Atualizar um módulo
+router.put('/modules/:id', async (req, res) => {
   try {
-    const { id } = req.params;
-    const validation = moduleSchema.safeParse(req.body);
+    const moduleId = parseInt(req.params.id);
     
-    if (!validation.success) {
-      return res.status(400).json({ 
-        message: 'Dados inválidos', 
-        errors: validation.error.errors 
-      });
+    if (isNaN(moduleId)) {
+      return res.status(400).json({ message: 'ID inválido' });
     }
     
-    const moduleId = parseInt(id);
-    const existingModule = await db.select().from(courseModules).where(eq(courseModules.id, moduleId)).limit(1);
+    const existingModule = await db.query.courseModules.findFirst({
+      where: eq(courseModules.id, moduleId)
+    });
     
-    if (existingModule.length === 0) {
+    if (!existingModule) {
       return res.status(404).json({ message: 'Módulo não encontrado' });
     }
     
-    const result = await db.update(courseModules)
-      .set({
-        ...validation.data,
-        updatedAt: new Date()
-      })
+    const moduleData = insertCourseModuleSchema.partial().parse(req.body);
+    
+    const [updatedModule] = await db
+      .update(courseModules)
+      .set(moduleData)
       .where(eq(courseModules.id, moduleId))
       .returning();
     
-    res.json(result[0]);
-  } catch (error: any) {
+    return res.json(updatedModule);
+  } catch (error) {
+    if (error instanceof ZodError) {
+      const validationError = fromZodError(error);
+      return res.status(400).json({ message: 'Dados inválidos', errors: validationError.message });
+    }
+    
     console.error('Erro ao atualizar módulo:', error);
-    res.status(500).json({ message: 'Erro ao atualizar módulo', error: error.message });
+    return res.status(500).json({ message: 'Erro ao atualizar módulo', error: String(error) });
   }
 });
 
-// Excluir módulo
-router.delete('/course-modules/:id', async (req, res) => {
+// Excluir um módulo
+router.delete('/modules/:id', async (req, res) => {
   try {
-    const { id } = req.params;
-    const moduleId = parseInt(id);
+    const moduleId = parseInt(req.params.id);
+    
+    if (isNaN(moduleId)) {
+      return res.status(400).json({ message: 'ID inválido' });
+    }
     
     // Verificar se o módulo existe
-    const existingModule = await db.select().from(courseModules).where(eq(courseModules.id, moduleId)).limit(1);
+    const existingModule = await db.query.courseModules.findFirst({
+      where: eq(courseModules.id, moduleId)
+    });
     
-    if (existingModule.length === 0) {
+    if (!existingModule) {
       return res.status(404).json({ message: 'Módulo não encontrado' });
     }
     
-    // Primeiro excluir todas as aulas do módulo
-    await db.delete(courseLessons).where(eq(courseLessons.moduleId, moduleId));
+    // Verificar se existem lições associadas a este módulo
+    const relatedLessons = await db.query.courseLessons.findMany({
+      where: eq(courseLessons.moduleId, moduleId)
+    });
     
-    // Depois excluir o módulo
+    if (relatedLessons.length > 0) {
+      return res.status(400).json({ 
+        message: 'Não é possível excluir este módulo pois existem lições associadas a ele. Exclua as lições primeiro.'
+      });
+    }
+    
+    // Excluir o módulo
     await db.delete(courseModules).where(eq(courseModules.id, moduleId));
     
-    res.json({ message: 'Módulo e aulas relacionadas excluídos com sucesso' });
-  } catch (error: any) {
+    return res.status(200).json({ message: 'Módulo excluído com sucesso' });
+  } catch (error) {
     console.error('Erro ao excluir módulo:', error);
-    res.status(500).json({ message: 'Erro ao excluir módulo', error: error.message });
+    return res.status(500).json({ message: 'Erro ao excluir módulo', error: String(error) });
   }
 });
 
-// ===== Rotas de Aulas =====
+// ENDPOINTS PARA LIÇÕES
 
-// Listar todas as aulas
-router.get('/course-lessons', async (req, res) => {
+// Buscar todas as lições
+router.get('/lessons', async (req, res) => {
   try {
-    const lessons = await db.select().from(courseLessons).orderBy(courseLessons.moduleId, courseLessons.order);
+    const moduleId = req.query.moduleId ? parseInt(req.query.moduleId as string) : undefined;
     
-    res.json(lessons);
-  } catch (error: any) {
-    console.error('Erro ao buscar aulas:', error);
-    res.status(500).json({ message: 'Erro ao buscar aulas', error: error.message });
-  }
-});
-
-// Listar aulas por módulo
-router.get('/course-modules/:moduleId/lessons', async (req, res) => {
-  try {
-    const { moduleId } = req.params;
-    const lessons = await db.select()
-      .from(courseLessons)
-      .where(eq(courseLessons.moduleId, parseInt(moduleId)))
-      .orderBy(courseLessons.order);
+    let query = db.select().from(courseLessons).orderBy(asc(courseLessons.order));
     
-    res.json(lessons);
-  } catch (error: any) {
-    console.error('Erro ao buscar aulas do módulo:', error);
-    res.status(500).json({ message: 'Erro ao buscar aulas do módulo', error: error.message });
-  }
-});
-
-// Buscar aula por ID
-router.get('/course-lessons/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const lesson = await db.select().from(courseLessons).where(eq(courseLessons.id, parseInt(id))).limit(1);
-    
-    if (lesson.length === 0) {
-      return res.status(404).json({ message: 'Aula não encontrada' });
+    if (moduleId && !isNaN(moduleId)) {
+      query = query.where(eq(courseLessons.moduleId, moduleId));
     }
     
-    res.json(lesson[0]);
-  } catch (error: any) {
-    console.error('Erro ao buscar aula:', error);
-    res.status(500).json({ message: 'Erro ao buscar aula', error: error.message });
+    const lessons = await query;
+    
+    return res.json(lessons);
+  } catch (error) {
+    console.error('Erro ao buscar lições:', error);
+    return res.status(500).json({ message: 'Erro ao buscar lições', error: String(error) });
   }
 });
 
-// Criar nova aula
-router.post('/course-lessons', async (req, res) => {
+// Buscar uma lição específica
+router.get('/lessons/:id', async (req, res) => {
   try {
-    const validation = lessonSchema.safeParse(req.body);
+    const lessonId = parseInt(req.params.id);
     
-    if (!validation.success) {
-      return res.status(400).json({ 
-        message: 'Dados inválidos', 
-        errors: validation.error.errors 
-      });
+    if (isNaN(lessonId)) {
+      return res.status(400).json({ message: 'ID inválido' });
     }
+    
+    const lesson = await db.query.courseLessons.findFirst({
+      where: eq(courseLessons.id, lessonId),
+      with: {
+        module: true
+      }
+    });
+    
+    if (!lesson) {
+      return res.status(404).json({ message: 'Lição não encontrada' });
+    }
+    
+    return res.json(lesson);
+  } catch (error) {
+    console.error('Erro ao buscar lição:', error);
+    return res.status(500).json({ message: 'Erro ao buscar lição', error: String(error) });
+  }
+});
+
+// Criar uma nova lição
+router.post('/lessons', async (req, res) => {
+  try {
+    const lessonData = insertCourseLessonSchema.parse({
+      ...req.body,
+      createdBy: req.user?.id
+    });
     
     // Verificar se o módulo existe
-    const moduleExists = await db.select({ id: courseModules.id })
-      .from(courseModules)
-      .where(eq(courseModules.id, validation.data.moduleId))
-      .limit(1);
+    const moduleExists = await db.query.courseModules.findFirst({
+      where: eq(courseModules.id, lessonData.moduleId)
+    });
     
-    if (moduleExists.length === 0) {
+    if (!moduleExists) {
       return res.status(400).json({ message: 'Módulo não encontrado' });
     }
     
-    // Adiciona ID do usuário que criou a aula
-    const userId = req.user?.id || 1; // Fallback para usuário 1 se não estiver logado
+    const [newLesson] = await db.insert(courseLessons).values(lessonData).returning();
     
-    const result = await db.insert(courseLessons).values({
-      ...validation.data,
-      createdBy: userId
-    }).returning();
+    return res.status(201).json(newLesson);
+  } catch (error) {
+    if (error instanceof ZodError) {
+      const validationError = fromZodError(error);
+      return res.status(400).json({ message: 'Dados inválidos', errors: validationError.message });
+    }
     
-    res.status(201).json(result[0]);
-  } catch (error: any) {
-    console.error('Erro ao criar aula:', error);
-    res.status(500).json({ message: 'Erro ao criar aula', error: error.message });
+    console.error('Erro ao criar lição:', error);
+    return res.status(500).json({ message: 'Erro ao criar lição', error: String(error) });
   }
 });
 
-// Atualizar aula existente
-router.put('/course-lessons/:id', async (req, res) => {
+// Atualizar uma lição
+router.put('/lessons/:id', async (req, res) => {
   try {
-    const { id } = req.params;
-    const validation = lessonSchema.safeParse(req.body);
+    const lessonId = parseInt(req.params.id);
     
-    if (!validation.success) {
-      return res.status(400).json({ 
-        message: 'Dados inválidos', 
-        errors: validation.error.errors 
+    if (isNaN(lessonId)) {
+      return res.status(400).json({ message: 'ID inválido' });
+    }
+    
+    const existingLesson = await db.query.courseLessons.findFirst({
+      where: eq(courseLessons.id, lessonId)
+    });
+    
+    if (!existingLesson) {
+      return res.status(404).json({ message: 'Lição não encontrada' });
+    }
+    
+    const lessonData = insertCourseLessonSchema.partial().parse(req.body);
+    
+    // Se o moduleId foi fornecido, verificar se o módulo existe
+    if (lessonData.moduleId !== undefined) {
+      const moduleExists = await db.query.courseModules.findFirst({
+        where: eq(courseModules.id, lessonData.moduleId)
       });
+      
+      if (!moduleExists) {
+        return res.status(400).json({ message: 'Módulo não encontrado' });
+      }
     }
     
-    const lessonId = parseInt(id);
-    const existingLesson = await db.select().from(courseLessons).where(eq(courseLessons.id, lessonId)).limit(1);
-    
-    if (existingLesson.length === 0) {
-      return res.status(404).json({ message: 'Aula não encontrada' });
-    }
-    
-    // Verificar se o módulo existe
-    const moduleExists = await db.select({ id: courseModules.id })
-      .from(courseModules)
-      .where(eq(courseModules.id, validation.data.moduleId))
-      .limit(1);
-    
-    if (moduleExists.length === 0) {
-      return res.status(400).json({ message: 'Módulo não encontrado' });
-    }
-    
-    const result = await db.update(courseLessons)
-      .set({
-        ...validation.data,
-        updatedAt: new Date()
-      })
+    const [updatedLesson] = await db
+      .update(courseLessons)
+      .set(lessonData)
       .where(eq(courseLessons.id, lessonId))
       .returning();
     
-    res.json(result[0]);
-  } catch (error: any) {
-    console.error('Erro ao atualizar aula:', error);
-    res.status(500).json({ message: 'Erro ao atualizar aula', error: error.message });
+    return res.json(updatedLesson);
+  } catch (error) {
+    if (error instanceof ZodError) {
+      const validationError = fromZodError(error);
+      return res.status(400).json({ message: 'Dados inválidos', errors: validationError.message });
+    }
+    
+    console.error('Erro ao atualizar lição:', error);
+    return res.status(500).json({ message: 'Erro ao atualizar lição', error: String(error) });
   }
 });
 
-// Excluir aula
-router.delete('/course-lessons/:id', async (req, res) => {
+// Excluir uma lição
+router.delete('/lessons/:id', async (req, res) => {
   try {
-    const { id } = req.params;
-    const lessonId = parseInt(id);
+    const lessonId = parseInt(req.params.id);
     
-    // Verificar se a aula existe
-    const existingLesson = await db.select().from(courseLessons).where(eq(courseLessons.id, lessonId)).limit(1);
-    
-    if (existingLesson.length === 0) {
-      return res.status(404).json({ message: 'Aula não encontrada' });
+    if (isNaN(lessonId)) {
+      return res.status(400).json({ message: 'ID inválido' });
     }
     
-    // TODO: Quando houver tabelas de progresso e avaliações, excluir registros relacionados aqui
+    // Verificar se a lição existe
+    const existingLesson = await db.query.courseLessons.findFirst({
+      where: eq(courseLessons.id, lessonId)
+    });
     
-    // Excluir a aula
+    if (!existingLesson) {
+      return res.status(404).json({ message: 'Lição não encontrada' });
+    }
+    
+    // Excluir a lição
     await db.delete(courseLessons).where(eq(courseLessons.id, lessonId));
     
-    res.json({ message: 'Aula excluída com sucesso' });
-  } catch (error: any) {
-    console.error('Erro ao excluir aula:', error);
-    res.status(500).json({ message: 'Erro ao excluir aula', error: error.message });
+    return res.status(200).json({ message: 'Lição excluída com sucesso' });
+  } catch (error) {
+    console.error('Erro ao excluir lição:', error);
+    return res.status(500).json({ message: 'Erro ao excluir lição', error: String(error) });
   }
 });
 
