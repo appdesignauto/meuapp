@@ -384,7 +384,7 @@ export default function VideoaulasPage() {
                         {categoria.modules.map((tutorial, moduleIdx) => (
                           <CarouselItem key={tutorial.id} className="pl-3 sm:pl-4 basis-3/4 sm:basis-2/5 md:basis-1/3 lg:basis-1/5 xl:basis-[19.5%]">
                             <Link href={`/videoaulas/${tutorial.id}`} className="block h-full">
-                              <div className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 hover:shadow-lg hover:border-blue-300 transition-all group">
+                              <div className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 hover:shadow-lg hover:border-blue-300 transition-all group h-full">
                                 <div className="relative">
                                   {/* Numeração de módulo estilo Shark Tank */}
                                   <div className="absolute bottom-0 left-0 right-0 p-3 flex justify-between items-end z-10">
