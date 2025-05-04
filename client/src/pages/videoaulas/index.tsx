@@ -270,14 +270,14 @@ export default function VideoaulasPage() {
                       align: "start",
                       loop: false,
                       skipSnaps: false,
-                      containScroll: "trimSnaps",
+                      containScroll: "keepSnaps",
                       dragFree: true
                     }}
-                    className="w-full"
+                    className="w-full overflow-visible"
                   >
                     <CarouselContent className="-ml-3 sm:-ml-4">
                       {tutoriaisPopulares.slice(0, 8).map((tutorial, index) => (
-                        <CarouselItem key={tutorial.id} className="pl-3 sm:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
+                        <CarouselItem key={tutorial.id} className="pl-3 sm:pl-4 basis-3/4 sm:basis-2/5 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
                           <Link href={`/videoaulas/${tutorial.id}`} className="block h-full">
                             <div className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 hover:shadow-lg hover:border-blue-300 transition-all group">
                               <div className="relative">
@@ -327,10 +327,7 @@ export default function VideoaulasPage() {
                         </CarouselItem>
                       ))}
                     </CarouselContent>
-                    <div className="flex justify-end mt-4">
-                      <CarouselPrevious className="relative mr-2" />
-                      <CarouselNext className="relative" />
-                    </div>
+                    {/* Removemos as setas de navegação */}
                   </Carousel>
                 </div>
               
@@ -352,14 +349,14 @@ export default function VideoaulasPage() {
                         align: "start",
                         loop: false,
                         skipSnaps: false,
-                        containScroll: "trimSnaps",
+                        containScroll: "keepSnaps",
                         dragFree: true
                       }}
-                      className="w-full"
+                      className="w-full overflow-visible"
                     >
                       <CarouselContent className="-ml-3 sm:-ml-4">
                         {categoria.modules.map((tutorial, moduleIdx) => (
-                          <CarouselItem key={tutorial.id} className="pl-3 sm:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
+                          <CarouselItem key={tutorial.id} className="pl-3 sm:pl-4 basis-3/4 sm:basis-2/5 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
                             <Link href={`/videoaulas/${tutorial.id}`} className="block h-full">
                               <div className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 hover:shadow-lg hover:border-blue-300 transition-all group">
                                 <div className="relative">
@@ -417,10 +414,7 @@ export default function VideoaulasPage() {
                           </CarouselItem>
                         ))}
                       </CarouselContent>
-                      <div className="flex justify-end mt-4">
-                        <CarouselPrevious className="relative mr-2" />
-                        <CarouselNext className="relative" />
-                      </div>
+                      {/* Removemos as setas de navegação */}
                     </Carousel>
                   </div>
                 ))}
