@@ -9,7 +9,8 @@ import {
   Settings,
   LogOut,
   CreditCard,
-  Infinity 
+  Infinity,
+  PlayCircle
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/use-auth';
@@ -20,7 +21,7 @@ import { UserRole } from '@/types';
 interface MobileMenuProps {
   isOpen: boolean;
   onClose: () => void;
-  navLinks: { name: string; path: string }[];
+  navLinks: { name: string; path: string; icon?: React.ReactNode }[];
   userRole?: string;
 }
 

@@ -39,6 +39,7 @@ import {
   Users,
   HelpCircle,
   Link as LinkIcon,
+  PlayCircle,
 } from 'lucide-react';
 import MobileMenu from './MobileMenu';
 import { useQuery } from '@tanstack/react-query';
@@ -199,7 +200,7 @@ const Header = () => {
     { name: 'Categorias', path: '/categories' },
     { name: 'Designers', path: '/designers' },
     { name: 'Formatos', path: '/formats' },
-    { name: 'Tutoriais', path: '/tutorials' },
+    { name: 'Videoaulas', path: '/videoaulas', icon: <PlayCircle className="h-3.5 w-3.5 mr-1.5" /> },
     { name: 'Suporte', path: '/support' },
   ];
 
@@ -260,8 +261,9 @@ const Header = () => {
                 href={link.path}
                 className={`text-neutral-600 hover:text-blue-600 font-medium text-[13px] px-3 py-2 rounded-md transition-all duration-200 hover:bg-blue-50 ${
                   location === link.path ? 'text-blue-600 bg-blue-50/80' : ''
-                }`}
+                } ${link.icon ? 'flex items-center' : ''}`}
               >
+                {link.icon}
                 {link.name}
               </Link>
             ))}
