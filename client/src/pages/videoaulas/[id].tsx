@@ -685,8 +685,14 @@ const VideoLessonPage: React.FC = () => {
               
               {/* Abas de conteúdo adicional - estilo clean */}
               <div className="mt-4 sm:mt-6">
-                <Tabs defaultValue="comentarios" className="w-full">
+                <Tabs defaultValue="aulas" className="w-full">
                   <TabsList className="bg-white border border-blue-100 rounded-md shadow-sm w-full mb-0 h-auto p-0.5 sm:p-1">
+                    <TabsTrigger 
+                      value="aulas" 
+                      className="data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-colors text-xs sm:text-sm py-1 px-2 sm:px-3 sm:py-1.5 flex-1"
+                    >
+                      Aulas
+                    </TabsTrigger>
                     <TabsTrigger 
                       value="comentarios" 
                       className="data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-colors text-xs sm:text-sm py-1 px-2 sm:px-3 sm:py-1.5 flex-1"
@@ -698,12 +704,6 @@ const VideoLessonPage: React.FC = () => {
                       className="data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-colors text-xs sm:text-sm py-1 px-2 sm:px-3 sm:py-1.5 flex-1"
                     >
                       Materiais
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="notas" 
-                      className="data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-colors text-xs sm:text-sm py-1 px-2 sm:px-3 sm:py-1.5 flex-1"
-                    >
-                      Notas
                     </TabsTrigger>
                   </TabsList>
                   
