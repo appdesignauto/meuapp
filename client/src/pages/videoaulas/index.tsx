@@ -106,8 +106,8 @@ export default function VideoaulasPage() {
           <div className="absolute inset-0 bg-gradient-to-t from-white/50 via-blue-50/30 to-transparent z-1"></div>
           
           {/* Conteúdo sobreposto */}
-          <div className="container mx-auto h-full flex flex-col justify-center relative z-10 px-4 md:px-8 lg:px-10 xl:px-12">
-            <div className="max-w-3xl">
+          <div className="container mx-auto h-full flex flex-col justify-center relative z-10">
+            <div className="max-w-3xl ml-4 md:ml-8 lg:ml-10 xl:ml-12">
               <h1 className="text-4xl md:text-5xl font-bold mb-4 text-blue-800">
                 DesignAuto Videoaulas
               </h1>
@@ -133,9 +133,9 @@ export default function VideoaulasPage() {
           </div>
         </div>
         
-        <div className="container mx-auto py-8 max-w-7xl px-4 md:px-8 lg:px-10 xl:px-12">
+        <div className="container mx-auto py-8 max-w-7xl">
           {/* Barra de pesquisa clean com filtros em formato de pills */}
-          <div className="mb-6 sticky top-16 z-20">
+          <div className="mb-6 sticky top-16 z-20 ml-4 md:ml-8 lg:ml-10 xl:ml-12">
             <div className="flex flex-col md:flex-row items-center gap-3 p-3 rounded-lg bg-white shadow-sm border border-gray-100">
               {/* Barra de busca estilo clean */}
               <div className="relative w-full md:w-auto md:min-w-[240px] flex-grow-0">
@@ -221,7 +221,7 @@ export default function VideoaulasPage() {
           </div>
           
           {/* Conteúdo principal baseado na filtragem */}
-          <div className="mt-6">
+          <div className="mt-6 ml-4 md:ml-8 lg:ml-10 xl:ml-12">
             {/* Resultados de pesquisa */}
             {searchTerm && (
               <div className="mb-10">
@@ -334,7 +334,7 @@ export default function VideoaulasPage() {
               
                 {/* Modulos organizados por categorias estilo Shark Tank */}
                 {tutoriaisPorCategoria.map((categoria, idx) => (
-                  <div key={categoria.id} className="mb-16 relative">
+                  <div key={categoria.id} className="mb-16 relative ml-4 md:ml-8 lg:ml-10 xl:ml-12">
                     <div className="flex items-center mb-6">
                       <div className="bg-blue-100 h-10 w-10 rounded-lg flex items-center justify-center mr-3 text-blue-600">
                         {categoria.icon}
@@ -416,7 +416,7 @@ export default function VideoaulasPage() {
                 ))}
                 
                 {/* Seção "Bem-vindo" com imagem adicionada */}
-                <div className="bg-gradient-to-r from-blue-50 to-white border border-blue-100 rounded-xl p-8 text-blue-900 mt-12 shadow-sm">
+                <div className="bg-gradient-to-r from-blue-50 to-white border border-blue-100 rounded-xl p-8 text-blue-900 mt-12 shadow-sm ml-4 md:ml-8 lg:ml-10 xl:ml-12">
                   <div className="flex flex-col md:flex-row md:items-center justify-between">
                     <div className="mb-6 md:mb-0 md:mr-8">
                       <h2 className="text-2xl font-bold mb-3 text-blue-800">Bem-vindo às Videoaulas</h2>
