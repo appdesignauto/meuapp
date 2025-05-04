@@ -239,6 +239,14 @@ const VideoLessonPage: React.FC = () => {
   const { user } = useAuth();
   const isPremiumUser = user && (user.nivelacesso === 'premium' || user.nivelacesso === 'admin');
   const [, navigate] = useLocation();
+  const [watchedLessons, setWatchedLessons] = useState<number[]>(() => {
+    // Recuperar aulas assistidas do localStorage
+    const saved = localStorage.getItem('watchedLessons');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  // Estado para controlar se a aula atual está concluída
+  const isCompleted = watchedLessons.includes(id);
 
   // Encontrar o tutorial pelo ID
   const tutorial = tutoriais.find(t => t.id === id);
@@ -248,6 +256,20 @@ const VideoLessonPage: React.FC = () => {
   const isPremiumLocked = (isPremium: boolean) => {
     if (!isPremium) return false;
     return !isPremiumUser;
+  };
+  
+  // Função para marcar a aula como concluída e ir para a próxima
+  const handleComplete = () => {
+    if (!isCompleted) {
+      const newWatchedLessons = [...watchedLessons, id];
+      setWatchedLessons(newWatchedLessons);
+      localStorage.setItem('watchedLessons', JSON.stringify(newWatchedLessons));
+    }
+    
+    // Navegar para a próxima aula se existir
+    if (id < tutoriais.length) {
+      navigate(`/videoaulas/${id + 1}`);
+    }
   };
 
   // Se o tutorial não existir, redirecionar para a página de videoaulas
@@ -444,9 +466,18 @@ const VideoLessonPage: React.FC = () => {
                   {/* Ações */}
                   <div className="flex flex-wrap gap-3">
                     {!isLocked && (
-                      <Button variant="outline" className="text-green-700 border-green-200 hover:bg-green-50 transition-colors">
-                        <CheckCircle className="mr-2 h-4 w-4" />
-                        Concluir
+                      <Button 
+                        variant="outline" 
+                        onClick={handleComplete}
+                        className={isCompleted 
+                          ? "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 transition-colors" 
+                          : "text-blue-700 border-blue-200 hover:bg-blue-50 transition-colors"}
+                      >
+                        {isCompleted 
+                          ? <CheckCircle className="mr-2 h-4 w-4 text-green-600" fill="rgba(22, 163, 74, 0.2)" /> 
+                          : <CheckCircle className="mr-2 h-4 w-4" />
+                        }
+                        {isCompleted ? "Concluído" : "Concluir"}
                       </Button>
                     )}
                     
