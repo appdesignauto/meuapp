@@ -406,13 +406,12 @@ export default function VideoaulasPage() {
                       </ul>
                     </div>
                     <div className="flex-shrink-0">
-                      <div className="relative w-48 h-48 overflow-hidden rounded-lg shadow-md border border-blue-100">
+                      <div className="relative w-64 overflow-hidden rounded-lg shadow-md border border-blue-100">
                         <img 
-                          src="https://images.unsplash.com/photo-1550855034-3ab03877a364?q=80&w=1974&auto=format&fit=crop" 
-                          alt="DesignAuto Academy" 
-                          className="w-full h-full object-cover"
+                          src="/images/videoaulas/modulo-0-banner.png" 
+                          alt="Módulo 0: Bem-vindo ao DesignAuto - Tour Inicial" 
+                          className="w-full object-cover"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-blue-900/40 to-transparent"></div>
                         <div className="absolute bottom-0 left-0 right-0 p-3">
                           <Button size="sm" className="bg-blue-600 text-white hover:bg-blue-700 shadow-md w-full">
                             <Play className="h-4 w-4 mr-1" />
