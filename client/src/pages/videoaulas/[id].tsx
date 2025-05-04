@@ -481,13 +481,13 @@ const VideoLessonPage: React.FC = () => {
                       <Button 
                         onClick={handleComplete}
                         className={isCompleted 
-                          ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white border-0 hover:from-green-600 hover:to-emerald-700 transition-all shadow-md" 
+                          ? "bg-gradient-to-r from-blue-600 to-indigo-700 text-white border-0 hover:from-blue-700 hover:to-indigo-800 transition-all shadow-md" 
                           : "bg-white text-blue-700 border border-blue-200 hover:bg-blue-50 transition-all shadow-sm"}
                       >
                         {isCompleted ? (
                           <div className="flex items-center">
                             <div className="bg-white p-0.5 rounded-full mr-2">
-                              <CheckCircle className="h-4 w-4 text-green-600" fill="white" />
+                              <CheckCircle className="h-4 w-4 text-blue-600" fill="white" />
                             </div>
                             <span>Concluído</span>
                           </div>
