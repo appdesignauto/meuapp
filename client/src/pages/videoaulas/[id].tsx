@@ -393,16 +393,38 @@ const VideoLessonPage: React.FC = () => {
                   <div className="flex justify-between items-center mb-2">
                     <h1 className="text-2xl font-bold text-gray-800">{tutorial.title}</h1>
                     
-                    {/* Avaliação com estrelas (apenas para avaliar, sem contador) */}
-                    <div className="flex space-x-1">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <button 
-                          key={star} 
-                          className="text-gray-300 hover:text-yellow-400 focus:outline-none"
-                        >
-                          <Star className={`h-5 w-5 ${star <= (tutorial.rating || 0) ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`} />
-                        </button>
-                      ))}
+                    {/* Container para estrelas e setas de navegação */}
+                    <div className="flex items-center gap-4">
+                      {/* Avaliação com estrelas (apenas para avaliar, sem contador) */}
+                      <div className="flex space-x-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button 
+                            key={star} 
+                            className="text-gray-300 hover:text-yellow-400 focus:outline-none"
+                          >
+                            <Star className={`h-5 w-5 ${star <= (tutorial.rating || 0) ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`} />
+                          </button>
+                        ))}
+                      </div>
+                      
+                      {/* Setas de navegação */}
+                      <div className="flex gap-1">
+                        {id > 1 && (
+                          <Link href={`/videoaulas/${id - 1}`} className="inline-flex">
+                            <button className="text-gray-500 hover:text-blue-600 focus:outline-none transition-colors">
+                              <ArrowLeft className="h-5 w-5" />
+                            </button>
+                          </Link>
+                        )}
+                        
+                        {id < tutoriais.length && (
+                          <Link href={`/videoaulas/${id + 1}`} className="inline-flex">
+                            <button className="text-gray-500 hover:text-blue-600 focus:outline-none transition-colors">
+                              <ArrowRight className="h-5 w-5" />
+                            </button>
+                          </Link>
+                        )}
+                      </div>
                     </div>
                   </div>
                   
