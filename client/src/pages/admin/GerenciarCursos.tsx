@@ -558,6 +558,10 @@ const GerenciarCursos = () => {
                   <Video className="w-4 h-4 mr-2" />
                   Aulas
                 </TabsTrigger>
+                <TabsTrigger value="config" className="text-sm">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Configurações da Página
+                </TabsTrigger>
               </TabsList>
           
               {/* Tab de Módulos */}
