@@ -19,6 +19,7 @@ import {
   ListChecks,
   CheckCircle2,
   CheckCircle,
+  Circle,
   Lock,
   ExternalLink,
   BookOpen,
@@ -524,20 +525,19 @@ const VideoLessonPage: React.FC = () => {
                     {!isLocked && (
                       <Button 
                         onClick={handleComplete}
+                        variant="outline"
                         className={isCompleted 
-                          ? "bg-gradient-to-r from-blue-600 to-indigo-700 text-white border-0 hover:from-blue-700 hover:to-indigo-800 transition-all shadow-md" 
-                          : "bg-white text-blue-700 border border-blue-200 hover:bg-blue-50 transition-all shadow-sm"}
+                          ? "text-blue-700 border-blue-300 hover:bg-blue-50 transition-all" 
+                          : "text-blue-700 border-blue-200 hover:bg-blue-50 transition-all"}
                       >
                         {isCompleted ? (
                           <div className="flex items-center">
-                            <div className="bg-white p-0.5 rounded-full mr-2">
-                              <CheckCircle className="h-4 w-4 text-blue-600" fill="white" />
-                            </div>
+                            <CheckCircle2 className="mr-2 h-4 w-4 text-blue-600 fill-blue-100" />
                             <span>Concluído</span>
                           </div>
                         ) : (
                           <div className="flex items-center">
-                            <CheckCircle className="mr-2 h-4 w-4" />
+                            <Circle className="mr-2 h-4 w-4" />
                             <span>Concluir</span>
                           </div>
                         )}
