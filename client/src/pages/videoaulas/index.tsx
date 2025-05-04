@@ -114,9 +114,33 @@ export default function VideoaulasPage() {
                 DesignAuto Videoaulas
               </h1>
               <div className="h-1 w-16 md:w-24 bg-yellow-500 mb-4 md:mb-6"></div>
-              <p className="text-base sm:text-lg md:text-xl text-blue-700 mb-6 md:mb-8 max-w-2xl">
+              <p className="text-base sm:text-lg md:text-xl text-blue-700 mb-3 md:mb-4 max-w-2xl">
                 A formação completa para você criar designs profissionais para seu negócio automotivo
               </p>
+              
+              <div className="flex items-center gap-5 mb-6 md:mb-8 text-sm md:text-base">
+                <div className="flex items-center">
+                  <div className="flex text-yellow-500">
+                    <Star className="h-4 w-4 md:h-5 md:w-5 fill-current" />
+                    <Star className="h-4 w-4 md:h-5 md:w-5 fill-current" />
+                    <Star className="h-4 w-4 md:h-5 md:w-5 fill-current" />
+                    <Star className="h-4 w-4 md:h-5 md:w-5 fill-current" />
+                    <Star className="h-4 w-4 md:h-5 md:w-5 fill-yellow-100" strokeWidth={1.5} />
+                  </div>
+                  <span className="ml-2 font-medium text-blue-800">4.8</span>
+                  <span className="ml-1 text-blue-500">(287)</span>
+                </div>
+                
+                <div className="flex items-center text-blue-600 font-medium">
+                  <Clock className="h-4 w-4 md:h-5 md:w-5 mr-1.5 text-blue-400" />
+                  <span>42 horas de conteúdo</span>
+                </div>
+                
+                <div className="flex items-center text-blue-600 font-medium">
+                  <BookOpen className="h-4 w-4 md:h-5 md:w-5 mr-1.5 text-blue-400" />
+                  <span>18 módulos</span>
+                </div>
+              </div>
               
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <Link href={`/videoaulas/${tutorialDestaque.id}`} className="w-full sm:w-auto">
