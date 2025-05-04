@@ -108,23 +108,23 @@ export default function VideoaulasPage() {
           {/* Conteúdo sobreposto */}
           <div className="container mx-auto h-full flex flex-col justify-center relative z-10">
             <div className="max-w-3xl px-4 md:px-8 lg:px-10 xl:px-12">
-              <h1 className="text-4xl md:text-5xl font-bold mb-4 text-blue-800">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 md:mb-4 text-blue-800">
                 DesignAuto Videoaulas
               </h1>
-              <div className="h-1 w-24 bg-yellow-500 mb-6"></div>
-              <p className="text-xl text-blue-700 mb-8 max-w-2xl">
+              <div className="h-1 w-16 md:w-24 bg-yellow-500 mb-4 md:mb-6"></div>
+              <p className="text-base sm:text-lg md:text-xl text-blue-700 mb-6 md:mb-8 max-w-2xl">
                 A formação completa para você criar designs profissionais para seu negócio automotivo
               </p>
               
-              <div className="flex gap-4">
-                <Link href={`/videoaulas/${tutorialDestaque.id}`}>
-                  <Button className="bg-yellow-500 hover:bg-yellow-600 text-blue-950 border-0 py-6 px-8 text-lg font-medium">
-                    <Play className="h-5 w-5 mr-2" />
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                <Link href={`/videoaulas/${tutorialDestaque.id}`} className="w-full sm:w-auto">
+                  <Button className="bg-yellow-500 hover:bg-yellow-600 text-blue-950 border-0 py-4 md:py-6 px-5 md:px-8 text-base md:text-lg font-medium w-full sm:w-auto">
+                    <Play className="h-4 md:h-5 w-4 md:w-5 mr-2" />
                     Começar Agora
                   </Button>
                 </Link>
-                <Link href="#categorias">
-                  <Button variant="outline" className="bg-transparent border-blue-700 text-blue-700 hover:bg-blue-50 py-6 px-8 text-lg font-medium">
+                <Link href="#categorias" className="w-full sm:w-auto">
+                  <Button variant="outline" className="bg-transparent border-blue-700 text-blue-700 hover:bg-blue-50 py-4 md:py-6 px-5 md:px-8 text-base md:text-lg font-medium w-full sm:w-auto">
                     Ver Categorias
                   </Button>
                 </Link>
@@ -261,8 +261,8 @@ export default function VideoaulasPage() {
               <>
                 {/* Tutoriais em destaque ou recomendados - sempre visíveis */}
                 {/* Lista de reprodução estilo Shark Tank */}
-                <div className="mb-12" id="categorias">
-                  <h2 className="text-2xl font-bold text-blue-800 mb-6 flex items-center">
+                <div className="mb-8 sm:mb-12" id="categorias">
+                  <h2 className="text-xl sm:text-2xl font-bold text-blue-800 mb-4 sm:mb-6 flex items-center">
                     Lista de Reprodução
                   </h2>
                   <Carousel
@@ -275,9 +275,9 @@ export default function VideoaulasPage() {
                     }}
                     className="w-full"
                   >
-                    <CarouselContent className="-ml-4">
+                    <CarouselContent className="-ml-3 sm:-ml-4">
                       {tutoriaisPopulares.slice(0, 8).map((tutorial, index) => (
-                        <CarouselItem key={tutorial.id} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
+                        <CarouselItem key={tutorial.id} className="pl-3 sm:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                           <Link href={`/videoaulas/${tutorial.id}`} className="block h-full">
                             <div className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 hover:shadow-lg hover:border-blue-300 transition-all group">
                               <div className="relative">
@@ -336,14 +336,14 @@ export default function VideoaulasPage() {
               
                 {/* Modulos organizados por categorias estilo Shark Tank */}
                 {tutoriaisPorCategoria.map((categoria, idx) => (
-                  <div key={categoria.id} className="mb-16 relative">
-                    <div className="flex items-center mb-6">
-                      <div className="bg-blue-100 h-10 w-10 rounded-lg flex items-center justify-center mr-3 text-blue-600">
+                  <div key={categoria.id} className="mb-10 sm:mb-16 relative">
+                    <div className="flex items-center mb-4 sm:mb-6">
+                      <div className="bg-blue-100 h-8 sm:h-10 w-8 sm:w-10 rounded-lg flex items-center justify-center mr-2 sm:mr-3 text-blue-600">
                         {categoria.icon}
                       </div>
                       <div>
-                        <h2 className="text-xl font-bold text-blue-800">{categoria.title}</h2>
-                        <p className="text-blue-600 text-sm">{categoria.subtitle}</p>
+                        <h2 className="text-lg sm:text-xl font-bold text-blue-800">{categoria.title}</h2>
+                        <p className="text-blue-600 text-xs sm:text-sm">{categoria.subtitle}</p>
                       </div>
                     </div>
                     
@@ -357,9 +357,9 @@ export default function VideoaulasPage() {
                       }}
                       className="w-full"
                     >
-                      <CarouselContent className="-ml-4">
+                      <CarouselContent className="-ml-3 sm:-ml-4">
                         {categoria.modules.map((tutorial, moduleIdx) => (
-                          <CarouselItem key={tutorial.id} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
+                          <CarouselItem key={tutorial.id} className="pl-3 sm:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                             <Link href={`/videoaulas/${tutorial.id}`} className="block h-full">
                               <div className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 hover:shadow-lg hover:border-blue-300 transition-all group">
                                 <div className="relative">
@@ -427,30 +427,30 @@ export default function VideoaulasPage() {
                 
                 {/* Bloco CTA Premium */}
                 {!isPremiumUser && (
-                  <div className="mb-16 p-6 bg-gradient-to-r from-blue-50 to-white rounded-xl border border-blue-100 shadow-sm relative overflow-hidden">
+                  <div className="mb-10 sm:mb-16 p-4 sm:p-6 bg-gradient-to-r from-blue-50 to-white rounded-xl border border-blue-100 shadow-sm relative overflow-hidden">
                     {/* Decoração de background */}
-                    <div className="absolute right-0 top-0 bottom-0 w-1/3 overflow-hidden opacity-10">
+                    <div className="absolute right-0 top-0 bottom-0 w-1/3 overflow-hidden opacity-10 hidden sm:block">
                       <div className="w-full h-full bg-contain bg-no-repeat bg-right-top" 
                            style={{backgroundImage: "url('https://images.unsplash.com/photo-1617651823081-270acchia626?q=80&w=1970&auto=format&fit=crop')"}}></div>
                     </div>
                     
                     <div className="relative z-10 max-w-3xl">
-                      <div className="flex items-center mb-4">
-                        <Crown className="h-8 w-8 text-yellow-500 mr-3" />
-                        <h2 className="text-2xl font-bold text-blue-800">Desbloqueie Todo o Conteúdo Premium</h2>
+                      <div className="flex items-center mb-3 sm:mb-4">
+                        <Crown className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-500 mr-2 sm:mr-3" />
+                        <h2 className="text-xl sm:text-2xl font-bold text-blue-800">Desbloqueie Todo o Conteúdo Premium</h2>
                       </div>
-                      <p className="text-blue-700 mb-6">
+                      <p className="text-blue-700 text-sm sm:text-base mb-4 sm:mb-6">
                         Tenha acesso a mais de 50+ videoaulas exclusivas, downloads ilimitados de artes e suporte prioritário da nossa equipe.
                       </p>
-                      <div className="flex flex-wrap gap-4">
-                        <Link href="/planos">
-                          <Button size="lg" className="bg-yellow-500 hover:bg-yellow-600 text-blue-950 border-0 shadow-md">
-                            <Sparkles className="h-5 w-5 mr-2" />
+                      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                        <Link href="/planos" className="w-full sm:w-auto">
+                          <Button size="default" className="bg-yellow-500 hover:bg-yellow-600 text-blue-950 border-0 shadow-md w-full sm:w-auto">
+                            <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                             Conheça os Planos
                           </Button>
                         </Link>
-                        <Link href="/cursos">
-                          <Button variant="outline" size="lg" className="border-blue-600 text-blue-700 hover:bg-blue-50">
+                        <Link href="/cursos" className="w-full sm:w-auto">
+                          <Button variant="outline" size="default" className="border-blue-600 text-blue-700 hover:bg-blue-50 w-full sm:w-auto">
                             Ver Todos os Cursos
                           </Button>
                         </Link>
