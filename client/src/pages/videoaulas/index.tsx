@@ -150,11 +150,11 @@ export default function VideoaulasPage() {
         <div className="relative w-full h-[450px] overflow-hidden">
           {/* Fundo sólido com carro sutil */}
           <div className="absolute inset-0 z-0 bg-gradient-to-r from-blue-50 to-white">
-            {/* Imagem de carro sutil no fundo */}
+            {/* Imagem de carro sutil no fundo ou imagem personalizada */}
             <div 
               className="absolute inset-0 opacity-10 bg-right-bottom bg-no-repeat"
               style={{
-                backgroundImage: "url('https://images.unsplash.com/photo-1617651823081-270acchia626?q=80&w=1970&auto=format&fit=crop')",
+                backgroundImage: `url('${siteSettings?.courseHeroImageUrl || "https://images.unsplash.com/photo-1617651823081-270acchia626?q=80&w=1970&auto=format&fit=crop"}')`,
                 backgroundSize: '60%',
                 backgroundPosition: 'right bottom'
               }}
@@ -168,11 +168,11 @@ export default function VideoaulasPage() {
           <div className="container mx-auto h-full flex flex-col justify-center relative z-10">
             <div className="px-4 md:px-8">
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 md:mb-4 text-blue-800">
-                DesignAuto Videoaulas
+                {siteSettings?.courseHeroTitle || "DesignAuto Videoaulas"}
               </h1>
               <div className="h-1 w-16 md:w-24 bg-yellow-500 mb-4 md:mb-6"></div>
               <p className="text-base sm:text-lg md:text-xl text-blue-700 mb-3 md:mb-4 max-w-2xl">
-                A formação completa para você criar designs profissionais para seu negócio automotivo
+                {siteSettings?.courseHeroSubtitle || "A formação completa para você criar designs profissionais para seu negócio automotivo"}
               </p>
               
               <div className="flex items-center gap-5 mb-6 md:mb-8 text-sm md:text-base">
@@ -184,18 +184,18 @@ export default function VideoaulasPage() {
                     <Star className="h-4 w-4 md:h-5 md:w-5 fill-current" />
                     <Star className="h-4 w-4 md:h-5 md:w-5 fill-yellow-100" strokeWidth={1.5} />
                   </div>
-                  <span className="ml-2 font-medium text-blue-800">4.8</span>
-                  <span className="ml-1 text-blue-500">(287)</span>
+                  <span className="ml-2 font-medium text-blue-800">{siteSettings?.courseRating || "4.8"}</span>
+                  <span className="ml-1 text-blue-500">({siteSettings?.courseReviewCount || "287"})</span>
                 </div>
                 
                 <div className="flex items-center text-blue-600 font-medium">
                   <Clock className="h-4 w-4 md:h-5 md:w-5 mr-1.5 text-blue-400" />
-                  <span>42 horas de conteúdo</span>
+                  <span>{siteSettings?.courseTotalHours || "42 horas de conteúdo"}</span>
                 </div>
                 
                 <div className="flex items-center text-blue-600 font-medium">
                   <BookOpen className="h-4 w-4 md:h-5 md:w-5 mr-1.5 text-blue-400" />
-                  <span>18 módulos</span>
+                  <span>{siteSettings?.courseTotalModules || "18"} módulos</span>
                 </div>
               </div>
               
