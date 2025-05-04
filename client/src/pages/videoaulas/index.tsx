@@ -303,9 +303,9 @@ export default function VideoaulasPage() {
                   >
                     <CarouselContent className="-ml-3 sm:-ml-4">
                       {tutoriaisPopulares.slice(0, 8).map((tutorial, index) => (
-                        <CarouselItem key={tutorial.id} className="pl-3 sm:pl-4 basis-3/4 sm:basis-2/5 md:basis-1/3 lg:basis-[23%] xl:basis-[20%]">
+                        <CarouselItem key={tutorial.id} className="pl-3 sm:pl-4 basis-3/4 sm:basis-2/5 md:basis-1/3 lg:basis-1/5 xl:basis-[19.5%]">
                           <Link href={`/videoaulas/${tutorial.id}`} className="block h-full">
-                            <div className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 hover:shadow-lg hover:border-blue-300 transition-all group">
+                            <div className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 hover:shadow-lg hover:border-blue-300 transition-all group h-full">
                               <div className="relative">
                                 {/* Numeração de módulo estilo Shark Tank */}
                                 <div className="absolute bottom-0 left-0 right-0 p-3 flex justify-between items-end z-10">
@@ -330,10 +330,10 @@ export default function VideoaulasPage() {
                               </div>
                               
                               <div className="p-4">
-                                <h3 className="font-bold text-blue-800 mb-1 group-hover:text-blue-600 transition-colors">
+                                <h3 className="font-bold text-blue-800 mb-1 group-hover:text-blue-600 transition-colors truncate h-6 text-base">
                                   {tutorial.title}
                                 </h3>
-                                <p className="text-gray-600 text-sm line-clamp-2 mb-3">
+                                <p className="text-gray-600 text-sm line-clamp-2 mb-3 h-10">
                                   {tutorial.description || "Aprenda técnicas avançadas de design automotivo neste tutorial completo."}
                                 </p>
                                 
@@ -382,7 +382,7 @@ export default function VideoaulasPage() {
                     >
                       <CarouselContent className="-ml-3 sm:-ml-4">
                         {categoria.modules.map((tutorial, moduleIdx) => (
-                          <CarouselItem key={tutorial.id} className="pl-3 sm:pl-4 basis-3/4 sm:basis-2/5 md:basis-1/3 lg:basis-[23%] xl:basis-[20%]">
+                          <CarouselItem key={tutorial.id} className="pl-3 sm:pl-4 basis-3/4 sm:basis-2/5 md:basis-1/3 lg:basis-1/5 xl:basis-[19.5%]">
                             <Link href={`/videoaulas/${tutorial.id}`} className="block h-full">
                               <div className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 hover:shadow-lg hover:border-blue-300 transition-all group">
                                 <div className="relative">
@@ -417,10 +417,10 @@ export default function VideoaulasPage() {
                                 </div>
                                 
                                 <div className="p-4">
-                                  <h3 className="font-bold text-blue-800 mb-1 group-hover:text-blue-600 transition-colors">
+                                  <h3 className="font-bold text-blue-800 mb-1 group-hover:text-blue-600 transition-colors truncate h-6 text-base">
                                     {tutorial.title}
                                   </h3>
-                                  <p className="text-gray-600 text-sm line-clamp-2 mb-3">
+                                  <p className="text-gray-600 text-sm line-clamp-2 mb-3 h-10">
                                     {tutorial.description || "Aprenda técnicas avançadas de design automotivo neste tutorial completo."}
                                   </p>
                                   
