@@ -21,7 +21,14 @@ import {
   Star,
   Eye,
   ChevronRight,
-  ChevronLeft
+  ChevronLeft,
+  Car,
+  Camera,
+  Palette,
+  Wrench,
+  Settings,
+  BarChart4,
+  Book
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
@@ -413,11 +420,14 @@ export default function VideoaulasPage() {
                     <div className="flex flex-col mb-4 sm:mb-6">
                       <div className="flex items-center mb-1">
                         <div className="bg-blue-100 h-8 sm:h-10 w-8 sm:w-10 rounded-lg flex items-center justify-center mr-2 sm:mr-3 text-blue-600">
-                          {categoria.id === 1 ? "🚗" : 
-                           categoria.id === 2 ? "🎨" : 
-                           categoria.id === 3 ? "📱" :
-                           categoria.id === 4 ? "📸" :
-                           categoria.id === 5 ? "🔧" : "📚"}
+                          {categoria.id === 1 ? <Car className="h-5 w-5" /> : 
+                           categoria.id === 2 ? <Palette className="h-5 w-5" /> : 
+                           categoria.id === 3 ? <Smartphone className="h-5 w-5" /> :
+                           categoria.id === 4 ? <Camera className="h-5 w-5" /> :
+                           categoria.id === 5 ? <Wrench className="h-5 w-5" /> :
+                           categoria.id === 6 ? <Settings className="h-5 w-5" /> :
+                           categoria.id === 7 ? <BarChart4 className="h-5 w-5" /> :
+                           categoria.id === 8 ? <Book className="h-5 w-5" /> : <BookOpen className="h-5 w-5" />}
                         </div>
                         <h2 className="text-xl sm:text-2xl font-bold text-blue-800 mr-4">
                           {categoria.title}
