@@ -465,7 +465,20 @@ const GerenciarCursos = () => {
   
   const updateSettingsMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest('PATCH', '/api/site-settings', data);
+      // Converter strings para números onde necessário
+      const formattedData = {
+        courseHeroTitle: data.courseHeroTitle,
+        courseHeroSubtitle: data.courseHeroSubtitle,
+        courseHeroImageUrl: data.courseHeroImageUrl,
+        courseRating: data.courseRating,
+        courseReviewCount: Number(data.courseReviewCount),
+        courseTotalHours: data.courseTotalHours,
+        courseTotalModules: Number(data.courseTotalModules)
+      };
+      
+      console.log('Dados a serem enviados:', formattedData);
+      
+      const response = await apiRequest('PATCH', '/api/site-settings', formattedData);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Erro ao atualizar configurações');
@@ -972,7 +985,7 @@ const GerenciarCursos = () => {
                         />
                       </div>
                       
-                      <div className="space-y-2">
+                      <div className="space-y-2 col-span-full">
                         <Label htmlFor="courseHeroImageUrl">URL da Imagem de Fundo</Label>
                         <Input 
                           id="courseHeroImageUrl"
@@ -981,6 +994,19 @@ const GerenciarCursos = () => {
                           value={pageSettings.courseHeroImageUrl}
                           onChange={handlePageSettingsChange}
                         />
+                        {pageSettings.courseHeroImageUrl && (
+                          <div className="mt-2 p-2 border rounded">
+                            <p className="text-xs text-gray-500 mb-1">Prévia da imagem:</p>
+                            <img 
+                              src={pageSettings.courseHeroImageUrl} 
+                              alt="Prévia do banner" 
+                              className="max-h-40 object-cover rounded"
+                              onError={(e) => {
+                                e.currentTarget.src = "https://placehold.co/600x200/e2e8f0/64748b?text=Imagem+Inválida";
+                              }}
+                            />
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1050,6 +1076,7 @@ const GerenciarCursos = () => {
                   <Button 
                     onClick={handleSavePageSettings}
                     disabled={isSavingSettings}
+                    className="bg-blue-600 hover:bg-blue-700"
                   >
                     {isSavingSettings ? (
                       <>
@@ -1060,7 +1087,10 @@ const GerenciarCursos = () => {
                         Salvando...
                       </>
                     ) : (
-                      'Salvar Configurações'
+                      <>
+                        <CheckCircle2 className="w-4 h-4 mr-2" />
+                        Salvar Configurações
+                      </>
                     )}
                   </Button>
                 </div>
