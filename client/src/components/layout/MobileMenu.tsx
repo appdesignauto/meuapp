@@ -193,9 +193,10 @@ const MobileMenu = ({ isOpen, onClose, navLinks, userRole }: MobileMenuProps) =>
             <Link
               key={link.path}
               href={link.path}
-              className="text-neutral-700 hover:text-blue-600 font-medium py-2 border-b border-neutral-100 transition-colors"
+              className="flex items-center text-neutral-700 hover:text-blue-600 font-medium py-2 border-b border-neutral-100 transition-colors"
               onClick={onClose}
             >
+              {link.icon && <span className="mr-2">{link.icon}</span>}
               {link.name}
             </Link>
           ))}
