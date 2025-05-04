@@ -479,17 +479,24 @@ const VideoLessonPage: React.FC = () => {
                   <div className="flex flex-wrap gap-3">
                     {!isLocked && (
                       <Button 
-                        variant="outline" 
                         onClick={handleComplete}
                         className={isCompleted 
-                          ? "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 transition-colors" 
-                          : "text-blue-700 border-blue-200 hover:bg-blue-50 transition-colors"}
+                          ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white border-0 hover:from-green-600 hover:to-emerald-700 transition-all shadow-md" 
+                          : "bg-white text-blue-700 border border-blue-200 hover:bg-blue-50 transition-all shadow-sm"}
                       >
-                        {isCompleted 
-                          ? <CheckCircle className="mr-2 h-4 w-4 text-green-600" fill="rgba(22, 163, 74, 0.2)" /> 
-                          : <CheckCircle className="mr-2 h-4 w-4" />
-                        }
-                        {isCompleted ? "Concluído" : "Concluir"}
+                        {isCompleted ? (
+                          <div className="flex items-center">
+                            <div className="bg-white p-0.5 rounded-full mr-2">
+                              <CheckCircle className="h-4 w-4 text-green-600" fill="white" />
+                            </div>
+                            <span>Concluído</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center">
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                            <span>Concluir</span>
+                          </div>
+                        )}
                       </Button>
                     )}
                     
