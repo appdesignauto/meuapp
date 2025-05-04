@@ -22,7 +22,10 @@ import {
   ExternalLink,
   BookOpen,
   PlayCircle,
-  ThumbsUp
+  ThumbsUp,
+  Star,
+  ArrowLeft,
+  ArrowRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -390,6 +393,23 @@ const VideoLessonPage: React.FC = () => {
                   <h1 className="text-2xl font-bold text-gray-800 mb-2">{tutorial.title}</h1>
                   <p className="text-gray-600 mb-5">{tutorial.description}</p>
                   
+                  {/* Avaliação do tutorial */}
+                  <div className="flex items-center mb-5">
+                    <div className="flex space-x-1 mr-3">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button 
+                          key={star} 
+                          className="text-gray-300 hover:text-yellow-400 focus:outline-none"
+                        >
+                          <Star className={`h-5 w-5 ${star <= (tutorial.rating || 4) ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`} />
+                        </button>
+                      ))}
+                    </div>
+                    <span className="text-sm text-gray-500">
+                      {tutorial.numRatings || 42} avaliações
+                    </span>
+                  </div>
+                  
                   {/* Ações */}
                   <div className="flex flex-wrap gap-3">
                     {!isLocked && (
@@ -556,6 +576,34 @@ const VideoLessonPage: React.FC = () => {
                     )}
                   </TabsContent>
                 </Tabs>
+              </div>
+              
+              {/* Navegação entre aulas (estilo minimalista como na referência) */}
+              <div className="mt-8 border-t border-blue-100 pt-6">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-gray-600 text-sm">{tutorial.module || "Módulo"}: {tutorial.id}</span>
+                    <h3 className="text-gray-800 font-semibold">{tutorial.title}</h3>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    {id > 1 && (
+                      <Link href={`/videoaulas/${id - 1}`} className="inline-flex">
+                        <Button variant="outline" size="sm" className="rounded-full w-8 h-8 p-0 flex items-center justify-center border-blue-200 text-blue-700 hover:bg-blue-50">
+                          <ArrowLeft className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                    )}
+                    
+                    {id < tutoriais.length && (
+                      <Link href={`/videoaulas/${id + 1}`} className="inline-flex">
+                        <Button variant="outline" size="sm" className="rounded-full w-8 h-8 p-0 flex items-center justify-center border-blue-200 text-blue-700 hover:bg-blue-50">
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
             
