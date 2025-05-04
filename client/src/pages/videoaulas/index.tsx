@@ -42,6 +42,15 @@ import {
   Tutorial
 } from '@/components/videoaulas/TutorialData';
 
+// Interface para categorias
+interface CategoriaTutorial {
+  id: number;
+  title: string;
+  subtitle: string;
+  icon: string;
+  tutoriais: Tutorial[];
+}
+
 export default function VideoaulasPage() {
   const { user } = useAuth();
   const isPremiumUser = user && (user.nivelacesso === 'premium' || user.nivelacesso === 'admin');
@@ -84,9 +93,9 @@ export default function VideoaulasPage() {
 
   return (
     <>
-      <Helmet>
+      {/* <Helmet>
         <title>Videoaulas | DesignAuto</title>
-      </Helmet>
+      </Helmet> */}
       
       <div className="bg-white min-h-screen">
         {/* Seção Hero estilo MBA com imagem de fundo/shark em tons claros */}
@@ -358,7 +367,7 @@ export default function VideoaulasPage() {
                 </div>
               
                 {/* Modulos organizados por categorias estilo Shark Tank */}
-                {tutoriaisPorCategoria.map((categoria, idx) => (
+                {tutoriaisPorCategoria.map((categoria: CategoriaTutorial) => (
                   <div key={categoria.id} className="mb-10 sm:mb-16 relative">
                     <div className="flex items-center mb-4 sm:mb-6">
                       <div className="bg-blue-100 h-8 sm:h-10 w-8 sm:w-10 rounded-lg flex items-center justify-center mr-2 sm:mr-3 text-blue-600">
@@ -370,78 +379,85 @@ export default function VideoaulasPage() {
                       </div>
                     </div>
                     
-                    <Carousel
-                      opts={{
-                        align: "start",
-                        loop: false,
-                        skipSnaps: false,
-                        containScroll: "trimSnaps",
-                        dragFree: true
-                      }}
-                      className="w-full overflow-visible"
-                    >
-                      <CarouselContent className="-ml-3 sm:-ml-4">
-                        {categoria.tutoriais.map((tutorial, moduleIdx) => (
-                          <CarouselItem key={tutorial.id} className="pl-3 sm:pl-4 basis-3/4 sm:basis-2/5 md:basis-1/3 lg:basis-1/5 xl:basis-[19.5%]">
-                            <Link href={`/videoaulas/${tutorial.id}`} className="block h-full">
-                              <div className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 hover:shadow-lg hover:border-blue-300 transition-all group h-full">
-                                <div className="relative">
-                                  {/* Numeração de módulo estilo Shark Tank */}
-                                  <div className="absolute bottom-0 left-0 right-0 p-3 flex justify-between items-end z-10">
-                                    <div className="text-3xl font-black text-white drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)] flex items-center">
-                                      <span className="text-yellow-500">Parte</span>
-                                      <span className="ml-2 text-4xl text-white">{moduleIdx + 1}</span>
+                    {categoria.tutoriais.length > 0 ? (
+                      <Carousel
+                        opts={{
+                          align: "start",
+                          loop: false,
+                          skipSnaps: false,
+                          containScroll: "trimSnaps",
+                          dragFree: true
+                        }}
+                        className="w-full overflow-visible"
+                      >
+                        <CarouselContent className="-ml-3 sm:-ml-4">
+                          {categoria.tutoriais.map((tutorial: Tutorial, moduleIdx: number) => (
+                            <CarouselItem key={tutorial.id} className="pl-3 sm:pl-4 basis-3/4 sm:basis-2/5 md:basis-1/3 lg:basis-1/5 xl:basis-[19.5%]">
+                              <Link href={`/videoaulas/${tutorial.id}`} className="block h-full">
+                                <div className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 hover:shadow-lg hover:border-blue-300 transition-all group h-full">
+                                  <div className="relative">
+                                    {/* Numeração de módulo estilo Shark Tank */}
+                                    <div className="absolute bottom-0 left-0 right-0 p-3 flex justify-between items-end z-10">
+                                      <div className="text-3xl font-black text-white drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)] flex items-center">
+                                        <span className="text-yellow-500">Parte</span>
+                                        <span className="ml-2 text-4xl text-white">{moduleIdx + 1}</span>
+                                      </div>
+                                      <div className="bg-blue-600 text-white text-xs px-2 py-1 rounded shadow-sm">
+                                        {tutorial.duration}
+                                      </div>
                                     </div>
-                                    <div className="bg-blue-600 text-white text-xs px-2 py-1 rounded shadow-sm">
-                                      {tutorial.duration}
-                                    </div>
+                                    
+                                    {/* Imagem do tutorial */}
+                                    <img 
+                                      src={tutorial.thumbnailUrl} 
+                                      alt={tutorial.title} 
+                                      className="w-full aspect-[3/2] object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                                    />
+                                    
+                                    {/* Overlay gradiente */}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-blue-900 via-blue-900/40 to-transparent"></div>
+                                    
+                                    {/* Indicador Premium */}
+                                    {tutorial.isPremium && (
+                                      <div className="absolute top-3 right-3 bg-yellow-500 text-blue-900 text-xs font-bold px-2 py-1 rounded-full flex items-center shadow-md">
+                                        <Crown className="h-3 w-3 mr-1" />
+                                        PREMIUM
+                                      </div>
+                                    )}
                                   </div>
                                   
-                                  {/* Imagem do tutorial */}
-                                  <img 
-                                    src={tutorial.thumbnailUrl} 
-                                    alt={tutorial.title} 
-                                    className="w-full aspect-[3/2] object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                                  />
-                                  
-                                  {/* Overlay gradiente */}
-                                  <div className="absolute inset-0 bg-gradient-to-t from-blue-900 via-blue-900/40 to-transparent"></div>
-                                  
-                                  {/* Indicador Premium */}
-                                  {tutorial.isPremium && (
-                                    <div className="absolute top-3 right-3 bg-yellow-500 text-blue-900 text-xs font-bold px-2 py-1 rounded-full flex items-center shadow-md">
-                                      <Crown className="h-3 w-3 mr-1" />
-                                      PREMIUM
-                                    </div>
-                                  )}
-                                </div>
-                                
-                                <div className="p-4">
-                                  <h3 className="font-bold text-blue-800 mb-1 group-hover:text-blue-600 transition-colors truncate h-6 text-base">
-                                    {tutorial.title}
-                                  </h3>
-                                  <p className="text-gray-600 text-sm line-clamp-2 mb-3 h-10">
-                                    {tutorial.description || "Aprenda técnicas avançadas de design automotivo neste tutorial completo."}
-                                  </p>
-                                  
-                                  <div className="flex justify-between items-center">
-                                    <span className="text-xs text-blue-600 font-medium">
-                                      {tutorial.level === "iniciante" ? "INICIANTE" : 
-                                      tutorial.level === "intermediario" ? "INTERMEDIÁRIO" : "AVANÇADO"}
-                                    </span>
-                                    <div className="text-xs text-gray-500 flex items-center">
-                                      <Eye className="h-3.5 w-3.5 mr-1 text-gray-400" />
-                                      {tutorial.views.toLocaleString()}
+                                  <div className="p-4">
+                                    <h3 className="font-bold text-blue-800 mb-1 group-hover:text-blue-600 transition-colors truncate h-6 text-base">
+                                      {tutorial.title}
+                                    </h3>
+                                    <p className="text-gray-600 text-sm line-clamp-2 mb-3 h-10">
+                                      {tutorial.description || "Aprenda técnicas avançadas de design automotivo neste tutorial completo."}
+                                    </p>
+                                    
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-xs text-blue-600 font-medium">
+                                        {tutorial.level === "iniciante" ? "INICIANTE" : 
+                                        tutorial.level === "intermediario" ? "INTERMEDIÁRIO" : "AVANÇADO"}
+                                      </span>
+                                      <div className="text-xs text-gray-500 flex items-center">
+                                        <Eye className="h-3.5 w-3.5 mr-1 text-gray-400" />
+                                        {tutorial.views.toLocaleString()}
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
-                              </div>
-                            </Link>
-                          </CarouselItem>
-                        ))}
-                      </CarouselContent>
-                      {/* Netflix style: último card parcialmente visível */}
-                    </Carousel>
+                              </Link>
+                            </CarouselItem>
+                          ))}
+                        </CarouselContent>
+                      </Carousel>
+                    ) : (
+                      <div className="bg-blue-50 border border-blue-100 text-blue-700 p-4 rounded-lg">
+                        <p className="text-sm text-blue-700">
+                          Nenhum tutorial disponível nesta categoria no momento.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 ))}
                 

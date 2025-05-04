@@ -199,8 +199,17 @@ export const tutoriaisRecentes = [...tutoriais].sort(() => 0.5 - Math.random()).
 // Tutoriais populares (os 6 mais visualizados)
 export const tutoriaisPopulares = [...tutoriais].sort((a, b) => b.views - a.views).slice(0, 8);
 
+// Definição da interface para categoria
+export interface TutorialCategoria {
+  id: number;
+  title: string;
+  subtitle: string;
+  icon: string;
+  tutoriais: Tutorial[];
+}
+
 // Tutoriais por categoria
-export const tutoriaisPorCategoria = [
+export const tutoriaisPorCategoria: TutorialCategoria[] = [
   {
     id: 1,
     title: "Design Automotivo",
