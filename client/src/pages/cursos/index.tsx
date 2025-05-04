@@ -387,11 +387,11 @@ export default function CursosPage() {
     return !['premium', 'mensal', 'anual', 'lifetime'].includes(user.role);
   };
 
-  // Buscar todos os módulos (atualizando para a nova rota)
+  // Buscar todos os módulos
   const { data: modules, isLoading, error } = useQuery({
-    queryKey: ['/api/courses/modules'],
+    queryKey: ['/api/cursos/modules'],
     queryFn: async () => {
-      const res = await apiRequest('GET', '/api/courses/modules');
+      const res = await apiRequest('GET', '/api/cursos/modules');
       return await res.json();
     }
   });

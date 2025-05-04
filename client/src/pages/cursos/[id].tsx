@@ -628,9 +628,9 @@ export default function CursoDetalhesPage() {
     isLoading: isLoadingModule, 
     error: moduleError 
   } = useQuery({
-    queryKey: [`/api/courses/modules/${id}`],
+    queryKey: [`/api/cursos/modules/${id}`],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/courses/modules/${id}`);
+      const res = await apiRequest('GET', `/api/cursos/modules/${id}`);
       return await res.json();
     }
   });
@@ -642,9 +642,9 @@ export default function CursoDetalhesPage() {
     error: lessonsError,
     refetch: refetchLessons
   } = useQuery<{lesson: CourseLesson, progress: CourseProgress}[]>({
-    queryKey: [`/api/courses/modules/${id}/lessons`],
+    queryKey: [`/api/cursos/modules/${id}/lessons`],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/courses/modules/${id}/lessons`);
+      const res = await apiRequest('GET', `/api/cursos/modules/${id}/lessons`);
       return await res.json();
     }
   });
