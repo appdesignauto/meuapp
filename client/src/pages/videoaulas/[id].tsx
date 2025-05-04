@@ -43,7 +43,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tutorial } from "@/components/videoaulas/TutorialData";
 
 // Importar os dados simulados
-import { tutoriais, tutoriaisPopulares } from "@/components/videoaulas/TutorialData";
+// import { tutoriais, tutoriaisPopulares } from "@/components/videoaulas/TutorialData";
 
 // Componente para player de vídeo personalizado
 const VideoPlayer: React.FC<{ videoUrl: string; thumbnailUrl: string }> = ({ videoUrl, thumbnailUrl }) => {
@@ -280,9 +280,66 @@ const VideoLessonPage: React.FC = () => {
   const [hoverRating, setHoverRating] = useState<number>(0);
   const [hasRated, setHasRated] = useState<boolean>(userRating > 0);
 
-  // Encontrar o tutorial pelo ID
-  const tutorial = tutoriais.find(t => t.id === id);
-  const tutoriaisRelacionados = tutoriaisPopulares.filter(t => t.id !== id).slice(0, 4);
+  // Buscar dados do banco
+  const { data: moduleData, isLoading: isLoadingModules } = useQuery({
+    queryKey: ['/api/courses/modules'],
+    retry: 1,
+  });
+  
+  const { data: lessonsData, isLoading: isLoadingLessons } = useQuery({
+    queryKey: ['/api/courses/lessons'],
+    retry: 1,
+  });
+  
+  // Formatar duração de segundos para string "MM:SS"
+  const formatarDuracao = (segundos?: number) => {
+    if (!segundos) return "00:00";
+    const minutos = Math.floor(segundos / 60);
+    const segsRestantes = segundos % 60;
+    return `${minutos}:${segsRestantes.toString().padStart(2, '0')}`;
+  };
+  
+  // Encontrar a lição atual pelo ID
+  const currentLesson = lessonsData?.find(lesson => lesson.id === id);
+  const currentModule = currentLesson ? moduleData?.find(module => module.id === currentLesson.moduleId) : null;
+  
+  // Preparar o objeto tutorial no formato necessário para o componente
+  const tutorial = currentLesson ? {
+    id: currentLesson.id,
+    title: currentLesson.title,
+    description: currentLesson.description,
+    thumbnailUrl: currentLesson.thumbnailUrl,
+    videoUrl: currentLesson.videoUrl,
+    videoProvider: currentLesson.videoProvider,
+    duration: formatarDuracao(currentLesson.duration),
+    level: currentModule?.level || 'iniciante',
+    isPremium: currentLesson.isPremium,
+    isWatched: false, // Será implementado com histórico do usuário no futuro
+    views: 0, // Será implementado no futuro
+    moduleId: currentLesson.moduleId,
+    tags: [], // Será implementado no futuro
+    progress: 0 // Será implementado no futuro
+  } : null;
+  
+  // Buscar lições relacionadas (do mesmo módulo)
+  const tutoriaisRelacionados = lessonsData
+    ?.filter(lesson => lesson.id !== id && lesson.moduleId === currentLesson?.moduleId)
+    .slice(0, 4)
+    .map(lesson => ({
+      id: lesson.id,
+      title: lesson.title,
+      description: lesson.description,
+      thumbnailUrl: lesson.thumbnailUrl,
+      videoUrl: lesson.videoUrl,
+      videoProvider: lesson.videoProvider,
+      duration: formatarDuracao(lesson.duration),
+      level: currentModule?.level || 'iniciante',
+      isPremium: lesson.isPremium,
+      isWatched: false,
+      views: 0,
+      moduleId: lesson.moduleId,
+      tags: []
+    })) || [];
 
   // Função para verificar se o conteúdo premium deve ser bloqueado
   const isPremiumLocked = (isPremium: boolean) => {
@@ -335,8 +392,9 @@ const VideoLessonPage: React.FC = () => {
       // Aguardar um instante para mostrar visualmente que a aula foi concluída
       setTimeout(() => {
         // Navegar para a próxima aula se existir
-        if (id < tutoriais.length) {
-          navigate(`/videoaulas/${id + 1}`);
+        const nextLesson = lessonsData?.find(l => l.moduleId === currentLesson?.moduleId && l.id > id);
+        if (nextLesson) {
+          navigate(`/videoaulas/${nextLesson.id}`);
         }
       }, 300);
     }
@@ -480,30 +538,36 @@ const VideoLessonPage: React.FC = () => {
                       {/* Botões de navegação mobile - agora ao lado do título */}
                       <div className="flex gap-1.5 flex-shrink-0 mt-0.5">
                         {/* Botão anterior */}
-                        {id > 1 ? (
-                          <Link href={`/videoaulas/${id - 1}`} className="inline-flex">
-                            <div className="w-8 h-8 bg-[#434756] rounded-md flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
+                        {(() => {
+                          const prevLesson = lessonsData?.find(l => l.moduleId === currentLesson?.moduleId && l.id < id);
+                          return prevLesson ? (
+                            <Link href={`/videoaulas/${prevLesson.id}`} className="inline-flex">
+                              <div className="w-8 h-8 bg-[#434756] rounded-md flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
+                                <ChevronLeft className="h-4 w-4" />
+                              </div>
+                            </Link>
+                          ) : (
+                            <div className="w-8 h-8 bg-gray-300 rounded-md flex items-center justify-center text-white cursor-not-allowed">
                               <ChevronLeft className="h-4 w-4" />
                             </div>
-                          </Link>
-                        ) : (
-                          <div className="w-8 h-8 bg-gray-300 rounded-md flex items-center justify-center text-white cursor-not-allowed">
-                            <ChevronLeft className="h-4 w-4" />
-                          </div>
-                        )}
+                          );
+                        })()}
                         
                         {/* Botão próximo */}
-                        {id < tutoriais.length ? (
-                          <Link href={`/videoaulas/${id + 1}`} className="inline-flex">
-                            <div className="w-8 h-8 bg-[#434756] rounded-md flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
+                        {(() => {
+                          const nextLesson = lessonsData?.find(l => l.moduleId === currentLesson?.moduleId && l.id > id);
+                          return nextLesson ? (
+                            <Link href={`/videoaulas/${nextLesson.id}`} className="inline-flex">
+                              <div className="w-8 h-8 bg-[#434756] rounded-md flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
+                                <ChevronRight className="h-4 w-4" />
+                              </div>
+                            </Link>
+                          ) : (
+                            <div className="w-8 h-8 bg-gray-300 rounded-md flex items-center justify-center text-white cursor-not-allowed">
                               <ChevronRight className="h-4 w-4" />
                             </div>
-                          </Link>
-                        ) : (
-                          <div className="w-8 h-8 bg-gray-300 rounded-md flex items-center justify-center text-white cursor-not-allowed">
-                            <ChevronRight className="h-4 w-4" />
-                          </div>
-                        )}
+                          );
+                        })()}
                       </div>
                     </div>
                     
