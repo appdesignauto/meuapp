@@ -45,6 +45,7 @@ import dateTestRouter from './date-test-router';
 import supabeDiagnosticsRouter from './routes/supabase-diagnostics';
 import multiArtRouter from './routes/multi-art'; // Rota para artes multi-formato
 import testCreateGroupRouter from './routes/test-create-group'; // Rota de teste para criar grupos
+import videoaulasRouter from './routes/videoaulas-routes'; // Rotas para as videoaulas
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Rota simples de verificação de saúde
@@ -4415,6 +4416,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Registrar rota de teste para criar grupos de artes
   app.use(testCreateGroupRouter);
+  
+  // Aplicar middleware de autenticação nas rotas protegidas de videoaulas
+  app.use('/api/videoaulas/visualizacao', isAuthenticated);
+  app.use('/api/videoaulas/completar', isAuthenticated);
+  app.use('/api/videoaulas/progresso', isAuthenticated);
+  app.use('/api/videoaulas/anotacao', isAuthenticated);
+  
+  // Registrar o router de videoaulas
+  app.use('/api/videoaulas', videoaulasRouter);
 
   const httpServer = createServer(app);
   
