@@ -20,6 +20,7 @@ import {
   Eye
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -264,9 +265,26 @@ export default function VideoaulasPage() {
                   <h2 className="text-2xl font-bold text-blue-800 mb-6 flex items-center">
                     Lista de Reprodução
                   </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  <Carousel
+                    opts={{
+                      align: "start",
+                      loop: false,
+                      containScroll: "trimSnaps",
+                      dragFree: true
+                    }}
+                    slidesPerView={{
+                      base: 1.2,
+                      sm: 2.2, 
+                      md: 3.2,
+                      lg: 4.2
+                    }}
+                    spacing={12}
+                    className="w-full"
+                  >
+                    <CarouselContent>
                     {tutoriaisPopulares.slice(0, 8).map((tutorial, index) => (
-                      <Link key={tutorial.id} href={`/videoaulas/${tutorial.id}`}>
+                      <CarouselItem key={tutorial.id}>
+                      <Link href={`/videoaulas/${tutorial.id}`}>
                         <div className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 hover:shadow-lg hover:border-blue-300 transition-all group">
                           <div className="relative">
                             {/* Numeração de módulo estilo Shark Tank */}
@@ -312,8 +330,10 @@ export default function VideoaulasPage() {
                           </div>
                         </div>
                       </Link>
+                      </CarouselItem>
                     ))}
-                  </div>
+                    </CarouselContent>
+                  </Carousel>
                 </div>
               
                 {/* Modulos organizados por categorias estilo Shark Tank */}
