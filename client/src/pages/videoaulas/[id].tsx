@@ -929,48 +929,50 @@ const VideoLessonPage: React.FC = () => {
                     )}
                   </TabsContent>
                   
-                  <TabsContent value="notas" className="mt-3 sm:mt-4 bg-white p-3 sm:p-5 rounded-lg border border-blue-100 shadow-sm">
-                    <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2 sm:mb-3">Minhas anotações</h3>
-                    {user ? (
-                      <div>
-                        <textarea 
-                          className="w-full min-h-[150px] sm:min-h-[200px] p-3 sm:p-4 bg-white border border-blue-200 text-gray-700 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-sm text-xs sm:text-sm"
-                          placeholder="Faça suas anotações sobre este tutorial aqui..."
-                        ></textarea>
-                        <div className="flex justify-end mt-3">
-                          <Button 
-                            size="sm"
-                            className="bg-blue-600 hover:bg-blue-700 shadow-sm text-xs sm:text-sm"
-                          >
-                            Salvar notas
-                          </Button>
-                        </div>
-                        
-                        <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-100">
-                          <h4 className="text-base sm:text-lg font-medium text-gray-800 mb-2">Dicas para anotações:</h4>
-                          <ul className="list-disc pl-4 sm:pl-5 text-gray-600 space-y-1 text-xs sm:text-sm">
-                            <li>Anote os pontos principais com suas próprias palavras</li>
-                            <li>Registre dúvidas para pesquisar mais tarde</li>
-                            <li>Adicione exemplos relacionados à sua área</li>
-                            <li>Crie uma lista para implementar o aprendizado</li>
-                          </ul>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-center p-4 sm:p-6 bg-blue-50 rounded-md">
-                        <p className="text-gray-700 text-xs sm:text-sm mb-3">
-                          Faça login para adicionar notas a este tutorial.
-                        </p>
-                        <Link href="/auth">
-                          <Button 
-                            size="sm"
-                            className="bg-blue-600 hover:bg-blue-700 shadow-sm text-xs sm:text-sm"
-                          >
-                            Entrar
-                          </Button>
+                  <TabsContent value="aulas" className="mt-3 sm:mt-4 bg-white p-3 sm:p-5 rounded-lg border border-blue-100 shadow-sm">
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Lista de Aulas</h3>
+                    <div className="space-y-2 sm:space-y-3">
+                      {tutoriais.map((aula, indice) => (
+                        <Link 
+                          key={indice + 1} 
+                          href={`/videoaulas/${indice + 1}`}
+                          className={`flex items-center p-2 sm:p-3 rounded-md transition-colors ${
+                            indice + 1 === id 
+                              ? "bg-blue-50 border border-blue-200" 
+                              : "hover:bg-gray-50 border border-gray-100"
+                          }`}
+                        >
+                          <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-md overflow-hidden mr-3 sm:mr-4">
+                            <img 
+                              src={aula.thumbnailUrl} 
+                              alt={aula.title} 
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between">
+                              <h4 className={`font-medium text-sm sm:text-base truncate ${
+                                indice + 1 === id ? "text-blue-700" : "text-gray-800"
+                              }`}>
+                                {indice + 1}. {aula.title}
+                              </h4>
+                              {localStorage.getItem(`tutorial-${indice + 1}-completed`) === 'true' && (
+                                <div className="ml-2 sm:ml-3 flex-shrink-0">
+                                  <div className="relative flex-shrink-0">
+                                    <Check className="h-4 w-4 text-blue-600" />
+                                    <Check className="h-4 w-4 text-blue-600 absolute -top-0.5 -left-0.5" />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            <p className="text-xs sm:text-sm text-gray-500 truncate max-w-full">
+                              {aula.duration} · {aula.level}
+                            </p>
+                          </div>
                         </Link>
-                      </div>
-                    )}
+                      ))}
+                    </div>
                   </TabsContent>
                 </Tabs>
               </div>
