@@ -722,69 +722,84 @@ const VideoLessonPage: React.FC = () => {
                     )}
                   </TabsContent>
                   
-                  <TabsContent value="materiais" className="mt-4 bg-white p-5 rounded-lg border border-blue-100 shadow-sm">
+                  <TabsContent value="materiais" className="mt-3 sm:mt-4 bg-white p-3 sm:p-5 rounded-lg border border-blue-100 shadow-sm">
                     {isLocked ? (
-                      <div className="text-center p-8">
-                        <div className="bg-gradient-to-r from-amber-50 to-yellow-100 p-4 rounded-full shadow-sm inline-flex mb-3">
-                          <Lock className="h-12 w-12 text-yellow-500" />
+                      <div className="text-center p-4 sm:p-8">
+                        <div className="bg-gradient-to-r from-amber-50 to-yellow-100 p-3 sm:p-4 rounded-full shadow-sm inline-flex mb-2 sm:mb-3">
+                          <Lock className="h-8 w-8 sm:h-12 sm:w-12 text-yellow-500" />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-800 mb-2">
+                        <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2">
                           Materiais Premium
                         </h3>
-                        <p className="text-gray-600 mb-4 max-w-md mx-auto">
+                        <p className="text-xs sm:text-sm md:text-base text-gray-600 mb-3 sm:mb-4 max-w-md mx-auto">
                           Os materiais deste tutorial estão disponíveis apenas para assinantes premium.
                         </p>
                         <Link href="/planos">
-                          <Button className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white shadow-sm transition-all">
+                          <Button 
+                            size="sm"
+                            className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white shadow-sm transition-all text-xs sm:text-sm"
+                          >
                             Ver Planos de Assinatura
                           </Button>
                         </Link>
                       </div>
                     ) : (
-                      <div className="space-y-4">
-                        <h3 className="text-xl font-bold text-gray-800 mb-3">Materiais de apoio</h3>
+                      <div className="space-y-3 sm:space-y-4">
+                        <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2 sm:mb-3">Materiais de apoio</h3>
                         
-                        <div className="border border-blue-100 rounded-md p-4 hover:bg-blue-50 transition-colors flex justify-between items-center shadow-sm">
-                          <div className="flex items-center gap-4">
-                            <div className="bg-blue-100 p-2 rounded-md">
-                              <Download className="h-5 w-5 text-blue-600" />
+                        <div className="border border-blue-100 rounded-md p-3 sm:p-4 hover:bg-blue-50 transition-colors flex justify-between items-center shadow-sm">
+                          <div className="flex items-center gap-2 sm:gap-4">
+                            <div className="bg-blue-100 p-1.5 sm:p-2 rounded-md">
+                              <Download className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                             </div>
                             <div>
-                              <h4 className="text-gray-800 font-medium">Guia de Referência</h4>
-                              <p className="text-gray-500 text-sm">PDF • 2.4 MB</p>
+                              <h4 className="text-gray-800 font-medium text-xs sm:text-sm">Guia de Referência</h4>
+                              <p className="text-gray-500 text-[10px] sm:text-xs">PDF • 2.4 MB</p>
                             </div>
                           </div>
-                          <Button variant="outline" size="sm" className="text-blue-700 border-blue-200 hover:bg-blue-50">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="text-blue-700 border-blue-200 hover:bg-blue-50 text-xs h-7 px-2 sm:px-3"
+                          >
                             Baixar
                           </Button>
                         </div>
                         
-                        <div className="border border-blue-100 rounded-md p-4 hover:bg-blue-50 transition-colors flex justify-between items-center shadow-sm">
-                          <div className="flex items-center gap-4">
-                            <div className="bg-purple-100 p-2 rounded-md">
-                              <Download className="h-5 w-5 text-purple-600" />
+                        <div className="border border-blue-100 rounded-md p-3 sm:p-4 hover:bg-blue-50 transition-colors flex justify-between items-center shadow-sm">
+                          <div className="flex items-center gap-2 sm:gap-4">
+                            <div className="bg-purple-100 p-1.5 sm:p-2 rounded-md">
+                              <Download className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
                             </div>
                             <div>
-                              <h4 className="text-gray-800 font-medium">Templates</h4>
-                              <p className="text-gray-500 text-sm">ZIP • 5.8 MB</p>
+                              <h4 className="text-gray-800 font-medium text-xs sm:text-sm">Templates</h4>
+                              <p className="text-gray-500 text-[10px] sm:text-xs">ZIP • 5.8 MB</p>
                             </div>
                           </div>
-                          <Button variant="outline" size="sm" className="text-blue-700 border-blue-200 hover:bg-blue-50">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="text-blue-700 border-blue-200 hover:bg-blue-50 text-xs h-7 px-2 sm:px-3"
+                          >
                             Baixar
                           </Button>
                         </div>
                         
-                        <div className="border border-blue-100 rounded-md p-4 hover:bg-blue-50 transition-colors flex justify-between items-center shadow-sm">
-                          <div className="flex items-center gap-4">
-                            <div className="bg-green-100 p-2 rounded-md">
-                              <ExternalLink className="h-5 w-5 text-green-600" />
+                        <div className="border border-blue-100 rounded-md p-3 sm:p-4 hover:bg-blue-50 transition-colors flex justify-between items-center shadow-sm">
+                          <div className="flex items-center gap-2 sm:gap-4">
+                            <div className="bg-green-100 p-1.5 sm:p-2 rounded-md">
+                              <ExternalLink className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
                             </div>
                             <div>
-                              <h4 className="text-gray-800 font-medium">Link para template Canva</h4>
-                              <p className="text-gray-500 text-sm">Link externo • Canva</p>
+                              <h4 className="text-gray-800 font-medium text-xs sm:text-sm">Link para template Canva</h4>
+                              <p className="text-gray-500 text-[10px] sm:text-xs">Link externo • Canva</p>
                             </div>
                           </div>
-                          <Button variant="outline" size="sm" className="text-blue-700 border-blue-200 hover:bg-blue-50">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="text-blue-700 border-blue-200 hover:bg-blue-50 text-xs h-7 px-2 sm:px-3"
+                          >
                             Abrir link
                           </Button>
                         </div>
@@ -792,27 +807,43 @@ const VideoLessonPage: React.FC = () => {
                     )}
                   </TabsContent>
                   
-                  <TabsContent value="notas" className="mt-4 bg-white p-5 rounded-lg border border-blue-100 shadow-sm">
-                    <h3 className="text-xl font-bold text-gray-800 mb-3">Minhas anotações</h3>
+                  <TabsContent value="notas" className="mt-3 sm:mt-4 bg-white p-3 sm:p-5 rounded-lg border border-blue-100 shadow-sm">
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2 sm:mb-3">Minhas anotações</h3>
                     {user ? (
                       <div>
                         <textarea 
-                          className="w-full h-40 p-4 bg-white border border-blue-200 text-gray-700 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-sm"
+                          className="w-full min-h-[150px] sm:min-h-[200px] p-3 sm:p-4 bg-white border border-blue-200 text-gray-700 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-sm text-xs sm:text-sm"
                           placeholder="Faça suas anotações sobre este tutorial aqui..."
                         ></textarea>
                         <div className="flex justify-end mt-3">
-                          <Button className="bg-blue-600 hover:bg-blue-700 shadow-sm">
+                          <Button 
+                            size="sm"
+                            className="bg-blue-600 hover:bg-blue-700 shadow-sm text-xs sm:text-sm"
+                          >
                             Salvar notas
                           </Button>
                         </div>
+                        
+                        <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-100">
+                          <h4 className="text-base sm:text-lg font-medium text-gray-800 mb-2">Dicas para anotações:</h4>
+                          <ul className="list-disc pl-4 sm:pl-5 text-gray-600 space-y-1 text-xs sm:text-sm">
+                            <li>Anote os pontos principais com suas próprias palavras</li>
+                            <li>Registre dúvidas para pesquisar mais tarde</li>
+                            <li>Adicione exemplos relacionados à sua área</li>
+                            <li>Crie uma lista para implementar o aprendizado</li>
+                          </ul>
+                        </div>
                       </div>
                     ) : (
-                      <div className="text-center p-6 bg-blue-50 rounded-md">
-                        <p className="text-gray-700 mb-3">
+                      <div className="text-center p-4 sm:p-6 bg-blue-50 rounded-md">
+                        <p className="text-gray-700 text-xs sm:text-sm mb-3">
                           Faça login para adicionar notas a este tutorial.
                         </p>
                         <Link href="/auth">
-                          <Button className="bg-blue-600 hover:bg-blue-700 shadow-sm">
+                          <Button 
+                            size="sm"
+                            className="bg-blue-600 hover:bg-blue-700 shadow-sm text-xs sm:text-sm"
+                          >
                             Entrar
                           </Button>
                         </Link>
@@ -823,37 +854,39 @@ const VideoLessonPage: React.FC = () => {
               </div>
               
               {/* Navegação entre aulas (estilo minimalista com botões circulares) */}
-              <div className="mt-8 border-t border-gray-200 pt-4">
+              <div className="mt-6 sm:mt-8 border-t border-gray-200 pt-3 sm:pt-4">
                 <div className="flex justify-between items-center">
-                  <div className="flex items-center space-x-3">
-                    <span className="text-gray-500 text-sm">{tutorial.id}/10</span>
-                    <h3 className="text-gray-800 font-medium text-sm">{tutorial.title}</h3>
+                  <div className="flex items-center space-x-2 sm:space-x-3 overflow-hidden">
+                    <span className="text-gray-500 text-xs sm:text-sm">{tutorial.id}/10</span>
+                    <h3 className="text-gray-800 font-medium text-xs sm:text-sm truncate">
+                      {tutorial.title}
+                    </h3>
                   </div>
                   
-                  <div className="flex gap-2">
+                  <div className="flex gap-1.5 sm:gap-2 flex-shrink-0 ml-2">
                     {/* Botão anterior - sempre visível, desabilitado se for a primeira aula */}
                     {id > 1 ? (
                       <Link href={`/videoaulas/${id - 1}`} className="inline-flex">
-                        <div className="w-10 h-10 bg-[#434756] rounded-full flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
-                          <ChevronLeft className="h-5 w-5" />
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#434756] rounded-full flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
+                          <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
                         </div>
                       </Link>
                     ) : (
-                      <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white cursor-not-allowed">
-                        <ChevronLeft className="h-5 w-5" />
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex items-center justify-center text-white cursor-not-allowed">
+                        <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
                       </div>
                     )}
                     
                     {/* Botão próximo - sempre visível, desabilitado se for a última aula */}
                     {id < tutoriais.length ? (
                       <Link href={`/videoaulas/${id + 1}`} className="inline-flex">
-                        <div className="w-10 h-10 bg-[#434756] rounded-full flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
-                          <ChevronRight className="h-5 w-5" />
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#434756] rounded-full flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
+                          <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
                         </div>
                       </Link>
                     ) : (
-                      <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white cursor-not-allowed">
-                        <ChevronRight className="h-5 w-5" />
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex items-center justify-center text-white cursor-not-allowed">
+                        <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
                       </div>
                     )}
                   </div>
@@ -862,14 +895,14 @@ const VideoLessonPage: React.FC = () => {
             </div>
             
             {/* Sidebar com tutoriais relacionados e progresso - estilo clean */}
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Progresso do módulo */}
-              <div className="bg-white rounded-lg border border-blue-100 p-5 shadow-sm">
-                <h3 className="text-gray-800 font-bold text-lg mb-4 flex items-center">
-                  <ListChecks className="h-5 w-5 mr-2 text-blue-600" />
-                  Progresso do Módulo
+              <div className="bg-white rounded-lg border border-blue-100 p-3 sm:p-5 shadow-sm">
+                <h3 className="text-gray-800 font-bold text-base sm:text-lg mb-3 sm:mb-4 flex items-center">
+                  <ListChecks className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2 text-blue-600" />
+                  <span>Progresso do Módulo</span>
                 </h3>
-                <div className="space-y-2.5">
+                <div className="space-y-2 sm:space-y-2.5">
                   {tutoriaisRelacionados.slice(0, 5).map((t, index) => (
                     <div 
                       key={t.id}
@@ -877,32 +910,32 @@ const VideoLessonPage: React.FC = () => {
                         t.id === id 
                           ? 'bg-blue-50 border-blue-400' 
                           : 'border-blue-100 hover:bg-blue-50/50'
-                      } border rounded-md p-3 transition-colors flex items-center justify-between shadow-sm`}
+                      } border rounded-md p-2 sm:p-3 transition-colors flex items-center justify-between shadow-sm`}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className={`${t.id === id ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700'} h-7 w-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-medium transition-colors shadow-sm`}>
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className={`${t.id === id ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700'} h-6 w-6 sm:h-7 sm:w-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-medium transition-colors shadow-sm`}>
                           {index + 1}
                         </div>
                         <div className="min-w-0">
-                          <h4 className={`${t.id === id ? 'text-blue-700' : 'text-gray-800'} font-medium text-sm truncate`}>
+                          <h4 className={`${t.id === id ? 'text-blue-700' : 'text-gray-800'} font-medium text-xs sm:text-sm truncate`}>
                             {t.title}
                           </h4>
-                          <p className="text-gray-500 text-xs">{t.duration}</p>
+                          <p className="text-gray-500 text-[10px] sm:text-xs">{t.duration}</p>
                         </div>
                       </div>
                       
                       {t.id === id ? (
-                        <div className="bg-blue-600 h-6 w-6 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
-                          <Play fill="white" className="h-3.5 w-3.5 text-white ml-0.5" />
+                        <div className="bg-blue-600 h-5 w-5 sm:h-6 sm:w-6 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
+                          <Play fill="white" className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white ml-0.5" />
                         </div>
                       ) : t.isWatched ? (
-                        <div className="bg-green-100 h-6 w-6 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
-                          <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
+                        <div className="bg-green-100 h-5 w-5 sm:h-6 sm:w-6 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
+                          <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-green-600" />
                         </div>
                       ) : (
                         <Link href={`/videoaulas/${t.id}`} className="flex">
-                          <div className="bg-blue-100 hover:bg-blue-200 h-6 w-6 rounded-full flex items-center justify-center flex-shrink-0 transition-colors shadow-sm">
-                            <Play fill="#2563EB" className="h-3.5 w-3.5 text-blue-600 ml-0.5" />
+                          <div className="bg-blue-100 hover:bg-blue-200 h-5 w-5 sm:h-6 sm:w-6 rounded-full flex items-center justify-center flex-shrink-0 transition-colors shadow-sm">
+                            <Play fill="#2563EB" className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-blue-600 ml-0.5" />
                           </div>
                         </Link>
                       )}
@@ -910,36 +943,36 @@ const VideoLessonPage: React.FC = () => {
                   ))}
                 </div>
                 
-                <div className="mt-5 pt-4 border-t border-blue-100">
+                <div className="mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-blue-100">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-gray-600 text-sm">Progresso do módulo</span>
-                    <span className="text-blue-700 text-sm font-medium">2/8</span>
+                    <span className="text-gray-600 text-xs sm:text-sm">Progresso do módulo</span>
+                    <span className="text-blue-700 text-xs sm:text-sm font-medium">2/8</span>
                   </div>
-                  <div className="w-full h-2.5 bg-blue-100 rounded-full overflow-hidden">
+                  <div className="w-full h-2 sm:h-2.5 bg-blue-100 rounded-full overflow-hidden">
                     <div className="h-full bg-blue-600 rounded-full" style={{ width: '25%' }}></div>
                   </div>
                 </div>
               </div>
               
               {/* Tutoriais relacionados - estilo minimalista */}
-              <div className="bg-white rounded-lg border border-blue-100 p-5 shadow-sm">
-                <h3 className="text-gray-800 font-bold text-lg mb-4 flex items-center">
-                  <BookOpen className="h-5 w-5 mr-2 text-blue-600" />
-                  Tutoriais Relacionados
+              <div className="bg-white rounded-lg border border-blue-100 p-3 sm:p-5 shadow-sm">
+                <h3 className="text-gray-800 font-bold text-base sm:text-lg mb-3 sm:mb-4 flex items-center">
+                  <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2 text-blue-600" />
+                  <span>Tutoriais Relacionados</span>
                 </h3>
                 
                 {/* Mesma série */}
-                <div className="mb-4">
-                  <h4 className="text-sm font-medium text-gray-500 mb-3 flex items-center">
-                    <PlayCircle className="h-4 w-4 mr-1.5 text-blue-500" />
-                    Mesma série
+                <div className="mb-3 sm:mb-4">
+                  <h4 className="text-xs sm:text-sm font-medium text-gray-500 mb-2 sm:mb-3 flex items-center">
+                    <PlayCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5 text-blue-500" />
+                    <span>Mesma série</span>
                   </h4>
-                  <div className="space-y-2.5">
+                  <div className="space-y-2 sm:space-y-2.5">
                     {tutoriaisRelacionados.slice(0, 2).map((t) => (
                       <Link key={t.id} href={`/videoaulas/${t.id}`}>
-                        <div className="group flex items-center gap-3 p-2 hover:bg-blue-50 rounded-md transition-colors cursor-pointer">
+                        <div className="group flex items-center gap-2 sm:gap-3 p-1.5 sm:p-2 hover:bg-blue-50 rounded-md transition-colors cursor-pointer">
                           {/* Thumbnail pequena melhorada */}
-                          <div className="relative w-20 h-20 flex-shrink-0 rounded-md overflow-hidden shadow-sm">
+                          <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 rounded-md overflow-hidden shadow-sm">
                             <img 
                               src={t.thumbnailUrl} 
                               alt={t.title}
@@ -948,30 +981,30 @@ const VideoLessonPage: React.FC = () => {
                             
                             {/* Indicador de Play hover */}
                             <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Play className="h-5 w-5 text-white" fill="white" />
+                              <Play className="h-4 w-4 sm:h-5 sm:w-5 text-white" fill="white" />
                             </div>
                             
                             {/* Indicadores de status */}
                             {t.isWatched && (
-                              <div className="absolute bottom-1 right-1 bg-green-500 h-3.5 w-3.5 rounded-full border border-white flex items-center justify-center">
-                                <CheckCircle2 className="h-2 w-2 text-white" />
+                              <div className="absolute bottom-1 right-1 bg-green-500 h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-full border border-white flex items-center justify-center">
+                                <CheckCircle2 className="h-1.5 w-1.5 sm:h-2 sm:w-2 text-white" />
                               </div>
                             )}
                             {t.isPremium && !t.isWatched && (
-                              <div className="absolute bottom-1 right-1 bg-yellow-500 h-3.5 w-3.5 rounded-full border border-white flex items-center justify-center">
-                                <Lock className="h-2 w-2 text-white" />
+                              <div className="absolute bottom-1 right-1 bg-yellow-500 h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-full border border-white flex items-center justify-center">
+                                <Lock className="h-1.5 w-1.5 sm:h-2 sm:w-2 text-white" />
                               </div>
                             )}
                           </div>
                           
                           {/* Informações */}
                           <div className="min-w-0 flex-1">
-                            <h4 className="text-gray-800 text-sm font-medium group-hover:text-blue-700 transition-colors line-clamp-2">
+                            <h4 className="text-gray-800 text-xs sm:text-sm font-medium group-hover:text-blue-700 transition-colors line-clamp-2">
                               {t.title}
                             </h4>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="text-gray-500 text-xs flex items-center">
-                                <Clock className="h-3 w-3 mr-1 inline-block" />
+                            <div className="flex items-center gap-1.5 sm:gap-2 mt-1">
+                              <span className="text-gray-500 text-[10px] sm:text-xs flex items-center">
+                                <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1 inline-block" />
                                 {t.duration}
                               </span>
                             </div>
@@ -983,17 +1016,17 @@ const VideoLessonPage: React.FC = () => {
                 </div>
                 
                 {/* Recomendados para você */}
-                <div className="pt-3 border-t border-blue-100">
-                  <h4 className="text-sm font-medium text-gray-500 mb-3 flex items-center">
-                    <ThumbsUp className="h-4 w-4 mr-1.5 text-blue-500" />
-                    Recomendados para você
+                <div className="pt-2 sm:pt-3 border-t border-blue-100">
+                  <h4 className="text-xs sm:text-sm font-medium text-gray-500 mb-2 sm:mb-3 flex items-center">
+                    <ThumbsUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5 text-blue-500" />
+                    <span>Recomendados para você</span>
                   </h4>
-                  <div className="space-y-2.5">
+                  <div className="space-y-2 sm:space-y-2.5">
                     {tutoriaisRelacionados.slice(2, 5).map((t) => (
                       <Link key={t.id} href={`/videoaulas/${t.id}`}>
-                        <div className="group flex items-center gap-3 p-2 hover:bg-blue-50 rounded-md transition-colors cursor-pointer">
+                        <div className="group flex items-center gap-2 sm:gap-3 p-1.5 sm:p-2 hover:bg-blue-50 rounded-md transition-colors cursor-pointer">
                           {/* Thumbnail pequena */}
-                          <div className="relative w-20 h-20 flex-shrink-0 rounded-md overflow-hidden shadow-sm">
+                          <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 rounded-md overflow-hidden shadow-sm">
                             <img 
                               src={t.thumbnailUrl} 
                               alt={t.title}
@@ -1002,30 +1035,30 @@ const VideoLessonPage: React.FC = () => {
                             
                             {/* Indicador de Play hover */}
                             <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Play className="h-5 w-5 text-white" fill="white" />
+                              <Play className="h-4 w-4 sm:h-5 sm:w-5 text-white" fill="white" />
                             </div>
                             
                             {/* Indicadores de status */}
                             {t.isWatched && (
-                              <div className="absolute bottom-1 right-1 bg-green-500 h-3.5 w-3.5 rounded-full border border-white flex items-center justify-center">
-                                <CheckCircle2 className="h-2 w-2 text-white" />
+                              <div className="absolute bottom-1 right-1 bg-green-500 h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-full border border-white flex items-center justify-center">
+                                <CheckCircle2 className="h-1.5 w-1.5 sm:h-2 sm:w-2 text-white" />
                               </div>
                             )}
                             {t.isPremium && !t.isWatched && (
-                              <div className="absolute bottom-1 right-1 bg-yellow-500 h-3.5 w-3.5 rounded-full border border-white flex items-center justify-center">
-                                <Lock className="h-2 w-2 text-white" />
+                              <div className="absolute bottom-1 right-1 bg-yellow-500 h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-full border border-white flex items-center justify-center">
+                                <Lock className="h-1.5 w-1.5 sm:h-2 sm:w-2 text-white" />
                               </div>
                             )}
                           </div>
                           
                           {/* Informações */}
                           <div className="min-w-0 flex-1">
-                            <h4 className="text-gray-800 text-sm font-medium group-hover:text-blue-700 transition-colors line-clamp-2">
+                            <h4 className="text-gray-800 text-xs sm:text-sm font-medium group-hover:text-blue-700 transition-colors line-clamp-2">
                               {t.title}
                             </h4>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="text-gray-500 text-xs flex items-center">
-                                <Clock className="h-3 w-3 mr-1 inline-block" />
+                            <div className="flex items-center gap-1.5 sm:gap-2 mt-1">
+                              <span className="text-gray-500 text-[10px] sm:text-xs flex items-center">
+                                <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1 inline-block" />
                                 {t.duration}
                               </span>
                             </div>
