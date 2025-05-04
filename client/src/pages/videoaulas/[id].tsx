@@ -1032,17 +1032,34 @@ const VideoLessonPage: React.FC = () => {
                 </h3>
                 <div className="space-y-2 sm:space-y-2.5">
                   {tutoriaisRelacionados.slice(0, 5).map((t, index) => (
-                    <div 
+                    <Link 
                       key={t.id}
+                      href={`/videoaulas/${t.id}`}
                       className={`${
                         t.id === id 
                           ? 'bg-blue-50 border-blue-400' 
                           : 'border-blue-100 hover:bg-blue-50/50'
-                      } border rounded-md p-2 sm:p-3 transition-colors flex items-center justify-between shadow-sm`}
+                      } border rounded-md p-2 sm:p-3 transition-colors flex items-center justify-between shadow-sm w-full`}
                     >
                       <div className="flex items-center gap-2 sm:gap-3">
-                        <div className={`${t.id === id ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700'} h-6 w-6 sm:h-7 sm:w-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-medium transition-colors shadow-sm`}>
-                          {index + 1}
+                        <div className={`${t.id === id ? 'ring-2 ring-blue-600' : ''} h-10 w-16 sm:h-12 sm:w-20 rounded overflow-hidden flex-shrink-0 transition-all shadow-sm relative`}>
+                          <img 
+                            src={t.thumbnailUrl} 
+                            alt={t.title} 
+                            className="w-full h-full object-cover"
+                          />
+                          {t.isWatched && (
+                            <div className="absolute bottom-0.5 right-0.5 bg-green-600 rounded-full h-4 w-4 flex items-center justify-center">
+                              <Check className="h-2.5 w-2.5 text-white" />
+                            </div>
+                          )}
+                          {t.id === id && (
+                            <div className="absolute inset-0 bg-blue-900/20 flex items-center justify-center">
+                              <div className="bg-blue-600 h-6 w-6 rounded-full flex items-center justify-center shadow-sm">
+                                <Play fill="white" className="h-3.5 w-3.5 text-white ml-0.5" />
+                              </div>
+                            </div>
+                          )}
                         </div>
                         <div className="min-w-0">
                           <h4 className={`${t.id === id ? 'text-blue-700' : 'text-gray-800'} font-medium text-xs sm:text-sm truncate`}>
@@ -1051,23 +1068,7 @@ const VideoLessonPage: React.FC = () => {
                           <p className="text-gray-500 text-[10px] sm:text-xs">{t.duration}</p>
                         </div>
                       </div>
-                      
-                      {t.id === id ? (
-                        <div className="bg-blue-600 h-5 w-5 sm:h-6 sm:w-6 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
-                          <Play fill="white" className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white ml-0.5" />
-                        </div>
-                      ) : t.isWatched ? (
-                        <div className="bg-green-100 h-5 w-5 sm:h-6 sm:w-6 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
-                          <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-green-600" />
-                        </div>
-                      ) : (
-                        <Link href={`/videoaulas/${t.id}`} className="flex">
-                          <div className="bg-blue-100 hover:bg-blue-200 h-5 w-5 sm:h-6 sm:w-6 rounded-full flex items-center justify-center flex-shrink-0 transition-colors shadow-sm">
-                            <Play fill="#2563EB" className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-blue-600 ml-0.5" />
-                          </div>
-                        </Link>
-                      )}
-                    </div>
+                    </Link>
                   ))}
                 </div>
                 
