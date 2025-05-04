@@ -90,6 +90,15 @@ export default function VideoaulasPage() {
         <div className="relative w-full h-[450px] overflow-hidden">
           {/* Fundo com imagem ou gradiente */}
           <div className="absolute inset-0 z-0 bg-gradient-to-r from-blue-100 via-blue-50 to-white">
+            {/* Imagem de fundo provisória */}
+            <div 
+              className="absolute inset-0 opacity-20 bg-cover bg-center"
+              style={{
+                backgroundImage: "url('https://images.unsplash.com/photo-1542362567-b07e54358753?q=80&w=2070&auto=format&fit=crop')",
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
+            ></div>
             <div className="absolute inset-0 opacity-10 bg-[url('/images/backgrounds/auto-pattern.png')] bg-center"></div>
           </div>
           
