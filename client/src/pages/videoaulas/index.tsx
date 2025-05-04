@@ -268,9 +268,15 @@ export default function VideoaulasPage() {
                   <Carousel
                     opts={{
                       align: "start",
-                      dragFree: true
+                      loop: false,
+                      containScroll: "trimSnaps"
                     }}
-                    slidesPerView={4.2}
+                    slidesPerView={{
+                      base: 1.2,
+                      sm: 2.2, 
+                      md: 3.2,
+                      lg: 4.2
+                    }}
                     spacing={16}
                     className="w-full"
                   >
@@ -345,9 +351,15 @@ export default function VideoaulasPage() {
                     <Carousel
                       opts={{
                         align: "start",
-                        dragFree: true
+                        loop: false,
+                        containScroll: "trimSnaps"
                       }}
-                      slidesPerView={4.2}
+                      slidesPerView={{
+                        base: 1.2,
+                        sm: 2.2, 
+                        md: 3.2,
+                        lg: 4.2
+                      }}
                       spacing={16}
                       className="w-full"
                     >
