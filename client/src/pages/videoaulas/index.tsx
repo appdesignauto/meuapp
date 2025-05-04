@@ -135,7 +135,7 @@ export default function VideoaulasPage() {
         
         <div className="container mx-auto py-8 max-w-7xl">
           {/* Barra de pesquisa clean com filtros em formato de pills */}
-          <div className="mb-6 sticky top-16 z-20 ml-4 md:ml-8 lg:ml-10 xl:ml-12">
+          <div className="mb-6 sticky top-16 z-20 mx-4 md:mx-8 lg:mx-10 xl:mx-12">
             <div className="flex flex-col md:flex-row items-center gap-3 p-3 rounded-lg bg-white shadow-sm border border-gray-100">
               {/* Barra de busca estilo clean */}
               <div className="relative w-full md:w-auto md:min-w-[240px] flex-grow-0">
