@@ -200,12 +200,36 @@ export const tutoriaisRecentes = [...tutoriais].sort(() => 0.5 - Math.random()).
 export const tutoriaisPopulares = [...tutoriais].sort((a, b) => b.views - a.views).slice(0, 8);
 
 // Tutoriais por categoria
-export const tutoriaisPorCategoria = {
-  design: tutoriais.filter(t => t.tags.includes('design')),
-  marketing: tutoriais.filter(t => t.tags.includes('marketing')),
-  fotografia: tutoriais.filter(t => t.tags.includes('fotografia')),
-  edição: tutoriais.filter(t => t.tags.includes('edição')),
-};
+export const tutoriaisPorCategoria = [
+  {
+    id: 1,
+    title: "Design Automotivo",
+    subtitle: "Elementos visuais para o setor de carros",
+    icon: "🎨",
+    tutoriais: tutoriais.filter(t => t.tags.includes('design'))
+  },
+  {
+    id: 2,
+    title: "Marketing Digital",
+    subtitle: "Estratégias para vender mais",
+    icon: "📢",
+    tutoriais: tutoriais.filter(t => t.tags.includes('marketing'))
+  },
+  {
+    id: 3,
+    title: "Fotografia Automotiva",
+    subtitle: "Técnicas profissionais",
+    icon: "📸",
+    tutoriais: tutoriais.filter(t => t.tags.includes('fotografia'))
+  },
+  {
+    id: 4,
+    title: "Edição de Imagens",
+    subtitle: "Pós-processamento profissional",
+    icon: "🖌️",
+    tutoriais: tutoriais.filter(t => t.tags.includes('edição'))
+  }
+];
 
 // Tutoriais por nível
 export const iniciantes = tutoriais.filter(t => t.level === 'iniciante');

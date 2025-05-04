@@ -362,7 +362,7 @@ export default function VideoaulasPage() {
                   <div key={categoria.id} className="mb-10 sm:mb-16 relative">
                     <div className="flex items-center mb-4 sm:mb-6">
                       <div className="bg-blue-100 h-8 sm:h-10 w-8 sm:w-10 rounded-lg flex items-center justify-center mr-2 sm:mr-3 text-blue-600">
-                        {categoria.icon}
+                        <span>{categoria.icon}</span>
                       </div>
                       <div>
                         <h2 className="text-lg sm:text-xl font-bold text-blue-800">{categoria.title}</h2>
@@ -381,7 +381,7 @@ export default function VideoaulasPage() {
                       className="w-full overflow-visible"
                     >
                       <CarouselContent className="-ml-3 sm:-ml-4">
-                        {categoria.modules.map((tutorial, moduleIdx) => (
+                        {categoria.tutoriais.map((tutorial, moduleIdx) => (
                           <CarouselItem key={tutorial.id} className="pl-3 sm:pl-4 basis-3/4 sm:basis-2/5 md:basis-1/3 lg:basis-1/5 xl:basis-[19.5%]">
                             <Link href={`/videoaulas/${tutorial.id}`} className="block h-full">
                               <div className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 hover:shadow-lg hover:border-blue-300 transition-all group h-full">
