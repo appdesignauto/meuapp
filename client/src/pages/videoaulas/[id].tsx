@@ -260,15 +260,27 @@ const VideoLessonPage: React.FC = () => {
   
   // Função para marcar a aula como concluída e ir para a próxima
   const handleComplete = () => {
+    // Salvar o estado imediatamente no localStorage
+    const newWatchedLessons = [...watchedLessons];
+    
+    // Verificar se esta aula já está como concluída
     if (!isCompleted) {
-      const newWatchedLessons = [...watchedLessons, id];
+      newWatchedLessons.push(id);
       setWatchedLessons(newWatchedLessons);
       localStorage.setItem('watchedLessons', JSON.stringify(newWatchedLessons));
-    }
-    
-    // Navegar para a próxima aula se existir
-    if (id < tutoriais.length) {
-      navigate(`/videoaulas/${id + 1}`);
+      
+      // Aguardar um instante para mostrar visualmente que a aula foi concluída
+      setTimeout(() => {
+        // Navegar para a próxima aula se existir
+        if (id < tutoriais.length) {
+          navigate(`/videoaulas/${id + 1}`);
+        }
+      }, 300);
+    } else {
+      // Mesmo que já esteja concluída, vamos para a próxima aula
+      if (id < tutoriais.length) {
+        navigate(`/videoaulas/${id + 1}`);
+      }
     }
   };
 
