@@ -353,15 +353,6 @@ const VideoLessonPage: React.FC = () => {
       </Helmet> */}
       
       <div className="min-h-screen bg-white pb-12">
-        {/* Barra de progresso do tutorial - estilo minimalista */}
-        <div className="bg-[#222] text-white relative">
-          <div className="absolute top-0 left-0 h-1 bg-[#0ef18c] transition-all duration-500 ease-out" 
-               style={{ width: `${tutorial.progress || 15}%` }} />
-          <div className="container mx-auto px-6 py-1 flex justify-end">
-            <span className="text-xs font-medium">{tutorial.progress || 15}%</span>
-          </div>
-        </div>
-        
         {/* Cabeçalho com navegação - estilo clean, sem breadcrumbs */}
         <div className="bg-gradient-to-r from-blue-50 to-white py-4 border-b border-blue-100 shadow-sm">
           <div className="container mx-auto px-4">
