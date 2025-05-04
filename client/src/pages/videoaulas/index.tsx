@@ -410,14 +410,14 @@ export default function VideoaulasPage() {
                 {/* Modulos organizados por categorias estilo Shark Tank */}
                 {moduleData && moduleData.map((categoria) => (
                   <div key={categoria.id} className="mb-10 sm:mb-16 relative">
-                    <div className="flex items-center mb-4 sm:mb-6">
-                      <div className="bg-blue-100 h-8 sm:h-10 w-8 sm:w-10 rounded-lg flex items-center justify-center mr-2 sm:mr-3 text-blue-600">
-                        <span>📚</span>
+                    <div className="flex flex-col mb-4 sm:mb-6">
+                      <div className="flex items-baseline mb-1">
+                        <h2 className="text-xl sm:text-2xl font-bold text-blue-800 mr-4">
+                          {categoria.title}
+                        </h2>
+                        <div className="flex-1 h-px bg-gradient-to-r from-blue-100 to-transparent self-center"></div>
                       </div>
-                      <div>
-                        <h2 className="text-lg sm:text-xl font-bold text-blue-800">{categoria.title}</h2>
-                        <p className="text-blue-600 text-xs sm:text-sm">{categoria.description || "Módulo de aprendizado"}</p>
-                      </div>
+                      <p className="text-blue-600 text-xs sm:text-sm ml-1">{categoria.description || "Módulo de aprendizado"}</p>
                     </div>
                     
                     {categoria.lessons && categoria.lessons.length > 0 ? (
