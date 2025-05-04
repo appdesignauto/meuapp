@@ -275,7 +275,7 @@ export default function VideoaulasPage() {
                   >
                     <CarouselContent className="-ml-4">
                       {tutoriaisPopulares.slice(0, 8).map((tutorial, index) => (
-                        <CarouselItem key={tutorial.id} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                        <CarouselItem key={tutorial.id} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                           <Link href={`/videoaulas/${tutorial.id}`} className="block h-full">
                             <div className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 hover:shadow-lg hover:border-blue-300 transition-all group">
                               <div className="relative">
@@ -357,7 +357,7 @@ export default function VideoaulasPage() {
                     >
                       <CarouselContent className="-ml-4">
                         {categoria.modules.map((tutorial, moduleIdx) => (
-                          <CarouselItem key={tutorial.id} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                          <CarouselItem key={tutorial.id} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                             <Link href={`/videoaulas/${tutorial.id}`} className="block h-full">
                               <div className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 hover:shadow-lg hover:border-blue-300 transition-all group">
                                 <div className="relative">
