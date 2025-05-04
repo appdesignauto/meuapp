@@ -977,45 +977,7 @@ const VideoLessonPage: React.FC = () => {
                 </Tabs>
               </div>
               
-              {/* Navegação entre aulas (estilo minimalista com botões circulares) */}
-              <div className="mt-6 sm:mt-8 border-t border-gray-200 pt-3 sm:pt-4">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center space-x-2 sm:space-x-3 overflow-hidden">
-                    <span className="text-gray-500 text-xs sm:text-sm">{tutorial.id}/10</span>
-                    <h3 className="text-gray-800 font-medium text-xs sm:text-sm truncate">
-                      {tutorial.title}
-                    </h3>
-                  </div>
-                  
-                  <div className="flex gap-1.5 sm:gap-2 flex-shrink-0 ml-2">
-                    {/* Botão anterior - sempre visível, desabilitado se for a primeira aula */}
-                    {id > 1 ? (
-                      <Link href={`/videoaulas/${id - 1}`} className="inline-flex">
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#434756] rounded-full flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
-                          <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-                        </div>
-                      </Link>
-                    ) : (
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex items-center justify-center text-white cursor-not-allowed">
-                        <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-                      </div>
-                    )}
-                    
-                    {/* Botão próximo - sempre visível, desabilitado se for a última aula */}
-                    {id < tutoriais.length ? (
-                      <Link href={`/videoaulas/${id + 1}`} className="inline-flex">
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#434756] rounded-full flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
-                          <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
-                        </div>
-                      </Link>
-                    ) : (
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex items-center justify-center text-white cursor-not-allowed">
-                        <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+
             </div>
             
             {/* Sidebar com tutoriais relacionados e progresso - estilo clean */}
