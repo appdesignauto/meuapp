@@ -4411,8 +4411,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Ferramenta de diagnóstico do Supabase Storage
   app.use(supabeDiagnosticsRouter);
   
-  // Registrar rotas de videoaulas/cursos
+  // Registrar rotas de videoaulas/cursos - Usando ambos os caminhos para compatibilidade
   app.use('/api/courses', courseRoutes);
+  app.use('/api/cursos', courseRoutes);
   
   // Registrar rotas para artes multi-formato
   app.use(multiArtRouter);
