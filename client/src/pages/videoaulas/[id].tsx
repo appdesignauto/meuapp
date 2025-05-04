@@ -407,22 +407,32 @@ const VideoLessonPage: React.FC = () => {
                         ))}
                       </div>
                       
-                      {/* Setas de navegação - estilo minimalista com botões quadrados, apenas anterior e próximo */}
+                      {/* Setas de navegação - estilo minimalista com botões quadrados, sempre mostrando anterior e próximo */}
                       <div className="flex gap-2">
-                        {id > 1 && (
+                        {/* Botão anterior - sempre visível, desabilitado se for a primeira aula */}
+                        {id > 1 ? (
                           <Link href={`/videoaulas/${id - 1}`} className="inline-flex">
                             <div className="w-10 h-10 bg-[#434756] rounded-md flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
                               <ChevronLeft className="h-5 w-5" />
                             </div>
                           </Link>
+                        ) : (
+                          <div className="w-10 h-10 bg-gray-300 rounded-md flex items-center justify-center text-white cursor-not-allowed">
+                            <ChevronLeft className="h-5 w-5" />
+                          </div>
                         )}
                         
-                        {id < tutoriais.length && (
+                        {/* Botão próximo - sempre visível, desabilitado se for a última aula */}
+                        {id < tutoriais.length ? (
                           <Link href={`/videoaulas/${id + 1}`} className="inline-flex">
                             <div className="w-10 h-10 bg-[#434756] rounded-md flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
                               <ChevronRight className="h-5 w-5" />
                             </div>
                           </Link>
+                        ) : (
+                          <div className="w-10 h-10 bg-gray-300 rounded-md flex items-center justify-center text-white cursor-not-allowed">
+                            <ChevronRight className="h-5 w-5" />
+                          </div>
                         )}
                       </div>
                     </div>
@@ -607,20 +617,30 @@ const VideoLessonPage: React.FC = () => {
                   </div>
                   
                   <div className="flex gap-2">
-                    {id > 1 && (
+                    {/* Botão anterior - sempre visível, desabilitado se for a primeira aula */}
+                    {id > 1 ? (
                       <Link href={`/videoaulas/${id - 1}`} className="inline-flex">
                         <div className="w-10 h-10 bg-[#434756] rounded-full flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
                           <ChevronLeft className="h-5 w-5" />
                         </div>
                       </Link>
+                    ) : (
+                      <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white cursor-not-allowed">
+                        <ChevronLeft className="h-5 w-5" />
+                      </div>
                     )}
                     
-                    {id < tutoriais.length && (
+                    {/* Botão próximo - sempre visível, desabilitado se for a última aula */}
+                    {id < tutoriais.length ? (
                       <Link href={`/videoaulas/${id + 1}`} className="inline-flex">
                         <div className="w-10 h-10 bg-[#434756] rounded-full flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
                           <ChevronRight className="h-5 w-5" />
                         </div>
                       </Link>
+                    ) : (
+                      <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white cursor-not-allowed">
+                        <ChevronRight className="h-5 w-5" />
+                      </div>
                     )}
                   </div>
                 </div>
