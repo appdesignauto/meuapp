@@ -46,6 +46,7 @@ import supabeDiagnosticsRouter from './routes/supabase-diagnostics';
 import multiArtRouter from './routes/multi-art'; // Rota para artes multi-formato
 import testCreateGroupRouter from './routes/test-create-group'; // Rota de teste para criar grupos
 import videoaulasRouter from './routes/videoaulas-routes'; // Rotas para as videoaulas
+import courseRouter from './routes/course-routes'; // Rotas para gerenciamento de cursos
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Rota simples de verificação de saúde
@@ -4425,6 +4426,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Registrar o router de videoaulas
   app.use('/api/videoaulas', videoaulasRouter);
+  
+  // Rotas para gerenciamento de cursos e aulas (protegidas por autenticação)
+  app.use('/api/course-modules', isAuthenticated, isAdmin, courseRouter);
+  app.use('/api/course-lessons', isAuthenticated, isAdmin, courseRouter);
 
   const httpServer = createServer(app);
   

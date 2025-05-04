@@ -172,6 +172,13 @@ const AdminDashboard = () => {
                 <Plus className="w-5 h-5 mr-3" />
                 Arte Multi-Formato
               </Button>
+              
+              <Link href="/admin/gerenciar-cursos">
+                <Button variant="ghost" className="w-full justify-start text-gray-600 mb-2">
+                  <BookOpen className="w-5 h-5 mr-3" />
+                  Gerenciar Cursos
+                </Button>
+              </Link>
               {user?.role === 'admin' && (
                 <>
                   <Link href="/admin/logo-upload">
