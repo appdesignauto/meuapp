@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useRef } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
 import {
   LayoutGrid,
@@ -26,13 +26,50 @@ import {
   Layers,
   PanelRight,
   PanelLeft,
-  Video
+  Video,
+  Trash2,
+  Pencil,
+  MoreVertical,
+  AlertCircle,
+  AlertTriangle,
+  Loader2,
+  XCircle,
+  CheckCircle2,
+  Crown,
+  Sparkles,
+  Zap,
+  Award
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/use-auth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import SimpleFormMultiDialog from "@/components/admin/SimpleFormMultiDialog";
 import ArtsList from '@/components/admin/ArtsList';
 import CategoriesList from '@/components/admin/CategoriesList';
@@ -41,6 +78,7 @@ import SiteSettings from '@/components/admin/SiteSettings';
 import FormatsList from '@/components/admin/FormatsList';
 import FileTypesList from '@/components/admin/FileTypesList';
 import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from "@/lib/queryClient";
 
 const AdminDashboard = () => {
   const { user, logoutMutation } = useAuth();
@@ -49,7 +87,295 @@ const AdminDashboard = () => {
   const { toast } = useToast();
   const [isMultiFormOpen, setIsMultiFormOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const queryClient = useQueryClient();
 
+  // Estados para módulos
+  const [isModuleDialogOpen, setIsModuleDialogOpen] = useState(false);
+  const [isConfirmDeleteModuleOpen, setIsConfirmDeleteModuleOpen] = useState(false);
+  const [currentModule, setCurrentModule] = useState<any | null>(null);
+  const [moduleForm, setModuleForm] = useState<any>({
+    title: '',
+    description: '',
+    thumbnailUrl: '',
+    level: 'iniciante',
+    order: 0,
+    isActive: true,
+    isPremium: false
+  });
+  
+  // Estados para aulas
+  const [isLessonDialogOpen, setIsLessonDialogOpen] = useState(false);
+  const [isConfirmDeleteLessonOpen, setIsConfirmDeleteLessonOpen] = useState(false);
+  const [currentLesson, setCurrentLesson] = useState<any | null>(null);
+  const [lessonForm, setLessonForm] = useState<any>({
+    moduleId: 0,
+    title: '',
+    description: '',
+    videoUrl: '',
+    videoProvider: 'youtube',
+    duration: 0,
+    thumbnailUrl: '',
+    order: 0,
+    isPremium: false,
+    showLessonNumber: true
+  });
+  
+  // Consultas para obter módulos e aulas
+  const { 
+    data: modules = [], 
+    isLoading: isLoadingModules,
+    isError: isModulesError
+  } = useQuery({
+    queryKey: ['/api/courses/modules'],
+    queryFn: async () => {
+      const res = await fetch('/api/courses/modules');
+      if (!res.ok) {
+        console.error('Erro ao buscar módulos:', res.status, res.statusText);
+        throw new Error('Falha ao carregar módulos');
+      }
+      return res.json();
+    }
+  });
+  
+  const { 
+    data: lessons = [], 
+    isLoading: isLoadingLessons,
+    isError: isLessonsError
+  } = useQuery({
+    queryKey: ['/api/courses/lessons'],
+    queryFn: async () => {
+      const res = await fetch('/api/courses/lessons');
+      if (!res.ok) {
+        console.error('Erro ao buscar aulas:', res.status, res.statusText);
+        throw new Error('Falha ao carregar aulas');
+      }
+      return res.json();
+    }
+  });
+  
+  // Handler para mudanças no formulário de módulo
+  const handleModuleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setModuleForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+  
+  // Handler para mudanças no formulário de aula
+  const handleLessonFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setLessonForm(prev => ({
+      ...prev,
+      [name]: typeof prev[name] === 'number' ? Number(value) : value
+    }));
+  };
+  
+  // Mutations para módulos
+  const createModuleMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest('POST', '/api/courses/modules', data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao criar módulo');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/courses/modules'] });
+      setIsModuleDialogOpen(false);
+      toast({
+        title: 'Módulo criado com sucesso',
+        description: 'O módulo foi adicionado à lista de cursos',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro ao criar módulo',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  });
+  
+  const updateModuleMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest('PUT', `/api/courses/modules/${data.id}`, data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao atualizar módulo');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/courses/modules'] });
+      setIsModuleDialogOpen(false);
+      toast({
+        title: 'Módulo atualizado com sucesso',
+        description: 'As alterações foram salvas',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro ao atualizar módulo',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  });
+  
+  const deleteModuleMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest('DELETE', `/api/courses/modules/${id}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao excluir módulo');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/courses/modules'] });
+      setIsConfirmDeleteModuleOpen(false);
+      toast({
+        title: 'Módulo excluído com sucesso',
+        description: 'O módulo foi removido permanentemente',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro ao excluir módulo',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  });
+  
+  // Mutations para aulas
+  const createLessonMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest('POST', '/api/courses/lessons', data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao criar aula');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/courses/lessons'] });
+      setIsLessonDialogOpen(false);
+      toast({
+        title: 'Aula criada com sucesso',
+        description: 'A aula foi adicionada ao módulo',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro ao criar aula',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  });
+  
+  const updateLessonMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest('PUT', `/api/courses/lessons/${data.id}`, data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao atualizar aula');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/courses/lessons'] });
+      setIsLessonDialogOpen(false);
+      toast({
+        title: 'Aula atualizada com sucesso',
+        description: 'As alterações foram salvas',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro ao atualizar aula',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  });
+  
+  const deleteLessonMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest('DELETE', `/api/courses/lessons/${id}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao excluir aula');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/courses/lessons'] });
+      setIsConfirmDeleteLessonOpen(false);
+      toast({
+        title: 'Aula excluída com sucesso',
+        description: 'A aula foi removida permanentemente',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro ao excluir aula',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  });
+  
+  // Handlers para submits
+  const handleModuleSubmit = () => {
+    if (!moduleForm.title || !moduleForm.description) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Preencha todos os campos obrigatórios",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (currentModule) {
+      updateModuleMutation.mutate(moduleForm);
+    } else {
+      createModuleMutation.mutate(moduleForm);
+    }
+  };
+  
+  const handleDeleteModule = () => {
+    if (currentModule && currentModule.id) {
+      deleteModuleMutation.mutate(currentModule.id);
+    }
+  };
+  
+  const handleLessonSubmit = () => {
+    if (!lessonForm.title || !lessonForm.moduleId || !lessonForm.videoUrl) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Preencha todos os campos obrigatórios",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (currentLesson) {
+      updateLessonMutation.mutate(lessonForm);
+    } else {
+      createLessonMutation.mutate(lessonForm);
+    }
+  };
+  
+  const handleDeleteLesson = () => {
+    if (currentLesson && currentLesson.id) {
+      deleteLessonMutation.mutate(currentLesson.id);
+    }
+  };
+  
   // Verifica se o usuário é admin ou designer_adm
   const isAuthorized = user?.role === 'admin' || user?.role === 'designer_adm';
 
@@ -534,7 +860,19 @@ const AdminDashboard = () => {
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl font-semibold">Módulos dos Cursos</h2>
                   <Button 
-                    onClick={() => window.location.href = '/admin/gerenciar-cursos'}
+                    onClick={() => {
+                      setCurrentModule(null);
+                      setModuleForm({
+                        title: '',
+                        description: '',
+                        thumbnailUrl: '',
+                        level: 'iniciante',
+                        order: 0,
+                        isActive: true,
+                        isPremium: false
+                      });
+                      setIsModuleDialogOpen(true);
+                    }}
                     className="flex items-center"
                   >
                     <Plus className="w-4 h-4 mr-2" />
@@ -542,72 +880,357 @@ const AdminDashboard = () => {
                   </Button>
                 </div>
                 
-                <div className="bg-blue-50 p-4 rounded-lg mb-6">
-                  <p className="text-blue-600">Para gerenciar módulos com todas as funcionalidades, acesse o gerenciador completo. Aqui você tem uma visão rápida dos módulos existentes.</p>
+                <div className="flex justify-end mb-4">
+                  <Select
+                    value="recentes"
+                    onValueChange={(value) => console.log(value)}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Ordenar por" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="recentes">Mais recentes</SelectItem>
+                      <SelectItem value="antigos">Mais antigos</SelectItem>
+                      <SelectItem value="ordem">Ordem de exibição</SelectItem>
+                      <SelectItem value="alfabetica">Ordem alfabética</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                    <div className="aspect-video bg-gray-100 relative">
-                      <img 
-                        src="https://images.unsplash.com/photo-1612825173281-9a193378527e?q=80&w=1499&auto=format&fit=crop" 
-                        alt="Configurações Iniciais" 
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
-                        <div className="text-white font-medium">Configurações Iniciais</div>
+                {isLoadingModules ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="border rounded-lg overflow-hidden animate-pulse">
+                        <div className="aspect-video bg-gray-200"></div>
+                        <div className="p-4 space-y-2">
+                          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                          <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                        </div>
                       </div>
-                    </div>
-                    <div className="p-3">
-                      <div className="text-sm text-gray-500 mb-2">Estratégias para Redes Sociais Automotivas</div>
-                      <div className="flex items-center text-sm">
-                        <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs mr-2">Iniciante</span>
-                        <span className="text-gray-500">2 aulas</span>
-                      </div>
-                    </div>
+                    ))}
                   </div>
-                  
-                  <div className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                    <div className="aspect-video bg-gray-100 relative">
-                      <img 
-                        src="https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?q=80&w=1470&auto=format&fit=crop" 
-                        alt="Design para Automotivo" 
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
-                        <div className="text-white font-medium">Design para Automotivo</div>
-                      </div>
-                    </div>
-                    <div className="p-3">
-                      <div className="text-sm text-gray-500 mb-2">Criando artes impactantes</div>
-                      <div className="flex items-center text-sm">
-                        <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded text-xs mr-2">Intermediário</span>
-                        <span className="text-gray-500">5 aulas</span>
-                      </div>
-                    </div>
+                ) : isModulesError ? (
+                  <Alert variant="destructive" className="mb-6">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Erro!</AlertTitle>
+                    <AlertDescription>
+                      Não foi possível carregar os módulos. Por favor, tente novamente.
+                    </AlertDescription>
+                  </Alert>
+                ) : modules.length === 0 ? (
+                  <div className="text-center py-10 border rounded-lg">
+                    <BookOpen className="h-10 w-10 text-gray-400 mx-auto mb-3" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-1">Nenhum módulo encontrado</h3>
+                    <p className="text-gray-500 mb-4">Comece criando seu primeiro módulo de curso.</p>
+                    <Button 
+                      onClick={() => {
+                        setCurrentModule(null);
+                        setModuleForm({
+                          title: '',
+                          description: '',
+                          thumbnailUrl: '',
+                          level: 'iniciante',
+                          order: 0,
+                          isActive: true,
+                          isPremium: false
+                        });
+                        setIsModuleDialogOpen(true);
+                      }}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Criar Módulo
+                    </Button>
                   </div>
-                  
-                  <div className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                    <div className="aspect-video bg-gray-100 relative">
-                      <img 
-                        src="https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/designer_1/lessonthumbnails/1746472059081_e1617750-5a94-4a6c-b664-9e2974cd9efa.webp" 
-                        alt="Edição Avançada" 
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
-                        <div className="text-white font-medium">Edição Avançada</div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {modules.map(module => (
+                      <div key={module.id} className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow group">
+                        <div className="aspect-video bg-gray-100 relative">
+                          <img 
+                            src={module.thumbnailUrl || "https://via.placeholder.com/640x360?text=Sem+Imagem"} 
+                            alt={module.title} 
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.src = "https://via.placeholder.com/640x360?text=Erro+ao+carregar";
+                            }}
+                          />
+                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                            <div className="text-white font-medium">{module.title}</div>
+                          </div>
+                          <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 bg-black/50 text-white hover:bg-black/70">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => {
+                                  setCurrentModule(module);
+                                  setModuleForm({
+                                    id: module.id,
+                                    title: module.title,
+                                    description: module.description,
+                                    thumbnailUrl: module.thumbnailUrl,
+                                    level: module.level,
+                                    order: module.order,
+                                    isActive: module.isActive,
+                                    isPremium: module.isPremium
+                                  });
+                                  setIsModuleDialogOpen(true);
+                                }}>
+                                  <Pencil className="mr-2 h-4 w-4" />
+                                  <span>Editar</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => {
+                                  setCurrentModule(module);
+                                  setIsConfirmDeleteModuleOpen(true);
+                                }} className="text-red-600">
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  <span>Excluir</span>
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                          {module.isPremium && (
+                            <div className="absolute top-2 left-2 bg-amber-500 text-white text-xs px-2 py-1 rounded-full">
+                              Premium
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-3">
+                          <div className="text-sm text-gray-500 mb-2">{module.description}</div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className={`px-2 py-0.5 rounded text-xs mr-2 ${
+                              module.level === 'iniciante' ? 'bg-blue-100 text-blue-800' :
+                              module.level === 'intermediario' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {module.level === 'iniciante' ? 'Iniciante' :
+                               module.level === 'intermediario' ? 'Intermediário' :
+                               'Avançado'}
+                            </span>
+                            <span className="text-gray-500">{module.lessons?.length || 0} aulas</span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    <div className="p-3">
-                      <div className="text-sm text-gray-500 mb-2">Técnicas profissionais de edição</div>
-                      <div className="flex items-center text-sm">
-                        <span className="px-2 py-0.5 bg-red-100 text-red-800 rounded text-xs mr-2">Avançado</span>
-                        <span className="text-gray-500">5 aulas</span>
-                      </div>
-                    </div>
+                    ))}
                   </div>
-                </div>
+                )}
               </div>
+              
+              {/* Diálogo para adicionar/editar módulo */}
+              <Dialog open={isModuleDialogOpen} onOpenChange={setIsModuleDialogOpen}>
+                <DialogContent className="sm:max-w-[600px]">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <BookOpen className="h-5 w-5" />
+                      {currentModule ? 'Editar Módulo' : 'Adicionar Módulo'}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid gap-2 md:col-span-2">
+                        <Label htmlFor="moduleTitle">Título do módulo *</Label>
+                        <Input
+                          id="moduleTitle"
+                          name="title"
+                          value={moduleForm.title}
+                          onChange={handleModuleFormChange}
+                          placeholder="Ex: Introdução ao Design"
+                        />
+                      </div>
+                      <div className="grid gap-2 md:col-span-2">
+                        <Label htmlFor="moduleDescription">Descrição *</Label>
+                        <Textarea
+                          id="moduleDescription"
+                          name="description"
+                          value={moduleForm.description}
+                          onChange={handleModuleFormChange}
+                          placeholder="Breve descrição sobre o módulo"
+                          rows={3}
+                        />
+                      </div>
+                      <div className="grid gap-2 md:col-span-2">
+                        <Label htmlFor="moduleThumbUrl">URL da miniatura *</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            id="moduleThumbUrl"
+                            name="thumbnailUrl"
+                            value={moduleForm.thumbnailUrl}
+                            onChange={handleModuleFormChange}
+                            placeholder="URL da imagem de miniatura"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="moduleLevel">Nível *</Label>
+                        <Select
+                          name="level"
+                          value={moduleForm.level}
+                          onValueChange={value => 
+                            setModuleForm({...moduleForm, level: value})
+                          }
+                        >
+                          <SelectTrigger id="moduleLevel" className="h-10">
+                            <SelectValue placeholder="Selecione o nível" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="iniciante">
+                              <div className="flex items-center gap-2">
+                                <Sparkles className="h-4 w-4 text-green-500" />
+                                <span>Iniciante</span>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="intermediario">
+                              <div className="flex items-center gap-2">
+                                <Zap className="h-4 w-4 text-yellow-500" />
+                                <span>Intermediário</span>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="avancado">
+                              <div className="flex items-center gap-2">
+                                <Award className="h-4 w-4 text-red-500" />
+                                <span>Avançado</span>
+                              </div>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="moduleOrder">Ordem na sequência *</Label>
+                        <Input
+                          id="moduleOrder"
+                          name="order"
+                          type="number"
+                          value={moduleForm.order}
+                          onChange={handleModuleFormChange}
+                          placeholder="Número da ordem"
+                          min={1}
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id="moduleActive"
+                          name="isActive"
+                          checked={moduleForm.isActive}
+                          onCheckedChange={checked => 
+                            setModuleForm({...moduleForm, isActive: checked === true})
+                          }
+                        />
+                        <Label htmlFor="moduleActive" className="text-sm">
+                          <span className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                            Módulo ativo
+                          </span>
+                        </Label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id="modulePremium"
+                          name="isPremium"
+                          checked={moduleForm.isPremium}
+                          onCheckedChange={checked => 
+                            setModuleForm({...moduleForm, isPremium: checked === true})
+                          }
+                        />
+                        <Label htmlFor="modulePremium" className="text-sm">
+                          <span className="flex items-center gap-2">
+                            <Crown className="h-4 w-4 text-amber-500" />
+                            Conteúdo premium
+                          </span>
+                        </Label>
+                      </div>
+                    </div>
+                  </div>
+                  <DialogFooter className="border-t pt-4 mt-4">
+                    <div className="flex items-center space-x-4">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setIsModuleDialogOpen(false)}
+                        className="gap-2"
+                      >
+                        <XCircle className="h-4 w-4" />
+                        Cancelar
+                      </Button>
+                      <Button 
+                        onClick={handleModuleSubmit}
+                        disabled={createModuleMutation.isPending || updateModuleMutation.isPending}
+                        className="gap-2"
+                      >
+                        {createModuleMutation.isPending || updateModuleMutation.isPending ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Salvando...
+                          </>
+                        ) : currentModule ? (
+                          <>
+                            <CheckCircle2 className="h-4 w-4" />
+                            Atualizar módulo
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="h-4 w-4" />
+                            Criar módulo
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+              
+              {/* Diálogo de confirmação para excluir módulo */}
+              <Dialog open={isConfirmDeleteModuleOpen} onOpenChange={setIsConfirmDeleteModuleOpen}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5 text-red-500" />
+                      Excluir Módulo
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="py-4">
+                    <p className="mb-4">
+                      Tem certeza que deseja excluir o módulo <strong>{currentModule?.title}</strong>?
+                    </p>
+                    <Alert variant="destructive">
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertTitle>Atenção</AlertTitle>
+                      <AlertDescription>
+                        A exclusão do módulo afetará a navegação dos usuários que estavam acompanhando este conteúdo.
+                      </AlertDescription>
+                    </Alert>
+                  </div>
+                  <DialogFooter className="flex justify-between gap-3 border-t pt-4">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setIsConfirmDeleteModuleOpen(false)}
+                      className="gap-2"
+                    >
+                      <XCircle className="h-4 w-4" />
+                      Cancelar
+                    </Button>
+                    <Button 
+                      variant="destructive" 
+                      onClick={handleDeleteModule}
+                      disabled={deleteModuleMutation.isPending}
+                      className="gap-2"
+                    >
+                      {deleteModuleMutation.isPending ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Excluindo...
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 className="h-4 w-4" />
+                          Excluir módulo
+                        </>
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </TabsContent>
             
             <TabsContent value="lessons" className="mt-0">
