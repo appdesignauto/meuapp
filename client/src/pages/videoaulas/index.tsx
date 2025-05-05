@@ -270,8 +270,8 @@ export default function VideoaulasPage() {
             ></div>
           </div>
           
-          {/* Overlay gradiente para melhorar contraste e legibilidade do texto */}
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/80 via-blue-800/60 to-blue-700/30 z-1"></div>
+          {/* Overlay gradiente mais sutil e profissional */}
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-950/70 via-blue-900/50 to-blue-800/30 z-1"></div>
           
           {/* Conteúdo sobreposto */}
           <div className="container mx-auto h-full flex flex-col justify-center relative z-10">
@@ -287,15 +287,18 @@ export default function VideoaulasPage() {
               {/* Espaçamento adicional entre a descrição e os botões */}
               <div className="mb-6 md:mb-8"></div>
               
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-5">
                 <Link href={`/videoaulas/${tutorialDestaque.id}`} className="w-full sm:w-auto">
-                  <Button className="bg-yellow-500 hover:bg-yellow-600 text-blue-950 border-0 py-4 md:py-6 px-5 md:px-8 text-base md:text-lg font-medium w-full sm:w-auto">
-                    <Play className="h-4 md:h-5 w-4 md:w-5 mr-2" />
-                    Começar Agora
+                  <Button className="bg-yellow-500 hover:bg-yellow-600 text-blue-950 border-0 py-4 md:py-6 px-6 md:px-10 text-base md:text-lg font-semibold w-full sm:w-auto shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-yellow-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="relative flex items-center justify-center">
+                      <Play className="h-4 md:h-5 w-4 md:w-5 mr-2" />
+                      <span>Começar Agora</span>
+                    </div>
                   </Button>
                 </Link>
                 <Link href="#categorias" className="w-full sm:w-auto">
-                  <Button variant="outline" className="bg-transparent border-white text-white hover:bg-white/10 py-4 md:py-6 px-5 md:px-8 text-base md:text-lg font-medium w-full sm:w-auto">
+                  <Button variant="outline" className="bg-transparent border-white text-white hover:bg-white/20 py-4 md:py-6 px-6 md:px-10 text-base md:text-lg font-medium w-full sm:w-auto transition-all duration-300">
                     Ver Categorias
                   </Button>
                 </Link>

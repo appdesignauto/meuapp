@@ -8,11 +8,16 @@ import {
   Eye, 
   CheckCircle,
   Lock,
-  Search
+  Search,
+  Sparkles,
+  BookmarkPlus,
+  CheckCircle2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tutorial } from './TutorialData';
+import { formatDistanceToNow, isAfter, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 // Componente para destacar termos de pesquisa no texto
 const HighlightText = ({ text, searchTerm }: { text: string, searchTerm?: string }) => {
@@ -55,6 +60,26 @@ const TutorialCard: React.FC<TutorialCardProps> = ({
   searchTerm
 }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  
+  // Verificar se o tutorial é novo (menos de 15 dias)
+  const isNewTutorial = () => {
+    try {
+      const dataAdicionado = parseISO(tutorial.createdAt);
+      const quinzeDiasAtras = new Date();
+      quinzeDiasAtras.setDate(quinzeDiasAtras.getDate() - 15);
+      return isAfter(dataAdicionado, quinzeDiasAtras);
+    } catch (e) {
+      return false;
+    }
+  };
+  
+  // Calcular o progresso de visualização do tutorial (simulado)
+  const getProgress = () => {
+    if (tutorial.isWatched) return 100;
+    // Poderia ser personalizado com um valor real vindo do banco de dados
+    return Math.floor(Math.random() * 80); // Simula um progresso entre 0-80%
+  };
   
   // Determinar o nível do tutorial com cores e textos específicos
   const levelInfo = {
@@ -108,6 +133,33 @@ const TutorialCard: React.FC<TutorialCardProps> = ({
         <Eye className="h-3 w-3 mr-1" />
         {tutorial.views.toLocaleString()}
       </div>
+      
+      {/* Badge NOVO para conteúdos recentes */}
+      {isNewTutorial() && (
+        <div className="absolute top-12 right-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs py-1 px-2 rounded-md flex items-center">
+          <Sparkles className="h-3 w-3 mr-1" />
+          NOVO
+        </div>
+      )}
+      
+      {/* Barra de progresso para vídeos já iniciados mas não concluídos */}
+      {!tutorial.isWatched && getProgress() > 0 && (
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-800 z-20">
+          <div 
+            className="h-full bg-blue-500" 
+            style={{ width: `${getProgress()}%` }}
+          />
+        </div>
+      )}
+      
+      {/* Marcador de conclusão */}
+      {tutorial.isWatched && (
+        <div className="absolute top-1/2 right-1/2 transform translate-x-1/2 -translate-y-1/2 z-20">
+          <div className="bg-green-500/90 rounded-full p-2 shadow-lg">
+            <CheckCircle2 className="h-8 w-8 text-white" />
+          </div>
+        </div>
+      )}
       
       {/* Overlay para conteúdo premium bloqueado */}
       {isPremiumLocked && (
