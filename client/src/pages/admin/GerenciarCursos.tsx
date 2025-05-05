@@ -719,6 +719,58 @@ const GerenciarCursos = () => {
     return `${minutos.toString().padStart(2, '0')}:${segsRestantes.toString().padStart(2, '0')}`;
   };
   
+  // Formata a duração para uma exibição mais humanizada (ex: "1h 15min" ou "5min 30s")
+  const formatarDuracaoHumanizada = (segundos?: number | null) => {
+    if (segundos === undefined || segundos === null) return "Não definida";
+    
+    // Garantir que segundos seja um número
+    let totalSegundos = 0;
+    
+    if (typeof segundos === 'string') {
+      if (segundos.includes(':')) {
+        // Converter de formato "HH:MM:SS" ou "MM:SS" para segundos
+        const partes = segundos.split(':').map(p => parseInt(p, 10));
+        if (partes.length === 3) {
+          totalSegundos = (partes[0] * 3600) + (partes[1] * 60) + partes[2];
+        } else if (partes.length === 2) {
+          totalSegundos = (partes[0] * 60) + partes[1];
+        }
+      } else {
+        totalSegundos = parseInt(segundos, 10);
+      }
+    } else if (typeof segundos === 'number') {
+      totalSegundos = segundos;
+    }
+    
+    if (isNaN(totalSegundos) || totalSegundos < 0) {
+      return "Duração desconhecida";
+    }
+    
+    // Calcular horas, minutos e segundos
+    const horas = Math.floor(totalSegundos / 3600);
+    const minutos = Math.floor((totalSegundos % 3600) / 60);
+    const segsRestantes = totalSegundos % 60;
+    
+    // Montar exibição humanizada
+    let resultado = '';
+    
+    if (horas > 0) {
+      resultado += `${horas}h `;
+    }
+    
+    if (minutos > 0 || horas > 0) {
+      resultado += `${minutos}min`;
+    }
+    
+    // Só mostrar segundos se não tiver horas e for menos de 10 minutos
+    if (horas === 0 && segsRestantes > 0 && minutos < 10) {
+      if (minutos > 0) resultado += ' ';
+      resultado += `${segsRestantes}s`;
+    }
+    
+    return resultado.trim() || '< 1min';
+  };
+  
   const getVideoProviderBadge = (provider: string) => {
     switch (provider) {
       case 'youtube':
@@ -2045,14 +2097,21 @@ const GerenciarCursos = () => {
                   />
                 </div>
 
-                <div className="flex flex-wrap gap-4">
+                <div className="flex flex-wrap gap-6 p-3 bg-gray-50 rounded-md">
                   <div className="flex items-center space-x-2">
                     <Switch
                       id="lessonPremium"
                       checked={lessonForm.isPremium}
                       onCheckedChange={(checked) => handleLessonToggleChange('isPremium', checked)}
                     />
-                    <Label htmlFor="lessonPremium">Premium</Label>
+                    <Label htmlFor="lessonPremium" className="flex items-center gap-2 cursor-pointer">
+                      {lessonForm.isPremium ? (
+                        <Crown className="h-4 w-4 text-yellow-500" />
+                      ) : (
+                        <Crown className="h-4 w-4 text-gray-400" />
+                      )}
+                      <span>Conteúdo premium</span>
+                    </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Switch
@@ -2060,7 +2119,14 @@ const GerenciarCursos = () => {
                       checked={lessonForm.showLessonNumber}
                       onCheckedChange={(checked) => handleLessonToggleChange('showLessonNumber', checked)}
                     />
-                    <Label htmlFor="showLessonNumber">Mostrar "Aula X" na miniatura</Label>
+                    <Label htmlFor="showLessonNumber" className="flex items-center gap-2 cursor-pointer">
+                      {lessonForm.showLessonNumber ? (
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-gray-400" />
+                      )}
+                      <span>Mostrar "Aula X" na miniatura</span>
+                    </Label>
                   </div>
                 </div>
               </div>
@@ -2204,26 +2270,89 @@ const GerenciarCursos = () => {
       
       {/* Diálogo de confirmação para excluir aula */}
       <Dialog open={isConfirmDeleteLessonOpen} onOpenChange={setIsConfirmDeleteLessonOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive">
               <AlertTriangle className="h-5 w-5" />
               Excluir Aula
             </DialogTitle>
+            <DialogDescription>
+              Esta ação não pode ser revertida após confirmação
+            </DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <div className="bg-destructive/10 p-4 rounded-md mb-4 border border-destructive/30">
               <p className="font-medium">Tem certeza que deseja excluir a aula "{currentLesson?.title}"?</p>
               <p className="text-sm text-gray-700 mt-2">
-                Esta ação não pode ser desfeita. A aula será removida permanentemente do sistema.
+                Esta aula será removida permanentemente do sistema.
               </p>
             </div>
-            <p className="text-sm text-gray-500">
-              <strong>Nota:</strong> Excluir uma aula pode afetar a ordem das aulas restantes no módulo. 
-              Considere ajustar a ordem das aulas após a exclusão.
-            </p>
+            
+            {currentLesson && (
+              <div className="mt-4 flex flex-col sm:flex-row gap-4 bg-gray-50 p-3 rounded-md border mb-4">
+                <div className="sm:w-1/3">
+                  {currentLesson.thumbnailUrl ? (
+                    <div className="aspect-video w-full rounded-md overflow-hidden border bg-gray-100">
+                      <img 
+                        src={currentLesson.thumbnailUrl}
+                        alt={currentLesson.title}
+                        className="w-full h-full object-cover" 
+                        onError={(e) => {
+                          e.currentTarget.src = "https://placehold.co/400x225/e2e8f0/94a3b8?text=Miniatura";
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="aspect-video w-full rounded-md overflow-hidden border bg-gray-100 flex items-center justify-center">
+                      <FileVideo className="h-12 w-12 text-gray-400" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-medium text-sm">Detalhes da aula:</h4>
+                  <ul className="mt-1 space-y-1 text-sm text-gray-700">
+                    <li className="flex items-center gap-2">
+                      <span className="font-medium min-w-20">Módulo:</span>
+                      <span>{modules.find(m => m.id === currentLesson.moduleId)?.title || 'Desconhecido'}</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="font-medium min-w-20">Ordem:</span>
+                      <span>{currentLesson.order}</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="font-medium min-w-20">Duração:</span>
+                      <span>{formatarDuracaoHumanizada(currentLesson.duration)}</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="font-medium min-w-20">Status:</span>
+                      <span className="flex items-center gap-1">
+                        {currentLesson.isPremium ? (
+                          <>
+                            <Crown className="h-3.5 w-3.5 text-yellow-500" />
+                            <span>Premium</span>
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                            <span>Gratuito</span>
+                          </>
+                        )}
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            )}
+            
+            <Alert className="mb-4 bg-amber-50 border-amber-200">
+              <AlertTriangle className="h-4 w-4 text-amber-600" />
+              <AlertDescription className="text-amber-800">
+                Excluir uma aula pode afetar a ordem das aulas restantes no módulo. 
+                Considere ajustar a ordem das aulas após a exclusão.
+              </AlertDescription>
+            </Alert>
           </div>
-          <DialogFooter className="flex justify-between gap-3">
+          <DialogFooter className="flex justify-between gap-3 border-t pt-4">
             <Button 
               variant="outline" 
               onClick={() => setIsConfirmDeleteLessonOpen(false)}
