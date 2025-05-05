@@ -510,6 +510,102 @@ const GerenciarCursos = () => {
     setLessonForm(prev => ({ ...prev, [name]: checked }));
   };
   
+  // Handler para upload de miniatura de aula
+  const handleThumbnailFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      
+      // Verificar tamanho do arquivo (5MB máximo)
+      const MAX_SIZE = 5 * 1024 * 1024;
+      if (file.size > MAX_SIZE) {
+        toast({
+          title: "Arquivo muito grande",
+          description: "O tamanho máximo permitido é 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setThumbnailFile(file);
+      setThumbnailUploadError(null);
+      thumbnailUploadMutation.mutate(file);
+    }
+  };
+  
+  // Mutation para upload de miniatura
+  const thumbnailUploadMutation = useMutation({
+    mutationFn: async (file: File) => {
+      setIsUploadingThumbnail(true);
+      setThumbnailUploadProgress(0);
+      
+      const formData = new FormData();
+      formData.append('thumbnail', file);
+      
+      // Iniciar um timer para simular o progresso enquanto o upload acontece
+      let uploadTimer = setInterval(() => {
+        setThumbnailUploadProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(uploadTimer);
+            return prev;
+          }
+          return prev + 5;
+        });
+      }, 200);
+      
+      try {
+        const response = await fetch('/api/lesson-thumbnail-upload', {
+          method: 'POST',
+          body: formData,
+          credentials: 'include'
+        });
+        
+        clearInterval(uploadTimer);
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Erro ao fazer upload da miniatura');
+        }
+        
+        setThumbnailUploadProgress(100);
+        const data = await response.json();
+        return data;
+      } catch (error: any) {
+        clearInterval(uploadTimer);
+        setThumbnailUploadError(error.message);
+        throw error;
+      } finally {
+        setIsUploadingThumbnail(false);
+      }
+    },
+    onSuccess: (data) => {
+      // Atualizar o formulário com a URL da miniatura
+      setLessonForm(prev => ({
+        ...prev,
+        thumbnailUrl: data.thumbnailUrl
+      }));
+      
+      toast({
+        title: "Miniatura enviada com sucesso",
+        description: "A imagem foi otimizada e salva no servidor",
+      });
+      
+      // Limpar o campo de arquivo para permitir selecionar o mesmo arquivo novamente
+      if (thumbnailInputRef.current) {
+        thumbnailInputRef.current.value = '';
+      }
+      
+      // Limpar o estado do arquivo
+      setThumbnailFile(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao enviar miniatura",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
   // Handler para campos de duração (horas, minutos, segundos)
   const handleDurationChange = (type: 'hours' | 'minutes' | 'seconds', value: number) => {
     // Garantir valores não negativos e dentro dos limites
@@ -1694,45 +1790,79 @@ const GerenciarCursos = () => {
                 rows={3}
               />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="lessonVideoUrl">URL do vídeo *</Label>
-              <Input
-                id="lessonVideoUrl"
-                name="videoUrl"
-                value={lessonForm.videoUrl}
-                onChange={handleLessonFormChange}
-                placeholder="https://youtube.com/watch?v=xyz"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-4">
               <div className="grid gap-2">
-                <Label htmlFor="lessonVideoProvider">Plataforma de vídeo</Label>
-                <Select
-                  value={lessonForm.videoProvider}
-                  onValueChange={(value) => handleLessonSelectChange('videoProvider', value)}
-                >
-                  <SelectTrigger id="lessonVideoProvider">
-                    <SelectValue placeholder="Selecione a plataforma" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="youtube">YouTube</SelectItem>
-                    <SelectItem value="vimeo">Vimeo</SelectItem>
-                    <SelectItem value="vturb">vTurb</SelectItem>
-                    <SelectItem value="panda">Panda</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="lessonOrder">Ordem *</Label>
+                <Label htmlFor="lessonVideoUrl">URL do vídeo *</Label>
                 <Input
-                  id="lessonOrder"
-                  name="order"
-                  type="number"
-                  value={lessonForm.order}
+                  id="lessonVideoUrl"
+                  name="videoUrl"
+                  value={lessonForm.videoUrl}
                   onChange={handleLessonFormChange}
-                  min={1}
+                  placeholder="https://youtube.com/watch?v=xyz"
                 />
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="lessonVideoProvider">Plataforma de vídeo</Label>
+                  <Select
+                    value={lessonForm.videoProvider}
+                    onValueChange={(value) => handleLessonSelectChange('videoProvider', value)}
+                  >
+                    <SelectTrigger id="lessonVideoProvider">
+                      <SelectValue placeholder="Selecione a plataforma" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="youtube">YouTube</SelectItem>
+                      <SelectItem value="vimeo">Vimeo</SelectItem>
+                      <SelectItem value="vturb">vTurb</SelectItem>
+                      <SelectItem value="panda">Panda</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {/* Botão de prévia do vídeo */}
+                <div className="flex items-end justify-end">
+                  <Button
+                    variant="outline"
+                    type="button"
+                    className="gap-2"
+                    disabled={!lessonForm.videoUrl}
+                    onClick={() => {
+                      // Simplesmente atualiza o estado para forçar a renderização do preview
+                      setLessonForm(prev => ({ ...prev }));
+                    }}
+                  >
+                    <Play className="h-4 w-4" />
+                    Verificar vídeo
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Visualização do vídeo */}
+              {lessonForm.videoUrl && (
+                <div className="mt-3">
+                  <p className="text-sm font-medium mb-2">Prévia do vídeo:</p>
+                  <div className="rounded-md overflow-hidden border aspect-video">
+                    <VideoPreview 
+                      videoUrl={lessonForm.videoUrl} 
+                      videoProvider={lessonForm.videoProvider}
+                      thumbnailUrl={lessonForm.thumbnailUrl} 
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="lessonOrder">Ordem *</Label>
+              <Input
+                id="lessonOrder"
+                name="order"
+                type="number"
+                value={lessonForm.order}
+                onChange={handleLessonFormChange}
+                min={1}
+              />
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div className="grid gap-2">
