@@ -1,69 +1,61 @@
--- Script para criar tabelas de videoaulas
+-- Criação da tabela de cursos
+CREATE TABLE IF NOT EXISTS "courses" (
+  "id" SERIAL PRIMARY KEY,
+  "title" TEXT NOT NULL,
+  "description" TEXT NOT NULL,
+  "slug" TEXT NOT NULL UNIQUE,
+  "featuredImage" TEXT,
+  "level" TEXT NOT NULL DEFAULT 'iniciante',
+  "status" TEXT NOT NULL DEFAULT 'active',
+  "isPublished" BOOLEAN NOT NULL DEFAULT true,
+  "isPremium" BOOLEAN NOT NULL DEFAULT false,
+  "createdBy" INTEGER REFERENCES "users"("id"),
+  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
+);
 
--- Tabela de Módulos de Curso
+-- Criação da tabela de módulos
 CREATE TABLE IF NOT EXISTS "courseModules" (
   "id" SERIAL PRIMARY KEY,
+  "courseId" INTEGER REFERENCES "courses"("id"),
   "title" TEXT NOT NULL,
   "description" TEXT NOT NULL,
   "thumbnailUrl" TEXT NOT NULL,
   "level" TEXT NOT NULL DEFAULT 'iniciante',
   "order" INTEGER NOT NULL,
-  "isActive" BOOLEAN NOT NULL DEFAULT TRUE,
-  "isPremium" BOOLEAN NOT NULL DEFAULT FALSE,
+  "isActive" BOOLEAN NOT NULL DEFAULT true,
+  "isPremium" BOOLEAN NOT NULL DEFAULT false,
   "createdBy" INTEGER NOT NULL REFERENCES "users"("id"),
-  "createdAt" TIMESTAMP NOT NULL DEFAULT now(),
-  "updatedAt" TIMESTAMP NOT NULL DEFAULT now()
+  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- Tabela de Aulas de Curso
-CREATE TABLE IF NOT EXISTS "courseLessons" (
+-- Criação da tabela de configurações
+CREATE TABLE IF NOT EXISTS "courseSettings" (
   "id" SERIAL PRIMARY KEY,
-  "moduleId" INTEGER NOT NULL REFERENCES "courseModules"("id"),
-  "title" TEXT NOT NULL,
-  "description" TEXT NOT NULL,
-  "videoUrl" TEXT NOT NULL,
-  "videoProvider" TEXT NOT NULL,
-  "duration" INTEGER,
-  "thumbnailUrl" TEXT,
-  "order" INTEGER NOT NULL,
-  "isPremium" BOOLEAN NOT NULL DEFAULT FALSE,
-  "additionalMaterialsUrl" TEXT,
-  "createdBy" INTEGER NOT NULL REFERENCES "users"("id"),
-  "createdAt" TIMESTAMP NOT NULL DEFAULT now(),
-  "updatedAt" TIMESTAMP NOT NULL DEFAULT now()
+  "bannerTitle" TEXT,
+  "bannerDescription" TEXT,
+  "bannerImageUrl" TEXT,
+  "welcomeMessage" TEXT,
+  "showModuleNumbers" BOOLEAN DEFAULT true,
+  "useCustomPlayerColors" BOOLEAN DEFAULT false,
+  "enableComments" BOOLEAN DEFAULT true,
+  "allowNonPremiumEnrollment" BOOLEAN DEFAULT false,
+  "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  "updatedBy" INTEGER REFERENCES "users"("id")
 );
 
--- Tabela de Progresso do Usuário
-CREATE TABLE IF NOT EXISTS "courseProgress" (
-  "id" SERIAL PRIMARY KEY,
-  "userId" INTEGER NOT NULL REFERENCES "users"("id"),
-  "lessonId" INTEGER NOT NULL REFERENCES "courseLessons"("id"),
-  "progress" INTEGER NOT NULL DEFAULT 0,
-  "isCompleted" BOOLEAN NOT NULL DEFAULT FALSE,
-  "lastWatchedAt" TIMESTAMP NOT NULL DEFAULT now(),
-  "notes" TEXT,
-  "createdAt" TIMESTAMP NOT NULL DEFAULT now(),
-  "updatedAt" TIMESTAMP NOT NULL DEFAULT now(),
-  PRIMARY KEY ("userId", "lessonId")
-);
+-- Inserção de dados iniciais na tabela de configurações
+INSERT INTO "courseSettings" ("bannerTitle", "bannerDescription", "showModuleNumbers", "enableComments")
+VALUES ('Aprenda com nossos cursos', 'Conteúdo exclusivo para você evoluir', true, true)
+ON CONFLICT (id) DO NOTHING;
 
--- Tabela de Avaliações
-CREATE TABLE IF NOT EXISTS "courseRatings" (
-  "id" SERIAL PRIMARY KEY,
-  "userId" INTEGER NOT NULL REFERENCES "users"("id"),
-  "lessonId" INTEGER NOT NULL REFERENCES "courseLessons"("id"),
-  "rating" INTEGER NOT NULL,
-  "comment" TEXT,
-  "createdAt" TIMESTAMP NOT NULL DEFAULT now(),
-  "updatedAt" TIMESTAMP NOT NULL DEFAULT now(),
-  PRIMARY KEY ("userId", "lessonId")
-);
+-- Inserção de curso de exemplo se não existir
+INSERT INTO "courses" ("title", "description", "slug", "level", "isPremium", "createdBy")
+SELECT 'Curso Introdutório', 'Este é um curso introdutório para novos usuários', 'curso-introdutorio', 'iniciante', false, 1
+WHERE NOT EXISTS (SELECT 1 FROM "courses" LIMIT 1);
 
--- Adicionar índices para melhor performance
-CREATE INDEX IF NOT EXISTS "idx_courseModules_createdBy" ON "courseModules"("createdBy");
-CREATE INDEX IF NOT EXISTS "idx_courseLessons_moduleId" ON "courseLessons"("moduleId");
-CREATE INDEX IF NOT EXISTS "idx_courseLessons_createdBy" ON "courseLessons"("createdBy");
-CREATE INDEX IF NOT EXISTS "idx_courseProgress_userId" ON "courseProgress"("userId");
-CREATE INDEX IF NOT EXISTS "idx_courseProgress_lessonId" ON "courseProgress"("lessonId");
-CREATE INDEX IF NOT EXISTS "idx_courseRatings_userId" ON "courseRatings"("userId");
-CREATE INDEX IF NOT EXISTS "idx_courseRatings_lessonId" ON "courseRatings"("lessonId");
+-- Inserção de módulo de exemplo se não existir
+INSERT INTO "courseModules" ("courseId", "title", "description", "thumbnailUrl", "order", "createdBy")
+SELECT (SELECT id FROM "courses" LIMIT 1), 'Módulo Inicial', 'Módulo introdutório do curso', '/images/default-module.jpg', 1, 1
+WHERE NOT EXISTS (SELECT 1 FROM "courseModules" LIMIT 1);
