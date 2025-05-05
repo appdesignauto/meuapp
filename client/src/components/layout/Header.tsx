@@ -269,20 +269,17 @@ const Header = () => {
           <nav className={`hidden md:flex items-center space-x-1 transition-opacity duration-300 ${
             showHeaderSearch && !isVideoaulasPage ? 'opacity-0' : 'opacity-100'
           }`}>
-            {navLinks
-              .filter(link => {
-                // Se estiver na página de videoaulas, esconde os links de "Vídeo Aulas" e "Categorias"
-                if (isVideoaulasPage && (link.path === '/videoaulas' || link.path === '/categories')) {
-                  return false;
-                }
-                return true;
-              })
-              .map((link) => (
+            {/* Todos os links principais sempre visíveis */}
+            {navLinks.map((link) => (
                 <Link
                   key={link.path}
                   href={link.path}
                   className={`text-neutral-600 hover:text-blue-600 font-medium text-[13px] px-3 py-2 rounded-md transition-all duration-200 hover:bg-blue-50 ${
-                    location === link.path ? 'text-blue-600 bg-blue-50/80' : ''
+                    location === link.path 
+                      ? 'text-blue-600 bg-blue-50/80' 
+                      : isVideoaulasPage && (link.path === '/videoaulas' || link.path === '/categories') 
+                        ? 'text-blue-600 font-semibold' 
+                        : ''
                   } ${link.icon ? 'flex items-center' : ''}`}
                 >
                   {link.icon}
@@ -291,19 +288,18 @@ const Header = () => {
               ))}
           </nav>
 
-          {/* User Actions */}
-          <div className="flex items-center space-x-3">
-            {/* Barra de pesquisa para videoaulas - apenas aparece na página de videoaulas */}
+          {/* Barra de pesquisa de vídeo integrada ao menu - apenas aparece na página de videoaulas */}
+          <div className="flex-1 max-w-md px-4 flex justify-center">
             {isVideoaulasPage && (
               <form 
                 onSubmit={handleVideoSearch}
-                className="hidden md:flex w-80 mr-3"
+                className="hidden md:flex w-full mr-3"
               >
                 <div className="relative w-full">
                   <Input
                     type="text"
                     placeholder="Buscar Vídeo Aulas..."
-                    className="w-full px-4 py-2 rounded-full border border-blue-200 text-sm"
+                    className="w-full px-4 py-2 rounded-full border border-blue-200 text-sm shadow-sm focus-visible:ring-blue-400"
                     value={videoSearchQuery}
                     onChange={(e) => setVideoSearchQuery(e.target.value)}
                     autoComplete="off"
@@ -311,6 +307,10 @@ const Header = () => {
                 </div>
               </form>
             )}
+          </div>
+          
+          {/* User Actions */}
+          <div className="flex items-center space-x-3">
             
             {/* Link para busca geral (sem ícone) - Visível apenas em telas médias e maiores, e não na página de videoaulas */}
             {!isVideoaulasPage && (
