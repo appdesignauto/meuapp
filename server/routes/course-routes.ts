@@ -477,7 +477,7 @@ router.get('/', async (req, res) => {
       FROM 
         courses c
       ORDER BY 
-        c.createdat DESC
+        c."createdAt" DESC
     `;
     
     const result = await db.execute(query);
