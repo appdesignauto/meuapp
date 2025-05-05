@@ -285,7 +285,7 @@ const AdminDashboard = () => {
   
   const deleteCourseMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await apiRequest('DELETE', `/api/courses/${id}`);
+      const response = await apiRequest('DELETE', `/api/course/${id}`);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Erro ao excluir curso');
@@ -293,7 +293,7 @@ const AdminDashboard = () => {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/courses'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/course'] });
       setIsConfirmDeleteCourseOpen(false);
       toast({
         title: 'Curso excluído com sucesso',
