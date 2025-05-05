@@ -491,8 +491,25 @@ export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
 export type InsertPasswordResetToken = z.infer<typeof insertPasswordResetTokenSchema>;
 
 // Videoaulas: Módulos
+// Videoaulas: Cursos 
+export const courses = pgTable("courses", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  thumbnailUrl: text("thumbnailUrl"),
+  featuredImage: text("featuredImage"),
+  level: text("level").notNull().default("iniciante"), // iniciante, intermediario, avancado
+  status: text("status").notNull().default("active"), // active, draft, archived
+  isPublished: boolean("isPublished").notNull().default(true),
+  isPremium: boolean("isPremium").notNull().default(false),
+  createdBy: integer("createdBy").references(() => users.id),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
 export const courseModules = pgTable("courseModules", {
   id: serial("id").primaryKey(),
+  courseId: integer("courseId").references(() => courses.id),
   title: text("title").notNull(),
   description: text("description").notNull(),
   thumbnailUrl: text("thumbnailUrl").notNull(),
@@ -556,8 +573,35 @@ export const courseRatings = pgTable("courseRatings", {
   };
 });
 
+// Videoaulas: Configurações
+export const courseSettings = pgTable("courseSettings", {
+  id: serial("id").primaryKey(),
+  bannerTitle: text("bannerTitle"),
+  bannerDescription: text("bannerDescription"),
+  bannerImageUrl: text("bannerImageUrl"),
+  welcomeMessage: text("welcomeMessage"),
+  showModuleNumbers: boolean("showModuleNumbers").default(true),
+  useCustomPlayerColors: boolean("useCustomPlayerColors").default(false),
+  enableComments: boolean("enableComments").default(true),
+  allowNonPremiumEnrollment: boolean("allowNonPremiumEnrollment").default(false),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+  updatedBy: integer("updatedBy").references(() => users.id),
+});
+
 // Definindo relações após todas as tabelas estarem criadas
+export const coursesRelations = relations(courses, ({ one, many }) => ({
+  creator: one(users, {
+    fields: [courses.createdBy],
+    references: [users.id],
+  }),
+  modules: many(courseModules),
+}));
+
 export const courseModulesRelations = relations(courseModules, ({ one, many }) => ({
+  course: one(courses, {
+    fields: [courseModules.courseId],
+    references: [courses.id],
+  }),
   creator: one(users, {
     fields: [courseModules.createdBy],
     references: [users.id],
@@ -602,6 +646,12 @@ export const courseRatingsRelations = relations(courseRatings, ({ one }) => ({
 }));
 
 // Schemas de inserção
+export const insertCourseSchema = createInsertSchema(courses).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertCourseModuleSchema = createInsertSchema(courseModules).omit({
   id: true,
   createdAt: true,
@@ -627,6 +677,9 @@ export const insertCourseRatingSchema = createInsertSchema(courseRatings).omit({
 });
 
 // Tipos para videoaulas
+export type Course = typeof courses.$inferSelect;
+export type InsertCourse = z.infer<typeof insertCourseSchema>;
+
 export type CourseModule = typeof courseModules.$inferSelect;
 export type InsertCourseModule = z.infer<typeof insertCourseModuleSchema>;
 
