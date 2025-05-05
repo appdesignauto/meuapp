@@ -162,13 +162,26 @@ const AdminDashboard = () => {
   } = useQuery({
     queryKey: ['/api/course'],
     queryFn: async () => {
-      const res = await fetch('/api/course');
-      if (!res.ok) {
-        console.error('Erro ao buscar cursos:', res.status, res.statusText);
-        throw new Error('Falha ao carregar cursos');
+      try {
+        console.log("Consultando API de cursos em: /api/course");
+        const res = await fetch('/api/course');
+        
+        if (!res.ok) {
+          console.error('Erro ao buscar cursos:', res.status, res.statusText);
+          const errorText = await res.text();
+          console.error('Resposta da API:', errorText);
+          throw new Error(`Falha ao carregar cursos: ${res.status} ${res.statusText}`);
+        }
+        
+        const jsonData = await res.json();
+        console.log("Cursos recebidos da API:", jsonData);
+        return jsonData;
+      } catch (error) {
+        console.error("Exceção ao buscar cursos:", error);
+        throw error;
       }
-      return res.json();
-    }
+    },
+    retry: 1
   });
   
   const { 
@@ -250,12 +263,34 @@ const AdminDashboard = () => {
   // Mutations para cursos
   const createCourseMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest('POST', '/api/course', data);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erro ao criar curso');
+      try {
+        console.log("Enviando requisição para criar curso:", data);
+        const response = await apiRequest('POST', '/api/course', data);
+        
+        if (!response.ok) {
+          console.error("Erro na resposta:", response.status, response.statusText);
+          const errorText = await response.text();
+          console.error("Corpo da resposta de erro:", errorText);
+          
+          let errorMessage = 'Erro ao criar curso';
+          try {
+            const errorData = JSON.parse(errorText);
+            errorMessage = errorData.message || errorMessage;
+          } catch (e) {
+            console.error("Falha ao analisar resposta de erro como JSON:", e);
+            errorMessage = `Erro ${response.status}: ${errorText.substring(0, 100)}`;
+          }
+          
+          throw new Error(errorMessage);
+        }
+        
+        const data = await response.json();
+        console.log("Curso criado com sucesso:", data);
+        return data;
+      } catch (error) {
+        console.error("Exceção ao criar curso:", error);
+        throw error;
       }
-      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/course'] });
