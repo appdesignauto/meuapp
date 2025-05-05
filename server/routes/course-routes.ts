@@ -504,6 +504,7 @@ router.get('/:id', async (req, res) => {
     console.log(`[GET /course/${courseId}] Buscando curso específico`);
     
     // Usando SQL diretamente para evitar problemas de esquema
+    // Usando string interpolation para evitar problemas com parâmetros $1
     const query = `
       SELECT 
         c.id, 
@@ -520,10 +521,11 @@ router.get('/:id', async (req, res) => {
       FROM 
         courses c
       WHERE 
-        c.id = $1
+        c.id = ${courseId}
     `;
     
-    const result = await db.execute(query, [courseId]);
+    console.log(`[GET /course/${courseId}] Query de curso:`, query);
+    const result = await db.execute(query);
     
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Curso não encontrado' });
@@ -543,16 +545,18 @@ router.get('/:id', async (req, res) => {
       FROM 
         "courseModules" cm
       WHERE 
-        cm."courseId" = $1
+        cm."courseId" = ${courseId}
       ORDER BY 
         cm.order ASC
     `;
     
-    const modulesResult = await db.execute(modulesQuery, [courseId]);
+    console.log(`[GET /course/${courseId}] Modules Query:`, modulesQuery);
+    const modulesResult = await db.execute(modulesQuery);
     const modules = modulesResult.rows;
     
     // Para cada módulo, buscar suas lições
     for (const module of modules) {
+      const moduleId = module.id;
       const lessonsQuery = `
         SELECT 
           cl.id, 
@@ -566,13 +570,14 @@ router.get('/:id', async (req, res) => {
         FROM 
           "courseLessons" cl
         WHERE 
-          cl."moduleId" = $1
+          cl."moduleId" = ${moduleId}
         ORDER BY 
           cl.order ASC
       `;
       
-      const lessonsResult = await db.execute(lessonsQuery, [module.id]);
-      module.lessons = lessonsResult.rows;
+      console.log(`[GET /course/${courseId}] Lessons Query para módulo ${moduleId}:`, lessonsQuery);
+      const lessonsResult = await db.execute(lessonsQuery);
+      module.lessons = lessonsResult.rows || [];
     }
     
     // Combinar os resultados
