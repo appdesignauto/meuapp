@@ -131,16 +131,23 @@ const YouTubePlayer: React.FC<{ videoUrl: string; thumbnailUrl: string }> = ({ v
   );
 };
 
+// Importação do player de Vimeo
+import VimeoPlayer from '@/components/ui/vimeo-player';
+
 // Componente para player de vídeo que detecta o provedor e escolhe o player apropriado
 const VideoPlayer: React.FC<{ videoUrl: string; thumbnailUrl: string; videoProvider?: string }> = ({ 
   videoUrl, 
   thumbnailUrl,
   videoProvider = 'youtube' // Valor padrão
 }) => {
+  console.log("Player iniciado com provedor:", videoProvider, "URL:", videoUrl); // Log para depuração
+  
   // Definir o player com base no provedor de vídeo
   switch (videoProvider.toLowerCase()) {
     case 'youtube':
       return <YouTubePlayer videoUrl={videoUrl} thumbnailUrl={thumbnailUrl} />;
+    case 'vimeo':
+      return <VimeoPlayer videoUrl={videoUrl} thumbnailUrl={thumbnailUrl} />;
     default:
       // Se não for um provedor conhecido, ou se for 'local', usar o player padrão
       return (
@@ -455,7 +462,8 @@ const VideoLessonPage: React.FC = () => {
                 ) : (
                   <VideoPlayer 
                     videoUrl={tutorial.videoUrl} 
-                    thumbnailUrl={tutorial.thumbnailUrl} 
+                    thumbnailUrl={tutorial.thumbnailUrl}
+                    videoProvider={tutorial.videoProvider || 'youtube'}
                   />
                 )}
                 
