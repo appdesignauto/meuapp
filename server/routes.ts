@@ -4474,9 +4474,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/courses/modules', courseRouter);
   app.get('/api/courses/lessons', courseRouter);
   
-  // Rotas para gerenciamento de cursos e aulas (protegidas por autenticação e admin)
-  // Usar courseRouter sem middleware para permitir acesso público
-  app.use('/api/courses', courseRouter);
+  // Rotas para gerenciamento de cursos (cursos, configurações)
+  app.use('/api/courses', coursesRouter);
+  
+  // Rotas para gerenciamento de módulos e aulas
+  app.use('/api/course', courseRouter);
   
   // Rotas para gerenciamento de comentários em vídeos
   app.use('/api', videoCommentsRouter);
