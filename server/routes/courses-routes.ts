@@ -10,16 +10,42 @@ const router = Router();
 // Buscar todos os cursos
 router.get('/', async (req, res) => {
   try {
-    const coursesList = await db.query.courses.findMany({
-      orderBy: [desc(courses.updatedAt)],
-      with: {
-        modules: {
-          orderBy: [asc(courseModules.order)]
-        }
-      }
-    });
+    console.log('[GET /courses] Buscando cursos');
     
-    return res.json(coursesList);
+    // Usar select em vez de query para evitar problema com thumbnailUrl
+    const coursesList = await db.select({
+      id: courses.id,
+      title: courses.title,
+      description: courses.description,
+      slug: courses.slug,
+      featuredImage: courses.featuredImage,
+      level: courses.level,
+      status: courses.status,
+      isPublished: courses.isPublished,
+      isPremium: courses.isPremium,
+      createdBy: courses.createdBy,
+      createdAt: courses.createdAt,
+      updatedAt: courses.updatedAt
+    })
+    .from(courses)
+    .orderBy(desc(courses.updatedAt));
+    
+    // Buscar os módulos para cada curso
+    const coursesWithModules = await Promise.all(
+      coursesList.map(async (course) => {
+        const modules = await db.query.courseModules.findMany({
+          where: eq(courseModules.courseId, course.id),
+          orderBy: [asc(courseModules.order)]
+        });
+        
+        return {
+          ...course,
+          modules
+        };
+      })
+    );
+    
+    return res.json(coursesWithModules);
   } catch (error) {
     console.error('Erro ao buscar cursos:', error);
     return res.status(500).json({ message: 'Erro ao buscar cursos', error: String(error) });
