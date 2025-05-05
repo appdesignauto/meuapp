@@ -457,7 +457,7 @@ export default function VideoaulasPage() {
                     className="w-full overflow-visible relative"
                   >
                     <CarouselContent className="-ml-3 sm:-ml-4">
-                      {tutoriaisPopulares.slice(0, 8).map((tutorial, index) => (
+                      {Array.isArray(tutoriaisPopulares) && tutoriaisPopulares.map((tutorial, index) => (
                         <CarouselItem key={tutorial.id} className="pl-3 sm:pl-4 basis-3/4 sm:basis-2/5 md:basis-1/3 lg:basis-1/4 xl:basis-[24%]">
                           <Link href={`/videoaulas/${tutorial.id}`} className="block h-full">
                             <div className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 hover:shadow-lg hover:border-blue-300 transition-all group h-full">
@@ -469,14 +469,14 @@ export default function VideoaulasPage() {
                                     <span className="ml-2 text-4xl text-white">{index + 1}</span>
                                   </div>
                                   <div className="bg-blue-600 text-white text-xs px-2 py-1 rounded shadow-sm">
-                                    {tutorial.duration}
+                                    {tutorial.duration || ""}
                                   </div>
                                 </div>
                                 
                                 {/* Imagem do tutorial */}
                                 <img 
-                                  src={tutorial.thumbnailUrl} 
-                                  alt={tutorial.title} 
+                                  src={tutorial.thumbnailUrl || ""} 
+                                  alt={tutorial.title || "Tutorial"} 
                                   className="w-full aspect-[3/2] object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                                 />
                                 
@@ -486,7 +486,7 @@ export default function VideoaulasPage() {
                               
                               <div className="p-4">
                                 <h3 className="font-bold text-blue-800 mb-1 group-hover:text-blue-600 transition-colors truncate h-6 text-base">
-                                  {tutorial.title}
+                                  {tutorial.title || "Tutorial sem título"}
                                 </h3>
                                 <p className="text-gray-600 text-sm line-clamp-2 mb-3 h-10">
                                   {tutorial.description || "Aprenda técnicas avançadas de design automotivo neste tutorial completo."}
@@ -499,7 +499,7 @@ export default function VideoaulasPage() {
                                   </span>
                                   <div className="text-xs text-gray-500 flex items-center">
                                     <Eye className="h-3.5 w-3.5 mr-1 text-gray-400" />
-                                    {tutorial.views.toLocaleString()}
+                                    {(tutorial.views || 0).toLocaleString()}
                                   </div>
                                 </div>
                               </div>
@@ -559,14 +559,14 @@ export default function VideoaulasPage() {
                                         <span className="ml-2 text-4xl text-white">{moduleIdx + 1}</span>
                                       </div>
                                       <div className="bg-blue-600 text-white text-xs px-2 py-1 rounded shadow-sm">
-                                        {tutorial.duration}
+                                        {tutorial.duration || "00:00"}
                                       </div>
                                     </div>
                                     
                                     {/* Imagem do tutorial */}
                                     <img 
-                                      src={tutorial.thumbnailUrl} 
-                                      alt={tutorial.title} 
+                                      src={tutorial.thumbnailUrl || ""} 
+                                      alt={tutorial.title || "Tutorial"} 
                                       className="w-full aspect-[3/2] object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                                     />
                                     
@@ -584,7 +584,7 @@ export default function VideoaulasPage() {
                                   
                                   <div className="p-4">
                                     <h3 className="font-bold text-blue-800 mb-1 group-hover:text-blue-600 transition-colors truncate h-6 text-base">
-                                      {tutorial.title}
+                                      {tutorial.title || "Tutorial sem título"}
                                     </h3>
                                     <p className="text-gray-600 text-sm line-clamp-2 mb-3 h-10">
                                       {tutorial.description || "Aprenda técnicas avançadas de design automotivo neste tutorial completo."}
