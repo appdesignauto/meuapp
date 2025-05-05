@@ -112,6 +112,38 @@ const AdminDashboard = () => {
               <span>Visão Geral</span>
             </button>
             
+            {/* Usuários e Comunidade */}
+            <Collapsible 
+              className="bg-gray-50 rounded-lg py-1 mb-1"
+              defaultOpen={['users', 'community'].includes(activeTab)}
+            >
+              <CollapsibleTrigger className="flex items-center w-full px-4 py-2 text-gray-700 font-medium">
+                <Users className="w-5 h-5 mr-3" />
+                <span>Usuários</span>
+                <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pl-4 space-y-1 pt-1 pb-2">
+                <button
+                  onClick={() => setActiveTab('users')}
+                  className={`flex items-center w-full px-4 py-2 rounded-md ${
+                    activeTab === 'users' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <Users className="w-4 h-4 mr-3" />
+                  <span>Gerenciar Usuários</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('community')}
+                  className={`flex items-center w-full px-4 py-2 rounded-md ${
+                    activeTab === 'community' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <MessageSquare className="w-4 h-4 mr-3" />
+                  <span>Comunidade</span>
+                </button>
+              </CollapsibleContent>
+            </Collapsible>
+            
             {/* Gerenciamento de Conteúdo */}
             <Collapsible 
               className="bg-gray-50 rounded-lg py-1 mb-1"
@@ -173,38 +205,6 @@ const AdminDashboard = () => {
                 Cursos e Vídeos
               </Button>
             </Link>
-            
-            {/* Usuários e Comunidade */}
-            <Collapsible 
-              className="bg-gray-50 rounded-lg py-1 mb-1"
-              defaultOpen={['users', 'community'].includes(activeTab)}
-            >
-              <CollapsibleTrigger className="flex items-center w-full px-4 py-2 text-gray-700 font-medium">
-                <Users className="w-5 h-5 mr-3" />
-                <span>Usuários</span>
-                <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
-              </CollapsibleTrigger>
-              <CollapsibleContent className="pl-4 space-y-1 pt-1 pb-2">
-                <button
-                  onClick={() => setActiveTab('users')}
-                  className={`flex items-center w-full px-4 py-2 rounded-md ${
-                    activeTab === 'users' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  <Users className="w-4 h-4 mr-3" />
-                  <span>Gerenciar Usuários</span>
-                </button>
-                <button
-                  onClick={() => setActiveTab('community')}
-                  className={`flex items-center w-full px-4 py-2 rounded-md ${
-                    activeTab === 'community' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  <MessageSquare className="w-4 h-4 mr-3" />
-                  <span>Comunidade</span>
-                </button>
-              </CollapsibleContent>
-            </Collapsible>
             
             {/* Configurações */}
             <Collapsible 
