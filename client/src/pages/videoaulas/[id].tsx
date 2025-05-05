@@ -41,22 +41,17 @@ import YouTubePlayer from "@/components/ui/youtube-player";
 import VimeoPlayer from "@/components/ui/vimeo-player";
 import { Tutorial } from "@/components/videoaulas/TutorialData";
 
-// Função auxiliar para extrair o ID do vídeo do YouTube
-const extractYouTubeVideoId = (url: string): string | null => {
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-  const match = url.match(regExp);
-  return (match && match[2].length === 11) ? match[2] : null;
-};
-
-// Componente para player de vídeo do YouTube
-const YouTubePlayer: React.FC<{ videoUrl: string; thumbnailUrl: string }> = ({ videoUrl, thumbnailUrl }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
+// Componente para player de vídeo que detecta o provedor e escolhe o player apropriado
+const VideoPlayer: React.FC<{ videoUrl: string; thumbnailUrl: string; videoProvider?: string }> = ({ 
+  videoUrl, 
+  thumbnailUrl,
+  videoProvider = 'youtube' // Valor padrão
+}) => {
+  console.log("[VideoPlayer] Iniciado com provedor:", videoProvider, "URL:", videoUrl); // Log para depuração
   
-  // Extrair o ID do vídeo do YouTube da URL
-  const videoId = extractYouTubeVideoId(videoUrl);
-  
-  if (!videoId) {
+  // Verificar se a URL existe
+  if (!videoUrl) {
+    console.error("[VideoPlayer] URL de vídeo não fornecida ou inválida");
     return (
       <div className="w-full aspect-video bg-gray-100 rounded-md sm:rounded-lg flex items-center justify-center">
         <div className="text-center p-4">
@@ -64,111 +59,67 @@ const YouTubePlayer: React.FC<{ videoUrl: string; thumbnailUrl: string }> = ({ v
             <ExternalLink className="h-10 w-10 mx-auto" />
           </div>
           <h3 className="text-lg font-semibold text-gray-800">URL de vídeo inválida</h3>
-          <p className="text-gray-600 text-sm mt-1">Não foi possível carregar o vídeo do YouTube</p>
+          <p className="text-gray-600 text-sm mt-1">
+            Nenhuma URL de vídeo foi fornecida para este conteúdo
+          </p>
         </div>
       </div>
     );
   }
   
-  // Manipuladores para eventos de carregamento
-  const handleIframeLoad = () => {
-    setIsLoading(false);
-  };
-  
-  const handleIframeError = () => {
-    setIsError(true);
-    setIsLoading(false);
-  };
-  
-  // Preparar a URL do embed do YouTube apenas com parâmetros essenciais
-  // modestbranding=1 - reduz o branding do YouTube
-  // rel=0 - não mostra vídeos relacionados ao final do vídeo
-  const embedUrl = `https://www.youtube.com/embed/${videoId}?modestbranding=1&rel=0&origin=${window.location.origin}`;
-  
-  return (
-    <div className="relative w-full aspect-video bg-black rounded-md sm:rounded-lg overflow-hidden">
-      {/* Mostrar thumbnail enquanto carrega */}
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <img 
-            src={thumbnailUrl} 
-            alt="Thumbnail do vídeo" 
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
-          </div>
-        </div>
-      )}
-      
-      {/* Mostrar mensagem de erro se não for possível carregar o iframe */}
-      {isError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-          <div className="text-center p-4">
-            <div className="text-red-500 mb-2">
-              <ExternalLink className="h-10 w-10 mx-auto" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-800">Erro ao carregar o vídeo</h3>
-            <p className="text-gray-600 text-sm mt-1">Verifique sua conexão com a internet</p>
-          </div>
-        </div>
-      )}
-      
-      {/* iframe do YouTube - sem sobreposições */}
-      <iframe
-        className="w-full h-full"
-        src={embedUrl}
-        title="YouTube video player"
-        frameBorder="0"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-        onLoad={handleIframeLoad}
-        onError={handleIframeError}
-      ></iframe>
-    </div>
-  );
-};
-
-// Importação do player de Vimeo
-import VimeoPlayer from '@/components/ui/vimeo-player';
-
-// Componente para player de vídeo que detecta o provedor e escolhe o player apropriado
-const VideoPlayer: React.FC<{ videoUrl: string; thumbnailUrl: string; videoProvider?: string }> = ({ 
-  videoUrl, 
-  thumbnailUrl,
-  videoProvider = 'youtube' // Valor padrão
-}) => {
-  console.log("Player iniciado com provedor:", videoProvider, "URL:", videoUrl); // Log para depuração
-  
   // Definir o player com base no provedor de vídeo
-  switch (videoProvider.toLowerCase()) {
-    case 'youtube':
-      return <YouTubePlayer videoUrl={videoUrl} thumbnailUrl={thumbnailUrl} />;
-    case 'vimeo':
-      return <VimeoPlayer videoUrl={videoUrl} thumbnailUrl={thumbnailUrl} />;
-    default:
-      // Se não for um provedor conhecido, ou se for 'local', usar o player padrão
-      return (
-        <div className="w-full aspect-video bg-gray-100 rounded-md sm:rounded-lg flex items-center justify-center">
-          <div className="text-center p-4">
-            <div className="text-blue-500 mb-2">
-              <ExternalLink className="h-10 w-10 mx-auto" />
+  try {
+    switch (videoProvider?.toLowerCase()) {
+      case 'youtube':
+        console.log("[VideoPlayer] Utilizando YouTube player");
+        return <YouTubePlayer videoUrl={videoUrl} thumbnailUrl={thumbnailUrl} />;
+      case 'vimeo':
+        console.log("[VideoPlayer] Utilizando Vimeo player");
+        return <VimeoPlayer videoUrl={videoUrl} thumbnailUrl={thumbnailUrl} />;
+      default:
+        // Se não for um provedor conhecido, ou se for 'local', usar o player padrão
+        console.log("[VideoPlayer] Provedor não reconhecido:", videoProvider);
+        return (
+          <div className="w-full aspect-video bg-gray-100 rounded-md sm:rounded-lg flex items-center justify-center">
+            <div className="text-center p-4">
+              <div className="text-blue-500 mb-2">
+                <ExternalLink className="h-10 w-10 mx-auto" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800">Provedor de vídeo não suportado</h3>
+              <p className="text-gray-600 text-sm mt-1">
+                O provedor "{videoProvider || 'desconhecido'}" ainda não é suportado
+              </p>
+              <a 
+                href={videoUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="mt-4 inline-block px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+              >
+                Abrir link do vídeo
+              </a>
             </div>
-            <h3 className="text-lg font-semibold text-gray-800">Provedor de vídeo não suportado</h3>
-            <p className="text-gray-600 text-sm mt-1">
-              O provedor "{videoProvider}" ainda não é suportado
-            </p>
-            <a 
-              href={videoUrl} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="mt-4 inline-block px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-            >
-              Abrir link do vídeo
-            </a>
           </div>
+        );
+    }
+  } catch (error) {
+    // Capturar qualquer erro que possa ocorrer durante a renderização
+    console.error("[VideoPlayer] Erro ao renderizar o player:", error);
+    return (
+      <div className="w-full aspect-video bg-gray-100 rounded-md sm:rounded-lg flex items-center justify-center">
+        <div className="text-center p-4">
+          <div className="text-red-500 mb-2">
+            <ExternalLink className="h-10 w-10 mx-auto" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-800">Erro ao carregar o vídeo</h3>
+          <p className="text-gray-600 text-sm mt-1">
+            Ocorreu um erro inesperado ao carregar o player de vídeo
+          </p>
+          <p className="text-xs text-gray-400 mt-2">
+            Detalhes técnicos: {String(error)}
+          </p>
         </div>
-      );
+      </div>
+    );
   }
 };
 
