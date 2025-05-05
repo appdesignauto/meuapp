@@ -84,8 +84,17 @@ const YouTubePlayer: React.FC<{ videoUrl: string; thumbnailUrl: string }> = ({ v
     setIsLoading(false);
   };
   
-  // Preparar a URL do embed do YouTube (inclui opções como autoplay, controles, etc.)
-  const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=0&modestbranding=1&rel=0`;
+  // Preparar a URL do embed do YouTube (incluindo opções para maximizar a privacidade e reduzir branding)
+  // Parâmetros:
+  // modestbranding=1 - reduz o branding do YouTube
+  // rel=0 - não mostra vídeos relacionados no final
+  // controls=1 - mantém controles básicos
+  // disablekb=1 - desativa atalhos de teclado
+  // fs=0 - desativa botão de tela cheia
+  // iv_load_policy=3 - não mostra anotações
+  // showinfo=0 - não mostra informações do vídeo
+  // cc_load_policy=0 - não carrega legendas automaticamente
+  const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=0&modestbranding=1&rel=0&controls=1&disablekb=1&fs=0&iv_load_policy=3&showinfo=0&cc_load_policy=0&origin=${window.location.origin}`;
   
   return (
     <div className="relative w-full aspect-video bg-black rounded-md sm:rounded-lg overflow-hidden">
@@ -117,16 +126,24 @@ const YouTubePlayer: React.FC<{ videoUrl: string; thumbnailUrl: string }> = ({ v
       )}
       
       {/* iframe do YouTube */}
-      <iframe
-        className="w-full h-full"
-        src={embedUrl}
-        title="YouTube video player"
-        frameBorder="0"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-        onLoad={handleIframeLoad}
-        onError={handleIframeError}
-      ></iframe>
+      <div className="w-full h-full relative">
+        {/* Sobreposição para evitar cliques em elementos interativos do player que podem levar ao YouTube */}
+        <div 
+          className="absolute inset-0 z-10 pointer-events-none"
+          style={{ backgroundColor: 'transparent' }}
+        ></div>
+        
+        <iframe
+          className="w-full h-full"
+          src={embedUrl}
+          title="Player de vídeo"
+          frameBorder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          onLoad={handleIframeLoad}
+          onError={handleIframeError}
+        ></iframe>
+      </div>
     </div>
   );
 };

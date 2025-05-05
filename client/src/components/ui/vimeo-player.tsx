@@ -46,8 +46,18 @@ const VimeoPlayer: React.FC<VimeoPlayerProps> = ({ videoUrl, thumbnailUrl }) => 
     setIsLoading(false);
   };
   
-  // URL do embed do Vimeo
-  const embedUrl = `https://player.vimeo.com/video/${videoId}?byline=0&portrait=0`;
+  // URL do embed do Vimeo com parâmetros avançados
+  // Parâmetros:
+  // - byline=0: oculta a autoria
+  // - portrait=0: oculta o avatar
+  // - title=0: oculta o título
+  // - transparent=1: fundo transparente 
+  // - pip=0: desativa picture-in-picture
+  // - autopause=0: não pausa outros vídeos
+  // - controls=1: mantém os controles básicos
+  // - playsinline=1: reproduz inline em dispositivos móveis
+  // - dnt=1: não rastrear (privacidade)
+  const embedUrl = `https://player.vimeo.com/video/${videoId}?byline=0&portrait=0&title=0&transparent=1&pip=0&autopause=0&controls=1&playsinline=1&dnt=1`;
   
   return (
     <div className="relative w-full aspect-video bg-black rounded-md sm:rounded-lg overflow-hidden">
@@ -78,17 +88,25 @@ const VimeoPlayer: React.FC<VimeoPlayerProps> = ({ videoUrl, thumbnailUrl }) => 
         </div>
       )}
       
-      {/* iframe do Vimeo */}
-      <iframe
-        className="w-full h-full"
-        src={embedUrl}
-        title="Vimeo video player"
-        frameBorder="0"
-        allow="autoplay; fullscreen; picture-in-picture"
-        allowFullScreen
-        onLoad={handleIframeLoad}
-        onError={handleIframeError}
-      ></iframe>
+      {/* iframe do Vimeo com sobreposição de proteção */}
+      <div className="w-full h-full relative">
+        {/* Sobreposição para evitar cliques em elementos interativos do player que podem levar ao Vimeo */}
+        <div 
+          className="absolute inset-0 z-10 pointer-events-none"
+          style={{ backgroundColor: 'transparent' }}
+        ></div>
+        
+        <iframe
+          className="w-full h-full"
+          src={embedUrl}
+          title="Player de vídeo"
+          frameBorder="0"
+          allow="autoplay; fullscreen; picture-in-picture"
+          allowFullScreen
+          onLoad={handleIframeLoad}
+          onError={handleIframeError}
+        ></iframe>
+      </div>
     </div>
   );
 };
