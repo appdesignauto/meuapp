@@ -114,6 +114,7 @@ const GerenciarCursos = () => {
   const [isLessonDialogOpen, setIsLessonDialogOpen] = useState(false);
   const [isConfirmDeleteLessonOpen, setIsConfirmDeleteLessonOpen] = useState(false);
   const [currentLesson, setCurrentLesson] = useState<CourseLesson | null>(null);
+  const [isEditingLesson, setIsEditingLesson] = useState(false);
   const [lessonForm, setLessonForm] = useState<CourseLesson>({
     moduleId: 0,
     title: '',
@@ -531,8 +532,21 @@ const GerenciarCursos = () => {
         return;
       }
       
+      // Se temos um ID de aula no formulário e não é a mesma que já temos carregada
+      const lessonIdForUpload = currentLesson?.id || (lessonForm.id ? Number(lessonForm.id) : undefined);
+      
       setThumbnailFile(file);
       setThumbnailUploadError(null);
+      
+      if (!lessonIdForUpload && isEditingLesson) {
+        toast({
+          title: "Aviso",
+          description: "Salve a aula primeiro antes de fazer upload da miniatura",
+          variant: "default",
+        });
+        return;
+      }
+      
       thumbnailUploadMutation.mutate(file);
     }
   };
@@ -546,6 +560,11 @@ const GerenciarCursos = () => {
       const formData = new FormData();
       formData.append('thumbnail', file);
       
+      // Adicionar ID da aula ao formData se disponível (para aulas existentes)
+      if (currentLesson?.id) {
+        formData.append('lessonId', String(currentLesson.id));
+      }
+      
       // Iniciar um timer para simular o progresso enquanto o upload acontece
       let uploadTimer = setInterval(() => {
         setThumbnailUploadProgress(prev => {
@@ -558,7 +577,7 @@ const GerenciarCursos = () => {
       }, 200);
       
       try {
-        const response = await fetch('/api/lesson-thumbnail-upload', {
+        const response = await fetch('/api/courses/lessons/thumbnail-upload', {
           method: 'POST',
           body: formData,
           credentials: 'include'
@@ -2257,85 +2276,107 @@ const GerenciarCursos = () => {
                 
                 <div className="mt-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="lessonThumbnailUrl">URL da miniatura (opcional)</Label>
-                    <Input
-                      id="lessonThumbnailUrl"
-                      name="thumbnailUrl"
-                      value={lessonForm.thumbnailUrl || ''}
-                      onChange={handleLessonFormChange}
-                      placeholder="Deixe em branco para usar miniatura padrão do vídeo"
-                    />
-                  </div>
-                  
-                  <div className="grid gap-1 mt-3">
-                    <Label htmlFor="lessonThumbnailFile">Ou faça upload de uma imagem</Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        id="lessonThumbnailFile"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleThumbnailFileChange}
-                        ref={thumbnailInputRef}
-                        disabled={isUploadingThumbnail}
-                        className="flex-1"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={() => thumbnailInputRef.current?.click()}
-                        disabled={isUploadingThumbnail}
-                      >
-                        <ImagePlus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  {/* Progresso de upload da miniatura */}
-                  {isUploadingThumbnail && (
-                    <div className="mt-2">
-                      <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-primary" 
-                          style={{ width: `${thumbnailUploadProgress}%` }}
-                        />
-                      </div>
-                      <p className="text-xs text-center mt-1">
-                        {thumbnailUploadProgress < 100 
-                          ? `Enviando miniatura... ${thumbnailUploadProgress}%`
-                          : "Processando imagem..."}
-                      </p>
-                    </div>
-                  )}
-                  
-                  {/* Erro de upload */}
-                  {thumbnailUploadError && (
-                    <Alert variant="destructive" className="mt-2">
-                      <AlertTriangle className="h-4 w-4" />
-                      <AlertDescription>
-                        {thumbnailUploadError}
-                      </AlertDescription>
-                    </Alert>
-                  )}
-                  
-                  {/* Visualização de miniatura */}
-                  {lessonForm.thumbnailUrl && (
-                    <div className="mt-3">
-                      <p className="text-sm font-medium mb-1">Visualização da miniatura:</p>
-                      <div className="relative aspect-video rounded-md overflow-hidden border">
-                        <img 
-                          src={lessonForm.thumbnailUrl} 
-                          alt="Prévia da miniatura" 
-                          className="w-full h-full object-cover"
-                        />
-                        {lessonForm.showLessonNumber && lessonForm.order && (
-                          <div className="absolute bottom-2 left-2 bg-black/60 text-white px-2 py-1 text-xs rounded">
-                            Aula {lessonForm.order}
+                    <Label htmlFor="lessonThumbnailFile" className="flex justify-between items-center">
+                      <span>Miniatura da aula</span>
+                      {lessonForm.thumbnailUrl && (
+                        <Badge variant="outline" className="text-xs bg-green-50 text-green-700 font-normal">
+                          <CheckCircle2 className="h-3 w-3 mr-1" />
+                          Miniatura carregada
+                        </Badge>
+                      )}
+                    </Label>
+                    
+                    <div className="flex flex-col gap-4 md:flex-row md:items-start">
+                      {/* Preview da miniatura */}
+                      <div className="w-full md:w-1/2">
+                        {lessonForm.thumbnailUrl ? (
+                          <div className="relative aspect-video rounded-md overflow-hidden border">
+                            <img 
+                              src={lessonForm.thumbnailUrl} 
+                              alt="Prévia da miniatura" 
+                              className="w-full h-full object-cover"
+                            />
+                            {lessonForm.showLessonNumber && lessonForm.order && (
+                              <div className="absolute bottom-2 left-2 bg-black/60 text-white px-2 py-1 rounded text-xs">
+                                Aula {lessonForm.order}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="relative aspect-video rounded-md overflow-hidden border bg-gray-100 flex items-center justify-center">
+                            <div className="text-center">
+                              <ImagePlus className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                              <p className="text-gray-500 text-sm">Faça upload de uma miniatura</p>
+                            </div>
                           </div>
                         )}
                       </div>
+                      
+                      {/* Upload da miniatura */}
+                      <div className="w-full md:w-1/2 space-y-3">
+                        <div className="space-y-1">
+                          <div className="flex items-start gap-2">
+                            <Input
+                              id="lessonThumbnailFile"
+                              type="file"
+                              accept="image/*"
+                              onChange={handleThumbnailFileChange}
+                              ref={thumbnailInputRef}
+                              disabled={isUploadingThumbnail}
+                              className="flex-1"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              onClick={() => thumbnailInputRef.current?.click()}
+                              disabled={isUploadingThumbnail}
+                            >
+                              <ImagePlus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            Formatos aceitos: JPG, PNG, WEBP (máx. 5MB)
+                          </p>
+                        </div>
+                        
+                        {/* Progresso de upload da miniatura */}
+                        {isUploadingThumbnail && (
+                          <div className="mt-2">
+                            <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-primary" 
+                                style={{ width: `${thumbnailUploadProgress}%` }}
+                              />
+                            </div>
+                            <p className="text-xs text-center mt-1">
+                              {thumbnailUploadProgress < 100 
+                                ? `Enviando miniatura... ${thumbnailUploadProgress}%`
+                                : "Processando imagem..."}
+                            </p>
+                          </div>
+                        )}
+                        
+                        {/* Erro de upload */}
+                        {thumbnailUploadError && (
+                          <Alert variant="destructive" className="mt-2">
+                            <AlertTriangle className="h-4 w-4" />
+                            <AlertDescription>
+                              {thumbnailUploadError}
+                            </AlertDescription>
+                          </Alert>
+                        )}
+                        
+                        {/* Informação adicional */}
+                        <Alert variant="outline" className="bg-blue-50 border-blue-200">
+                          <FileVideo className="h-4 w-4 text-blue-500" />
+                          <AlertDescription className="text-blue-700 text-xs">
+                            A miniatura será salva em uma pasta específica no Supabase Storage para melhor organização.
+                          </AlertDescription>
+                        </Alert>
+                      </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
             </div>
