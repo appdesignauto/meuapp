@@ -2079,6 +2079,567 @@ const AdminDashboard = () => {
               <FileTypesList />
             </TabsContent>
             
+            <TabsContent value="coursesList">
+              <div className="mb-6 grid grid-cols-1 gap-6">
+                <div className="col-span-full">
+                  <div className="bg-white rounded-lg shadow-sm p-6">
+                    <div className="flex justify-between items-center mb-6">
+                      <h2 className="text-lg font-semibold">Cursos</h2>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          setCurrentCourse(null);
+                          setCourseForm({
+                            title: '',
+                            description: '',
+                            thumbnailUrl: '',
+                            featuredImage: '',
+                            level: 'iniciante',
+                            status: 'active',
+                            isPublished: true,
+                            isPremium: false
+                          });
+                          setIsCourseDialogOpen(true);
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Novo Curso
+                      </Button>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-[100px]">Imagem</TableHead>
+                            <TableHead>Título</TableHead>
+                            <TableHead>Nível</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead className="w-[100px]">Premium</TableHead>
+                            <TableHead className="text-right">Ações</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {isLoadingCourses ? (
+                            <TableRow>
+                              <TableCell colSpan={6} className="text-center py-4">
+                                <div className="flex justify-center">
+                                  <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ) : isCoursesError ? (
+                            <TableRow>
+                              <TableCell colSpan={6} className="text-center py-4 text-red-500">
+                                Erro ao carregar os cursos. Tente novamente.
+                              </TableCell>
+                            </TableRow>
+                          ) : courses.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={6} className="text-center py-4 text-gray-500">
+                                Nenhum curso encontrado. Clique em "Novo Curso" para criar.
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            courses.map((course) => (
+                              <TableRow key={course.id}>
+                                <TableCell>
+                                  <div className="w-16 h-9 bg-gray-100 rounded overflow-hidden">
+                                    {course.thumbnailUrl ? (
+                                      <img 
+                                        src={course.thumbnailUrl} 
+                                        alt={course.title} 
+                                        className="w-full h-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center">
+                                        <BookOpen className="w-5 h-5 text-gray-400" />
+                                      </div>
+                                    )}
+                                  </div>
+                                </TableCell>
+                                <TableCell>{course.title}</TableCell>
+                                <TableCell>
+                                  {course.level === 'iniciante' && 'Iniciante'}
+                                  {course.level === 'intermediario' && 'Intermediário'}
+                                  {course.level === 'avancado' && 'Avançado'}
+                                </TableCell>
+                                <TableCell>
+                                  {course.status === 'active' && (
+                                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                      Ativo
+                                    </Badge>
+                                  )}
+                                  {course.status === 'draft' && (
+                                    <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
+                                      Rascunho
+                                    </Badge>
+                                  )}
+                                  {course.status === 'archived' && (
+                                    <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                                      Arquivado
+                                    </Badge>
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  {course.isPremium ? (
+                                    <Badge variant="default" className="bg-amber-500">Premium</Badge>
+                                  ) : (
+                                    <Badge variant="outline">Grátis</Badge>
+                                  )}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button variant="ghost" size="icon">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuItem
+                                        onClick={() => {
+                                          setCurrentCourse(course);
+                                          setCourseForm({
+                                            ...course
+                                          });
+                                          setIsCourseDialogOpen(true);
+                                        }}
+                                      >
+                                        <Edit className="h-4 w-4 mr-2" />
+                                        Editar
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                        onClick={() => {
+                                          setCurrentCourse(course);
+                                          setIsConfirmDeleteCourseOpen(true);
+                                        }}
+                                        className="text-red-600"
+                                      >
+                                        <Trash2 className="h-4 w-4 mr-2" />
+                                        Excluir
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Diálogo para adicionar/editar curso */}
+              <Dialog open={isCourseDialogOpen} onOpenChange={setIsCourseDialogOpen}>
+                <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <BookOpen className="h-5 w-5" />
+                      {currentCourse ? 'Editar Curso' : 'Adicionar Curso'}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid gap-2 md:col-span-2">
+                        <Label htmlFor="courseTitle">Título do curso *</Label>
+                        <Input
+                          id="courseTitle"
+                          name="title"
+                          value={courseForm.title}
+                          onChange={handleCourseFormChange}
+                          placeholder="Ex: Dominando o Design para Redes Sociais"
+                        />
+                      </div>
+                      
+                      <div className="grid gap-2 md:col-span-2">
+                        <Label htmlFor="courseDescription">Descrição</Label>
+                        <Textarea
+                          id="courseDescription"
+                          name="description"
+                          value={courseForm.description}
+                          onChange={handleCourseFormChange}
+                          placeholder="Descreva o conteúdo do curso"
+                          rows={4}
+                        />
+                      </div>
+                      
+                      <div className="grid gap-2">
+                        <Label htmlFor="courseThumbnailUrl">URL da thumbnail</Label>
+                        <Input
+                          id="courseThumbnailUrl"
+                          name="thumbnailUrl"
+                          value={courseForm.thumbnailUrl}
+                          onChange={handleCourseFormChange}
+                          placeholder="Ex: https://example.com/thumbnail.jpg"
+                        />
+                      </div>
+                      
+                      <div className="grid gap-2">
+                        <Label htmlFor="courseFeaturedImage">URL da imagem de destaque</Label>
+                        <Input
+                          id="courseFeaturedImage"
+                          name="featuredImage"
+                          value={courseForm.featuredImage}
+                          onChange={handleCourseFormChange}
+                          placeholder="Ex: https://example.com/featured.jpg"
+                        />
+                      </div>
+                      
+                      <div className="grid gap-2">
+                        <Label htmlFor="courseLevel">Nível</Label>
+                        <Select
+                          name="level"
+                          value={courseForm.level}
+                          onValueChange={(value) => 
+                            setCourseForm({...courseForm, level: value})
+                          }
+                        >
+                          <SelectTrigger id="courseLevel" className="h-10">
+                            <SelectValue placeholder="Selecione o nível" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="iniciante">Iniciante</SelectItem>
+                            <SelectItem value="intermediario">Intermediário</SelectItem>
+                            <SelectItem value="avancado">Avançado</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="grid gap-2">
+                        <Label htmlFor="courseStatus">Status</Label>
+                        <Select
+                          name="status"
+                          value={courseForm.status}
+                          onValueChange={(value) => 
+                            setCourseForm({...courseForm, status: value})
+                          }
+                        >
+                          <SelectTrigger id="courseStatus" className="h-10">
+                            <SelectValue placeholder="Selecione o status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="active">Ativo</SelectItem>
+                            <SelectItem value="draft">Rascunho</SelectItem>
+                            <SelectItem value="archived">Arquivado</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id="courseIsPublished"
+                          name="isPublished"
+                          checked={courseForm.isPublished}
+                          onCheckedChange={(checked) => 
+                            setCourseForm({...courseForm, isPublished: checked === true})
+                          }
+                        />
+                        <Label htmlFor="courseIsPublished" className="text-sm">
+                          <span className="flex items-center gap-2">
+                            <Eye className="h-4 w-4 text-blue-500" />
+                            Publicado
+                          </span>
+                        </Label>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id="courseIsPremium"
+                          name="isPremium"
+                          checked={courseForm.isPremium}
+                          onCheckedChange={(checked) => 
+                            setCourseForm({...courseForm, isPremium: checked === true})
+                          }
+                        />
+                        <Label htmlFor="courseIsPremium" className="text-sm">
+                          <span className="flex items-center gap-2">
+                            <Crown className="h-4 w-4 text-amber-500" />
+                            Premium
+                          </span>
+                        </Label>
+                      </div>
+                    </div>
+                  </div>
+                  <DialogFooter className="border-t pt-4 mt-4">
+                    <div className="flex items-center space-x-4">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setIsCourseDialogOpen(false)}
+                        className="gap-2"
+                      >
+                        <XCircle className="h-4 w-4" />
+                        Cancelar
+                      </Button>
+                      <Button 
+                        onClick={handleCourseSubmit}
+                        disabled={createCourseMutation.isPending || updateCourseMutation.isPending}
+                        className="gap-2"
+                      >
+                        {createCourseMutation.isPending || updateCourseMutation.isPending ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Salvando...
+                          </>
+                        ) : currentCourse ? (
+                          <>
+                            <CheckCircle2 className="h-4 w-4" />
+                            Atualizar curso
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="h-4 w-4" />
+                            Criar curso
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
+              {/* Diálogo para confirmação de exclusão de curso */}
+              <Dialog open={isConfirmDeleteCourseOpen} onOpenChange={setIsConfirmDeleteCourseOpen}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5 text-red-500" />
+                      Excluir Curso
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="py-4">
+                    <p className="mb-4">
+                      Tem certeza que deseja excluir o curso <strong>{currentCourse?.title}</strong>?
+                    </p>
+                    <Alert variant="destructive">
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertTitle>Atenção</AlertTitle>
+                      <AlertDescription>
+                        A exclusão do curso também pode excluir todos os módulos e aulas associados. Esta ação é permanente e não pode ser desfeita.
+                      </AlertDescription>
+                    </Alert>
+                  </div>
+                  <DialogFooter className="flex justify-between gap-3 border-t pt-4">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setIsConfirmDeleteCourseOpen(false)}
+                      className="gap-2"
+                    >
+                      <XCircle className="h-4 w-4" />
+                      Cancelar
+                    </Button>
+                    <Button 
+                      variant="destructive" 
+                      onClick={handleDeleteCourse}
+                      disabled={deleteCourseMutation.isPending}
+                      className="gap-2"
+                    >
+                      {deleteCourseMutation.isPending ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Excluindo...
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 className="h-4 w-4" />
+                          Excluir curso
+                        </>
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </TabsContent>
+            
+            <TabsContent value="coursesConfig">
+              <div className="mb-6 grid grid-cols-1 gap-6">
+                <div className="col-span-full">
+                  <div className="bg-white rounded-lg shadow-sm p-6">
+                    <div className="flex justify-between items-center mb-6">
+                      <h2 className="text-lg font-semibold">Configurações de Cursos</h2>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          // Recarregar configurações atuais
+                          queryClient.invalidateQueries({ queryKey: ['/api/courses/settings'] });
+                        }}
+                      >
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Atualizar
+                      </Button>
+                    </div>
+                    
+                    {isLoadingCourseSettings ? (
+                      <div className="py-8 text-center">
+                        <Loader2 className="h-8 w-8 animate-spin mx-auto text-gray-400" />
+                        <p className="mt-2 text-gray-500">Carregando configurações...</p>
+                      </div>
+                    ) : isCourseSettingsError ? (
+                      <Alert variant="destructive" className="mb-4">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Erro</AlertTitle>
+                        <AlertDescription>
+                          Não foi possível carregar as configurações dos cursos. Tente novamente.
+                        </AlertDescription>
+                      </Alert>
+                    ) : (
+                      <div className="grid gap-6">
+                        <div className="grid gap-3">
+                          <h3 className="text-md font-medium">Configurações da Página de Cursos</h3>
+                          <Separator />
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                            <div className="grid gap-2">
+                              <Label htmlFor="settingsBannerTitle">Título do Banner</Label>
+                              <Input
+                                id="settingsBannerTitle"
+                                name="bannerTitle"
+                                value={courseSettings.bannerTitle || ''}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  const updated = {...courseSettings, bannerTitle: value};
+                                  updateCourseSettingsMutation.mutate(updated);
+                                }}
+                                placeholder="Ex: Aprenda com nossos cursos exclusivos"
+                              />
+                            </div>
+                            
+                            <div className="grid gap-2">
+                              <Label htmlFor="settingsBannerDescription">Descrição do Banner</Label>
+                              <Textarea
+                                id="settingsBannerDescription"
+                                name="bannerDescription"
+                                value={courseSettings.bannerDescription || ''}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  const updated = {...courseSettings, bannerDescription: value};
+                                  updateCourseSettingsMutation.mutate(updated);
+                                }}
+                                placeholder="Descreva o propósito dos cursos"
+                                rows={3}
+                              />
+                            </div>
+                            
+                            <div className="grid gap-2">
+                              <Label htmlFor="settingsBannerImageUrl">URL da Imagem do Banner</Label>
+                              <Input
+                                id="settingsBannerImageUrl"
+                                name="bannerImageUrl"
+                                value={courseSettings.bannerImageUrl || ''}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  const updated = {...courseSettings, bannerImageUrl: value};
+                                  updateCourseSettingsMutation.mutate(updated);
+                                }}
+                                placeholder="Ex: https://example.com/banner.jpg"
+                              />
+                            </div>
+                            
+                            <div className="grid gap-2">
+                              <Label htmlFor="settingsWelcomeMessage">Mensagem de Boas-Vindas</Label>
+                              <Textarea
+                                id="settingsWelcomeMessage"
+                                name="welcomeMessage"
+                                value={courseSettings.welcomeMessage || ''}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  const updated = {...courseSettings, welcomeMessage: value};
+                                  updateCourseSettingsMutation.mutate(updated);
+                                }}
+                                placeholder="Mensagem para os alunos"
+                                rows={3}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="grid gap-3 mt-4">
+                          <h3 className="text-md font-medium">Configurações Avançadas</h3>
+                          <Separator />
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                            <div className="flex items-center gap-2">
+                              <Checkbox
+                                id="settingsShowModuleNumbers"
+                                name="showModuleNumbers"
+                                checked={courseSettings.showModuleNumbers || false}
+                                onCheckedChange={(checked) => {
+                                  const updated = {...courseSettings, showModuleNumbers: checked === true};
+                                  updateCourseSettingsMutation.mutate(updated);
+                                }}
+                              />
+                              <Label htmlFor="settingsShowModuleNumbers" className="text-sm">
+                                <span className="flex items-center gap-2">
+                                  <ListOrdered className="h-4 w-4 text-blue-500" />
+                                  Mostrar numeração dos módulos
+                                </span>
+                              </Label>
+                            </div>
+                            
+                            <div className="flex items-center gap-2">
+                              <Checkbox
+                                id="settingsUseCustomPlayerColors"
+                                name="useCustomPlayerColors"
+                                checked={courseSettings.useCustomPlayerColors || false}
+                                onCheckedChange={(checked) => {
+                                  const updated = {...courseSettings, useCustomPlayerColors: checked === true};
+                                  updateCourseSettingsMutation.mutate(updated);
+                                }}
+                              />
+                              <Label htmlFor="settingsUseCustomPlayerColors" className="text-sm">
+                                <span className="flex items-center gap-2">
+                                  <Palette className="h-4 w-4 text-purple-500" />
+                                  Usar cores personalizadas no player
+                                </span>
+                              </Label>
+                            </div>
+                            
+                            <div className="flex items-center gap-2">
+                              <Checkbox
+                                id="settingsEnableComments"
+                                name="enableComments"
+                                checked={courseSettings.enableComments !== false}
+                                onCheckedChange={(checked) => {
+                                  const updated = {...courseSettings, enableComments: checked === true};
+                                  updateCourseSettingsMutation.mutate(updated);
+                                }}
+                              />
+                              <Label htmlFor="settingsEnableComments" className="text-sm">
+                                <span className="flex items-center gap-2">
+                                  <MessageSquare className="h-4 w-4 text-green-500" />
+                                  Habilitar comentários nas aulas
+                                </span>
+                              </Label>
+                            </div>
+                            
+                            <div className="flex items-center gap-2">
+                              <Checkbox
+                                id="settingsAllowNonPremiumEnrollment"
+                                name="allowNonPremiumEnrollment"
+                                checked={courseSettings.allowNonPremiumEnrollment || false}
+                                onCheckedChange={(checked) => {
+                                  const updated = {...courseSettings, allowNonPremiumEnrollment: checked === true};
+                                  updateCourseSettingsMutation.mutate(updated);
+                                }}
+                              />
+                              <Label htmlFor="settingsAllowNonPremiumEnrollment" className="text-sm">
+                                <span className="flex items-center gap-2">
+                                  <Users className="h-4 w-4 text-amber-500" />
+                                  Permitir matrícula para não-premium
+                                </span>
+                              </Label>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+            
             <TabsContent value="settings">
               <SiteSettings />
             </TabsContent>
