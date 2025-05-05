@@ -473,7 +473,7 @@ export default function VideoaulasPage() {
                                 {/* Badge de módulo - estilo clean */}
                                 <div className="absolute top-2 left-2">
                                   <div className="bg-black/70 backdrop-blur-sm px-2 py-1 rounded-sm text-xs font-medium text-white shadow-sm">
-                                    Módulo {index + 1}
+                                    Aula {index + 1}
                                   </div>
                                 </div>
                                 
@@ -585,10 +585,10 @@ export default function VideoaulasPage() {
                                     {/* Overlay escuro sutil */}
                                     <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                     
-                                    {/* Badge de parte - estilo clean */}
+                                    {/* Badge de aula - estilo clean */}
                                     <div className="absolute top-2 left-2">
                                       <div className="bg-black/70 backdrop-blur-sm px-2 py-1 rounded-sm text-xs font-medium text-white shadow-sm">
-                                        Parte {moduleIdx + 1}
+                                        Aula {moduleIdx + 1}
                                       </div>
                                     </div>
                                     

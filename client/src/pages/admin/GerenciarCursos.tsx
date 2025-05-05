@@ -111,7 +111,8 @@ const GerenciarCursos = () => {
     videoUrl: '',
     videoProvider: 'youtube',
     order: 0,
-    isPremium: false
+    isPremium: false,
+    showLessonNumber: true // Nova propriedade para controlar a exibição do número da aula
   });
   
   // Estados para configurações da página
@@ -1772,6 +1773,14 @@ const GerenciarCursos = () => {
                 onCheckedChange={(checked) => handleLessonToggleChange('isPremium', checked)}
               />
               <Label htmlFor="lessonPremium">Premium</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="showLessonNumber"
+                checked={lessonForm.showLessonNumber}
+                onCheckedChange={(checked) => handleLessonToggleChange('showLessonNumber', checked)}
+              />
+              <Label htmlFor="showLessonNumber">Mostrar número "Aula X" na miniatura</Label>
             </div>
           </div>
           <DialogFooter>
