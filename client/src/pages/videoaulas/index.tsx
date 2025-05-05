@@ -471,11 +471,13 @@ export default function VideoaulasPage() {
                                 <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                 
                                 {/* Badge de módulo - estilo clean */}
-                                <div className="absolute top-2 left-2">
-                                  <div className="bg-black/70 backdrop-blur-sm px-2 py-1 rounded-sm text-xs font-medium text-white shadow-sm">
-                                    Aula {index + 1}
+                                {tutorial.showLessonNumber !== false && (
+                                  <div className="absolute top-2 left-2">
+                                    <div className="bg-black/70 backdrop-blur-sm px-2 py-1 rounded-sm text-xs font-medium text-white shadow-sm">
+                                      Aula {index + 1}
+                                    </div>
                                   </div>
-                                </div>
+                                )}
                                 
                                 {/* Badge de duração - estilo clean */}
                                 <div className="absolute bottom-2 right-2">
@@ -586,11 +588,13 @@ export default function VideoaulasPage() {
                                     <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                     
                                     {/* Badge de aula - estilo clean */}
-                                    <div className="absolute top-2 left-2">
-                                      <div className="bg-black/70 backdrop-blur-sm px-2 py-1 rounded-sm text-xs font-medium text-white shadow-sm">
-                                        Aula {moduleIdx + 1}
+                                    {tutorial.showLessonNumber !== false && (
+                                      <div className="absolute top-2 left-2">
+                                        <div className="bg-black/70 backdrop-blur-sm px-2 py-1 rounded-sm text-xs font-medium text-white shadow-sm">
+                                          Aula {moduleIdx + 1}
+                                        </div>
                                       </div>
-                                    </div>
+                                    )}
                                     
                                     {/* Badge de duração - estilo clean */}
                                     <div className="absolute bottom-2 right-2">

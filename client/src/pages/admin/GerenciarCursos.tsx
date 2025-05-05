@@ -79,6 +79,7 @@ interface CourseLesson {
   order: number;
   isPremium: boolean;
   additionalMaterialsUrl?: string | null;
+  showLessonNumber?: boolean;
 }
 
 const GerenciarCursos = () => {
