@@ -127,13 +127,41 @@ export default function VideoaulasPage() {
     return !isPremiumUser;
   };
   
-  // Filtrar tutoriais com base na busca
+  // Filtrar tutoriais com base na busca - versão avançada
   const filteredTutoriais = searchTerm && tutoriais
-    ? tutoriais.filter(tutorial => 
-        tutorial.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        tutorial.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (tutorial.tags && tutorial.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())))
-      )
+    ? tutoriais.filter(tutorial => {
+        const termLower = searchTerm.toLowerCase().trim();
+        const searchTerms = termLower.split(/\s+/); // Divide a busca em palavras individuais
+        
+        // Busca por título (prioridade mais alta)
+        const titleMatch = tutorial.title?.toLowerCase().includes(termLower);
+        
+        // Busca por palavras individuais no título
+        const titleWordsMatch = searchTerms.some(term => 
+          tutorial.title?.toLowerCase().includes(term)
+        );
+        
+        // Busca por descrição
+        const descriptionMatch = tutorial.description?.toLowerCase().includes(termLower);
+        
+        // Busca por palavras individuais na descrição
+        const descriptionWordsMatch = searchTerms.some(term => 
+          tutorial.description?.toLowerCase().includes(term)
+        );
+        
+        // Busca por tags
+        const tagMatch = tutorial.tags?.some(tag => 
+          tag.toLowerCase().includes(termLower)
+        );
+        
+        // Busca por módulo (nome do módulo)
+        const moduleMatch = moduleData?.find(m => m.id === tutorial.moduleId)?.title
+          ?.toLowerCase().includes(termLower);
+          
+        // Retorna true se qualquer um dos critérios for atendido
+        return titleMatch || titleWordsMatch || descriptionMatch || 
+               descriptionWordsMatch || tagMatch || moduleMatch;
+      })
     : [];
     
   // Filtrar tutoriais por nível baseado na tab ativa
@@ -252,6 +280,29 @@ export default function VideoaulasPage() {
                       {lessonsData?.length || '0'} aulas
                     </span>
                   </div>
+                </div>
+                
+                {/* Campo de pesquisa */}
+                <div className="relative w-full md:w-auto md:flex-1 md:max-w-xs ml-auto mr-2">
+                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                    <Search className="h-4 w-4 text-neutral-400" />
+                  </div>
+                  <Input
+                    type="text"
+                    placeholder="Buscar em todos os vídeos..."
+                    className="pl-10 pr-4 py-2 h-9 rounded-full border border-blue-200 text-sm w-full focus:border-blue-400"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    ref={searchInputRef}
+                  />
+                  {searchTerm && (
+                    <button 
+                      onClick={() => setSearchTerm('')}
+                      className="absolute inset-y-0 right-2 flex items-center"
+                    >
+                      <X className="h-4 w-4 text-neutral-400 hover:text-blue-600" />
+                    </button>
+                  )}
                 </div>
                 
                 {/* Filtros em formato de pills com tons claros de azul */}

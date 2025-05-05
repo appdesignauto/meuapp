@@ -7,22 +7,52 @@ import {
   Crown, 
   Eye, 
   CheckCircle,
-  Lock
+  Lock,
+  Search
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tutorial } from './TutorialData';
 
+// Componente para destacar termos de pesquisa no texto
+const HighlightText = ({ text, searchTerm }: { text: string, searchTerm?: string }) => {
+  if (!searchTerm || !text) return <>{text}</>;
+  
+  const termLower = searchTerm.toLowerCase().trim();
+  const searchTerms = termLower.split(/\s+/);
+  
+  // Se não tiver termo de busca, retorna o texto normal
+  if (!searchTerms.length) return <>{text}</>;
+  
+  // Cria um regex que busca qualquer um dos termos, ignorando case
+  const regex = new RegExp(`(${searchTerms.join('|')})`, 'gi');
+  const parts = text.split(regex);
+  
+  return (
+    <>
+      {parts.map((part, i) => {
+        // Verifica se a parte atual corresponde a qualquer um dos termos de busca
+        const isMatch = searchTerms.some(term => part.toLowerCase().includes(term));
+        return isMatch ? 
+          <span key={i} className="bg-yellow-200 text-blue-900 font-medium px-0.5 rounded-sm">{part}</span> : 
+          <span key={i}>{part}</span>;
+      })}
+    </>
+  );
+};
+
 interface TutorialCardProps {
   tutorial: Tutorial;
   isPremiumLocked: boolean;
   isWide?: boolean;
+  searchTerm?: string;
 }
 
 const TutorialCard: React.FC<TutorialCardProps> = ({
   tutorial,
   isPremiumLocked,
-  isWide = false
+  isWide = false,
+  searchTerm
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   

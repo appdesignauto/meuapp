@@ -305,10 +305,13 @@ const Header = () => {
                 className="hidden md:flex w-80 mr-3"
               >
                 <div className="relative w-full">
+                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                    <Search className="h-4 w-4 text-neutral-400" />
+                  </div>
                   <Input
                     type="text"
                     placeholder="Buscar Vídeo Aulas..."
-                    className="w-full px-4 py-2 rounded-full border border-blue-200 text-sm"
+                    className="w-full pl-10 pr-4 py-2 rounded-full border border-blue-200 text-sm"
                     value={videoSearchQuery}
                     onChange={(e) => setVideoSearchQuery(e.target.value)}
                     autoComplete="off"
