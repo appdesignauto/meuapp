@@ -272,8 +272,8 @@ export default function VideoaulasPage() {
             ></div>
           </div>
           
-          {/* Overlay gradiente aprimorado para melhor contraste */}
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-950/85 via-blue-900/70 to-blue-800/50 z-1"></div>
+          {/* Overlay gradiente aprimorado para melhor contraste e coerência com o tema geral */}
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-800/85 via-blue-700/75 to-blue-600/60 z-1"></div>
           
           {/* Conteúdo sobreposto */}
           <div className="container mx-auto h-full flex flex-col justify-center relative z-10">
