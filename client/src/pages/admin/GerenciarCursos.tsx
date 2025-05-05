@@ -4,6 +4,7 @@ import { Link } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
+import VideoPreview from '@/components/admin/VideoPreview';
 import { 
   Plus, 
   Pencil, 
@@ -29,7 +30,8 @@ import {
   XCircle,
   Clock,
   Youtube,
-  Play
+  Play,
+  ImagePlus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
