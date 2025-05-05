@@ -107,6 +107,11 @@ export default function VideoaulasPage() {
         const modulo = modulosMap[lesson.moduleId];
         
         console.log(`Processando lição ID ${lesson.id} (${lesson.title}) - Módulo: ${lesson.moduleId} - ${modulo ? modulo.title : 'Módulo não encontrado'}`);
+        console.log(`Duração original: ${lesson.duration} (tipo: ${typeof lesson.duration})`);
+        
+        // Formatar a duração para exibição
+        const duracaoFormatada = formatarDuracao(lesson.duration);
+        console.log(`Duração formatada: ${duracaoFormatada}`);
         
         return {
           id: lesson.id,
@@ -115,7 +120,7 @@ export default function VideoaulasPage() {
           thumbnailUrl: lesson.thumbnailUrl,
           videoUrl: lesson.videoUrl,
           videoProvider: lesson.videoProvider,
-          duration: formatarDuracao(lesson.duration),
+          duration: duracaoFormatada,
           // Usar o nível do módulo encontrado ou 'iniciante' como fallback
           level: modulo?.level || 'iniciante',
           isPremium: lesson.isPremium,
@@ -127,7 +132,7 @@ export default function VideoaulasPage() {
         };
       });
       
-      return tutoriais; // Esta linha importante estava faltando
+      return tutoriais;
     } catch (error) {
       console.error("Erro ao transformar lições para tutoriais:", error);
       return []; // Retorna array vazio em caso de erro
@@ -136,12 +141,27 @@ export default function VideoaulasPage() {
   
   // Formatar duração de segundos para string "MM:SS" ou "HH:MM:SS" para vídeos longos
   const formatarDuracao = (segundos) => {
-    if (!segundos) return "00:00";
+    if (segundos === undefined || segundos === null) return "00:00";
+    
+    // Verificar se já é uma string formatada como "MM:SS" ou "HH:MM:SS"
+    if (typeof segundos === 'string' && segundos.includes(':')) {
+      // Se já estiver no formato adequado, retorna a string diretamente
+      return segundos;
+    }
     
     // Garantir que segundos seja um número
-    const totalSegundos = typeof segundos === 'string' ? parseInt(segundos, 10) : segundos;
+    let totalSegundos = 0;
     
-    if (isNaN(totalSegundos)) return "00:00";
+    if (typeof segundos === 'string') {
+      totalSegundos = parseInt(segundos, 10);
+    } else if (typeof segundos === 'number') {
+      totalSegundos = segundos;
+    }
+    
+    if (isNaN(totalSegundos) || totalSegundos < 0) {
+      console.warn(`Valor inválido para formatação de duração: ${segundos}`);
+      return "00:00";
+    }
     
     // Calcular horas, minutos e segundos
     const horas = Math.floor(totalSegundos / 3600);
@@ -153,8 +173,8 @@ export default function VideoaulasPage() {
       return `${horas}:${minutos.toString().padStart(2, '0')}:${segsRestantes.toString().padStart(2, '0')}`;
     }
     
-    // Formatar apenas com minutos e segundos
-    return `${minutos}:${segsRestantes.toString().padStart(2, '0')}`;
+    // Formatar apenas com minutos e segundos (agora sempre com padding)
+    return `${minutos.toString().padStart(2, '0')}:${segsRestantes.toString().padStart(2, '0')}`;
   };
   
   // Preparar dados
