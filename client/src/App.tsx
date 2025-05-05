@@ -23,6 +23,7 @@ import DesignerProfile from "@/pages/DesignerProfile";
 import PlanosPage from "@/pages/PlanosPage";
 import ProfilePage from "@/pages/profile-page";
 import AdminDashboard from "@/pages/admin/Dashboard";
+import UpdatedDashboard from "@/pages/admin/UpdatedDashboard";
 import LogoUploadPage from "@/pages/admin/LogoUploadPage";
 import StorageTestPage from "@/pages/admin/StorageTestPage";
 import AddArtMultiFormatPage from "@/pages/admin/AddArtMultiFormat";
@@ -186,7 +187,7 @@ function AppRoutes() {
       {/* Rotas Administrativas */}
       <ProtectedRoute 
         path="/admin" 
-        component={AdminDashboard} 
+        component={UpdatedDashboard} 
         roles={['admin', 'designer_adm']} 
       />
       <ProtectedRoute
@@ -211,7 +212,7 @@ function AppRoutes() {
       />
       <ProtectedRoute 
         path="/admin/:page" 
-        component={AdminDashboard}
+        component={UpdatedDashboard}
         roles={['admin', 'designer_adm']} 
       />
       
