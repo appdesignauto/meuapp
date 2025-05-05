@@ -28,7 +28,8 @@ import {
   Wrench,
   Settings,
   BarChart4,
-  Book
+  Book,
+  X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
@@ -101,9 +102,6 @@ export default function VideoaulasPage() {
   const tutoriaisPopulares = tutoriais.slice(0, 8);
   const tutorialDestaque = tutoriais[0] || { id: 1, title: 'Carregando...' };
   
-  // Agrupar por níveis
-  const minimalistas = tutoriais.filter(t => !t.isPremium && t.thumbnailUrl && t.thumbnailUrl.includes('minimalista'));
-  
   // Função para verificar se o conteúdo premium deve ser bloqueado
   const isPremiumLocked = (isPremium: boolean) => {
     if (!isPremium) return false;
@@ -119,18 +117,10 @@ export default function VideoaulasPage() {
       )
     : [];
     
-  // Filtrar tutoriais por nível baseado na tab ativa
+  // Simplificando a função para usar apenas a busca de texto
   const getFilteredTutoriais = () => {
     if (searchTerm) return filteredTutoriais;
-    
-    switch (activeTab) {
-      case 'minimalista':
-        return minimalistas;
-      case 'vistos':
-        return tutoriais.filter(t => t.isWatched);
-      default:
-        return tutoriais;
-    }
+    return tutoriais;
   };
 
   return (
@@ -211,64 +201,43 @@ export default function VideoaulasPage() {
         </div>
         
         <div className="container mx-auto py-8">
-          {/* Navegação principal das videoaulas - Estilo moderno sem barra de pesquisa */}
+          {/* Barra de pesquisa moderna e focada para videoaulas */}
           <div className="px-4 md:px-8">
             <div className="mb-6 sticky top-16 z-20">
-              <div className="flex flex-col md:flex-row items-center gap-3 p-3 rounded-lg bg-white shadow-sm border border-gray-100">
-                {/* Cabeçalho com informações sobre cursos */}
-                <div className="flex items-center gap-3 text-blue-800">
-                  <BookOpen className="h-5 w-5 text-blue-600" />
-                  <div className="font-medium">Cursos</div>
-                  <div className="hidden md:flex items-center text-sm text-blue-600">
-                    <span className="mx-1.5 text-blue-300">|</span>
-                    <span className="flex items-center">
-                      <GraduationCap className="h-4 w-4 mr-1.5" />
-                      {moduleData?.length || '0'} módulos
-                    </span>
-                    <span className="mx-1.5 text-blue-300">|</span>
-                    <span className="flex items-center">
-                      <Play className="h-4 w-4 mr-1.5" />
-                      {lessonsData?.length || '0'} aulas
-                    </span>
-                  </div>
-                </div>
+              <div className="relative bg-white rounded-xl shadow-lg overflow-hidden max-w-3xl mx-auto">
+                {/* Fundo gradiente sutil */}
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-white to-blue-50 opacity-80"></div>
                 
-                {/* Filtros em formato de pills com tons claros de azul */}
-                <div className="flex flex-wrap gap-1.5 mt-2 md:mt-0 w-full md:w-auto">
-                  <button 
-                    onClick={() => setActiveTab('todos')}
-                    className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
-                      activeTab === 'todos' 
-                        ? 'bg-blue-600 text-white font-medium' 
-                        : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
-                    }`}
-                  >
-                    Todos
-                  </button>
-                  <button 
-                    onClick={() => setActiveTab('minimalista')}
-                    className={`text-xs px-3 py-1.5 rounded-full flex items-center transition-colors ${
-                      activeTab === 'minimalista' 
-                        ? 'bg-gray-700 text-white font-medium' 
-                        : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    <Play className="h-3 w-3 mr-1" />
-                    Minimalista
-                  </button>
-                  {user && (
-                    <button 
-                      onClick={() => setActiveTab('vistos')}
-                      className={`text-xs px-3 py-1.5 rounded-full flex items-center transition-colors ${
-                        activeTab === 'vistos' 
-                          ? 'bg-teal-600 text-white font-medium' 
-                          : 'bg-teal-50 text-teal-700 hover:bg-teal-100'
-                      }`}
+                {/* Barra de pesquisa moderna */}
+                <div className="relative py-4 px-6 flex items-center">
+                  <Search className="h-5 w-5 absolute left-6 text-blue-500" />
+                  <input
+                    type="text"
+                    placeholder="Buscar videoaulas, tutoriais, técnicas..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    ref={searchInputRef}
+                    className="w-full pl-10 pr-12 py-3 bg-transparent border-none focus:ring-0 focus:outline-none text-gray-800 placeholder-gray-500 text-lg"
+                    autoComplete="off"
+                  />
+                  {searchTerm && (
+                    <button
+                      onClick={() => setSearchTerm('')}
+                      className="absolute right-6 p-1 rounded-full hover:bg-gray-100 transition-colors"
+                      aria-label="Limpar busca"
                     >
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      Vistos
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500">
+                        <path d="M18 6 6 18"></path>
+                        <path d="m6 6 12 12"></path>
+                      </svg>
                     </button>
                   )}
+                </div>
+                
+                {/* Efeito decorativo no canto */}
+                <div className="absolute right-0 top-0 bottom-0 w-32 overflow-hidden">
+                  <div className="absolute -right-10 -top-10 w-32 h-32 rounded-full bg-blue-100 opacity-50"></div>
+                  <div className="absolute -right-5 -bottom-10 w-24 h-24 rounded-full bg-yellow-100 opacity-30"></div>
                 </div>
               </div>
             </div>
