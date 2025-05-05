@@ -159,9 +159,9 @@ const AdminDashboard = () => {
     isLoading: isLoadingModules,
     isError: isModulesError
   } = useQuery({
-    queryKey: ['/api/courses/modules'],
+    queryKey: ['/api/course/modules'],
     queryFn: async () => {
-      const res = await fetch('/api/courses/modules');
+      const res = await fetch('/api/course/modules');
       if (!res.ok) {
         console.error('Erro ao buscar módulos:', res.status, res.statusText);
         throw new Error('Falha ao carregar módulos');
@@ -175,9 +175,9 @@ const AdminDashboard = () => {
     isLoading: isLoadingLessons,
     isError: isLessonsError
   } = useQuery({
-    queryKey: ['/api/courses/lessons'],
+    queryKey: ['/api/course/lessons'],
     queryFn: async () => {
-      const res = await fetch('/api/courses/lessons');
+      const res = await fetch('/api/course/lessons');
       if (!res.ok) {
         console.error('Erro ao buscar aulas:', res.status, res.statusText);
         throw new Error('Falha ao carregar aulas');
@@ -192,9 +192,9 @@ const AdminDashboard = () => {
     isLoading: isLoadingCourseSettings,
     isError: isCourseSettingsError
   } = useQuery({
-    queryKey: ['/api/courses/settings'],
+    queryKey: ['/api/course/settings'],
     queryFn: async () => {
-      const res = await fetch('/api/courses/settings');
+      const res = await fetch('/api/course/settings');
       if (!res.ok) {
         console.error('Erro ao buscar configurações:', res.status, res.statusText);
         throw new Error('Falha ao carregar configurações dos cursos');
@@ -312,7 +312,7 @@ const AdminDashboard = () => {
   // Mutation para configurações de cursos
   const updateCourseSettingsMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest('PUT', '/api/courses/settings', data);
+      const response = await apiRequest('PUT', '/api/course/settings', data);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Erro ao atualizar configurações');
@@ -320,7 +320,7 @@ const AdminDashboard = () => {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/courses/settings'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/course/settings'] });
       toast({
         title: 'Configurações atualizadas',
         description: 'As configurações dos cursos foram atualizadas com sucesso',
