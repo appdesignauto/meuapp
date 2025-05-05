@@ -307,12 +307,21 @@ const GerenciarCursos = () => {
       }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (createdLesson) => {
       queryClient.invalidateQueries({ queryKey: ['/api/courses/lessons'] });
-      setIsLessonDialogOpen(false);
+      
+      // Atualizar estado da aula atual para a recém-criada
+      setCurrentLesson(createdLesson);
+      
+      // Definir que estamos em modo de edição para a nova aula
+      setIsEditingLesson(true);
+      
+      // Manter o diálogo aberto para que o usuário possa continuar adicionando a miniatura
+      // setIsLessonDialogOpen(false);
+      
       toast({
         title: 'Aula criada com sucesso',
-        description: 'A aula foi adicionada ao módulo',
+        description: 'Agora você pode adicionar uma miniatura para esta aula',
       });
     },
     onError: (error: Error) => {
@@ -476,6 +485,7 @@ const GerenciarCursos = () => {
 
   const handleOpenAddLesson = (moduleId: number) => {
     setCurrentLesson(null);
+    setIsEditingLesson(false);
     const moduleLessons = lessons.filter((lesson: CourseLesson) => lesson.moduleId === moduleId);
     resetLessonForm(moduleId);
     setLessonForm(prev => ({
@@ -488,6 +498,7 @@ const GerenciarCursos = () => {
   
   const handleOpenEditLesson = (lesson: CourseLesson) => {
     setCurrentLesson(lesson);
+    setIsEditingLesson(true);
     setLessonForm({ ...lesson });
     setIsLessonDialogOpen(true);
   };
@@ -673,6 +684,14 @@ const GerenciarCursos = () => {
       ...prev,
       duration: totalSeconds
     }));
+  };
+  
+  // Fecha o diálogo de edição de aulas
+  const handleCloseEditLesson = () => {
+    setIsLessonDialogOpen(false);
+    setCurrentLesson(null);
+    setIsEditingLesson(false);
+    resetLessonForm();
   };
   
   const handleLessonSubmit = () => {
