@@ -48,6 +48,7 @@ import testCreateGroupRouter from './routes/test-create-group'; // Rota de teste
 import videoaulasRouter from './routes/videoaulas-routes'; // Rotas para as videoaulas
 import courseRouter from './routes/course-routes'; // Rotas para gerenciamento de módulos e aulas
 import coursesRouter from './routes/courses-routes'; // Rotas para gerenciamento de cursos
+import coursesAdapterRouter from './routes/courses-adapter'; // Adaptador para compatibilidade com rotas antigas
 import videoCommentsRouter from './routes/video-comments-routes'; // Rotas para comentários de videoaulas
 import lessonThumbnailUploadRouter from './routes/lesson-thumbnail-upload'; // Rota para upload de thumbnails de aulas
 import bannerUploadRouter from './routes/banner-upload'; // Rota para upload de banners de cursos
