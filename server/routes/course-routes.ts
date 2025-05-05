@@ -695,17 +695,29 @@ router.put('/:id', async (req, res) => {
       'isPremium': '"isPremium"'
     };
     
+    // Flag para verificar se algum campo foi atualizado
+    let hasUpdates = false;
+    
     fields.forEach(field => {
       if (req.body[field] !== undefined) {
         const dbField = dbFields[field] || field.toLowerCase();
         updateQuery += `, ${dbField} = $${paramIndex}`;
         params.push(req.body[field]);
         paramIndex++;
+        hasUpdates = true;
       }
     });
     
+    // Adicionar o ID do curso aos parâmetros
     updateQuery += ' WHERE id = $' + paramIndex;
     params.push(courseId);
+    
+    // Se não houver atualizações, adicionamos pelo menos um campo para evitar erro
+    if (!hasUpdates) {
+      updateQuery = 'UPDATE courses SET "updatedAt" = NOW() WHERE id = $1';
+      params.length = 0; // Limpar parâmetros
+      params.push(courseId);
+    }
     
     // Query para retornar os dados atualizados
     updateQuery += ` RETURNING id, title, description, "featuredImage" as "thumbnailUrl", "featuredImage", 
