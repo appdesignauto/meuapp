@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { db } from '../db';
 import { courses, insertCourseSchema, courseModules, courseSettings, insertCourseModuleSchema } from '@shared/schema';
-import { eq, asc, desc } from 'drizzle-orm';
+import { eq, asc, desc, sql } from 'drizzle-orm';
 import { ZodError } from 'zod';
 import { fromZodError } from 'zod-validation-error';
 
@@ -13,31 +13,27 @@ router.get('/', async (req, res) => {
     console.log('[GET /courses] Buscando cursos');
     
     // Abordagem mais simples para evitar problemas com colunas que não existem
-    const coursesList = await db
-      .execute(
-        sql`SELECT id, title, description, slug, "featuredImage", level, status, "isPublished", "isPremium", "createdBy", "createdAt", "updatedAt" 
-            FROM courses 
-            ORDER BY "updatedAt" DESC`
-      );
+    const query = `
+      SELECT c.id, c.title, c.description, c."featuredImage", c.level, c.status, 
+             c."isPublished", c."isPremium", c."createdBy", c."createdAt", c."updatedAt",
+             (SELECT COUNT(*) FROM "courseModules" WHERE "courseId" = c.id) as "moduleCount",
+             (SELECT COUNT(*) FROM "courseLessons" l INNER JOIN "courseModules" m ON l."moduleId" = m.id WHERE m."courseId" = c.id) as "lessonCount"
+      FROM courses c
+      ORDER BY c."updatedAt" DESC
+    `;
     
-    console.log('[GET /courses] Cursos encontrados:', JSON.stringify(coursesList));
+    const result = await db.execute(query);
     
-    // Buscar os módulos para cada curso
-    const coursesWithModules = await Promise.all(
-      coursesList.map(async (course) => {
-        const modules = await db.query.courseModules.findMany({
-          where: eq(courseModules.courseId, course.id),
-          orderBy: [asc(courseModules.order)]
-        });
-        
-        return {
-          ...course,
-          modules
-        };
-      })
-    );
+    // Formatar resultados
+    const formattedCourses = result.rows.map((course: any) => {
+      // Garantir que temos o campo thumbnailUrl para compatibilidade
+      return {
+        ...course,
+        thumbnailUrl: course.featuredImage
+      };
+    });
     
-    return res.json(coursesWithModules);
+    return res.json(formattedCourses);
   } catch (error) {
     console.error('Erro ao buscar cursos:', error);
     return res.status(500).json({ message: 'Erro ao buscar cursos', error: String(error) });

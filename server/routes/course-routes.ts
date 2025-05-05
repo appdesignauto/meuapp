@@ -677,7 +677,8 @@ router.put('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Curso não encontrado' });
     }
     
-    // Extrair dados do corpo da requisição
+    // Abordagem completamente diferente - usar lógica de string interpolado para SQL
+    // Este método evita o problema de parâmetros $N com erros
     const { 
       title, 
       description, 
@@ -692,91 +693,76 @@ router.put('/:id', async (req, res) => {
     // Usar thumbnailUrl como fallback para featuredImage se fornecido
     const finalFeaturedImage = featuredImage || thumbnailUrl;
     
-    // Vamos usar um método mais direto com mais segurança para garantir que os parâmetros são passados corretamente
-    try {
-      // Primeiro vamos buscar os valores atuais para campos que podem ser undefined
-      const currentDataQuery = `
-        SELECT level, status, "isPublished", "isPremium" 
-        FROM courses 
-        WHERE id = $1
-      `;
-      const currentData = await db.execute(currentDataQuery, [courseId]);
-      const current = currentData.rows[0] || {};
-      
-      // Atualizar o curso usando todos os parâmetros explícitos
-      const updateQuery = `
-        UPDATE courses 
-        SET 
-          "updatedAt" = NOW(),
-          title = $1,
-          description = $2,
-          "featuredImage" = $3,
-          level = $4,
-          status = $5,
-          "isPublished" = $6,
-          "isPremium" = $7
-        WHERE 
-          id = $8
-        RETURNING 
-          id, 
-          title, 
-          description, 
-          "featuredImage" as "thumbnailUrl", 
-          "featuredImage", 
-          level, 
-          status, 
-          "isPublished", 
-          "isPremium", 
-          "createdAt", 
-          "updatedAt"
-      `;
-      
-      const updateParams = [
-        title || null, 
-        description || null, 
-        finalFeaturedImage || null,
-        level || current.level || 'iniciante',
-        status || current.status || 'active',
-        isPublished !== undefined ? isPublished : current.isPublished !== undefined ? current.isPublished : true,
-        isPremium !== undefined ? isPremium : current.isPremium !== undefined ? current.isPremium : false,
-        courseId
-      ];
-      
-      console.log(`[PUT /course/${courseId}] Query de atualização params:`, updateParams);
-      
-      const result = await db.execute(updateQuery, updateParams);
-      
-      if (result.rows.length === 0) {
-        return res.status(500).json({ message: 'Falha ao atualizar o curso' });
-      }
-      
-      const updatedCourse = result.rows[0];
-      console.log(`[PUT /course/${courseId}] Curso atualizado com sucesso:`, updatedCourse);
-      
-      return res.json(updatedCourse);
-    } catch (updateError) {
-      console.error(`[PUT /course/${courseId}] Erro durante atualização:`, updateError);
-      
-      // Fallback para uma tentativa mais simples de atualização
-      const simpleUpdateQuery = `
-        UPDATE courses 
-        SET "updatedAt" = NOW(), title = $1
-        WHERE id = $2
-        RETURNING id, title, description, "featuredImage" as "thumbnailUrl", "featuredImage", 
-                  level, status, "isPublished", "isPremium", "createdAt", "updatedAt"
-      `;
-      
-      console.log(`[PUT /course/${courseId}] Tentando method de fallback`);
-      const fallbackResult = await db.execute(simpleUpdateQuery, [
-        title || 'Curso atualizado', 
-        courseId
-      ]);
-      
-      const updatedCourse = fallbackResult.rows[0];
-      console.log(`[PUT /course/${courseId}] Curso atualizado (fallback) com sucesso:`, updatedCourse);
-      
-      return res.json(updatedCourse);
+    // Construir manualmente os SET clauses
+    let setClauses = [];
+    let values = [];
+    
+    // Adicionar clauses que são seguros
+    setClauses.push(`"updatedAt" = NOW()`);
+    
+    if (title !== undefined) {
+      setClauses.push(`title = '${title.replace(/'/g, "''")}'`);
     }
+    
+    if (description !== undefined) {
+      setClauses.push(`description = '${description.replace(/'/g, "''")}'`);
+    }
+    
+    if (finalFeaturedImage !== undefined) {
+      setClauses.push(`"featuredImage" = '${finalFeaturedImage.replace(/'/g, "''")}'`);
+    }
+    
+    if (level !== undefined) {
+      setClauses.push(`level = '${level.replace(/'/g, "''")}'`);
+    }
+    
+    if (status !== undefined) {
+      setClauses.push(`status = '${status.replace(/'/g, "''")}'`);
+    }
+    
+    if (isPublished !== undefined) {
+      setClauses.push(`"isPublished" = ${isPublished ? 'true' : 'false'}`);
+    }
+    
+    if (isPremium !== undefined) {
+      setClauses.push(`"isPremium" = ${isPremium ? 'true' : 'false'}`);
+    }
+    
+    // Verificar se temos algo para atualizar
+    if (setClauses.length < 1) {
+      return res.status(400).json({ message: 'Nenhum dado fornecido para atualização' });
+    }
+    
+    const updateQuery = `
+      UPDATE courses 
+      SET ${setClauses.join(', ')}
+      WHERE id = ${courseId}
+      RETURNING 
+        id, 
+        title, 
+        description, 
+        "featuredImage" as "thumbnailUrl", 
+        "featuredImage", 
+        level, 
+        status, 
+        "isPublished", 
+        "isPremium", 
+        "createdAt", 
+        "updatedAt"
+    `;
+    
+    console.log(`[PUT /course/${courseId}] Query de atualização:`, updateQuery);
+    
+    const result = await db.execute(updateQuery);
+    
+    if (!result || !result.rows || result.rows.length === 0) {
+      return res.status(500).json({ message: 'Falha ao atualizar o curso' });
+    }
+    
+    const updatedCourse = result.rows[0];
+    console.log(`[PUT /course/${courseId}] Curso atualizado com sucesso:`, updatedCourse);
+    
+    return res.json(updatedCourse);
   } catch (error) {
     console.error(`[PUT /course/${req.params.id}] Erro ao atualizar curso:`, error);
     return res.status(500).json({ message: 'Erro ao atualizar curso', error: String(error) });
@@ -855,10 +841,11 @@ router.get('/settings', async (req, res) => {
     const result = await db.execute(query);
     
     // Se não houver configurações, criar uma padrão
-    if (result.rows.length === 0) {
+    if (!result.rows || result.rows.length === 0) {
       console.log('[GET /course/settings] Configurações não encontradas, criando padrão...');
       
-      // Criar configurações padrão com SQL bruto
+      // Criar configurações padrão com SQL bruto com string interpolação em vez de parâmetros
+      const userId = req.user?.id || 'NULL';
       const insertQuery = `
         INSERT INTO "courseSettings" (
           "bannerTitle", 
@@ -880,7 +867,7 @@ router.get('/settings', async (req, res) => {
           false,
           true,
           false,
-          $1
+          ${userId}
         )
         RETURNING 
           id, 
@@ -897,9 +884,14 @@ router.get('/settings', async (req, res) => {
           "updatedBy"
       `;
       
-      const insertResult = await db.execute(insertQuery, [req.user?.id || null]);
+      console.log('[GET /course/settings] Query de inserção: ', insertQuery);
+      const insertResult = await db.execute(insertQuery);
       
-      return res.json(insertResult.rows[0]);
+      if (insertResult.rows && insertResult.rows.length > 0) {
+        return res.json(insertResult.rows[0]);
+      } else {
+        return res.status(500).json({ message: 'Falha ao criar as configurações padrão' });
+      }
     }
     
     return res.json(result.rows[0]);
@@ -929,14 +921,11 @@ router.put('/settings', async (req, res) => {
     const checkQuery = `SELECT id FROM "courseSettings" WHERE id = 1`;
     const checkResult = await db.execute(checkQuery);
     
-    let updateQuery;
-    let params;
-    
     if (checkResult.rows.length === 0) {
       console.log('[PUT /course/settings] Configurações não encontradas, criando...');
       
-      // Criar configurações se não existirem
-      updateQuery = `
+      // Criar configurações se não existirem - usando abordagem mais segura com string interpolation
+      const insertQuery = `
         INSERT INTO "courseSettings" (
           "bannerTitle", 
           "bannerDescription", 
@@ -948,7 +937,17 @@ router.put('/settings', async (req, res) => {
           "allowNonPremiumEnrollment",
           "updatedBy"
         ) 
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        VALUES (
+          '${bannerTitle ? bannerTitle.replace(/'/g, "''") : "DesignAuto Videoaulas"}',
+          '${bannerDescription ? bannerDescription.replace(/'/g, "''") : "A formação completa para você criar designs profissionais para seu negócio automotivo"}',
+          '${bannerImageUrl ? bannerImageUrl.replace(/'/g, "''") : "https://images.unsplash.com/photo-1617651823081-270acchia626?q=80&w=1970&auto=format&fit=crop"}',
+          '${welcomeMessage ? welcomeMessage.replace(/'/g, "''") : "Bem-vindo aos nossos cursos! Aprenda com os melhores profissionais."}',
+          ${showModuleNumbers !== undefined ? showModuleNumbers : true},
+          ${useCustomPlayerColors !== undefined ? useCustomPlayerColors : false},
+          ${enableComments !== undefined ? enableComments : true},
+          ${allowNonPremiumEnrollment !== undefined ? allowNonPremiumEnrollment : false},
+          ${req.user?.id || 'NULL'}
+        )
         RETURNING 
           id, 
           "bannerTitle",
@@ -964,34 +963,67 @@ router.put('/settings', async (req, res) => {
           "updatedBy"
       `;
       
-      params = [
-        bannerTitle,
-        bannerDescription,
-        bannerImageUrl,
-        welcomeMessage,
-        showModuleNumbers !== undefined ? showModuleNumbers : true,
-        useCustomPlayerColors !== undefined ? useCustomPlayerColors : false,
-        enableComments !== undefined ? enableComments : true,
-        allowNonPremiumEnrollment !== undefined ? allowNonPremiumEnrollment : false,
-        req.user?.id || null
-      ];
+      console.log('[PUT /course/settings] Query de inserção: ', insertQuery);
+      const insertResult = await db.execute(insertQuery);
+      
+      if (insertResult.rows.length === 0) {
+        return res.status(500).json({ message: 'Falha ao criar as configurações' });
+      }
+      
+      const newSettings = insertResult.rows[0];
+      console.log('[PUT /course/settings] Configurações criadas com sucesso:', newSettings);
+      
+      return res.json(newSettings);
     } else {
       console.log('[PUT /course/settings] Atualizando configurações existentes');
       
-      // Atualizar configurações existentes
-      updateQuery = `
+      // Construir manualmente os SET clauses
+      let setClauses = [];
+      
+      // Adicionar clauses que são seguros
+      setClauses.push(`"updatedAt" = NOW()`);
+      setClauses.push(`"updatedBy" = ${req.user?.id || 'NULL'}`);
+      
+      if (bannerTitle !== undefined) {
+        setClauses.push(`"bannerTitle" = '${bannerTitle.replace(/'/g, "''")}'`);
+      }
+      
+      if (bannerDescription !== undefined) {
+        setClauses.push(`"bannerDescription" = '${bannerDescription.replace(/'/g, "''")}'`);
+      }
+      
+      if (bannerImageUrl !== undefined) {
+        setClauses.push(`"bannerImageUrl" = '${bannerImageUrl.replace(/'/g, "''")}'`);
+      }
+      
+      if (welcomeMessage !== undefined) {
+        setClauses.push(`"welcomeMessage" = '${welcomeMessage.replace(/'/g, "''")}'`);
+      }
+      
+      if (showModuleNumbers !== undefined) {
+        setClauses.push(`"showModuleNumbers" = ${showModuleNumbers}`);
+      }
+      
+      if (useCustomPlayerColors !== undefined) {
+        setClauses.push(`"useCustomPlayerColors" = ${useCustomPlayerColors}`);
+      }
+      
+      if (enableComments !== undefined) {
+        setClauses.push(`"enableComments" = ${enableComments}`);
+      }
+      
+      if (allowNonPremiumEnrollment !== undefined) {
+        setClauses.push(`"allowNonPremiumEnrollment" = ${allowNonPremiumEnrollment}`);
+      }
+      
+      // Verificar se temos algo para atualizar além do timestamp
+      if (setClauses.length < 2) {
+        return res.status(400).json({ message: 'Nenhum dado fornecido para atualização' });
+      }
+      
+      const updateQuery = `
         UPDATE "courseSettings"
-        SET 
-          "bannerTitle" = COALESCE($1, "bannerTitle"),
-          "bannerDescription" = COALESCE($2, "bannerDescription"),
-          "bannerImageUrl" = COALESCE($3, "bannerImageUrl"),
-          "welcomeMessage" = COALESCE($4, "welcomeMessage"),
-          "showModuleNumbers" = COALESCE($5, "showModuleNumbers"),
-          "useCustomPlayerColors" = COALESCE($6, "useCustomPlayerColors"),
-          "enableComments" = COALESCE($7, "enableComments"),
-          "allowNonPremiumEnrollment" = COALESCE($8, "allowNonPremiumEnrollment"),
-          "updatedBy" = $9,
-          "updatedAt" = NOW()
+        SET ${setClauses.join(', ')}
         WHERE id = 1
         RETURNING 
           id, 
@@ -1008,25 +1040,19 @@ router.put('/settings', async (req, res) => {
           "updatedBy"
       `;
       
-      params = [
-        bannerTitle,
-        bannerDescription,
-        bannerImageUrl,
-        welcomeMessage,
-        showModuleNumbers,
-        useCustomPlayerColors,
-        enableComments,
-        allowNonPremiumEnrollment,
-        req.user?.id || null
-      ];
+      console.log('[PUT /course/settings] Query de atualização: ', updateQuery);
+      
+      const result = await db.execute(updateQuery);
+      
+      if (result.rows.length === 0) {
+        return res.status(500).json({ message: 'Falha ao atualizar as configurações' });
+      }
+      
+      const updatedSettings = result.rows[0];
+      console.log('[PUT /course/settings] Configurações atualizadas com sucesso:', updatedSettings);
+      
+      return res.json(updatedSettings);
     }
-    
-    const result = await db.execute(updateQuery, params);
-    const updatedSettings = result.rows[0];
-    
-    console.log('[PUT /course/settings] Configurações atualizadas com sucesso:', updatedSettings);
-    
-    return res.json(updatedSettings);
   } catch (error) {
     console.error('[PUT /course/settings] Erro ao atualizar configurações:', error);
     return res.status(500).json({ message: 'Erro ao atualizar configurações', error: String(error) });
