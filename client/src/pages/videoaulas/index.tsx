@@ -446,7 +446,7 @@ export default function VideoaulasPage() {
                               </div>
                               
                               <div className="p-4">
-                                <h3 className="font-bold text-blue-800 mb-1 group-hover:text-blue-600 transition-colors line-clamp-2 min-h-[3rem] text-base">
+                                <h3 className="font-bold text-blue-800 mb-1 group-hover:text-blue-600 transition-colors truncate h-6 text-base">
                                   {tutorial.title}
                                 </h3>
                                 <p className="text-gray-600 text-sm line-clamp-2 mb-3 h-10">
@@ -544,7 +544,7 @@ export default function VideoaulasPage() {
                                   </div>
                                   
                                   <div className="p-4">
-                                    <h3 className="font-bold text-blue-800 mb-1 group-hover:text-blue-600 transition-colors line-clamp-2 min-h-[3rem] text-base">
+                                    <h3 className="font-bold text-blue-800 mb-1 group-hover:text-blue-600 transition-colors truncate h-6 text-base">
                                       {tutorial.title}
                                     </h3>
                                     <p className="text-gray-600 text-sm line-clamp-2 mb-3 h-10">
