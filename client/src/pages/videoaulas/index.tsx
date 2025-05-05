@@ -189,55 +189,53 @@ export default function VideoaulasPage() {
       </Helmet> */}
       
       <div className="bg-white min-h-screen">
-        {/* Seção Hero estilo MBA com imagem de fundo/shark em tons claros */}
+        {/* Seção Hero estilo MBA com imagem de fundo */}
         <div className="relative w-full h-[450px] overflow-hidden">
-          {/* Fundo sólido com carro sutil */}
-          <div className="absolute inset-0 z-0 bg-gradient-to-r from-blue-50 to-white">
-            {/* Imagem de carro sutil no fundo ou imagem personalizada */}
+          {/* Fundo com imagem do banner */}
+          <div className="absolute inset-0 z-0">
+            {/* Imagem de banner personalizada */}
             <div 
-              className="absolute inset-0 opacity-10 bg-right-bottom bg-no-repeat"
+              className="absolute inset-0 bg-center bg-cover"
               style={{
                 backgroundImage: `url('${siteSettings?.courseHeroImageUrl || "https://images.unsplash.com/photo-1617651823081-270acchia626?q=80&w=1970&auto=format&fit=crop"}')`,
-                backgroundSize: '60%',
-                backgroundPosition: 'right bottom'
               }}
             ></div>
           </div>
           
-          {/* Overlay gradiente para melhorar contraste */}
-          <div className="absolute inset-0 bg-gradient-to-t from-white/50 via-blue-50/30 to-transparent z-1"></div>
+          {/* Overlay gradiente para melhorar contraste e legibilidade do texto */}
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/80 via-blue-800/60 to-blue-700/30 z-1"></div>
           
           {/* Conteúdo sobreposto */}
           <div className="container mx-auto h-full flex flex-col justify-center relative z-10">
             <div className="px-4 md:px-8">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 md:mb-4 text-blue-800">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 md:mb-4 text-white">
                 {siteSettings?.courseHeroTitle || "DesignAuto Videoaulas"}
               </h1>
               <div className="h-1 w-16 md:w-24 bg-yellow-500 mb-4 md:mb-6"></div>
-              <p className="text-base sm:text-lg md:text-xl text-blue-700 mb-3 md:mb-4 max-w-2xl">
+              <p className="text-base sm:text-lg md:text-xl text-blue-100 mb-3 md:mb-4 max-w-2xl">
                 {siteSettings?.courseHeroSubtitle || "A formação completa para você criar designs profissionais para seu negócio automotivo"}
               </p>
               
               <div className="flex items-center gap-5 mb-6 md:mb-8 text-sm md:text-base">
                 <div className="flex items-center">
-                  <div className="flex text-yellow-500">
+                  <div className="flex text-yellow-400">
                     <Star className="h-4 w-4 md:h-5 md:w-5 fill-current" />
                     <Star className="h-4 w-4 md:h-5 md:w-5 fill-current" />
                     <Star className="h-4 w-4 md:h-5 md:w-5 fill-current" />
                     <Star className="h-4 w-4 md:h-5 md:w-5 fill-current" />
-                    <Star className="h-4 w-4 md:h-5 md:w-5 fill-yellow-100" strokeWidth={1.5} />
+                    <Star className="h-4 w-4 md:h-5 md:w-5 fill-yellow-100/30" strokeWidth={1.5} />
                   </div>
-                  <span className="ml-2 font-medium text-blue-800">{siteSettings?.courseRating || "4.8"}</span>
-                  <span className="ml-1 text-blue-500">({siteSettings?.courseReviewCount || "287"})</span>
+                  <span className="ml-2 font-medium text-white">{siteSettings?.courseRating || "4.8"}</span>
+                  <span className="ml-1 text-blue-200">({siteSettings?.courseReviewCount || "287"})</span>
                 </div>
                 
-                <div className="flex items-center text-blue-600 font-medium">
-                  <Clock className="h-4 w-4 md:h-5 md:w-5 mr-1.5 text-blue-400" />
+                <div className="flex items-center text-blue-100 font-medium">
+                  <Clock className="h-4 w-4 md:h-5 md:w-5 mr-1.5 text-blue-200" />
                   <span>{siteSettings?.courseTotalHours || "42 horas de conteúdo"}</span>
                 </div>
                 
-                <div className="flex items-center text-blue-600 font-medium">
-                  <BookOpen className="h-4 w-4 md:h-5 md:w-5 mr-1.5 text-blue-400" />
+                <div className="flex items-center text-blue-100 font-medium">
+                  <BookOpen className="h-4 w-4 md:h-5 md:w-5 mr-1.5 text-blue-200" />
                   <span>{siteSettings?.courseTotalModules || "18"} módulos</span>
                 </div>
               </div>
@@ -250,7 +248,7 @@ export default function VideoaulasPage() {
                   </Button>
                 </Link>
                 <Link href="#categorias" className="w-full sm:w-auto">
-                  <Button variant="outline" className="bg-transparent border-blue-700 text-blue-700 hover:bg-blue-50 py-4 md:py-6 px-5 md:px-8 text-base md:text-lg font-medium w-full sm:w-auto">
+                  <Button variant="outline" className="bg-transparent border-white text-white hover:bg-white/10 py-4 md:py-6 px-5 md:px-8 text-base md:text-lg font-medium w-full sm:w-auto">
                     Ver Categorias
                   </Button>
                 </Link>
