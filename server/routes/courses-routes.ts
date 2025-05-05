@@ -12,23 +12,15 @@ router.get('/', async (req, res) => {
   try {
     console.log('[GET /courses] Buscando cursos');
     
-    // Usar select em vez de query para evitar problema com thumbnailUrl
-    const coursesList = await db.select({
-      id: courses.id,
-      title: courses.title,
-      description: courses.description,
-      slug: courses.slug,
-      featuredImage: courses.featuredImage,
-      level: courses.level,
-      status: courses.status,
-      isPublished: courses.isPublished,
-      isPremium: courses.isPremium,
-      createdBy: courses.createdBy,
-      createdAt: courses.createdAt,
-      updatedAt: courses.updatedAt
-    })
-    .from(courses)
-    .orderBy(desc(courses.updatedAt));
+    // Abordagem mais simples para evitar problemas com colunas que não existem
+    const coursesList = await db
+      .execute(
+        sql`SELECT id, title, description, slug, "featuredImage", level, status, "isPublished", "isPremium", "createdBy", "createdAt", "updatedAt" 
+            FROM courses 
+            ORDER BY "updatedAt" DESC`
+      );
+    
+    console.log('[GET /courses] Cursos encontrados:', JSON.stringify(coursesList));
     
     // Buscar os módulos para cada curso
     const coursesWithModules = await Promise.all(
