@@ -46,7 +46,8 @@ import supabeDiagnosticsRouter from './routes/supabase-diagnostics';
 import multiArtRouter from './routes/multi-art'; // Rota para artes multi-formato
 import testCreateGroupRouter from './routes/test-create-group'; // Rota de teste para criar grupos
 import videoaulasRouter from './routes/videoaulas-routes'; // Rotas para as videoaulas
-import courseRouter from './routes/course-routes'; // Rotas para gerenciamento de cursos
+import courseRouter from './routes/course-routes'; // Rotas para gerenciamento de módulos e aulas
+import coursesRouter from './routes/courses-routes'; // Rotas para gerenciamento de cursos
 import videoCommentsRouter from './routes/video-comments-routes'; // Rotas para comentários de videoaulas
 import lessonThumbnailUploadRouter from './routes/lesson-thumbnail-upload'; // Rota para upload de thumbnails de aulas
 import bannerUploadRouter from './routes/banner-upload'; // Rota para upload de banners de cursos
