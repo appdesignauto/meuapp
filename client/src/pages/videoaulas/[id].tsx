@@ -183,15 +183,18 @@ const VideoLessonPage: React.FC = () => {
   const { user } = useAuth();
   const isPremiumUser = user && (user.nivelacesso === 'premium' || user.nivelacesso === 'admin');
   const [, navigate] = useLocation();
-  const [isDesktop, setIsDesktop] = useState(false);
+  // Inicializar isDesktop com um valor padrão que será ajustado no useEffect
+  const [isDesktop, setIsDesktop] = useState(true);
   
   // Detectar se é desktop após montagem do componente
   useEffect(() => {
-    setIsDesktop(window.innerWidth >= 768);
+    // Definir isDesktop no lado do cliente
+    const checkDesktop = () => window.innerWidth >= 768;
+    setIsDesktop(checkDesktop());
     
     // Adicionar event listener para responsividade
     const handleResize = () => {
-      setIsDesktop(window.innerWidth >= 768);
+      setIsDesktop(checkDesktop());
     };
     
     window.addEventListener('resize', handleResize);
