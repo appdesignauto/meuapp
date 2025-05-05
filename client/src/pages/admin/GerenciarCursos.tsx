@@ -1614,9 +1614,10 @@ const GerenciarCursos = () => {
       
       {/* Diálogo para adicionar/editar módulo */}
       <Dialog open={isModuleDialogOpen} onOpenChange={setIsModuleDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5" />
               {currentModule ? 'Editar Módulo' : 'Adicionar Módulo'}
             </DialogTitle>
           </DialogHeader>
@@ -1720,24 +1721,73 @@ const GerenciarCursos = () => {
       
       {/* Diálogo de confirmação para excluir módulo */}
       <Dialog open={isConfirmDeleteModuleOpen} onOpenChange={setIsConfirmDeleteModuleOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Excluir Módulo</DialogTitle>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              Excluir Módulo
+            </DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <p>Tem certeza que deseja excluir o módulo "{currentModule?.title}"?</p>
-            <p className="text-sm text-gray-500 mt-2">Esta ação também excluirá todas as aulas associadas a este módulo.</p>
+            <div className="bg-destructive/10 p-4 rounded-md mb-4 border border-destructive/30">
+              <p className="font-medium">Tem certeza que deseja excluir o módulo "{currentModule?.title}"?</p>
+              <p className="text-sm text-gray-700 mt-2">
+                Esta ação não pode ser desfeita. O módulo será removido permanentemente do sistema.
+              </p>
+            </div>
+            
+            {currentModule && lessons.some(lesson => lesson.moduleId === currentModule.id) && (
+              <div className="mb-4">
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4 mr-2" />
+                  <AlertDescription className="font-semibold">
+                    Este módulo contém aulas que também serão excluídas!
+                  </AlertDescription>
+                </Alert>
+                <div className="mt-3 bg-gray-50 p-3 rounded-md border border-gray-200">
+                  <p className="text-sm font-medium mb-2">Aulas a serem excluídas:</p>
+                  <ul className="list-disc pl-5 text-sm text-gray-700 space-y-1 max-h-40 overflow-auto">
+                    {lessons
+                      .filter((lesson) => lesson.moduleId === currentModule.id)
+                      .map((lesson) => (
+                        <li key={lesson.id}>{lesson.title}</li>
+                      ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+            
+            <p className="text-sm text-gray-500">
+              <strong>Nota:</strong> A exclusão do módulo pode afetar a navegação dos usuários que 
+              estavam acompanhando este conteúdo.
+            </p>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsConfirmDeleteModuleOpen(false)}>
+          <DialogFooter className="flex justify-between gap-3">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsConfirmDeleteModuleOpen(false)}
+              className="gap-2"
+            >
+              <XCircle className="h-4 w-4" />
               Cancelar
             </Button>
             <Button 
               variant="destructive" 
               onClick={handleDeleteModule}
               disabled={deleteModuleMutation.isPending}
+              className="gap-2"
             >
-              {deleteModuleMutation.isPending ? 'Excluindo...' : 'Excluir módulo'}
+              {deleteModuleMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Excluindo...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4" />
+                  Excluir módulo
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1745,30 +1795,44 @@ const GerenciarCursos = () => {
       
       {/* Diálogo para adicionar/editar aula */}
       <Dialog open={isLessonDialogOpen} onOpenChange={setIsLessonDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {currentLesson ? 'Editar Aula' : 'Adicionar Aula'}
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="lessonModule">Módulo *</Label>
-              <Select
-                value={String(lessonForm.moduleId)}
-                onValueChange={(value) => handleLessonSelectChange('moduleId', value)}
-                disabled={currentLesson !== null}
-              >
-                <SelectTrigger id="lessonModule">
-                  <SelectValue placeholder="Selecione o módulo" />
-                </SelectTrigger>
-                <SelectContent>
-                  {modules.map((module: CourseModule) => (
-                    <SelectItem key={module.id} value={String(module.id)}>{module.title}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="lessonModule">Módulo *</Label>
+                <Select
+                  value={String(lessonForm.moduleId)}
+                  onValueChange={(value) => handleLessonSelectChange('moduleId', value)}
+                  disabled={currentLesson !== null}
+                >
+                  <SelectTrigger id="lessonModule">
+                    <SelectValue placeholder="Selecione o módulo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {modules.map((module: CourseModule) => (
+                      <SelectItem key={module.id} value={String(module.id)}>{module.title}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="lessonOrder">Ordem na sequência *</Label>
+                <Input
+                  id="lessonOrder"
+                  name="order"
+                  type="number"
+                  value={lessonForm.order}
+                  onChange={handleLessonFormChange}
+                  min={1}
+                />
+              </div>
             </div>
+
             <div className="grid gap-2">
               <Label htmlFor="lessonTitle">Título da aula *</Label>
               <Input
@@ -1790,247 +1854,266 @@ const GerenciarCursos = () => {
                 rows={3}
               />
             </div>
-            <div className="space-y-4">
-              <div className="grid gap-2">
-                <Label htmlFor="lessonVideoUrl">URL do vídeo *</Label>
-                <Input
-                  id="lessonVideoUrl"
-                  name="videoUrl"
-                  value={lessonForm.videoUrl}
-                  onChange={handleLessonFormChange}
-                  placeholder="https://youtube.com/watch?v=xyz"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+
+            {/* Seção de Vídeo */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="lessonVideoProvider">Plataforma de vídeo</Label>
-                  <Select
-                    value={lessonForm.videoProvider}
-                    onValueChange={(value) => handleLessonSelectChange('videoProvider', value)}
-                  >
-                    <SelectTrigger id="lessonVideoProvider">
-                      <SelectValue placeholder="Selecione a plataforma" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="youtube">YouTube</SelectItem>
-                      <SelectItem value="vimeo">Vimeo</SelectItem>
-                      <SelectItem value="vturb">vTurb</SelectItem>
-                      <SelectItem value="panda">Panda</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                {/* Botão de prévia do vídeo */}
-                <div className="flex items-end justify-end">
-                  <Button
-                    variant="outline"
-                    type="button"
-                    className="gap-2"
-                    disabled={!lessonForm.videoUrl}
-                    onClick={() => {
-                      // Simplesmente atualiza o estado para forçar a renderização do preview
-                      setLessonForm(prev => ({ ...prev }));
-                    }}
-                  >
-                    <Play className="h-4 w-4" />
-                    Verificar vídeo
-                  </Button>
-                </div>
-              </div>
-              
-              {/* Visualização do vídeo */}
-              {lessonForm.videoUrl && (
-                <div className="mt-3">
-                  <p className="text-sm font-medium mb-2">Prévia do vídeo:</p>
-                  <div className="rounded-md overflow-hidden border aspect-video">
-                    <VideoPreview 
-                      videoUrl={lessonForm.videoUrl} 
-                      videoProvider={lessonForm.videoProvider}
-                      thumbnailUrl={lessonForm.thumbnailUrl} 
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="lessonOrder">Ordem *</Label>
-              <Input
-                id="lessonOrder"
-                name="order"
-                type="number"
-                value={lessonForm.order}
-                onChange={handleLessonFormChange}
-                min={1}
-              />
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="lessonDurationHours">Horas</Label>
-                <Input
-                  id="lessonDurationHours"
-                  type="number"
-                  value={Math.floor((lessonForm.duration || 0) / 3600)}
-                  onChange={(e) => handleDurationChange('hours', parseInt(e.target.value) || 0)}
-                  placeholder="0"
-                  min={0}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="lessonDurationMinutes">Minutos</Label>
-                <Input
-                  id="lessonDurationMinutes"
-                  type="number"
-                  value={Math.floor(((lessonForm.duration || 0) % 3600) / 60)}
-                  onChange={(e) => handleDurationChange('minutes', parseInt(e.target.value) || 0)}
-                  placeholder="0"
-                  min={0}
-                  max={59}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="lessonDurationSeconds">Segundos</Label>
-                <Input
-                  id="lessonDurationSeconds"
-                  type="number"
-                  value={(lessonForm.duration || 0) % 60}
-                  onChange={(e) => handleDurationChange('seconds', parseInt(e.target.value) || 0)}
-                  placeholder="0"
-                  min={0}
-                  max={59}
-                />
-              </div>
-              <div className="col-span-3">
-                <div className="flex items-center h-10 px-3 border rounded-md bg-gray-50">
-                  <span className="mr-2 font-medium">Duração:</span> {formatarDuracaoPreview(lessonForm.duration)}
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Esta é a duração que aparecerá no card da lição
-                </p>
-              </div>
-            </div>
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="lessonThumbnailUrl">URL da miniatura (opcional)</Label>
+                  <Label htmlFor="lessonVideoUrl">URL do vídeo *</Label>
                   <Input
-                    id="lessonThumbnailUrl"
-                    name="thumbnailUrl"
-                    value={lessonForm.thumbnailUrl || ''}
+                    id="lessonVideoUrl"
+                    name="videoUrl"
+                    value={lessonForm.videoUrl}
                     onChange={handleLessonFormChange}
-                    placeholder="Deixe em branco para usar miniatura padrão do vídeo"
+                    placeholder="https://youtube.com/watch?v=xyz"
                   />
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="lessonThumbnailFile">Ou faça upload de uma imagem</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      id="lessonThumbnailFile"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleThumbnailFileChange}
-                      ref={thumbnailInputRef}
-                      disabled={isUploadingThumbnail}
-                      className="flex-1"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => thumbnailInputRef.current?.click()}
-                      disabled={isUploadingThumbnail}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="lessonVideoProvider">Plataforma de vídeo</Label>
+                    <Select
+                      value={lessonForm.videoProvider}
+                      onValueChange={(value) => handleLessonSelectChange('videoProvider', value)}
                     >
-                      <ImagePlus className="h-4 w-4" />
+                      <SelectTrigger id="lessonVideoProvider">
+                        <SelectValue placeholder="Selecione a plataforma" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="youtube">YouTube</SelectItem>
+                        <SelectItem value="vimeo">Vimeo</SelectItem>
+                        <SelectItem value="vturb">vTurb</SelectItem>
+                        <SelectItem value="panda">Panda</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* Botão de prévia do vídeo */}
+                  <div className="flex items-end justify-end">
+                    <Button
+                      variant="outline"
+                      type="button"
+                      className="gap-2"
+                      disabled={!lessonForm.videoUrl}
+                      onClick={() => {
+                        // Simplesmente atualiza o estado para forçar a renderização do preview
+                        setLessonForm(prev => ({ ...prev }));
+                      }}
+                    >
+                      <Play className="h-4 w-4" />
+                      Verificar vídeo
                     </Button>
                   </div>
                 </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="grid gap-1">
+                    <Label htmlFor="lessonDurationHours" className="text-xs">Horas</Label>
+                    <Input
+                      id="lessonDurationHours"
+                      type="number"
+                      value={Math.floor((lessonForm.duration || 0) / 3600)}
+                      onChange={(e) => handleDurationChange('hours', parseInt(e.target.value) || 0)}
+                      placeholder="0"
+                      min={0}
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="grid gap-1">
+                    <Label htmlFor="lessonDurationMinutes" className="text-xs">Minutos</Label>
+                    <Input
+                      id="lessonDurationMinutes"
+                      type="number"
+                      value={Math.floor(((lessonForm.duration || 0) % 3600) / 60)}
+                      onChange={(e) => handleDurationChange('minutes', parseInt(e.target.value) || 0)}
+                      placeholder="0"
+                      min={0}
+                      max={59}
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="grid gap-1">
+                    <Label htmlFor="lessonDurationSeconds" className="text-xs">Segundos</Label>
+                    <Input
+                      id="lessonDurationSeconds"
+                      type="number"
+                      value={(lessonForm.duration || 0) % 60}
+                      onChange={(e) => handleDurationChange('seconds', parseInt(e.target.value) || 0)}
+                      placeholder="0"
+                      min={0}
+                      max={59}
+                      className="h-9"
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex items-center h-8 px-3 border rounded-md bg-gray-50 text-sm">
+                  <span className="mr-2 font-medium">Duração:</span> {formatarDuracaoPreview(lessonForm.duration)}
+                </div>
+                
+                <div className="grid gap-2">
+                  <Label htmlFor="additionalMaterialsUrl">URL materiais adicionais (opcional)</Label>
+                  <Input
+                    id="additionalMaterialsUrl"
+                    name="additionalMaterialsUrl"
+                    value={lessonForm.additionalMaterialsUrl || ''}
+                    onChange={handleLessonFormChange}
+                    placeholder="https://exemplo.com/materiais.zip"
+                  />
+                </div>
+
+                <div className="flex flex-wrap gap-4">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="lessonPremium"
+                      checked={lessonForm.isPremium}
+                      onCheckedChange={(checked) => handleLessonToggleChange('isPremium', checked)}
+                    />
+                    <Label htmlFor="lessonPremium">Premium</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="showLessonNumber"
+                      checked={lessonForm.showLessonNumber}
+                      onCheckedChange={(checked) => handleLessonToggleChange('showLessonNumber', checked)}
+                    />
+                    <Label htmlFor="showLessonNumber">Mostrar "Aula X" na miniatura</Label>
+                  </div>
+                </div>
               </div>
-              
-              {/* Progresso de upload da miniatura */}
-              {isUploadingThumbnail && (
-                <div className="mt-2">
-                  <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-primary" 
-                      style={{ width: `${thumbnailUploadProgress}%` }}
+
+              <div className="space-y-4">
+                {/* Visualização do vídeo */}
+                {lessonForm.videoUrl && (
+                  <div>
+                    <p className="text-sm font-medium mb-2">Prévia do vídeo:</p>
+                    <div className="rounded-md overflow-hidden border aspect-video">
+                      <VideoPreview 
+                        videoUrl={lessonForm.videoUrl} 
+                        videoProvider={lessonForm.videoProvider}
+                        thumbnailUrl={lessonForm.thumbnailUrl} 
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                <div className="mt-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="lessonThumbnailUrl">URL da miniatura (opcional)</Label>
+                    <Input
+                      id="lessonThumbnailUrl"
+                      name="thumbnailUrl"
+                      value={lessonForm.thumbnailUrl || ''}
+                      onChange={handleLessonFormChange}
+                      placeholder="Deixe em branco para usar miniatura padrão do vídeo"
                     />
                   </div>
-                  <p className="text-xs text-center mt-1">
-                    {thumbnailUploadProgress < 100 
-                      ? `Enviando miniatura... ${thumbnailUploadProgress}%`
-                      : "Processando imagem..."}
-                  </p>
-                </div>
-              )}
-              
-              {/* Erro de upload */}
-              {thumbnailUploadError && (
-                <Alert variant="destructive" className="mt-2">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
-                    {thumbnailUploadError}
-                  </AlertDescription>
-                </Alert>
-              )}
-              
-              {/* Visualização de miniatura */}
-              {lessonForm.thumbnailUrl && (
-                <div className="mt-2">
-                  <p className="text-sm font-medium mb-1">Visualização da miniatura:</p>
-                  <div className="relative aspect-video rounded-md overflow-hidden border">
-                    <img 
-                      src={lessonForm.thumbnailUrl} 
-                      alt="Prévia da miniatura" 
-                      className="w-full h-full object-cover"
-                    />
-                    {lessonForm.showLessonNumber && lessonForm.order && (
-                      <div className="absolute bottom-2 left-2 bg-black/60 text-white px-2 py-1 text-xs rounded">
-                        Aula {lessonForm.order}
+                  
+                  <div className="grid gap-1 mt-3">
+                    <Label htmlFor="lessonThumbnailFile">Ou faça upload de uma imagem</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="lessonThumbnailFile"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleThumbnailFileChange}
+                        ref={thumbnailInputRef}
+                        disabled={isUploadingThumbnail}
+                        className="flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => thumbnailInputRef.current?.click()}
+                        disabled={isUploadingThumbnail}
+                      >
+                        <ImagePlus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {/* Progresso de upload da miniatura */}
+                  {isUploadingThumbnail && (
+                    <div className="mt-2">
+                      <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-primary" 
+                          style={{ width: `${thumbnailUploadProgress}%` }}
+                        />
                       </div>
-                    )}
-                  </div>
+                      <p className="text-xs text-center mt-1">
+                        {thumbnailUploadProgress < 100 
+                          ? `Enviando miniatura... ${thumbnailUploadProgress}%`
+                          : "Processando imagem..."}
+                      </p>
+                    </div>
+                  )}
+                  
+                  {/* Erro de upload */}
+                  {thumbnailUploadError && (
+                    <Alert variant="destructive" className="mt-2">
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertDescription>
+                        {thumbnailUploadError}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  
+                  {/* Visualização de miniatura */}
+                  {lessonForm.thumbnailUrl && (
+                    <div className="mt-3">
+                      <p className="text-sm font-medium mb-1">Visualização da miniatura:</p>
+                      <div className="relative aspect-video rounded-md overflow-hidden border">
+                        <img 
+                          src={lessonForm.thumbnailUrl} 
+                          alt="Prévia da miniatura" 
+                          className="w-full h-full object-cover"
+                        />
+                        {lessonForm.showLessonNumber && lessonForm.order && (
+                          <div className="absolute bottom-2 left-2 bg-black/60 text-white px-2 py-1 text-xs rounded">
+                            Aula {lessonForm.order}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="additionalMaterialsUrl">URL materiais adicionais (opcional)</Label>
-              <Input
-                id="additionalMaterialsUrl"
-                name="additionalMaterialsUrl"
-                value={lessonForm.additionalMaterialsUrl || ''}
-                onChange={handleLessonFormChange}
-                placeholder="https://exemplo.com/materiais.zip"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="lessonPremium"
-                checked={lessonForm.isPremium}
-                onCheckedChange={(checked) => handleLessonToggleChange('isPremium', checked)}
-              />
-              <Label htmlFor="lessonPremium">Premium</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="showLessonNumber"
-                checked={lessonForm.showLessonNumber}
-                onCheckedChange={(checked) => handleLessonToggleChange('showLessonNumber', checked)}
-              />
-              <Label htmlFor="showLessonNumber">Mostrar número "Aula X" na miniatura</Label>
+              </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsLessonDialogOpen(false)}>
-              Cancelar
-            </Button>
-            <Button 
-              onClick={handleLessonSubmit}
-              disabled={createLessonMutation.isPending || updateLessonMutation.isPending}
-            >
-              {createLessonMutation.isPending || updateLessonMutation.isPending
-                ? 'Salvando...'
-                : currentLesson ? 'Atualizar' : 'Criar'}
-            </Button>
+          <DialogFooter className="border-t pt-4 mt-4">
+            <div className="flex items-center space-x-4">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsLessonDialogOpen(false)}
+                className="gap-2"
+              >
+                <XCircle className="h-4 w-4" />
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleLessonSubmit}
+                disabled={createLessonMutation.isPending || updateLessonMutation.isPending}
+                className="gap-2"
+              >
+                {createLessonMutation.isPending || updateLessonMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Salvando...
+                  </>
+                ) : currentLesson ? (
+                  <>
+                    <CheckCircle2 className="h-4 w-4" />
+                    Atualizar aula
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4" />
+                    Criar aula
+                  </>
+                )}
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -2039,22 +2122,49 @@ const GerenciarCursos = () => {
       <Dialog open={isConfirmDeleteLessonOpen} onOpenChange={setIsConfirmDeleteLessonOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Excluir Aula</DialogTitle>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              Excluir Aula
+            </DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <p>Tem certeza que deseja excluir a aula "{currentLesson?.title}"?</p>
-            <p className="text-sm text-gray-500 mt-2">Esta ação não pode ser desfeita.</p>
+            <div className="bg-destructive/10 p-4 rounded-md mb-4 border border-destructive/30">
+              <p className="font-medium">Tem certeza que deseja excluir a aula "{currentLesson?.title}"?</p>
+              <p className="text-sm text-gray-700 mt-2">
+                Esta ação não pode ser desfeita. A aula será removida permanentemente do sistema.
+              </p>
+            </div>
+            <p className="text-sm text-gray-500">
+              <strong>Nota:</strong> Excluir uma aula pode afetar a ordem das aulas restantes no módulo. 
+              Considere ajustar a ordem das aulas após a exclusão.
+            </p>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsConfirmDeleteLessonOpen(false)}>
+          <DialogFooter className="flex justify-between gap-3">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsConfirmDeleteLessonOpen(false)}
+              className="gap-2"
+            >
+              <XCircle className="h-4 w-4" />
               Cancelar
             </Button>
             <Button 
               variant="destructive" 
               onClick={handleDeleteLesson}
               disabled={deleteLessonMutation.isPending}
+              className="gap-2"
             >
-              {deleteLessonMutation.isPending ? 'Excluindo...' : 'Excluir aula'}
+              {deleteLessonMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Excluindo...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4" />
+                  Excluir aula
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
