@@ -49,6 +49,7 @@ import videoaulasRouter from './routes/videoaulas-routes'; // Rotas para as vide
 import courseRouter from './routes/course-routes'; // Rotas para gerenciamento de cursos
 import videoCommentsRouter from './routes/video-comments-routes'; // Rotas para comentários de videoaulas
 import bannerUploadRouter from './routes/banner-upload'; // Rota para upload de banners de cursos
+import lessonThumbnailUploadRouter from './routes/lesson-thumbnail-upload'; // Rota para upload de thumbnails de aulas
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Rota simples de verificação de saúde
