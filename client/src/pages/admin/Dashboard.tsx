@@ -18,12 +18,20 @@ import {
   HardDrive,
   FileType,
   CreditCard,
-  BookOpen
+  BookOpen,
+  LayoutDashboard,
+  ChevronDown,
+  ImagePlus,
+  FolderPlus,
+  Layers,
+  PanelRight,
+  PanelLeft
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/use-auth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import SimpleFormMultiDialog from "@/components/admin/SimpleFormMultiDialog";
 import ArtsList from '@/components/admin/ArtsList';
 import CategoriesList from '@/components/admin/CategoriesList';
@@ -39,6 +47,7 @@ const AdminDashboard = () => {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [isMultiFormOpen, setIsMultiFormOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Verifica se o usuário é admin ou designer_adm
   const isAuthorized = user?.role === 'admin' || user?.role === 'designer_adm';
@@ -76,130 +85,168 @@ const AdminDashboard = () => {
               <p className="text-sm text-gray-500">{user?.role}</p>
             </div>
           </div>
-          <nav className="mt-6">
-            <button
-              onClick={() => setActiveTab('arts')}
-              className={`flex items-center w-full px-4 py-2.5 mb-2 rounded-lg ${
-                activeTab === 'arts' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <Image className="w-5 h-5 mr-3" />
-              <span>Artes</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('categories')}
-              className={`flex items-center w-full px-4 py-2.5 mb-2 rounded-lg ${
-                activeTab === 'categories' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <LayoutGrid className="w-5 h-5 mr-3" />
-              <span>Categorias</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('formats')}
-              className={`flex items-center w-full px-4 py-2.5 mb-2 rounded-lg ${
-                activeTab === 'formats' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <CreditCard className="w-5 h-5 mr-3" />
-              <span>Formatos</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('fileTypes')}
-              className={`flex items-center w-full px-4 py-2.5 mb-2 rounded-lg ${
-                activeTab === 'fileTypes' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <FileType className="w-5 h-5 mr-3" />
-              <span>Tipos de Arquivo</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('users')}
-              className={`flex items-center w-full px-4 py-2.5 mb-2 rounded-lg ${
-                activeTab === 'users' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <Users className="w-5 h-5 mr-3" />
-              <span>Usuários</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('collections')}
-              className={`flex items-center w-full px-4 py-2.5 mb-2 rounded-lg ${
-                activeTab === 'collections' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <ListChecks className="w-5 h-5 mr-3" />
-              <span>Coleções</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('community')}
-              className={`flex items-center w-full px-4 py-2.5 mb-2 rounded-lg ${
-                activeTab === 'community' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <MessageSquare className="w-5 h-5 mr-3" />
-              <span>Comunidade</span>
-            </button>
+          <nav className="mt-6 space-y-2">
+            {/* Dashboard principal */}
             <button
               onClick={() => setActiveTab('stats')}
-              className={`flex items-center w-full px-4 py-2.5 mb-2 rounded-lg ${
+              className={`flex items-center w-full px-4 py-2.5 rounded-lg ${
                 activeTab === 'stats' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
-              <BarChart3 className="w-5 h-5 mr-3" />
-              <span>Estatísticas</span>
+              <LayoutDashboard className="w-5 h-5 mr-3" />
+              <span>Visão Geral</span>
             </button>
-            <button
-              onClick={() => setActiveTab('settings')}
-              className={`flex items-center w-full px-4 py-2.5 mb-2 rounded-lg ${
-                activeTab === 'settings' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-              }`}
+            
+            {/* Gerenciamento de Conteúdo */}
+            <Collapsible 
+              className="bg-gray-50 rounded-lg py-1 mb-1"
+              defaultOpen={['arts', 'categories', 'formats', 'fileTypes'].includes(activeTab)}
             >
-              <Settings className="w-5 h-5 mr-3" />
-              <span>Configurações</span>
-            </button>
+              <CollapsibleTrigger className="flex items-center w-full px-4 py-2 text-gray-700 font-medium">
+                <Layers className="w-5 h-5 mr-3" />
+                <span>Conteúdo</span>
+                <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pl-4 space-y-1 pt-1 pb-2">
+                <button
+                  onClick={() => setActiveTab('arts')}
+                  className={`flex items-center w-full px-4 py-2 rounded-md ${
+                    activeTab === 'arts' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <Image className="w-4 h-4 mr-3" />
+                  <span>Artes</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('categories')}
+                  className={`flex items-center w-full px-4 py-2 rounded-md ${
+                    activeTab === 'categories' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <LayoutGrid className="w-4 h-4 mr-3" />
+                  <span>Categorias</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('formats')}
+                  className={`flex items-center w-full px-4 py-2 rounded-md ${
+                    activeTab === 'formats' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <CreditCard className="w-4 h-4 mr-3" />
+                  <span>Formatos</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('fileTypes')}
+                  className={`flex items-center w-full px-4 py-2 rounded-md ${
+                    activeTab === 'fileTypes' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <FileType className="w-4 h-4 mr-3" />
+                  <span>Tipos de Arquivo</span>
+                </button>
+                <button
+                  onClick={() => setIsMultiFormOpen(true)}
+                  className="flex items-center w-full px-4 py-2 rounded-md text-blue-600 font-medium"
+                >
+                  <ImagePlus className="w-4 h-4 mr-3" />
+                  <span>Nova Arte Multi-Formato</span>
+                </button>
+              </CollapsibleContent>
+            </Collapsible>
+            
+            {/* Cursos e Vídeo-aulas */}
+            <Link href="/admin/gerenciar-cursos">
+              <Button 
+                variant="ghost" 
+                className={`w-full justify-start px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100`}
+              >
+                <BookOpen className="w-5 h-5 mr-3" />
+                Cursos e Vídeos
+              </Button>
+            </Link>
+            
+            {/* Usuários e Comunidade */}
+            <Collapsible 
+              className="bg-gray-50 rounded-lg py-1 mb-1"
+              defaultOpen={['users', 'community'].includes(activeTab)}
+            >
+              <CollapsibleTrigger className="flex items-center w-full px-4 py-2 text-gray-700 font-medium">
+                <Users className="w-5 h-5 mr-3" />
+                <span>Usuários</span>
+                <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pl-4 space-y-1 pt-1 pb-2">
+                <button
+                  onClick={() => setActiveTab('users')}
+                  className={`flex items-center w-full px-4 py-2 rounded-md ${
+                    activeTab === 'users' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <Users className="w-4 h-4 mr-3" />
+                  <span>Gerenciar Usuários</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('community')}
+                  className={`flex items-center w-full px-4 py-2 rounded-md ${
+                    activeTab === 'community' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <MessageSquare className="w-4 h-4 mr-3" />
+                  <span>Comunidade</span>
+                </button>
+              </CollapsibleContent>
+            </Collapsible>
+            
+            {/* Configurações */}
+            <Collapsible 
+              className="bg-gray-50 rounded-lg py-1 mb-1"
+              defaultOpen={['settings', 'collections'].includes(activeTab)}
+            >
+              <CollapsibleTrigger className="flex items-center w-full px-4 py-2 text-gray-700 font-medium">
+                <Settings className="w-5 h-5 mr-3" />
+                <span>Configurações</span>
+                <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pl-4 space-y-1 pt-1 pb-2">
+                <button
+                  onClick={() => setActiveTab('settings')}
+                  className={`flex items-center w-full px-4 py-2 rounded-md ${
+                    activeTab === 'settings' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <Settings className="w-4 h-4 mr-3" />
+                  <span>Configurações do Site</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('collections')}
+                  className={`flex items-center w-full px-4 py-2 rounded-md ${
+                    activeTab === 'collections' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <ListChecks className="w-4 h-4 mr-3" />
+                  <span>Coleções</span>
+                </button>
+                {user?.role === 'admin' && (
+                  <>
+                    <Link href="/admin/logo-upload">
+                      <Button variant="ghost" className="w-full justify-start text-gray-600 py-2 h-auto">
+                        <Image className="w-4 h-4 mr-3" />
+                        <span>Gerenciar Logo</span>
+                      </Button>
+                    </Link>
+                    <Link href="/admin/storage-test">
+                      <Button variant="ghost" className="w-full justify-start text-gray-600 py-2 h-auto">
+                        <HardDrive className="w-4 h-4 mr-3" />
+                        <span>Testar Armazenamento</span>
+                      </Button>
+                    </Link>
+                  </>
+                )}
+              </CollapsibleContent>
+            </Collapsible>
           </nav>
         </div>
         <div className="mt-auto p-4 border-t">
-          {/* Ferramentas específicas de administração */}
-          {(user?.role === 'admin' || user?.role === 'designer_adm') && (
-            <>
-              <h3 className="text-sm uppercase font-semibold text-gray-500 mb-2">Ferramentas Avançadas</h3>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start text-gray-600 mb-2 text-blue-600 font-medium"
-                onClick={() => setIsMultiFormOpen(true)}
-              >
-                <Plus className="w-5 h-5 mr-3" />
-                Arte Multi-Formato
-              </Button>
-              
-              <Link href="/admin/gerenciar-cursos">
-                <Button variant="ghost" className="w-full justify-start text-gray-600 mb-2">
-                  <BookOpen className="w-5 h-5 mr-3" />
-                  Gerenciar Cursos
-                </Button>
-              </Link>
-              {user?.role === 'admin' && (
-                <>
-                  <Link href="/admin/logo-upload">
-                    <Button variant="ghost" className="w-full justify-start text-gray-600 mb-2">
-                      <Image className="w-5 h-5 mr-3" />
-                      Gerenciar Logo
-                    </Button>
-                  </Link>
-                  <Link href="/admin/storage-test">
-                    <Button variant="ghost" className="w-full justify-start text-gray-600 mb-2">
-                      <HardDrive className="w-5 h-5 mr-3" />
-                      Testar Armazenamento
-                    </Button>
-                  </Link>
-                </>
-              )}
-              <div className="border-t my-2"></div>
-            </>
-          )}
-          
           <Link href="/">
             <Button variant="ghost" className="w-full justify-start text-gray-600 mb-2">
               <Home className="w-5 h-5 mr-3" />
@@ -220,35 +267,44 @@ const AdminDashboard = () => {
       {/* Main Content */}
       <div className="flex-1 overflow-auto">
         <header className="bg-white shadow-sm">
-          <div className="px-6 py-4 flex items-center justify-between">
-            <h1 className="text-xl font-semibold">
-              {activeTab === 'arts' && 'Gerenciar Artes'}
-              {activeTab === 'categories' && 'Gerenciar Categorias'}
-              {activeTab === 'formats' && 'Gerenciar Formatos'}
-              {activeTab === 'fileTypes' && 'Gerenciar Tipos de Arquivo'}
-              {activeTab === 'users' && 'Gerenciar Usuários'}
-              {activeTab === 'collections' && 'Gerenciar Coleções'}
-              {activeTab === 'community' && 'Gerenciar Comunidade'}
-              {activeTab === 'stats' && 'Estatísticas'}
-              {activeTab === 'settings' && 'Configurações'}
-            </h1>
-            <div className="flex items-center">
+          <div className="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between">
+            <div className="flex items-center mb-3 sm:mb-0">
+              {/* Botão de alternância do menu (visível apenas em telas menores) */}
+              <button className="sm:hidden mr-3 text-gray-600 hover:text-blue-600">
+                <PanelLeft className="w-5 h-5" />
+              </button>
+              
+              <h1 className="text-xl font-semibold">
+                {activeTab === 'arts' && 'Artes e Designs'}
+                {activeTab === 'categories' && 'Categorias'}
+                {activeTab === 'formats' && 'Formatos'}
+                {activeTab === 'fileTypes' && 'Tipos de Arquivo'}
+                {activeTab === 'users' && 'Usuários'}
+                {activeTab === 'collections' && 'Coleções'}
+                {activeTab === 'community' && 'Comunidade'}
+                {activeTab === 'stats' && 'Visão Geral'}
+                {activeTab === 'settings' && 'Configurações'}
+              </h1>
+            </div>
+            
+            <div className="flex items-center flex-wrap gap-2">
               <div className="relative mr-2">
                 <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
                 <Input
                   placeholder="Buscar..."
-                  className="pl-9 w-64"
+                  className="pl-9 w-full sm:w-64"
                 />
               </div>
+              
               {(activeTab === 'arts' || activeTab === 'categories' || activeTab === 'collections' || activeTab === 'formats' || activeTab === 'fileTypes') && (
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   {activeTab === 'arts' && (
                     <Button 
                       variant="default" 
-                      className="flex items-center bg-blue-600 hover:bg-blue-700 mr-2"
+                      className="flex items-center bg-blue-600 hover:bg-blue-700"
                       onClick={() => setIsMultiFormOpen(true)}
                     >
-                      <Plus className="w-4 h-4 mr-2" />
+                      <ImagePlus className="w-4 h-4 mr-2" />
                       Arte Multi-Formato
                     </Button>
                   )}
@@ -268,7 +324,7 @@ const AdminDashboard = () => {
           </div>
         </header>
 
-        <main className="p-6">
+        <main className="p-4 sm:p-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsContent value="arts" className="mt-0">
               <ArtsList />
