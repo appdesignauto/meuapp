@@ -86,21 +86,45 @@ export default function VideoaulasPage() {
   const transformarLicoesParaTutoriais = (modules = [], lessons = []) => {
     if (!modules.length || !lessons.length) return [];
     
-    return lessons.map(lesson => ({
-      id: lesson.id,
-      title: lesson.title,
-      description: lesson.description,
-      thumbnailUrl: lesson.thumbnailUrl,
-      videoUrl: lesson.videoUrl,
-      videoProvider: lesson.videoProvider,
-      duration: formatarDuracao(lesson.duration),
-      level: modules.find(m => m.id === lesson.moduleId)?.level || 'iniciante',
-      isPremium: lesson.isPremium,
-      isWatched: false, // Será implementado com histórico do usuário no futuro
-      views: 0, // Será implementado no futuro
-      moduleId: lesson.moduleId,
-      tags: [] // Será implementado no futuro
-    }));
+    // Criamos um mapa de módulos por ID para acesso rápido
+    const modulosMap = modules.reduce((acc, modulo) => {
+      acc[modulo.id] = modulo;
+      return acc;
+    }, {});
+
+    console.log("Mapa de módulos criado:", 
+      Object.keys(modulosMap).map(id => ({
+        id, 
+        title: modulosMap[id].title,
+        level: modulosMap[id].level
+      }))
+    );
+    
+    // Transformar lições
+    const tutoriais = lessons.map(lesson => {
+      // Encontrar o módulo correspondente
+      const modulo = modulosMap[lesson.moduleId];
+      
+      console.log(`Processando lição ID ${lesson.id} (${lesson.title}) - Módulo: ${lesson.moduleId} - ${modulo ? modulo.title : 'Módulo não encontrado'}`);
+      
+      return {
+        id: lesson.id,
+        title: lesson.title,
+        description: lesson.description,
+        thumbnailUrl: lesson.thumbnailUrl,
+        videoUrl: lesson.videoUrl,
+        videoProvider: lesson.videoProvider,
+        duration: formatarDuracao(lesson.duration),
+        // Usar o nível do módulo encontrado ou 'iniciante' como fallback
+        level: modulo?.level || 'iniciante',
+        isPremium: lesson.isPremium,
+        isWatched: false, // Será implementado com histórico do usuário no futuro
+        views: 0, // Será implementado no futuro
+        moduleId: lesson.moduleId,
+        moduloNome: modulo?.title || 'Módulo desconhecido',
+        tags: [] // Será implementado no futuro
+      };
+    });
   };
   
   // Formatar duração de segundos para string "MM:SS" ou "HH:MM:SS" para vídeos longos
