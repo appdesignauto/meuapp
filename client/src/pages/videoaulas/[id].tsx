@@ -45,194 +45,126 @@ import { Tutorial } from "@/components/videoaulas/TutorialData";
 // Importar os dados simulados
 // import { tutoriais, tutoriaisPopulares } from "@/components/videoaulas/TutorialData";
 
-// Componente para player de vídeo personalizado
-const VideoPlayer: React.FC<{ videoUrl: string; thumbnailUrl: string }> = ({ videoUrl, thumbnailUrl }) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [progress, setProgress] = useState(0);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const playerContainerRef = useRef<HTMLDivElement>(null);
+// Função auxiliar para extrair o ID do vídeo do YouTube
+const extractYouTubeVideoId = (url: string): string | null => {
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+};
 
-  // Atualizar o progresso do vídeo
-  const updateProgress = () => {
-    if (videoRef.current) {
-      const current = videoRef.current.currentTime;
-      const duration = videoRef.current.duration;
-      setCurrentTime(current);
-      setProgress((current / duration) * 100);
-    }
-  };
-
-  // Formatar tempo (segundos para MM:SS)
-  const formatTime = (time: number): string => {
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-  };
-
-  // Manipuladores de eventos
-  const handlePlay = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
-    }
-  };
-
-  const handleMute = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
-    }
-  };
-
-  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (videoRef.current) {
-      const progressBar = e.currentTarget;
-      const rect = progressBar.getBoundingClientRect();
-      const pos = (e.clientX - rect.left) / rect.width;
-      videoRef.current.currentTime = pos * videoRef.current.duration;
-    }
-  };
-
-  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (videoRef.current) {
-      const volume = parseFloat(e.target.value);
-      videoRef.current.volume = volume;
-      if (volume === 0) {
-        setIsMuted(true);
-      } else if (isMuted) {
-        setIsMuted(false);
-      }
-    }
-  };
-
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement && playerContainerRef.current) {
-      playerContainerRef.current.requestFullscreen().catch(err => {
-        console.log(`Erro ao tentar entrar em tela cheia: ${err.message}`);
-      });
-    } else {
-      document.exitFullscreen();
-    }
-  };
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (video) {
-      const handleLoadedMetadata = () => {
-        setDuration(video.duration);
-      };
-      
-      const handleFullscreenChange = () => {
-        setIsFullscreen(!!document.fullscreenElement);
-      };
-
-      video.addEventListener('loadedmetadata', handleLoadedMetadata);
-      video.addEventListener('timeupdate', updateProgress);
-      document.addEventListener('fullscreenchange', handleFullscreenChange);
-
-      return () => {
-        video.removeEventListener('loadedmetadata', handleLoadedMetadata);
-        video.removeEventListener('timeupdate', updateProgress);
-        document.removeEventListener('fullscreenchange', handleFullscreenChange);
-      };
-    }
-  }, []);
-
-  return (
-    <div 
-      ref={playerContainerRef}
-      className="relative rounded-md sm:rounded-lg overflow-hidden bg-black w-full aspect-video" 
-    >
-      {/* Vídeo */}
-      <video
-        ref={videoRef}
-        className="w-full h-full object-contain"
-        poster={thumbnailUrl}
-        src={videoUrl}
-        onClick={handlePlay}
-      />
-
-      {/* Overlay de controles */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end">
-        {/* Botão de play central */}
-        <div className="absolute inset-0 flex items-center justify-center cursor-pointer" onClick={handlePlay}>
-          <div className="bg-white/20 backdrop-blur-sm rounded-full p-2 sm:p-4">
-            {isPlaying ? (
-              <Pause className="w-6 h-6 sm:w-10 sm:h-10 text-white" />
-            ) : (
-              <Play className="w-6 h-6 sm:w-10 sm:h-10 text-white" fill="white" />
-            )}
+// Componente para player de vídeo do YouTube
+const YouTubePlayer: React.FC<{ videoUrl: string; thumbnailUrl: string }> = ({ videoUrl, thumbnailUrl }) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+  
+  // Extrair o ID do vídeo do YouTube da URL
+  const videoId = extractYouTubeVideoId(videoUrl);
+  
+  if (!videoId) {
+    return (
+      <div className="w-full aspect-video bg-gray-100 rounded-md sm:rounded-lg flex items-center justify-center">
+        <div className="text-center p-4">
+          <div className="text-red-500 mb-2">
+            <ExternalLink className="h-10 w-10 mx-auto" />
           </div>
-        </div>
-        
-        {/* Controles inferiores */}
-        <div className="p-2 sm:p-3 flex flex-col gap-1 sm:gap-2">
-          {/* Barra de progresso */}
-          <div 
-            className="w-full h-1.5 sm:h-2 bg-white/20 rounded-full cursor-pointer"
-            onClick={handleProgressClick}
-          >
-            <div 
-              className="h-full bg-blue-500 rounded-full"
-              style={{ width: `${progress}%` }}
-            ></div>
-          </div>
-          
-          {/* Controles e tempo */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-3">
-              {/* Play/Pause */}
-              <button onClick={handlePlay} className="text-white hover:text-blue-400 transition-colors">
-                {isPlaying ? (
-                  <Pause className="w-4 h-4 sm:w-5 sm:h-5" />
-                ) : (
-                  <Play className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" />
-                )}
-              </button>
-              
-              {/* Mute/Unmute */}
-              <button onClick={handleMute} className="text-white hover:text-blue-400 transition-colors">
-                {isMuted ? (
-                  <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" />
-                ) : (
-                  <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                )}
-              </button>
-              
-              {/* Volume slider - escondido em telas muito pequenas */}
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.1"
-                defaultValue="1"
-                onChange={handleVolumeChange}
-                className="hidden xs:block w-12 sm:w-16 md:w-24 accent-blue-500"
-              />
-              
-              {/* Tempo */}
-              <div className="text-white text-xs">
-                {formatTime(currentTime)} / {formatTime(duration)}
-              </div>
-            </div>
-            
-            {/* Fullscreen */}
-            <button onClick={toggleFullscreen} className="text-white hover:text-blue-400 transition-colors">
-              <Maximize className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-          </div>
+          <h3 className="text-lg font-semibold text-gray-800">URL de vídeo inválida</h3>
+          <p className="text-gray-600 text-sm mt-1">Não foi possível carregar o vídeo do YouTube</p>
         </div>
       </div>
+    );
+  }
+  
+  // Manipuladores para eventos de carregamento
+  const handleIframeLoad = () => {
+    setIsLoading(false);
+  };
+  
+  const handleIframeError = () => {
+    setIsError(true);
+    setIsLoading(false);
+  };
+  
+  // Preparar a URL do embed do YouTube (inclui opções como autoplay, controles, etc.)
+  const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=0&modestbranding=1&rel=0`;
+  
+  return (
+    <div className="relative w-full aspect-video bg-black rounded-md sm:rounded-lg overflow-hidden">
+      {/* Mostrar thumbnail enquanto carrega */}
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <img 
+            src={thumbnailUrl} 
+            alt="Thumbnail do vídeo" 
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+          </div>
+        </div>
+      )}
+      
+      {/* Mostrar mensagem de erro se não for possível carregar o iframe */}
+      {isError && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+          <div className="text-center p-4">
+            <div className="text-red-500 mb-2">
+              <ExternalLink className="h-10 w-10 mx-auto" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-800">Erro ao carregar o vídeo</h3>
+            <p className="text-gray-600 text-sm mt-1">Verifique sua conexão com a internet</p>
+          </div>
+        </div>
+      )}
+      
+      {/* iframe do YouTube */}
+      <iframe
+        className="w-full h-full"
+        src={embedUrl}
+        title="YouTube video player"
+        frameBorder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+        onLoad={handleIframeLoad}
+        onError={handleIframeError}
+      ></iframe>
     </div>
   );
+};
+
+// Componente para player de vídeo que detecta o provedor e escolhe o player apropriado
+const VideoPlayer: React.FC<{ videoUrl: string; thumbnailUrl: string; videoProvider?: string }> = ({ 
+  videoUrl, 
+  thumbnailUrl,
+  videoProvider = 'youtube' // Valor padrão
+}) => {
+  // Definir o player com base no provedor de vídeo
+  switch (videoProvider.toLowerCase()) {
+    case 'youtube':
+      return <YouTubePlayer videoUrl={videoUrl} thumbnailUrl={thumbnailUrl} />;
+    default:
+      // Se não for um provedor conhecido, ou se for 'local', usar o player padrão
+      return (
+        <div className="w-full aspect-video bg-gray-100 rounded-md sm:rounded-lg flex items-center justify-center">
+          <div className="text-center p-4">
+            <div className="text-blue-500 mb-2">
+              <ExternalLink className="h-10 w-10 mx-auto" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-800">Provedor de vídeo não suportado</h3>
+            <p className="text-gray-600 text-sm mt-1">
+              O provedor "{videoProvider}" ainda não é suportado
+            </p>
+            <a 
+              href={videoUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="mt-4 inline-block px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+            >
+              Abrir link do vídeo
+            </a>
+          </div>
+        </div>
+      );
+  }
 };
 
 const VideoLessonPage: React.FC = () => {
