@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '../db';
-import { courseModules, courseLessons, insertCourseModuleSchema, insertCourseLessonSchema } from '@shared/schema';
+import { courseModules, courseLessons, courseSettings, insertCourseModuleSchema, insertCourseLessonSchema } from '@shared/schema';
 import { eq, asc, desc, sql } from 'drizzle-orm';
 import { ZodError } from 'zod';
 import { fromZodError } from 'zod-validation-error';
@@ -352,6 +352,98 @@ router.delete('/lessons/:id', async (req, res) => {
   } catch (error) {
     console.error('Erro ao excluir lição:', error);
     return res.status(500).json({ message: 'Erro ao excluir lição', error: String(error) });
+  }
+});
+
+// ENDPOINTS PARA CONFIGURAÇÕES DOS CURSOS
+
+// Buscar configurações dos cursos
+router.get('/settings', async (req, res) => {
+  try {
+    console.log('[GET /course/settings] Buscando configurações de cursos');
+    
+    // Buscar as configurações ou criar registros padrão se não existirem
+    const settings = await db.query.courseSettings.findFirst({
+      where: eq(courseSettings.id, 1) // Assumindo que há apenas um registro de configurações
+    });
+    
+    if (!settings) {
+      console.log('[GET /course/settings] Configurações não encontradas, criando padrão...');
+      
+      // Criar configurações padrão
+      const [newSettings] = await db.insert(courseSettings)
+        .values({
+          bannerTitle: 'DesignAuto Videoaulas',
+          bannerDescription: 'A formação completa para você criar designs profissionais para seu negócio automotivo',
+          bannerImageUrl: 'https://images.unsplash.com/photo-1617651823081-270acchia626?q=80&w=1970&auto=format&fit=crop',
+          welcomeMessage: 'Bem-vindo aos nossos cursos! Aprenda com os melhores profissionais.',
+          showModuleNumbers: true,
+          useCustomPlayerColors: false,
+          enableComments: true,
+          allowNonPremiumEnrollment: false,
+          updatedBy: req.user?.id
+        })
+        .returning();
+      
+      return res.json(newSettings);
+    }
+    
+    return res.json(settings);
+  } catch (error) {
+    console.error('[GET /course/settings] Erro ao buscar configurações:', error);
+    return res.status(500).json({ message: 'Erro ao buscar configurações', error: String(error) });
+  }
+});
+
+// Atualizar configurações dos cursos
+router.put('/settings', async (req, res) => {
+  try {
+    console.log('[PUT /course/settings] Atualizando configurações de cursos:', req.body);
+    
+    const settingsId = 1; // Assumindo que há apenas um registro de configurações
+    
+    // Verificar se as configurações existem
+    const existingSettings = await db.query.courseSettings.findFirst({
+      where: eq(courseSettings.id, settingsId)
+    });
+    
+    let updatedSettings;
+    
+    if (!existingSettings) {
+      console.log('[PUT /course/settings] Configurações não encontradas, criando...');
+      
+      // Criar configurações
+      const [newSettings] = await db.insert(courseSettings)
+        .values({
+          ...req.body,
+          updatedBy: req.user?.id
+        })
+        .returning();
+      
+      updatedSettings = newSettings;
+    } else {
+      console.log('[PUT /course/settings] Atualizando configurações existentes');
+      
+      // Atualizar configurações existentes
+      const [settings] = await db
+        .update(courseSettings)
+        .set({
+          ...req.body,
+          updatedBy: req.user?.id,
+          updatedAt: new Date()
+        })
+        .where(eq(courseSettings.id, settingsId))
+        .returning();
+      
+      updatedSettings = settings;
+    }
+    
+    console.log('[PUT /course/settings] Configurações atualizadas com sucesso:', updatedSettings);
+    
+    return res.json(updatedSettings);
+  } catch (error) {
+    console.error('[PUT /course/settings] Erro ao atualizar configurações:', error);
+    return res.status(500).json({ message: 'Erro ao atualizar configurações', error: String(error) });
   }
 });
 
