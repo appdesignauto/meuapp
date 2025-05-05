@@ -460,14 +460,14 @@ router.get('/', async (req, res) => {
         c.id, 
         c.title, 
         c.description, 
-        c.thumbnailurl as "thumbnailUrl", 
-        c.featuredimage as "featuredImage",
+        c."featuredImage" as "thumbnailUrl", /* Usando featuredImage como fallback para thumbnailUrl */
+        c."featuredImage" as "featuredImage",
         c.level, 
         c.status, 
-        c.ispublished as "isPublished", 
-        c.ispremium as "isPremium",
-        c.createdat as "createdAt",
-        c.updatedat as "updatedAt",
+        c."isPublished" as "isPublished", 
+        c."isPremium" as "isPremium",
+        c."createdAt" as "createdAt",
+        c."updatedAt" as "updatedAt",
         COALESCE(
           (SELECT COUNT(*) FROM "courseModules" cm WHERE cm."courseId" = c.id), 0
         ) AS "moduleCount",
@@ -509,14 +509,14 @@ router.get('/:id', async (req, res) => {
         c.id, 
         c.title, 
         c.description, 
-        c.thumbnailurl as "thumbnailUrl", 
-        c.featuredimage as "featuredImage",
+        c."featuredImage" as "thumbnailUrl", /* Usando featuredImage como fallback para thumbnailUrl */
+        c."featuredImage" as "featuredImage",
         c.level, 
         c.status, 
-        c.ispublished as "isPublished", 
-        c.ispremium as "isPremium",
-        c.createdat as "createdAt",
-        c.updatedat as "updatedAt"
+        c."isPublished" as "isPublished", 
+        c."isPremium" as "isPremium",
+        c."createdAt" as "createdAt",
+        c."updatedAt" as "updatedAt"
       FROM 
         courses c
       WHERE 
@@ -604,27 +604,27 @@ router.post('/', async (req, res) => {
       INSERT INTO courses (
         title, 
         description, 
-        thumbnailurl, 
-        featuredimage, 
+        "featuredImage", /* Usando a coluna featuredImage correta */
+        "featuredImage", /* Usando featuredImage como thumbnailUrl */
         level, 
         status, 
-        ispublished, 
-        ispremium, 
-        createdby
+        "isPublished", 
+        "isPremium", 
+        "createdBy"
       ) 
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
       RETURNING 
         id, 
         title, 
         description, 
-        thumbnailurl as "thumbnailUrl", 
-        featuredimage as "featuredImage", 
+        "featuredImage" as "thumbnailUrl", /* Usando featuredImage como thumbnailUrl */ 
+        "featuredImage", 
         level, 
         status, 
-        ispublished as "isPublished", 
-        ispremium as "isPremium", 
-        createdat as "createdAt", 
-        updatedat as "updatedAt"
+        "isPublished", 
+        "isPremium", 
+        "createdAt", 
+        "updatedAt"
     `;
     
     const levelValue = level || 'iniciante';
@@ -678,7 +678,7 @@ router.put('/:id', async (req, res) => {
     }
     
     // Construir a query de atualização
-    let updateQuery = 'UPDATE courses SET updatedat = NOW()';
+    let updateQuery = 'UPDATE courses SET "updatedAt" = NOW()';
     const params = [];
     let paramIndex = 1;
     
@@ -687,11 +687,12 @@ router.put('/:id', async (req, res) => {
       'level', 'status', 'isPublished', 'isPremium'
     ];
     
+    // Mapeamento correto dos campos
     const dbFields = {
-      'thumbnailUrl': 'thumbnailurl',
-      'featuredImage': 'featuredimage',
-      'isPublished': 'ispublished',
-      'isPremium': 'ispremium'
+      'thumbnailUrl': '"featuredImage"', // Usar featuredImage para thumbnailUrl
+      'featuredImage': '"featuredImage"',
+      'isPublished': '"isPublished"',
+      'isPremium': '"isPremium"'
     };
     
     fields.forEach(field => {
@@ -707,9 +708,9 @@ router.put('/:id', async (req, res) => {
     params.push(courseId);
     
     // Query para retornar os dados atualizados
-    updateQuery += ` RETURNING id, title, description, thumbnailurl as "thumbnailUrl", featuredimage as "featuredImage", 
-                     level, status, ispublished as "isPublished", ispremium as "isPremium", 
-                     createdat as "createdAt", updatedat as "updatedAt"`;
+    updateQuery += ` RETURNING id, title, description, "featuredImage" as "thumbnailUrl", "featuredImage", 
+                     level, status, "isPublished", "isPremium", 
+                     "createdAt", "updatedAt"`;
     
     console.log(`[PUT /course/${courseId}] Query de atualização:`, updateQuery);
     console.log(`[PUT /course/${courseId}] Parâmetros:`, params);
