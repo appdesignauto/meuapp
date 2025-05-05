@@ -284,29 +284,8 @@ export default function VideoaulasPage() {
                 {siteSettings?.courseHeroSubtitle || "A formação completa para você criar designs profissionais para seu negócio automotivo"}
               </p>
               
-              <div className="flex items-center gap-5 mb-6 md:mb-8 text-sm md:text-base">
-                <div className="flex items-center">
-                  <div className="flex text-yellow-400">
-                    <Star className="h-4 w-4 md:h-5 md:w-5 fill-current" />
-                    <Star className="h-4 w-4 md:h-5 md:w-5 fill-current" />
-                    <Star className="h-4 w-4 md:h-5 md:w-5 fill-current" />
-                    <Star className="h-4 w-4 md:h-5 md:w-5 fill-current" />
-                    <Star className="h-4 w-4 md:h-5 md:w-5 fill-yellow-100/30" strokeWidth={1.5} />
-                  </div>
-                  <span className="ml-2 font-medium text-white">{siteSettings?.courseRating || "4.8"}</span>
-                  <span className="ml-1 text-blue-200">({siteSettings?.courseReviewCount || "287"})</span>
-                </div>
-                
-                <div className="flex items-center text-blue-100 font-medium">
-                  <Clock className="h-4 w-4 md:h-5 md:w-5 mr-1.5 text-blue-200" />
-                  <span>{siteSettings?.courseTotalHours || "42 horas de conteúdo"}</span>
-                </div>
-                
-                <div className="flex items-center text-blue-100 font-medium">
-                  <BookOpen className="h-4 w-4 md:h-5 md:w-5 mr-1.5 text-blue-200" />
-                  <span>{siteSettings?.courseTotalModules || "18"} módulos</span>
-                </div>
-              </div>
+              {/* Espaçamento adicional entre a descrição e os botões */}
+              <div className="mb-6 md:mb-8"></div>
               
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <Link href={`/videoaulas/${tutorialDestaque.id}`} className="w-full sm:w-auto">
@@ -329,50 +308,15 @@ export default function VideoaulasPage() {
           {/* Navegação principal das videoaulas - Estilo moderno sem barra de pesquisa */}
           <div className="px-4 md:px-8">
             <div className="mb-6 sticky top-16 z-20">
-              <div className="flex flex-col md:flex-row items-center gap-3 p-3 rounded-lg bg-white shadow-sm border border-gray-100">
-                {/* Cabeçalho com informações sobre cursos */}
+              <div className="flex flex-row items-center justify-between p-3 rounded-lg bg-white shadow-sm border border-gray-100">
+                {/* Título da seção */}
                 <div className="flex items-center gap-3 text-blue-800">
                   <BookOpen className="h-5 w-5 text-blue-600" />
-                  <div className="font-medium">Cursos</div>
-                  <div className="hidden md:flex items-center text-sm text-blue-600">
-                    <span className="mx-1.5 text-blue-300">|</span>
-                    <span className="flex items-center">
-                      <GraduationCap className="h-4 w-4 mr-1.5" />
-                      {moduleData?.length || '0'} módulos
-                    </span>
-                    <span className="mx-1.5 text-blue-300">|</span>
-                    <span className="flex items-center">
-                      <Play className="h-4 w-4 mr-1.5" />
-                      {lessonsData?.length || '0'} aulas
-                    </span>
-                  </div>
-                </div>
-                
-                {/* Campo de pesquisa */}
-                <div className="relative w-full md:w-auto md:flex-1 md:max-w-xs ml-auto mr-2">
-                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                    <Search className="h-4 w-4 text-neutral-400" />
-                  </div>
-                  <Input
-                    type="text"
-                    placeholder="Buscar em todos os vídeos..."
-                    className="pl-10 pr-4 py-2 h-9 rounded-full border border-blue-200 text-sm w-full focus:border-blue-400"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    ref={searchInputRef}
-                  />
-                  {searchTerm && (
-                    <button 
-                      onClick={() => setSearchTerm('')}
-                      className="absolute inset-y-0 right-2 flex items-center"
-                    >
-                      <X className="h-4 w-4 text-neutral-400 hover:text-blue-600" />
-                    </button>
-                  )}
+                  <div className="font-medium">Videoaulas</div>
                 </div>
                 
                 {/* Filtros em formato de pills com tons claros de azul */}
-                <div className="flex flex-wrap gap-1.5 mt-2 md:mt-0 w-full md:w-auto">
+                <div className="flex flex-wrap gap-1.5 w-auto">
                   <button 
                     onClick={() => setActiveTab('todos')}
                     className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
