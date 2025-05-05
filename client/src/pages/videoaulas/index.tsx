@@ -311,66 +311,85 @@ export default function VideoaulasPage() {
           {/* Navegação principal das videoaulas - Estilo moderno sem barra de pesquisa */}
           <div className="px-4 md:px-8">
             <div className="mb-6 sticky top-16 z-20">
-              <div className="flex flex-row items-center justify-between p-3 rounded-lg bg-white shadow-sm border border-gray-100">
-                {/* Título da seção */}
-                <div className="flex items-center gap-3 text-blue-800">
-                  <BookOpen className="h-5 w-5 text-blue-600" />
-                  <div className="font-medium">Videoaulas</div>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl bg-white shadow-md border border-gray-100 gap-3">
+                {/* Título da seção com ícone mais elegante */}
+                <div className="flex items-center gap-3">
+                  <div className="bg-gradient-to-br from-blue-500 to-blue-600 h-10 w-10 rounded-lg flex items-center justify-center shadow-sm">
+                    <BookOpen className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <div className="font-bold text-blue-800 text-lg">Videoaulas</div>
+                    <div className="text-blue-500 text-xs">Aprenda com tutoriais exclusivos</div>
+                  </div>
                 </div>
                 
-                {/* Filtros em formato de pills com tons claros de azul */}
-                <div className="flex flex-wrap gap-1.5 w-auto">
+                {/* Filtros em formato de pills com estilo mais moderno */}
+                <div className="flex flex-wrap gap-2 w-full sm:w-auto bg-blue-50/50 p-2 rounded-lg border border-blue-100/50">
                   <button 
                     onClick={() => setActiveTab('todos')}
-                    className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
+                    className={`text-xs px-4 py-1.5 rounded-full transition-all font-medium ${
                       activeTab === 'todos' 
-                        ? 'bg-blue-600 text-white font-medium' 
-                        : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                        ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-sm transform scale-105' 
+                        : 'bg-white text-blue-700 hover:bg-blue-50 border border-blue-100'
                     }`}
                   >
                     Todos
                   </button>
                   <button 
                     onClick={() => setActiveTab('iniciantes')}
-                    className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
+                    className={`text-xs px-4 py-1.5 rounded-full transition-all font-medium ${
                       activeTab === 'iniciantes' 
-                        ? 'bg-blue-600 text-white font-medium' 
-                        : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                        ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-sm transform scale-105' 
+                        : 'bg-white text-green-700 hover:bg-green-50 border border-green-100'
                     }`}
                   >
-                    Iniciantes
+                    <div className="flex items-center">
+                      <Star className="h-3 w-3 mr-1" />
+                      Iniciantes
+                    </div>
                   </button>
                   <button 
                     onClick={() => setActiveTab('intermediarios')}
-                    className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
+                    className={`text-xs px-4 py-1.5 rounded-full transition-all font-medium ${
                       activeTab === 'intermediarios' 
-                        ? 'bg-blue-600 text-white font-medium' 
-                        : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                        ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-sm transform scale-105' 
+                        : 'bg-white text-blue-700 hover:bg-blue-50 border border-blue-100'
                     }`}
                   >
-                    Intermediários
+                    <div className="flex items-center">
+                      <Star className="h-3 w-3 mr-1" />
+                      <Star className="h-3 w-3 mr-1" />
+                      Intermediários
+                    </div>
                   </button>
                   <button 
                     onClick={() => setActiveTab('avancados')}
-                    className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
+                    className={`text-xs px-4 py-1.5 rounded-full transition-all font-medium ${
                       activeTab === 'avancados' 
-                        ? 'bg-blue-600 text-white font-medium' 
-                        : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                        ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-sm transform scale-105' 
+                        : 'bg-white text-purple-700 hover:bg-purple-50 border border-purple-100'
                     }`}
                   >
-                    Avançados
+                    <div className="flex items-center">
+                      <Star className="h-3 w-3 mr-1" />
+                      <Star className="h-3 w-3 mr-1" />
+                      <Star className="h-3 w-3 mr-1" />
+                      Avançados
+                    </div>
                   </button>
                   {user && (
                     <button 
                       onClick={() => setActiveTab('vistos')}
-                      className={`text-xs px-3 py-1.5 rounded-full flex items-center transition-colors ${
+                      className={`text-xs px-4 py-1.5 rounded-full transition-all font-medium ${
                         activeTab === 'vistos' 
-                          ? 'bg-teal-600 text-white font-medium' 
-                          : 'bg-teal-50 text-teal-700 hover:bg-teal-100'
+                          ? 'bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-sm transform scale-105' 
+                          : 'bg-white text-teal-700 hover:bg-teal-50 border border-teal-100'
                       }`}
                     >
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      Vistos
+                      <div className="flex items-center">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Vistos
+                      </div>
                     </button>
                   )}
                 </div>
