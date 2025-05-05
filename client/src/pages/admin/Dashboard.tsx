@@ -25,7 +25,8 @@ import {
   FolderPlus,
   Layers,
   PanelRight,
-  PanelLeft
+  PanelLeft,
+  Video
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -196,15 +197,15 @@ const AdminDashboard = () => {
             </Collapsible>
             
             {/* Cursos e Vídeo-aulas */}
-            <Link href="/admin/gerenciar-cursos">
-              <Button 
-                variant="ghost" 
-                className={`w-full justify-start px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100`}
-              >
-                <BookOpen className="w-5 h-5 mr-3" />
-                Cursos e Vídeos
-              </Button>
-            </Link>
+            <button
+              onClick={() => setActiveTab('courses')}
+              className={`flex items-center w-full px-4 py-2.5 rounded-lg ${
+                activeTab === 'courses' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <BookOpen className="w-5 h-5 mr-3" />
+              <span>Cursos e Vídeos</span>
+            </button>
             
             {/* Configurações */}
             <Collapsible 
@@ -297,6 +298,7 @@ const AdminDashboard = () => {
                 {activeTab === 'community' && 'Comunidade'}
                 {activeTab === 'stats' && 'Visão Geral'}
                 {activeTab === 'settings' && 'Configurações'}
+                {activeTab === 'courses' && 'Cursos e Vídeo-aulas'}
               </h1>
             </div>
             
@@ -398,6 +400,63 @@ const AdminDashboard = () => {
                     <div className="space-y-6">
                       <h3 className="text-lg font-medium">Configurações Avançadas</h3>
                       <p className="text-gray-500">Configurações avançadas do sistema em desenvolvimento.</p>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="courses" className="mt-0">
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <Tabs defaultValue="modulos">
+                  <TabsList className="mb-6">
+                    <TabsTrigger value="modulos" className="text-sm">
+                      <BookOpen className="w-4 h-4 mr-2" />
+                      Módulos
+                    </TabsTrigger>
+                    <TabsTrigger value="aulas" className="text-sm">
+                      <Video className="w-4 h-4 mr-2" />
+                      Aulas
+                    </TabsTrigger>
+                    <TabsTrigger value="config" className="text-sm">
+                      <Settings className="w-4 h-4 mr-2" />
+                      Configurações da Página
+                    </TabsTrigger>
+                  </TabsList>
+                
+                  <TabsContent value="modulos" className="space-y-6">
+                    <div className="flex justify-between items-center">
+                      <h2 className="text-xl font-semibold">Módulos dos Cursos</h2>
+                      <Button onClick={() => window.location.href = '/admin/gerenciar-cursos'}>
+                        Ver Gerenciador Completo
+                      </Button>
+                    </div>
+                    <div className="bg-blue-50 p-4 rounded-lg mb-6">
+                      <p className="text-blue-600">O gerenciamento de cursos foi integrado ao painel principal. Para acessar todas as funcionalidades, utilize o botão "Ver Gerenciador Completo".</p>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="aulas" className="space-y-6">
+                    <div className="flex justify-between items-center">
+                      <h2 className="text-xl font-semibold">Aulas dos Cursos</h2>
+                      <Button onClick={() => window.location.href = '/admin/gerenciar-cursos?tab=aulas'}>
+                        Ver Gerenciador Completo
+                      </Button>
+                    </div>
+                    <div className="bg-blue-50 p-4 rounded-lg mb-6">
+                      <p className="text-blue-600">O gerenciamento de aulas foi integrado ao painel principal. Para acessar todas as funcionalidades, utilize o botão "Ver Gerenciador Completo".</p>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="config" className="space-y-6">
+                    <div className="flex justify-between items-center">
+                      <h2 className="text-xl font-semibold">Configurações da Página</h2>
+                      <Button onClick={() => window.location.href = '/admin/gerenciar-cursos?tab=config'}>
+                        Ver Gerenciador Completo
+                      </Button>
+                    </div>
+                    <div className="bg-blue-50 p-4 rounded-lg mb-6">
+                      <p className="text-blue-600">As configurações da página de cursos foram integradas ao painel principal. Para acessar todas as funcionalidades, utilize o botão "Ver Gerenciador Completo".</p>
                     </div>
                   </TabsContent>
                 </Tabs>
