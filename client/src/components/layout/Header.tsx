@@ -312,13 +312,13 @@ const Header = () => {
               </form>
             )}
             
-            {/* Icone de Busca geral - Visível apenas em telas médias e maiores */}
+            {/* Link para busca geral (sem ícone) - Visível apenas em telas médias e maiores */}
             <Button 
               variant="ghost" 
-              className="hidden md:flex w-9 h-9 rounded-full items-center justify-center p-0 text-neutral-600 hover:text-blue-600 hover:bg-blue-50"
+              className="hidden md:flex h-9 items-center px-4 rounded-full text-neutral-600 hover:text-blue-600 hover:bg-blue-50"
               onClick={() => setLocation('/arts')}
             >
-              <Search className="h-[18px] w-[18px]" />
+              <span className="text-xs font-medium">Buscar Artes</span>
             </Button>
 
             {user && user.role !== 'premium' && (
