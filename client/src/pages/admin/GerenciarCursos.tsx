@@ -120,6 +120,13 @@ const GerenciarCursos = () => {
     showLessonNumber: true // Nova propriedade para controlar a exibição do número da aula
   });
   
+  // Estados para upload de miniatura de aula
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
+  const [thumbnailUploadProgress, setThumbnailUploadProgress] = useState(0);
+  const [thumbnailUploadError, setThumbnailUploadError] = useState<string | null>(null);
+  const thumbnailInputRef = useRef<HTMLInputElement>(null);
+  
   // Estados para configurações da página
   const [pageSettings, setPageSettings] = useState({
     courseHeroTitle: '',
@@ -437,18 +444,39 @@ const GerenciarCursos = () => {
   };
 
   // Handlers para aulas
-  const handleOpenAddLesson = (moduleId: number) => {
-    setCurrentLesson(null);
-    const moduleLessons = lessons.filter((lesson: CourseLesson) => lesson.moduleId === moduleId);
+  // Reseta o formulário de aula para valores padrão
+  const resetLessonForm = (moduleId?: number) => {
     setLessonForm({
-      moduleId,
+      moduleId: moduleId || 0,
       title: '',
       description: '',
       videoUrl: '',
       videoProvider: 'youtube',
-      order: moduleLessons.length + 1,
-      isPremium: false
+      duration: 0,
+      thumbnailUrl: '',
+      isPremium: false,
+      order: 0,
+      showLessonNumber: true
     });
+    
+    // Limpar estados de upload de miniatura
+    setThumbnailFile(null);
+    setThumbnailUploadError(null);
+    setThumbnailUploadProgress(0);
+    if (thumbnailInputRef.current) {
+      thumbnailInputRef.current.value = '';
+    }
+  };
+
+  const handleOpenAddLesson = (moduleId: number) => {
+    setCurrentLesson(null);
+    const moduleLessons = lessons.filter((lesson: CourseLesson) => lesson.moduleId === moduleId);
+    resetLessonForm(moduleId);
+    setLessonForm(prev => ({
+      ...prev,
+      moduleId,
+      order: moduleLessons.length + 1
+    }));
     setIsLessonDialogOpen(true);
   };
   
@@ -1751,15 +1779,88 @@ const GerenciarCursos = () => {
                 </p>
               </div>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="lessonThumbnailUrl">URL da miniatura (opcional)</Label>
-              <Input
-                id="lessonThumbnailUrl"
-                name="thumbnailUrl"
-                value={lessonForm.thumbnailUrl || ''}
-                onChange={handleLessonFormChange}
-                placeholder="Deixe em branco para usar miniatura padrão do vídeo"
-              />
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="lessonThumbnailUrl">URL da miniatura (opcional)</Label>
+                  <Input
+                    id="lessonThumbnailUrl"
+                    name="thumbnailUrl"
+                    value={lessonForm.thumbnailUrl || ''}
+                    onChange={handleLessonFormChange}
+                    placeholder="Deixe em branco para usar miniatura padrão do vídeo"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="lessonThumbnailFile">Ou faça upload de uma imagem</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="lessonThumbnailFile"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleThumbnailFileChange}
+                      ref={thumbnailInputRef}
+                      disabled={isUploadingThumbnail}
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => thumbnailInputRef.current?.click()}
+                      disabled={isUploadingThumbnail}
+                    >
+                      <ImagePlus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Progresso de upload da miniatura */}
+              {isUploadingThumbnail && (
+                <div className="mt-2">
+                  <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-primary" 
+                      style={{ width: `${thumbnailUploadProgress}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-center mt-1">
+                    {thumbnailUploadProgress < 100 
+                      ? `Enviando miniatura... ${thumbnailUploadProgress}%`
+                      : "Processando imagem..."}
+                  </p>
+                </div>
+              )}
+              
+              {/* Erro de upload */}
+              {thumbnailUploadError && (
+                <Alert variant="destructive" className="mt-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    {thumbnailUploadError}
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              {/* Visualização de miniatura */}
+              {lessonForm.thumbnailUrl && (
+                <div className="mt-2">
+                  <p className="text-sm font-medium mb-1">Visualização da miniatura:</p>
+                  <div className="relative aspect-video rounded-md overflow-hidden border">
+                    <img 
+                      src={lessonForm.thumbnailUrl} 
+                      alt="Prévia da miniatura" 
+                      className="w-full h-full object-cover"
+                    />
+                    {lessonForm.showLessonNumber && lessonForm.order && (
+                      <div className="absolute bottom-2 left-2 bg-black/60 text-white px-2 py-1 text-xs rounded">
+                        Aula {lessonForm.order}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="additionalMaterialsUrl">URL materiais adicionais (opcional)</Label>
