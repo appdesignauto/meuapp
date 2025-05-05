@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Link } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
@@ -22,7 +22,11 @@ import {
   BarChart3,
   Users,
   Image,
-  LayoutGrid
+  LayoutGrid,
+  Upload,
+  AlertTriangle,
+  Loader2,
+  XCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -120,7 +124,17 @@ const GerenciarCursos = () => {
     courseTotalModules: 0
   });
   
+  // Estados para upload de banner
   const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [bannerUploadError, setBannerUploadError] = useState<string | null>(null);
+  const [bannerSizes, setBannerSizes] = useState({
+    desktop: { width: 1920, height: 600 },
+    tablet: { width: 1024, height: 400 },
+    mobile: { width: 768, height: 350 }
+  });
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Consultas para obter módulos e aulas
   const { 
@@ -480,6 +494,126 @@ const GerenciarCursos = () => {
       [name]: type === 'number' ? parseInt(value) || 0 : value 
     }));
   };
+  
+  // Handler para upload de banner
+  const handleBannerFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) {
+      toast({
+        title: "Nenhum arquivo selecionado",
+        description: "Por favor, selecione uma imagem para o banner",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const file = e.target.files[0];
+    
+    // Verificar tipo de arquivo
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Tipo de arquivo inválido",
+        description: "Por favor, selecione apenas arquivos de imagem",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Verificar tamanho (limitar a 5MB)
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    if (file.size > MAX_SIZE) {
+      toast({
+        title: "Arquivo muito grande",
+        description: "O tamanho máximo permitido é 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Criar FormData para upload
+    const formData = new FormData();
+    formData.append('banner', file);
+    formData.append('width', bannerSizes.desktop.width.toString());
+    formData.append('quality', '80');
+    
+    // Resetar estados
+    setBannerUploadError(null);
+    setUploadProgress(0);
+    setIsUploadingBanner(true);
+    
+    // Iniciar upload
+    uploadBannerMutation.mutate(formData);
+  };
+  
+  // Mutation para upload de banner
+  const uploadBannerMutation = useMutation({
+    mutationFn: async (formData: FormData) => {
+      // Simulando progresso durante upload (atualizações incrementais)
+      const uploadTimer = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(uploadTimer);
+            return prev;
+          }
+          return prev + 10;
+        });
+      }, 300);
+      
+      try {
+        const response = await fetch('/api/admin/upload-banner', {
+          method: 'POST',
+          body: formData,
+          // Não incluir Content-Type aqui para que o navegador defina
+          // corretamente o boundary para o FormData
+        });
+        
+        clearInterval(uploadTimer);
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Falha no upload do banner');
+        }
+        
+        setUploadProgress(100);
+        const data = await response.json();
+        
+        // Atualizar tamanhos recomendados se o servidor os fornecer
+        if (data.sizes) {
+          setBannerSizes(data.sizes);
+        }
+        
+        return data;
+      } catch (error: any) {
+        clearInterval(uploadTimer);
+        setBannerUploadError(error.message);
+        throw error;
+      } finally {
+        setIsUploadingBanner(false);
+      }
+    },
+    onSuccess: (data) => {
+      setPageSettings(prev => ({
+        ...prev,
+        courseHeroImageUrl: data.bannerUrl
+      }));
+      
+      toast({
+        title: "Banner enviado com sucesso",
+        description: "A imagem foi otimizada e salva no servidor",
+      });
+      
+      // Limpar o campo de arquivo para permitir selecionar o mesmo arquivo novamente
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao enviar banner",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
   
   const updateSettingsMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -1004,25 +1138,117 @@ const GerenciarCursos = () => {
                       </div>
                       
                       <div className="space-y-2 col-span-full">
-                        <Label htmlFor="courseHeroImageUrl">URL da Imagem de Fundo</Label>
-                        <Input 
-                          id="courseHeroImageUrl"
-                          name="courseHeroImageUrl"
-                          placeholder="https://example.com/image.jpg"
-                          value={pageSettings.courseHeroImageUrl}
-                          onChange={handlePageSettingsChange}
-                        />
-                        {pageSettings.courseHeroImageUrl && (
-                          <div className="mt-2 p-2 border rounded">
-                            <p className="text-xs text-gray-500 mb-1">Prévia da imagem:</p>
-                            <img 
-                              src={pageSettings.courseHeroImageUrl} 
-                              alt="Prévia do banner" 
-                              className="max-h-40 object-cover rounded"
-                              onError={(e) => {
-                                e.currentTarget.src = "https://placehold.co/600x200/e2e8f0/64748b?text=Imagem+Inválida";
-                              }}
+                        <div className="flex flex-col">
+                          <Label htmlFor="courseHeroImageUrl" className="mb-2">Banner do Curso</Label>
+                          
+                          {/* Componente de Upload de Banner */}
+                          <div className="mb-4 border border-dashed rounded-lg p-4 bg-gray-50">
+                            <div className="flex flex-col items-center">
+                              <div className="mb-3 w-full">
+                                <p className="text-sm text-gray-600 mb-2">
+                                  Upload de nova imagem para o banner do curso:
+                                </p>
+                                
+                                <div className="flex items-start space-x-2">
+                                  <div className="flex-1">
+                                    <div className="relative">
+                                      <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        id="bannerUpload"
+                                        className="hidden"
+                                        accept="image/*"
+                                        onChange={handleBannerFileSelect}
+                                        disabled={isUploadingBanner}
+                                      />
+                                      <Button
+                                        variant="outline"
+                                        onClick={() => fileInputRef.current?.click()}
+                                        disabled={isUploadingBanner}
+                                        className="w-full flex items-center justify-center"
+                                      >
+                                        {isUploadingBanner ? (
+                                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        ) : (
+                                          <Upload className="w-4 h-4 mr-2" />
+                                        )}
+                                        {isUploadingBanner ? 'Enviando...' : 'Selecionar Imagem'}
+                                      </Button>
+                                      
+                                      {isUploadingBanner && (
+                                        <div className="w-full mt-2">
+                                          <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                                            <div 
+                                              className="h-full bg-blue-600 transition-all duration-300 ease-out"
+                                              style={{ width: `${uploadProgress}%` }}
+                                            />
+                                          </div>
+                                          <p className="text-xs text-gray-500 mt-1 text-center">
+                                            {uploadProgress}% concluído
+                                          </p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* Informações do banner */}
+                              <div className="w-full p-3 bg-blue-50 rounded text-xs text-blue-700">
+                                <div className="flex items-start mb-1">
+                                  <AlertTriangle className="w-4 h-4 mr-1 flex-shrink-0 mt-0.5" />
+                                  <p>Recomendações para o banner do curso:</p>
+                                </div>
+                                <ul className="list-disc ml-8 space-y-1 mt-1">
+                                  <li>Dimensões recomendadas: {bannerSizes.desktop.width}x{bannerSizes.desktop.height}px</li>
+                                  <li>Formatos aceitos: JPG, PNG, WebP</li>
+                                  <li>Tamanho máximo: 5MB</li>
+                                  <li>Use imagens com boa resolução e qualidade</li>
+                                </ul>
+                              </div>
+
+                              {bannerUploadError && (
+                                <div className="w-full mt-3 p-3 bg-red-50 rounded border border-red-200 text-sm text-red-600 flex items-start">
+                                  <XCircle className="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" />
+                                  <p>{bannerUploadError}</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Campo para a URL da imagem */}
+                          <div className="mt-4">
+                            <Label htmlFor="courseHeroImageUrl" className="text-sm text-gray-600">URL da imagem atual</Label>
+                            <Input 
+                              id="courseHeroImageUrl"
+                              name="courseHeroImageUrl"
+                              placeholder="https://example.com/image.jpg"
+                              value={pageSettings.courseHeroImageUrl}
+                              onChange={handlePageSettingsChange}
                             />
+                            <p className="text-xs text-gray-500 mt-1">
+                              Este campo é atualizado automaticamente após o upload, mas também pode ser editado manualmente.
+                            </p>
+                          </div>
+                        </div>
+                        
+                        {/* Prévia da imagem */}
+                        {pageSettings.courseHeroImageUrl && (
+                          <div className="mt-4 p-3 border rounded">
+                            <p className="text-sm font-medium text-gray-700 mb-2">Prévia do banner:</p>
+                            <div className="relative bg-gray-200 rounded overflow-hidden" style={{ height: '150px' }}>
+                              <img 
+                                src={pageSettings.courseHeroImageUrl} 
+                                alt="Prévia do banner" 
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.src = "https://placehold.co/1920x600/e2e8f0/64748b?text=Imagem+Inválida";
+                                }}
+                              />
+                            </div>
+                            <p className="text-xs text-gray-500 mt-2">
+                              Esta é uma prévia de como o banner aparecerá no topo da página de videoaulas.
+                            </p>
                           </div>
                         )}
                       </div>
