@@ -297,23 +297,17 @@ const Header = () => {
             {isVideoaulasPage && (
               <form 
                 onSubmit={handleVideoSearch}
-                className="hidden md:flex w-60 mr-3"
+                className="hidden md:flex w-80 mr-3"
               >
                 <div className="relative w-full">
                   <Input
                     type="text"
                     placeholder="Buscar Vídeo Aulas..."
-                    className="w-full pr-10 py-1.5 rounded-full border border-blue-200 text-sm"
+                    className="w-full px-4 py-2 rounded-full border border-blue-200 text-sm"
                     value={videoSearchQuery}
                     onChange={(e) => setVideoSearchQuery(e.target.value)}
                     autoComplete="off"
                   />
-                  <button 
-                    type="submit" 
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-blue-500 hover:text-blue-600"
-                  >
-                    <Search className="h-3.5 w-3.5" />
-                  </button>
                 </div>
               </form>
             )}
