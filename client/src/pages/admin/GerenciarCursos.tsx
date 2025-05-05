@@ -471,6 +471,29 @@ const GerenciarCursos = () => {
     return module ? module.title : 'Módulo não encontrado';
   };
   
+  // Formatar duração para visualização de tempo "HH:MM:SS" ou "MM:SS"
+  const formatarDuracaoPreview = (segundos?: number | null) => {
+    if (!segundos) return "00:00";
+    
+    // Garantir que segundos seja um número
+    const totalSegundos = typeof segundos === 'string' ? parseInt(segundos, 10) : segundos;
+    
+    if (isNaN(totalSegundos)) return "00:00";
+    
+    // Calcular horas, minutos e segundos
+    const horas = Math.floor(totalSegundos / 3600);
+    const minutos = Math.floor((totalSegundos % 3600) / 60);
+    const segsRestantes = totalSegundos % 60;
+    
+    // Formatar com horas se for necessário
+    if (horas > 0) {
+      return `${horas}:${minutos.toString().padStart(2, '0')}:${segsRestantes.toString().padStart(2, '0')}`;
+    }
+    
+    // Formatar apenas com minutos e segundos
+    return `${minutos}:${segsRestantes.toString().padStart(2, '0')}`;
+  };
+  
   const getVideoProviderBadge = (provider: string) => {
     switch (provider) {
       case 'youtube':
@@ -1560,6 +1583,32 @@ const GerenciarCursos = () => {
                   onChange={handleLessonFormChange}
                   min={1}
                 />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="lessonDuration">Duração (em segundos)</Label>
+                <Input
+                  id="lessonDuration"
+                  name="duration"
+                  type="number"
+                  value={lessonForm.duration || ''}
+                  onChange={handleLessonFormChange}
+                  placeholder="Ex: 360 (para 6 minutos)"
+                  min={0}
+                />
+                <p className="text-xs text-gray-500">
+                  Defina a duração total do vídeo em segundos. Se o vídeo tiver 5 minutos, coloque 300.
+                </p>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="durationPreview">Visualização da duração</Label>
+                <div className="flex items-center h-10 px-3 border rounded-md bg-gray-50">
+                  {formatarDuracaoPreview(lessonForm.duration)}
+                </div>
+                <p className="text-xs text-gray-500">
+                  Aparecerá assim no card da lição
+                </p>
               </div>
             </div>
             <div className="grid gap-2">
