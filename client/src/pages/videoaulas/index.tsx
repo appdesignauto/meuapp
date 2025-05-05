@@ -271,13 +271,17 @@ export default function VideoaulasPage() {
         <div className="relative w-full h-[450px] overflow-hidden">
           {/* Fundo com imagem do banner */}
           <div className="absolute inset-0 z-0">
-            {/* Imagem de banner personalizada */}
-            <div 
-              className="absolute inset-0 bg-center bg-cover"
-              style={{
-                backgroundImage: `url('${siteSettings?.courseHeroImageUrl || "https://images.unsplash.com/photo-1617651823081-270acchia626?q=80&w=1970&auto=format&fit=crop"}')`,
-              }}
-            ></div>
+            {/* Imagem de banner personalizada com estado de carregamento */}
+            {isLoadingSiteSettings ? (
+              <div className="absolute inset-0 bg-blue-700"></div>
+            ) : (
+              <div 
+                className="absolute inset-0 bg-center bg-cover"
+                style={{
+                  backgroundImage: siteSettings?.courseHeroImageUrl ? `url('${siteSettings.courseHeroImageUrl}')` : 'linear-gradient(to right, #3b82f6, #2563eb)',
+                }}
+              ></div>
+            )}
           </div>
           
           {/* Overlay gradiente aprimorado para melhor contraste e coerência com o tema geral */}
@@ -286,13 +290,23 @@ export default function VideoaulasPage() {
           {/* Conteúdo sobreposto */}
           <div className="container mx-auto h-full flex flex-col justify-center relative z-10">
             <div className="px-4 md:px-8 max-w-3xl">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 md:mb-4 text-white drop-shadow-sm">
-                {siteSettings?.courseHeroTitle || "DesignAuto Videoaulas"}
-              </h1>
-              <div className="h-1 w-16 md:w-24 bg-yellow-500 mb-4 md:mb-6 shadow-sm"></div>
-              <p className="text-base sm:text-lg md:text-xl text-white mb-6 md:mb-8 max-w-2xl leading-relaxed shadow-sm">
-                {siteSettings?.courseHeroSubtitle || "A formação completa para você criar designs profissionais para seu negócio automotivo"}
-              </p>
+              {isLoadingSiteSettings ? (
+                <>
+                  <div className="bg-white/10 backdrop-blur-sm h-12 w-80 animate-pulse rounded-md mb-4"></div>
+                  <div className="h-1 w-16 md:w-24 bg-yellow-500 mb-4 md:mb-6 shadow-sm"></div>
+                  <div className="bg-white/10 backdrop-blur-sm h-24 w-full max-w-2xl animate-pulse rounded-md"></div>
+                </>
+              ) : (
+                <>
+                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 md:mb-4 text-white drop-shadow-sm">
+                    {siteSettings?.courseHeroTitle || ""}
+                  </h1>
+                  <div className="h-1 w-16 md:w-24 bg-yellow-500 mb-4 md:mb-6 shadow-sm"></div>
+                  <p className="text-base sm:text-lg md:text-xl text-white mb-6 md:mb-8 max-w-2xl leading-relaxed shadow-sm">
+                    {siteSettings?.courseHeroSubtitle || ""}
+                  </p>
+                </>
+              )}
               
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
                 {tutorialDestaque ? (
