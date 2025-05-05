@@ -228,18 +228,37 @@ const TutorialCard: React.FC<TutorialCardProps> = ({
               )}
             </p>
             
-            {/* Botão de ação */}
+            {/* Área de botões com duas colunas */}
             {!isPremiumLocked && (
-              <Link href={`/videoaulas/${tutorial.id}`}>
+              <div className="flex gap-2">
+                {/* Botão principal de assistir */}
+                <Link href={`/videoaulas/${tutorial.id}`} className="flex-grow">
+                  <Button 
+                    className="w-full h-8 text-xs flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    {tutorial.isWatched
+                      ? <>Assistir novamente <Play className="h-3.5 w-3.5" /></>
+                      : <>Assistir tutorial <Play className="h-3.5 w-3.5" /></>
+                    }
+                  </Button>
+                </Link>
+                
+                {/* Botão para salvar/favoritar */}
                 <Button 
-                  className="w-full h-8 text-xs flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
+                  variant="outline"
+                  className={`h-8 w-8 flex items-center justify-center shrink-0 ${
+                    isSaved 
+                      ? 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30' 
+                      : 'bg-transparent text-white/70 border-white/30 hover:text-white hover:border-white'
+                  }`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsSaved(!isSaved);
+                  }}
                 >
-                  {tutorial.isWatched
-                    ? <>Assistir novamente <Play className="h-3.5 w-3.5" /></>
-                    : <>Assistir tutorial <Play className="h-3.5 w-3.5" /></>
-                  }
+                  <BookmarkPlus className="h-4 w-4" />
                 </Button>
-              </Link>
+              </div>
             )}
           </motion.div>
         )}
