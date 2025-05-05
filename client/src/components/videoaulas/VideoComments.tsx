@@ -1,0 +1,326 @@
+import React, { useState } from 'react';
+import { useAuth } from '@/hooks/use-auth';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { apiRequest } from '@/lib/queryClient';
+import { ThumbsUp, Trash2, AlertTriangle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+
+interface Comment {
+  id: number;
+  content: string;
+  createdAt: string; // ISO date string
+  userId: number;
+  lessonId: number;
+  likes: number;
+  isHidden: boolean;
+  username: string;
+  name: string | null;
+  profileImageUrl: string | null;
+}
+
+interface VideoCommentsProps {
+  lessonId: number;
+}
+
+const VideoComments: React.FC<VideoCommentsProps> = ({ lessonId }) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [commentText, setCommentText] = useState('');
+  const queryClient = useQueryClient();
+  
+  // Buscar comentários
+  const { data: comments = [], isLoading, error } = useQuery<Comment[]>({
+    queryKey: ['/api/video-comments', lessonId],
+    queryFn: async () => {
+      const response = await fetch(`/api/video-comments/${lessonId}`);
+      if (!response.ok) {
+        throw new Error('Erro ao carregar comentários');
+      }
+      return response.json();
+    },
+    retry: 1,
+  });
+  
+  // Mutação para adicionar comentário
+  const addCommentMutation = useMutation({
+    mutationFn: async (content: string) => {
+      const response = await apiRequest('POST', '/api/video-comments', {
+        lessonId,
+        content
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao adicionar comentário');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      setCommentText('');
+      queryClient.invalidateQueries({ queryKey: ['/api/video-comments', lessonId] });
+      toast({
+        title: 'Comentário adicionado',
+        description: 'Seu comentário foi publicado com sucesso.',
+      });
+    },
+    onError: (error: Error) => {
+      console.error('Erro ao adicionar comentário:', error);
+      toast({
+        title: 'Erro ao adicionar comentário',
+        description: error.message || 'Tente novamente mais tarde.',
+        variant: 'destructive',
+      });
+    }
+  });
+  
+  // Mutação para dar like em comentário
+  const likeCommentMutation = useMutation({
+    mutationFn: async (commentId: number) => {
+      const response = await apiRequest('POST', `/api/video-comments/${commentId}/like`, {});
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao curtir comentário');
+      }
+      return response.json();
+    },
+    onSuccess: (_, commentId) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/video-comments', lessonId] });
+    },
+    onError: (error: Error) => {
+      console.error('Erro ao curtir comentário:', error);
+      toast({
+        title: 'Erro ao curtir comentário',
+        description: error.message || 'Tente novamente mais tarde.',
+        variant: 'destructive',
+      });
+    }
+  });
+  
+  // Mutação para deletar comentário
+  const deleteCommentMutation = useMutation({
+    mutationFn: async (commentId: number) => {
+      const response = await apiRequest('DELETE', `/api/video-comments/${commentId}`, {});
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao excluir comentário');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/video-comments', lessonId] });
+      toast({
+        title: 'Comentário excluído',
+        description: 'Seu comentário foi excluído com sucesso.',
+      });
+    },
+    onError: (error: Error) => {
+      console.error('Erro ao excluir comentário:', error);
+      toast({
+        title: 'Erro ao excluir comentário',
+        description: error.message || 'Tente novamente mais tarde.',
+        variant: 'destructive',
+      });
+    }
+  });
+  
+  // Formatação relativa de data (ex: "há 2 dias")
+  const formatRelativeDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffTime = Math.abs(now.getTime() - date.getTime());
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 0) {
+        const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+        if (diffHours === 0) {
+          const diffMinutes = Math.floor(diffTime / (1000 * 60));
+          return diffMinutes <= 1 ? 'agora mesmo' : `${diffMinutes} minutos atrás`;
+        }
+        return diffHours === 1 ? 'há 1 hora' : `há ${diffHours} horas`;
+      } else if (diffDays === 1) {
+        return 'ontem';
+      } else if (diffDays < 7) {
+        return `há ${diffDays} dias`;
+      } else if (diffDays < 30) {
+        const diffWeeks = Math.floor(diffDays / 7);
+        return diffWeeks === 1 ? 'há 1 semana' : `há ${diffWeeks} semanas`;
+      } else if (diffDays < 365) {
+        const diffMonths = Math.floor(diffDays / 30);
+        return diffMonths === 1 ? 'há 1 mês' : `há ${diffMonths} meses`;
+      } else {
+        const diffYears = Math.floor(diffDays / 365);
+        return diffYears === 1 ? 'há 1 ano' : `há ${diffYears} anos`;
+      }
+    } catch (error) {
+      console.error('Erro ao formatar data:', error);
+      return 'data desconhecida';
+    }
+  };
+  
+  // Manipulador para envio de comentário
+  const handleSubmitComment = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (commentText.trim() && user) {
+      addCommentMutation.mutate(commentText.trim());
+    }
+  };
+  
+  // Manipulador para like em comentário
+  const handleLikeComment = (commentId: number) => {
+    if (user) {
+      likeCommentMutation.mutate(commentId);
+    } else {
+      toast({
+        title: 'Login necessário',
+        description: 'Faça login para curtir este comentário.',
+        variant: 'destructive',
+      });
+    }
+  };
+  
+  // Manipulador para exclusão de comentário
+  const handleDeleteComment = (commentId: number) => {
+    if (window.confirm('Tem certeza que deseja excluir este comentário?')) {
+      deleteCommentMutation.mutate(commentId);
+    }
+  };
+
+  // Verificar se usuário pode excluir um comentário (sendo o dono ou admin)
+  const canDeleteComment = (comment: Comment) => {
+    return user && (user.id === comment.userId || user.nivelacesso === 'admin');
+  };
+  
+  return (
+    <div className="space-y-4">
+      <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-3 sm:mb-4">Comentários</h3>
+      
+      {/* Formulário de comentário (apenas para usuários logados) */}
+      {user ? (
+        <div>
+          <form onSubmit={handleSubmitComment} className="flex items-start gap-2 sm:gap-3 mb-4 sm:mb-5">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-100 overflow-hidden flex-shrink-0">
+              {user.profileimageurl ? (
+                <img 
+                  src={user.profileimageurl} 
+                  alt={user.name || user.username} 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-blue-200 text-blue-600 font-bold text-xs sm:text-base">
+                  {(user.name?.[0] || user.username[0]).toUpperCase()}
+                </div>
+              )}
+            </div>
+            <div className="flex-1">
+              <textarea 
+                className="w-full p-2 sm:p-3 bg-white border border-blue-200 text-gray-700 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-sm text-xs sm:text-sm"
+                placeholder="Deixe seu comentário sobre este tutorial..."
+                rows={3}
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                required
+              />
+              <div className="flex justify-end mt-2">
+                <Button 
+                  type="submit"
+                  size="sm"
+                  className="bg-blue-600 hover:bg-blue-700 shadow-sm text-xs sm:text-sm px-3 sm:px-4"
+                  disabled={addCommentMutation.isPending || !commentText.trim()}
+                >
+                  {addCommentMutation.isPending ? 'Enviando...' : 'Comentar'}
+                </Button>
+              </div>
+            </div>
+          </form>
+        </div>
+      ) : (
+        <div className="flex items-center justify-center p-4 bg-blue-50 rounded-lg border border-blue-100 mb-4">
+          <p className="text-blue-600 text-sm text-center">
+            Faça login para deixar seu comentário sobre este tutorial.
+          </p>
+        </div>
+      )}
+      
+      {/* Lista de comentários */}
+      <div className="space-y-4 sm:space-y-6 mt-6 sm:mt-8">
+        <h4 className="text-gray-500 text-xs sm:text-sm font-medium border-b border-gray-100 pb-2">
+          {comments.length > 0 
+            ? `Todos os comentários (${comments.length})`
+            : 'Nenhum comentário ainda. Seja o primeiro a comentar!'}
+        </h4>
+        
+        {isLoading && (
+          <div className="py-6 flex justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
+        )}
+        
+        {error && (
+          <div className="py-4 flex justify-center text-red-500 items-center gap-2">
+            <AlertTriangle size={16} />
+            <span className="text-sm">Erro ao carregar comentários. Tente novamente.</span>
+          </div>
+        )}
+        
+        {comments.length === 0 && !isLoading && !error && (
+          <div className="py-8 text-center text-gray-400">
+            <p>Seja o primeiro a comentar nesta aula!</p>
+          </div>
+        )}
+        
+        {comments.map((comment) => (
+          <div key={comment.id} className="flex items-start gap-2 sm:gap-3">
+            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-blue-100 overflow-hidden flex-shrink-0">
+              {comment.profileImageUrl ? (
+                <img 
+                  src={comment.profileImageUrl} 
+                  alt={comment.name || comment.username} 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-blue-200 text-blue-600 font-bold text-[10px] sm:text-xs">
+                  {(comment.name?.[0] || comment.username[0]).toUpperCase()}
+                </div>
+              )}
+            </div>
+            <div className="flex-1">
+              <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+                <h5 className="font-medium text-gray-800 text-xs sm:text-sm">
+                  {comment.name || comment.username}
+                </h5>
+                <span className="text-gray-400 text-[10px] sm:text-xs">
+                  {formatRelativeDate(comment.createdAt)}
+                </span>
+              </div>
+              <p className="mt-1 text-gray-700 text-xs sm:text-sm">{comment.content}</p>
+              <div className="mt-2 flex items-center gap-4">
+                <button 
+                  onClick={() => handleLikeComment(comment.id)}
+                  disabled={likeCommentMutation.isPending}
+                  className="flex items-center gap-1 text-gray-500 hover:text-blue-600 transition-colors text-[10px] sm:text-xs"
+                >
+                  <ThumbsUp className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span>{comment.likes || 0}</span>
+                </button>
+                
+                {canDeleteComment(comment) && (
+                  <button 
+                    onClick={() => handleDeleteComment(comment.id)}
+                    disabled={deleteCommentMutation.isPending}
+                    className="flex items-center gap-1 text-gray-500 hover:text-red-600 transition-colors text-[10px] sm:text-xs"
+                  >
+                    <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span>Excluir</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default VideoComments;
