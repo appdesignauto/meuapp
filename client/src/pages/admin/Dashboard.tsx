@@ -69,11 +69,26 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
-      <div className="w-64 bg-white shadow-md">
-        <div className="p-4 border-b">
+    <div className="flex h-screen bg-gray-100 relative">
+      {/* Overlay - aparece apenas em telas pequenas quando a sidebar está aberta */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-10 sm:hidden" 
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+      
+      {/* Sidebar - visível em telas maiores ou quando sidebarOpen=true em telas menores */}
+      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} sm:translate-x-0 absolute sm:relative z-20 h-full w-64 bg-white shadow-md transition-transform duration-300 ease-in-out`}>
+        <div className="p-4 border-b flex justify-between items-center">
           <h1 className="text-xl font-bold text-blue-600">DesignAuto Admin</h1>
+          <button 
+            className="sm:hidden text-gray-500 hover:text-gray-700" 
+            onClick={() => setSidebarOpen(false)}
+          >
+            <PanelLeft className="w-5 h-5" />
+          </button>
         </div>
         <div className="p-4">
           <div className="flex items-center mb-6">
@@ -144,13 +159,7 @@ const AdminDashboard = () => {
                   <FileType className="w-4 h-4 mr-3" />
                   <span>Tipos de Arquivo</span>
                 </button>
-                <button
-                  onClick={() => setIsMultiFormOpen(true)}
-                  className="flex items-center w-full px-4 py-2 rounded-md text-blue-600 font-medium"
-                >
-                  <ImagePlus className="w-4 h-4 mr-3" />
-                  <span>Nova Arte Multi-Formato</span>
-                </button>
+
               </CollapsibleContent>
             </Collapsible>
             
@@ -270,8 +279,12 @@ const AdminDashboard = () => {
           <div className="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between">
             <div className="flex items-center mb-3 sm:mb-0">
               {/* Botão de alternância do menu (visível apenas em telas menores) */}
-              <button className="sm:hidden mr-3 text-gray-600 hover:text-blue-600">
-                <PanelLeft className="w-5 h-5" />
+              <button 
+                className="sm:hidden mr-3 text-gray-600 hover:text-blue-600"
+                onClick={() => setSidebarOpen(true)}
+                aria-label="Abrir menu lateral"
+              >
+                <PanelRight className="w-5 h-5" />
               </button>
               
               <h1 className="text-xl font-semibold">
