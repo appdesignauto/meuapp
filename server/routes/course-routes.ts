@@ -677,59 +677,70 @@ router.put('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Curso não encontrado' });
     }
     
-    // Construir a query de atualização
-    let updateQuery = 'UPDATE courses SET "updatedAt" = NOW()';
-    const params = [];
-    let paramIndex = 1;
+    // Extrair dados do corpo da requisição
+    const { 
+      title, 
+      description, 
+      thumbnailUrl, // Vamos mapear para featuredImage
+      featuredImage,
+      level,
+      status,
+      isPublished,
+      isPremium
+    } = req.body;
     
-    const fields = [
-      'title', 'description', 'thumbnailUrl', 'featuredImage', 
-      'level', 'status', 'isPublished', 'isPremium'
+    // Criar query de atualização usando parâmetros nomeados para maior segurança
+    const updateQuery = `
+      UPDATE courses 
+      SET 
+        "updatedAt" = NOW(),
+        title = COALESCE($1, title),
+        description = COALESCE($2, description),
+        "featuredImage" = COALESCE($3, "featuredImage"),
+        level = COALESCE($4, level),
+        status = COALESCE($5, status),
+        "isPublished" = COALESCE($6, "isPublished"),
+        "isPremium" = COALESCE($7, "isPremium")
+      WHERE 
+        id = $8
+      RETURNING 
+        id, 
+        title, 
+        description, 
+        "featuredImage" as "thumbnailUrl", 
+        "featuredImage", 
+        level, 
+        status, 
+        "isPublished", 
+        "isPremium", 
+        "createdAt", 
+        "updatedAt"
+    `;
+    
+    // Usar thumbnailUrl como fallback para featuredImage se fornecido
+    const finalFeaturedImage = featuredImage || thumbnailUrl;
+    
+    const params = [
+      title, 
+      description, 
+      finalFeaturedImage,
+      level,
+      status,
+      isPublished === undefined ? null : isPublished,
+      isPremium === undefined ? null : isPremium,
+      courseId
     ];
     
-    // Mapeamento correto dos campos
-    const dbFields = {
-      'thumbnailUrl': '"featuredImage"', // Usar featuredImage para thumbnailUrl
-      'featuredImage': '"featuredImage"',
-      'isPublished': '"isPublished"',
-      'isPremium': '"isPremium"'
-    };
-    
-    // Flag para verificar se algum campo foi atualizado
-    let hasUpdates = false;
-    
-    fields.forEach(field => {
-      if (req.body[field] !== undefined) {
-        const dbField = dbFields[field] || field.toLowerCase();
-        updateQuery += `, ${dbField} = $${paramIndex}`;
-        params.push(req.body[field]);
-        paramIndex++;
-        hasUpdates = true;
-      }
-    });
-    
-    // Se não houver atualizações, adicionamos pelo menos um campo para evitar erro
-    if (!hasUpdates) {
-      updateQuery = 'UPDATE courses SET "updatedAt" = NOW() WHERE id = $1';
-      params.length = 0; // Limpar parâmetros
-      params.push(courseId);
-    } else {
-      // Adicionar o ID do curso aos parâmetros apenas se houver atualizações
-      updateQuery += ' WHERE id = $' + paramIndex;
-      params.push(courseId);
-    }
-    
-    // Query para retornar os dados atualizados - adicionamos no final para qualquer caso
-    updateQuery += ` RETURNING id, title, description, "featuredImage" as "thumbnailUrl", "featuredImage", 
-                     level, status, "isPublished", "isPremium", 
-                     "createdAt", "updatedAt"`;
-    
-    console.log(`[PUT /course/${courseId}] Query de atualização:`, updateQuery);
+    console.log(`[PUT /course/${courseId}] Query de atualização simplificada:`);
     console.log(`[PUT /course/${courseId}] Parâmetros:`, params);
     
     const result = await db.execute(updateQuery, params);
-    const updatedCourse = result.rows[0];
     
+    if (result.rows.length === 0) {
+      return res.status(500).json({ message: 'Falha ao atualizar o curso' });
+    }
+    
+    const updatedCourse = result.rows[0];
     console.log(`[PUT /course/${courseId}] Curso atualizado com sucesso:`, updatedCourse);
     
     return res.json(updatedCourse);
@@ -776,6 +787,216 @@ router.delete('/:id', async (req, res) => {
   } catch (error) {
     console.error(`[DELETE /course/${req.params.id}] Erro ao excluir curso:`, error);
     return res.status(500).json({ message: 'Erro ao excluir curso', error: String(error) });
+  }
+});
+
+// ENDPOINTS PARA CONFIGURAÇÕES DOS CURSOS
+
+// Buscar configurações dos cursos
+router.get('/settings', async (req, res) => {
+  try {
+    console.log('[GET /course/settings] Buscando configurações de cursos');
+    
+    // Buscar as configurações com SQL bruto para evitar problemas
+    const query = `
+      SELECT 
+        id, 
+        "bannerTitle",
+        "bannerDescription", 
+        "bannerImageUrl",
+        "welcomeMessage",
+        "showModuleNumbers",
+        "useCustomPlayerColors",
+        "enableComments",
+        "allowNonPremiumEnrollment",
+        "createdAt",
+        "updatedAt",
+        "updatedBy"
+      FROM 
+        "courseSettings" 
+      WHERE 
+        id = 1
+      LIMIT 1
+    `;
+    
+    const result = await db.execute(query);
+    
+    // Se não houver configurações, criar uma padrão
+    if (result.rows.length === 0) {
+      console.log('[GET /course/settings] Configurações não encontradas, criando padrão...');
+      
+      // Criar configurações padrão com SQL bruto
+      const insertQuery = `
+        INSERT INTO "courseSettings" (
+          "bannerTitle", 
+          "bannerDescription", 
+          "bannerImageUrl", 
+          "welcomeMessage",
+          "showModuleNumbers",
+          "useCustomPlayerColors",
+          "enableComments",
+          "allowNonPremiumEnrollment",
+          "updatedBy"
+        ) 
+        VALUES (
+          'DesignAuto Videoaulas',
+          'A formação completa para você criar designs profissionais para seu negócio automotivo',
+          'https://images.unsplash.com/photo-1617651823081-270acchia626?q=80&w=1970&auto=format&fit=crop',
+          'Bem-vindo aos nossos cursos! Aprenda com os melhores profissionais.',
+          true,
+          false,
+          true,
+          false,
+          $1
+        )
+        RETURNING 
+          id, 
+          "bannerTitle",
+          "bannerDescription", 
+          "bannerImageUrl",
+          "welcomeMessage",
+          "showModuleNumbers",
+          "useCustomPlayerColors",
+          "enableComments",
+          "allowNonPremiumEnrollment",
+          "createdAt",
+          "updatedAt",
+          "updatedBy"
+      `;
+      
+      const insertResult = await db.execute(insertQuery, [req.user?.id || null]);
+      
+      return res.json(insertResult.rows[0]);
+    }
+    
+    return res.json(result.rows[0]);
+  } catch (error) {
+    console.error('[GET /course/settings] Erro ao buscar configurações:', error);
+    return res.status(500).json({ message: 'Erro ao buscar configurações', error: String(error) });
+  }
+});
+
+// Atualizar configurações dos cursos
+router.put('/settings', async (req, res) => {
+  try {
+    console.log('[PUT /course/settings] Atualizando configurações de cursos:', req.body);
+    
+    const { 
+      bannerTitle,
+      bannerDescription,
+      bannerImageUrl,
+      welcomeMessage,
+      showModuleNumbers,
+      useCustomPlayerColors,
+      enableComments,
+      allowNonPremiumEnrollment
+    } = req.body;
+    
+    // Verificar se as configurações existem
+    const checkQuery = `SELECT id FROM "courseSettings" WHERE id = 1`;
+    const checkResult = await db.execute(checkQuery);
+    
+    let updateQuery;
+    let params;
+    
+    if (checkResult.rows.length === 0) {
+      console.log('[PUT /course/settings] Configurações não encontradas, criando...');
+      
+      // Criar configurações se não existirem
+      updateQuery = `
+        INSERT INTO "courseSettings" (
+          "bannerTitle", 
+          "bannerDescription", 
+          "bannerImageUrl", 
+          "welcomeMessage",
+          "showModuleNumbers",
+          "useCustomPlayerColors",
+          "enableComments",
+          "allowNonPremiumEnrollment",
+          "updatedBy"
+        ) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        RETURNING 
+          id, 
+          "bannerTitle",
+          "bannerDescription", 
+          "bannerImageUrl",
+          "welcomeMessage",
+          "showModuleNumbers",
+          "useCustomPlayerColors",
+          "enableComments",
+          "allowNonPremiumEnrollment",
+          "createdAt",
+          "updatedAt",
+          "updatedBy"
+      `;
+      
+      params = [
+        bannerTitle,
+        bannerDescription,
+        bannerImageUrl,
+        welcomeMessage,
+        showModuleNumbers !== undefined ? showModuleNumbers : true,
+        useCustomPlayerColors !== undefined ? useCustomPlayerColors : false,
+        enableComments !== undefined ? enableComments : true,
+        allowNonPremiumEnrollment !== undefined ? allowNonPremiumEnrollment : false,
+        req.user?.id || null
+      ];
+    } else {
+      console.log('[PUT /course/settings] Atualizando configurações existentes');
+      
+      // Atualizar configurações existentes
+      updateQuery = `
+        UPDATE "courseSettings"
+        SET 
+          "bannerTitle" = COALESCE($1, "bannerTitle"),
+          "bannerDescription" = COALESCE($2, "bannerDescription"),
+          "bannerImageUrl" = COALESCE($3, "bannerImageUrl"),
+          "welcomeMessage" = COALESCE($4, "welcomeMessage"),
+          "showModuleNumbers" = COALESCE($5, "showModuleNumbers"),
+          "useCustomPlayerColors" = COALESCE($6, "useCustomPlayerColors"),
+          "enableComments" = COALESCE($7, "enableComments"),
+          "allowNonPremiumEnrollment" = COALESCE($8, "allowNonPremiumEnrollment"),
+          "updatedBy" = $9,
+          "updatedAt" = NOW()
+        WHERE id = 1
+        RETURNING 
+          id, 
+          "bannerTitle",
+          "bannerDescription", 
+          "bannerImageUrl",
+          "welcomeMessage",
+          "showModuleNumbers",
+          "useCustomPlayerColors",
+          "enableComments",
+          "allowNonPremiumEnrollment",
+          "createdAt",
+          "updatedAt",
+          "updatedBy"
+      `;
+      
+      params = [
+        bannerTitle,
+        bannerDescription,
+        bannerImageUrl,
+        welcomeMessage,
+        showModuleNumbers,
+        useCustomPlayerColors,
+        enableComments,
+        allowNonPremiumEnrollment,
+        req.user?.id || null
+      ];
+    }
+    
+    const result = await db.execute(updateQuery, params);
+    const updatedSettings = result.rows[0];
+    
+    console.log('[PUT /course/settings] Configurações atualizadas com sucesso:', updatedSettings);
+    
+    return res.json(updatedSettings);
+  } catch (error) {
+    console.error('[PUT /course/settings] Erro ao atualizar configurações:', error);
+    return res.status(500).json({ message: 'Erro ao atualizar configurações', error: String(error) });
   }
 });
 
