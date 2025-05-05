@@ -31,13 +31,17 @@ import {
   Clock,
   Youtube,
   Play,
-  ImagePlus
+  ImagePlus,
+  Award,
+  Crown,
+  Sparkles,
+  Zap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Table,
@@ -1622,38 +1626,63 @@ const GerenciarCursos = () => {
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="moduleTitle">Título do módulo *</Label>
-              <Input
-                id="moduleTitle"
-                name="title"
-                value={moduleForm.title}
-                onChange={handleModuleFormChange}
-                placeholder="Ex: Introdução ao Design"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="moduleDescription">Descrição *</Label>
-              <Textarea
-                id="moduleDescription"
-                name="description"
-                value={moduleForm.description}
-                onChange={handleModuleFormChange}
-                placeholder="Breve descrição sobre o módulo"
-                rows={3}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="moduleThumbUrl">URL da miniatura</Label>
-              <Input
-                id="moduleThumbUrl"
-                name="thumbnailUrl"
-                value={moduleForm.thumbnailUrl}
-                onChange={handleModuleFormChange}
-                placeholder="https://exemplo.com/imagem.jpg"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid gap-2 md:col-span-2">
+                <Label htmlFor="moduleTitle">Título do módulo *</Label>
+                <Input
+                  id="moduleTitle"
+                  name="title"
+                  value={moduleForm.title}
+                  onChange={handleModuleFormChange}
+                  placeholder="Ex: Introdução ao Design"
+                />
+              </div>
+              <div className="grid gap-2 md:col-span-2">
+                <Label htmlFor="moduleDescription">Descrição *</Label>
+                <Textarea
+                  id="moduleDescription"
+                  name="description"
+                  value={moduleForm.description}
+                  onChange={handleModuleFormChange}
+                  placeholder="Breve descrição sobre o módulo"
+                  rows={3}
+                />
+              </div>
+              <div className="grid gap-2 md:col-span-2">
+                <Label htmlFor="moduleThumbUrl">URL da miniatura *</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="moduleThumbUrl"
+                    name="thumbnailUrl"
+                    value={moduleForm.thumbnailUrl}
+                    onChange={handleModuleFormChange}
+                    placeholder="https://exemplo.com/imagem.jpg"
+                    className="flex-1"
+                  />
+                  {moduleForm.thumbnailUrl && (
+                    <Button
+                      variant="outline"
+                      type="button"
+                      size="icon"
+                      onClick={() => window.open(moduleForm.thumbnailUrl, '_blank')}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                {moduleForm.thumbnailUrl && (
+                  <div className="mt-2 h-36 overflow-hidden rounded-md border">
+                    <img 
+                      src={moduleForm.thumbnailUrl} 
+                      alt="Prévia da miniatura" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = "https://placehold.co/600x400/e2e8f0/94a3b8?text=Imagem+não+encontrada";
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
               <div className="grid gap-2">
                 <Label htmlFor="moduleLevel">Nível</Label>
                 <Select
@@ -1662,18 +1691,33 @@ const GerenciarCursos = () => {
                     target: { name: 'level', value }
                   } as React.ChangeEvent<HTMLSelectElement>)}
                 >
-                  <SelectTrigger id="moduleLevel">
+                  <SelectTrigger id="moduleLevel" className="h-10">
                     <SelectValue placeholder="Selecione o nível" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="iniciante">Iniciante</SelectItem>
-                    <SelectItem value="intermediario">Intermediário</SelectItem>
-                    <SelectItem value="avancado">Avançado</SelectItem>
+                    <SelectItem value="iniciante">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="h-4 w-4 text-green-500" />
+                        <span>Iniciante</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="intermediario">
+                      <div className="flex items-center gap-2">
+                        <Zap className="h-4 w-4 text-yellow-500" />
+                        <span>Intermediário</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="avancado">
+                      <div className="flex items-center gap-2">
+                        <Award className="h-4 w-4 text-red-500" />
+                        <span>Avançado</span>
+                      </div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="moduleOrder">Ordem *</Label>
+                <Label htmlFor="moduleOrder">Ordem na sequência *</Label>
                 <Input
                   id="moduleOrder"
                   name="order"
@@ -1681,17 +1725,25 @@ const GerenciarCursos = () => {
                   value={moduleForm.order}
                   onChange={handleModuleFormChange}
                   min={1}
+                  className="h-10"
                 />
               </div>
             </div>
-            <div className="flex space-x-4">
+            <div className="flex flex-wrap gap-6 mt-2 p-3 bg-gray-50 rounded-md">
               <div className="flex items-center space-x-2">
                 <Switch
                   id="moduleActive"
                   checked={moduleForm.isActive}
                   onCheckedChange={(checked) => handleModuleToggleChange('isActive', checked)}
                 />
-                <Label htmlFor="moduleActive">Ativo</Label>
+                <Label htmlFor="moduleActive" className="flex items-center gap-2 cursor-pointer">
+                  {moduleForm.isActive ? (
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <XCircle className="h-4 w-4 text-gray-400" />
+                  )}
+                  <span>Módulo ativo</span>
+                </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Switch
@@ -1699,22 +1751,50 @@ const GerenciarCursos = () => {
                   checked={moduleForm.isPremium}
                   onCheckedChange={(checked) => handleModuleToggleChange('isPremium', checked)}
                 />
-                <Label htmlFor="modulePremium">Premium</Label>
+                <Label htmlFor="modulePremium" className="flex items-center gap-2 cursor-pointer">
+                  {moduleForm.isPremium ? (
+                    <Crown className="h-4 w-4 text-yellow-500" />
+                  ) : (
+                    <Crown className="h-4 w-4 text-gray-400" />
+                  )}
+                  <span>Conteúdo premium</span>
+                </Label>
               </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsModuleDialogOpen(false)}>
-              Cancelar
-            </Button>
-            <Button 
-              onClick={handleModuleSubmit}
-              disabled={createModuleMutation.isPending || updateModuleMutation.isPending}
-            >
-              {createModuleMutation.isPending || updateModuleMutation.isPending
-                ? 'Salvando...'
-                : currentModule ? 'Atualizar' : 'Criar'}
-            </Button>
+          <DialogFooter className="border-t pt-4 mt-4">
+            <div className="flex items-center space-x-4">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsModuleDialogOpen(false)}
+                className="gap-2"
+              >
+                <XCircle className="h-4 w-4" />
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleModuleSubmit}
+                disabled={createModuleMutation.isPending || updateModuleMutation.isPending}
+                className="gap-2"
+              >
+                {createModuleMutation.isPending || updateModuleMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Salvando...
+                  </>
+                ) : currentModule ? (
+                  <>
+                    <CheckCircle2 className="h-4 w-4" />
+                    Atualizar módulo
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4" />
+                    Criar módulo
+                  </>
+                )}
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1797,9 +1877,13 @@ const GerenciarCursos = () => {
       <Dialog open={isLessonDialogOpen} onOpenChange={setIsLessonDialogOpen}>
         <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <FileVideo className="h-5 w-5" />
               {currentLesson ? 'Editar Aula' : 'Adicionar Aula'}
             </DialogTitle>
+            <DialogDescription>
+              Preencha os campos abaixo para {currentLesson ? 'editar a' : 'criar uma nova'} aula
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
