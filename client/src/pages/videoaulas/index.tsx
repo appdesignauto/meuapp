@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 // Helmet comentado temporariamente para evitar erros
 // import { Helmet } from 'react-helmet-async';
 import { Link } from 'wouter';
@@ -132,6 +132,7 @@ export default function VideoaulasPage() {
           views: Math.floor(Math.random() * 100) + 10, // Valor temporário para visualização
           moduleId: lesson.moduleId,
           moduloNome: modulo?.title || 'Módulo desconhecido',
+          showLessonNumber: lesson.showLessonNumber !== false, // Por padrão, mostra número da aula
           tags: [] // Será implementado no futuro
         };
       });
@@ -184,7 +185,14 @@ export default function VideoaulasPage() {
   // Preparar dados
   const tutoriais = transformarLicoesParaTutoriais(moduleData || [], lessonsData || []);
   const tutoriaisPopulares = Array.isArray(tutoriais) && tutoriais.length > 0 ? tutoriais.slice(0, 8) : [];
-  const tutorialDestaque = Array.isArray(tutoriais) && tutoriais.length > 0 ? tutoriais[0] : { id: 1, title: 'Carregando...' };
+  
+  // Aguardar o carregamento completo dos dados antes de definir o tutorial destaque
+  const tutorialDestaque = useMemo(() => {
+    if (isLoadingModules || isLoadingLessons || isLoadingSiteSettings) {
+      return null;
+    }
+    return Array.isArray(tutoriais) && tutoriais.length > 0 ? tutoriais[0] : null;
+  }, [tutoriais, isLoadingModules, isLoadingLessons, isLoadingSiteSettings]);
   
   // Agrupar por níveis
   const iniciantes = Array.isArray(tutoriais) ? tutoriais.filter(t => t.level === 'iniciante') : [];
@@ -287,15 +295,24 @@ export default function VideoaulasPage() {
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
-                <Link href={`/videoaulas/${tutorialDestaque.id}`} className="w-full sm:w-auto">
-                  <Button className="bg-yellow-500 hover:bg-yellow-600 text-blue-950 border-0 py-4 md:py-6 px-6 md:px-10 text-base md:text-lg font-semibold w-full sm:w-auto shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group">
-                    <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-yellow-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                {tutorialDestaque ? (
+                  <Link href={`/videoaulas/${tutorialDestaque.id}`} className="w-full sm:w-auto">
+                    <Button className="bg-yellow-500 hover:bg-yellow-600 text-blue-950 border-0 py-4 md:py-6 px-6 md:px-10 text-base md:text-lg font-semibold w-full sm:w-auto shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group">
+                      <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-yellow-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <div className="relative flex items-center justify-center">
+                        <Play className="h-5 w-5 md:h-6 md:w-6 mr-2" />
+                        <span>Começar Agora</span>
+                      </div>
+                    </Button>
+                  </Link>
+                ) : (
+                  <Button disabled className="bg-yellow-500/70 text-blue-950 border-0 py-4 md:py-6 px-6 md:px-10 text-base md:text-lg font-semibold w-full sm:w-auto shadow-lg transition-all duration-300 relative overflow-hidden">
                     <div className="relative flex items-center justify-center">
                       <Play className="h-5 w-5 md:h-6 md:w-6 mr-2" />
-                      <span>Começar Agora</span>
+                      <span>Carregando...</span>
                     </div>
                   </Button>
-                </Link>
+                )}
                 <Link href="#categorias" className="w-full sm:w-auto">
                   <Button variant="outline" className="bg-white/10 text-white hover:bg-white/20 border-2 border-white/40 py-4 md:py-6 px-6 md:px-10 text-base md:text-lg font-medium w-full sm:w-auto transition-all duration-300 hover:scale-105">
                     Ver Categorias
