@@ -132,8 +132,11 @@ const VideoLessonPage: React.FC = () => {
   // Inicializar isDesktop com um valor padrão que será ajustado no useEffect
   const [isDesktop, setIsDesktop] = useState(true);
   
-  // Detectar se é desktop após montagem do componente
+  // Detectar se é desktop após montagem do componente e rolar para o topo
   useEffect(() => {
+    // Rolar para o topo da página quando a página é carregada ou o ID muda
+    window.scrollTo(0, 0);
+    
     // Definir isDesktop no lado do cliente
     const checkDesktop = () => window.innerWidth >= 768;
     setIsDesktop(checkDesktop());
@@ -147,7 +150,7 @@ const VideoLessonPage: React.FC = () => {
     return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, []);
+  }, [id]); // Adicionar 'id' como dependência para rolar para o topo quando a aula mudar
   
   const [watchedLessons, setWatchedLessons] = useState<number[]>(() => {
     // Recuperar aulas assistidas do localStorage
@@ -457,7 +460,13 @@ const VideoLessonPage: React.FC = () => {
                         {(() => {
                           const prevLesson = lessonsData?.find(l => l.moduleId === currentLesson?.moduleId && l.id < id);
                           return prevLesson ? (
-                            <Link href={`/videoaulas/${prevLesson.id}`} className="inline-flex">
+                            <Link 
+                              href={`/videoaulas/${prevLesson.id}`} 
+                              className="inline-flex"
+                              onClick={(e) => {
+                                // Permitir o comportamento padrão do link, o useEffect cuidará da rolagem
+                              }}
+                            >
                               <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-md flex items-center justify-center text-white shadow-sm hover:shadow-md hover:from-blue-700 hover:to-blue-800 transition-all">
                                 <ChevronLeft className="h-4 w-4" />
                               </div>
@@ -473,7 +482,13 @@ const VideoLessonPage: React.FC = () => {
                         {(() => {
                           const nextLesson = lessonsData?.find(l => l.moduleId === currentLesson?.moduleId && l.id > id);
                           return nextLesson ? (
-                            <Link href={`/videoaulas/${nextLesson.id}`} className="inline-flex">
+                            <Link 
+                              href={`/videoaulas/${nextLesson.id}`} 
+                              className="inline-flex"
+                              onClick={(e) => {
+                                // Permitir o comportamento padrão do link, o useEffect cuidará da rolagem
+                              }}
+                            >
                               <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-md flex items-center justify-center text-white shadow-sm hover:shadow-md hover:from-blue-700 hover:to-blue-800 transition-all">
                                 <ChevronRight className="h-4 w-4" />
                               </div>
@@ -612,7 +627,13 @@ const VideoLessonPage: React.FC = () => {
                           {(() => {
                             const prevLesson = lessonsData?.find(l => l.moduleId === currentLesson?.moduleId && l.id < id);
                             return prevLesson ? (
-                              <Link href={`/videoaulas/${prevLesson.id}`} className="inline-flex">
+                              <Link 
+                                href={`/videoaulas/${prevLesson.id}`} 
+                                className="inline-flex"
+                                onClick={(e) => {
+                                  // Permitir o comportamento padrão do link, o useEffect cuidará da rolagem
+                                }}
+                              >
                                 <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-blue-700 rounded-md flex items-center justify-center text-white shadow-sm hover:shadow-md hover:from-blue-700 hover:to-blue-800 transition-all">
                                   <ChevronLeft className="h-5 w-5" />
                                 </div>
@@ -628,7 +649,13 @@ const VideoLessonPage: React.FC = () => {
                           {(() => {
                             const nextLesson = lessonsData?.find(l => l.moduleId === currentLesson?.moduleId && l.id > id);
                             return nextLesson ? (
-                              <Link href={`/videoaulas/${nextLesson.id}`} className="inline-flex">
+                              <Link 
+                                href={`/videoaulas/${nextLesson.id}`} 
+                                className="inline-flex"
+                                onClick={(e) => {
+                                  // Permitir o comportamento padrão do link, o useEffect cuidará da rolagem
+                                }}
+                              >
                                 <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-blue-700 rounded-md flex items-center justify-center text-white shadow-sm hover:shadow-md hover:from-blue-700 hover:to-blue-800 transition-all">
                                   <ChevronRight className="h-5 w-5" />
                                 </div>
