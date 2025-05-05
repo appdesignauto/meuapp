@@ -102,9 +102,7 @@ export default function VideoaulasPage() {
   const tutorialDestaque = tutoriais[0] || { id: 1, title: 'Carregando...' };
   
   // Agrupar por níveis
-  const iniciantes = tutoriais.filter(t => t.level === 'iniciante');
-  const intermediarios = tutoriais.filter(t => t.level === 'intermediario');
-  const avancados = tutoriais.filter(t => t.level === 'avancado');
+  const minimalistas = tutoriais.filter(t => !t.isPremium && t.thumbnailUrl && t.thumbnailUrl.includes('minimalista'));
   
   // Função para verificar se o conteúdo premium deve ser bloqueado
   const isPremiumLocked = (isPremium: boolean) => {
@@ -126,12 +124,8 @@ export default function VideoaulasPage() {
     if (searchTerm) return filteredTutoriais;
     
     switch (activeTab) {
-      case 'iniciantes':
-        return iniciantes;
-      case 'intermediarios':
-        return intermediarios;
-      case 'avancados':
-        return avancados;
+      case 'minimalista':
+        return minimalistas;
       case 'vistos':
         return tutoriais.filter(t => t.isWatched);
       default:
@@ -252,37 +246,15 @@ export default function VideoaulasPage() {
                     Todos
                   </button>
                   <button 
-                    onClick={() => setActiveTab('iniciantes')}
+                    onClick={() => setActiveTab('minimalista')}
                     className={`text-xs px-3 py-1.5 rounded-full flex items-center transition-colors ${
-                      activeTab === 'iniciantes' 
-                        ? 'bg-green-600 text-white font-medium' 
-                        : 'bg-green-50 text-green-700 hover:bg-green-100'
+                      activeTab === 'minimalista' 
+                        ? 'bg-gray-700 text-white font-medium' 
+                        : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
                     }`}
                   >
                     <Play className="h-3 w-3 mr-1" />
-                    Iniciantes
-                  </button>
-                  <button 
-                    onClick={() => setActiveTab('intermediarios')}
-                    className={`text-xs px-3 py-1.5 rounded-full flex items-center transition-colors ${
-                      activeTab === 'intermediarios' 
-                        ? 'bg-blue-600 text-white font-medium' 
-                        : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
-                    }`}
-                  >
-                    <Zap className="h-3 w-3 mr-1" />
-                    Intermediários
-                  </button>
-                  <button 
-                    onClick={() => setActiveTab('avancados')}
-                    className={`text-xs px-3 py-1.5 rounded-full flex items-center transition-colors ${
-                      activeTab === 'avancados' 
-                        ? 'bg-purple-600 text-white font-medium' 
-                        : 'bg-purple-50 text-purple-700 hover:bg-purple-100'
-                    }`}
-                  >
-                    <Award className="h-3 w-3 mr-1" />
-                    Avançados
+                    Minimalista
                   </button>
                   {user && (
                     <button 
