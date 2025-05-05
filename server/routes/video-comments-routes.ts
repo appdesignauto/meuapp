@@ -1,232 +1,174 @@
-import { db } from '../db';
-import { eq, and, desc } from 'drizzle-orm';
-import { videoComments, users, insertVideoCommentSchema } from '@shared/schema';
 import { Router, Request, Response } from 'express';
 import { checkUserAuth, checkUserRole } from '../middlewares/auth';
+import { db } from '../db';
+import { videoComments, users, courseLessons } from '@shared/schema';
+import { eq, and, desc } from 'drizzle-orm';
 
 const router = Router();
 
-// Listar comentários de uma aula específica
+// Rota para obter todos os comentários de uma lição específica
 router.get('/video-comments/:lessonId', async (req: Request, res: Response) => {
   try {
-    const lessonId = parseInt(req.params.lessonId);
-    if (isNaN(lessonId)) {
-      return res.status(400).json({ error: 'ID da aula inválido' });
+    const { lessonId } = req.params;
+    
+    // Verificar se a lição existe
+    const [lesson] = await db.select().from(courseLessons).where(eq(courseLessons.id, parseInt(lessonId)));
+    
+    if (!lesson) {
+      return res.status(404).json({ error: 'Lição não encontrada' });
     }
-
-    const commentsWithUsers = await db.query.videoComments.findMany({
-      where: eq(videoComments.lessonId, lessonId),
-      with: {
-        user: {
-          columns: {
-            id: true,
-            username: true,
-            name: true,
-            profileimageurl: true,
-            nivelacesso: true,
-          }
-        }
-      },
-      orderBy: [desc(videoComments.createdAt)]
-    });
-
-    // Formatando os dados para o formato esperado pelo frontend
-    const formattedComments = commentsWithUsers.map(comment => ({
-      id: comment.id,
-      content: comment.content,
-      likes: comment.likes,
-      createdAt: comment.createdAt,
-      updatedAt: comment.updatedAt,
-      isHidden: comment.isHidden,
-      user: {
-        id: comment.user.id,
-        username: comment.user.username,
-        name: comment.user.name,
-        profileImage: comment.user.profileimageurl,
-        role: comment.user.nivelacesso
-      }
-    }));
-
-    res.json(formattedComments);
-  } catch (error) {
-    console.error('Erro ao buscar comentários da aula:', error);
-    res.status(500).json({ error: 'Erro ao buscar comentários' });
-  }
-});
-
-// Adicionar um novo comentário
-router.post('/video-comments', checkUserAuth, async (req: Request, res: Response) => {
-  try {
-    const userId = req.user?.id;
-    if (!userId) {
-      return res.status(401).json({ error: 'Usuário não autenticado' });
-    }
-
-    // Validar dados de entrada
-    const validationResult = insertVideoCommentSchema.safeParse(req.body);
-    if (!validationResult.success) {
-      return res.status(400).json({ error: 'Dados de comentário inválidos', details: validationResult.error });
-    }
-
-    const { lessonId, content } = validationResult.data;
-
-    // Inserir comentário
-    const [newComment] = await db
-      .insert(videoComments)
-      .values({
-        userId,
-        lessonId,
-        content,
-        isHidden: false,
-        likes: 0
-      })
-      .returning();
-
-    // Buscar dados do usuário para incluir na resposta
-    const [user] = await db
+    
+    // Obter comentários ordenados por data mais recente
+    const commentsList = await db
       .select({
-        id: users.id,
+        id: videoComments.id,
+        content: videoComments.content,
+        createdAt: videoComments.createdAt,
+        userId: videoComments.userId,
+        lessonId: videoComments.lessonId,
+        likes: videoComments.likes,
+        isHidden: videoComments.isHidden,
         username: users.username,
         name: users.name,
-        profileimageurl: users.profileimageurl,
-        nivelacesso: users.nivelacesso
+        profileImageUrl: users.profileimageurl
       })
-      .from(users)
-      .where(eq(users.id, userId));
-
-    // Formatar resposta
-    const commentWithUser = {
-      ...newComment,
-      user: {
-        id: user.id,
-        username: user.username,
-        name: user.name,
-        profileImage: user.profileimageurl,
-        role: user.nivelacesso
-      }
-    };
-
-    res.status(201).json(commentWithUser);
+      .from(videoComments)
+      .leftJoin(users, eq(videoComments.userId, users.id))
+      .where(
+        and(
+          eq(videoComments.lessonId, parseInt(lessonId)),
+          eq(videoComments.isVisible, true)
+        )
+      )
+      .orderBy(desc(videoComments.createdAt));
+      
+    return res.status(200).json(commentsList);
   } catch (error) {
-    console.error('Erro ao adicionar comentário:', error);
-    res.status(500).json({ error: 'Erro ao adicionar comentário' });
+    console.error('Erro ao buscar comentários:', error);
+    return res.status(500).json({ error: 'Erro ao buscar comentários' });
   }
 });
 
-// Curtir um comentário (toggle)
+// Rota para criar um novo comentário (requer autenticação)
+router.post('/video-comments', checkUserAuth, async (req: Request, res: Response) => {
+  try {
+    const { lessonId, content } = req.body;
+    
+    // Validar dados de entrada
+    if (!lessonId || !content) {
+      return res.status(400).json({ error: 'Dados incompletos. lessonId e content são obrigatórios' });
+    }
+    
+    // Verificar se a lição existe
+    const [lesson] = await db.select().from(courseLessons).where(eq(courseLessons.id, parseInt(lessonId)));
+    
+    if (!lesson) {
+      return res.status(404).json({ error: 'Lição não encontrada' });
+    }
+    
+    // Criar o comentário
+    const [newComment] = await db.insert(videoComments).values({
+      content,
+      userId: req.user?.id,
+      lessonId: parseInt(lessonId),
+      createdAt: new Date(),
+      likes: 0,
+      isVisible: true
+    }).returning();
+    
+    // Buscar dados completos do usuário para retornar junto com o comentário
+    const [user] = await db.select().from(users).where(eq(users.id, req.user?.id));
+    
+    // Retornar o comentário criado com dados do usuário
+    return res.status(201).json({
+      ...newComment,
+      username: user.username,
+      name: user.name,
+      profileImageUrl: user.profileimageurl
+    });
+  } catch (error) {
+    console.error('Erro ao criar comentário:', error);
+    return res.status(500).json({ error: 'Erro ao criar comentário' });
+  }
+});
+
+// Rota para dar like em um comentário (requer autenticação)
 router.post('/video-comments/:commentId/like', checkUserAuth, async (req: Request, res: Response) => {
   try {
-    const commentId = parseInt(req.params.commentId);
-    if (isNaN(commentId)) {
-      return res.status(400).json({ error: 'ID do comentário inválido' });
-    }
-
-    // Verificar se comentário existe
-    const [comment] = await db
-      .select()
-      .from(videoComments)
-      .where(eq(videoComments.id, commentId));
-
+    const { commentId } = req.params;
+    
+    // Verificar se o comentário existe
+    const [comment] = await db.select().from(videoComments).where(eq(videoComments.id, parseInt(commentId)));
+    
     if (!comment) {
       return res.status(404).json({ error: 'Comentário não encontrado' });
     }
-
-    // Atualizar likes (nesta implementação simples, apenas incrementamos)
-    // Em uma implementação mais completa, você teria uma tabela de "likes" para controlar quem curtiu
+    
+    // Incrementar o contador de likes
     const [updatedComment] = await db
       .update(videoComments)
-      .set({ 
-        likes: comment.likes + 1,
-        updatedAt: new Date()
-      })
-      .where(eq(videoComments.id, commentId))
+      .set({ likes: (comment.likes || 0) + 1 })
+      .where(eq(videoComments.id, parseInt(commentId)))
       .returning();
-
-    res.json(updatedComment);
+    
+    return res.status(200).json({ likes: updatedComment.likes });
   } catch (error) {
-    console.error('Erro ao curtir comentário:', error);
-    res.status(500).json({ error: 'Erro ao processar a ação' });
+    console.error('Erro ao dar like no comentário:', error);
+    return res.status(500).json({ error: 'Erro ao dar like no comentário' });
   }
 });
 
-// Excluir comentário (apenas o autor ou admin)
+// Rota para excluir um comentário (requer autenticação e ser dono do comentário ou admin)
 router.delete('/video-comments/:commentId', checkUserAuth, async (req: Request, res: Response) => {
   try {
-    const commentId = parseInt(req.params.commentId);
-    if (isNaN(commentId)) {
-      return res.status(400).json({ error: 'ID do comentário inválido' });
-    }
-
-    const userId = req.user?.id;
-    const userRole = req.user?.nivelacesso;
-
-    // Verificar se comentário existe
-    const [comment] = await db
-      .select()
-      .from(videoComments)
-      .where(eq(videoComments.id, commentId));
-
+    const { commentId } = req.params;
+    
+    // Verificar se o comentário existe
+    const [comment] = await db.select().from(videoComments).where(eq(videoComments.id, parseInt(commentId)));
+    
     if (!comment) {
       return res.status(404).json({ error: 'Comentário não encontrado' });
     }
-
-    // Verificar permissão (autor do comentário ou admin)
-    const isAdmin = userRole === 'admin';
-    const isAuthor = comment.userId === userId;
     
-    if (!isAdmin && !isAuthor) {
+    // Verificar se o usuário é dono do comentário ou admin
+    if (comment.userId !== req.user?.id && req.user?.nivelacesso !== 'admin') {
       return res.status(403).json({ error: 'Sem permissão para excluir este comentário' });
     }
-
-    // Excluir comentário
-    await db
-      .delete(videoComments)
-      .where(eq(videoComments.id, commentId));
-
-    res.json({ success: true, message: 'Comentário excluído com sucesso' });
+    
+    // Excluir o comentário
+    await db.delete(videoComments).where(eq(videoComments.id, parseInt(commentId)));
+    
+    return res.status(200).json({ success: true, message: 'Comentário excluído com sucesso' });
   } catch (error) {
     console.error('Erro ao excluir comentário:', error);
-    res.status(500).json({ error: 'Erro ao excluir comentário' });
+    return res.status(500).json({ error: 'Erro ao excluir comentário' });
   }
 });
 
-// Ocultar/mostrar comentário (apenas admin)
+// Rota para atualizar visibilidade de um comentário (apenas para admin)
 router.patch('/video-comments/:commentId/visibility', checkUserAuth, checkUserRole(['admin']), async (req: Request, res: Response) => {
   try {
-    const commentId = parseInt(req.params.commentId);
-    if (isNaN(commentId)) {
-      return res.status(400).json({ error: 'ID do comentário inválido' });
-    }
-
-    const { isHidden } = req.body;
-    if (typeof isHidden !== 'boolean') {
-      return res.status(400).json({ error: 'Valor de visibilidade inválido' });
-    }
-
-    // Verificar se comentário existe
-    const [comment] = await db
-      .select()
-      .from(videoComments)
-      .where(eq(videoComments.id, commentId));
-
+    const { commentId } = req.params;
+    const { isVisible } = req.body;
+    
+    // Verificar se o comentário existe
+    const [comment] = await db.select().from(videoComments).where(eq(videoComments.id, parseInt(commentId)));
+    
     if (!comment) {
       return res.status(404).json({ error: 'Comentário não encontrado' });
     }
-
+    
     // Atualizar visibilidade
     const [updatedComment] = await db
       .update(videoComments)
-      .set({ 
-        isHidden,
-        updatedAt: new Date()
-      })
-      .where(eq(videoComments.id, commentId))
+      .set({ isVisible: isVisible === true })
+      .where(eq(videoComments.id, parseInt(commentId)))
       .returning();
-
-    res.json(updatedComment);
+    
+    return res.status(200).json(updatedComment);
   } catch (error) {
     console.error('Erro ao atualizar visibilidade do comentário:', error);
-    res.status(500).json({ error: 'Erro ao processar a ação' });
+    return res.status(500).json({ error: 'Erro ao atualizar visibilidade do comentário' });
   }
 });
 

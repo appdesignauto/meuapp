@@ -41,7 +41,7 @@ import emailTestRouter from './routes/email-test';
 import { emailDiagnosticsRouter } from './routes/email-diagnostics';
 import passwordResetRouter from './routes/password-reset';
 import { setupTestR2DirectRoute } from './routes/test-r2-direct';
-import dateTestRouter from './date-test-router';
+import dateTestRouter from './routes/date-test-routes';
 import supabeDiagnosticsRouter from './routes/supabase-diagnostics';
 import multiArtRouter from './routes/multi-art'; // Rota para artes multi-formato
 import testCreateGroupRouter from './routes/test-create-group'; // Rota de teste para criar grupos
@@ -4474,6 +4474,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Rotas para gerenciamento de cursos e aulas (protegidas por autenticação e admin)
   // Usar courseRouter sem middleware para permitir acesso público
   app.use('/api/courses', courseRouter);
+  
+  // Rotas para gerenciamento de comentários em vídeos
+  app.use('/api', videoCommentsRouter);
 
   const httpServer = createServer(app);
   
