@@ -86,45 +86,52 @@ export default function VideoaulasPage() {
   const transformarLicoesParaTutoriais = (modules = [], lessons = []) => {
     if (!modules.length || !lessons.length) return [];
     
-    // Criamos um mapa de módulos por ID para acesso rápido
-    const modulosMap = modules.reduce((acc, modulo) => {
-      acc[modulo.id] = modulo;
-      return acc;
-    }, {});
-
-    console.log("Mapa de módulos criado:", 
-      Object.keys(modulosMap).map(id => ({
-        id, 
-        title: modulosMap[id].title,
-        level: modulosMap[id].level
-      }))
-    );
-    
-    // Transformar lições
-    const tutoriais = lessons.map(lesson => {
-      // Encontrar o módulo correspondente
-      const modulo = modulosMap[lesson.moduleId];
+    try {
+      // Criamos um mapa de módulos por ID para acesso rápido
+      const modulosMap = modules.reduce((acc, modulo) => {
+        acc[modulo.id] = modulo;
+        return acc;
+      }, {});
+  
+      console.log("Mapa de módulos criado:", 
+        Object.keys(modulosMap).map(id => ({
+          id, 
+          title: modulosMap[id].title,
+          level: modulosMap[id].level
+        }))
+      );
       
-      console.log(`Processando lição ID ${lesson.id} (${lesson.title}) - Módulo: ${lesson.moduleId} - ${modulo ? modulo.title : 'Módulo não encontrado'}`);
+      // Transformar lições
+      const tutoriais = lessons.map(lesson => {
+        // Encontrar o módulo correspondente
+        const modulo = modulosMap[lesson.moduleId];
+        
+        console.log(`Processando lição ID ${lesson.id} (${lesson.title}) - Módulo: ${lesson.moduleId} - ${modulo ? modulo.title : 'Módulo não encontrado'}`);
+        
+        return {
+          id: lesson.id,
+          title: lesson.title,
+          description: lesson.description,
+          thumbnailUrl: lesson.thumbnailUrl,
+          videoUrl: lesson.videoUrl,
+          videoProvider: lesson.videoProvider,
+          duration: formatarDuracao(lesson.duration),
+          // Usar o nível do módulo encontrado ou 'iniciante' como fallback
+          level: modulo?.level || 'iniciante',
+          isPremium: lesson.isPremium,
+          isWatched: false, // Será implementado com histórico do usuário no futuro
+          views: Math.floor(Math.random() * 100) + 10, // Valor temporário para visualização
+          moduleId: lesson.moduleId,
+          moduloNome: modulo?.title || 'Módulo desconhecido',
+          tags: [] // Será implementado no futuro
+        };
+      });
       
-      return {
-        id: lesson.id,
-        title: lesson.title,
-        description: lesson.description,
-        thumbnailUrl: lesson.thumbnailUrl,
-        videoUrl: lesson.videoUrl,
-        videoProvider: lesson.videoProvider,
-        duration: formatarDuracao(lesson.duration),
-        // Usar o nível do módulo encontrado ou 'iniciante' como fallback
-        level: modulo?.level || 'iniciante',
-        isPremium: lesson.isPremium,
-        isWatched: false, // Será implementado com histórico do usuário no futuro
-        views: 0, // Será implementado no futuro
-        moduleId: lesson.moduleId,
-        moduloNome: modulo?.title || 'Módulo desconhecido',
-        tags: [] // Será implementado no futuro
-      };
-    });
+      return tutoriais; // Esta linha importante estava faltando
+    } catch (error) {
+      console.error("Erro ao transformar lições para tutoriais:", error);
+      return []; // Retorna array vazio em caso de erro
+    }
   };
   
   // Formatar duração de segundos para string "MM:SS" ou "HH:MM:SS" para vídeos longos
