@@ -48,6 +48,7 @@ import testCreateGroupRouter from './routes/test-create-group'; // Rota de teste
 import videoaulasRouter from './routes/videoaulas-routes'; // Rotas para as videoaulas
 import courseRouter from './routes/course-routes'; // Rotas para gerenciamento de cursos
 import videoCommentsRouter from './routes/video-comments-routes'; // Rotas para comentários de videoaulas
+import bannerUploadRouter from './routes/banner-upload'; // Rota para upload de banners de cursos
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Rota simples de verificação de saúde
