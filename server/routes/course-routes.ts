@@ -605,15 +605,32 @@ router.post('/', async (req, res) => {
     }
     
     // Inserir o novo curso usando SQL direto com string interpolation em vez de parâmetros
+    // Função auxiliar segura para escapar strings SQL que pode ser null/undefined
+    const safeEscape = (value) => {
+      if (value === null || value === undefined) return null;
+      return `'${value.toString().replace(/'/g, "''")}'`;
+    };
+    
     // Definir valores padrão seguros
-    const levelValue = level || 'iniciante';
-    const statusValue = status || 'active';
+    const levelValue = safeEscape(level || 'iniciante');
+    const statusValue = safeEscape(status || 'active');
     const isPublishedValue = isPublished !== undefined ? isPublished : true;
     const isPremiumValue = isPremium !== undefined ? isPremium : false;
-    const descriptionValue = description ? description.replace(/'/g, "''") : '';
-    const titleValue = title.replace(/'/g, "''");
-    const thumbnailUrlValue = thumbnailUrl ? thumbnailUrl.replace(/'/g, "''") : 'null';
-    const featuredImageValue = featuredImage ? featuredImage.replace(/'/g, "''") : thumbnailUrlValue;
+    
+    // Tratar nulos e escapar strings de forma segura
+    const titleEscaped = safeEscape(title);
+    const descriptionEscaped = safeEscape(description);
+    
+    // Tratar campos de imagem que podem ser nulos
+    let thumbnailUrlEscaped = safeEscape(thumbnailUrl);
+    let featuredImageEscaped = safeEscape(featuredImage);
+    
+    // Se não houver featuredImage, usar thumbnailUrl como fallback
+    if (!featuredImageEscaped && thumbnailUrlEscaped) {
+      featuredImageEscaped = thumbnailUrlEscaped;
+    }
+    
+    // ID do criador (pode ser NULL)
     const createdById = req.user?.id || 'NULL';
     
     const query = `
@@ -628,11 +645,11 @@ router.post('/', async (req, res) => {
         "createdBy"
       ) 
       VALUES (
-        '${titleValue}', 
-        '${descriptionValue}', 
-        ${featuredImageValue === 'null' ? 'null' : `'${featuredImageValue}'`}, 
-        '${levelValue}', 
-        '${statusValue}', 
+        ${titleEscaped || 'NULL'}, 
+        ${descriptionEscaped || 'NULL'}, 
+        ${featuredImageEscaped || 'NULL'}, 
+        ${levelValue || "'iniciante'"}, 
+        ${statusValue || "'active'"}, 
         ${isPublishedValue}, 
         ${isPremiumValue}, 
         ${createdById}
@@ -703,29 +720,59 @@ router.put('/:id', async (req, res) => {
     
     // Construir manualmente os SET clauses
     let setClauses = [];
-    let values = [];
+    
+    // Função auxiliar segura para escapar strings SQL que pode ser null/undefined
+    const safeEscape = (value) => {
+      if (value === null || value === undefined) return null;
+      return `'${value.toString().replace(/'/g, "''")}'`;
+    };
     
     // Adicionar clauses que são seguros
     setClauses.push(`"updatedAt" = NOW()`);
     
     if (title !== undefined) {
-      setClauses.push(`title = '${title.replace(/'/g, "''")}'`);
+      const safeTitle = safeEscape(title);
+      if (safeTitle) {
+        setClauses.push(`title = ${safeTitle}`);
+      } else {
+        setClauses.push(`title = NULL`);
+      }
     }
     
     if (description !== undefined) {
-      setClauses.push(`description = '${description.replace(/'/g, "''")}'`);
+      const safeDescription = safeEscape(description);
+      if (safeDescription) {
+        setClauses.push(`description = ${safeDescription}`);
+      } else {
+        setClauses.push(`description = NULL`);
+      }
     }
     
     if (finalFeaturedImage !== undefined) {
-      setClauses.push(`"featuredImage" = '${finalFeaturedImage.replace(/'/g, "''")}'`);
+      const safeFeaturedImage = safeEscape(finalFeaturedImage);
+      if (safeFeaturedImage) {
+        setClauses.push(`"featuredImage" = ${safeFeaturedImage}`);
+      } else {
+        setClauses.push(`"featuredImage" = NULL`);
+      }
     }
     
     if (level !== undefined) {
-      setClauses.push(`level = '${level.replace(/'/g, "''")}'`);
+      const safeLevel = safeEscape(level);
+      if (safeLevel) {
+        setClauses.push(`level = ${safeLevel}`);
+      } else {
+        setClauses.push(`level = NULL`);
+      }
     }
     
     if (status !== undefined) {
-      setClauses.push(`status = '${status.replace(/'/g, "''")}'`);
+      const safeStatus = safeEscape(status);
+      if (safeStatus) {
+        setClauses.push(`status = ${safeStatus}`);
+      } else {
+        setClauses.push(`status = NULL`);
+      }
     }
     
     if (isPublished !== undefined) {
