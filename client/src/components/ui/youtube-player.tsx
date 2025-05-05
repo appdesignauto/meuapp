@@ -1,43 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { ExternalLink } from 'lucide-react';
 
-interface VimeoPlayerProps {
+interface YouTubePlayerProps {
   videoUrl: string;
   thumbnailUrl: string;
 }
 
-const extractVimeoVideoId = (url: string): string | null => {
+const extractYouTubeVideoId = (url: string): string | null => {
   // Verificar se a URL está vazia ou é indefinida
   if (!url) return null;
   
-  // Formatos de URL do Vimeo suportados:
-  // - https://vimeo.com/1234567
-  // - https://vimeo.com/channels/staffpicks/1234567
-  // - https://vimeo.com/groups/name/videos/1234567
-  // - https://player.vimeo.com/video/1234567
-  
-  const regExp = /(?:vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|video\/|)(\d+)(?:|\/\?)|player\.vimeo\.com\/video\/(\d+)(?:\/\?)?)/;
-  
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
   const match = url.match(regExp);
-  
-  // Se encontrar um match, retornar o ID do vídeo
-  if (match) {
-    // O ID pode estar no grupo 1 ou 2 dependendo do formato da URL
-    return match[1] || match[2];
-  }
-  
-  return null;
+  return (match && match[2].length === 11) ? match[2] : null;
 };
 
-const VimeoPlayer: React.FC<VimeoPlayerProps> = ({ videoUrl, thumbnailUrl }) => {
+const YouTubePlayer: React.FC<YouTubePlayerProps> = ({ videoUrl, thumbnailUrl }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
   const [videoId, setVideoId] = useState<string | null>(null);
   
   useEffect(() => {
-    // Extrair o ID do vídeo do Vimeo da URL quando a URL mudar
-    const id = extractVimeoVideoId(videoUrl);
-    console.log("[Vimeo Player] URL:", videoUrl, "ID extraído:", id);
+    // Extrair o ID do vídeo do YouTube da URL quando a URL mudar
+    const id = extractYouTubeVideoId(videoUrl);
+    console.log("[YouTube Player] URL:", videoUrl, "ID extraído:", id);
     setVideoId(id);
     
     // Resetar estados quando a URL mudar
@@ -47,12 +33,12 @@ const VimeoPlayer: React.FC<VimeoPlayerProps> = ({ videoUrl, thumbnailUrl }) => 
   
   // Manipuladores para eventos de carregamento
   const handleIframeLoad = () => {
-    console.log("[Vimeo Player] Iframe carregado com sucesso");
+    console.log("[YouTube Player] Iframe carregado com sucesso");
     setIsLoading(false);
   };
   
   const handleIframeError = () => {
-    console.log("[Vimeo Player] Erro ao carregar iframe");
+    console.log("[YouTube Player] Erro ao carregar iframe");
     setIsError(true);
     setIsLoading(false);
   };
@@ -66,20 +52,19 @@ const VimeoPlayer: React.FC<VimeoPlayerProps> = ({ videoUrl, thumbnailUrl }) => 
           </div>
           <h3 className="text-lg font-semibold text-gray-800">URL de vídeo inválida</h3>
           <p className="text-gray-600 text-sm mt-1">
-            Não foi possível extrair o ID do vídeo do Vimeo: {videoUrl}
+            Não foi possível extrair o ID do vídeo do YouTube: {videoUrl}
           </p>
         </div>
       </div>
     );
   }
   
-  // Preparar a URL do embed do Vimeo com parâmetros para melhor experiência
-  // byline=0 - esconde o nome do autor
-  // portrait=0 - esconde o avatar
-  // title=0 - esconde o título
-  // transparent=1 - torna o fundo transparente
-  // dnt=1 - "Do Not Track" (privacidade)
-  const embedUrl = `https://player.vimeo.com/video/${videoId}?byline=0&portrait=0&title=0&transparent=1&pip=0&autopause=0&controls=1&playsinline=1&dnt=1`;
+  // Preparar a URL do embed do YouTube apenas com parâmetros essenciais para melhor experiência
+  // modestbranding=1 - reduz o branding do YouTube
+  // rel=0 - não mostra vídeos relacionados ao final do vídeo
+  // origin - especifica a origem para segurança
+  // enablejsapi=1 - habilita a API JavaScript
+  const embedUrl = `https://www.youtube.com/embed/${videoId}?modestbranding=1&rel=0&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`;
   
   return (
     <div className="relative w-full aspect-video bg-black rounded-md sm:rounded-lg overflow-hidden">
@@ -111,13 +96,13 @@ const VimeoPlayer: React.FC<VimeoPlayerProps> = ({ videoUrl, thumbnailUrl }) => 
         </div>
       )}
       
-      {/* iframe do Vimeo - com uma camada invisível para evitar cliques indesejados */}
+      {/* iframe do YouTube - com uma camada invisível para evitar cliques indesejados */}
       <iframe
         className={`w-full h-full ${isLoading ? 'opacity-0' : 'opacity-100'}`}
         src={embedUrl}
-        title="Vimeo video player"
+        title="YouTube video player"
         frameBorder="0"
-        allow="autoplay; fullscreen; picture-in-picture"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
         loading="lazy"
         onLoad={handleIframeLoad}
@@ -127,4 +112,4 @@ const VimeoPlayer: React.FC<VimeoPlayerProps> = ({ videoUrl, thumbnailUrl }) => 
   );
 };
 
-export default VimeoPlayer;
+export default YouTubePlayer;

@@ -37,16 +37,9 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-// import { 
-//   Tooltip, 
-//   TooltipContent, 
-//   TooltipProvider, 
-//   TooltipTrigger 
-// } from "@/components/ui/tooltip";
+import YouTubePlayer from "@/components/ui/youtube-player";
+import VimeoPlayer from "@/components/ui/vimeo-player";
 import { Tutorial } from "@/components/videoaulas/TutorialData";
-
-// Importar os dados simulados
-// import { tutoriais, tutoriaisPopulares } from "@/components/videoaulas/TutorialData";
 
 // Função auxiliar para extrair o ID do vídeo do YouTube
 const extractYouTubeVideoId = (url: string): string | null => {
