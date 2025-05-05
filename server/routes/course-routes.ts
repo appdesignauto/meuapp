@@ -604,20 +604,39 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ message: 'O título do curso é obrigatório' });
     }
     
-    // Inserir o novo curso usando SQL direto para evitar problemas de esquema
+    // Inserir o novo curso usando SQL direto com string interpolation em vez de parâmetros
+    // Definir valores padrão seguros
+    const levelValue = level || 'iniciante';
+    const statusValue = status || 'active';
+    const isPublishedValue = isPublished !== undefined ? isPublished : true;
+    const isPremiumValue = isPremium !== undefined ? isPremium : false;
+    const descriptionValue = description ? description.replace(/'/g, "''") : '';
+    const titleValue = title.replace(/'/g, "''");
+    const thumbnailUrlValue = thumbnailUrl ? thumbnailUrl.replace(/'/g, "''") : 'null';
+    const featuredImageValue = featuredImage ? featuredImage.replace(/'/g, "''") : thumbnailUrlValue;
+    const createdById = req.user?.id || 'NULL';
+    
     const query = `
       INSERT INTO courses (
         title, 
         description, 
         "featuredImage", /* Usando a coluna featuredImage correta */
-        "featuredImage", /* Usando featuredImage como thumbnailUrl */
         level, 
         status, 
         "isPublished", 
         "isPremium", 
         "createdBy"
       ) 
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
+      VALUES (
+        '${titleValue}', 
+        '${descriptionValue}', 
+        ${featuredImageValue === 'null' ? 'null' : `'${featuredImageValue}'`}, 
+        '${levelValue}', 
+        '${statusValue}', 
+        ${isPublishedValue}, 
+        ${isPremiumValue}, 
+        ${createdById}
+      ) 
       RETURNING 
         id, 
         title, 
@@ -632,25 +651,8 @@ router.post('/', async (req, res) => {
         "updatedAt"
     `;
     
-    const levelValue = level || 'iniciante';
-    const statusValue = status || 'active';
-    const isPublishedValue = isPublished !== undefined ? isPublished : true;
-    const isPremiumValue = isPremium !== undefined ? isPremium : false;
-    
-    const result = await db.execute(
-      query, 
-      [
-        title, 
-        description || '', 
-        thumbnailUrl || null, 
-        featuredImage || null, 
-        levelValue, 
-        statusValue, 
-        isPublishedValue, 
-        isPremiumValue, 
-        req.user?.id || null
-      ]
-    );
+    console.log(`[POST /course] Query de inserção:`, query);
+    const result = await db.execute(query);
     
     const newCourse = result.rows[0];
     
@@ -674,9 +676,10 @@ router.put('/:id', async (req, res) => {
     
     console.log(`[PUT /course/${courseId}] Atualizando curso com dados:`, req.body);
     
-    // Verificar se o curso existe
-    const checkQuery = `SELECT id FROM courses WHERE id = $1`;
-    const checkResult = await db.execute(checkQuery, [courseId]);
+    // Verificar se o curso existe - usando string interpolation
+    const checkQuery = `SELECT id FROM courses WHERE id = ${courseId}`;
+    console.log(`[PUT /course/${courseId}] Verificando existência do curso:`, checkQuery);
+    const checkResult = await db.execute(checkQuery);
     
     if (checkResult.rows.length === 0) {
       return res.status(404).json({ message: 'Curso não encontrado' });
@@ -785,10 +788,11 @@ router.delete('/:id', async (req, res) => {
     
     console.log(`[DELETE /course/${courseId}] Verificando dependências antes de excluir`);
     
-    // Verificar se existem módulos relacionados
-    const checkModulesQuery = `SELECT COUNT(*) as count FROM "courseModules" WHERE "courseId" = $1`;
-    const modulesResult = await db.execute(checkModulesQuery, [courseId]);
-    const moduleCount = parseInt(modulesResult.rows[0].count);
+    // Verificar se existem módulos relacionados - usando string interpolation
+    const checkModulesQuery = `SELECT COUNT(*) as count FROM "courseModules" WHERE "courseId" = ${courseId}`;
+    console.log(`[DELETE /course/${courseId}] Query para verificar módulos:`, checkModulesQuery);
+    const modulesResult = await db.execute(checkModulesQuery);
+    const moduleCount = parseInt(modulesResult.rows[0].count || '0');
     
     if (moduleCount > 0) {
       return res.status(400).json({ 
@@ -797,9 +801,10 @@ router.delete('/:id', async (req, res) => {
       });
     }
     
-    // Excluir o curso
-    const deleteQuery = `DELETE FROM courses WHERE id = $1 RETURNING id`;
-    const result = await db.execute(deleteQuery, [courseId]);
+    // Excluir o curso - usando string interpolation
+    const deleteQuery = `DELETE FROM courses WHERE id = ${courseId} RETURNING id`;
+    console.log(`[DELETE /course/${courseId}] Query de exclusão:`, deleteQuery);
+    const result = await db.execute(deleteQuery);
     
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Curso não encontrado' });
