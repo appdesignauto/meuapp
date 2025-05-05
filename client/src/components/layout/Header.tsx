@@ -212,7 +212,7 @@ const Header = () => {
   const navLinks = [
     { name: 'Início', path: '/' },
     { name: 'Categorias', path: '/categories' },
-    { name: 'Vídeo Aulas', path: '/videoaulas', icon: <PlayCircle className="h-3.5 w-3.5 mr-1.5" /> },
+    { name: 'Vídeo Aulas', path: '/videoaulas' },
     { name: 'Suporte', path: '/support' },
   ];
 
