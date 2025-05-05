@@ -323,24 +323,24 @@ const VideoLessonPage: React.FC = () => {
       </Helmet> */}
       
       <div className="min-h-screen bg-white pb-12">
-        {/* Cabeçalho com navegação - estilo clean e moderno */}
-        <div className="bg-gradient-to-r from-blue-50 via-blue-50 to-white py-4 border-b border-blue-100 shadow-sm">
+        {/* Cabeçalho com navegação - estilo aprimorado */}
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 py-4 border-b border-blue-700 shadow-md">
           <div className="container mx-auto px-4">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
               <div className="flex items-center">
                 <Button 
                   variant="ghost" 
-                  className="text-blue-700 hover:text-blue-900 hover:bg-blue-50 -ml-3 transition-colors mr-3"
+                  className="text-white hover:text-white hover:bg-blue-500/20 -ml-3 transition-colors mr-3"
                   onClick={() => navigate("/videoaulas")}
                 >
                   <ChevronLeft className="h-5 w-5" />
                   <span className="hidden sm:inline ml-1">Voltar</span>
                 </Button>
                 
-                <div className="hidden sm:flex items-center text-blue-700">
+                <div className="hidden sm:flex items-center text-white">
                   <span className="mx-2 text-blue-300">|</span>
                   <div className="flex items-center">
-                    <Layers className="h-4 w-4 mr-1.5 text-blue-500" />
+                    <Layers className="h-4 w-4 mr-1.5 text-blue-300" />
                     <span className="font-medium">{currentModule?.title || "Módulo"}</span>
                   </div>
                 </div>
@@ -410,11 +410,11 @@ const VideoLessonPage: React.FC = () => {
                       alt={tutorial.title} 
                       className="w-full h-full object-cover opacity-30 absolute inset-0"
                     />
-                    <div className="absolute inset-0 bg-blue-900/10"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-blue-900/30 to-blue-900/5 backdrop-blur-sm"></div>
                     <div className="text-center z-10 p-6">
                       <div className="flex justify-center mb-4">
-                        <div className="bg-gradient-to-r from-amber-50 to-yellow-100 p-4 rounded-full shadow-sm">
-                          <Lock className="h-12 w-12 text-yellow-500" />
+                        <div className="bg-gradient-to-r from-amber-500 to-amber-600 p-5 rounded-full shadow-md">
+                          <Lock className="h-10 w-10 text-white" />
                         </div>
                       </div>
                       <h3 className="text-xl font-bold text-gray-800 mb-2">
@@ -425,7 +425,7 @@ const VideoLessonPage: React.FC = () => {
                         Assine agora para desbloquear este e todos os outros conteúdos exclusivos.
                       </p>
                       <Link href="/planos">
-                        <Button className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white shadow-sm transition-all">
+                        <Button className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-md transition-all font-medium">
                           Ver Planos de Assinatura
                         </Button>
                       </Link>
@@ -447,19 +447,19 @@ const VideoLessonPage: React.FC = () => {
                     <div className="flex justify-between items-start mb-2">
                       <h1 className="text-xl font-bold text-gray-800 pr-3">{tutorial.title}</h1>
                       
-                      {/* Botões de navegação mobile - agora ao lado do título */}
+                      {/* Botões de navegação mobile - design aprimorado */}
                       <div className="flex gap-1.5 flex-shrink-0 mt-0.5">
                         {/* Botão anterior */}
                         {(() => {
                           const prevLesson = lessonsData?.find(l => l.moduleId === currentLesson?.moduleId && l.id < id);
                           return prevLesson ? (
                             <Link href={`/videoaulas/${prevLesson.id}`} className="inline-flex">
-                              <div className="w-8 h-8 bg-[#434756] rounded-md flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
+                              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-md flex items-center justify-center text-white shadow-sm hover:shadow-md hover:from-blue-700 hover:to-blue-800 transition-all">
                                 <ChevronLeft className="h-4 w-4" />
                               </div>
                             </Link>
                           ) : (
-                            <div className="w-8 h-8 bg-gray-300 rounded-md flex items-center justify-center text-white cursor-not-allowed">
+                            <div className="w-8 h-8 bg-gray-200 rounded-md flex items-center justify-center text-gray-400 cursor-not-allowed">
                               <ChevronLeft className="h-4 w-4" />
                             </div>
                           );
@@ -470,12 +470,12 @@ const VideoLessonPage: React.FC = () => {
                           const nextLesson = lessonsData?.find(l => l.moduleId === currentLesson?.moduleId && l.id > id);
                           return nextLesson ? (
                             <Link href={`/videoaulas/${nextLesson.id}`} className="inline-flex">
-                              <div className="w-8 h-8 bg-[#434756] rounded-md flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
+                              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-md flex items-center justify-center text-white shadow-sm hover:shadow-md hover:from-blue-700 hover:to-blue-800 transition-all">
                                 <ChevronRight className="h-4 w-4" />
                               </div>
                             </Link>
                           ) : (
-                            <div className="w-8 h-8 bg-gray-300 rounded-md flex items-center justify-center text-white cursor-not-allowed">
+                            <div className="w-8 h-8 bg-gray-200 rounded-md flex items-center justify-center text-gray-400 cursor-not-allowed">
                               <ChevronRight className="h-4 w-4" />
                             </div>
                           );
@@ -609,12 +609,12 @@ const VideoLessonPage: React.FC = () => {
                             const prevLesson = lessonsData?.find(l => l.moduleId === currentLesson?.moduleId && l.id < id);
                             return prevLesson ? (
                               <Link href={`/videoaulas/${prevLesson.id}`} className="inline-flex">
-                                <div className="w-10 h-10 bg-[#434756] rounded-md flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
+                                <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-blue-700 rounded-md flex items-center justify-center text-white shadow-sm hover:shadow-md hover:from-blue-700 hover:to-blue-800 transition-all">
                                   <ChevronLeft className="h-5 w-5" />
                                 </div>
                               </Link>
                             ) : (
-                              <div className="w-10 h-10 bg-gray-300 rounded-md flex items-center justify-center text-white cursor-not-allowed">
+                              <div className="w-10 h-10 bg-gray-200 rounded-md flex items-center justify-center text-gray-400 cursor-not-allowed">
                                 <ChevronLeft className="h-5 w-5" />
                               </div>
                             );
@@ -625,12 +625,12 @@ const VideoLessonPage: React.FC = () => {
                             const nextLesson = lessonsData?.find(l => l.moduleId === currentLesson?.moduleId && l.id > id);
                             return nextLesson ? (
                               <Link href={`/videoaulas/${nextLesson.id}`} className="inline-flex">
-                                <div className="w-10 h-10 bg-[#434756] rounded-md flex items-center justify-center text-white hover:bg-[#5a5f73] transition-colors">
+                                <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-blue-700 rounded-md flex items-center justify-center text-white shadow-sm hover:shadow-md hover:from-blue-700 hover:to-blue-800 transition-all">
                                   <ChevronRight className="h-5 w-5" />
                                 </div>
                               </Link>
                             ) : (
-                              <div className="w-10 h-10 bg-gray-300 rounded-md flex items-center justify-center text-white cursor-not-allowed">
+                              <div className="w-10 h-10 bg-gray-200 rounded-md flex items-center justify-center text-gray-400 cursor-not-allowed">
                                 <ChevronRight className="h-5 w-5" />
                               </div>
                             );
@@ -682,27 +682,49 @@ const VideoLessonPage: React.FC = () => {
                 </div>
               </div>
               
-              {/* Abas de conteúdo adicional - estilo clean */}
+              {/* Indicador de progresso do módulo */}
+              <div className="mt-4 p-3 sm:p-4 bg-blue-50 border border-blue-100 rounded-lg shadow-sm">
+                <div className="flex flex-col sm:flex-row justify-between gap-2 sm:items-center mb-2">
+                  <div className="flex items-center gap-1.5">
+                    <Layers className="h-4 w-4 text-blue-600" />
+                    <h3 className="font-semibold text-blue-800 text-sm">Progresso no módulo: {currentModule?.title}</h3>
+                  </div>
+                  <div className="text-xs text-blue-700 font-medium">
+                    Aula {currentLessonIndex + 1} de {moduleLessons?.length || '?'}
+                  </div>
+                </div>
+                {/* Barra de progresso do módulo */}
+                <div className="relative w-full h-2 bg-blue-100 rounded-full overflow-hidden shadow-inner">
+                  <div 
+                    className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"
+                    style={{ 
+                      width: `${Math.round(((currentLessonIndex + 1) / (moduleLessons?.length || 1)) * 100)}%` 
+                    }}
+                  ></div>
+                </div>
+              </div>
+
+              {/* Abas de conteúdo adicional - estilo aprimorado */}
               <div className="mt-4 sm:mt-6">
                 <Tabs defaultValue={isDesktop ? "comentarios" : "aulas"} className="w-full">
-                  <TabsList className="bg-white border border-blue-100 rounded-md shadow-sm w-full mb-0 h-auto p-0.5 sm:p-1">
+                  <TabsList className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg shadow-sm w-full mb-0 h-auto p-1 sm:p-1.5">
                     {isDesktop ? (
                       <>
                         <TabsTrigger 
                           value="comentarios" 
-                          className="data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-colors text-xs sm:text-sm py-1 px-2 sm:px-3 sm:py-1.5 flex-1"
+                          className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-700 data-[state=active]:text-white data-[state=active]:shadow-md transition-all text-xs sm:text-sm py-1.5 px-2 sm:px-4 sm:py-2 flex-1 rounded-md"
                         >
                           Comentários
                         </TabsTrigger>
                         <TabsTrigger 
                           value="aulas" 
-                          className="data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-colors text-xs sm:text-sm py-1 px-2 sm:px-3 sm:py-1.5 flex-1"
+                          className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-700 data-[state=active]:text-white data-[state=active]:shadow-md transition-all text-xs sm:text-sm py-1.5 px-2 sm:px-4 sm:py-2 flex-1 rounded-md"
                         >
                           Aulas
                         </TabsTrigger>
                         <TabsTrigger 
                           value="materiais" 
-                          className="data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-colors text-xs sm:text-sm py-1 px-2 sm:px-3 sm:py-1.5 flex-1"
+                          className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-700 data-[state=active]:text-white data-[state=active]:shadow-md transition-all text-xs sm:text-sm py-1.5 px-2 sm:px-4 sm:py-2 flex-1 rounded-md"
                         >
                           Materiais
                         </TabsTrigger>
@@ -711,19 +733,19 @@ const VideoLessonPage: React.FC = () => {
                       <>
                         <TabsTrigger 
                           value="aulas" 
-                          className="data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-colors text-xs sm:text-sm py-1 px-2 sm:px-3 sm:py-1.5 flex-1"
+                          className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-700 data-[state=active]:text-white data-[state=active]:shadow-md transition-all text-xs sm:text-sm py-1.5 px-2 sm:px-4 sm:py-2 flex-1 rounded-md"
                         >
                           Aulas
                         </TabsTrigger>
                         <TabsTrigger 
                           value="comentarios" 
-                          className="data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-colors text-xs sm:text-sm py-1 px-2 sm:px-3 sm:py-1.5 flex-1"
+                          className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-700 data-[state=active]:text-white data-[state=active]:shadow-md transition-all text-xs sm:text-sm py-1.5 px-2 sm:px-4 sm:py-2 flex-1 rounded-md"
                         >
                           Comentários
                         </TabsTrigger>
                         <TabsTrigger 
                           value="materiais" 
-                          className="data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-colors text-xs sm:text-sm py-1 px-2 sm:px-3 sm:py-1.5 flex-1"
+                          className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-700 data-[state=active]:text-white data-[state=active]:shadow-md transition-all text-xs sm:text-sm py-1.5 px-2 sm:px-4 sm:py-2 flex-1 rounded-md"
                         >
                           Materiais
                         </TabsTrigger>
