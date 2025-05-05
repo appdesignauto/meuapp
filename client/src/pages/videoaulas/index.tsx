@@ -455,12 +455,12 @@ export default function VideoaulasPage() {
                   >
                     <CarouselContent className="-ml-3 sm:-ml-4">
                       {Array.isArray(tutoriaisPopulares) && tutoriaisPopulares.map((tutorial, index) => (
-                        <CarouselItem key={tutorial.id} className="pl-3 sm:pl-4 basis-3/4 sm:basis-2/5 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                        <CarouselItem key={tutorial.id} className="pl-3 sm:pl-4 basis-3/4 sm:basis-2/5 md:basis-1/3 lg:basis-1/4 xl:basis-1/4">
                           <Link href={`/videoaulas/${tutorial.id}`} className="block h-full">
                             {/* Card estilo Netflix - minimalista e clean */}
                             <div className="group relative h-full flex flex-col overflow-hidden">
                               {/* Thumbnail com proporção mais moderna */}
-                              <div className="relative overflow-hidden rounded-md bg-gray-100">
+                              <div className="relative overflow-hidden rounded-md bg-gray-100 shadow-sm">
                                 {/* Imagem de thumbnail */}
                                 <div className="aspect-[16/9] overflow-hidden">
                                   <img 
@@ -510,9 +510,9 @@ export default function VideoaulasPage() {
                               </div>
                               
                               {/* Conteúdo - estilo Netflix clean */}
-                              <div className="mt-2 flex flex-col flex-grow">
+                              <div className="mt-3 flex flex-col flex-grow">
                                 {/* Título - fonte clean e espaçamento */}
-                                <h3 className="font-medium text-gray-800 mb-1 line-clamp-1 text-sm">
+                                <h3 className="font-medium text-gray-800 mb-1.5 line-clamp-2 text-sm md:text-base">
                                   {tutorial.title || "Tutorial sem título"}
                                 </h3>
                                 
@@ -569,12 +569,12 @@ export default function VideoaulasPage() {
                       >
                         <CarouselContent className="-ml-3 sm:-ml-4">
                           {categoria.lessons && categoria.lessons.map((tutorial, moduleIdx: number) => (
-                            <CarouselItem key={tutorial.id} className="pl-3 sm:pl-4 basis-3/4 sm:basis-2/5 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                            <CarouselItem key={tutorial.id} className="pl-3 sm:pl-4 basis-3/4 sm:basis-2/5 md:basis-1/3 lg:basis-1/4 xl:basis-1/4">
                               <Link href={`/videoaulas/${tutorial.id}`} className="block h-full">
                                 {/* Card estilo Netflix - minimalista e clean */}
                                 <div className="group relative h-full flex flex-col overflow-hidden">
                                   {/* Thumbnail com proporção mais moderna */}
-                                  <div className="relative overflow-hidden rounded-md bg-gray-100">
+                                  <div className="relative overflow-hidden rounded-md bg-gray-100 shadow-sm">
                                     {/* Imagem de thumbnail */}
                                     <div className="aspect-[16/9] overflow-hidden">
                                       <img 
@@ -624,9 +624,9 @@ export default function VideoaulasPage() {
                                   </div>
                                   
                                   {/* Conteúdo - estilo Netflix clean */}
-                                  <div className="mt-2 flex flex-col flex-grow">
+                                  <div className="mt-3 flex flex-col flex-grow">
                                     {/* Título - fonte clean e espaçamento */}
-                                    <h3 className="font-medium text-gray-800 mb-1 line-clamp-1 text-sm">
+                                    <h3 className="font-medium text-gray-800 mb-1.5 line-clamp-2 text-sm md:text-base">
                                       {tutorial.title || "Tutorial sem título"}
                                     </h3>
                                     
