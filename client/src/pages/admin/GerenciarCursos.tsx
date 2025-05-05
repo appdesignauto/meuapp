@@ -433,16 +433,44 @@ const GerenciarCursos = () => {
   };
   
   const handleLessonFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setLessonForm(prev => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    setLessonForm(prev => ({ 
+      ...prev, 
+      [name]: type === 'number' ? parseInt(value) || 0 : value 
+    }));
   };
   
   const handleLessonSelectChange = (name: string, value: string) => {
-    setLessonForm(prev => ({ ...prev, [name]: value }));
+    setLessonForm(prev => ({ 
+      ...prev, 
+      [name]: name === 'moduleId' ? parseInt(value, 10) : value 
+    }));
   };
   
   const handleLessonToggleChange = (name: string, checked: boolean) => {
     setLessonForm(prev => ({ ...prev, [name]: checked }));
+  };
+  
+  // Handler para campos de duração (horas, minutos, segundos)
+  const handleDurationChange = (type: 'hours' | 'minutes' | 'seconds', value: number) => {
+    // Garantir valores não negativos e dentro dos limites
+    value = Math.max(0, value);
+    if (type === 'minutes' || type === 'seconds') {
+      value = Math.min(59, value);
+    }
+    
+    // Calcular duração atual em componentes
+    const hours = type === 'hours' ? value : Math.floor((lessonForm.duration || 0) / 3600);
+    const minutes = type === 'minutes' ? value : Math.floor(((lessonForm.duration || 0) % 3600) / 60);
+    const seconds = type === 'seconds' ? value : (lessonForm.duration || 0) % 60;
+    
+    // Calcular nova duração total em segundos
+    const totalSeconds = (hours * 3600) + (minutes * 60) + seconds;
+    
+    setLessonForm(prev => ({
+      ...prev,
+      duration: totalSeconds
+    }));
   };
   
   const handleLessonSubmit = () => {
@@ -1585,29 +1613,48 @@ const GerenciarCursos = () => {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="lessonDuration">Duração (em segundos)</Label>
+                <Label htmlFor="lessonDurationHours">Horas</Label>
                 <Input
-                  id="lessonDuration"
-                  name="duration"
+                  id="lessonDurationHours"
                   type="number"
-                  value={lessonForm.duration || ''}
-                  onChange={handleLessonFormChange}
-                  placeholder="Ex: 360 (para 6 minutos)"
+                  value={Math.floor((lessonForm.duration || 0) / 3600)}
+                  onChange={(e) => handleDurationChange('hours', parseInt(e.target.value) || 0)}
+                  placeholder="0"
                   min={0}
                 />
-                <p className="text-xs text-gray-500">
-                  Defina a duração total do vídeo em segundos. Se o vídeo tiver 5 minutos, coloque 300.
-                </p>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="durationPreview">Visualização da duração</Label>
+                <Label htmlFor="lessonDurationMinutes">Minutos</Label>
+                <Input
+                  id="lessonDurationMinutes"
+                  type="number"
+                  value={Math.floor(((lessonForm.duration || 0) % 3600) / 60)}
+                  onChange={(e) => handleDurationChange('minutes', parseInt(e.target.value) || 0)}
+                  placeholder="0"
+                  min={0}
+                  max={59}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="lessonDurationSeconds">Segundos</Label>
+                <Input
+                  id="lessonDurationSeconds"
+                  type="number"
+                  value={(lessonForm.duration || 0) % 60}
+                  onChange={(e) => handleDurationChange('seconds', parseInt(e.target.value) || 0)}
+                  placeholder="0"
+                  min={0}
+                  max={59}
+                />
+              </div>
+              <div className="col-span-3">
                 <div className="flex items-center h-10 px-3 border rounded-md bg-gray-50">
-                  {formatarDuracaoPreview(lessonForm.duration)}
+                  <span className="mr-2 font-medium">Duração:</span> {formatarDuracaoPreview(lessonForm.duration)}
                 </div>
-                <p className="text-xs text-gray-500">
-                  Aparecerá assim no card da lição
+                <p className="text-xs text-gray-500 mt-1">
+                  Esta é a duração que aparecerá no card da lição
                 </p>
               </div>
             </div>
