@@ -75,8 +75,11 @@ const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showHeaderSearch, setShowHeaderSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [videoSearchQuery, setVideoSearchQuery] = useState('');
   const { user, logoutMutation } = useAuth();
   const [location, setLocation] = useLocation();
+  // Verificar se estamos na página de videoaulas
+  const isVideoaulasPage = location.startsWith('/videoaulas');
   
   // Buscar estatísticas do usuário para exibir no dropdown
   const { data: userStats } = useQuery({
@@ -194,6 +197,17 @@ const Header = () => {
       setLocation(`/arts?search=${encodeURIComponent(searchQuery)}`);
     }
   };
+  
+  // Função para lidar com a submissão da pesquisa de videoaulas
+  const handleVideoSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (videoSearchQuery.trim()) {
+      // Define o termo de pesquisa como parâmetro de consulta e mantém na página de videoaulas
+      window.dispatchEvent(new CustomEvent('video-search', { 
+        detail: { searchTerm: videoSearchQuery }
+      }));
+    }
+  };
 
   const navLinks = [
     { name: 'Início', path: '/' },
@@ -271,7 +285,32 @@ const Header = () => {
 
           {/* User Actions */}
           <div className="flex items-center space-x-3">
-            {/* Icone de Busca - Visível apenas em telas médias e maiores */}
+            {/* Barra de pesquisa para videoaulas - apenas aparece na página de videoaulas */}
+            {isVideoaulasPage && (
+              <form 
+                onSubmit={handleVideoSearch}
+                className="hidden md:flex w-60 mr-3"
+              >
+                <div className="relative w-full">
+                  <Input
+                    type="text"
+                    placeholder="Buscar videoaulas..."
+                    className="w-full pr-10 py-1.5 rounded-full border border-blue-200 text-sm"
+                    value={videoSearchQuery}
+                    onChange={(e) => setVideoSearchQuery(e.target.value)}
+                    autoComplete="off"
+                  />
+                  <button 
+                    type="submit" 
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-blue-500 hover:text-blue-600"
+                  >
+                    <Search className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </form>
+            )}
+            
+            {/* Icone de Busca geral - Visível apenas em telas médias e maiores */}
             <Button 
               variant="ghost" 
               className="hidden md:flex w-9 h-9 rounded-full items-center justify-center p-0 text-neutral-600 hover:text-blue-600 hover:bg-blue-50"
