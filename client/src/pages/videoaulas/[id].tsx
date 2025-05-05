@@ -28,7 +28,9 @@ import {
   ThumbsUp,
   Star,
   ArrowLeft,
-  ArrowRight
+  ArrowRight,
+  Layers,
+  Menu
 } from "lucide-react";
 import VideoComments from "@/components/videoaulas/VideoComments";
 import { Button } from "@/components/ui/button";
