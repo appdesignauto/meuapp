@@ -47,6 +47,7 @@ import multiArtRouter from './routes/multi-art'; // Rota para artes multi-format
 import testCreateGroupRouter from './routes/test-create-group'; // Rota de teste para criar grupos
 import videoaulasRouter from './routes/videoaulas-routes'; // Rotas para as videoaulas
 import courseRouter from './routes/course-routes'; // Rotas para gerenciamento de cursos
+import videoCommentsRouter from './routes/video-comments-routes'; // Rotas para comentários de videoaulas
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Rota simples de verificação de saúde

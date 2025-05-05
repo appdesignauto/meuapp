@@ -320,6 +320,28 @@ export const insertCommunityCommentSchema = createInsertSchema(communityComments
 export type CommunityComment = typeof communityComments.$inferSelect;
 export type InsertCommunityComment = z.infer<typeof insertCommunityCommentSchema>;
 
+// Comentários em vídeos/videoaulas
+export const videoComments = pgTable("videoComments", {
+  id: serial("id").primaryKey(),
+  lessonId: integer("lessonId").notNull().references(() => courseLessons.id),
+  userId: integer("userId").notNull().references(() => users.id),
+  content: text("content").notNull(),
+  isHidden: boolean("isHidden").notNull().default(false),
+  likes: integer("likes").notNull().default(0),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export const insertVideoCommentSchema = createInsertSchema(videoComments).omit({
+  id: true,
+  likes: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type VideoComment = typeof videoComments.$inferSelect;
+export type InsertVideoComment = z.infer<typeof insertVideoCommentSchema>;
+
 // Designer Stats para artes
 export const designerStats = pgTable("designerStats", {
   id: serial("id").primaryKey(),
@@ -553,6 +575,7 @@ export const courseLessonsRelations = relations(courseLessons, ({ one, many }) =
   }),
   progress: many(courseProgress),
   ratings: many(courseRatings),
+  comments: many(videoComments),
 }));
 
 export const courseProgressRelations = relations(courseProgress, ({ one }) => ({
