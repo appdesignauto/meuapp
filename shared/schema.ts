@@ -517,6 +517,7 @@ export const courseLessons = pgTable("courseLessons", {
   thumbnailUrl: text("thumbnailUrl"),
   order: integer("order").notNull(),
   isPremium: boolean("isPremium").notNull().default(false),
+  showLessonNumber: boolean("showLessonNumber").notNull().default(true), // Controla se o número da aula aparece na thumb
   additionalMaterialsUrl: text("additionalMaterialsUrl"),
   createdBy: integer("createdBy").notNull().references(() => users.id),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
