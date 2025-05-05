@@ -2168,13 +2168,14 @@ const AdminDashboard = () => {
                             <TableHead>Nível</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead className="w-[100px]">Premium</TableHead>
+                            <TableHead>Conteúdo</TableHead>
                             <TableHead className="text-right">Ações</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {isLoadingCourses ? (
                             <TableRow>
-                              <TableCell colSpan={6} className="text-center py-4">
+                              <TableCell colSpan={7} className="text-center py-4">
                                 <div className="flex justify-center">
                                   <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
                                 </div>
