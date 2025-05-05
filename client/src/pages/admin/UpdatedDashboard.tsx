@@ -90,11 +90,27 @@ const AdminDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const queryClient = useQueryClient();
 
+  // Estados para cursos
+  const [isCourseDialogOpen, setIsCourseDialogOpen] = useState(false);
+  const [isConfirmDeleteCourseOpen, setIsConfirmDeleteCourseOpen] = useState(false);
+  const [currentCourse, setCurrentCourse] = useState<any | null>(null);
+  const [courseForm, setCourseForm] = useState<any>({
+    title: '',
+    description: '',
+    thumbnailUrl: '',
+    featuredImage: '',
+    level: 'iniciante',
+    status: 'active',
+    isPublished: true,
+    isPremium: false
+  });
+  
   // Estados para módulos
   const [isModuleDialogOpen, setIsModuleDialogOpen] = useState(false);
   const [isConfirmDeleteModuleOpen, setIsConfirmDeleteModuleOpen] = useState(false);
   const [currentModule, setCurrentModule] = useState<any | null>(null);
   const [moduleForm, setModuleForm] = useState<any>({
+    courseId: 0,
     title: '',
     description: '',
     thumbnailUrl: '',
@@ -121,7 +137,23 @@ const AdminDashboard = () => {
     showLessonNumber: true
   });
   
-  // Consultas para obter módulos e aulas
+  // Consultas para obter cursos, módulos e aulas
+  const { 
+    data: courses = [], 
+    isLoading: isLoadingCourses,
+    isError: isCoursesError
+  } = useQuery({
+    queryKey: ['/api/courses'],
+    queryFn: async () => {
+      const res = await fetch('/api/courses');
+      if (!res.ok) {
+        console.error('Erro ao buscar cursos:', res.status, res.statusText);
+        throw new Error('Falha ao carregar cursos');
+      }
+      return res.json();
+    }
+  });
+  
   const { 
     data: modules = [], 
     isLoading: isLoadingModules,
@@ -154,6 +186,32 @@ const AdminDashboard = () => {
     }
   });
   
+  // Consulta para obter configurações dos cursos
+  const { 
+    data: courseSettings = {}, 
+    isLoading: isLoadingCourseSettings,
+    isError: isCourseSettingsError
+  } = useQuery({
+    queryKey: ['/api/courses/settings'],
+    queryFn: async () => {
+      const res = await fetch('/api/courses/settings');
+      if (!res.ok) {
+        console.error('Erro ao buscar configurações:', res.status, res.statusText);
+        throw new Error('Falha ao carregar configurações dos cursos');
+      }
+      return res.json();
+    }
+  });
+  
+  // Handler para mudanças no formulário de curso
+  const handleCourseFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setCourseForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   // Handler para mudanças no formulário de módulo
   const handleModuleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -172,6 +230,111 @@ const AdminDashboard = () => {
     }));
   };
   
+  // Mutations para cursos
+  const createCourseMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest('POST', '/api/courses', data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao criar curso');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/courses'] });
+      setIsCourseDialogOpen(false);
+      toast({
+        title: 'Curso criado com sucesso',
+        description: 'O curso foi adicionado à plataforma',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro ao criar curso',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  });
+  
+  const updateCourseMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest('PUT', `/api/courses/${data.id}`, data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao atualizar curso');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/courses'] });
+      setIsCourseDialogOpen(false);
+      toast({
+        title: 'Curso atualizado com sucesso',
+        description: 'As alterações foram salvas',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro ao atualizar curso',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  });
+  
+  const deleteCourseMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest('DELETE', `/api/courses/${id}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao excluir curso');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/courses'] });
+      setIsConfirmDeleteCourseOpen(false);
+      toast({
+        title: 'Curso excluído com sucesso',
+        description: 'O curso foi removido permanentemente',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro ao excluir curso',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  });
+
+  // Mutation para configurações de cursos
+  const updateCourseSettingsMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest('PUT', '/api/courses/settings', data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao atualizar configurações');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/courses/settings'] });
+      toast({
+        title: 'Configurações atualizadas',
+        description: 'As configurações dos cursos foram atualizadas com sucesso',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro ao atualizar configurações',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  });
+
   // Mutations para módulos
   const createModuleMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -331,11 +494,38 @@ const AdminDashboard = () => {
   });
   
   // Handlers para submits
-  const handleModuleSubmit = () => {
-    if (!moduleForm.title || !moduleForm.description) {
+  const handleCourseSubmit = () => {
+    if (!courseForm.title || !courseForm.description) {
       toast({
         title: "Campos obrigatórios",
         description: "Preencha todos os campos obrigatórios",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (currentCourse) {
+      updateCourseMutation.mutate(courseForm);
+    } else {
+      createCourseMutation.mutate(courseForm);
+    }
+  };
+  
+  const handleDeleteCourse = () => {
+    if (currentCourse && currentCourse.id) {
+      deleteCourseMutation.mutate(currentCourse.id);
+    }
+  };
+  
+  const handleSettingsSubmit = (data: any) => {
+    updateCourseSettingsMutation.mutate(data);
+  };
+  
+  const handleModuleSubmit = () => {
+    if (!moduleForm.title || !moduleForm.description || !moduleForm.courseId) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Preencha todos os campos obrigatórios, incluindo o curso ao qual este módulo pertence",
         variant: "destructive",
       });
       return;
@@ -544,12 +734,21 @@ const AdminDashboard = () => {
                   <span>Dashboard</span>
                 </button>
                 <button
+                  onClick={() => setActiveTab('coursesList')}
+                  className={`flex items-center w-full px-4 py-2 rounded-md ${
+                    activeTab === 'coursesList' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <BookOpen className="w-4 h-4 mr-3" />
+                  <span>Cursos</span>
+                </button>
+                <button
                   onClick={() => setActiveTab('modules')}
                   className={`flex items-center w-full px-4 py-2 rounded-md ${
                     activeTab === 'modules' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
                   }`}
                 >
-                  <BookOpen className="w-4 h-4 mr-3" />
+                  <Layers className="w-4 h-4 mr-3" />
                   <span>Módulos</span>
                 </button>
                 <button
@@ -665,6 +864,7 @@ const AdminDashboard = () => {
                 {activeTab === 'stats' && 'Visão Geral'}
                 {activeTab === 'settings' && 'Configurações'}
                 {activeTab === 'courses' && 'Dashboard de Cursos'}
+                {activeTab === 'coursesList' && 'Gerenciamento de Cursos'}
                 {activeTab === 'modules' && 'Módulos dos Cursos'}
                 {activeTab === 'lessons' && 'Aulas dos Cursos'}
                 {activeTab === 'coursesConfig' && 'Configurações de Cursos'}
@@ -705,11 +905,35 @@ const AdminDashboard = () => {
                 </div>
               )}
               
+              {(activeTab === 'coursesList') && (
+                <Button 
+                  onClick={() => {
+                    setCurrentCourse(null);
+                    setCourseForm({
+                      title: '',
+                      description: '',
+                      thumbnailUrl: '',
+                      featuredImage: '',
+                      level: 'iniciante',
+                      status: 'active',
+                      isPublished: true,
+                      isPremium: false
+                    });
+                    setIsCourseDialogOpen(true);
+                  }}
+                  className="flex items-center bg-blue-600 hover:bg-blue-700"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Novo Curso
+                </Button>
+              )}
+              
               {(activeTab === 'modules') && (
                 <Button 
                   onClick={() => {
                     setCurrentModule(null);
                     setModuleForm({
+                      courseId: 0,
                       title: '',
                       description: '',
                       thumbnailUrl: '',
