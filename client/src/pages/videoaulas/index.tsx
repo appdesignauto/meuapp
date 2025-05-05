@@ -84,47 +84,58 @@ export default function VideoaulasPage() {
   
   // Transformar dados do banco para o formato esperado pelos componentes
   const transformarLicoesParaTutoriais = (modules = [], lessons = []) => {
-    if (!modules.length || !lessons.length) return [];
+    if (!modules.length || !lessons.length) {
+      console.log("Nenhum dado de módulos ou lições disponível");
+      return [];
+    }
     
-    // Criamos um mapa de módulos por ID para acesso rápido
-    const modulosMap = modules.reduce((acc, modulo) => {
-      acc[modulo.id] = modulo;
-      return acc;
-    }, {});
-
-    console.log("Mapa de módulos criado:", 
-      Object.keys(modulosMap).map(id => ({
-        id, 
-        title: modulosMap[id].title,
-        level: modulosMap[id].level
-      }))
-    );
-    
-    // Transformar lições
-    const tutoriais = lessons.map(lesson => {
-      // Encontrar o módulo correspondente
-      const modulo = modulosMap[lesson.moduleId];
+    try {
+      // Criamos um mapa de módulos por ID para acesso rápido
+      const modulosMap = modules.reduce((acc, modulo) => {
+        acc[modulo.id] = modulo;
+        return acc;
+      }, {});
+  
+      console.log("Mapa de módulos criado:", 
+        Object.keys(modulosMap).map(id => ({
+          id, 
+          title: modulosMap[id].title,
+          level: modulosMap[id].level
+        }))
+      );
       
-      console.log(`Processando lição ID ${lesson.id} (${lesson.title}) - Módulo: ${lesson.moduleId} - ${modulo ? modulo.title : 'Módulo não encontrado'}`);
+      // Transformar lições
+      const tutoriais = lessons.map(lesson => {
+        // Encontrar o módulo correspondente
+        const modulo = modulosMap[lesson.moduleId];
+        
+        console.log(`Processando lição ID ${lesson.id} (${lesson.title}) - Módulo: ${lesson.moduleId} - ${modulo ? modulo.title : 'Módulo não encontrado'}`);
+        
+        return {
+          id: lesson.id,
+          title: lesson.title,
+          description: lesson.description,
+          thumbnailUrl: lesson.thumbnailUrl,
+          videoUrl: lesson.videoUrl,
+          videoProvider: lesson.videoProvider,
+          duration: formatarDuracao(lesson.duration),
+          // Usar o nível do módulo encontrado ou 'iniciante' como fallback
+          level: modulo?.level || 'iniciante',
+          isPremium: lesson.isPremium,
+          isWatched: false, // Será implementado com histórico do usuário no futuro
+          views: 0, // Será implementado no futuro
+          moduleId: lesson.moduleId,
+          moduloNome: modulo?.title || 'Módulo desconhecido',
+          tags: [] // Será implementado no futuro
+        };
+      });
       
-      return {
-        id: lesson.id,
-        title: lesson.title,
-        description: lesson.description,
-        thumbnailUrl: lesson.thumbnailUrl,
-        videoUrl: lesson.videoUrl,
-        videoProvider: lesson.videoProvider,
-        duration: formatarDuracao(lesson.duration),
-        // Usar o nível do módulo encontrado ou 'iniciante' como fallback
-        level: modulo?.level || 'iniciante',
-        isPremium: lesson.isPremium,
-        isWatched: false, // Será implementado com histórico do usuário no futuro
-        views: 0, // Será implementado no futuro
-        moduleId: lesson.moduleId,
-        moduloNome: modulo?.title || 'Módulo desconhecido',
-        tags: [] // Será implementado no futuro
-      };
-    });
+      console.log(`Total de tutoriais processados: ${tutoriais.length}`);
+      return tutoriais;
+    } catch (error) {
+      console.error("Erro ao transformar lições para tutoriais:", error);
+      return []; // Retornar array vazio em caso de erro
+    }
   };
   
   // Formatar duração de segundos para string "MM:SS" ou "HH:MM:SS" para vídeos longos
@@ -152,13 +163,13 @@ export default function VideoaulasPage() {
   
   // Preparar dados
   const tutoriais = transformarLicoesParaTutoriais(moduleData, lessonsData);
-  const tutoriaisPopulares = tutoriais.slice(0, 8);
-  const tutorialDestaque = tutoriais[0] || { id: 1, title: 'Carregando...' };
+  const tutoriaisPopulares = tutoriais?.slice(0, 8) || [];
+  const tutorialDestaque = tutoriais?.length ? tutoriais[0] : { id: 1, title: 'Carregando...' };
   
   // Agrupar por níveis
-  const iniciantes = tutoriais.filter(t => t.level === 'iniciante');
-  const intermediarios = tutoriais.filter(t => t.level === 'intermediario');
-  const avancados = tutoriais.filter(t => t.level === 'avancado');
+  const iniciantes = tutoriais?.filter(t => t.level === 'iniciante') || [];
+  const intermediarios = tutoriais?.filter(t => t.level === 'intermediario') || [];
+  const avancados = tutoriais?.filter(t => t.level === 'avancado') || [];
   
   // Função para verificar se o conteúdo premium deve ser bloqueado
   const isPremiumLocked = (isPremium: boolean) => {
@@ -215,11 +226,14 @@ export default function VideoaulasPage() {
       case 'avancados':
         return avancados;
       case 'vistos':
-        return tutoriais.filter(t => t.isWatched);
+        return tutoriais?.filter(t => t.isWatched) || [];
       default:
-        return tutoriais;
+        return tutoriais || [];
     }
   };
+
+  // Array de filteredTutoriais para exibição
+  const filteredTutoriaisToDisplay = getFilteredTutoriais();
 
   return (
     <>
@@ -346,313 +360,302 @@ export default function VideoaulasPage() {
                 <div className="flex flex-wrap gap-1.5 mt-2 md:mt-0 w-full md:w-auto">
                   <button 
                     onClick={() => setActiveTab('todos')}
-                    className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
-                      activeTab === 'todos' 
-                        ? 'bg-blue-600 text-white font-medium' 
-                        : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                    className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${activeTab === 'todos' 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-blue-100/50 text-blue-700 hover:bg-blue-100'
                     }`}
                   >
                     Todos
                   </button>
+                  
                   <button 
                     onClick={() => setActiveTab('iniciantes')}
-                    className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
-                      activeTab === 'iniciantes' 
-                        ? 'bg-blue-600 text-white font-medium' 
-                        : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                    className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors flex items-center ${activeTab === 'iniciantes' 
+                      ? 'bg-green-600 text-white' 
+                      : 'bg-green-100/50 text-green-700 hover:bg-green-100'
                     }`}
                   >
+                    <Sparkles className="h-3 w-3 mr-1" />
                     Iniciantes
                   </button>
+                  
                   <button 
                     onClick={() => setActiveTab('intermediarios')}
-                    className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
-                      activeTab === 'intermediarios' 
-                        ? 'bg-blue-600 text-white font-medium' 
-                        : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                    className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors flex items-center ${activeTab === 'intermediarios' 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-blue-100/50 text-blue-700 hover:bg-blue-100'
                     }`}
                   >
+                    <Zap className="h-3 w-3 mr-1" />
                     Intermediários
                   </button>
+                  
                   <button 
                     onClick={() => setActiveTab('avancados')}
-                    className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
-                      activeTab === 'avancados' 
-                        ? 'bg-blue-600 text-white font-medium' 
-                        : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                    className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors flex items-center ${activeTab === 'avancados' 
+                      ? 'bg-purple-600 text-white' 
+                      : 'bg-purple-100/50 text-purple-700 hover:bg-purple-100'
                     }`}
                   >
+                    <Award className="h-3 w-3 mr-1" />
                     Avançados
                   </button>
-                  {user && (
-                    <button 
-                      onClick={() => setActiveTab('vistos')}
-                      className={`text-xs px-3 py-1.5 rounded-full flex items-center transition-colors ${
-                        activeTab === 'vistos' 
-                          ? 'bg-teal-600 text-white font-medium' 
-                          : 'bg-teal-50 text-teal-700 hover:bg-teal-100'
-                      }`}
-                    >
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      Vistos
-                    </button>
-                  )}
+                  
+                  <button 
+                    onClick={() => setActiveTab('vistos')}
+                    className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors flex items-center ${activeTab === 'vistos' 
+                      ? 'bg-teal-600 text-white' 
+                      : 'bg-teal-100/50 text-teal-700 hover:bg-teal-100'
+                    }`}
+                  >
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    Assistidos
+                  </button>
                 </div>
               </div>
             </div>
           </div>
           
-          {/* Conteúdo principal baseado na filtragem */}
-          <div className="px-4 md:px-8 mt-6">
-            {/* Resultados de pesquisa */}
-            {searchTerm && (
-              <div className="mb-10">
-                <h3 className="text-xl font-bold text-blue-800 mb-4 flex items-center">
-                  <Search className="mr-2 h-5 w-5 text-blue-500" />
-                  Resultados para: "{searchTerm}"
-                </h3>
-                
-                {filteredTutoriais.length === 0 ? (
-                  <div className="bg-blue-50 border border-blue-100 text-blue-700 p-4 rounded-lg flex items-start mb-8">
-                    <Info className="h-5 w-5 mr-3 mt-0.5 flex-shrink-0 text-blue-500" />
-                    <div>
-                      <h3 className="font-medium">Nenhum tutorial encontrado</h3>
-                      <p className="text-sm text-blue-600">
-                        Não encontramos tutoriais com o termo "{searchTerm}". Tente outra busca.
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
-                    {filteredTutoriais.map((tutorial: Tutorial) => (
-                      <TutorialCard
-                        key={tutorial.id}
-                        tutorial={tutorial}
-                        isPremiumLocked={isPremiumLocked(tutorial.isPremium)}
-                        searchTerm={searchTerm}
-                      />
-                    ))}
-                  </div>
-                )}
+          {/* Exibição de resultados para pesquisa */}
+          {searchTerm && (
+            <div className="px-4 md:px-8 mb-8">
+              <div className="border-b border-gray-200 pb-3 mb-5">
+                <h2 className="text-xl font-bold text-blue-900">
+                  Resultados para "{searchTerm}"
+                  <Badge variant="outline" className="ml-2 bg-blue-50 border-blue-200 text-blue-700">
+                    {filteredTutoriaisToDisplay.length} {filteredTutoriaisToDisplay.length === 1 ? 'resultado' : 'resultados'}
+                  </Badge>
+                </h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  Buscando por título, descrição e categorias
+                </p>
               </div>
-            )}
-            
-            {/* Visualização estilo Netflix quando não está pesquisando */}
-            {!searchTerm && (
-              <>
-                {/* Tutoriais em destaque ou recomendados - sempre visíveis */}
-                {/* Lista de reprodução estilo Shark Tank */}
-                <div className="mb-8 sm:mb-12" id="categorias">
-                  <h2 className="text-xl sm:text-2xl font-bold text-blue-800 mb-4 sm:mb-6 flex items-center">
-                    Lista de Reprodução
+              
+              {filteredTutoriaisToDisplay.length === 0 ? (
+                <div className="text-center py-12">
+                  <Search className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-1">Nenhum resultado encontrado</h3>
+                  <p className="text-gray-500 max-w-md mx-auto">
+                    Não encontramos nenhum vídeo correspondente à sua busca. Tente termos diferentes ou navegue por categorias.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                  {filteredTutoriaisToDisplay.map((tutorial) => (
+                    <TutorialCard
+                      key={tutorial.id}
+                      tutorial={tutorial}
+                      isPremiumLocked={isPremiumLocked(tutorial.isPremium)}
+                      searchTerm={searchTerm}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          
+          {!searchTerm && (
+            <>
+              {/* Módulos populares - Estilo Netflix */}
+              <div className="px-4 md:px-8 mb-12">
+                <div className="flex items-center justify-between mb-5">
+                  <h2 className="text-xl font-bold text-blue-900 flex items-center">
+                    <Crown className="h-5 w-5 mr-2 text-amber-500" strokeWidth={1.5} />
+                    Aulas Populares
+                    <Badge variant="outline" className="ml-2 bg-amber-50 border-amber-200 text-amber-700">
+                      Mais assistidas
+                    </Badge>
                   </h2>
+                  <Link href="/videoaulas/populares">
+                    <Button variant="link" className="gap-1 text-blue-600 hover:text-blue-800 p-0 h-auto">
+                      Ver todas <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                  {tutoriaisPopulares.slice(0, 4).map((tutorial) => (
+                    <TutorialCard
+                      key={tutorial.id}
+                      tutorial={tutorial}
+                      isPremiumLocked={isPremiumLocked(tutorial.isPremium)}
+                    />
+                  ))}
+                </div>
+              </div>
+              
+              {/* Categorias */}
+              <div id="categorias" className="px-4 md:px-8 mb-12">
+                <div className="flex items-center justify-between mb-5">
+                  <h2 className="text-xl font-bold text-blue-900">
+                    <span>Categorias de Videoaulas</span>
+                  </h2>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+                  {/* Categoria de design */}
+                  <TutorialCategory
+                    id={1}
+                    title="Design Automotivo"
+                    description="Aprenda a criar artes profissionais para seu negócio automotivo"
+                    count={iniciantes.length} 
+                    image="https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?q=80&w=1287&auto=format&fit=crop"
+                  />
+                  
+                  {/* Categoria de redes sociais */}
+                  <TutorialCategory
+                    id={2}
+                    title="Marketing Digital"
+                    description="Estratégias para promover seu negócio nas redes sociais"
+                    count={intermediarios.length}
+                    image="https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?q=80&w=1374&auto=format&fit=crop"
+                  />
+                  
+                  {/* Categoria de Configurações */}
+                  <TutorialCategory
+                    id={3}
+                    title="Configurações"
+                    description="Aprenda a configurar e personalizar a plataforma"
+                    count={avancados.length}
+                    image="https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1470&auto=format&fit=crop"
+                  />
+                </div>
+              </div>
+              
+              {/* Tutoriais para iniciantes em slider horizontal */}
+              {iniciantes.length > 0 && (
+                <div className="px-4 md:px-8 mb-12">
+                  <div className="flex items-center justify-between mb-5">
+                    <h2 className="text-xl font-bold text-blue-900 flex items-center">
+                      <Sparkles className="h-5 w-5 mr-2 text-green-500" />
+                      Para Iniciantes
+                    </h2>
+                    <button
+                      onClick={() => setActiveTab('iniciantes')}
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center"
+                    >
+                      Ver todos <ChevronRight className="h-4 w-4 ml-1" />
+                    </button>
+                  </div>
+                  
                   <Carousel
                     opts={{
                       align: "start",
-                      loop: false,
-                      skipSnaps: false,
-                      containScroll: "trimSnaps",
                       dragFree: true
                     }}
-                    className="w-full overflow-visible relative"
+                    className="w-full"
                   >
-                    <CarouselContent className="-ml-3 sm:-ml-4">
-                      {tutoriaisPopulares.slice(0, 8).map((tutorial, index) => (
-                        <CarouselItem key={tutorial.id} className="pl-3 sm:pl-4 basis-3/4 sm:basis-2/5 md:basis-1/3 lg:basis-1/4 xl:basis-[24%]">
-                          <Link href={`/videoaulas/${tutorial.id}`} className="block h-full">
-                            <div className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 hover:shadow-lg hover:border-blue-300 transition-all group h-full">
-                              <div className="relative">
-                                {/* Numeração de módulo estilo Shark Tank */}
-                                <div className="absolute bottom-0 left-0 right-0 p-3 flex justify-between items-end z-10">
-                                  <div className="text-3xl font-black text-white drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)] flex items-center">
-                                    <span className="text-yellow-500">Módulo</span>
-                                    <span className="ml-2 text-4xl text-white">{index + 1}</span>
-                                  </div>
-                                  <div className="bg-blue-600 text-white text-xs px-2 py-1 rounded shadow-sm">
-                                    {tutorial.duration}
-                                  </div>
-                                </div>
-                                
-                                {/* Imagem do tutorial */}
-                                <img 
-                                  src={tutorial.thumbnailUrl} 
-                                  alt={tutorial.title} 
-                                  className="w-full aspect-[3/2] object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                                />
-                                
-                                {/* Overlay gradiente */}
-                                <div className="absolute inset-0 bg-gradient-to-t from-blue-900 via-blue-900/40 to-transparent"></div>
-                              </div>
-                              
-                              <div className="p-4">
-                                <h3 className="font-bold text-blue-800 mb-1 group-hover:text-blue-600 transition-colors truncate h-6 text-base">
-                                  {tutorial.title}
-                                </h3>
-                                <p className="text-gray-600 text-sm line-clamp-2 mb-3 h-10">
-                                  {tutorial.description || "Aprenda técnicas avançadas de design automotivo neste tutorial completo."}
-                                </p>
-                                
-                                <div className="flex justify-between items-center">
-                                  <span className="text-xs text-yellow-600 font-medium flex items-center">
-                                    <Play className="h-3.5 w-3.5 mr-1" />
-                                    INICIAR
-                                  </span>
-                                  <div className="text-xs text-gray-500 flex items-center">
-                                    <Eye className="h-3.5 w-3.5 mr-1 text-gray-400" />
-                                    {tutorial.views.toLocaleString()}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </Link>
+                    <CarouselContent className="-ml-4">
+                      {iniciantes.map((tutorial) => (
+                        <CarouselItem key={tutorial.id} className="pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                          <TutorialCard
+                            tutorial={tutorial}
+                            isPremiumLocked={isPremiumLocked(tutorial.isPremium)}
+                          />
                         </CarouselItem>
                       ))}
                     </CarouselContent>
-                    {/* Netflix style: último card parcialmente visível */}
+                    <div className="hidden md:flex">
+                      <CarouselPrevious className="relative -left-4" />
+                      <CarouselNext className="relative -right-4" />
+                    </div>
                   </Carousel>
                 </div>
+              )}
               
-                {/* Modulos organizados por categorias estilo Shark Tank */}
-                {moduleData && moduleData.map((categoria) => (
-                  <div key={categoria.id} className="mb-10 sm:mb-16 relative">
-                    <div className="flex flex-col mb-4 sm:mb-6">
-                      <div className="flex items-center mb-1">
-                        <div className="bg-blue-100 h-8 sm:h-10 w-8 sm:w-10 rounded-lg flex items-center justify-center mr-2 sm:mr-3 text-blue-600">
-                          {categoria.id === 1 ? <Car className="h-5 w-5" /> : 
-                           categoria.id === 2 ? <Palette className="h-5 w-5" /> : 
-                           categoria.id === 3 ? <Smartphone className="h-5 w-5" /> :
-                           categoria.id === 4 ? <Camera className="h-5 w-5" /> :
-                           categoria.id === 5 ? <Wrench className="h-5 w-5" /> :
-                           categoria.id === 6 ? <Settings className="h-5 w-5" /> :
-                           categoria.id === 7 ? <BarChart4 className="h-5 w-5" /> :
-                           categoria.id === 8 ? <Book className="h-5 w-5" /> : <BookOpen className="h-5 w-5" />}
-                        </div>
-                        <h2 className="text-xl sm:text-2xl font-bold text-blue-800 mr-4">
-                          {categoria.title}
-                        </h2>
-                        <div className="flex-1 h-px bg-gradient-to-r from-blue-100 to-transparent self-center"></div>
-                      </div>
-                      <p className="text-blue-600 text-xs sm:text-sm ml-12">{categoria.description || "Módulo de aprendizado"}</p>
-                    </div>
-                    
-                    {categoria.lessons && categoria.lessons.length > 0 ? (
-                      <Carousel
-                        opts={{
-                          align: "start",
-                          loop: false,
-                          skipSnaps: false,
-                          containScroll: "trimSnaps",
-                          dragFree: true
-                        }}
-                        className="w-full overflow-visible"
-                      >
-                        <CarouselContent className="-ml-3 sm:-ml-4">
-                          {categoria.lessons && categoria.lessons.map((tutorial, moduleIdx: number) => (
-                            <CarouselItem key={tutorial.id} className="pl-3 sm:pl-4 basis-3/4 sm:basis-2/5 md:basis-1/3 lg:basis-1/4 xl:basis-[24%]">
-                              <Link href={`/videoaulas/${tutorial.id}`} className="block h-full">
-                                <div className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 hover:shadow-lg hover:border-blue-300 transition-all group h-full">
-                                  <div className="relative">
-                                    {/* Numeração de módulo estilo Shark Tank */}
-                                    <div className="absolute bottom-0 left-0 right-0 p-3 flex justify-between items-end z-10">
-                                      <div className="text-3xl font-black text-white drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)] flex items-center">
-                                        <span className="text-yellow-500">Parte</span>
-                                        <span className="ml-2 text-4xl text-white">{moduleIdx + 1}</span>
-                                      </div>
-                                      <div className="bg-blue-600 text-white text-xs px-2 py-1 rounded shadow-sm">
-                                        {tutorial.duration}
-                                      </div>
-                                    </div>
-                                    
-                                    {/* Imagem do tutorial */}
-                                    <img 
-                                      src={tutorial.thumbnailUrl} 
-                                      alt={tutorial.title} 
-                                      className="w-full aspect-[3/2] object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                                    />
-                                    
-                                    {/* Overlay gradiente */}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-blue-900 via-blue-900/40 to-transparent"></div>
-                                    
-                                    {/* Indicador Premium */}
-                                    {tutorial.isPremium && (
-                                      <div className="absolute top-3 right-3 bg-yellow-500 text-blue-900 text-xs font-bold px-2 py-1 rounded-full flex items-center shadow-md">
-                                        <Crown className="h-3 w-3 mr-1" />
-                                        PREMIUM
-                                      </div>
-                                    )}
-                                  </div>
-                                  
-                                  <div className="p-4">
-                                    <h3 className="font-bold text-blue-800 mb-1 group-hover:text-blue-600 transition-colors truncate h-6 text-base">
-                                      {tutorial.title}
-                                    </h3>
-                                    <p className="text-gray-600 text-sm line-clamp-2 mb-3 h-10">
-                                      {tutorial.description || "Aprenda técnicas avançadas de design automotivo neste tutorial completo."}
-                                    </p>
-                                    
-                                    <div className="flex justify-between items-center">
-                                      <span className="text-xs text-blue-600 font-medium flex items-center">
-                                        <Play className="h-3.5 w-3.5 mr-1" />
-                                        INICIAR
-                                      </span>
-                                      <div className="text-xs text-gray-500 flex items-center">
-                                        <Eye className="h-3.5 w-3.5 mr-1 text-gray-400" />
-                                        {(tutorial.views || 0).toLocaleString()}
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              </Link>
-                            </CarouselItem>
-                          ))}
-                        </CarouselContent>
-                      </Carousel>
-                    ) : (
-                      <div className="bg-blue-50 border border-blue-100 text-blue-700 p-4 rounded-lg">
-                        <p className="text-sm text-blue-700">
-                          Nenhum tutorial disponível nesta categoria no momento.
-                        </p>
-                      </div>
-                    )}
+              {/* Tutoriais intermediários */}
+              {intermediarios.length > 0 && (
+                <div className="px-4 md:px-8 mb-12">
+                  <div className="flex items-center justify-between mb-5">
+                    <h2 className="text-xl font-bold text-blue-900 flex items-center">
+                      <Zap className="h-5 w-5 mr-2 text-blue-500" />
+                      Nível Intermediário
+                    </h2>
+                    <button
+                      onClick={() => setActiveTab('intermediarios')}
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center"
+                    >
+                      Ver todos <ChevronRight className="h-4 w-4 ml-1" />
+                    </button>
                   </div>
-                ))}
-                
-                {/* Bloco CTA Premium */}
-                {!isPremiumUser && (
-                  <div className="mb-10 sm:mb-16 p-4 sm:p-6 bg-gradient-to-r from-blue-50 to-white rounded-xl border border-blue-100 shadow-sm relative overflow-hidden">
-                    {/* Decoração de background */}
-                    <div className="absolute right-0 top-0 bottom-0 w-1/3 overflow-hidden opacity-10 hidden sm:block">
-                      <div className="w-full h-full bg-contain bg-no-repeat bg-right-top" 
-                           style={{backgroundImage: "url('https://images.unsplash.com/photo-1617651823081-270acchia626?q=80&w=1970&auto=format&fit=crop')"}}></div>
+                  
+                  <Carousel
+                    opts={{
+                      align: "start",
+                      dragFree: true
+                    }}
+                    className="w-full"
+                  >
+                    <CarouselContent className="-ml-4">
+                      {intermediarios.map((tutorial) => (
+                        <CarouselItem key={tutorial.id} className="pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                          <TutorialCard
+                            tutorial={tutorial}
+                            isPremiumLocked={isPremiumLocked(tutorial.isPremium)}
+                          />
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                    <div className="hidden md:flex">
+                      <CarouselPrevious className="relative -left-4" />
+                      <CarouselNext className="relative -right-4" />
                     </div>
-                    
-                    <div className="relative z-10 max-w-3xl">
-                      <div className="flex items-center mb-3 sm:mb-4">
-                        <Crown className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-500 mr-2 sm:mr-3" />
-                        <h2 className="text-xl sm:text-2xl font-bold text-blue-800">Desbloqueie Todo o Conteúdo Premium</h2>
-                      </div>
-                      <p className="text-blue-700 text-sm sm:text-base mb-4 sm:mb-6">
-                        Tenha acesso a mais de 50+ videoaulas exclusivas, downloads ilimitados de artes e suporte prioritário da nossa equipe.
-                      </p>
-                      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                        <Link href="/planos" className="w-full sm:w-auto">
-                          <Button size="default" className="bg-yellow-500 hover:bg-yellow-600 text-blue-950 border-0 shadow-md w-full sm:w-auto">
-                            <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-                            Conheça os Planos
-                          </Button>
-                        </Link>
-                        <Link href="/cursos" className="w-full sm:w-auto">
-                          <Button variant="outline" size="default" className="border-blue-600 text-blue-700 hover:bg-blue-50 w-full sm:w-auto">
-                            Ver Todos os Cursos
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
+                  </Carousel>
+                </div>
+              )}
+              
+              {/* Tutoriais avançados */}
+              {avancados.length > 0 && (
+                <div className="px-4 md:px-8 mb-12">
+                  <div className="flex items-center justify-between mb-5">
+                    <h2 className="text-xl font-bold text-blue-900 flex items-center">
+                      <Award className="h-5 w-5 mr-2 text-purple-500" />
+                      Nível Avançado
+                    </h2>
+                    <button
+                      onClick={() => setActiveTab('avancados')}
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center"
+                    >
+                      Ver todos <ChevronRight className="h-4 w-4 ml-1" />
+                    </button>
                   </div>
-                )}
-              </>
-            )}
-          </div>
+                  
+                  <Carousel
+                    opts={{
+                      align: "start",
+                      dragFree: true
+                    }}
+                    className="w-full"
+                  >
+                    <CarouselContent className="-ml-4">
+                      {avancados.map((tutorial) => (
+                        <CarouselItem key={tutorial.id} className="pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                          <TutorialCard
+                            tutorial={tutorial}
+                            isPremiumLocked={isPremiumLocked(tutorial.isPremium)}
+                          />
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                    <div className="hidden md:flex">
+                      <CarouselPrevious className="relative -left-4" />
+                      <CarouselNext className="relative -right-4" />
+                    </div>
+                  </Carousel>
+                </div>
+              )}
+              
+              {/* Botão para acessar mais cursos */}
+              <div className="flex justify-center mb-20">
+                <Link href="/planos">
+                  <Button size="lg" className="bg-blue-600 hover:bg-blue-800 text-white font-medium">
+                    <Crown className="h-5 w-5 mr-2" />
+                    Acessar todos os cursos
+                  </Button>
+                </Link>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </>
