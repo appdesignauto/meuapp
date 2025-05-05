@@ -193,13 +193,16 @@ const VideoComments: React.FC<VideoCommentsProps> = ({ lessonId }) => {
   
   return (
     <div className="space-y-4">
-      <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-3 sm:mb-4">Comentários</h3>
+      <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-3 sm:mb-4 flex items-center gap-2">
+        <span className="bg-gradient-to-r from-blue-500 to-blue-600 h-5 w-1 rounded-full"></span>
+        Comentários
+      </h3>
       
       {/* Formulário de comentário (apenas para usuários logados) */}
       {user ? (
         <div>
           <form onSubmit={handleSubmitComment} className="flex items-start gap-2 sm:gap-3 mb-4 sm:mb-5">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-100 overflow-hidden flex-shrink-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-100 overflow-hidden flex-shrink-0 shadow-sm">
               {user.profileimageurl ? (
                 <img 
                   src={user.profileimageurl} 
@@ -207,14 +210,14 @@ const VideoComments: React.FC<VideoCommentsProps> = ({ lessonId }) => {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-blue-200 text-blue-600 font-bold text-xs sm:text-base">
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold text-xs sm:text-base">
                   {(user.name?.[0] || user.username[0]).toUpperCase()}
                 </div>
               )}
             </div>
             <div className="flex-1">
               <textarea 
-                className="w-full p-2 sm:p-3 bg-white border border-blue-200 text-gray-700 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-sm text-xs sm:text-sm"
+                className="w-full p-2 sm:p-3 bg-white border border-blue-200 text-gray-700 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-sm text-xs sm:text-sm transition-all"
                 placeholder="Deixe seu comentário sobre este tutorial..."
                 rows={3}
                 value={commentText}
@@ -225,7 +228,7 @@ const VideoComments: React.FC<VideoCommentsProps> = ({ lessonId }) => {
                 <Button 
                   type="submit"
                   size="sm"
-                  className="bg-blue-600 hover:bg-blue-700 shadow-sm text-xs sm:text-sm px-3 sm:px-4"
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-sm text-xs sm:text-sm px-3 sm:px-4 transition-all"
                   disabled={addCommentMutation.isPending || !commentText.trim()}
                 >
                   {addCommentMutation.isPending ? 'Enviando...' : 'Comentar'}
@@ -235,8 +238,8 @@ const VideoComments: React.FC<VideoCommentsProps> = ({ lessonId }) => {
           </form>
         </div>
       ) : (
-        <div className="flex items-center justify-center p-4 bg-blue-50 rounded-lg border border-blue-100 mb-4">
-          <p className="text-blue-600 text-sm text-center">
+        <div className="flex items-center justify-center p-5 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg border border-blue-200 mb-4 shadow-sm">
+          <p className="text-blue-700 text-sm text-center font-medium">
             Faça login para deixar seu comentário sobre este tutorial.
           </p>
         </div>
@@ -270,50 +273,52 @@ const VideoComments: React.FC<VideoCommentsProps> = ({ lessonId }) => {
         )}
         
         {comments.map((comment) => (
-          <div key={comment.id} className="flex items-start gap-2 sm:gap-3">
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-blue-100 overflow-hidden flex-shrink-0">
-              {comment.profileImageUrl ? (
-                <img 
-                  src={comment.profileImageUrl} 
-                  alt={comment.name || comment.username} 
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-blue-200 text-blue-600 font-bold text-[10px] sm:text-xs">
-                  {(comment.name?.[0] || comment.username[0]).toUpperCase()}
-                </div>
-              )}
-            </div>
-            <div className="flex-1">
-              <div className="flex flex-wrap items-center gap-1 sm:gap-2">
-                <h5 className="font-medium text-gray-800 text-xs sm:text-sm">
-                  {comment.name || comment.username}
-                </h5>
-                <span className="text-gray-400 text-[10px] sm:text-xs">
-                  {formatRelativeDate(comment.createdAt)}
-                </span>
-              </div>
-              <p className="mt-1 text-gray-700 text-xs sm:text-sm">{comment.content}</p>
-              <div className="mt-2 flex items-center gap-4">
-                <button 
-                  onClick={() => handleLikeComment(comment.id)}
-                  disabled={likeCommentMutation.isPending}
-                  className="flex items-center gap-1 text-gray-500 hover:text-blue-600 transition-colors text-[10px] sm:text-xs"
-                >
-                  <ThumbsUp className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span>{comment.likes || 0}</span>
-                </button>
-                
-                {canDeleteComment(comment) && (
-                  <button 
-                    onClick={() => handleDeleteComment(comment.id)}
-                    disabled={deleteCommentMutation.isPending}
-                    className="flex items-center gap-1 text-gray-500 hover:text-red-600 transition-colors text-[10px] sm:text-xs"
-                  >
-                    <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                    <span>Excluir</span>
-                  </button>
+          <div key={comment.id} className="p-3 sm:p-4 border border-blue-100 rounded-lg shadow-sm bg-white hover:bg-blue-50 transition-colors mb-3">
+            <div className="flex items-start gap-2 sm:gap-3">
+              <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-blue-100 overflow-hidden flex-shrink-0 shadow-sm">
+                {comment.profileImageUrl ? (
+                  <img 
+                    src={comment.profileImageUrl} 
+                    alt={comment.name || comment.username} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold text-[10px] sm:text-xs">
+                    {(comment.name?.[0] || comment.username[0]).toUpperCase()}
+                  </div>
                 )}
+              </div>
+              <div className="flex-1">
+                <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+                  <h5 className="font-medium text-gray-800 text-xs sm:text-sm">
+                    {comment.name || comment.username}
+                  </h5>
+                  <span className="text-gray-400 text-[10px] sm:text-xs bg-gray-100 px-1.5 py-0.5 rounded-full">
+                    {formatRelativeDate(comment.createdAt)}
+                  </span>
+                </div>
+                <p className="mt-2 text-gray-700 text-xs sm:text-sm leading-relaxed">{comment.content}</p>
+                <div className="mt-3 flex items-center gap-4 border-t border-blue-50 pt-2">
+                  <button 
+                    onClick={() => handleLikeComment(comment.id)}
+                    disabled={likeCommentMutation.isPending}
+                    className="flex items-center gap-1.5 text-gray-500 hover:text-blue-600 transition-colors text-[10px] sm:text-xs bg-white rounded-full px-2 py-1 border border-gray-200 hover:border-blue-200 shadow-sm"
+                  >
+                    <ThumbsUp className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                    <span>{comment.likes || 0}</span>
+                  </button>
+                  
+                  {canDeleteComment(comment) && (
+                    <button 
+                      onClick={() => handleDeleteComment(comment.id)}
+                      disabled={deleteCommentMutation.isPending}
+                      className="flex items-center gap-1.5 text-gray-500 hover:text-red-600 transition-colors text-[10px] sm:text-xs bg-white rounded-full px-2 py-1 border border-gray-200 hover:border-red-200 shadow-sm"
+                    >
+                      <Trash2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                      <span>Excluir</span>
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>

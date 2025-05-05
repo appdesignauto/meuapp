@@ -213,6 +213,10 @@ const VideoLessonPage: React.FC = () => {
     progress: 0 // Será implementado no futuro
   } : null;
   
+  // Filtrar aulas do módulo atual e determinar o índice da lição atual
+  const moduleLessons = lessonsData?.filter(lesson => lesson.moduleId === currentLesson?.moduleId) || [];
+  const currentLessonIndex = moduleLessons.findIndex(lesson => lesson.id === id);
+  
   // Buscar lições relacionadas (do mesmo módulo)
   const tutoriaisRelacionados = lessonsData
     ?.filter(lesson => lesson.id !== id && lesson.moduleId === currentLesson?.moduleId)
@@ -690,7 +694,7 @@ const VideoLessonPage: React.FC = () => {
                     <h3 className="font-semibold text-blue-800 text-sm">Progresso no módulo: {currentModule?.title}</h3>
                   </div>
                   <div className="text-xs text-blue-700 font-medium">
-                    Aula {currentLessonIndex + 1} de {moduleLessons?.length || '?'}
+                    Aula {currentLessonIndex >= 0 ? currentLessonIndex + 1 : 1} de {moduleLessons?.length || '?'}
                   </div>
                 </div>
                 {/* Barra de progresso do módulo */}
@@ -698,7 +702,7 @@ const VideoLessonPage: React.FC = () => {
                   <div 
                     className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"
                     style={{ 
-                      width: `${Math.round(((currentLessonIndex + 1) / (moduleLessons?.length || 1)) * 100)}%` 
+                      width: `${Math.round((((currentLessonIndex >= 0 ? currentLessonIndex : 0) + 1) / (moduleLessons?.length || 1)) * 100)}%` 
                     }}
                   ></div>
                 </div>
