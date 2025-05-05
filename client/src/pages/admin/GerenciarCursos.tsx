@@ -552,45 +552,58 @@ const GerenciarCursos = () => {
         return;
       }
       
-      // Se temos um ID de aula no formulário e não é a mesma que já temos carregada
+      // Determinar o ID da aula para usar no upload
+      // 1. Primeiro verificamos o ID no objeto currentLesson
+      // 2. Depois tentamos obter do lessonForm (para quando acabamos de criar uma aula)
+      // 3. Se nenhum desses funcionar, exibimos um aviso
       const lessonIdForUpload = currentLesson?.id || (lessonForm.id ? Number(lessonForm.id) : undefined);
+      
+      console.log('[Upload File] Estado atual:', {
+        currentLessonId: currentLesson?.id,
+        lessonFormId: lessonForm.id,
+        lessonIdForUpload
+      });
       
       setThumbnailFile(file);
       setThumbnailUploadError(null);
       
-      if (!lessonIdForUpload && isEditingLesson) {
+      if (!lessonIdForUpload) {
         toast({
-          title: "Aviso",
+          title: "ID da aula não encontrado",
           description: "Salve a aula primeiro antes de fazer upload da miniatura",
-          variant: "default",
+          variant: "destructive",
         });
         return;
       }
       
-      thumbnailUploadMutation.mutate(file);
+      // Enviar o arquivo junto com o ID da aula
+      thumbnailUploadMutation.mutate({
+        file: file,
+        lessonId: lessonIdForUpload as number
+      });
     }
   };
   
+  // Interface para o payload de upload de thumbnail
+  interface ThumbnailUploadPayload {
+    file: File;
+    lessonId: number;
+  }
+
   // Mutation para upload de miniatura
   const thumbnailUploadMutation = useMutation({
-    mutationFn: async (file: File) => {
+    mutationFn: async (payload: ThumbnailUploadPayload) => {
+      const { file, lessonId } = payload;
+      
       setIsUploadingThumbnail(true);
       setThumbnailUploadProgress(0);
       
       const formData = new FormData();
       formData.append('thumbnail', file);
       
-      // Adicionar ID da aula ao formData - verificar em currentLesson e no lessonForm
-      // (o segundo caso acontece quando acabamos de criar uma aula e o objeto currentLesson
-      // ainda não foi atualizado, mas o lessonForm já tem o ID)
-      const lessonId = currentLesson?.id || (lessonForm.id ? Number(lessonForm.id) : undefined);
-      
-      if (lessonId) {
-        console.log(`[Upload Thumbnail] Usando lessonId: ${lessonId}`);
-        formData.append('lessonId', String(lessonId));
-      } else {
-        console.log(`[Upload Thumbnail] Nenhum lessonId disponível para o upload`);
-      }
+      // Adicionar o ID da aula ao formData usando o ID explicitamente fornecido
+      console.log(`[Upload Thumbnail] Usando lessonId: ${lessonId}`);
+      formData.append('lessonId', String(lessonId));
       
       // Iniciar um timer para simular o progresso enquanto o upload acontece
       let uploadTimer = setInterval(() => {
@@ -604,6 +617,8 @@ const GerenciarCursos = () => {
       }, 200);
       
       try {
+        console.log(`[Upload Thumbnail] Iniciando upload para aula ID: ${lessonId}`);
+        
         const response = await fetch('/api/courses/lessons/thumbnail-upload', {
           method: 'POST',
           body: formData,
@@ -614,15 +629,18 @@ const GerenciarCursos = () => {
         
         if (!response.ok) {
           const errorData = await response.json();
+          console.error('[Upload Thumbnail] Erro na resposta:', errorData);
           throw new Error(errorData.message || 'Erro ao fazer upload da miniatura');
         }
         
         setThumbnailUploadProgress(100);
         const data = await response.json();
+        console.log('[Upload Thumbnail] Resultado do upload:', data);
         return data;
       } catch (error: any) {
         clearInterval(uploadTimer);
         setThumbnailUploadError(error.message);
+        console.error('[Upload Thumbnail] Erro durante o upload:', error);
         throw error;
       } finally {
         setIsUploadingThumbnail(false);
