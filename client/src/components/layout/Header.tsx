@@ -269,18 +269,26 @@ const Header = () => {
           <nav className={`hidden md:flex items-center space-x-1 transition-opacity duration-300 ${
             showHeaderSearch && !isVideoaulasPage ? 'opacity-0' : 'opacity-100'
           }`}>
-            {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                href={link.path}
-                className={`text-neutral-600 hover:text-blue-600 font-medium text-[13px] px-3 py-2 rounded-md transition-all duration-200 hover:bg-blue-50 ${
-                  location === link.path ? 'text-blue-600 bg-blue-50/80' : ''
-                } ${link.icon ? 'flex items-center' : ''}`}
-              >
-                {link.icon}
-                {link.name}
-              </Link>
-            ))}
+            {navLinks
+              .filter(link => {
+                // Se estiver na página de videoaulas, esconde os links de "Vídeo Aulas" e "Categorias"
+                if (isVideoaulasPage && (link.path === '/videoaulas' || link.path === '/categories')) {
+                  return false;
+                }
+                return true;
+              })
+              .map((link) => (
+                <Link
+                  key={link.path}
+                  href={link.path}
+                  className={`text-neutral-600 hover:text-blue-600 font-medium text-[13px] px-3 py-2 rounded-md transition-all duration-200 hover:bg-blue-50 ${
+                    location === link.path ? 'text-blue-600 bg-blue-50/80' : ''
+                  } ${link.icon ? 'flex items-center' : ''}`}
+                >
+                  {link.icon}
+                  {link.name}
+                </Link>
+              ))}
           </nav>
 
           {/* User Actions */}

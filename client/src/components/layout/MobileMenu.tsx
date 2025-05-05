@@ -189,17 +189,26 @@ const MobileMenu = ({ isOpen, onClose, navLinks, userRole }: MobileMenuProps) =>
         
         <nav className="flex flex-col space-y-5">
           {/* Enlaces de navegación principal */}
-          {navLinks.map((link) => (
-            <Link
-              key={link.path}
-              href={link.path}
-              className="flex items-center text-neutral-700 hover:text-blue-600 font-medium py-2 border-b border-neutral-100 transition-colors"
-              onClick={onClose}
-            >
-              {link.icon && <span className="mr-2">{link.icon}</span>}
-              {link.name}
-            </Link>
-          ))}
+          {navLinks
+            .filter(link => {
+              // Se a URL atual contém '/videoaulas', não mostra os links "Vídeo Aulas" e "Categorias"
+              const isVideoaulasPage = window.location.pathname.includes('/videoaulas');
+              if (isVideoaulasPage && (link.path === '/videoaulas' || link.path === '/categories')) {
+                return false;
+              }
+              return true;
+            })
+            .map((link) => (
+              <Link
+                key={link.path}
+                href={link.path}
+                className="flex items-center text-neutral-700 hover:text-blue-600 font-medium py-2 border-b border-neutral-100 transition-colors"
+                onClick={onClose}
+              >
+                {link.icon && <span className="mr-2">{link.icon}</span>}
+                {link.name}
+              </Link>
+            ))}
           
           {/* Botões de Login e Cadastro (exibidos apenas se não houver usuário) */}
           {!user && (
