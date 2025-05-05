@@ -78,8 +78,10 @@ const Header = () => {
   const [videoSearchQuery, setVideoSearchQuery] = useState('');
   const { user, logoutMutation } = useAuth();
   const [location, setLocation] = useLocation();
-  // Verificar se estamos na página de videoaulas
+  // Verificar se estamos na página de videoaulas ou outras páginas
   const isVideoaulasPage = location.startsWith('/videoaulas');
+  // Verificar se estamos na página inicial (home)
+  const isHomePage = location === '/';
   
   // Buscar estatísticas do usuário para exibir no dropdown
   const { data: userStats } = useQuery({
@@ -234,9 +236,9 @@ const Header = () => {
             </Link>
           </div>
 
-          {/* Barra de pesquisa flutuante - aparece quando rolar para baixo e NÃO está na página de videoaulas */}
+          {/* Barra de pesquisa flutuante - aparece apenas na página inicial quando rolar para baixo */}
           <div className={`absolute left-1/2 transform -translate-x-1/2 w-[500px] max-w-[calc(100%-220px)] z-10 transition-all duration-300 ease-in-out ${
-            showHeaderSearch && !isVideoaulasPage
+            showHeaderSearch && isHomePage
               ? 'opacity-100 translate-y-0' 
               : 'opacity-0 -translate-y-4 pointer-events-none'
           }`}>
@@ -267,7 +269,7 @@ const Header = () => {
           
           {/* Navigation - Desktop */}
           <nav className={`hidden md:flex items-center space-x-1 transition-opacity duration-300 ${
-            showHeaderSearch && !isVideoaulasPage ? 'opacity-0' : 'opacity-100'
+            showHeaderSearch && isHomePage ? 'opacity-0' : 'opacity-100'
           }`}>
             {/* Todos os links principais sempre visíveis */}
             {navLinks.map((link) => (
@@ -280,9 +282,8 @@ const Header = () => {
                       : isVideoaulasPage && (link.path === '/videoaulas' || link.path === '/categories') 
                         ? 'text-blue-600 font-semibold' 
                         : ''
-                  } ${link.icon ? 'flex items-center' : ''}`}
+                  }`}
                 >
-                  {link.icon}
                   {link.name}
                 </Link>
               ))}
