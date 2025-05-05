@@ -306,22 +306,31 @@ const GerenciarCursos = () => {
   
   const updateLessonMutation = useMutation({
     mutationFn: async (data: CourseLesson) => {
+      console.log('Enviando dados para atualização:', data);
       const response = await apiRequest('PUT', `/api/courses/lessons/${data.id}`, data);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Erro ao atualizar aula');
       }
-      return response.json();
+      const updatedLesson = await response.json();
+      console.log('Aula atualizada com sucesso:', updatedLesson);
+      return updatedLesson;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/courses/lessons'] });
+    onSuccess: (updatedLesson) => {
+      // Invalida a query e força um refetch dos dados
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/courses/lessons'],
+        refetchType: 'all'
+      });
+      
       setIsLessonDialogOpen(false);
       toast({
         title: 'Aula atualizada com sucesso',
-        description: 'As alterações foram salvas',
+        description: `"${updatedLesson.title}" foi atualizada com sucesso`,
       });
     },
     onError: (error: Error) => {
+      console.error('Erro durante atualização da aula:', error);
       toast({
         title: 'Erro ao atualizar aula',
         description: error.message,
@@ -997,8 +1006,20 @@ const GerenciarCursos = () => {
                                           <TableCell className="font-medium">{lesson.order}</TableCell>
                                           <TableCell>
                                             <div>
-                                              <div className="font-medium">{lesson.title}</div>
-                                              <div className="text-xs text-gray-500">{lesson.description.substring(0, 50)}...</div>
+                                              <div className="font-medium text-blue-600">{lesson.title}</div>
+                                              <div className="text-xs text-gray-600 mt-1">
+                                                {lesson.description ? (
+                                                  lesson.description.length > 50 
+                                                    ? `${lesson.description.substring(0, 50)}...` 
+                                                    : lesson.description
+                                                ) : <span className="italic text-gray-400">Sem descrição</span>}
+                                              </div>
+                                              <div className="text-xs text-gray-500 mt-1">
+                                                <span className="inline-flex items-center text-amber-600 font-medium">
+                                                  <Clock className="h-3 w-3 mr-1" /> 
+                                                  {formatarDuracaoPreview(lesson.duration)}
+                                                </span>
+                                              </div>
                                             </div>
                                           </TableCell>
                                           <TableCell>
