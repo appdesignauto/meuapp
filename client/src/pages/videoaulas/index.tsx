@@ -455,91 +455,73 @@ export default function VideoaulasPage() {
                   >
                     <CarouselContent className="-ml-3 sm:-ml-4">
                       {Array.isArray(tutoriaisPopulares) && tutoriaisPopulares.map((tutorial, index) => (
-                        <CarouselItem key={tutorial.id} className="pl-3 sm:pl-4 basis-3/4 sm:basis-2/5 md:basis-1/3 lg:basis-1/4 xl:basis-[24%]">
+                        <CarouselItem key={tutorial.id} className="pl-3 sm:pl-4 basis-3/4 sm:basis-2/5 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
                           <Link href={`/videoaulas/${tutorial.id}`} className="block h-full">
-                            {/* Card com novo design moderno */}
-                            <div className="relative group h-full bg-gradient-to-br from-slate-50 to-white rounded-xl overflow-hidden shadow-lg border border-slate-100 hover:shadow-xl hover:border-blue-100 transition-all">
-                              {/* Barra de status superior */}
-                              <div className="absolute top-0 left-0 right-0 px-3 py-2 z-20 flex justify-between items-center">
-                                {/* Numeração de módulo com design elegante */}
-                                <div className="bg-gradient-to-r from-blue-600/90 to-blue-700/90 backdrop-blur-sm px-2.5 py-1 rounded-full shadow-sm border border-white/20">
-                                  <span className="text-xs font-bold text-white flex items-center">
-                                    <BookOpen className="h-3 w-3 mr-1" />
-                                    Módulo {index + 1}
-                                  </span>
+                            {/* Card estilo Netflix - minimalista e clean */}
+                            <div className="group relative h-full flex flex-col overflow-hidden">
+                              {/* Thumbnail com proporção mais moderna */}
+                              <div className="relative overflow-hidden rounded-md bg-gray-100">
+                                {/* Imagem de thumbnail */}
+                                <div className="aspect-[16/9] overflow-hidden">
+                                  <img 
+                                    src={tutorial.thumbnailUrl || ""} 
+                                    alt={tutorial.title || "Tutorial"} 
+                                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out"
+                                  />
                                 </div>
                                 
-                                {/* Badge de duração com design elegante */}
-                                <div className="bg-black/60 backdrop-blur-sm text-white text-xs py-1 px-2 rounded-full flex items-center shadow-sm">
-                                  <Clock className="h-3 w-3 mr-1" />
-                                  {tutorial.durationFormatted || formatarDuracao(tutorial.duration) || ""}
+                                {/* Overlay escuro sutil */}
+                                <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                
+                                {/* Badge de módulo - estilo clean */}
+                                <div className="absolute top-2 left-2">
+                                  <div className="bg-black/70 backdrop-blur-sm px-2 py-1 rounded-sm text-xs font-medium text-white">
+                                    Módulo {index + 1}
+                                  </div>
                                 </div>
+                                
+                                {/* Badge de duração - estilo clean */}
+                                <div className="absolute bottom-2 right-2">
+                                  <div className="bg-black/70 backdrop-blur-sm px-2 py-1 rounded-sm text-xs text-white">
+                                    {tutorial.durationFormatted || formatarDuracao(tutorial.duration) || ""}
+                                  </div>
+                                </div>
+                                
+                                {/* Indicador NOVO - clean e minimalista */}
+                                {tutorial.createdAt && new Date(tutorial.createdAt).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000 && (
+                                  <div className="absolute top-2 right-2 bg-red-600 px-2 py-0.5 rounded-sm text-xs font-medium text-white">
+                                    NOVO
+                                  </div>
+                                )}
+                                
+                                {/* Botão de play minimalista */}
+                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                  <div className="bg-white/90 rounded-full p-3 transform scale-90 group-hover:scale-100 transition-all duration-300 shadow-md">
+                                    <Play className="h-6 w-6 text-blue-600" />
+                                  </div>
+                                </div>
+                                
+                                {/* Barra de progresso minimalista */}
+                                {Math.random() > 0.5 && (
+                                  <div className="absolute bottom-0 left-0 right-0 h-[3px]">
+                                    <div className="h-full bg-red-600" style={{ width: `${Math.floor(Math.random() * 90)}%` }} />
+                                  </div>
+                                )}
                               </div>
                               
-                              {/* Conteúdo principal do card */}
-                              <div className="flex flex-col h-full">
-                                {/* Área da imagem */}
-                                <div className="relative overflow-hidden">
-                                  {/* Badge NOVO - exibido apenas para conteúdos recentes */}
-                                  {tutorial.createdAt && new Date(tutorial.createdAt).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000 && (
-                                    <div className="absolute top-3 right-3 z-20 bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs py-1 px-2 rounded-md flex items-center shadow-md">
-                                      <Sparkles className="h-3 w-3 mr-1" />
-                                      NOVO
-                                    </div>
-                                  )}
-                                  
-                                  {/* Imagem do tutorial com overlay gradiente melhorado */}
-                                  <div className="relative">
-                                    <img 
-                                      src={tutorial.thumbnailUrl || ""} 
-                                      alt={tutorial.title || "Tutorial"} 
-                                      className="w-full aspect-video object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent opacity-80 group-hover:opacity-60 transition-opacity"></div>
-                                  </div>
-                                  
-                                  {/* Botão de play flutuante que aparece no hover */}
-                                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                    <div className="bg-blue-600/90 rounded-full p-3 transform scale-90 group-hover:scale-100 transition-all duration-300 shadow-lg border border-blue-400/30">
-                                      <Play className="h-8 w-8 text-white" fill="white" />
-                                    </div>
-                                  </div>
-                                  
-                                  {/* Indicador de progresso (simulado) */}
-                                  {Math.random() > 0.5 && (
-                                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-800">
-                                      <div className="h-full bg-blue-500" style={{ width: `${Math.floor(Math.random() * 90)}%` }} />
-                                    </div>
-                                  )}
-                                </div>
+                              {/* Conteúdo - estilo Netflix clean */}
+                              <div className="mt-2 flex flex-col flex-grow">
+                                {/* Título - fonte clean e espaçamento */}
+                                <h3 className="font-medium text-gray-800 mb-1 line-clamp-1 text-sm">
+                                  {tutorial.title || "Tutorial sem título"}
+                                </h3>
                                 
-                                {/* Área de informações */}
-                                <div className="p-4 flex flex-col flex-grow">
-                                  {/* Título com design atualizado */}
-                                  <h3 className="font-bold text-slate-800 mb-1.5 group-hover:text-blue-700 transition-colors line-clamp-1 text-base">
-                                    {tutorial.title || "Tutorial sem título"}
-                                  </h3>
-                                  
-                                  {/* Descrição mais limpa */}
-                                  <p className="text-slate-600 text-sm line-clamp-2 mb-4 flex-grow">
-                                    {tutorial.description || "Aprenda técnicas avançadas de design automotivo neste tutorial completo."}
-                                  </p>
-                                  
-                                  {/* Área de métricas e ações */}
-                                  <div className="flex justify-between items-center pt-2 border-t border-slate-100">
-                                    {/* Badge de nível */}
-                                    <div className="bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded-full flex items-center">
-                                      <Star className="h-3 w-3 mr-1" />
-                                      {tutorial.level === 'iniciante' ? 'Iniciante' : 
-                                       tutorial.level === 'intermediario' ? 'Intermediário' : 'Avançado'}
-                                    </div>
-                                    
-                                    {/* Métricas de visualização */}
-                                    <div className="text-xs text-slate-500 flex items-center">
-                                      <Eye className="h-3.5 w-3.5 mr-1 text-slate-400" />
-                                      {(tutorial.views || 0).toLocaleString()}
-                                    </div>
-                                  </div>
+                                {/* Meta informação em linha - estilo Netflix */}
+                                <div className="flex items-center text-xs text-gray-500 space-x-2">
+                                  <span className="line-clamp-1">{tutorial.level === 'iniciante' ? 'Iniciante' : 
+                                   tutorial.level === 'intermediario' ? 'Intermediário' : 'Avançado'}</span>
+                                  <span>•</span>
+                                  <span>{tutorial.views} visualizações</span>
                                 </div>
                               </div>
                             </div>
@@ -587,90 +569,72 @@ export default function VideoaulasPage() {
                       >
                         <CarouselContent className="-ml-3 sm:-ml-4">
                           {categoria.lessons && categoria.lessons.map((tutorial, moduleIdx: number) => (
-                            <CarouselItem key={tutorial.id} className="pl-3 sm:pl-4 basis-3/4 sm:basis-2/5 md:basis-1/3 lg:basis-1/4 xl:basis-[24%]">
+                            <CarouselItem key={tutorial.id} className="pl-3 sm:pl-4 basis-3/4 sm:basis-2/5 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
                               <Link href={`/videoaulas/${tutorial.id}`} className="block h-full">
-                                {/* Card com design moderno (mesmo estilo do primeiro carrossel) */}
-                                <div className="relative group h-full bg-gradient-to-br from-slate-50 to-white rounded-xl overflow-hidden shadow-lg border border-slate-100 hover:shadow-xl hover:border-blue-100 transition-all">
-                                  {/* Barra de status superior */}
-                                  <div className="absolute top-0 left-0 right-0 px-3 py-2 z-20 flex justify-between items-center">
-                                    {/* Numeração de parte com design elegante */}
-                                    <div className="bg-gradient-to-r from-indigo-600/90 to-indigo-700/90 backdrop-blur-sm px-2.5 py-1 rounded-full shadow-sm border border-white/20">
-                                      <span className="text-xs font-bold text-white flex items-center">
-                                        <FileText className="h-3 w-3 mr-1" />
-                                        Parte {moduleIdx + 1}
-                                      </span>
+                                {/* Card estilo Netflix - minimalista e clean */}
+                                <div className="group relative h-full flex flex-col overflow-hidden">
+                                  {/* Thumbnail com proporção mais moderna */}
+                                  <div className="relative overflow-hidden rounded-md bg-gray-100">
+                                    {/* Imagem de thumbnail */}
+                                    <div className="aspect-[16/9] overflow-hidden">
+                                      <img 
+                                        src={tutorial.thumbnailUrl || ""} 
+                                        alt={tutorial.title || "Tutorial"} 
+                                        className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out"
+                                      />
                                     </div>
                                     
-                                    {/* Badge de duração com design elegante */}
-                                    <div className="bg-black/60 backdrop-blur-sm text-white text-xs py-1 px-2 rounded-full flex items-center shadow-sm">
-                                      <Clock className="h-3 w-3 mr-1" />
-                                      {tutorial.durationFormatted || formatarDuracao(tutorial.duration) || "00:00"}
+                                    {/* Overlay escuro sutil */}
+                                    <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                    
+                                    {/* Badge de parte - estilo clean */}
+                                    <div className="absolute top-2 left-2">
+                                      <div className="bg-black/70 backdrop-blur-sm px-2 py-1 rounded-sm text-xs font-medium text-white">
+                                        Parte {moduleIdx + 1}
+                                      </div>
                                     </div>
+                                    
+                                    {/* Badge de duração - estilo clean */}
+                                    <div className="absolute bottom-2 right-2">
+                                      <div className="bg-black/70 backdrop-blur-sm px-2 py-1 rounded-sm text-xs text-white">
+                                        {tutorial.durationFormatted || formatarDuracao(tutorial.duration) || "00:00"}
+                                      </div>
+                                    </div>
+                                    
+                                    {/* Indicador Premium - clean e minimalista */}
+                                    {tutorial.isPremium && (
+                                      <div className="absolute top-2 right-2 bg-amber-500 px-2 py-0.5 rounded-sm text-xs font-medium text-gray-900">
+                                        PREMIUM
+                                      </div>
+                                    )}
+                                    
+                                    {/* Botão de play minimalista */}
+                                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                      <div className="bg-white/90 rounded-full p-3 transform scale-90 group-hover:scale-100 transition-all duration-300 shadow-md">
+                                        <Play className="h-6 w-6 text-blue-600" />
+                                      </div>
+                                    </div>
+                                    
+                                    {/* Barra de progresso minimalista */}
+                                    {Math.random() > 0.7 && (
+                                      <div className="absolute bottom-0 left-0 right-0 h-[3px]">
+                                        <div className="h-full bg-red-600" style={{ width: `${Math.floor(Math.random() * 80)}%` }} />
+                                      </div>
+                                    )}
                                   </div>
                                   
-                                  {/* Conteúdo principal do card */}
-                                  <div className="flex flex-col h-full">
-                                    {/* Área da imagem */}
-                                    <div className="relative overflow-hidden">
-                                      {/* Indicador Premium */}
-                                      {tutorial.isPremium && (
-                                        <div className="absolute top-10 right-3 z-20 bg-gradient-to-r from-amber-400 to-amber-500 text-blue-900 text-xs font-bold px-2 py-1 rounded-md flex items-center shadow-md">
-                                          <Crown className="h-3 w-3 mr-1" />
-                                          PREMIUM
-                                        </div>
-                                      )}
-                                      
-                                      {/* Imagem do tutorial com overlay gradiente melhorado */}
-                                      <div className="relative">
-                                        <img 
-                                          src={tutorial.thumbnailUrl || ""} 
-                                          alt={tutorial.title || "Tutorial"} 
-                                          className="w-full aspect-video object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                                        />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent opacity-80 group-hover:opacity-60 transition-opacity"></div>
-                                      </div>
-                                      
-                                      {/* Botão de play flutuante que aparece no hover */}
-                                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                        <div className="bg-indigo-600/90 rounded-full p-3 transform scale-90 group-hover:scale-100 transition-all duration-300 shadow-lg border border-indigo-400/30">
-                                          <Play className="h-8 w-8 text-white" fill="white" />
-                                        </div>
-                                      </div>
-                                      
-                                      {/* Indicador de progresso (simulado) */}
-                                      {Math.random() > 0.7 && (
-                                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-800">
-                                          <div className="h-full bg-indigo-500" style={{ width: `${Math.floor(Math.random() * 80)}%` }} />
-                                        </div>
-                                      )}
-                                    </div>
+                                  {/* Conteúdo - estilo Netflix clean */}
+                                  <div className="mt-2 flex flex-col flex-grow">
+                                    {/* Título - fonte clean e espaçamento */}
+                                    <h3 className="font-medium text-gray-800 mb-1 line-clamp-1 text-sm">
+                                      {tutorial.title || "Tutorial sem título"}
+                                    </h3>
                                     
-                                    {/* Área de informações */}
-                                    <div className="p-4 flex flex-col flex-grow">
-                                      {/* Título com design atualizado */}
-                                      <h3 className="font-bold text-slate-800 mb-1.5 group-hover:text-indigo-700 transition-colors line-clamp-1 text-base">
-                                        {tutorial.title || "Tutorial sem título"}
-                                      </h3>
-                                      
-                                      {/* Descrição mais limpa */}
-                                      <p className="text-slate-600 text-sm line-clamp-2 mb-4 flex-grow">
-                                        {tutorial.description || "Aprenda técnicas avançadas de design automotivo neste tutorial completo."}
-                                      </p>
-                                      
-                                      {/* Área de métricas e ações */}
-                                      <div className="flex justify-between items-center pt-2 border-t border-slate-100">
-                                        {/* Badge indicando o módulo */}
-                                        <div className="bg-indigo-50 text-indigo-700 text-xs px-2 py-0.5 rounded-full flex items-center">
-                                          <Folder className="h-3 w-3 mr-1" />
-                                          {categoria.title}
-                                        </div>
-                                        
-                                        {/* Métricas de visualização */}
-                                        <div className="text-xs text-slate-500 flex items-center">
-                                          <Eye className="h-3.5 w-3.5 mr-1 text-slate-400" />
-                                          {(tutorial.views || 0).toLocaleString()}
-                                        </div>
-                                      </div>
+                                    {/* Meta informação em linha - estilo Netflix */}
+                                    <div className="flex items-center text-xs text-gray-500 space-x-2">
+                                      <span className="line-clamp-1">{categoria.title}</span>
+                                      <span>•</span>
+                                      <span>{tutorial.views} visualizações</span>
                                     </div>
                                   </div>
                                 </div>
