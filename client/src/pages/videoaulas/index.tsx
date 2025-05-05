@@ -498,7 +498,7 @@ export default function VideoaulasPage() {
                                     <span className="ml-2 text-4xl text-white">{index + 1}</span>
                                   </div>
                                   <div className="bg-blue-600 text-white text-xs px-2 py-1 rounded shadow-sm">
-                                    {tutorial.duration || ""}
+                                    {tutorial.durationFormatted || formatarDuracao(tutorial.duration) || ""}
                                   </div>
                                 </div>
                                 
@@ -588,7 +588,7 @@ export default function VideoaulasPage() {
                                         <span className="ml-2 text-4xl text-white">{moduleIdx + 1}</span>
                                       </div>
                                       <div className="bg-blue-600 text-white text-xs px-2 py-1 rounded shadow-sm">
-                                        {tutorial.duration || "00:00"}
+                                        {tutorial.durationFormatted || formatarDuracao(tutorial.duration) || "00:00"}
                                       </div>
                                     </div>
                                     
