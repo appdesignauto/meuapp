@@ -84,17 +84,10 @@ const YouTubePlayer: React.FC<{ videoUrl: string; thumbnailUrl: string }> = ({ v
     setIsLoading(false);
   };
   
-  // Preparar a URL do embed do YouTube (incluindo opções para maximizar a privacidade e reduzir branding)
-  // Parâmetros:
+  // Preparar a URL do embed do YouTube apenas com parâmetros essenciais
   // modestbranding=1 - reduz o branding do YouTube
-  // rel=0 - não mostra vídeos relacionados no final
-  // controls=1 - mantém controles básicos
-  // disablekb=1 - desativa atalhos de teclado
-  // fs=0 - desativa botão de tela cheia
-  // iv_load_policy=3 - não mostra anotações
-  // showinfo=0 - não mostra informações do vídeo
-  // cc_load_policy=0 - não carrega legendas automaticamente
-  const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=0&modestbranding=1&rel=0&controls=1&disablekb=1&fs=0&iv_load_policy=3&showinfo=0&cc_load_policy=0&origin=${window.location.origin}`;
+  // rel=0 - não mostra vídeos relacionados ao final do vídeo
+  const embedUrl = `https://www.youtube.com/embed/${videoId}?modestbranding=1&rel=0&origin=${window.location.origin}`;
   
   return (
     <div className="relative w-full aspect-video bg-black rounded-md sm:rounded-lg overflow-hidden">
@@ -125,48 +118,17 @@ const YouTubePlayer: React.FC<{ videoUrl: string; thumbnailUrl: string }> = ({ v
         </div>
       )}
       
-      {/* iframe do YouTube */}
-      <div className="w-full h-full relative">
-        {/* Estilo personalizado do player */}
-        <div className="absolute inset-0 pointer-events-none z-20">
-          {/* Barra superior personalizada para substituir a do YouTube */}
-          <div className="absolute top-0 left-0 right-0 h-12 bg-black/80 flex items-center px-4 z-30">
-            <p className="text-white font-medium text-sm">DesignAuto Video Player</p>
-          </div>
-          
-          {/* Cantos com overlay para esconder elementos do YouTube */}
-          <div className="absolute top-0 left-0 w-16 h-16 bg-black/80 z-30"></div>
-          <div className="absolute top-0 right-0 w-16 h-16 bg-black/80 z-30"></div>
-          <div className="absolute bottom-0 left-0 w-16 h-16 bg-black/80 z-30"></div>
-          <div className="absolute bottom-0 right-0 w-16 h-16 bg-black/80 z-30"></div>
-        </div>
-        
-        {/* Sobreposição para bloquear interações em links da marca do player, mas permitir controles */}
-        <div 
-          className="absolute inset-0 z-10"
-          style={{ backgroundColor: 'transparent', pointerEvents: 'none' }}
-          onClick={(e) => {
-            // Bloqueia cliques em elementos específicos que levam ao YouTube
-            const target = e.target as HTMLElement;
-            if (target.tagName === 'A' || target.closest('a')) {
-              e.preventDefault();
-              e.stopPropagation();
-              return false;
-            }
-          }}
-        ></div>
-        
-        <iframe
-          className="w-full h-full"
-          src={embedUrl}
-          title="Player de vídeo"
-          frameBorder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          onLoad={handleIframeLoad}
-          onError={handleIframeError}
-        ></iframe>
-      </div>
+      {/* iframe do YouTube - sem sobreposições */}
+      <iframe
+        className="w-full h-full"
+        src={embedUrl}
+        title="YouTube video player"
+        frameBorder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+        onLoad={handleIframeLoad}
+        onError={handleIframeError}
+      ></iframe>
     </div>
   );
 };

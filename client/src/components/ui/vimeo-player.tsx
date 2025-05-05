@@ -88,48 +88,17 @@ const VimeoPlayer: React.FC<VimeoPlayerProps> = ({ videoUrl, thumbnailUrl }) => 
         </div>
       )}
       
-      {/* iframe do Vimeo com sobreposição de proteção */}
-      <div className="w-full h-full relative">
-        {/* Estilo personalizado do player */}
-        <div className="absolute inset-0 pointer-events-none z-20">
-          {/* Barra superior personalizada para substituir a do Vimeo */}
-          <div className="absolute top-0 left-0 right-0 h-12 bg-black/80 flex items-center px-4 z-30">
-            <p className="text-white font-medium text-sm">DesignAuto Video Player</p>
-          </div>
-          
-          {/* Cantos com overlay para esconder elementos do Vimeo */}
-          <div className="absolute top-0 left-0 w-16 h-16 bg-black/80 z-30"></div>
-          <div className="absolute top-0 right-0 w-16 h-16 bg-black/80 z-30"></div>
-          <div className="absolute bottom-0 left-0 w-16 h-16 bg-black/80 z-30"></div>
-          <div className="absolute bottom-0 right-0 w-16 h-16 bg-black/80 z-30"></div>
-        </div>
-        
-        {/* Sobreposição para bloquear interações em links da marca do player, mas permitir controles */}
-        <div 
-          className="absolute inset-0 z-10"
-          style={{ backgroundColor: 'transparent', pointerEvents: 'none' }}
-          onClick={(e) => {
-            // Bloqueia cliques em elementos específicos que levam ao Vimeo
-            const target = e.target as HTMLElement;
-            if (target.tagName === 'A' || target.closest('a')) {
-              e.preventDefault();
-              e.stopPropagation();
-              return false;
-            }
-          }}
-        ></div>
-        
-        <iframe
-          className="w-full h-full"
-          src={embedUrl}
-          title="Player de vídeo"
-          frameBorder="0"
-          allow="autoplay; fullscreen; picture-in-picture"
-          allowFullScreen
-          onLoad={handleIframeLoad}
-          onError={handleIframeError}
-        ></iframe>
-      </div>
+      {/* iframe do Vimeo - sem sobreposições */}
+      <iframe
+        className="w-full h-full"
+        src={embedUrl}
+        title="Vimeo video player"
+        frameBorder="0"
+        allow="autoplay; fullscreen; picture-in-picture"
+        allowFullScreen
+        onLoad={handleIframeLoad}
+        onError={handleIframeError}
+      ></iframe>
     </div>
   );
 };
