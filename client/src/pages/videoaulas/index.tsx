@@ -51,6 +51,20 @@ export default function VideoaulasPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
   
+  // Capturar eventos de pesquisa enviados pelo cabeçalho
+  useEffect(() => {
+    const handleHeaderVideoSearch = (event: any) => {
+      const { searchTerm } = event.detail;
+      setSearchTerm(searchTerm);
+    };
+    
+    window.addEventListener('video-search', handleHeaderVideoSearch);
+    
+    return () => {
+      window.removeEventListener('video-search', handleHeaderVideoSearch);
+    };
+  }, []);
+  
   // Buscar módulos e lições do banco de dados
   const { data: moduleData, isLoading: isLoadingModules } = useQuery({
     queryKey: ['/api/courses/modules'],
