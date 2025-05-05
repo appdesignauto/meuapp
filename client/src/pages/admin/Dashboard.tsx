@@ -197,15 +197,54 @@ const AdminDashboard = () => {
             </Collapsible>
             
             {/* Cursos e Vídeo-aulas */}
-            <button
-              onClick={() => setActiveTab('courses')}
-              className={`flex items-center w-full px-4 py-2.5 rounded-lg ${
-                activeTab === 'courses' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-              }`}
+            <Collapsible 
+              className="bg-gray-50 rounded-lg py-1 mb-1"
+              defaultOpen={['courses', 'modules', 'lessons', 'coursesConfig'].includes(activeTab)}
             >
-              <BookOpen className="w-5 h-5 mr-3" />
-              <span>Cursos e Vídeos</span>
-            </button>
+              <CollapsibleTrigger className="flex items-center w-full px-4 py-2 text-gray-700 font-medium">
+                <BookOpen className="w-5 h-5 mr-3" />
+                <span>Cursos</span>
+                <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pl-4 space-y-1 pt-1 pb-2">
+                <button
+                  onClick={() => setActiveTab('courses')}
+                  className={`flex items-center w-full px-4 py-2 rounded-md ${
+                    activeTab === 'courses' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <LayoutDashboard className="w-4 h-4 mr-3" />
+                  <span>Dashboard</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('modules')}
+                  className={`flex items-center w-full px-4 py-2 rounded-md ${
+                    activeTab === 'modules' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <BookOpen className="w-4 h-4 mr-3" />
+                  <span>Módulos</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('lessons')}
+                  className={`flex items-center w-full px-4 py-2 rounded-md ${
+                    activeTab === 'lessons' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <Video className="w-4 h-4 mr-3" />
+                  <span>Aulas</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('coursesConfig')}
+                  className={`flex items-center w-full px-4 py-2 rounded-md ${
+                    activeTab === 'coursesConfig' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <Settings className="w-4 h-4 mr-3" />
+                  <span>Configurações</span>
+                </button>
+              </CollapsibleContent>
+            </Collapsible>
             
             {/* Configurações */}
             <Collapsible 
@@ -298,7 +337,10 @@ const AdminDashboard = () => {
                 {activeTab === 'community' && 'Comunidade'}
                 {activeTab === 'stats' && 'Visão Geral'}
                 {activeTab === 'settings' && 'Configurações'}
-                {activeTab === 'courses' && 'Cursos e Vídeo-aulas'}
+                {activeTab === 'courses' && 'Dashboard de Cursos'}
+                {activeTab === 'modules' && 'Módulos dos Cursos'}
+                {activeTab === 'lessons' && 'Aulas dos Cursos'}
+                {activeTab === 'coursesConfig' && 'Configurações de Cursos'}
               </h1>
             </div>
             
@@ -408,58 +450,311 @@ const AdminDashboard = () => {
             
             <TabsContent value="courses" className="mt-0">
               <div className="bg-white p-6 rounded-lg shadow-sm">
-                <Tabs defaultValue="modulos">
-                  <TabsList className="mb-6">
-                    <TabsTrigger value="modulos" className="text-sm">
-                      <BookOpen className="w-4 h-4 mr-2" />
-                      Módulos
-                    </TabsTrigger>
-                    <TabsTrigger value="aulas" className="text-sm">
-                      <Video className="w-4 h-4 mr-2" />
-                      Aulas
-                    </TabsTrigger>
-                    <TabsTrigger value="config" className="text-sm">
-                      <Settings className="w-4 h-4 mr-2" />
-                      Configurações da Página
-                    </TabsTrigger>
-                  </TabsList>
+                <div className="mb-6">
+                  <h2 className="text-xl font-semibold mb-4">Dashboard de Cursos</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-blue-50 rounded-lg p-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium text-blue-800">Módulos</h3>
+                          <p className="text-2xl font-bold mt-2">3</p>
+                        </div>
+                        <BookOpen className="w-8 h-8 text-blue-500" />
+                      </div>
+                      <button 
+                        onClick={() => setActiveTab('modules')}
+                        className="mt-4 text-blue-600 text-sm hover:text-blue-800 flex items-center"
+                      >
+                        Ver detalhes
+                        <ChevronDown className="w-4 h-4 ml-1 rotate-[270deg]" />
+                      </button>
+                    </div>
+                    <div className="bg-indigo-50 rounded-lg p-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium text-indigo-800">Aulas</h3>
+                          <p className="text-2xl font-bold mt-2">12</p>
+                        </div>
+                        <Video className="w-8 h-8 text-indigo-500" />
+                      </div>
+                      <button 
+                        onClick={() => setActiveTab('lessons')}
+                        className="mt-4 text-indigo-600 text-sm hover:text-indigo-800 flex items-center"
+                      >
+                        Ver detalhes
+                        <ChevronDown className="w-4 h-4 ml-1 rotate-[270deg]" />
+                      </button>
+                    </div>
+                    <div className="bg-emerald-50 rounded-lg p-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium text-emerald-800">Configurações</h3>
+                          <p className="text-sm mt-2">Página de cursos</p>
+                        </div>
+                        <Settings className="w-8 h-8 text-emerald-500" />
+                      </div>
+                      <button 
+                        onClick={() => setActiveTab('coursesConfig')}
+                        className="mt-4 text-emerald-600 text-sm hover:text-emerald-800 flex items-center"
+                      >
+                        Configurar
+                        <ChevronDown className="w-4 h-4 ml-1 rotate-[270deg]" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
                 
-                  <TabsContent value="modulos" className="space-y-6">
-                    <div className="flex justify-between items-center">
-                      <h2 className="text-xl font-semibold">Módulos dos Cursos</h2>
-                      <Button onClick={() => window.location.href = '/admin/gerenciar-cursos'}>
-                        Ver Gerenciador Completo
-                      </Button>
+                <div className="bg-white border rounded-lg p-4 mt-6">
+                  <h3 className="font-semibold mb-4">Acesso rápido</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Button 
+                      onClick={() => window.location.href = '/admin/gerenciar-cursos'}
+                      variant="outline" 
+                      className="flex items-center justify-center h-12 border-blue-200 text-blue-700 hover:bg-blue-50"
+                    >
+                      <BookOpen className="w-5 h-5 mr-2" />
+                      Gerenciador de Cursos Completo
+                    </Button>
+                    
+                    <Button 
+                      onClick={() => window.location.href = '/videoaulas'}
+                      variant="outline" 
+                      className="flex items-center justify-center h-12 border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                    >
+                      <Video className="w-5 h-5 mr-2" />
+                      Visualizar Página de Vídeo-aulas
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="modules" className="mt-0">
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-semibold">Módulos dos Cursos</h2>
+                  <Button 
+                    onClick={() => window.location.href = '/admin/gerenciar-cursos'}
+                    className="flex items-center"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Adicionar Módulo
+                  </Button>
+                </div>
+                
+                <div className="bg-blue-50 p-4 rounded-lg mb-6">
+                  <p className="text-blue-600">Para gerenciar módulos com todas as funcionalidades, acesse o gerenciador completo. Aqui você tem uma visão rápida dos módulos existentes.</p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                    <div className="aspect-video bg-gray-100 relative">
+                      <img 
+                        src="https://images.unsplash.com/photo-1612825173281-9a193378527e?q=80&w=1499&auto=format&fit=crop" 
+                        alt="Configurações Iniciais" 
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                        <div className="text-white font-medium">Configurações Iniciais</div>
+                      </div>
                     </div>
-                    <div className="bg-blue-50 p-4 rounded-lg mb-6">
-                      <p className="text-blue-600">O gerenciamento de cursos foi integrado ao painel principal. Para acessar todas as funcionalidades, utilize o botão "Ver Gerenciador Completo".</p>
+                    <div className="p-3">
+                      <div className="text-sm text-gray-500 mb-2">Estratégias para Redes Sociais Automotivas</div>
+                      <div className="flex items-center text-sm">
+                        <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs mr-2">Iniciante</span>
+                        <span className="text-gray-500">2 aulas</span>
+                      </div>
                     </div>
-                  </TabsContent>
+                  </div>
                   
-                  <TabsContent value="aulas" className="space-y-6">
-                    <div className="flex justify-between items-center">
-                      <h2 className="text-xl font-semibold">Aulas dos Cursos</h2>
-                      <Button onClick={() => window.location.href = '/admin/gerenciar-cursos?tab=aulas'}>
-                        Ver Gerenciador Completo
-                      </Button>
+                  <div className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                    <div className="aspect-video bg-gray-100 relative">
+                      <img 
+                        src="https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?q=80&w=1470&auto=format&fit=crop" 
+                        alt="Design para Automotivo" 
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                        <div className="text-white font-medium">Design para Automotivo</div>
+                      </div>
                     </div>
-                    <div className="bg-blue-50 p-4 rounded-lg mb-6">
-                      <p className="text-blue-600">O gerenciamento de aulas foi integrado ao painel principal. Para acessar todas as funcionalidades, utilize o botão "Ver Gerenciador Completo".</p>
+                    <div className="p-3">
+                      <div className="text-sm text-gray-500 mb-2">Criando artes impactantes</div>
+                      <div className="flex items-center text-sm">
+                        <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded text-xs mr-2">Intermediário</span>
+                        <span className="text-gray-500">5 aulas</span>
+                      </div>
                     </div>
-                  </TabsContent>
+                  </div>
                   
-                  <TabsContent value="config" className="space-y-6">
-                    <div className="flex justify-between items-center">
-                      <h2 className="text-xl font-semibold">Configurações da Página</h2>
-                      <Button onClick={() => window.location.href = '/admin/gerenciar-cursos?tab=config'}>
-                        Ver Gerenciador Completo
+                  <div className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                    <div className="aspect-video bg-gray-100 relative">
+                      <img 
+                        src="https://dcodfuzoxmddmpvowhap.supabase.co/storage/v1/object/public/designauto-images/designer_1/lessonthumbnails/1746472059081_e1617750-5a94-4a6c-b664-9e2974cd9efa.webp" 
+                        alt="Edição Avançada" 
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                        <div className="text-white font-medium">Edição Avançada</div>
+                      </div>
+                    </div>
+                    <div className="p-3">
+                      <div className="text-sm text-gray-500 mb-2">Técnicas profissionais de edição</div>
+                      <div className="flex items-center text-sm">
+                        <span className="px-2 py-0.5 bg-red-100 text-red-800 rounded text-xs mr-2">Avançado</span>
+                        <span className="text-gray-500">5 aulas</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="lessons" className="mt-0">
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-semibold">Aulas dos Cursos</h2>
+                  <Button 
+                    onClick={() => window.location.href = '/admin/gerenciar-cursos?tab=aulas'}
+                    className="flex items-center"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Adicionar Aula
+                  </Button>
+                </div>
+                
+                <div className="bg-blue-50 p-4 rounded-lg mb-6">
+                  <p className="text-blue-600">Para gerenciar aulas com todas as funcionalidades, acesse o gerenciador completo. Aqui você tem uma visão rápida das aulas existentes.</p>
+                </div>
+                
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[800px] border-collapse">
+                    <thead>
+                      <tr className="bg-gray-50">
+                        <th className="py-3 px-4 text-left font-medium text-gray-600 border-b">Título</th>
+                        <th className="py-3 px-4 text-left font-medium text-gray-600 border-b">Módulo</th>
+                        <th className="py-3 px-4 text-left font-medium text-gray-600 border-b">Duração</th>
+                        <th className="py-3 px-4 text-left font-medium text-gray-600 border-b">Status</th>
+                        <th className="py-3 px-4 text-left font-medium text-gray-600 border-b text-right">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="hover:bg-gray-50">
+                        <td className="py-3 px-4 border-b">
+                          <div className="flex items-center">
+                            <Video className="w-5 h-5 text-blue-500 mr-3" />
+                            <span>Boas Vindas</span>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 border-b">Configurações Iniciais</td>
+                        <td className="py-3 px-4 border-b">10:45</td>
+                        <td className="py-3 px-4 border-b">
+                          <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Publicado</span>
+                        </td>
+                        <td className="py-3 px-4 border-b text-right">
+                          <Button variant="ghost" size="sm">Editar</Button>
+                        </td>
+                      </tr>
+                      <tr className="hover:bg-gray-50">
+                        <td className="py-3 px-4 border-b">
+                          <div className="flex items-center">
+                            <Video className="w-5 h-5 text-blue-500 mr-3" />
+                            <span>Baixando o App KDGPRO</span>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 border-b">Configurações Iniciais</td>
+                        <td className="py-3 px-4 border-b">5:30</td>
+                        <td className="py-3 px-4 border-b">
+                          <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Publicado</span>
+                        </td>
+                        <td className="py-3 px-4 border-b text-right">
+                          <Button variant="ghost" size="sm">Editar</Button>
+                        </td>
+                      </tr>
+                      <tr className="hover:bg-gray-50">
+                        <td className="py-3 px-4 border-b">
+                          <div className="flex items-center">
+                            <Video className="w-5 h-5 text-blue-500 mr-3" />
+                            <span>Como editar no Canva</span>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 border-b">Edição Avançada</td>
+                        <td className="py-3 px-4 border-b">15:00</td>
+                        <td className="py-3 px-4 border-b">
+                          <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Publicado</span>
+                        </td>
+                        <td className="py-3 px-4 border-b text-right">
+                          <Button variant="ghost" size="sm">Editar</Button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="coursesConfig" className="mt-0">
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-semibold">Configurações da Página de Cursos</h2>
+                  <Button 
+                    onClick={() => window.location.href = '/admin/gerenciar-cursos?tab=config'}
+                    className="flex items-center"
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    Gerenciador Completo
+                  </Button>
+                </div>
+                
+                <div className="bg-blue-50 p-4 rounded-lg mb-6">
+                  <p className="text-blue-600">Para configurar completamente a página de cursos, acesse o gerenciador completo. Aqui você pode alterar as configurações básicas.</p>
+                </div>
+                
+                <div className="space-y-6">
+                  <div className="border rounded-lg p-4">
+                    <h3 className="font-medium mb-3">Banner Principal</h3>
+                    <div className="aspect-[3/1] bg-gray-100 rounded-lg mb-3 overflow-hidden">
+                      <img 
+                        src="https://images.unsplash.com/photo-1617791160505-6f00504e3519?q=80&w=1469&auto=format&fit=crop" 
+                        alt="Banner de cursos" 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex items-center justify-end">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="mr-2"
+                        onClick={() => window.location.href = '/admin/gerenciar-cursos?tab=config'}
+                      >
+                        Trocar imagem
                       </Button>
                     </div>
-                    <div className="bg-blue-50 p-4 rounded-lg mb-6">
-                      <p className="text-blue-600">As configurações da página de cursos foram integradas ao painel principal. Para acessar todas as funcionalidades, utilize o botão "Ver Gerenciador Completo".</p>
+                  </div>
+                  
+                  <div className="border rounded-lg p-4">
+                    <h3 className="font-medium mb-3">Textos da Página</h3>
+                    <div className="space-y-3">
+                      <div>
+                        <div className="text-sm font-medium text-gray-500 mb-1">Título do Banner</div>
+                        <div className="p-2 bg-gray-50 rounded border">Aprenda a criar artes incríveis para sua loja</div>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-gray-500 mb-1">Subtítulo do Banner</div>
+                        <div className="p-2 bg-gray-50 rounded border">Mais de 30 aulas exclusivas para impulsionar seu negócio</div>
+                      </div>
                     </div>
-                  </TabsContent>
-                </Tabs>
+                    <div className="flex items-center justify-end mt-3">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => window.location.href = '/admin/gerenciar-cursos?tab=config'}
+                      >
+                        Editar textos
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </TabsContent>
           </Tabs>
