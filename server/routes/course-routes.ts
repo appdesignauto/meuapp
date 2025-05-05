@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '../db';
-import { courseModules, courseLessons, courseSettings, insertCourseModuleSchema, insertCourseLessonSchema } from '@shared/schema';
+import { courses, courseModules, courseLessons, courseSettings, insertCourseModuleSchema, insertCourseLessonSchema } from '@shared/schema';
 import { eq, asc, desc, sql } from 'drizzle-orm';
 import { ZodError } from 'zod';
 import { fromZodError } from 'zod-validation-error';
@@ -444,6 +444,325 @@ router.put('/settings', async (req, res) => {
   } catch (error) {
     console.error('[PUT /course/settings] Erro ao atualizar configurações:', error);
     return res.status(500).json({ message: 'Erro ao atualizar configurações', error: String(error) });
+  }
+});
+
+// ENDPOINTS PARA CURSOS
+
+// Buscar todos os cursos
+router.get('/', async (req, res) => {
+  try {
+    console.log('[GET /course] Buscando todos os cursos');
+    
+    // Usando SQL diretamente para evitar problemas de esquema
+    const query = `
+      SELECT 
+        c.id, 
+        c.title, 
+        c.description, 
+        c.thumbnailurl as "thumbnailUrl", 
+        c.featuredimage as "featuredImage",
+        c.level, 
+        c.status, 
+        c.ispublished as "isPublished", 
+        c.ispremium as "isPremium",
+        c.createdat as "createdAt",
+        c.updatedat as "updatedAt",
+        COALESCE(
+          (SELECT COUNT(*) FROM "courseModules" cm WHERE cm."courseId" = c.id), 0
+        ) AS "moduleCount",
+        COALESCE(
+          (SELECT COUNT(*) FROM "courseModules" cm JOIN "courseLessons" cl ON cm.id = cl."moduleId" WHERE cm."courseId" = c.id), 0
+        ) AS "lessonCount"
+      FROM 
+        courses c
+      ORDER BY 
+        c.createdat DESC
+    `;
+    
+    const result = await db.execute(query);
+    const courses = result.rows;
+    
+    console.log(`[GET /course] ${courses.length} cursos encontrados`);
+    
+    return res.json(courses);
+  } catch (error) {
+    console.error('[GET /course] Erro ao buscar cursos:', error);
+    return res.status(500).json({ message: 'Erro ao buscar cursos', error: String(error) });
+  }
+});
+
+// Buscar um curso específico
+router.get('/:id', async (req, res) => {
+  try {
+    const courseId = parseInt(req.params.id);
+    
+    if (isNaN(courseId)) {
+      return res.status(400).json({ message: 'ID de curso inválido' });
+    }
+    
+    console.log(`[GET /course/${courseId}] Buscando curso específico`);
+    
+    // Usando SQL diretamente para evitar problemas de esquema
+    const query = `
+      SELECT 
+        c.id, 
+        c.title, 
+        c.description, 
+        c.thumbnailurl as "thumbnailUrl", 
+        c.featuredimage as "featuredImage",
+        c.level, 
+        c.status, 
+        c.ispublished as "isPublished", 
+        c.ispremium as "isPremium",
+        c.createdat as "createdAt",
+        c.updatedat as "updatedAt"
+      FROM 
+        courses c
+      WHERE 
+        c.id = $1
+    `;
+    
+    const result = await db.execute(query, [courseId]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Curso não encontrado' });
+    }
+    
+    // Buscar módulos relacionados
+    const modulesQuery = `
+      SELECT 
+        cm.id, 
+        cm.title, 
+        cm.description, 
+        cm.thumbnailurl as "thumbnailUrl",
+        cm.level, 
+        cm.order, 
+        cm.isactive as "isActive", 
+        cm.ispremium as "isPremium"
+      FROM 
+        "courseModules" cm
+      WHERE 
+        cm."courseId" = $1
+      ORDER BY 
+        cm.order ASC
+    `;
+    
+    const modulesResult = await db.execute(modulesQuery, [courseId]);
+    const modules = modulesResult.rows;
+    
+    // Para cada módulo, buscar suas lições
+    for (const module of modules) {
+      const lessonsQuery = `
+        SELECT 
+          cl.id, 
+          cl.title, 
+          cl.description, 
+          cl.videourl as "videoUrl", 
+          cl.thumbnailurl as "thumbnailUrl",
+          cl.duration, 
+          cl.order, 
+          cl.ispremium as "isPremium"
+        FROM 
+          "courseLessons" cl
+        WHERE 
+          cl."moduleId" = $1
+        ORDER BY 
+          cl.order ASC
+      `;
+      
+      const lessonsResult = await db.execute(lessonsQuery, [module.id]);
+      module.lessons = lessonsResult.rows;
+    }
+    
+    // Combinar os resultados
+    const course = result.rows[0];
+    course.modules = modules;
+    
+    console.log(`[GET /course/${courseId}] Curso encontrado com ${modules.length} módulos`);
+    
+    return res.json(course);
+  } catch (error) {
+    console.error(`[GET /course/${req.params.id}] Erro ao buscar curso:`, error);
+    return res.status(500).json({ message: 'Erro ao buscar curso', error: String(error) });
+  }
+});
+
+// Criar um novo curso
+router.post('/', async (req, res) => {
+  try {
+    console.log('[POST /course] Criando novo curso com dados:', req.body);
+    
+    const { title, description, thumbnailUrl, featuredImage, level, status, isPublished, isPremium } = req.body;
+    
+    if (!title) {
+      return res.status(400).json({ message: 'O título do curso é obrigatório' });
+    }
+    
+    // Inserir o novo curso usando SQL direto para evitar problemas de esquema
+    const query = `
+      INSERT INTO courses (
+        title, 
+        description, 
+        thumbnailurl, 
+        featuredimage, 
+        level, 
+        status, 
+        ispublished, 
+        ispremium, 
+        createdby
+      ) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
+      RETURNING 
+        id, 
+        title, 
+        description, 
+        thumbnailurl as "thumbnailUrl", 
+        featuredimage as "featuredImage", 
+        level, 
+        status, 
+        ispublished as "isPublished", 
+        ispremium as "isPremium", 
+        createdat as "createdAt", 
+        updatedat as "updatedAt"
+    `;
+    
+    const levelValue = level || 'iniciante';
+    const statusValue = status || 'active';
+    const isPublishedValue = isPublished !== undefined ? isPublished : true;
+    const isPremiumValue = isPremium !== undefined ? isPremium : false;
+    
+    const result = await db.execute(
+      query, 
+      [
+        title, 
+        description || '', 
+        thumbnailUrl || null, 
+        featuredImage || null, 
+        levelValue, 
+        statusValue, 
+        isPublishedValue, 
+        isPremiumValue, 
+        req.user?.id || null
+      ]
+    );
+    
+    const newCourse = result.rows[0];
+    
+    console.log('[POST /course] Curso criado com sucesso:', newCourse);
+    
+    return res.status(201).json(newCourse);
+  } catch (error) {
+    console.error('[POST /course] Erro ao criar curso:', error);
+    return res.status(500).json({ message: 'Erro ao criar curso', error: String(error) });
+  }
+});
+
+// Atualizar um curso
+router.put('/:id', async (req, res) => {
+  try {
+    const courseId = parseInt(req.params.id);
+    
+    if (isNaN(courseId)) {
+      return res.status(400).json({ message: 'ID de curso inválido' });
+    }
+    
+    console.log(`[PUT /course/${courseId}] Atualizando curso com dados:`, req.body);
+    
+    // Verificar se o curso existe
+    const checkQuery = `SELECT id FROM courses WHERE id = $1`;
+    const checkResult = await db.execute(checkQuery, [courseId]);
+    
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Curso não encontrado' });
+    }
+    
+    // Construir a query de atualização
+    let updateQuery = 'UPDATE courses SET updatedat = NOW()';
+    const params = [];
+    let paramIndex = 1;
+    
+    const fields = [
+      'title', 'description', 'thumbnailUrl', 'featuredImage', 
+      'level', 'status', 'isPublished', 'isPremium'
+    ];
+    
+    const dbFields = {
+      'thumbnailUrl': 'thumbnailurl',
+      'featuredImage': 'featuredimage',
+      'isPublished': 'ispublished',
+      'isPremium': 'ispremium'
+    };
+    
+    fields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        const dbField = dbFields[field] || field.toLowerCase();
+        updateQuery += `, ${dbField} = $${paramIndex}`;
+        params.push(req.body[field]);
+        paramIndex++;
+      }
+    });
+    
+    updateQuery += ' WHERE id = $' + paramIndex;
+    params.push(courseId);
+    
+    // Query para retornar os dados atualizados
+    updateQuery += ` RETURNING id, title, description, thumbnailurl as "thumbnailUrl", featuredimage as "featuredImage", 
+                     level, status, ispublished as "isPublished", ispremium as "isPremium", 
+                     createdat as "createdAt", updatedat as "updatedAt"`;
+    
+    console.log(`[PUT /course/${courseId}] Query de atualização:`, updateQuery);
+    console.log(`[PUT /course/${courseId}] Parâmetros:`, params);
+    
+    const result = await db.execute(updateQuery, params);
+    const updatedCourse = result.rows[0];
+    
+    console.log(`[PUT /course/${courseId}] Curso atualizado com sucesso:`, updatedCourse);
+    
+    return res.json(updatedCourse);
+  } catch (error) {
+    console.error(`[PUT /course/${req.params.id}] Erro ao atualizar curso:`, error);
+    return res.status(500).json({ message: 'Erro ao atualizar curso', error: String(error) });
+  }
+});
+
+// Excluir um curso
+router.delete('/:id', async (req, res) => {
+  try {
+    const courseId = parseInt(req.params.id);
+    
+    if (isNaN(courseId)) {
+      return res.status(400).json({ message: 'ID de curso inválido' });
+    }
+    
+    console.log(`[DELETE /course/${courseId}] Verificando dependências antes de excluir`);
+    
+    // Verificar se existem módulos relacionados
+    const checkModulesQuery = `SELECT COUNT(*) as count FROM "courseModules" WHERE "courseId" = $1`;
+    const modulesResult = await db.execute(checkModulesQuery, [courseId]);
+    const moduleCount = parseInt(modulesResult.rows[0].count);
+    
+    if (moduleCount > 0) {
+      return res.status(400).json({ 
+        message: 'Não é possível excluir este curso pois existem módulos associados a ele. Exclua os módulos primeiro.',
+        moduleCount
+      });
+    }
+    
+    // Excluir o curso
+    const deleteQuery = `DELETE FROM courses WHERE id = $1 RETURNING id`;
+    const result = await db.execute(deleteQuery, [courseId]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Curso não encontrado' });
+    }
+    
+    console.log(`[DELETE /course/${courseId}] Curso excluído com sucesso`);
+    
+    return res.json({ message: 'Curso excluído com sucesso', id: courseId });
+  } catch (error) {
+    console.error(`[DELETE /course/${req.params.id}] Erro ao excluir curso:`, error);
+    return res.status(500).json({ message: 'Erro ao excluir curso', error: String(error) });
   }
 });
 
