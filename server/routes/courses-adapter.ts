@@ -11,6 +11,42 @@ import { eq, asc, desc, sql } from 'drizzle-orm';
 
 const router = Router();
 
+// Rota principal para listar todos os cursos
+router.get('/', async (req, res) => {
+  try {
+    console.log('[ADAPTER] Redirecionando chamada de /api/course para listar cursos');
+    
+    // Abordagem direta com SQL raw para evitar problemas
+    const coursesList = await db.execute(
+      sql`SELECT id, title, description, slug, "featuredImage", level, status, "isPublished", "isPremium", "createdBy", "createdAt", "updatedAt" 
+          FROM courses 
+          ORDER BY "updatedAt" DESC`
+    );
+    
+    console.log('[ADAPTER] Cursos encontrados:', coursesList.length);
+    
+    // Buscar os módulos para cada curso
+    const coursesWithModules = await Promise.all(
+      coursesList.map(async (course) => {
+        const modules = await db.query.courseModules.findMany({
+          where: eq(courseModules.courseId, course.id),
+          orderBy: [asc(courseModules.order)]
+        });
+        
+        return {
+          ...course,
+          modules
+        };
+      })
+    );
+    
+    return res.json(coursesWithModules);
+  } catch (error) {
+    console.error('[ADAPTER] Erro ao buscar cursos:', error);
+    return res.status(500).json({ message: 'Erro ao buscar cursos', error: String(error) });
+  }
+});
+
 // Rota de compatibilidade para módulos
 router.get('/modules', async (req, res) => {
   try {
