@@ -212,7 +212,7 @@ const Header = () => {
   const navLinks = [
     { name: 'Início', path: '/' },
     { name: 'Categorias', path: '/categories' },
-    { name: 'Videoaulas', path: '/videoaulas', icon: <PlayCircle className="h-3.5 w-3.5 mr-1.5" /> },
+    { name: 'Vídeo Aulas', path: '/videoaulas', icon: <PlayCircle className="h-3.5 w-3.5 mr-1.5" /> },
     { name: 'Suporte', path: '/support' },
   ];
 
@@ -292,7 +292,7 @@ const Header = () => {
                 <div className="relative w-full">
                   <Input
                     type="text"
-                    placeholder="Buscar videoaulas..."
+                    placeholder="Buscar Vídeo Aulas..."
                     className="w-full pr-10 py-1.5 rounded-full border border-blue-200 text-sm"
                     value={videoSearchQuery}
                     onChange={(e) => setVideoSearchQuery(e.target.value)}
