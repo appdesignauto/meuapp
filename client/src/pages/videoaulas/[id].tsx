@@ -327,8 +327,8 @@ const VideoLessonPage: React.FC = () => {
       </Helmet> */}
       
       <div className="min-h-screen bg-white pb-12">
-        {/* Cabeçalho com navegação - estilo aprimorado */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 py-4 border-b border-blue-700 shadow-md">
+        {/* Cabeçalho com navegação - estilo mais suave */}
+        <div className="bg-gradient-to-r from-blue-500/90 to-blue-600/90 py-4 border-b border-blue-200 shadow-sm">
           <div className="container mx-auto px-4">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
               <div className="flex items-center">
@@ -342,9 +342,9 @@ const VideoLessonPage: React.FC = () => {
                 </Button>
                 
                 <div className="hidden sm:flex items-center text-white">
-                  <span className="mx-2 text-blue-300">|</span>
+                  <span className="mx-2 text-blue-200">|</span>
                   <div className="flex items-center">
-                    <Layers className="h-4 w-4 mr-1.5 text-blue-300" />
+                    <Layers className="h-4 w-4 mr-1.5 text-blue-200" />
                     <span className="font-medium">{currentModule?.title || "Módulo"}</span>
                   </div>
                 </div>
@@ -387,15 +387,15 @@ const VideoLessonPage: React.FC = () => {
               </div>
             </div>
             
-            {/* Barra de progresso - estilo sofisticado e minimalista */}
+            {/* Barra de progresso - estilo mais suave */}
             <div className="mt-4 flex items-center gap-2">
-              <div className="flex-1 h-1.5 bg-blue-100 rounded-full overflow-hidden shadow-inner relative">
+              <div className="flex-1 h-1.5 bg-blue-50 rounded-full overflow-hidden shadow-inner relative">
                 <div 
-                  className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full shadow-sm transition-all duration-500 ease-out"
+                  className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-400 to-blue-500 rounded-full shadow-sm transition-all duration-500 ease-out"
                   style={{ width: `${tutorial.progress || 15}%` }}
                 ></div>
               </div>
-              <div className="text-xs text-blue-700 font-medium">{tutorial.progress || 15}%</div>
+              <div className="text-xs text-blue-500 font-medium">{tutorial.progress || 15}%</div>
             </div>
           </div>
         </div>
