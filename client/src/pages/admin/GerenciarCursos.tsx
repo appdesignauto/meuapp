@@ -484,13 +484,36 @@ const GerenciarCursos = () => {
       value = Math.min(59, value);
     }
     
+    // Obter a duração atual como número
+    let currentDuration = 0;
+    if (lessonForm.duration !== undefined && lessonForm.duration !== null) {
+      if (typeof lessonForm.duration === 'string') {
+        // Se for uma string formatada como tempo, convertemos para segundos
+        if (lessonForm.duration.includes(':')) {
+          const parts = lessonForm.duration.split(':').map(part => parseInt(part, 10));
+          if (parts.length === 3) {
+            currentDuration = (parts[0] * 3600) + (parts[1] * 60) + parts[2];
+          } else if (parts.length === 2) {
+            currentDuration = (parts[0] * 60) + parts[1];
+          }
+        } else {
+          // Tenta interpretar como valor numérico
+          currentDuration = parseInt(lessonForm.duration, 10) || 0;
+        }
+      } else if (typeof lessonForm.duration === 'number') {
+        currentDuration = lessonForm.duration;
+      }
+    }
+    
     // Calcular duração atual em componentes
-    const hours = type === 'hours' ? value : Math.floor((lessonForm.duration || 0) / 3600);
-    const minutes = type === 'minutes' ? value : Math.floor(((lessonForm.duration || 0) % 3600) / 60);
-    const seconds = type === 'seconds' ? value : (lessonForm.duration || 0) % 60;
+    const hours = type === 'hours' ? value : Math.floor(currentDuration / 3600);
+    const minutes = type === 'minutes' ? value : Math.floor((currentDuration % 3600) / 60);
+    const seconds = type === 'seconds' ? value : currentDuration % 60;
     
     // Calcular nova duração total em segundos
     const totalSeconds = (hours * 3600) + (minutes * 60) + seconds;
+    
+    console.log(`Nova duração: ${hours}h:${minutes}m:${seconds}s = ${totalSeconds}s`);
     
     setLessonForm(prev => ({
       ...prev,
@@ -526,12 +549,27 @@ const GerenciarCursos = () => {
   
   // Formatar duração para visualização de tempo "HH:MM:SS" ou "MM:SS"
   const formatarDuracaoPreview = (segundos?: number | null) => {
-    if (!segundos) return "00:00";
+    if (segundos === undefined || segundos === null) return "00:00";
+    
+    // Verificar se já é uma string formatada como "MM:SS" ou "HH:MM:SS"
+    if (typeof segundos === 'string' && segundos.includes(':')) {
+      // Se já estiver no formato adequado, retorna a string diretamente
+      return segundos;
+    }
     
     // Garantir que segundos seja um número
-    const totalSegundos = typeof segundos === 'string' ? parseInt(segundos, 10) : segundos;
+    let totalSegundos = 0;
     
-    if (isNaN(totalSegundos)) return "00:00";
+    if (typeof segundos === 'string') {
+      totalSegundos = parseInt(segundos, 10);
+    } else if (typeof segundos === 'number') {
+      totalSegundos = segundos;
+    }
+    
+    if (isNaN(totalSegundos) || totalSegundos < 0) {
+      console.warn(`Valor inválido para formatação de duração: ${segundos}`);
+      return "00:00";
+    }
     
     // Calcular horas, minutos e segundos
     const horas = Math.floor(totalSegundos / 3600);
@@ -543,8 +581,8 @@ const GerenciarCursos = () => {
       return `${horas}:${minutos.toString().padStart(2, '0')}:${segsRestantes.toString().padStart(2, '0')}`;
     }
     
-    // Formatar apenas com minutos e segundos
-    return `${minutos}:${segsRestantes.toString().padStart(2, '0')}`;
+    // Formatar sempre com padding para minutos e segundos
+    return `${minutos.toString().padStart(2, '0')}:${segsRestantes.toString().padStart(2, '0')}`;
   };
   
   const getVideoProviderBadge = (provider: string) => {
