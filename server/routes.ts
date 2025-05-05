@@ -4478,6 +4478,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Rotas para gerenciamento de comentários em vídeos
   app.use('/api', videoCommentsRouter);
+  
+  // Rota para upload de banners de cursos
+  app.use(bannerUploadRouter);
 
   const httpServer = createServer(app);
   
