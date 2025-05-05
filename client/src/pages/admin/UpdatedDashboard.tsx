@@ -143,9 +143,9 @@ const AdminDashboard = () => {
     isLoading: isLoadingCourses,
     isError: isCoursesError
   } = useQuery({
-    queryKey: ['/api/courses'],
+    queryKey: ['/api/course'],
     queryFn: async () => {
-      const res = await fetch('/api/courses');
+      const res = await fetch('/api/course');
       if (!res.ok) {
         console.error('Erro ao buscar cursos:', res.status, res.statusText);
         throw new Error('Falha ao carregar cursos');
@@ -233,7 +233,7 @@ const AdminDashboard = () => {
   // Mutations para cursos
   const createCourseMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest('POST', '/api/courses', data);
+      const response = await apiRequest('POST', '/api/course', data);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Erro ao criar curso');
@@ -241,7 +241,7 @@ const AdminDashboard = () => {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/courses'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/course'] });
       setIsCourseDialogOpen(false);
       toast({
         title: 'Curso criado com sucesso',
@@ -259,7 +259,7 @@ const AdminDashboard = () => {
   
   const updateCourseMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest('PUT', `/api/courses/${data.id}`, data);
+      const response = await apiRequest('PUT', `/api/course/${data.id}`, data);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Erro ao atualizar curso');
@@ -267,7 +267,7 @@ const AdminDashboard = () => {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/courses'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/course'] });
       setIsCourseDialogOpen(false);
       toast({
         title: 'Curso atualizado com sucesso',
@@ -338,7 +338,7 @@ const AdminDashboard = () => {
   // Mutations para módulos
   const createModuleMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest('POST', '/api/courses/modules', data);
+      const response = await apiRequest('POST', '/api/course/modules', data);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Erro ao criar módulo');
@@ -346,7 +346,7 @@ const AdminDashboard = () => {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/courses/modules'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/course/modules'] });
       setIsModuleDialogOpen(false);
       toast({
         title: 'Módulo criado com sucesso',
@@ -364,7 +364,7 @@ const AdminDashboard = () => {
   
   const updateModuleMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest('PUT', `/api/courses/modules/${data.id}`, data);
+      const response = await apiRequest('PUT', `/api/course/modules/${data.id}`, data);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Erro ao atualizar módulo');
@@ -372,7 +372,7 @@ const AdminDashboard = () => {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/courses/modules'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/course/modules'] });
       setIsModuleDialogOpen(false);
       toast({
         title: 'Módulo atualizado com sucesso',
@@ -390,7 +390,7 @@ const AdminDashboard = () => {
   
   const deleteModuleMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await apiRequest('DELETE', `/api/courses/modules/${id}`);
+      const response = await apiRequest('DELETE', `/api/course/modules/${id}`);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Erro ao excluir módulo');
@@ -398,7 +398,7 @@ const AdminDashboard = () => {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/courses/modules'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/course/modules'] });
       setIsConfirmDeleteModuleOpen(false);
       toast({
         title: 'Módulo excluído com sucesso',
@@ -417,7 +417,7 @@ const AdminDashboard = () => {
   // Mutations para aulas
   const createLessonMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest('POST', '/api/courses/lessons', data);
+      const response = await apiRequest('POST', '/api/course/lessons', data);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Erro ao criar aula');
@@ -425,7 +425,7 @@ const AdminDashboard = () => {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/courses/lessons'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/course/lessons'] });
       setIsLessonDialogOpen(false);
       toast({
         title: 'Aula criada com sucesso',
@@ -443,7 +443,7 @@ const AdminDashboard = () => {
   
   const updateLessonMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest('PUT', `/api/courses/lessons/${data.id}`, data);
+      const response = await apiRequest('PUT', `/api/course/lessons/${data.id}`, data);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Erro ao atualizar aula');
@@ -451,7 +451,7 @@ const AdminDashboard = () => {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/courses/lessons'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/course/lessons'] });
       setIsLessonDialogOpen(false);
       toast({
         title: 'Aula atualizada com sucesso',
@@ -469,7 +469,7 @@ const AdminDashboard = () => {
   
   const deleteLessonMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await apiRequest('DELETE', `/api/courses/lessons/${id}`);
+      const response = await apiRequest('DELETE', `/api/course/lessons/${id}`);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Erro ao excluir aula');
@@ -477,7 +477,7 @@ const AdminDashboard = () => {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/courses/lessons'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/course/lessons'] });
       setIsConfirmDeleteLessonOpen(false);
       toast({
         title: 'Aula excluída com sucesso',
