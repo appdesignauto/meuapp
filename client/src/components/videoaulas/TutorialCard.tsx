@@ -122,21 +122,21 @@ const TutorialCard: React.FC<TutorialCardProps> = ({
       {/* Overlay de gradiente */}
       <div className={`absolute inset-0 bg-gradient-to-t from-neutral-900/90 via-neutral-900/70 to-blue-900/30 ${isHovered ? 'opacity-100' : 'opacity-90'}`} />
       
-      {/* Badge de duração */}
-      <div className="absolute top-2 right-2 bg-black/60 text-white text-xs py-1 px-2 rounded-md flex items-center">
+      {/* Badge de duração - estilo aprimorado */}
+      <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white text-xs py-1 px-2 rounded-sm flex items-center shadow-sm z-10">
         <Clock className="h-3 w-3 mr-1" />
         {tutorial.durationFormatted || tutorial.duration || "00:00"}
       </div>
 
-      {/* Badge de visualizações */}
-      <div className="absolute top-2 left-2 bg-blue-900/60 text-white text-xs py-1 px-2 rounded-md flex items-center">
+      {/* Badge de visualizações - estilo aprimorado */}
+      <div className="absolute top-2 left-2 bg-blue-900/70 backdrop-blur-sm text-white text-xs py-1 px-2 rounded-sm flex items-center shadow-sm">
         <Eye className="h-3 w-3 mr-1" />
         {tutorial.views.toLocaleString()}
       </div>
       
-      {/* Badge NOVO para conteúdos recentes */}
+      {/* Badge NOVO para conteúdos recentes - estilo aprimorado para combinar com os outros badges */}
       {isNewTutorial() && (
-        <div className="absolute top-12 right-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs py-1 px-2 rounded-md flex items-center">
+        <div className="absolute top-12 right-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs py-1 px-2 rounded-sm flex items-center shadow-sm backdrop-blur-sm z-10">
           <Sparkles className="h-3 w-3 mr-1" />
           NOVO
         </div>
