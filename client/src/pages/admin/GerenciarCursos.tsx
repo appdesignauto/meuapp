@@ -316,6 +316,15 @@ const GerenciarCursos = () => {
       // Definir que estamos em modo de edição para a nova aula
       setIsEditingLesson(true);
       
+      // Atualizar o formulário com o ID da aula recém-criada
+      // Isso é importante para que o upload da miniatura funcione corretamente
+      setLessonForm(prev => ({
+        ...prev,
+        id: createdLesson.id
+      }));
+      
+      console.log(`[Aula Criada] ID: ${createdLesson.id}, Título: ${createdLesson.title}`);
+      
       // Manter o diálogo aberto para que o usuário possa continuar adicionando a miniatura
       // setIsLessonDialogOpen(false);
       
@@ -571,9 +580,16 @@ const GerenciarCursos = () => {
       const formData = new FormData();
       formData.append('thumbnail', file);
       
-      // Adicionar ID da aula ao formData se disponível (para aulas existentes)
-      if (currentLesson?.id) {
-        formData.append('lessonId', String(currentLesson.id));
+      // Adicionar ID da aula ao formData - verificar em currentLesson e no lessonForm
+      // (o segundo caso acontece quando acabamos de criar uma aula e o objeto currentLesson
+      // ainda não foi atualizado, mas o lessonForm já tem o ID)
+      const lessonId = currentLesson?.id || (lessonForm.id ? Number(lessonForm.id) : undefined);
+      
+      if (lessonId) {
+        console.log(`[Upload Thumbnail] Usando lessonId: ${lessonId}`);
+        formData.append('lessonId', String(lessonId));
+      } else {
+        console.log(`[Upload Thumbnail] Nenhum lessonId disponível para o upload`);
       }
       
       // Iniciar um timer para simular o progresso enquanto o upload acontece
@@ -2410,6 +2426,20 @@ const GerenciarCursos = () => {
                 <XCircle className="h-4 w-4" />
                 Cancelar
               </Button>
+              
+              {/* Botão "Concluir e Fechar" - Exibido apenas após upload da miniatura em uma aula já criada */}
+              {isEditingLesson && lessonForm.thumbnailUrl && !isUploadingThumbnail && (
+                <Button 
+                  variant="secondary"
+                  onClick={handleCloseEditLesson}
+                  type="button"
+                  className="gap-2 bg-green-50 text-green-700 hover:bg-green-100 border border-green-200"
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  Concluir e Fechar
+                </Button>
+              )}
+              
               <Button 
                 onClick={handleLessonSubmit}
                 disabled={createLessonMutation.isPending || updateLessonMutation.isPending}
