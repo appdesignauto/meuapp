@@ -194,6 +194,11 @@ const MobileMenu = ({ isOpen, onClose, navLinks, userRole }: MobileMenuProps) =>
               const isActive = window.location.pathname === link.path || 
                 (link.path === '/videoaulas' && isVideoaulasPage);
               
+              // Ocultar link de Categorias quando na página de videoaulas
+              if (isVideoaulasPage && link.path === '/categories') {
+                return null;
+              }
+              
               return (
                 <Link
                   key={link.path}

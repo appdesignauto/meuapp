@@ -271,22 +271,29 @@ const Header = () => {
           <nav className={`hidden md:flex items-center space-x-1 transition-opacity duration-300 ${
             showHeaderSearch && isHomePage ? 'opacity-0' : 'opacity-100'
           }`}>
-            {/* Todos os links principais sempre visíveis */}
-            {navLinks.map((link) => (
-                <Link
-                  key={link.path}
-                  href={link.path}
-                  className={`text-neutral-600 hover:text-blue-600 font-medium text-[13px] px-3 py-2 rounded-md transition-all duration-200 hover:bg-blue-50 ${
-                    location === link.path 
-                      ? 'text-blue-600 bg-blue-50/80' 
-                      : isVideoaulasPage && (link.path === '/videoaulas' || link.path === '/categories') 
-                        ? 'text-blue-600 font-semibold' 
-                        : ''
-                  }`}
-                >
-                  {link.name}
-                </Link>
-              ))}
+            {/* Links principais - ocultar Categorias quando na seção Video Aulas */}
+            {navLinks.map((link) => {
+                // Ocultar link de Categorias quando na página de videoaulas
+                if (isVideoaulasPage && link.path === '/categories') {
+                  return null;
+                }
+                
+                return (
+                  <Link
+                    key={link.path}
+                    href={link.path}
+                    className={`text-neutral-600 hover:text-blue-600 font-medium text-[13px] px-3 py-2 rounded-md transition-all duration-200 hover:bg-blue-50 ${
+                      location === link.path 
+                        ? 'text-blue-600 bg-blue-50/80' 
+                        : isVideoaulasPage && link.path === '/videoaulas'
+                          ? 'text-blue-600 font-semibold' 
+                          : ''
+                    }`}
+                  >
+                    {link.name}
+                  </Link>
+                );
+              })}
           </nav>
 
           {/* User Actions */}
