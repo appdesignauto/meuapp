@@ -103,11 +103,26 @@ export default function VideoaulasPage() {
     }));
   };
   
-  // Formatar duração de segundos para string "MM:SS"
+  // Formatar duração de segundos para string "MM:SS" ou "HH:MM:SS" para vídeos longos
   const formatarDuracao = (segundos) => {
     if (!segundos) return "00:00";
-    const minutos = Math.floor(segundos / 60);
-    const segsRestantes = segundos % 60;
+    
+    // Garantir que segundos seja um número
+    const totalSegundos = typeof segundos === 'string' ? parseInt(segundos, 10) : segundos;
+    
+    if (isNaN(totalSegundos)) return "00:00";
+    
+    // Calcular horas, minutos e segundos
+    const horas = Math.floor(totalSegundos / 3600);
+    const minutos = Math.floor((totalSegundos % 3600) / 60);
+    const segsRestantes = totalSegundos % 60;
+    
+    // Formatar com horas se for necessário
+    if (horas > 0) {
+      return `${horas}:${minutos.toString().padStart(2, '0')}:${segsRestantes.toString().padStart(2, '0')}`;
+    }
+    
+    // Formatar apenas com minutos e segundos
     return `${minutos}:${segsRestantes.toString().padStart(2, '0')}`;
   };
   
