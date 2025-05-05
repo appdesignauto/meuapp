@@ -312,13 +312,14 @@ const Header = () => {
           {/* User Actions */}
           <div className="flex items-center space-x-3">
             
-            {/* Link para busca geral (sem ícone) - Visível apenas em telas médias e maiores, e não na página de videoaulas */}
+            {/* Link para busca geral - Visível apenas em telas médias e maiores, e não na página de videoaulas */}
             {!isVideoaulasPage && (
               <Button 
                 variant="ghost" 
                 className="hidden md:flex h-9 items-center px-4 rounded-full text-neutral-600 hover:text-blue-600 hover:bg-blue-50"
                 onClick={() => setLocation('/arts')}
               >
+                <Search className="h-3.5 w-3.5 mr-1.5" />
                 <span className="text-xs font-medium">Buscar Artes</span>
               </Button>
             )}
