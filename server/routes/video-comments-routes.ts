@@ -37,7 +37,7 @@ router.get('/video-comments/:lessonId', async (req: Request, res: Response) => {
       .where(
         and(
           eq(videoComments.lessonId, parseInt(lessonId)),
-          eq(videoComments.isVisible, true)
+          eq(videoComments.isHidden, false)
         )
       )
       .orderBy(desc(videoComments.createdAt));
@@ -73,7 +73,7 @@ router.post('/video-comments', checkUserAuth, async (req: Request, res: Response
       lessonId: parseInt(lessonId),
       createdAt: new Date(),
       likes: 0,
-      isVisible: true
+      isHidden: false
     }).returning();
     
     // Buscar dados completos do usuário para retornar junto com o comentário
@@ -149,7 +149,7 @@ router.delete('/video-comments/:commentId', checkUserAuth, async (req: Request, 
 router.patch('/video-comments/:commentId/visibility', checkUserAuth, checkUserRole(['admin']), async (req: Request, res: Response) => {
   try {
     const { commentId } = req.params;
-    const { isVisible } = req.body;
+    const { isHidden } = req.body;
     
     // Verificar se o comentário existe
     const [comment] = await db.select().from(videoComments).where(eq(videoComments.id, parseInt(commentId)));
@@ -161,7 +161,7 @@ router.patch('/video-comments/:commentId/visibility', checkUserAuth, checkUserRo
     // Atualizar visibilidade
     const [updatedComment] = await db
       .update(videoComments)
-      .set({ isVisible: isVisible === true })
+      .set({ isHidden: isHidden === true })
       .where(eq(videoComments.id, parseInt(commentId)))
       .returning();
     
