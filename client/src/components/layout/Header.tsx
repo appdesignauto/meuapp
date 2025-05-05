@@ -234,9 +234,9 @@ const Header = () => {
             </Link>
           </div>
 
-          {/* Barra de pesquisa flutuante - aparece quando rolar para baixo */}
+          {/* Barra de pesquisa flutuante - aparece quando rolar para baixo e NÃO está na página de videoaulas */}
           <div className={`absolute left-1/2 transform -translate-x-1/2 w-[500px] max-w-[calc(100%-220px)] z-10 transition-all duration-300 ease-in-out ${
-            showHeaderSearch 
+            showHeaderSearch && !isVideoaulasPage
               ? 'opacity-100 translate-y-0' 
               : 'opacity-0 -translate-y-4 pointer-events-none'
           }`}>
@@ -266,7 +266,9 @@ const Header = () => {
           </div>
           
           {/* Navigation - Desktop */}
-          <nav className={`hidden md:flex items-center space-x-1 transition-opacity duration-300 ${showHeaderSearch ? 'opacity-0' : 'opacity-100'}`}>
+          <nav className={`hidden md:flex items-center space-x-1 transition-opacity duration-300 ${
+            showHeaderSearch && !isVideoaulasPage ? 'opacity-0' : 'opacity-100'
+          }`}>
             {navLinks.map((link) => (
               <Link
                 key={link.path}
