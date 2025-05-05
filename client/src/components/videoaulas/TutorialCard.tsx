@@ -100,7 +100,7 @@ const TutorialCard: React.FC<TutorialCardProps> = ({
       {/* Badge de duração */}
       <div className="absolute top-2 right-2 bg-black/60 text-white text-xs py-1 px-2 rounded-md flex items-center">
         <Clock className="h-3 w-3 mr-1" />
-        {tutorial.duration || "00:00"}
+        {tutorial.durationFormatted || tutorial.duration || "00:00"}
       </div>
 
       {/* Badge de visualizações */}

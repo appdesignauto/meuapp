@@ -38,7 +38,8 @@ export interface Tutorial {
   isPremium: boolean;
   level: "iniciante" | "intermediario" | "avancado";
   order: number;
-  duration: string; // Duração do tutorial em formato "MM:SS"
+  duration: string | number; // Duração do tutorial em segundos (number) ou formato "MM:SS" (string)
+  durationFormatted?: string; // Duração do tutorial em formato "MM:SS" ou "HH:MM:SS"
   createdAt: string;
   updatedAt: string;
   tags: string[];
@@ -46,6 +47,10 @@ export interface Tutorial {
   isWatched?: boolean;
   category: string;
   videoUrl?: string;
+  // Campos adicionais para a transformação de aulas
+  moduleId?: number;
+  moduloNome?: string;
+  videoProvider?: string;
 }
 
 // Thumbnails dos tutoriais - usamos URLs neutras que funcionariam como placeholders

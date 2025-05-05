@@ -113,6 +113,7 @@ export default function VideoaulasPage() {
         const duracaoFormatada = formatarDuracao(lesson.duration);
         console.log(`Duração formatada: ${duracaoFormatada}`);
         
+        // Manter ambos os valores - o original e o formatado para garantir compatibilidade
         return {
           id: lesson.id,
           title: lesson.title,
@@ -120,7 +121,8 @@ export default function VideoaulasPage() {
           thumbnailUrl: lesson.thumbnailUrl,
           videoUrl: lesson.videoUrl,
           videoProvider: lesson.videoProvider,
-          duration: duracaoFormatada,
+          duration: lesson.duration, // Valor original em segundos
+          durationFormatted: duracaoFormatada, // Valor formatado para exibição
           // Usar o nível do módulo encontrado ou 'iniciante' como fallback
           level: modulo?.level || 'iniciante',
           isPremium: lesson.isPremium,
