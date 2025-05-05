@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '../db';
-import { courses, courseModules, courseLessons } from '@shared/schema';
+import { courses, courseModules, courseLessons, courseSettings } from '@shared/schema';
 import { eq, asc, desc, sql } from 'drizzle-orm';
 
 /**
@@ -15,16 +15,39 @@ const router = Router();
 router.get('/modules', async (req, res) => {
   try {
     console.log('[ADAPTER] Redirecionando chamada de /api/courses/modules para estrutura atualizada');
-    const modules = await db.query.courseModules.findMany({
-      orderBy: [asc(courseModules.order)],
-      with: {
-        lessons: {
-          orderBy: [asc(courseLessons.order)]
-        }
-      }
-    });
     
-    return res.json(modules);
+    // Verificar se está buscando um módulo específico por ID
+    const moduleId = req.query.id ? parseInt(req.query.id as string) : undefined;
+    
+    if (moduleId && !isNaN(moduleId)) {
+      // Buscar módulo específico
+      const module = await db.query.courseModules.findFirst({
+        where: eq(courseModules.id, moduleId),
+        with: {
+          lessons: {
+            orderBy: [asc(courseLessons.order)]
+          }
+        }
+      });
+      
+      if (!module) {
+        return res.status(404).json({ message: 'Módulo não encontrado' });
+      }
+      
+      return res.json(module);
+    } else {
+      // Buscar todos os módulos
+      const modules = await db.query.courseModules.findMany({
+        orderBy: [asc(courseModules.order)],
+        with: {
+          lessons: {
+            orderBy: [asc(courseLessons.order)]
+          }
+        }
+      });
+      
+      return res.json(modules);
+    }
   } catch (error) {
     console.error('[ADAPTER] Erro ao buscar módulos:', error);
     return res.status(500).json({ message: 'Erro ao buscar módulos', error: String(error) });
@@ -65,20 +88,41 @@ router.get('/modules/:id', async (req, res) => {
 router.get('/lessons', async (req, res) => {
   try {
     console.log('[ADAPTER] Redirecionando chamada de /api/courses/lessons para estrutura atualizada');
+    
+    // Verificar diferentes parâmetros
     const moduleId = req.query.moduleId ? parseInt(req.query.moduleId as string) : undefined;
+    const lessonId = req.query.id ? parseInt(req.query.id as string) : undefined;
     
-    let lessons;
-    
-    if (moduleId && !isNaN(moduleId)) {
-      lessons = await db.select().from(courseLessons)
+    // Verificar se está buscando uma lição específica pelo ID
+    if (lessonId && !isNaN(lessonId)) {
+      const lesson = await db.query.courseLessons.findFirst({
+        where: eq(courseLessons.id, lessonId),
+        with: {
+          module: true
+        }
+      });
+      
+      if (!lesson) {
+        return res.status(404).json({ message: 'Lição não encontrada' });
+      }
+      
+      return res.json(lesson);
+    }
+    // Verificar lições por módulo
+    else if (moduleId && !isNaN(moduleId)) {
+      const lessons = await db.select().from(courseLessons)
         .where(eq(courseLessons.moduleId, moduleId))
         .orderBy(asc(courseLessons.order));
-    } else {
-      lessons = await db.select().from(courseLessons)
+      
+      return res.json(lessons);
+    } 
+    // Buscar todas as lições
+    else {
+      const lessons = await db.select().from(courseLessons)
         .orderBy(asc(courseLessons.order));
+      
+      return res.json(lessons);
     }
-    
-    return res.json(lessons);
   } catch (error) {
     console.error('[ADAPTER] Erro ao buscar lições:', error);
     return res.status(500).json({ message: 'Erro ao buscar lições', error: String(error) });
@@ -110,6 +154,28 @@ router.get('/lessons/:id', async (req, res) => {
   } catch (error) {
     console.error('[ADAPTER] Erro ao buscar lição:', error);
     return res.status(500).json({ message: 'Erro ao buscar lição', error: String(error) });
+  }
+});
+
+// Rota de compatibilidade para as configurações de cursos
+router.get('/settings/get', async (req, res) => {
+  try {
+    console.log('[ADAPTER] Redirecionando chamada de /api/courses/settings/get para estrutura atualizada');
+    
+    // Buscar as configurações ou criar registros padrão se não existirem
+    const settings = await db.query.courseSettings.findFirst({
+      where: eq(courseSettings.id, 1) // Assumindo que há apenas um registro de configurações
+    });
+    
+    if (!settings) {
+      console.log('[ADAPTER] Configurações não encontradas, redirecionando para API principal');
+      return res.status(404).json({ message: 'Configurações não encontradas' });
+    }
+    
+    return res.json(settings);
+  } catch (error) {
+    console.error('[ADAPTER] Erro ao buscar configurações:', error);
+    return res.status(500).json({ message: 'Erro ao buscar configurações', error: String(error) });
   }
 });
 

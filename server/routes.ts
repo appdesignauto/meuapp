@@ -4471,12 +4471,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Registrar o router de videoaulas
   app.use('/api/videoaulas', videoaulasRouter);
   
-  // Redirecionando apenas as rotas de leitura para serem públicas
-  app.get('/api/courses/modules', courseRouter);
-  app.get('/api/courses/lessons', courseRouter);
+  // Adaptador para manter compatibilidade com rotas antigas
+  app.use('/api/courses', coursesAdapterRouter);
   
   // Rotas para gerenciamento de cursos (cursos, configurações)
-  app.use('/api/courses', coursesRouter);
+  app.use('/api/course/settings', coursesRouter);
   
   // Rotas para gerenciamento de módulos e aulas
   app.use('/api/course', courseRouter);
