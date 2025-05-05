@@ -202,7 +202,8 @@ const VideoLessonPage: React.FC = () => {
     thumbnailUrl: currentLesson.thumbnailUrl,
     videoUrl: currentLesson.videoUrl,
     videoProvider: currentLesson.videoProvider,
-    duration: formatarDuracao(currentLesson.duration),
+    duration: currentLesson.duration, // Manter o valor original em segundos
+    durationFormatted: formatarDuracao(currentLesson.duration), // Adicionar formatação adequada
     level: currentModule?.level || 'iniciante',
     isPremium: currentLesson.isPremium,
     isWatched: false, // Será implementado com histórico do usuário no futuro
@@ -223,7 +224,8 @@ const VideoLessonPage: React.FC = () => {
       thumbnailUrl: lesson.thumbnailUrl,
       videoUrl: lesson.videoUrl,
       videoProvider: lesson.videoProvider,
-      duration: formatarDuracao(lesson.duration),
+      duration: lesson.duration, // Valor original
+      durationFormatted: formatarDuracao(lesson.duration), // Valor formatado
       level: currentModule?.level || 'iniciante',
       isPremium: lesson.isPremium,
       isWatched: false,
@@ -364,7 +366,7 @@ const VideoLessonPage: React.FC = () => {
                 
                 <Badge className="bg-blue-600 text-white border-0 shadow-sm font-medium px-3 py-1">
                   <Clock className="h-3 w-3 mr-1" />
-                  {tutorial.duration}
+                  {tutorial.durationFormatted || tutorial.duration}
                 </Badge>
                 
                 {isCompleted ? (
