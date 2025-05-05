@@ -26,7 +26,8 @@ import {
   Upload,
   AlertTriangle,
   Loader2,
-  XCircle
+  XCircle,
+  Clock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -306,31 +307,46 @@ const GerenciarCursos = () => {
   
   const updateLessonMutation = useMutation({
     mutationFn: async (data: CourseLesson) => {
-      console.log('Enviando dados para atualização:', data);
+      console.log('[CLIENT] Enviando dados para atualização de aula:', data);
       const response = await apiRequest('PUT', `/api/courses/lessons/${data.id}`, data);
+      
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('[CLIENT] Erro na resposta da API:', errorData);
         throw new Error(errorData.message || 'Erro ao atualizar aula');
       }
+      
       const updatedLesson = await response.json();
-      console.log('Aula atualizada com sucesso:', updatedLesson);
+      console.log('[CLIENT] Aula atualizada com sucesso:', updatedLesson);
       return updatedLesson;
     },
     onSuccess: (updatedLesson) => {
-      // Invalida a query e força um refetch dos dados
+      console.log('[CLIENT] Sucesso na atualização, invalidando cache...');
+      
+      // Invalida todas as queries relacionadas a lições
       queryClient.invalidateQueries({ 
         queryKey: ['/api/courses/lessons'],
         refetchType: 'all'
       });
       
+      // Também invalida módulos pois podem ter informações agregadas das lições
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/courses/modules'],
+        refetchType: 'all'
+      });
+      
+      console.log('[CLIENT] Cache invalidado, fechando diálogo...');
       setIsLessonDialogOpen(false);
+      
       toast({
         title: 'Aula atualizada com sucesso',
         description: `"${updatedLesson.title}" foi atualizada com sucesso`,
       });
+      
+      console.log('[CLIENT] Processo de atualização da aula concluído');
     },
     onError: (error: Error) => {
-      console.error('Erro durante atualização da aula:', error);
+      console.error('[CLIENT] Erro durante atualização da aula:', error);
       toast({
         title: 'Erro ao atualizar aula',
         description: error.message,
@@ -1016,7 +1032,7 @@ const GerenciarCursos = () => {
                                               </div>
                                               <div className="text-xs text-gray-500 mt-1">
                                                 <span className="inline-flex items-center text-amber-600 font-medium">
-                                                  <Clock className="h-3 w-3 mr-1" /> 
+                                                  <span className="inline-block w-3 h-3 mr-1 text-amber-600">⏱️</span>
                                                   {formatarDuracaoPreview(lesson.duration)}
                                                 </span>
                                               </div>
@@ -1132,8 +1148,20 @@ const GerenciarCursos = () => {
                             <TableCell>{lesson.order}</TableCell>
                             <TableCell>
                               <div>
-                                <div className="font-medium">{lesson.title}</div>
-                                <div className="text-xs text-gray-500">{lesson.description.substring(0, 50)}...</div>
+                                <div className="font-medium text-blue-600">{lesson.title}</div>
+                                <div className="text-xs text-gray-600 mt-1">
+                                  {lesson.description ? (
+                                    lesson.description.length > 50 
+                                      ? `${lesson.description.substring(0, 50)}...` 
+                                      : lesson.description
+                                  ) : <span className="italic text-gray-400">Sem descrição</span>}
+                                </div>
+                                <div className="text-xs text-gray-500 mt-1">
+                                  <span className="inline-flex items-center text-amber-600 font-medium">
+                                    <span className="inline-block w-3 h-3 mr-1 text-amber-600">⏱️</span>
+                                    {formatarDuracaoPreview(lesson.duration)}
+                                  </span>
+                                </div>
                               </div>
                             </TableCell>
                             <TableCell>

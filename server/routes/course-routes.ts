@@ -267,9 +267,13 @@ router.post('/lessons', async (req, res) => {
 // Atualizar uma lição
 router.put('/lessons/:id', async (req, res) => {
   try {
+    console.log(`[UPDATE LESSON] Iniciando atualização da lição ID: ${req.params.id}`);
+    console.log(`[UPDATE LESSON] Corpo da requisição:`, req.body);
+    
     const lessonId = parseInt(req.params.id);
     
     if (isNaN(lessonId)) {
+      console.log(`[UPDATE LESSON] ID inválido: ${req.params.id}`);
       return res.status(400).json({ message: 'ID inválido' });
     }
     
@@ -277,37 +281,48 @@ router.put('/lessons/:id', async (req, res) => {
       where: eq(courseLessons.id, lessonId)
     });
     
+    console.log(`[UPDATE LESSON] Lição existente encontrada:`, existingLesson);
+    
     if (!existingLesson) {
+      console.log(`[UPDATE LESSON] Lição não encontrada com ID: ${lessonId}`);
       return res.status(404).json({ message: 'Lição não encontrada' });
     }
     
+    console.log(`[UPDATE LESSON] Validando dados...`);
     const lessonData = insertCourseLessonSchema.partial().parse(req.body);
+    console.log(`[UPDATE LESSON] Dados validados:`, lessonData);
     
     // Se o moduleId foi fornecido, verificar se o módulo existe
     if (lessonData.moduleId !== undefined) {
+      console.log(`[UPDATE LESSON] Verificando existência do módulo ID: ${lessonData.moduleId}`);
       const moduleExists = await db.query.courseModules.findFirst({
         where: eq(courseModules.id, lessonData.moduleId)
       });
       
       if (!moduleExists) {
+        console.log(`[UPDATE LESSON] Módulo não encontrado com ID: ${lessonData.moduleId}`);
         return res.status(400).json({ message: 'Módulo não encontrado' });
       }
+      console.log(`[UPDATE LESSON] Módulo encontrado:`, moduleExists.title);
     }
     
+    console.log(`[UPDATE LESSON] Executando atualização no banco de dados...`);
     const [updatedLesson] = await db
       .update(courseLessons)
       .set(lessonData)
       .where(eq(courseLessons.id, lessonId))
       .returning();
     
+    console.log(`[UPDATE LESSON] Atualização concluída com sucesso:`, updatedLesson);
     return res.json(updatedLesson);
   } catch (error) {
     if (error instanceof ZodError) {
       const validationError = fromZodError(error);
+      console.error(`[UPDATE LESSON] Erro de validação:`, validationError);
       return res.status(400).json({ message: 'Dados inválidos', errors: validationError.message });
     }
     
-    console.error('Erro ao atualizar lição:', error);
+    console.error('[UPDATE LESSON] Erro ao atualizar lição:', error);
     return res.status(500).json({ message: 'Erro ao atualizar lição', error: String(error) });
   }
 });
