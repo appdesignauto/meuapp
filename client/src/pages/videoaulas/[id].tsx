@@ -127,10 +127,33 @@ const YouTubePlayer: React.FC<{ videoUrl: string; thumbnailUrl: string }> = ({ v
       
       {/* iframe do YouTube */}
       <div className="w-full h-full relative">
-        {/* Sobreposição para evitar cliques em elementos interativos do player que podem levar ao YouTube */}
+        {/* Estilo personalizado do player */}
+        <div className="absolute inset-0 pointer-events-none z-20">
+          {/* Barra superior personalizada para substituir a do YouTube */}
+          <div className="absolute top-0 left-0 right-0 h-12 bg-black/80 flex items-center px-4 z-30">
+            <p className="text-white font-medium text-sm">DesignAuto Video Player</p>
+          </div>
+          
+          {/* Cantos com overlay para esconder elementos do YouTube */}
+          <div className="absolute top-0 left-0 w-16 h-16 bg-black/80 z-30"></div>
+          <div className="absolute top-0 right-0 w-16 h-16 bg-black/80 z-30"></div>
+          <div className="absolute bottom-0 left-0 w-16 h-16 bg-black/80 z-30"></div>
+          <div className="absolute bottom-0 right-0 w-16 h-16 bg-black/80 z-30"></div>
+        </div>
+        
+        {/* Sobreposição para bloquear interações em links da marca do player, mas permitir controles */}
         <div 
-          className="absolute inset-0 z-10 pointer-events-none"
-          style={{ backgroundColor: 'transparent' }}
+          className="absolute inset-0 z-10"
+          style={{ backgroundColor: 'transparent', pointerEvents: 'none' }}
+          onClick={(e) => {
+            // Bloqueia cliques em elementos específicos que levam ao YouTube
+            const target = e.target as HTMLElement;
+            if (target.tagName === 'A' || target.closest('a')) {
+              e.preventDefault();
+              e.stopPropagation();
+              return false;
+            }
+          }}
         ></div>
         
         <iframe
