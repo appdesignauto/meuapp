@@ -35,7 +35,9 @@ import {
   Award,
   Crown,
   Sparkles,
-  Zap
+  Zap,
+  Folders,
+  AlertTitle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -1853,48 +1855,156 @@ const GerenciarCursos = () => {
       
       {/* Diálogo de confirmação para excluir módulo */}
       <Dialog open={isConfirmDeleteModuleOpen} onOpenChange={setIsConfirmDeleteModuleOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive">
               <AlertTriangle className="h-5 w-5" />
               Excluir Módulo
             </DialogTitle>
+            <DialogDescription>
+              Esta ação não pode ser revertida após confirmação
+            </DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <div className="bg-destructive/10 p-4 rounded-md mb-4 border border-destructive/30">
               <p className="font-medium">Tem certeza que deseja excluir o módulo "{currentModule?.title}"?</p>
               <p className="text-sm text-gray-700 mt-2">
-                Esta ação não pode ser desfeita. O módulo será removido permanentemente do sistema.
+                Este módulo será removido permanentemente do sistema.
               </p>
             </div>
             
-            {currentModule && lessons.some(lesson => lesson.moduleId === currentModule.id) && (
-              <div className="mb-4">
-                <Alert variant="destructive">
-                  <AlertTriangle className="h-4 w-4 mr-2" />
-                  <AlertDescription className="font-semibold">
-                    Este módulo contém aulas que também serão excluídas!
-                  </AlertDescription>
-                </Alert>
-                <div className="mt-3 bg-gray-50 p-3 rounded-md border border-gray-200">
-                  <p className="text-sm font-medium mb-2">Aulas a serem excluídas:</p>
-                  <ul className="list-disc pl-5 text-sm text-gray-700 space-y-1 max-h-40 overflow-auto">
-                    {lessons
-                      .filter((lesson) => lesson.moduleId === currentModule.id)
-                      .map((lesson) => (
-                        <li key={lesson.id}>{lesson.title}</li>
-                      ))}
+            {currentModule && (
+              <div className="mt-4 flex flex-col sm:flex-row gap-4 bg-gray-50 p-3 rounded-md border mb-4">
+                <div className="sm:w-1/3">
+                  {currentModule.thumbnailUrl ? (
+                    <div className="aspect-video w-full rounded-md overflow-hidden border bg-gray-100">
+                      <img 
+                        src={currentModule.thumbnailUrl}
+                        alt={currentModule.title}
+                        className="w-full h-full object-cover" 
+                        onError={(e) => {
+                          e.currentTarget.src = "https://placehold.co/400x225/e2e8f0/94a3b8?text=Miniatura";
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="aspect-video w-full rounded-md overflow-hidden border bg-gray-100 flex items-center justify-center">
+                      <Folders className="h-12 w-12 text-gray-400" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-medium text-sm">Detalhes do módulo:</h4>
+                  <ul className="mt-1 space-y-1 text-sm text-gray-700">
+                    <li className="flex items-center gap-2">
+                      <span className="font-medium min-w-20">Ordem:</span>
+                      <span>{currentModule.order}</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="font-medium min-w-20">Nível:</span>
+                      <span className="flex items-center gap-1">
+                        {currentModule.level === 'iniciante' && (
+                          <>
+                            <Sparkles className="h-3.5 w-3.5 text-green-500" />
+                            <span>Iniciante</span>
+                          </>
+                        )}
+                        {currentModule.level === 'intermediario' && (
+                          <>
+                            <Zap className="h-3.5 w-3.5 text-yellow-500" />
+                            <span>Intermediário</span>
+                          </>
+                        )}
+                        {currentModule.level === 'avancado' && (
+                          <>
+                            <Award className="h-3.5 w-3.5 text-red-500" />
+                            <span>Avançado</span>
+                          </>
+                        )}
+                      </span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="font-medium min-w-20">Status:</span>
+                      <span className="flex items-center gap-1">
+                        {currentModule.isPremium ? (
+                          <>
+                            <Crown className="h-3.5 w-3.5 text-yellow-500" />
+                            <span>Premium</span>
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                            <span>Gratuito</span>
+                          </>
+                        )}
+                        {currentModule.isActive ? (
+                          <Badge variant="outline" className="ml-2 bg-green-50 text-green-700 border-green-200 text-xs">
+                            Ativo
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="ml-2 bg-gray-50 text-gray-500 border-gray-200 text-xs">
+                            Inativo
+                          </Badge>
+                        )}
+                      </span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="font-medium min-w-20">Total aulas:</span>
+                      <span className="flex items-center gap-1">
+                        {lessons.filter(lesson => lesson.moduleId === currentModule.id).length}
+                        <FileVideo className="h-3.5 w-3.5 text-blue-400 ml-1" />
+                      </span>
+                    </li>
                   </ul>
                 </div>
               </div>
             )}
             
-            <p className="text-sm text-gray-500">
-              <strong>Nota:</strong> A exclusão do módulo pode afetar a navegação dos usuários que 
-              estavam acompanhando este conteúdo.
-            </p>
+            {currentModule && lessons.some(lesson => lesson.moduleId === currentModule.id) && (
+              <div className="mb-4">
+                <Alert className="bg-red-50 border-red-200 text-red-800">
+                  <AlertTriangle className="h-4 w-4 text-red-500" />
+                  <AlertTitle className="font-semibold text-red-800">Aulas relacionadas serão excluídas</AlertTitle>
+                  <AlertDescription className="text-red-700">
+                    As seguintes aulas também serão removidas permanentemente:
+                  </AlertDescription>
+                </Alert>
+                <div className="mt-3 bg-gray-50 p-3 rounded-md border border-gray-200">
+                  <div className="max-h-40 overflow-y-auto pr-2">
+                    <ul className="space-y-2">
+                      {lessons
+                        .filter(lesson => lesson.moduleId === currentModule.id)
+                        .sort((a, b) => a.order - b.order)
+                        .map((lesson) => (
+                          <li key={lesson.id} className="flex gap-3 py-1.5 px-2 rounded-md hover:bg-gray-100">
+                            <span className="flex-none w-6 h-6 flex items-center justify-center bg-gray-200 text-gray-700 rounded-full text-xs font-medium">
+                              {lesson.order}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-800 truncate">{lesson.title}</p>
+                              {lesson.isPremium && (
+                                <span className="inline-flex items-center text-xs text-amber-600 mt-0.5">
+                                  <Crown className="h-3 w-3 mr-1" />
+                                  Premium
+                                </span>
+                              )}
+                            </div>
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <Alert className="mb-4 bg-amber-50 border-amber-200">
+              <AlertTriangle className="h-4 w-4 text-amber-600" />
+              <AlertDescription className="text-amber-800">
+                A exclusão do módulo afetará a navegação dos usuários que estavam acompanhando este conteúdo.
+              </AlertDescription>
+            </Alert>
           </div>
-          <DialogFooter className="flex justify-between gap-3">
+          <DialogFooter className="flex justify-between gap-3 border-t pt-4">
             <Button 
               variant="outline" 
               onClick={() => setIsConfirmDeleteModuleOpen(false)}
