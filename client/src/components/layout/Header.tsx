@@ -312,14 +312,16 @@ const Header = () => {
               </form>
             )}
             
-            {/* Link para busca geral (sem ícone) - Visível apenas em telas médias e maiores */}
-            <Button 
-              variant="ghost" 
-              className="hidden md:flex h-9 items-center px-4 rounded-full text-neutral-600 hover:text-blue-600 hover:bg-blue-50"
-              onClick={() => setLocation('/arts')}
-            >
-              <span className="text-xs font-medium">Buscar Artes</span>
-            </Button>
+            {/* Link para busca geral (sem ícone) - Visível apenas em telas médias e maiores, e não na página de videoaulas */}
+            {!isVideoaulasPage && (
+              <Button 
+                variant="ghost" 
+                className="hidden md:flex h-9 items-center px-4 rounded-full text-neutral-600 hover:text-blue-600 hover:bg-blue-50"
+                onClick={() => setLocation('/arts')}
+              >
+                <span className="text-xs font-medium">Buscar Artes</span>
+              </Button>
+            )}
 
             {user && user.role !== 'premium' && (
               <Link href="/planos">
