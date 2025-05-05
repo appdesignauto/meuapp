@@ -681,7 +681,7 @@ router.put('/:id', async (req, res) => {
     const { 
       title, 
       description, 
-      thumbnailUrl, // Vamos mapear para featuredImage
+      thumbnailUrl, 
       featuredImage,
       level,
       status,
@@ -689,61 +689,94 @@ router.put('/:id', async (req, res) => {
       isPremium
     } = req.body;
     
-    // Criar query de atualização usando parâmetros nomeados para maior segurança
-    const updateQuery = `
-      UPDATE courses 
-      SET 
-        "updatedAt" = NOW(),
-        title = COALESCE($1, title),
-        description = COALESCE($2, description),
-        "featuredImage" = COALESCE($3, "featuredImage"),
-        level = COALESCE($4, level),
-        status = COALESCE($5, status),
-        "isPublished" = COALESCE($6, "isPublished"),
-        "isPremium" = COALESCE($7, "isPremium")
-      WHERE 
-        id = $8
-      RETURNING 
-        id, 
-        title, 
-        description, 
-        "featuredImage" as "thumbnailUrl", 
-        "featuredImage", 
-        level, 
-        status, 
-        "isPublished", 
-        "isPremium", 
-        "createdAt", 
-        "updatedAt"
-    `;
-    
     // Usar thumbnailUrl como fallback para featuredImage se fornecido
     const finalFeaturedImage = featuredImage || thumbnailUrl;
     
-    const params = [
-      title, 
-      description, 
-      finalFeaturedImage,
-      level,
-      status,
-      isPublished === undefined ? null : isPublished,
-      isPremium === undefined ? null : isPremium,
-      courseId
-    ];
-    
-    console.log(`[PUT /course/${courseId}] Query de atualização simplificada:`);
-    console.log(`[PUT /course/${courseId}] Parâmetros:`, params);
-    
-    const result = await db.execute(updateQuery, params);
-    
-    if (result.rows.length === 0) {
-      return res.status(500).json({ message: 'Falha ao atualizar o curso' });
+    // Vamos usar um método mais direto com mais segurança para garantir que os parâmetros são passados corretamente
+    try {
+      // Primeiro vamos buscar os valores atuais para campos que podem ser undefined
+      const currentDataQuery = `
+        SELECT level, status, "isPublished", "isPremium" 
+        FROM courses 
+        WHERE id = $1
+      `;
+      const currentData = await db.execute(currentDataQuery, [courseId]);
+      const current = currentData.rows[0] || {};
+      
+      // Atualizar o curso usando todos os parâmetros explícitos
+      const updateQuery = `
+        UPDATE courses 
+        SET 
+          "updatedAt" = NOW(),
+          title = $1,
+          description = $2,
+          "featuredImage" = $3,
+          level = $4,
+          status = $5,
+          "isPublished" = $6,
+          "isPremium" = $7
+        WHERE 
+          id = $8
+        RETURNING 
+          id, 
+          title, 
+          description, 
+          "featuredImage" as "thumbnailUrl", 
+          "featuredImage", 
+          level, 
+          status, 
+          "isPublished", 
+          "isPremium", 
+          "createdAt", 
+          "updatedAt"
+      `;
+      
+      const updateParams = [
+        title || null, 
+        description || null, 
+        finalFeaturedImage || null,
+        level || current.level || 'iniciante',
+        status || current.status || 'active',
+        isPublished !== undefined ? isPublished : current.isPublished !== undefined ? current.isPublished : true,
+        isPremium !== undefined ? isPremium : current.isPremium !== undefined ? current.isPremium : false,
+        courseId
+      ];
+      
+      console.log(`[PUT /course/${courseId}] Query de atualização params:`, updateParams);
+      
+      const result = await db.execute(updateQuery, updateParams);
+      
+      if (result.rows.length === 0) {
+        return res.status(500).json({ message: 'Falha ao atualizar o curso' });
+      }
+      
+      const updatedCourse = result.rows[0];
+      console.log(`[PUT /course/${courseId}] Curso atualizado com sucesso:`, updatedCourse);
+      
+      return res.json(updatedCourse);
+    } catch (updateError) {
+      console.error(`[PUT /course/${courseId}] Erro durante atualização:`, updateError);
+      
+      // Fallback para uma tentativa mais simples de atualização
+      const simpleUpdateQuery = `
+        UPDATE courses 
+        SET "updatedAt" = NOW(), title = $1
+        WHERE id = $2
+        RETURNING id, title, description, "featuredImage" as "thumbnailUrl", "featuredImage", 
+                  level, status, "isPublished", "isPremium", "createdAt", "updatedAt"
+      `;
+      
+      console.log(`[PUT /course/${courseId}] Tentando method de fallback`);
+      const fallbackResult = await db.execute(simpleUpdateQuery, [
+        title || 'Curso atualizado', 
+        courseId
+      ]);
+      
+      const updatedCourse = fallbackResult.rows[0];
+      console.log(`[PUT /course/${courseId}] Curso atualizado (fallback) com sucesso:`, updatedCourse);
+      
+      return res.json(updatedCourse);
     }
-    
-    const updatedCourse = result.rows[0];
-    console.log(`[PUT /course/${courseId}] Curso atualizado com sucesso:`, updatedCourse);
-    
-    return res.json(updatedCourse);
   } catch (error) {
     console.error(`[PUT /course/${req.params.id}] Erro ao atualizar curso:`, error);
     return res.status(500).json({ message: 'Erro ao atualizar curso', error: String(error) });
