@@ -454,9 +454,9 @@ export default function VideoaulasPage() {
                                 </p>
                                 
                                 <div className="flex justify-between items-center">
-                                  <span className="text-xs text-yellow-600 font-medium">
-                                    {tutorial.level === "iniciante" ? "INICIE AQUI" : 
-                                     tutorial.level === "intermediario" ? "DESENVOLVIMENTO" : "AVANÇADO"}
+                                  <span className="text-xs text-yellow-600 font-medium flex items-center">
+                                    <Play className="h-3.5 w-3.5 mr-1" />
+                                    INICIAR
                                   </span>
                                   <div className="text-xs text-gray-500 flex items-center">
                                     <Eye className="h-3.5 w-3.5 mr-1 text-gray-400" />
@@ -552,9 +552,9 @@ export default function VideoaulasPage() {
                                     </p>
                                     
                                     <div className="flex justify-between items-center">
-                                      <span className="text-xs text-blue-600 font-medium">
-                                        {tutorial.level === "iniciante" ? "INICIANTE" : 
-                                        tutorial.level === "intermediario" ? "INTERMEDIÁRIO" : "AVANÇADO"}
+                                      <span className="text-xs text-blue-600 font-medium flex items-center">
+                                        <Play className="h-3.5 w-3.5 mr-1" />
+                                        INICIAR
                                       </span>
                                       <div className="text-xs text-gray-500 flex items-center">
                                         <Eye className="h-3.5 w-3.5 mr-1 text-gray-400" />
