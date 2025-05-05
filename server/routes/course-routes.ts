@@ -708,18 +708,18 @@ router.put('/:id', async (req, res) => {
       }
     });
     
-    // Adicionar o ID do curso aos parâmetros
-    updateQuery += ' WHERE id = $' + paramIndex;
-    params.push(courseId);
-    
     // Se não houver atualizações, adicionamos pelo menos um campo para evitar erro
     if (!hasUpdates) {
       updateQuery = 'UPDATE courses SET "updatedAt" = NOW() WHERE id = $1';
       params.length = 0; // Limpar parâmetros
       params.push(courseId);
+    } else {
+      // Adicionar o ID do curso aos parâmetros apenas se houver atualizações
+      updateQuery += ' WHERE id = $' + paramIndex;
+      params.push(courseId);
     }
     
-    // Query para retornar os dados atualizados
+    // Query para retornar os dados atualizados - adicionamos no final para qualquer caso
     updateQuery += ` RETURNING id, title, description, "featuredImage" as "thumbnailUrl", "featuredImage", 
                      level, status, "isPublished", "isPremium", 
                      "createdAt", "updatedAt"`;
