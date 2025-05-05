@@ -272,35 +272,32 @@ export default function VideoaulasPage() {
             ></div>
           </div>
           
-          {/* Overlay gradiente mais sutil e profissional */}
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-950/70 via-blue-900/50 to-blue-800/30 z-1"></div>
+          {/* Overlay gradiente aprimorado para melhor contraste */}
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-950/85 via-blue-900/70 to-blue-800/50 z-1"></div>
           
           {/* Conteúdo sobreposto */}
           <div className="container mx-auto h-full flex flex-col justify-center relative z-10">
-            <div className="px-4 md:px-8">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 md:mb-4 text-white">
+            <div className="px-4 md:px-8 max-w-3xl">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 md:mb-4 text-white drop-shadow-sm">
                 {siteSettings?.courseHeroTitle || "DesignAuto Videoaulas"}
               </h1>
-              <div className="h-1 w-16 md:w-24 bg-yellow-500 mb-4 md:mb-6"></div>
-              <p className="text-base sm:text-lg md:text-xl text-blue-100 mb-3 md:mb-4 max-w-2xl">
+              <div className="h-1 w-16 md:w-24 bg-yellow-500 mb-4 md:mb-6 shadow-sm"></div>
+              <p className="text-base sm:text-lg md:text-xl text-white mb-6 md:mb-8 max-w-2xl leading-relaxed shadow-sm">
                 {siteSettings?.courseHeroSubtitle || "A formação completa para você criar designs profissionais para seu negócio automotivo"}
               </p>
               
-              {/* Espaçamento adicional entre a descrição e os botões */}
-              <div className="mb-6 md:mb-8"></div>
-              
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-5">
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
                 <Link href={`/videoaulas/${tutorialDestaque.id}`} className="w-full sm:w-auto">
                   <Button className="bg-yellow-500 hover:bg-yellow-600 text-blue-950 border-0 py-4 md:py-6 px-6 md:px-10 text-base md:text-lg font-semibold w-full sm:w-auto shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group">
                     <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-yellow-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                     <div className="relative flex items-center justify-center">
-                      <Play className="h-4 md:h-5 w-4 md:w-5 mr-2" />
+                      <Play className="h-5 w-5 md:h-6 md:w-6 mr-2" />
                       <span>Começar Agora</span>
                     </div>
                   </Button>
                 </Link>
                 <Link href="#categorias" className="w-full sm:w-auto">
-                  <Button variant="outline" className="bg-transparent border-white text-white hover:bg-white/20 py-4 md:py-6 px-6 md:px-10 text-base md:text-lg font-medium w-full sm:w-auto transition-all duration-300">
+                  <Button variant="outline" className="bg-white/10 text-white hover:bg-white/20 border-2 border-white/40 py-4 md:py-6 px-6 md:px-10 text-base md:text-lg font-medium w-full sm:w-auto transition-all duration-300 hover:scale-105">
                     Ver Categorias
                   </Button>
                 </Link>
@@ -475,21 +472,22 @@ export default function VideoaulasPage() {
                                 
                                 {/* Badge de módulo - estilo clean */}
                                 <div className="absolute top-2 left-2">
-                                  <div className="bg-black/70 backdrop-blur-sm px-2 py-1 rounded-sm text-xs font-medium text-white">
+                                  <div className="bg-black/70 backdrop-blur-sm px-2 py-1 rounded-sm text-xs font-medium text-white shadow-sm">
                                     Módulo {index + 1}
                                   </div>
                                 </div>
                                 
                                 {/* Badge de duração - estilo clean */}
                                 <div className="absolute bottom-2 right-2">
-                                  <div className="bg-black/70 backdrop-blur-sm px-2 py-1 rounded-sm text-xs text-white">
+                                  <div className="bg-black/70 backdrop-blur-sm px-2 py-1 rounded-sm text-xs text-white shadow-sm flex items-center">
+                                    <Clock className="w-3 h-3 mr-1" />
                                     {tutorial.durationFormatted || formatarDuracao(tutorial.duration) || ""}
                                   </div>
                                 </div>
                                 
-                                {/* Indicador NOVO - clean e minimalista */}
+                                {/* Indicador NOVO - clean e minimalista, posicionado para evitar sobreposição com PREMIUM */}
                                 {tutorial.createdAt && new Date(tutorial.createdAt).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000 && (
-                                  <div className="absolute top-2 right-2 bg-red-600 px-2 py-0.5 rounded-sm text-xs font-medium text-white">
+                                  <div className={`absolute ${tutorial.isPremium ? 'top-9' : 'top-2'} right-2 bg-red-600 px-2 py-0.5 rounded-sm text-xs font-medium text-white shadow-sm`}>
                                     NOVO
                                   </div>
                                 )}
@@ -589,21 +587,22 @@ export default function VideoaulasPage() {
                                     
                                     {/* Badge de parte - estilo clean */}
                                     <div className="absolute top-2 left-2">
-                                      <div className="bg-black/70 backdrop-blur-sm px-2 py-1 rounded-sm text-xs font-medium text-white">
+                                      <div className="bg-black/70 backdrop-blur-sm px-2 py-1 rounded-sm text-xs font-medium text-white shadow-sm">
                                         Parte {moduleIdx + 1}
                                       </div>
                                     </div>
                                     
                                     {/* Badge de duração - estilo clean */}
                                     <div className="absolute bottom-2 right-2">
-                                      <div className="bg-black/70 backdrop-blur-sm px-2 py-1 rounded-sm text-xs text-white">
+                                      <div className="bg-black/70 backdrop-blur-sm px-2 py-1 rounded-sm text-xs text-white shadow-sm flex items-center">
+                                        <Clock className="w-3 h-3 mr-1" />
                                         {tutorial.durationFormatted || formatarDuracao(tutorial.duration) || "00:00"}
                                       </div>
                                     </div>
                                     
                                     {/* Indicador Premium - clean e minimalista */}
                                     {tutorial.isPremium && (
-                                      <div className="absolute top-2 right-2 bg-amber-500 px-2 py-0.5 rounded-sm text-xs font-medium text-gray-900">
+                                      <div className="absolute top-2 right-2 bg-amber-500 px-2 py-0.5 rounded-sm text-xs font-medium text-gray-900 shadow-sm z-10">
                                         PREMIUM
                                       </div>
                                     )}
