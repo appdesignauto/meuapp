@@ -392,6 +392,7 @@ export default function VideoaulasPage() {
                         key={tutorial.id}
                         tutorial={tutorial}
                         isPremiumLocked={isPremiumLocked(tutorial.isPremium)}
+                        searchTerm={searchTerm}
                       />
                     ))}
                   </div>

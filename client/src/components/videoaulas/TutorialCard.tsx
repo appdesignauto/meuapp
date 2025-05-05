@@ -152,8 +152,14 @@ const TutorialCard: React.FC<TutorialCardProps> = ({
           )}
         </div>
         
-        {/* Título */}
-        <h3 className="text-white font-bold text-base line-clamp-1">{tutorial.title}</h3>
+        {/* Título com destaque de pesquisa */}
+        <h3 className="text-white font-bold text-base line-clamp-1">
+          {searchTerm ? (
+            <HighlightText text={tutorial.title} searchTerm={searchTerm} />
+          ) : (
+            tutorial.title
+          )}
+        </h3>
         
         {/* Detalhes quando hover */}
         {isHovered && (
@@ -162,7 +168,13 @@ const TutorialCard: React.FC<TutorialCardProps> = ({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2, delay: 0.1 }}
           >
-            <p className="text-white/80 text-xs mb-4 line-clamp-2">{tutorial.description}</p>
+            <p className="text-white/80 text-xs mb-4 line-clamp-2">
+              {searchTerm ? (
+                <HighlightText text={tutorial.description} searchTerm={searchTerm} />
+              ) : (
+                tutorial.description
+              )}
+            </p>
             
             {/* Botão de ação */}
             {!isPremiumLocked && (
