@@ -375,22 +375,40 @@ const VideoLessonPage: React.FC = () => {
       </Helmet> */}
       
       <div className="min-h-screen bg-white pb-12">
-        {/* Cabeçalho com navegação - estilo clean, sem breadcrumbs */}
-        <div className="bg-gradient-to-r from-blue-50 to-white py-4 border-b border-blue-100 shadow-sm">
+        {/* Cabeçalho com navegação - estilo clean e moderno */}
+        <div className="bg-gradient-to-r from-blue-50 via-blue-50 to-white py-4 border-b border-blue-100 shadow-sm">
           <div className="container mx-auto px-4">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-              <div>
+              <div className="flex items-center">
                 <Button 
                   variant="ghost" 
-                  className="text-blue-700 hover:text-blue-900 hover:bg-blue-50 -ml-3 transition-colors"
+                  className="text-blue-700 hover:text-blue-900 hover:bg-blue-50 -ml-3 transition-colors mr-3"
                   onClick={() => navigate("/videoaulas")}
                 >
-                  <ChevronLeft className="mr-1 h-4 w-4" />
-                  Voltar para Videoaulas
+                  <ChevronLeft className="h-5 w-5" />
+                  <span className="hidden sm:inline ml-1">Voltar</span>
                 </Button>
+                
+                <div className="hidden sm:flex items-center text-blue-700">
+                  <span className="mx-2 text-blue-300">|</span>
+                  <div className="flex items-center">
+                    <Layers className="h-4 w-4 mr-1.5 text-blue-500" />
+                    <span className="font-medium">{currentModule?.title || "Módulo"}</span>
+                  </div>
+                </div>
               </div>
               
               <div className="flex items-center gap-2">
+                {/* Botão de módulos para mobile */}
+                <Button 
+                  variant="outline" 
+                  className="sm:hidden bg-white text-blue-600 border-blue-200 hover:bg-blue-50"
+                  onClick={() => navigate("/videoaulas")}
+                >
+                  <Menu className="h-4 w-4 mr-1" />
+                  Módulos
+                </Button>
+                
                 {tutorial.isPremium && (
                   <Badge className="bg-gradient-to-r from-yellow-500 to-amber-500 text-white border-0 shadow-sm font-medium px-3 py-1">
                     <Lock className="h-3 w-3 mr-1" />
@@ -403,10 +421,10 @@ const VideoLessonPage: React.FC = () => {
                   {tutorial.duration}
                 </Badge>
                 
-                {tutorial.isWatched ? (
+                {isCompleted ? (
                   <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 font-medium px-3 py-1">
                     <CheckCircle2 className="h-3 w-3 mr-1" />
-                    Assistido
+                    Concluído
                   </Badge>
                 ) : (
                   <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 font-medium px-3 py-1">
