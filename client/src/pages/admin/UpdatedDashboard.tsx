@@ -28,6 +28,7 @@ import {
   PanelLeft,
   Video,
   Trash2,
+  FileText,
   Pencil,
   MoreVertical,
   AlertCircle,
@@ -2183,13 +2184,13 @@ const AdminDashboard = () => {
                             </TableRow>
                           ) : isCoursesError ? (
                             <TableRow>
-                              <TableCell colSpan={6} className="text-center py-4 text-red-500">
+                              <TableCell colSpan={7} className="text-center py-4 text-red-500">
                                 Erro ao carregar os cursos. Tente novamente.
                               </TableCell>
                             </TableRow>
                           ) : courses.length === 0 ? (
                             <TableRow>
-                              <TableCell colSpan={6} className="text-center py-4 text-gray-500">
+                              <TableCell colSpan={7} className="text-center py-4 text-gray-500">
                                 Nenhum curso encontrado. Clique em "Novo Curso" para criar.
                               </TableCell>
                             </TableRow>
@@ -2240,6 +2241,18 @@ const AdminDashboard = () => {
                                   ) : (
                                     <Badge variant="outline">Grátis</Badge>
                                   )}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex flex-col">
+                                    <div className="flex items-center gap-1 text-sm">
+                                      <Layers className="h-4 w-4 text-blue-500" />
+                                      <span>{course.moduleCount || 0} módulos</span>
+                                    </div>
+                                    <div className="flex items-center gap-1 text-sm mt-1">
+                                      <FileText className="h-4 w-4 text-green-500" />
+                                      <span>{course.lessonCount || 0} aulas</span>
+                                    </div>
+                                  </div>
                                 </TableCell>
                                 <TableCell className="text-right">
                                   <DropdownMenu>
