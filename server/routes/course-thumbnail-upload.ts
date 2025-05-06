@@ -88,7 +88,7 @@ async function generatePlaceholderImage(title: string, orientation: string): Pro
 }
 
 // Rota para upload de thumbnail do curso - formato horizontal
-router.post('/api/courses/thumbnail-upload-horizontal', isAuthenticated, isAdmin, upload.single('thumbnail'), 
+router.post('/thumbnail-upload-horizontal', isAuthenticated, isAdmin, upload.single('thumbnail'), 
   async (req: Request, res: Response) => {
     try {
       const courseId = req.body.courseId;
@@ -177,7 +177,7 @@ router.post('/api/courses/thumbnail-upload-horizontal', isAuthenticated, isAdmin
 );
 
 // Rota para upload de imagem de destaque do curso - formato vertical
-router.post('/api/courses/thumbnail-upload-vertical', isAuthenticated, isAdmin, upload.single('thumbnail'), 
+router.post('/thumbnail-upload-vertical', isAuthenticated, isAdmin, upload.single('thumbnail'), 
   async (req: Request, res: Response) => {
     try {
       const courseId = req.body.courseId;
