@@ -194,9 +194,9 @@ router.get('/lessons/:id', async (req, res) => {
 });
 
 // Rota de compatibilidade para as configurações de cursos
-router.get('/settings/get', async (req, res) => {
+router.get('/settings', async (req, res) => {
   try {
-    console.log('[ADAPTER] Redirecionando chamada de /api/courses/settings/get para estrutura atualizada');
+    console.log('[ADAPTER] Redirecionando chamada de /api/courses/settings para estrutura atualizada');
     
     // Buscar as configurações ou criar registros padrão se não existirem
     const settings = await db.query.courseSettings.findFirst({
@@ -211,6 +211,27 @@ router.get('/settings/get', async (req, res) => {
     return res.json(settings);
   } catch (error) {
     console.error('[ADAPTER] Erro ao buscar configurações:', error);
+    return res.status(500).json({ message: 'Erro ao buscar configurações', error: String(error) });
+  }
+});
+
+// Mantendo compatibilidade com a rota antiga
+router.get('/settings/get', async (req, res) => {
+  try {
+    console.log('[ADAPTER] Redirecionando chamada de /api/courses/settings/get para /api/courses/settings');
+    
+    // Buscar as configurações usando a rota principal
+    const settings = await db.query.courseSettings.findFirst({
+      where: eq(courseSettings.id, 1)
+    });
+    
+    if (!settings) {
+      return res.status(404).json({ message: 'Configurações não encontradas' });
+    }
+    
+    return res.json(settings);
+  } catch (error) {
+    console.error('[ADAPTER] Erro ao buscar configurações (rota antiga):', error);
     return res.status(500).json({ message: 'Erro ao buscar configurações', error: String(error) });
   }
 });

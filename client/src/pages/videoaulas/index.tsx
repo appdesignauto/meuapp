@@ -86,7 +86,7 @@ export default function VideoaulasPage() {
   
   // Buscar configurações de cursos para obter título, descrição e imagem do banner
   const { data: courseSettings, isLoading: isLoadingCourseSettings } = useQuery({
-    queryKey: ['/api/course/settings'],
+    queryKey: ['/api/courses/settings'], // Corrigido para usar a rota do adaptador
     retry: 1,
   });
   
