@@ -703,7 +703,7 @@ export default function VideoaulasPage() {
                                   <span className="line-clamp-1">{tutorial.level === 'iniciante' ? 'Iniciante' : 
                                    tutorial.level === 'intermediario' ? 'Intermediário' : 'Avançado'}</span>
                                   <span>•</span>
-                                  <span>{tutorial.views} visualizações</span>
+                                  <span>{tutorial.viewCount || 0} visualizações</span>
                                 </div>
                               </div>
                             </div>
@@ -814,7 +814,7 @@ export default function VideoaulasPage() {
                                     <div className="flex items-center text-xs text-gray-500 space-x-2">
                                       <span className="line-clamp-1">{categoria.title}</span>
                                       <span>•</span>
-                                      <span>{tutorial.views} visualizações</span>
+                                      <span>{tutorial.viewCount || 0} visualizações</span>
                                     </div>
                                   </div>
                                 </div>
