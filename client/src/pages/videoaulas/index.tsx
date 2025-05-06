@@ -778,73 +778,84 @@ export default function VideoaulasPage() {
           </div>
         </div>
         
-        {/* Modal de Informações estilo Netflix */}
+        {/* Modal de Informações estilo Netflix - Otimizado */}
         <Dialog open={infoModalOpen} onOpenChange={setInfoModalOpen}>
-          <DialogContent className="sm:max-w-3xl bg-zinc-900 border-zinc-800 text-white p-0 overflow-hidden">
+          <DialogContent className="sm:max-w-4xl bg-gradient-to-b from-zinc-900 to-zinc-950 border-zinc-800 text-white p-0 overflow-hidden rounded-xl shadow-2xl">
+            <DialogTitle className="sr-only">Detalhes da aula: {tutorialDestaque?.title}</DialogTitle>
+            <DialogDescription className="sr-only">Informações detalhadas sobre a aula e conteúdo relacionado</DialogDescription>
+            
             <div className="relative">
               {/* Header com imagem de fundo e gradiente */}
-              <div className="relative h-64 sm:h-80 w-full overflow-hidden">
+              <div className="relative h-72 sm:h-96 w-full overflow-hidden">
                 {tutorialDestaque?.thumbnailUrl ? (
                   <img 
                     src={tutorialDestaque.thumbnailUrl} 
-                    alt={tutorialDestaque.title || "Thumbnail"} 
-                    className="w-full h-full object-cover"
+                    alt={tutorialDestaque.title || "Thumbnail da aula"} 
+                    className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700 ease-out"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-r from-blue-800 to-blue-600"></div>
+                  <div className="w-full h-full bg-gradient-to-br from-blue-800 via-blue-700 to-blue-900"></div>
                 )}
                 
-                {/* Gradiente de sobreposição */}
-                <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/70 to-transparent"></div>
+                {/* Gradiente de sobreposição sofisticado */}
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-900/90 to-transparent"></div>
                 
-                {/* Botão de fechar */}
-                <DialogClose className="absolute top-4 right-4 bg-zinc-800/60 p-2 rounded-full hover:bg-zinc-700/80 transition-colors">
+                {/* Botão de fechar refinado */}
+                <DialogClose className="absolute top-4 right-4 bg-black/40 hover:bg-black/60 p-2.5 rounded-full transition-all duration-300 backdrop-blur-sm border border-white/10 shadow-lg z-50">
                   <X className="h-5 w-5 text-white" />
+                  <span className="sr-only">Fechar detalhes</span>
                 </DialogClose>
                 
-                {/* Título e metadados */}
-                <div className="absolute bottom-6 left-6 right-6">
-                  <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                {/* Título e metadados com melhor hierarquia e espacamento */}
+                <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 bg-gradient-to-t from-zinc-950 via-zinc-950/90 to-transparent">
+                  <h2 className="text-2xl sm:text-4xl font-bold text-white mb-3 tracking-tight">
                     {tutorialDestaque?.title || "Carregando..."}
                   </h2>
-                  <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-sm text-zinc-300">
+                  
+                  <div className="flex flex-wrap items-center gap-3 sm:gap-5 text-sm mb-4">
                     {tutorialDestaque?.moduloNome && (
-                      <div className="flex items-center">
-                        <Folder className="h-4 w-4 mr-1 text-zinc-400" />
-                        <span>{tutorialDestaque.moduloNome}</span>
+                      <div className="flex items-center px-3 py-1.5 bg-zinc-800/60 backdrop-blur-sm rounded-md border border-zinc-700/30">
+                        <Folder className="h-4 w-4 mr-2 text-blue-400" />
+                        <span className="font-medium text-blue-100">{tutorialDestaque.moduloNome}</span>
                       </div>
                     )}
                     {tutorialDestaque?.durationFormatted && (
-                      <div className="flex items-center">
-                        <Clock className="h-4 w-4 mr-1 text-zinc-400" />
-                        <span>{tutorialDestaque.durationFormatted}</span>
+                      <div className="flex items-center px-3 py-1.5 bg-zinc-800/60 backdrop-blur-sm rounded-md border border-zinc-700/30">
+                        <Clock className="h-4 w-4 mr-2 text-blue-400" />
+                        <span className="font-medium text-blue-100">{tutorialDestaque.durationFormatted}</span>
                       </div>
                     )}
                     {tutorialDestaque?.level && (
-                      <div className="flex items-center">
-                        <GraduationCap className="h-4 w-4 mr-1 text-zinc-400" />
-                        <span className="capitalize">{tutorialDestaque.level}</span>
+                      <div className="flex items-center px-3 py-1.5 bg-zinc-800/60 backdrop-blur-sm rounded-md border border-zinc-700/30">
+                        <GraduationCap className="h-4 w-4 mr-2 text-blue-400" />
+                        <span className="font-medium text-blue-100 capitalize">{tutorialDestaque.level}</span>
                       </div>
                     )}
                     {tutorialDestaque?.isPremium && (
-                      <Badge className="bg-yellow-500 hover:bg-yellow-600 text-black">Premium</Badge>
+                      <Badge className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black px-3 py-1.5 rounded-md font-semibold text-xs shadow-md">
+                        <Crown className="h-3.5 w-3.5 mr-1.5" />
+                        Premium
+                      </Badge>
                     )}
                   </div>
                 </div>
               </div>
               
-              {/* Corpo do modal */}
-              <div className="p-6">
-                {/* Descrição */}
-                <div className="mb-8">
-                  <h3 className="text-lg font-medium text-white mb-2">Sobre esta aula</h3>
-                  <p className="text-zinc-300 leading-relaxed">
+              {/* Corpo do modal redesenhado */}
+              <div className="px-6 sm:px-8 py-6">
+                {/* Descrição com design melhorado */}
+                <div className="mb-8 bg-zinc-800/30 p-5 rounded-xl border border-zinc-700/30">
+                  <h3 className="text-lg font-semibold text-white mb-3 flex items-center">
+                    <FileText className="h-5 w-5 mr-2 text-blue-400" />
+                    Sobre esta aula
+                  </h3>
+                  <p className="text-zinc-300 leading-relaxed text-base">
                     {tutorialDestaque?.description || 
                      "Aprenda passo a passo com este tutorial exclusivo do DesignAuto. Esta aula faz parte de um módulo completo para ajudar você a dominar a edição de designs automotivos."}
                   </p>
                 </div>
                 
-                {/* Botões de ação */}
+                {/* Botões de ação redesenhados */}
                 <div className="flex flex-col sm:flex-row gap-4 mt-2">
                   <Link 
                     href={user && lastWatchedData?.hasLastWatched && lastWatchedData.lessonId === tutorialDestaque?.id
@@ -855,11 +866,11 @@ export default function VideoaulasPage() {
                     onClick={() => setInfoModalOpen(false)}
                   >
                     <Button 
-                      className="bg-white hover:bg-white/90 text-black border-0 py-3 px-8 text-base font-semibold w-full sm:w-auto shadow-lg transition-all duration-300"
+                      className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white border-0 py-3 px-8 text-base font-semibold w-full sm:w-auto shadow-lg transition-all duration-300"
                     >
                       <div className="flex items-center justify-center">
-                        <Play className="h-5 w-5 mr-2 text-black" fill="black" />
-                        <span>{user && lastWatchedData?.hasLastWatched && lastWatchedData.lessonId === tutorialDestaque?.id ? 'Continuar Assistindo' : 'Assistir'}</span>
+                        <Play className="h-5 w-5 mr-2 text-white" fill="white" />
+                        <span>{user && lastWatchedData?.hasLastWatched && lastWatchedData.lessonId === tutorialDestaque?.id ? 'Continuar Assistindo' : 'Assistir Agora'}</span>
                       </div>
                     </Button>
                   </Link>
@@ -867,7 +878,7 @@ export default function VideoaulasPage() {
                   <DialogClose asChild>
                     <Button 
                       variant="outline" 
-                      className="bg-transparent text-white hover:bg-white/10 border border-white/20 py-3 px-8 text-base font-medium w-full sm:w-auto transition-all duration-300"
+                      className="bg-transparent hover:bg-zinc-800 text-zinc-200 hover:text-white border border-zinc-700 hover:border-zinc-600 py-3 px-8 text-base font-medium w-full sm:w-auto transition-all duration-300"
                     >
                       <div className="flex items-center justify-center">
                         <X className="h-5 w-5 mr-2" />
@@ -877,10 +888,14 @@ export default function VideoaulasPage() {
                   </DialogClose>
                 </div>
                 
-                {/* Recomendações */}
+                {/* Recomendações redesenhadas */}
                 <div className="mt-10">
-                  <h3 className="text-lg font-medium text-white mb-3">Do mesmo módulo</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  <h3 className="text-xl font-semibold text-white mb-5 flex items-center">
+                    <Zap className="h-5 w-5 mr-2 text-blue-400" />
+                    Aulas relacionadas do mesmo módulo
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                     {Array.isArray(tutoriais) && tutoriais
                       .filter(t => t.moduleId === tutorialDestaque?.moduleId && t.id !== tutorialDestaque?.id)
                       .slice(0, 3)
@@ -889,27 +904,48 @@ export default function VideoaulasPage() {
                           key={tutorial.id} 
                           href={`/videoaulas/${tutorial.id}`}
                           onClick={() => setInfoModalOpen(false)}
-                          className="flex gap-3 group"
+                          className="group bg-zinc-800/30 hover:bg-zinc-800/50 p-3 rounded-xl border border-zinc-700/30 hover:border-zinc-700/60 transition-all duration-300"
                         >
-                          <div className="w-20 h-20 rounded overflow-hidden flex-shrink-0">
-                            <img 
-                              src={tutorial.thumbnailUrl || ""}
-                              alt={tutorial.title || ""}
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                            />
-                          </div>
-                          <div className="flex flex-col">
-                            <h4 className="text-sm font-medium text-zinc-200 group-hover:text-white transition-colors">
-                              {tutorial.title}
-                            </h4>
-                            <div className="flex items-center text-xs text-zinc-400 mt-1">
-                              <Clock className="h-3 w-3 mr-1" />
-                              <span>{tutorial.durationFormatted}</span>
+                          <div className="flex gap-3 h-full">
+                            <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 shadow-md">
+                              <img 
+                                src={tutorial.thumbnailUrl || ""}
+                                alt={tutorial.title || ""}
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                              />
+                            </div>
+                            <div className="flex flex-col justify-center">
+                              <h4 className="text-sm font-medium text-zinc-100 group-hover:text-white transition-colors line-clamp-2">
+                                {tutorial.title}
+                              </h4>
+                              <div className="flex items-center text-xs text-zinc-400 mt-2 font-medium">
+                                <Clock className="h-3.5 w-3.5 mr-1.5 text-blue-400" />
+                                <span>{tutorial.durationFormatted}</span>
+                              </div>
+                              <div className="mt-2">
+                                <Badge variant="outline" className="text-[10px] px-2 py-0 border-zinc-600 text-zinc-400">
+                                  {tutorial.level}
+                                </Badge>
+                              </div>
                             </div>
                           </div>
                         </Link>
                       ))}
                   </div>
+                  
+                  {/* Botão para explorar todo o módulo */}
+                  {tutorialDestaque?.moduleId && (
+                    <div className="mt-6 text-center">
+                      <Link
+                        href="#categorias"
+                        onClick={() => setInfoModalOpen(false)}
+                        className="inline-flex items-center text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
+                      >
+                        <span>Ver todas as aulas deste módulo</span>
+                        <ChevronRight className="h-4 w-4 ml-1" />
+                      </Link>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
