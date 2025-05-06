@@ -178,11 +178,47 @@ router.get('/lessons', async (req, res) => {
     let lessons;
     
     if (moduleId && !isNaN(moduleId)) {
-      lessons = await db.select().from(courseLessons)
+      lessons = await db.select({
+        id: courseLessons.id,
+        moduleId: courseLessons.moduleId,
+        title: courseLessons.title,
+        description: courseLessons.description,
+        videoUrl: courseLessons.videoUrl,
+        videoProvider: courseLessons.videoProvider,
+        duration: courseLessons.duration,
+        thumbnailUrl: courseLessons.thumbnailUrl,
+        order: courseLessons.order,
+        isPremium: courseLessons.isPremium,
+        showLessonNumber: courseLessons.showLessonNumber,
+        additionalMaterialsUrl: courseLessons.additionalMaterialsUrl,
+        viewCount: courseLessons.viewCount,
+        createdBy: courseLessons.createdBy,
+        createdAt: courseLessons.createdAt,
+        updatedAt: courseLessons.updatedAt
+      })
+        .from(courseLessons)
         .where(eq(courseLessons.moduleId, moduleId))
         .orderBy(asc(courseLessons.order));
     } else {
-      lessons = await db.select().from(courseLessons)
+      lessons = await db.select({
+        id: courseLessons.id,
+        moduleId: courseLessons.moduleId,
+        title: courseLessons.title,
+        description: courseLessons.description,
+        videoUrl: courseLessons.videoUrl,
+        videoProvider: courseLessons.videoProvider,
+        duration: courseLessons.duration,
+        thumbnailUrl: courseLessons.thumbnailUrl,
+        order: courseLessons.order,
+        isPremium: courseLessons.isPremium,
+        showLessonNumber: courseLessons.showLessonNumber,
+        additionalMaterialsUrl: courseLessons.additionalMaterialsUrl,
+        viewCount: courseLessons.viewCount,
+        createdBy: courseLessons.createdBy,
+        createdAt: courseLessons.createdAt,
+        updatedAt: courseLessons.updatedAt
+      })
+        .from(courseLessons)
         .orderBy(asc(courseLessons.order));
     }
     
