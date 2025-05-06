@@ -4530,6 +4530,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Rota específica para configurações de cursos (antes do wildcard route)
+  app.get('/api/course/settings', async (req, res) => {
+    try {
+      console.log('[ROUTE ESPECÍFICA] GET /api/course/settings: Buscando configurações');
+      
+      // Buscar as configurações diretamente
+      const configQuery = `
+        SELECT * FROM "courseSettings" WHERE id = 1 LIMIT 1
+      `;
+      
+      const configResult = await db.execute(configQuery);
+      let settings = configResult.rows && configResult.rows.length > 0 ? configResult.rows[0] : null;
+      
+      if (!settings) {
+        return res.status(404).json({ message: 'Configurações não encontradas' });
+      }
+      
+      return res.json(settings);
+    } catch (error) {
+      console.error('[ROUTE ESPECÍFICA] Erro ao buscar configurações:', error);
+      return res.status(500).json({ message: 'Erro ao buscar configurações de cursos' });
+    }
+  });
+  
   // Rotas para gerenciamento de cursos, módulos, aulas e configurações
   // Montado apenas uma vez para evitar conflitos de rotas duplicadas
   app.use('/api/course', courseRouter);
