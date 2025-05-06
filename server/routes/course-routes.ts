@@ -602,13 +602,20 @@ router.post('/', async (req, res) => {
     `;
     
     console.log(`[POST /course] Query de inserção:`, query);
-    const result = await db.execute(query);
     
-    const newCourse = result.rows[0];
-    
-    console.log('[POST /course] Curso criado com sucesso:', newCourse);
-    
-    return res.status(201).json(newCourse);
+    try {
+      const result = await db.execute(query);
+      const newCourse = result.rows[0];
+      console.log('[POST /course] Curso criado com sucesso:', newCourse);
+      return res.status(201).json(newCourse);
+    } catch (error) {
+      console.error('[POST /course] Erro SQL ao criar curso:', error);
+      return res.status(500).json({ 
+        message: 'Erro ao criar curso', 
+        error: String(error),
+        query: query // Inclui a consulta na resposta de erro para depuração
+      });
+    }
   } catch (error) {
     console.error('[POST /course] Erro ao criar curso:', error);
     return res.status(500).json({ message: 'Erro ao criar curso', error: String(error) });
