@@ -115,22 +115,33 @@ router.post('/module-thumbnail', upload.single('file'), async (req: Request, res
         size: optimizedBuffer.length
       };
 
-      // Usa o método uploadImage do SupabaseStorageService
-      const result = await supabaseStorage.uploadImage(
-        multerCompatFile,
-        {
-          width: 800,  // Largura máxima para thumbnails de módulos
-          quality: 85, // Qualidade da imagem
-          format: 'webp' // Formato WebP
-        },
-        'module-thumbnails', // Pasta/bucket para os thumbnails
-        undefined // Sem designer ID específico
-      );
-      
-      if (result && result.imageUrl) {
-        fileUrl = result.imageUrl;
-      } else {
-        throw new Error('Falha no upload para o Supabase Storage');
+      // Usa o método uploadImage do SupabaseStorageService - tratando erros adequadamente
+      try {
+        console.log('Iniciando upload via Supabase Storage');
+        
+        const result = await supabaseStorage.uploadImage(
+          multerCompatFile,
+          {
+            width: 800,  // Largura máxima para thumbnails de módulos
+            quality: 85, // Qualidade da imagem
+            format: 'webp' // Formato WebP
+          },
+          'module-thumbnails', // Pasta/bucket para os thumbnails
+          undefined // Sem designer ID específico
+        );
+        
+        console.log('Resultado do upload:', JSON.stringify(result, null, 2));
+        
+        if (result && result.imageUrl) {
+          fileUrl = result.imageUrl;
+          console.log('URL obtida:', fileUrl);
+        } else {
+          console.warn('Resposta sem URL de imagem:', result);
+          throw new Error('Resposta do Supabase sem URL de imagem');
+        }
+      } catch (uploadError) {
+        console.error('Erro específico no upload para Supabase:', uploadError);
+        throw uploadError; // Propaga o erro para o catch externo
       }
     } catch (error) {
       console.error('Erro no upload para Supabase, tentando local:', error);
