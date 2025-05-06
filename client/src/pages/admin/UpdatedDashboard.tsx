@@ -2934,19 +2934,23 @@ const AdminDashboard = () => {
                                 const selectedCourse = courses.find((course) => course.id.toString() === value);
                                 setSelectedCourseForSettings(selectedCourse);
                                 
-                                // Se for o curso "Tutoriais Design Auto", sincroniza automaticamente com o banner
+                                // Se for o curso "Tutoriais Design Auto", sincroniza com o banner (apenas localmente)
                                 if (selectedCourse?.title === "Tutoriais Design Auto" || selectedCourse?.id === 2) {
                                   if (selectedCourse.thumbnailUrl) {
-                                    // Atualiza as configurações do banner com os dados do curso
-                                    const updatedSettings = {
+                                    // Atualiza apenas o estado local com os dados do curso
+                                    setCourseSettings({
                                       ...courseSettings,
                                       bannerTitle: selectedCourse.title || courseSettings.bannerTitle,
                                       bannerDescription: selectedCourse.description || courseSettings.bannerDescription,
                                       bannerImageUrl: selectedCourse.thumbnailUrl || courseSettings.bannerImageUrl
-                                    };
+                                    });
                                     
-                                    // Atualiza as configurações no servidor silenciosamente
-                                    updateCourseSettingsMutation.mutate(updatedSettings);
+                                    // Notifica o usuário que as alterações precisam ser salvas
+                                    toast({
+                                      title: "Dados carregados",
+                                      description: "Os dados do curso foram carregados. Clique em 'Salvar todas as configurações' para aplicar as mudanças.",
+                                      duration: 5000,
+                                    });
                                   }
                                 }
                               }}
@@ -2984,11 +2988,7 @@ const AdminDashboard = () => {
                                         title: e.target.value
                                       });
                                     }}
-                                    onBlur={() => {
-                                      if (selectedCourseForSettings.id) {
-                                        updateCourseMutation.mutate(selectedCourseForSettings);
-                                      }
-                                    }}
+                                    // Não salva automaticamente
                                     placeholder="Título do curso"
                                   />
                                 </div>
