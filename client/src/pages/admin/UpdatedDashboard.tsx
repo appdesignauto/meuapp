@@ -1726,6 +1726,33 @@ const AdminDashboard = () => {
                   <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="grid gap-2 md:col-span-2">
+                        <Label htmlFor="moduleCourse">Curso *</Label>
+                        <Select
+                          name="courseId"
+                          value={moduleForm.courseId ? moduleForm.courseId.toString() : ''}
+                          onValueChange={(value) => {
+                            setModuleForm({
+                              ...moduleForm,
+                              courseId: parseInt(value)
+                            });
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione um curso" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {courses.map((course) => (
+                              <SelectItem key={course.id} value={course.id.toString()}>
+                                {course.title}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-gray-500 mt-1">
+                          O módulo será vinculado ao curso selecionado
+                        </p>
+                      </div>
+                      <div className="grid gap-2 md:col-span-2">
                         <Label htmlFor="moduleTitle">Título do módulo *</Label>
                         <Input
                           id="moduleTitle"
