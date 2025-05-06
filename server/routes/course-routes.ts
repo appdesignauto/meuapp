@@ -868,13 +868,13 @@ router.delete('/:id', async (req, res) => {
 
 // ENDPOINTS PARA CONFIGURAÇÕES DOS CURSOS
 
-// Buscar configurações dos cursos
+// Buscar configurações dos cursos - Versão MELHORADA
 router.get('/settings', async (req, res) => {
   try {
-    console.log('[GET /course/settings] Buscando configurações de cursos');
+    console.log('[GET /course/settings] VERSÃO CORRIGIDA: Buscando configurações de cursos');
     
     // Buscar as configurações com SQL bruto para evitar problemas
-    const query = `
+    const configQuery = `
       SELECT 
         id, 
         "bannerTitle",
@@ -895,10 +895,13 @@ router.get('/settings', async (req, res) => {
       LIMIT 1
     `;
     
-    const result = await db.execute(query);
+    console.log('[GET /course/settings] Executando query para buscar configurações...');
+    const configResult = await db.execute(configQuery);
+    console.log('[GET /course/settings] Configurações encontradas:', configResult.rows);
+    let settings = configResult.rows && configResult.rows.length > 0 ? configResult.rows[0] : null;
     
     // Se não houver configurações, criar uma padrão
-    if (!result.rows || result.rows.length === 0) {
+    if (!settings) {
       console.log('[GET /course/settings] Configurações não encontradas, criando padrão...');
       
       // Criar configurações padrão com SQL bruto com string interpolação em vez de parâmetros
@@ -945,13 +948,82 @@ router.get('/settings', async (req, res) => {
       const insertResult = await db.execute(insertQuery);
       
       if (insertResult.rows && insertResult.rows.length > 0) {
-        return res.json(insertResult.rows[0]);
+        settings = insertResult.rows[0];
+        console.log('[GET /course/settings] Configurações criadas:', settings);
       } else {
         return res.status(500).json({ message: 'Falha ao criar as configurações padrão' });
       }
     }
     
-    return res.json(result.rows[0]);
+    // Buscar informações do curso principal (ID 2)
+    console.log('[GET /course/settings] Buscando dados do curso principal');
+    const courseQuery = `
+      SELECT 
+        c.id, 
+        c.title, 
+        c.description, 
+        c."featuredImage", 
+        c.level, 
+        c.status, 
+        c."isPublished", 
+        c."isPremium",
+        c."createdBy",
+        c."createdAt",
+        c."updatedAt",
+        COALESCE(
+          (SELECT COUNT(*) FROM "courseModules" cm WHERE cm."courseId" = c.id), 0
+        ) AS "moduleCount",
+        COALESCE(
+          (SELECT COUNT(*) FROM "courseModules" cm JOIN "courseLessons" cl ON cm.id = cl."moduleId" WHERE cm."courseId" = c.id), 0
+        ) AS "lessonCount"
+      FROM 
+        courses c
+      WHERE 
+        c.id = 2 -- Assume que o ID 2 é o curso "Tutoriais Design Auto"
+      LIMIT 1
+    `;
+    
+    console.log('[GET /course/settings] Executando query para buscar curso...');
+    const courseResult = await db.execute(courseQuery);
+    console.log('[GET /course/settings] Dados do curso encontrados:', courseResult.rows);
+    const course = courseResult.rows && courseResult.rows.length > 0 ? courseResult.rows[0] : null;
+    
+    // Retornar o HTML com as informações para depuração
+    if (req.query.format === 'debug') {
+      let debug = `
+        <h1>Dados de depuração</h1>
+        <h2>Configurações</h2>
+        <pre>${JSON.stringify(settings, null, 2)}</pre>
+        <h2>Curso</h2>
+        <pre>${JSON.stringify(course, null, 2)}</pre>
+      `;
+      return res.send(debug);
+    }
+    
+    // Combinar as informações do curso com as configurações e retornar em formato de array
+    if (course) {
+      console.log('[GET /course/settings] Combinando dados do curso com configurações');
+      
+      const combinedData = [{
+        ...course,
+        bannerTitle: settings.bannerTitle,
+        bannerDescription: settings.bannerDescription,
+        bannerImageUrl: settings.bannerImageUrl,
+        welcomeMessage: settings.welcomeMessage,
+        showModuleNumbers: settings.showModuleNumbers,
+        useCustomPlayerColors: settings.useCustomPlayerColors,
+        enableComments: settings.enableComments,
+        allowNonPremiumEnrollment: settings.allowNonPremiumEnrollment,
+        thumbnailUrl: course.featuredImage // Garantir que thumbnailUrl está presente para compatibilidade
+      }];
+      
+      console.log('[GET /course/settings] Dados combinados:', JSON.stringify(combinedData));
+      return res.json(combinedData);
+    } else {
+      // Se não houver curso, retornar apenas as configurações no formato de array
+      console.log('[GET /course/settings] Não foi encontrado curso. Retornando apenas configurações.');
+      return res.json([settings]);
+    }
   } catch (error) {
     console.error('[GET /course/settings] Erro ao buscar configurações:', error);
     return res.status(500).json({ message: 'Erro ao buscar configurações', error: String(error) });
