@@ -7,7 +7,8 @@ import {
   markLessonAsCompleted, 
   getCourseProgress, 
   saveNote,
-  getNotes
+  getNotes,
+  getLastWatchedLesson
 } from '../controllers/videoaulasController';
 
 const router = express.Router();
@@ -24,5 +25,6 @@ router.post('/completar/:id', markLessonAsCompleted);
 router.get('/progresso/:id', getCourseProgress);
 router.post('/anotacao/:id', saveNote);
 router.get('/anotacao/:id', getNotes);
+router.get('/ultima-aula', getLastWatchedLesson);
 
 export default router;

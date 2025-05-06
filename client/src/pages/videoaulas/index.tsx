@@ -193,12 +193,28 @@ export default function VideoaulasPage() {
   const tutoriaisPopulares = Array.isArray(tutoriais) && tutoriais.length > 0 ? tutoriais.slice(0, 8) : [];
   
   // Aguardar o carregamento completo dos dados antes de definir o tutorial destaque
+  // Consulta para obter a última aula assistida (quando o usuário está autenticado)
+  const { data: lastWatchedData, isLoading: isLoadingLastWatched } = useQuery({
+    queryKey: ['/api/videoaulas/ultima-aula'],
+    retry: 1,
+    enabled: !!user, // Só executa a query se o usuário estiver autenticado
+  });
+  
   const tutorialDestaque = useMemo(() => {
     if (isLoadingModules || isLoadingLessons || isLoadingSiteSettings || isLoadingCourseSettings) {
       return null;
     }
+    
+    // Se temos uma última aula assistida e o usuário está autenticado, usar como destaque
+    if (user && lastWatchedData?.hasLastWatched && !isLoadingLastWatched) {
+      // Encontrar a aula completa no array de tutoriais baseado no ID da última assistida
+      const lastWatchedLesson = tutoriais.find(t => t.id === lastWatchedData.lessonId);
+      return lastWatchedLesson || (Array.isArray(tutoriais) && tutoriais.length > 0 ? tutoriais[0] : null);
+    }
+    
+    // Caso contrário, usar a primeira aula como destaque
     return Array.isArray(tutoriais) && tutoriais.length > 0 ? tutoriais[0] : null;
-  }, [tutoriais, isLoadingModules, isLoadingLessons, isLoadingSiteSettings, isLoadingCourseSettings]);
+  }, [tutoriais, isLoadingModules, isLoadingLessons, isLoadingSiteSettings, isLoadingCourseSettings, lastWatchedData, isLoadingLastWatched, user]);
   
   // Agrupar por níveis
   const iniciantes = Array.isArray(tutoriais) ? tutoriais.filter(t => t.level === 'iniciante') : [];
@@ -335,11 +351,44 @@ export default function VideoaulasPage() {
                     </div>
                   </Button>
                 )}
-                <Link href="#categorias" className="w-full sm:w-auto">
-                  <Button variant="outline" className="bg-white/10 text-white hover:bg-white/20 border-2 border-white/40 py-4 md:py-6 px-6 md:px-10 text-base md:text-lg font-medium w-full sm:w-auto transition-all duration-300 hover:scale-105">
-                    Ver Categorias
-                  </Button>
-                </Link>
+                {user ? (
+                  <Link 
+                    href={lastWatchedData?.hasLastWatched 
+                      ? `/videoaulas/${lastWatchedData.lessonId}` 
+                      : tutorialDestaque ? `/videoaulas/${tutorialDestaque.id}` : '#'
+                    } 
+                    className="w-full sm:w-auto"
+                  >
+                    <Button 
+                      variant="outline" 
+                      className="bg-white/10 text-white hover:bg-white/20 border-2 border-white/40 py-4 md:py-6 px-6 md:px-10 text-base md:text-lg font-medium w-full sm:w-auto transition-all duration-300 hover:scale-105"
+                      disabled={isLoadingLastWatched}
+                    >
+                      <div className="flex items-center">
+                        {isLoadingLastWatched ? (
+                          <span className="flex items-center">
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                            Carregando...
+                          </span>
+                        ) : (
+                          <>
+                            <Clock className="h-5 w-5 md:h-6 md:w-6 mr-2" />
+                            <span>Continuar Assistindo</span>
+                          </>
+                        )}
+                      </div>
+                    </Button>
+                  </Link>
+                ) : (
+                  <Link href="#categorias" className="w-full sm:w-auto">
+                    <Button 
+                      variant="outline" 
+                      className="bg-white/10 text-white hover:bg-white/20 border-2 border-white/40 py-4 md:py-6 px-6 md:px-10 text-base md:text-lg font-medium w-full sm:w-auto transition-all duration-300 hover:scale-105"
+                    >
+                      Ver Categorias
+                    </Button>
+                  </Link>
+                )}
               </div>
             </div>
           </div>
