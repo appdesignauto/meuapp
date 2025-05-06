@@ -48,7 +48,8 @@ import {
   Eye, 
   RefreshCw,
   ListOrdered,
-  Palette
+  Palette,
+  Save
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -3006,16 +3007,7 @@ const AdminDashboard = () => {
                                 value={courseSettings.bannerTitle || ''}
                                 onChange={(e) => {
                                   const value = e.target.value;
-                                  const updated = {...courseSettings, bannerTitle: value};
                                   setCourseSettings(prev => ({...prev, bannerTitle: value}));
-                                }}
-                                onBlur={() => {
-                                  updateCourseSettingsMutation.mutate(courseSettings);
-                                  toast({
-                                    title: "Título atualizado",
-                                    description: "O título do banner foi atualizado com sucesso.",
-                                    duration: 3000,
-                                  });
                                 }}
                                 placeholder="Ex: Aprenda com nossos cursos exclusivos"
                               />
@@ -3030,14 +3022,6 @@ const AdminDashboard = () => {
                                 onChange={(e) => {
                                   const value = e.target.value;
                                   setCourseSettings(prev => ({...prev, bannerDescription: value}));
-                                }}
-                                onBlur={() => {
-                                  updateCourseSettingsMutation.mutate(courseSettings);
-                                  toast({
-                                    title: "Descrição atualizada",
-                                    description: "A descrição do banner foi atualizada com sucesso.",
-                                    duration: 3000,
-                                  });
                                 }}
                                 placeholder="Descreva o propósito dos cursos"
                                 rows={3}
@@ -3140,8 +3124,8 @@ const AdminDashboard = () => {
                                 name="showModuleNumbers"
                                 checked={courseSettings.showModuleNumbers || false}
                                 onCheckedChange={(checked) => {
-                                  const updated = {...courseSettings, showModuleNumbers: checked === true};
-                                  updateCourseSettingsMutation.mutate(updated);
+                                  // Atualiza apenas o estado local
+                                  setCourseSettings(prev => ({...prev, showModuleNumbers: checked === true}));
                                 }}
                               />
                               <Label htmlFor="settingsShowModuleNumbers" className="text-sm">
@@ -3158,8 +3142,8 @@ const AdminDashboard = () => {
                                 name="useCustomPlayerColors"
                                 checked={courseSettings.useCustomPlayerColors || false}
                                 onCheckedChange={(checked) => {
-                                  const updated = {...courseSettings, useCustomPlayerColors: checked === true};
-                                  updateCourseSettingsMutation.mutate(updated);
+                                  // Atualiza apenas o estado local
+                                  setCourseSettings(prev => ({...prev, useCustomPlayerColors: checked === true}));
                                 }}
                               />
                               <Label htmlFor="settingsUseCustomPlayerColors" className="text-sm">
@@ -3176,8 +3160,8 @@ const AdminDashboard = () => {
                                 name="enableComments"
                                 checked={courseSettings.enableComments !== false}
                                 onCheckedChange={(checked) => {
-                                  const updated = {...courseSettings, enableComments: checked === true};
-                                  updateCourseSettingsMutation.mutate(updated);
+                                  // Atualiza apenas o estado local
+                                  setCourseSettings(prev => ({...prev, enableComments: checked === true}));
                                 }}
                               />
                               <Label htmlFor="settingsEnableComments" className="text-sm">
@@ -3194,8 +3178,8 @@ const AdminDashboard = () => {
                                 name="allowNonPremiumEnrollment"
                                 checked={courseSettings.allowNonPremiumEnrollment || false}
                                 onCheckedChange={(checked) => {
-                                  const updated = {...courseSettings, allowNonPremiumEnrollment: checked === true};
-                                  updateCourseSettingsMutation.mutate(updated);
+                                  // Atualiza apenas o estado local
+                                  setCourseSettings(prev => ({...prev, allowNonPremiumEnrollment: checked === true}));
                                 }}
                               />
                               <Label htmlFor="settingsAllowNonPremiumEnrollment" className="text-sm">
@@ -3205,6 +3189,24 @@ const AdminDashboard = () => {
                                 </span>
                               </Label>
                             </div>
+                          </div>
+                          
+                          {/* Botão para salvar todas as configurações */}
+                          <div className="flex justify-end mt-6">
+                            <Button 
+                              onClick={() => {
+                                updateCourseSettingsMutation.mutate(courseSettings);
+                                toast({
+                                  title: "Configurações salvas",
+                                  description: "Todas as configurações foram salvas com sucesso",
+                                  duration: 3000,
+                                });
+                              }}
+                              className="bg-blue-600 hover:bg-blue-700"
+                            >
+                              <Save className="h-4 w-4 mr-2" />
+                              Salvar todas as configurações
+                            </Button>
                           </div>
                         </div>
                       </div>
