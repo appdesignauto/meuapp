@@ -2020,7 +2020,7 @@ const AdminDashboard = () => {
                                   const formData = new FormData();
                                   formData.append('file', file);
                                   
-                                  // Faz o upload da imagem para o servidor
+                                  // Faz o upload da imagem para o servidor - usando a rota específica para miniaturas de módulos
                                   fetch('/api/upload', {
                                     method: 'POST',
                                     body: formData,

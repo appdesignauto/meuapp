@@ -1,0 +1,5 @@
+                                  // Faz o upload da imagem para o servidor - usando a rota específica para miniaturas de módulos
+                                  fetch('/api/upload', {
+                                    method: 'POST',
+                                    body: formData,
+                                  })
