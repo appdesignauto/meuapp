@@ -47,17 +47,43 @@ const HighlightText = ({ text, searchTerm }: { text: string, searchTerm?: string
 };
 
 interface TutorialCardProps {
-  tutorial: Tutorial;
-  isPremiumLocked: boolean;
+  tutorial?: Tutorial;
+  isPremiumLocked?: boolean;
   isWide?: boolean;
   searchTerm?: string;
+  // Propriedades individuais (para uso com o histórico de visualização)
+  id?: number;
+  title?: string;
+  description?: string;
+  thumbnailUrl?: string;
+  durationFormatted?: string;
+  moduloNome?: string;
+  level?: string;
+  isWatched?: boolean;
+  isPremium?: boolean;
+  views?: number;
+  showProgressBar?: boolean;
+  progress?: number;
 }
 
 const TutorialCard: React.FC<TutorialCardProps> = ({
   tutorial,
-  isPremiumLocked,
+  isPremiumLocked = false,
   isWide = false,
-  searchTerm
+  searchTerm,
+  // Propriedades individuais
+  id,
+  title,
+  description,
+  thumbnailUrl,
+  durationFormatted,
+  moduloNome,
+  level,
+  isWatched = false,
+  isPremium = false,
+  views = 0,
+  showProgressBar = false,
+  progress = 0
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
@@ -65,20 +91,34 @@ const TutorialCard: React.FC<TutorialCardProps> = ({
   // Verificar se o tutorial é novo (menos de 15 dias)
   const isNewTutorial = () => {
     try {
-      const dataAdicionado = parseISO(tutorial.createdAt);
-      const quinzeDiasAtras = new Date();
-      quinzeDiasAtras.setDate(quinzeDiasAtras.getDate() - 15);
-      return isAfter(dataAdicionado, quinzeDiasAtras);
+      // Se temos a propriedade individual, use-a
+      if (tutorial?.createdAt) {
+        const dataAdicionado = parseISO(tutorial.createdAt);
+        const quinzeDiasAtras = new Date();
+        quinzeDiasAtras.setDate(quinzeDiasAtras.getDate() - 15);
+        return isAfter(dataAdicionado, quinzeDiasAtras);
+      }
+      return false;
     } catch (e) {
       return false;
     }
   };
   
-  // Calcular o progresso de visualização do tutorial (simulado)
+  // Calcular o progresso de visualização do tutorial
   const getProgress = () => {
-    if (tutorial.isWatched) return 100;
-    // Poderia ser personalizado com um valor real vindo do banco de dados
-    return Math.floor(Math.random() * 80); // Simula um progresso entre 0-80%
+    // Se fornecido explicitamente com showProgressBar, use o valor passado
+    if (showProgressBar && progress !== undefined) {
+      return progress;
+    }
+    
+    // Caso contrário, use o valor do tutorial completo, se disponível
+    if (tutorial) {
+      if (tutorial.isWatched) return 100;
+      // Se não tiver progresso explícito, simula um
+      return Math.floor(Math.random() * 80);
+    }
+    
+    return 0;
   };
   
   // Determinar o nível do tutorial com cores e textos específicos
@@ -87,6 +127,17 @@ const TutorialCard: React.FC<TutorialCardProps> = ({
     intermediario: { text: 'Intermediário', color: 'bg-blue-500/20 text-blue-500' },
     avancado: { text: 'Avançado', color: 'bg-purple-500/20 text-purple-500' }
   };
+  
+  // Pegar os valores reais (priorizando propriedades individuais sobre o objeto tutorial)
+  const actualId = id ?? tutorial?.id;
+  const actualTitle = title ?? tutorial?.title ?? "Sem título";
+  const actualDescription = description ?? tutorial?.description ?? "";
+  const actualThumbnailUrl = thumbnailUrl ?? tutorial?.thumbnailUrl ?? "";
+  const actualDurationFormatted = durationFormatted ?? tutorial?.durationFormatted ?? "00:00";
+  const actualLevel = level ?? tutorial?.level ?? "iniciante";
+  const actualIsWatched = isWatched || (tutorial?.isWatched ?? false);
+  const actualIsPremium = isPremium || (tutorial?.isPremium ?? false);
+  const actualViews = views ?? tutorial?.views ?? 0;
 
   return (
     <motion.div
@@ -109,8 +160,8 @@ const TutorialCard: React.FC<TutorialCardProps> = ({
       {/* Thumbnail com efeito de zoom */}
       <div className="w-full h-full absolute inset-0 overflow-hidden">
         <motion.img
-          src={tutorial.thumbnailUrl}
-          alt={tutorial.title}
+          src={actualThumbnailUrl}
+          alt={actualTitle}
           className="w-full h-full object-cover"
           animate={{ 
             scale: isHovered ? 1.05 : 1,
@@ -125,14 +176,21 @@ const TutorialCard: React.FC<TutorialCardProps> = ({
       {/* Badge de duração - estilo aprimorado */}
       <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white text-xs py-1 px-2 rounded-sm flex items-center shadow-sm z-10">
         <Clock className="h-3 w-3 mr-1" />
-        {tutorial.durationFormatted || tutorial.duration || "00:00"}
+        {actualDurationFormatted}
       </div>
 
       {/* Badge de visualizações - estilo aprimorado */}
       <div className="absolute top-2 left-2 bg-blue-900/70 backdrop-blur-sm text-white text-xs py-1 px-2 rounded-sm flex items-center shadow-sm">
         <Eye className="h-3 w-3 mr-1" />
-        {tutorial.views.toLocaleString()}
+        {actualViews.toLocaleString()}
       </div>
+      
+      {/* Badge de módulo - quando fornecido */}
+      {moduloNome && (
+        <div className="absolute top-12 left-2 bg-blue-600/80 backdrop-blur-sm text-white text-xs py-1 px-2 rounded-sm flex items-center shadow-sm z-10">
+          {moduloNome}
+        </div>
+      )}
       
       {/* Badge NOVO para conteúdos recentes - estilo aprimorado para combinar com os outros badges */}
       {isNewTutorial() && (
@@ -143,7 +201,7 @@ const TutorialCard: React.FC<TutorialCardProps> = ({
       )}
       
       {/* Barra de progresso para vídeos já iniciados mas não concluídos */}
-      {!tutorial.isWatched && getProgress() > 0 && (
+      {showProgressBar && getProgress() > 0 && !actualIsWatched && (
         <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-800 z-20">
           <div 
             className="h-full bg-blue-500" 
@@ -153,7 +211,7 @@ const TutorialCard: React.FC<TutorialCardProps> = ({
       )}
       
       {/* Marcador de conclusão */}
-      {tutorial.isWatched && (
+      {actualIsWatched && (
         <div className="absolute top-1/2 right-1/2 transform translate-x-1/2 -translate-y-1/2 z-20">
           <div className="bg-green-500/90 rounded-full p-2 shadow-lg">
             <CheckCircle2 className="h-8 w-8 text-white" />
@@ -182,7 +240,7 @@ const TutorialCard: React.FC<TutorialCardProps> = ({
       <div className="absolute bottom-0 w-full p-3">
         {/* Badges */}
         <div className="flex flex-wrap gap-1.5 mb-2">
-          {tutorial.isPremium && (
+          {actualIsPremium && (
             <Badge variant="outline" className="bg-gradient-to-r from-amber-500/90 to-amber-600/90 border-amber-500/30 text-white px-2 py-0.5 text-xs font-medium">
               <Crown className="h-3 w-3 mr-1" />
               Premium
@@ -191,12 +249,12 @@ const TutorialCard: React.FC<TutorialCardProps> = ({
           
           <Badge 
             variant="outline" 
-            className={`${levelInfo[tutorial.level].color} border-0 px-2 py-0.5 text-xs font-medium`}
+            className={`${levelInfo[actualLevel].color} border-0 px-2 py-0.5 text-xs font-medium`}
           >
-            {levelInfo[tutorial.level].text}
+            {levelInfo[actualLevel].text}
           </Badge>
 
-          {tutorial.isWatched && (
+          {actualIsWatched && (
             <Badge variant="outline" className="bg-green-500/20 text-green-500 border-0 px-2 py-0.5 text-xs font-medium">
               <CheckCircle className="h-3 w-3 mr-1" />
               Assistido
@@ -207,9 +265,9 @@ const TutorialCard: React.FC<TutorialCardProps> = ({
         {/* Título com destaque de pesquisa */}
         <h3 className="text-white font-bold text-base line-clamp-1">
           {searchTerm ? (
-            <HighlightText text={tutorial.title} searchTerm={searchTerm} />
+            <HighlightText text={actualTitle} searchTerm={searchTerm} />
           ) : (
-            tutorial.title
+            actualTitle
           )}
         </h3>
         
@@ -220,11 +278,20 @@ const TutorialCard: React.FC<TutorialCardProps> = ({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2, delay: 0.1 }}
           >
+            {/* Módulo quando fornecido - exibido apenas em hover */}
+            {moduloNome && (
+              <div className="mb-2">
+                <Badge variant="outline" className="bg-blue-500/20 text-blue-500 border-0 px-2 py-0.5 text-xs font-medium">
+                  {moduloNome}
+                </Badge>
+              </div>
+            )}
+            
             <p className="text-white/80 text-xs mb-4 line-clamp-2">
-              {searchTerm ? (
-                <HighlightText text={tutorial.description} searchTerm={searchTerm} />
+              {searchTerm && actualDescription ? (
+                <HighlightText text={actualDescription} searchTerm={searchTerm} />
               ) : (
-                tutorial.description
+                actualDescription
               )}
             </p>
             
@@ -232,11 +299,11 @@ const TutorialCard: React.FC<TutorialCardProps> = ({
             {!isPremiumLocked && (
               <div className="flex gap-2">
                 {/* Botão principal de assistir */}
-                <Link href={`/videoaulas/${tutorial.id}`} className="flex-grow">
+                <Link href={`/videoaulas/${actualId}`} className="flex-grow">
                   <Button 
                     className="w-full h-8 text-xs flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
                   >
-                    {tutorial.isWatched
+                    {actualIsWatched
                       ? <>Assistir novamente <Play className="h-3.5 w-3.5" /></>
                       : <>Assistir tutorial <Play className="h-3.5 w-3.5" /></>
                     }
@@ -266,16 +333,18 @@ const TutorialCard: React.FC<TutorialCardProps> = ({
       
       {/* Botão play no centro quando hover */}
       {isHovered && !isPremiumLocked && (
-        <motion.div 
-          className="absolute inset-0 flex items-center justify-center pointer-events-none"
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.2 }}
-        >
-          <div className="rounded-full bg-white/20 backdrop-blur-sm p-3">
-            <Play className="h-10 w-10 text-white" />
-          </div>
-        </motion.div>
+        <Link href={`/videoaulas/${actualId}`}>
+          <motion.div 
+            className="absolute inset-0 flex items-center justify-center"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="rounded-full bg-white/20 backdrop-blur-sm p-3">
+              <Play className="h-10 w-10 text-white" />
+            </div>
+          </motion.div>
+        </Link>
       )}
     </motion.div>
   );
