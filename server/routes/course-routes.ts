@@ -544,6 +544,25 @@ router.post('/', async (req, res) => {
     // ID do criador (pode ser NULL)
     const createdById = req.user?.id || 'NULL';
     
+    // Criar slug baseado no título
+    const generateSlug = (text: string) => {
+      return text
+        .toString()
+        .normalize('NFD')                // Normaliza caracteres acentuados
+        .replace(/[\u0300-\u036f]/g, '') // Remove diacríticos
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, '-')           // Substitui espaços por hífens
+        .replace(/[^\w-]+/g, '')        // Remove caracteres não alfanuméricos
+        .replace(/--+/g, '-')           // Substitui múltiplos hífens por um único hífen
+        .replace(/^-+/, '')             // Remove hífens do início
+        .replace(/-+$/, '');            // Remove hífens do final
+    };
+    
+    // Gerar slug a partir do título
+    const slug = title ? generateSlug(title) : `curso-${Date.now()}`;
+    const slugEscaped = safeEscape(slug);
+    
     const query = `
       INSERT INTO courses (
         title, 
@@ -553,7 +572,8 @@ router.post('/', async (req, res) => {
         status, 
         "isPublished", 
         "isPremium", 
-        "createdBy"
+        "createdBy",
+        slug  /* Adicionando o campo slug */
       ) 
       VALUES (
         ${titleEscaped || 'NULL'}, 
@@ -563,7 +583,8 @@ router.post('/', async (req, res) => {
         ${statusValue || "'active'"}, 
         ${isPublishedValue}, 
         ${isPremiumValue}, 
-        ${createdById}
+        ${createdById},
+        ${slugEscaped} /* Valor do slug gerado */
       ) 
       RETURNING 
         id, 
@@ -574,7 +595,8 @@ router.post('/', async (req, res) => {
         level, 
         status, 
         "isPublished", 
-        "isPremium", 
+        "isPremium",
+        slug,
         "createdAt", 
         "updatedAt"
     `;
@@ -638,6 +660,21 @@ router.put('/:id', async (req, res) => {
       return `'${value.toString().replace(/'/g, "''")}'`;
     };
     
+    // Criar slug baseado no título - mesma função da rota POST
+    const generateSlug = (text: string) => {
+      return text
+        .toString()
+        .normalize('NFD')                // Normaliza caracteres acentuados
+        .replace(/[\u0300-\u036f]/g, '') // Remove diacríticos
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, '-')           // Substitui espaços por hífens
+        .replace(/[^\w-]+/g, '')        // Remove caracteres não alfanuméricos
+        .replace(/--+/g, '-')           // Substitui múltiplos hífens por um único hífen
+        .replace(/^-+/, '')             // Remove hífens do início
+        .replace(/-+$/, '');            // Remove hífens do final
+    };
+    
     // Adicionar clauses que são seguros
     setClauses.push(`"updatedAt" = NOW()`);
     
@@ -645,6 +682,11 @@ router.put('/:id', async (req, res) => {
       const safeTitle = safeEscape(title);
       if (safeTitle) {
         setClauses.push(`title = ${safeTitle}`);
+        
+        // Se o título mudou, também atualizamos o slug
+        const slug = generateSlug(title);
+        const safeSlug = safeEscape(slug);
+        setClauses.push(`slug = ${safeSlug}`);
       } else {
         setClauses.push(`title = NULL`);
       }
@@ -712,7 +754,8 @@ router.put('/:id', async (req, res) => {
         level, 
         status, 
         "isPublished", 
-        "isPremium", 
+        "isPremium",
+        slug,
         "createdAt", 
         "updatedAt"
     `;
