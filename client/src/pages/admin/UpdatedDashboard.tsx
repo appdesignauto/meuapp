@@ -137,7 +137,7 @@ const AdminDashboard = () => {
   const [isConfirmDeleteModuleOpen, setIsConfirmDeleteModuleOpen] = useState(false);
   const [currentModule, setCurrentModule] = useState<any | null>(null);
   const [moduleForm, setModuleForm] = useState<any>({
-    courseId: 0,
+    courseId: '', // String vazia para forçar seleção explícita
     title: '',
     description: '',
     thumbnailUrl: '',
@@ -1558,6 +1558,7 @@ const AdminDashboard = () => {
                     onClick={() => {
                       setCurrentModule(null);
                       setModuleForm({
+                        courseId: '', // Começamos com courseId vazio para forçar escolha explícita
                         title: '',
                         description: '',
                         thumbnailUrl: '',
@@ -1621,6 +1622,7 @@ const AdminDashboard = () => {
                       onClick={() => {
                         setCurrentModule(null);
                         setModuleForm({
+                          courseId: '', // Começamos com courseId vazio para forçar escolha explícita
                           title: '',
                           description: '',
                           thumbnailUrl: '',
@@ -1664,6 +1666,7 @@ const AdminDashboard = () => {
                                   setCurrentModule(module);
                                   setModuleForm({
                                     id: module.id,
+                                    courseId: module.courseId,
                                     title: module.title,
                                     description: module.description,
                                     thumbnailUrl: module.thumbnailUrl,
