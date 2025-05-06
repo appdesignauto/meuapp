@@ -2974,7 +2974,15 @@ const AdminDashboard = () => {
                                 onChange={(e) => {
                                   const value = e.target.value;
                                   const updated = {...courseSettings, bannerTitle: value};
-                                  updateCourseSettingsMutation.mutate(updated);
+                                  setCourseSettings(prev => ({...prev, bannerTitle: value}));
+                                }}
+                                onBlur={() => {
+                                  updateCourseSettingsMutation.mutate(courseSettings);
+                                  toast({
+                                    title: "Título atualizado",
+                                    description: "O título do banner foi atualizado com sucesso.",
+                                    duration: 3000,
+                                  });
                                 }}
                                 placeholder="Ex: Aprenda com nossos cursos exclusivos"
                               />
@@ -3045,21 +3053,7 @@ const AdminDashboard = () => {
                               </div>
                             </div>
                             
-                            <div className="grid gap-2">
-                              <Label htmlFor="settingsWelcomeMessage">Mensagem de Boas-Vindas</Label>
-                              <Textarea
-                                id="settingsWelcomeMessage"
-                                name="welcomeMessage"
-                                value={courseSettings.welcomeMessage || ''}
-                                onChange={(e) => {
-                                  const value = e.target.value;
-                                  const updated = {...courseSettings, welcomeMessage: value};
-                                  updateCourseSettingsMutation.mutate(updated);
-                                }}
-                                placeholder="Mensagem para os alunos"
-                                rows={3}
-                              />
-                            </div>
+
                           </div>
                         </div>
                         
