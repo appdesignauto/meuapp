@@ -558,6 +558,16 @@ export default function VideoaulasPage() {
                                       alt={lesson.title} 
                                       className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out"
                                     />
+                                    
+                                    {/* Overlay escuro constante para o título */}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                                    
+                                    {/* Título sempre visível dentro da thumbnail */}
+                                    <div className="absolute bottom-0 left-0 right-0 p-2">
+                                      <h3 className="text-white font-medium text-sm line-clamp-2">
+                                        {lesson.title || "Tutorial sem título"}
+                                      </h3>
+                                    </div>
                                   </div>
                                   
                                   <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -579,11 +589,6 @@ export default function VideoaulasPage() {
                                     <div className="bg-white/90 rounded-full p-3 transform scale-90 group-hover:scale-100 transition-all duration-300 shadow-md">
                                       <Play className="h-6 w-6 text-blue-600" />
                                     </div>
-                                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                                      <div className="px-4 py-2 text-center">
-                                        <h3 className="text-white font-semibold text-lg">{lesson.title}</h3>
-                                      </div>
-                                    </div>
                                   </div>
                                   
                                   {lesson.progress > 0 && lesson.progress < 100 && (
@@ -602,11 +607,7 @@ export default function VideoaulasPage() {
                                   )}
                                 </div>
                                 
-                                <div className="mt-3 flex flex-col flex-grow">
-                                  <h3 className="font-medium text-gray-800 mb-1.5 line-clamp-2 text-sm md:text-base">
-                                    {lesson.title || "Tutorial sem título"}
-                                  </h3>
-                                </div>
+                                {/* Removido título externo para cards de "Continuar Assistindo" */}
                               </div>
                             </Link>
                           </CarouselItem>
