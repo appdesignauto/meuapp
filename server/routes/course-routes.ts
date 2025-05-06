@@ -864,9 +864,10 @@ router.get('/settings', async (req, res) => {
       configQuery += ` WHERE "courseId" = ${courseId} LIMIT 1`;
       console.log(`[GET /course/settings] Buscando configurações para curso ID: ${courseId}`);
     } else {
-      // Configurações padrão sem curso específico
-      configQuery += ` WHERE id = 1 LIMIT 1`;
-      console.log('[GET /course/settings] Sem courseId, buscando configurações padrão (id=1)');
+      // Sem courseId especificado, carregar configurações para Tutoriais Design Auto (id=2)
+      // já que é o que deve aparecer na página de videoaulas
+      configQuery += ` WHERE "courseId" = 2 LIMIT 1`;
+      console.log('[GET /course/settings] Sem courseId explícito, buscando configurações para Tutoriais Design Auto (ID=2)');
     }
     
     console.log('[GET /course/settings] Executando query para buscar configurações...');
@@ -1045,7 +1046,8 @@ router.put('/settings', async (req, res) => {
     if (courseId) {
       checkQuery = `SELECT id FROM "courseSettings" WHERE "courseId" = ${courseId}`;
     } else {
-      checkQuery = `SELECT id FROM "courseSettings" WHERE id = 1`;
+      // Sem courseId, usar as configurações do Tutoriais Design Auto por padrão
+      checkQuery = `SELECT id FROM "courseSettings" WHERE "courseId" = 2`;
     }
     
     console.log(`[PUT /course/settings] Verificando configurações existentes com query: ${checkQuery}`);
@@ -1213,7 +1215,9 @@ router.put('/settings', async (req, res) => {
       if (courseId) {
         whereClause = `"courseId" = ${courseId}`;
       } else {
-        whereClause = `id = ${settingsId}`;
+        // Se não foi especificado um courseId, assumimos que queremos atualizar
+        // as configurações do Tutoriais Design Auto (ID=2)
+        whereClause = `"courseId" = 2`;
       }
       
       // Registramos a query exata para diagnóstico
