@@ -1992,15 +1992,118 @@ const AdminDashboard = () => {
                         />
                       </div>
                       <div className="grid gap-2 md:col-span-2">
-                        <Label htmlFor="moduleThumbUrl">URL da miniatura *</Label>
-                        <div className="flex gap-2">
-                          <Input
-                            id="moduleThumbUrl"
-                            name="thumbnailUrl"
-                            value={moduleForm.thumbnailUrl}
-                            onChange={handleModuleFormChange}
-                            placeholder="URL da imagem de miniatura"
-                          />
+                        <Label htmlFor="moduleThumbnail">Miniatura do módulo *</Label>
+                        <div className="flex flex-col gap-4">
+                          {/* Área de upload */}
+                          <div className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-gray-50 transition-colors">
+                            <input
+                              type="file"
+                              id="moduleThumbnailUpload"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  const file = e.target.files[0];
+                                  setThumbnailFile(file);
+                                  
+                                  // Cria URL temporária para preview
+                                  const objectUrl = URL.createObjectURL(file);
+                                  setBannerPreviewUrl(objectUrl);
+                                  
+                                  // Indica que está fazendo upload (será alterado após o envio)
+                                  setUploadingThumbnail(true);
+                                  
+                                  // Prepara o FormData para upload
+                                  const formData = new FormData();
+                                  formData.append('file', file);
+                                  
+                                  // Faz o upload da imagem para o servidor
+                                  fetch('/api/upload', {
+                                    method: 'POST',
+                                    body: formData,
+                                  })
+                                    .then(res => {
+                                      if (!res.ok) {
+                                        throw new Error('Falha ao fazer upload da imagem');
+                                      }
+                                      return res.json();
+                                    })
+                                    .then(data => {
+                                      // Atualiza o formulário com a URL da imagem
+                                      setModuleForm({
+                                        ...moduleForm,
+                                        thumbnailUrl: data.fileUrl
+                                      });
+                                      
+                                      toast({
+                                        title: 'Upload concluído',
+                                        description: 'Imagem enviada com sucesso',
+                                      });
+                                    })
+                                    .catch(error => {
+                                      toast({
+                                        title: 'Erro no upload',
+                                        description: error.message,
+                                        variant: 'destructive',
+                                      });
+                                    })
+                                    .finally(() => {
+                                      setUploadingThumbnail(false);
+                                    });
+                                }
+                              }}
+                            />
+                            <Button 
+                              variant="ghost" 
+                              className="w-full h-full flex flex-col items-center justify-center"
+                              onClick={() => {
+                                const fileInput = document.getElementById('moduleThumbnailUpload');
+                                if (fileInput) {
+                                  fileInput.click();
+                                }
+                              }}
+                            >
+                              <Upload className="h-8 w-8 mb-2 text-gray-400" />
+                              <span className="font-medium text-sm">Clique para fazer upload da imagem</span>
+                              <span className="text-xs text-gray-500 mt-1">PNG, JPG ou WEBP até 5MB</span>
+                            </Button>
+                          </div>
+                          
+                          {/* Preview da imagem */}
+                          {(moduleForm.thumbnailUrl || bannerPreviewUrl) && (
+                            <div className="mt-2">
+                              <p className="text-sm font-medium mb-2">Preview:</p>
+                              <div className="relative aspect-video w-full max-w-md mx-auto border rounded-lg overflow-hidden">
+                                <img
+                                  src={bannerPreviewUrl || moduleForm.thumbnailUrl}
+                                  alt="Preview da miniatura"
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    e.currentTarget.src = "https://via.placeholder.com/640x360?text=Erro+ao+carregar";
+                                  }}
+                                />
+                                
+                                {uploadingThumbnail && (
+                                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                    <Loader2 className="h-8 w-8 animate-spin text-white" />
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {/* URL da imagem (opcional) */}
+                              <Input
+                                className="mt-2"
+                                id="moduleThumbUrl"
+                                name="thumbnailUrl"
+                                value={moduleForm.thumbnailUrl}
+                                onChange={handleModuleFormChange}
+                                placeholder="URL da imagem de miniatura"
+                              />
+                              <p className="text-xs text-gray-500 mt-1">
+                                Você também pode inserir diretamente a URL da imagem
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="grid gap-2">
