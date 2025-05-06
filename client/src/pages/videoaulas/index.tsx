@@ -358,7 +358,7 @@ export default function VideoaulasPage() {
                         ) : (
                           <>
                             <Play className="h-5 w-5 md:h-6 md:w-6 mr-2 text-black" fill="black" />
-                            <span>{user && lastWatchedData?.hasLastWatched ? 'Continuar Assistindo' : 'Assistir'}</span>
+                            <span>{user && lastWatchedData?.hasLastWatched ? 'Continuar Assistindo' : 'Assistir agora'}</span>
                           </>
                         )}
                       </div>
