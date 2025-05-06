@@ -1,203 +1,136 @@
-import { Router, Request, Response } from 'express';
+import express, { Request, Response } from 'express';
 import multer from 'multer';
-import { createClient } from '@supabase/supabase-js';
-import { randomUUID } from 'crypto';
+import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs';
-import sharp from 'sharp';
+import { v4 as uuidv4 } from 'uuid';
+import { SupabaseStorageService } from '../services/supabase-storage';
+import { randomUUID } from 'crypto';
 
-const router = Router();
+const router = express.Router();
 
-// Verificação de variáveis de ambiente
-if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
-  console.error('❌ Variáveis de ambiente SUPABASE_URL e SUPABASE_ANON_KEY são necessárias');
-}
-
-// Inicialização do cliente Supabase
-const supabase = createClient(
-  process.env.SUPABASE_URL || '',
-  process.env.SUPABASE_ANON_KEY || ''
-);
-
-// Constantes para buckets e pastas
-const BUCKET_NAME = 'designautoimages';
-const MODULE_FOLDER = 'module-thumbnails';
-
-// Configuração do multer para armazenar em memória
+// Configuração Multer para upload temporário em memória
+const storage = multer.memoryStorage();
 const upload = multer({
-  storage: multer.memoryStorage(),
+  storage,
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB
+    fileSize: 5 * 1024 * 1024, // 5MB
   },
   fileFilter: (req, file, cb) => {
-    const acceptedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    
-    if (acceptedTypes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Formato não suportado. Use apenas JPEG, PNG ou WEBP.'));
+    const filetypes = /jpeg|jpg|png|webp/;
+    const mimetype = filetypes.test(file.mimetype);
+    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+
+    if (mimetype && extname) {
+      return cb(null, true);
     }
-  }
+    
+    cb(new Error('Apenas imagens no formato JPEG, PNG ou WEBP são permitidas'));
+  },
 });
 
-// Função para otimizar imagem
+// Inicializando serviço Supabase Storage
+const supabaseStorage = new SupabaseStorageService();
+
+// Otimiza a imagem usando sharp
 async function optimizeImage(buffer: Buffer): Promise<Buffer> {
   try {
-    // Redimensiona para um tamanho padrão adequado para miniaturas de módulos
-    // e converte para webp para otimização
-    return await sharp(buffer)
-      .resize(800, 450, { fit: 'inside', withoutEnlargement: true })
+    // Usar sharp para converter para WebP com boa compressão
+    const optimizedBuffer = await sharp(buffer)
       .webp({ quality: 80 })
       .toBuffer();
+    
+    return optimizedBuffer;
   } catch (error) {
     console.error('Erro ao otimizar imagem:', error);
     return buffer; // Retorna o buffer original em caso de erro
   }
 }
 
-// Função para garantir que o bucket existe
+// Garante que o bucket do módulo exista
 async function ensureBucket() {
   try {
-    // Verificar se o bucket existe
-    const { data: buckets, error: getBucketError } = await supabase.storage.listBuckets();
-    
-    if (getBucketError) {
-      console.error('Erro ao listar buckets:', getBucketError);
-      return false;
-    }
-    
-    // Se o bucket não existir, tentar criar
-    if (!buckets?.find(b => b.name === BUCKET_NAME)) {
-      const { error: createError } = await supabase.storage.createBucket(BUCKET_NAME, {
-        public: true,
-        allowedMimeTypes: ['image/png', 'image/jpeg', 'image/webp'],
-        fileSizeLimit: 5242880 // 5MB em bytes
-      });
-      
-      if (createError) {
-        console.error('Erro ao criar bucket:', createError);
-        return false;
-      }
-    }
-    
+    await supabaseStorage.createBucketIfNotExists('module-thumbnails');
     return true;
   } catch (error) {
-    console.error('Exceção ao verificar/criar bucket:', error);
+    console.error('Erro ao criar bucket:', error);
     return false;
   }
 }
 
-// Implementar fallback para upload local quando necessário
+// Upload para pasta local em caso de fallback
 async function localUpload(buffer: Buffer, filename: string): Promise<string> {
-  try {
-    // Criar diretório se não existir
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads', MODULE_FOLDER);
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    
-    // Salvar arquivo
-    const filePath = path.join(uploadDir, filename);
-    fs.writeFileSync(filePath, buffer);
-    
-    // Retornar URL relativa
-    return `/uploads/${MODULE_FOLDER}/${filename}`;
-  } catch (error) {
-    console.error('Erro no upload local:', error);
-    throw error;
+  const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'modules');
+  
+  // Garantir que o diretório exista
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
   }
+  
+  const localPath = path.join(uploadsDir, filename);
+  await fs.promises.writeFile(localPath, buffer);
+  
+  return `/uploads/modules/${filename}`;
 }
 
-// Rota para upload de imagem de módulo
-router.post('/api/upload', upload.single('file'), async (req: Request, res: Response) => {
-  console.log('📂 Processando upload para miniatura de módulo');
-  
+// Rota para upload de thumbnails de módulos
+router.post('/module-thumbnail', upload.single('file'), async (req: Request, res: Response) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'Nenhum arquivo enviado' });
+  }
+
   try {
-    if (!req.file) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Nenhum arquivo enviado' 
-      });
-    }
-    
-    // Verificar se o usuário está autenticado (opcional, dependendo da configuração)
-    const userId = req.user?.id;
-    const username = req.user?.username;
-    
-    console.log(`📤 Upload recebido: ${req.file.originalname} (${req.file.size} bytes, ${req.file.mimetype})`);
-    console.log(`👤 Usuário: ${userId || 'desconhecido'} (${username || 'sem username'})`);
-    
-    // Otimizar imagem
+    // Otimiza a imagem
     const optimizedBuffer = await optimizeImage(req.file.buffer);
     
-    // Gerar nome de arquivo único
-    const uniqueId = randomUUID();
-    const filename = `module_${userId ? `user${userId}_` : ''}${uniqueId}.webp`;
-    const filePath = `${MODULE_FOLDER}/${filename}`;
+    // Gera um nome de arquivo único
+    const fileExtension = '.webp'; // Sempre salvamos como WebP após otimização
+    const uniqueFileName = `${randomUUID()}${fileExtension}`;
     
-    // Tentativa 1: Upload para Supabase
+    // Define a estrutura de pastas: module-thumbnails/YYYY-MM
+    const currentDate = new Date();
+    const yearMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+    const filePath = `${yearMonth}/${uniqueFileName}`;
+    
+    // Garante que o bucket exista
+    await ensureBucket();
+    
+    // Tenta fazer upload para o Supabase
+    let fileUrl = '';
     try {
-      // Verificar bucket
-      const bucketReady = await ensureBucket();
+      // Upload para o Supabase Storage
+      const result = await supabaseStorage.uploadFile({
+        bucket: 'module-thumbnails',
+        path: filePath,
+        file: optimizedBuffer,
+        contentType: 'image/webp'
+      });
       
-      if (bucketReady) {
-        // Fazer upload para Supabase Storage
-        const { data, error } = await supabase.storage
-          .from(BUCKET_NAME)
-          .upload(filePath, optimizedBuffer, {
-            contentType: 'image/webp',
-            upsert: true
-          });
-          
-        if (error) {
-          throw error;
-        }
-        
-        // Obter URL pública
-        const { data: urlData } = supabase.storage
-          .from(BUCKET_NAME)
-          .getPublicUrl(filePath);
-          
-        console.log(`✅ Upload para Supabase concluído: ${urlData.publicUrl}`);
-        
-        return res.status(200).json({
-          success: true,
-          message: 'Upload bem-sucedido',
-          fileUrl: urlData.publicUrl,
-          storageType: 'supabase'
-        });
+      if (result.success && result.url) {
+        fileUrl = result.url;
       } else {
-        throw new Error('Bucket não disponível');
+        throw new Error('Falha no upload para o Supabase Storage');
       }
-    } catch (supabaseError) {
-      console.error('❌ Erro no upload para Supabase:', supabaseError);
-      console.log('⚠️ Tentando fallback para armazenamento local...');
-      
-      // Tentativa 2: Fallback para armazenamento local
-      try {
-        const localUrl = await localUpload(optimizedBuffer, filename);
-        
-        console.log(`✅ Upload local concluído: ${localUrl}`);
-        
-        return res.status(200).json({
-          success: true,
-          message: 'Upload realizado com fallback para armazenamento local',
-          fileUrl: localUrl,
-          storageType: 'local',
-          originalError: String(supabaseError)
-        });
-      } catch (localError) {
-        console.error('❌ Erro no fallback para upload local:', localError);
-        throw new Error(`Falha em ambas as estratégias de upload: ${supabaseError} / ${localError}`);
-      }
+    } catch (error) {
+      console.error('Erro no upload para Supabase, tentando local:', error);
+      // Fallback para salvar localmente se o Supabase falhar
+      fileUrl = await localUpload(optimizedBuffer, uniqueFileName);
     }
-  } catch (error) {
-    console.error('❌ Erro no processamento do upload:', error);
     
-    return res.status(500).json({
+    // Retorna a URL do arquivo
+    res.status(200).json({
+      success: true,
+      fileUrl: fileUrl,
+      fileName: uniqueFileName,
+      fileSize: optimizedBuffer.length,
+      mimeType: 'image/webp'
+    });
+    
+  } catch (error) {
+    console.error('Erro no processamento do upload:', error);
+    res.status(500).json({
       success: false,
-      message: 'Erro ao processar o upload da imagem',
-      error: String(error)
+      error: 'Erro ao processar o upload da imagem'
     });
   }
 });
