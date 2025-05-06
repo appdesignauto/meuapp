@@ -37,7 +37,7 @@ const isAdmin = (req: Request, res: Response, next: NextFunction) => {
 };
 
 // Rota para upload de thumbnail da aula
-router.post('/api/courses/lessons/thumbnail-upload', isAuthenticated, isAdmin, upload.single('thumbnail'), 
+router.post('/lesson-thumbnail-upload', isAuthenticated, isAdmin, upload.single('thumbnail'), 
   async (req: Request, res: Response) => {
     try {
       if (!req.file) {

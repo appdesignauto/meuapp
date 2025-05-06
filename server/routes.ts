@@ -4712,16 +4712,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api', videoCommentsRouter);
   
   // Rota para upload de banners de cursos
-  app.use(bannerUploadRouter);
+  app.use('/api/upload', bannerUploadRouter);
   
   // Rota para upload de thumbnails de aulas
-  app.use(lessonThumbnailUploadRouter);
+  app.use('/api/upload', lessonThumbnailUploadRouter);
   
   // Rota para upload de thumbnails de cursos
-  app.use(courseThumbnailUploadRouter);
+  app.use('/api/upload', courseThumbnailUploadRouter);
   
   // Rota para upload de thumbnails de módulos
-  app.use(moduleUploadRouter);
+  app.use('/api/upload', moduleUploadRouter);
 
   const httpServer = createServer(app);
   

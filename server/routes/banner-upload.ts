@@ -31,7 +31,7 @@ const BANNER_SIZES = {
 
 // Rota para upload de banner do curso
 router.post(
-  "/api/admin/upload-banner",
+  "/banner-upload",
   upload.single("banner"),
   async (req: Request, res: Response) => {
     try {
