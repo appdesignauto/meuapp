@@ -772,8 +772,8 @@ const AdminDashboard = () => {
     };
   }, [bannerPreviewUrl]);
   
-  // Carrega automaticamente os dados do curso "Tutoriais Design Auto" quando a página é aberta
-  // na aba de configurações de cursos
+  // Carrega o curso "Tutoriais Design Auto" quando a página é aberta
+  // na aba de configurações de cursos, mas NÃO sincroniza automaticamente
   useEffect(() => {
     if (activeTab === 'coursesConfig' && courses.length > 0 && !isLoadingCourses) {
       // Verifica se nenhum curso foi selecionado ainda
@@ -784,30 +784,22 @@ const AdminDashboard = () => {
         );
         
         if (tutorialsCourse) {
+          // Apenas seleciona o curso, sem sincronizar automaticamente
           setSelectedCourseForSettings(tutorialsCourse);
           
-          // Se o curso tem imagens, sincroniza com as configurações do banner
-          if (tutorialsCourse.thumbnailUrl) {
-            // Atualiza as configurações do banner com os dados do curso
-            const updatedSettings = {
-              ...courseSettings,
-              bannerTitle: tutorialsCourse.title || courseSettings.bannerTitle,
-              bannerDescription: tutorialsCourse.description || courseSettings.bannerDescription,
-              bannerImageUrl: tutorialsCourse.thumbnailUrl || courseSettings.bannerImageUrl
-            };
-            
-            // Atualiza as configurações no servidor
-            updateCourseSettingsMutation.mutate(updatedSettings, {
-              onSuccess: () => {
-                // Invalidar cache para garantir que as alterações apareçam na página de videoaulas
-                queryClient.invalidateQueries({ queryKey: ['/api/course/settings'] });
-              }
-            });
-          }
+          // Notifica o usuário que pode sincronizar manualmente se quiser
+          toast({
+            title: "Curso selecionado",
+            description: "Você pode editar o curso ou usar os botões de 'Salvar Curso' para aplicar as mudanças.",
+            duration: 5000,
+          });
+          
+          // NÃO sincroniza automaticamente com o banner - isso será feito apenas
+          // quando o usuário clicar explicitamente no botão de sincronização
         }
       }
     }
-  }, [activeTab, courses, isLoadingCourses, selectedCourseForSettings, courseSettings, updateCourseSettingsMutation]);
+  }, [activeTab, courses, isLoadingCourses, selectedCourseForSettings, toast]);
 
   // Handlers para submits
   const handleCourseSubmit = () => {
