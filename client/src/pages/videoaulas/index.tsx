@@ -84,6 +84,12 @@ export default function VideoaulasPage() {
     retry: 1,
   });
   
+  // Buscar configurações de cursos para obter título, descrição e imagem do banner
+  const { data: courseSettings, isLoading: isLoadingCourseSettings } = useQuery({
+    queryKey: ['/api/course/settings'],
+    retry: 1,
+  });
+  
   // Transformar dados do banco para o formato esperado pelos componentes
   const transformarLicoesParaTutoriais = (modules = [], lessons = []) => {
     if (!modules.length || !lessons.length) return [];
@@ -188,11 +194,11 @@ export default function VideoaulasPage() {
   
   // Aguardar o carregamento completo dos dados antes de definir o tutorial destaque
   const tutorialDestaque = useMemo(() => {
-    if (isLoadingModules || isLoadingLessons || isLoadingSiteSettings) {
+    if (isLoadingModules || isLoadingLessons || isLoadingSiteSettings || isLoadingCourseSettings) {
       return null;
     }
     return Array.isArray(tutoriais) && tutoriais.length > 0 ? tutoriais[0] : null;
-  }, [tutoriais, isLoadingModules, isLoadingLessons, isLoadingSiteSettings]);
+  }, [tutoriais, isLoadingModules, isLoadingLessons, isLoadingSiteSettings, isLoadingCourseSettings]);
   
   // Agrupar por níveis
   const iniciantes = Array.isArray(tutoriais) ? tutoriais.filter(t => t.level === 'iniciante') : [];
@@ -272,13 +278,15 @@ export default function VideoaulasPage() {
           {/* Fundo com imagem do banner */}
           <div className="absolute inset-0 z-0">
             {/* Imagem de banner personalizada com estado de carregamento */}
-            {isLoadingSiteSettings ? (
+            {isLoadingCourseSettings ? (
               <div className="absolute inset-0 bg-blue-700"></div>
             ) : (
               <div 
                 className="absolute inset-0 bg-center bg-cover"
                 style={{
-                  backgroundImage: siteSettings?.courseHeroImageUrl ? `url('${siteSettings.courseHeroImageUrl}')` : 'linear-gradient(to right, #3b82f6, #2563eb)',
+                  backgroundImage: courseSettings?.bannerImageUrl 
+                    ? `url('${courseSettings.bannerImageUrl}')` 
+                    : 'linear-gradient(to right, #3b82f6, #2563eb)',
                 }}
               ></div>
             )}
@@ -290,7 +298,7 @@ export default function VideoaulasPage() {
           {/* Conteúdo sobreposto */}
           <div className="container mx-auto h-full flex flex-col justify-center relative z-10">
             <div className="px-4 md:px-8 max-w-3xl">
-              {isLoadingSiteSettings ? (
+              {isLoadingCourseSettings ? (
                 <>
                   <div className="bg-white/10 backdrop-blur-sm h-12 w-80 animate-pulse rounded-md mb-4"></div>
                   <div className="h-1 w-16 md:w-24 bg-yellow-500 mb-4 md:mb-6 shadow-sm"></div>
@@ -299,11 +307,11 @@ export default function VideoaulasPage() {
               ) : (
                 <>
                   <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 md:mb-4 text-white drop-shadow-sm">
-                    {siteSettings?.courseHeroTitle || ""}
+                    {courseSettings?.bannerTitle || "App DesignAuto"}
                   </h1>
                   <div className="h-1 w-16 md:w-24 bg-yellow-500 mb-4 md:mb-6 shadow-sm"></div>
                   <p className="text-base sm:text-lg md:text-xl text-white mb-6 md:mb-8 max-w-2xl leading-relaxed shadow-sm">
-                    {siteSettings?.courseHeroSubtitle || ""}
+                    {courseSettings?.bannerDescription || "A formação completa para você criar designs profissionais para seu negócio automotivo de forma simples e totalmente descomplicada."}
                   </p>
                 </>
               )}
