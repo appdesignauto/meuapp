@@ -4530,10 +4530,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Rotas para gerenciamento de cursos (cursos, configurações)
-  app.use('/api/course/settings', courseRouter);
-  
-  // Rotas para gerenciamento de módulos e aulas
+  // Rotas para gerenciamento de cursos, módulos, aulas e configurações
+  // Montado apenas uma vez para evitar conflitos de rotas duplicadas
   app.use('/api/course', courseRouter);
   
   // Rotas para gerenciamento de comentários em vídeos

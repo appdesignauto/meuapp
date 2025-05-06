@@ -355,59 +355,8 @@ router.delete('/lessons/:id', async (req, res) => {
   }
 });
 
-// ENDPOINTS PARA CONFIGURAÇÕES DOS CURSOS - Segunda implementação removida
-
-// Atualizar configurações dos cursos
-router.put('/settings', async (req, res) => {
-  try {
-    console.log('[PUT /course/settings] Atualizando configurações de cursos:', req.body);
-    
-    const settingsId = 1; // Assumindo que há apenas um registro de configurações
-    
-    // Verificar se as configurações existem
-    const existingSettings = await db.query.courseSettings.findFirst({
-      where: eq(courseSettings.id, settingsId)
-    });
-    
-    let updatedSettings;
-    
-    if (!existingSettings) {
-      console.log('[PUT /course/settings] Configurações não encontradas, criando...');
-      
-      // Criar configurações
-      const [newSettings] = await db.insert(courseSettings)
-        .values({
-          ...req.body,
-          updatedBy: req.user?.id
-        })
-        .returning();
-      
-      updatedSettings = newSettings;
-    } else {
-      console.log('[PUT /course/settings] Atualizando configurações existentes');
-      
-      // Atualizar configurações existentes
-      const [settings] = await db
-        .update(courseSettings)
-        .set({
-          ...req.body,
-          updatedBy: req.user?.id,
-          updatedAt: new Date()
-        })
-        .where(eq(courseSettings.id, settingsId))
-        .returning();
-      
-      updatedSettings = settings;
-    }
-    
-    console.log('[PUT /course/settings] Configurações atualizadas com sucesso:', updatedSettings);
-    
-    return res.json(updatedSettings);
-  } catch (error) {
-    console.error('[PUT /course/settings] Erro ao atualizar configurações:', error);
-    return res.status(500).json({ message: 'Erro ao atualizar configurações', error: String(error) });
-  }
-});
+// ENDPOINTS PARA CONFIGURAÇÕES DOS CURSOS
+// Implementação removida e unificada com a versão mais abaixo para evitar duplicação
 
 // ENDPOINTS PARA CURSOS
 
