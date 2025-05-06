@@ -882,6 +882,7 @@ router.get('/settings', async (req, res) => {
       const userId = req.user?.id || 'NULL';
       const insertQuery = `
         INSERT INTO "courseSettings" (
+          ${courseId ? `"courseId",` : ''}
           "bannerTitle", 
           "bannerDescription", 
           "bannerImageUrl", 
@@ -893,6 +894,7 @@ router.get('/settings', async (req, res) => {
           "updatedBy"
         ) 
         VALUES (
+          ${courseId ? `${courseId},` : ''}
           'DesignAuto Videoaulas',
           'A formação completa para você criar designs profissionais para seu negócio automotivo',
           'https://images.unsplash.com/photo-1617651823081-270acchia626?q=80&w=1970&auto=format&fit=crop',
@@ -905,6 +907,7 @@ router.get('/settings', async (req, res) => {
         )
         RETURNING 
           id, 
+          "courseId",
           "bannerTitle",
           "bannerDescription", 
           "bannerImageUrl",
