@@ -830,6 +830,16 @@ router.delete('/:id', async (req, res) => {
 
 // ENDPOINTS PARA CONFIGURAÇÕES DOS CURSOS - IMPLEMENTAÇÃO DA ROTA GET
 
+// Rota especial para depuração - para verificar se a implementação está sendo executada
+router.get('/settings/debug', async (req, res) => {
+  console.log('[GET /course/settings/debug] TESTANDO ACESSO - Rota de diagnóstico');
+  return res.json({
+    message: 'Rota de debug funcionando corretamente',
+    timestamp: new Date().toISOString(),
+    route: '/api/course/settings/debug'
+  });
+});
+
 router.get('/settings', async (req, res) => {
   try {
     console.log('[GET /course/settings] VERSÃO CORRIGIDA: Buscando configurações de cursos');
