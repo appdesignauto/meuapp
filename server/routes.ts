@@ -4476,7 +4476,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/courses', coursesAdapterRouter);
   
   // Rotas para gerenciamento de cursos (cursos, configurações)
-  app.use('/api/course/settings', coursesRouter);
+  app.use('/api/course/settings', courseRouter);
   
   // Rotas para gerenciamento de módulos e aulas
   app.use('/api/course', courseRouter);
