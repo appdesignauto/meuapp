@@ -283,25 +283,40 @@ export class SupabaseStorageService {
 
   /**
    * Faz upload de uma imagem otimizada para o Supabase Storage
+   * Aceita tanto um Express.Multer.File como um objeto simplificado com buffer, originalname e mimetype
    */
   async uploadImage(
-    file: Express.Multer.File,
+    file: Express.Multer.File | { buffer: Buffer; originalname: string; mimetype: string; },
     options: ImageOptimizationOptions = {},
-    categorySlug?: string, // Slug da categoria para organização
+    bucketFolder?: string, // Pasta/bucket específico onde salvar a imagem
     designerId?: number // ID do designer para organização em pastas
-  ): Promise<{ imageUrl: string; thumbnailUrl: string; storageType?: string }> {
+  ): Promise<{ imageUrl: string; thumbnailUrl?: string; storageType?: string; bucket?: string; logs: string[] }> {
     if (!file) {
       throw new Error("Nenhum arquivo foi fornecido");
     }
+    
+    // Limpar logs para este upload
+    this.clearLogs();
+    this.log(`Iniciando upload de imagem para ${bucketFolder || 'bucket padrão'}`);
+    
+    // Capturar tempo para análise de performance
+    const startTime = Date.now();
 
     // Certifica-se de que o bucket existe
     await this.initBucket();
 
     try {
-      console.log("Tentando upload para Supabase Storage...");
-      console.log(`Nome original: ${file.originalname}`);
-      console.log(`Tipo MIME: ${file.mimetype}`);
-      console.log(`Tamanho: ${file.size} bytes`);
+      // Verificar tamanho do arquivo (adicionar field size se não existir)
+      const fileSize = 'size' in file ? file.size : file.buffer.length;
+      
+      this.log(`Iniciando processamento de imagem`);
+      this.log(`Nome original: ${file.originalname}`);
+      this.log(`Tipo MIME: ${file.mimetype}`);
+      this.log(`Tamanho: ${fileSize} bytes`);
+      
+      // Use o bucket fornecido ou use um padrão
+      const targetBucket = bucketFolder || BUCKET_NAME;
+      this.log(`Bucket alvo: ${targetBucket}`);
 
       // Otimização da imagem principal
       const optimizedBuffer = await this.optimizeImage(file.buffer, {
@@ -309,24 +324,46 @@ export class SupabaseStorageService {
         width: options.width || 1200, // Limita o tamanho máximo
         quality: options.quality || 80,
       });
+      this.log(`Imagem otimizada: ${optimizedBuffer.length} bytes`);
 
-      // Cria uma versão thumbnail para listagens e previews
-      const thumbnailBuffer = await this.optimizeImage(file.buffer, {
-        width: 400,
-        quality: 75,
-      });
+      // Determinar se devemos criar versão thumbnail
+      // Se a largura já for pequena, não precisamos de thumbnail
+      let thumbnailBuffer = null;
+      if (options.width === undefined || options.width > 400) {
+        thumbnailBuffer = await this.optimizeImage(file.buffer, {
+          width: 400,
+          quality: 75,
+        });
+        this.log(`Thumbnail criado: ${thumbnailBuffer?.length} bytes`);
+      } else {
+        this.log(`Thumbnail não criado (imagem já é pequena)`);
+      }
 
-      // Gera nomes de arquivos únicos com estrutura de pastas hierárquica
-      console.log(`Usando parâmetros para estrutura de pastas:`);
-      console.log(`- Categoria (slug): ${categorySlug || '(não especificada)'}`);
-      console.log(`- Designer ID: ${designerId || '(não especificado)'}`);
+      // Gera nomes de arquivos únicos
+      const uuid = randomUUID();
+      const timestamp = Date.now();
       
-      const imagePath = this.generateFilename(file.originalname, false, categorySlug, designerId);
-      const thumbnailPath = this.generateFilename(file.originalname, true, categorySlug, designerId);
+      this.log(`Usando pasta/bucket: ${bucketFolder || '(padrão)'}`);
+      this.log(`ID do designer: ${designerId || '(não especificado)'}`);
       
-      console.log(`Estrutura de pastas gerada:`);
-      console.log(`- Imagem principal: ${imagePath}`);
-      console.log(`- Thumbnail: ${thumbnailPath}`);
+      // Formato do caminho depende da pasta/bucket fornecida
+      const filename = `${timestamp}_${uuid}.webp`;
+      const imagePath = bucketFolder 
+        ? `${bucketFolder}/${filename}` 
+        : this.generateFilename(file.originalname, false, '', designerId);
+        
+      // Só criamos path para thumbnail se tiver thumbnail
+      const thumbnailPath = thumbnailBuffer 
+        ? bucketFolder 
+          ? `${bucketFolder}/thumbnails/${filename}` 
+          : this.generateFilename(file.originalname, true, '', designerId)
+        : '';
+      
+      this.log(`Caminhos gerados:`);
+      this.log(`- Imagem: ${imagePath}`);
+      if (thumbnailPath) {
+        this.log(`- Thumbnail: ${thumbnailPath}`);
+      }
 
       // Upload da imagem principal para o Supabase
       const { error: imageError, data: imageData } = await supabase.storage

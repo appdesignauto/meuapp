@@ -51,6 +51,7 @@ import coursesRouter from './routes/courses-routes'; // Rotas para gerenciamento
 import coursesAdapterRouter from './routes/courses-adapter'; // Adaptador para compatibilidade com rotas antigas
 import videoCommentsRouter from './routes/video-comments-routes'; // Rotas para comentários de videoaulas
 import lessonThumbnailUploadRouter from './routes/lesson-thumbnail-upload'; // Rota para upload de thumbnails de aulas
+import courseThumbnailUploadRouter from './routes/course-thumbnail-upload'; // Rota para upload de thumbnails de cursos
 import bannerUploadRouter from './routes/banner-upload'; // Rota para upload de banners de cursos
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -4488,6 +4489,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Rota para upload de thumbnails de aulas
   app.use(lessonThumbnailUploadRouter);
+  
+  // Rota para upload de thumbnails de cursos
+  app.use(courseThumbnailUploadRouter);
 
   const httpServer = createServer(app);
   
