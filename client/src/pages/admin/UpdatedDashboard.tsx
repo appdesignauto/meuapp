@@ -231,7 +231,7 @@ const AdminDashboard = () => {
   
   // Consulta para obter configurações dos cursos
   const { 
-    data: courseSettings = {}, 
+    data: courseSettingsData = {}, 
     isLoading: isLoadingCourseSettings,
     isError: isCourseSettingsError
   } = useQuery({
@@ -245,6 +245,16 @@ const AdminDashboard = () => {
       return res.json();
     }
   });
+  
+  // Estado local para gerenciar edições antes de salvar
+  const [courseSettings, setCourseSettings] = useState(courseSettingsData);
+  
+  // Atualiza o estado local quando os dados da API são carregados
+  useEffect(() => {
+    if (!isLoadingCourseSettings && !isCourseSettingsError && courseSettingsData) {
+      setCourseSettings(courseSettingsData);
+    }
+  }, [courseSettingsData, isLoadingCourseSettings, isCourseSettingsError]);
   
   // Handler para mudanças no formulário de curso
   const handleCourseFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -2996,8 +3006,15 @@ const AdminDashboard = () => {
                                 value={courseSettings.bannerDescription || ''}
                                 onChange={(e) => {
                                   const value = e.target.value;
-                                  const updated = {...courseSettings, bannerDescription: value};
-                                  updateCourseSettingsMutation.mutate(updated);
+                                  setCourseSettings(prev => ({...prev, bannerDescription: value}));
+                                }}
+                                onBlur={() => {
+                                  updateCourseSettingsMutation.mutate(courseSettings);
+                                  toast({
+                                    title: "Descrição atualizada",
+                                    description: "A descrição do banner foi atualizada com sucesso.",
+                                    duration: 3000,
+                                  });
                                 }}
                                 placeholder="Descreva o propósito dos cursos"
                                 rows={3}
@@ -3033,16 +3050,22 @@ const AdminDashboard = () => {
                                     size="sm"
                                     onClick={handleBannerUpload}
                                     disabled={!bannerFile || uploadingBanner}
+                                    className={`min-w-24 ${bannerFile ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
                                   >
                                     {uploadingBanner ? (
                                       <>
                                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                                         Enviando...
                                       </>
-                                    ) : (
+                                    ) : !bannerFile ? (
                                       <>
                                         <Upload className="h-4 w-4 mr-2" />
                                         Enviar
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Upload className="h-4 w-4 mr-2" />
+                                        Enviar Banner
                                       </>
                                     )}
                                   </Button>
