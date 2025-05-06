@@ -324,10 +324,10 @@ const AdminDashboard = () => {
   
   // Mutations para cursos
   const createCourseMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (formData: any) => {
       try {
-        console.log("Enviando requisição para criar curso:", data);
-        const response = await apiRequest('POST', '/api/course', data);
+        console.log("Enviando requisição para criar curso:", formData);
+        const response = await apiRequest('POST', '/api/course', formData);
         
         if (!response.ok) {
           console.error("Erro na resposta:", response.status, response.statusText);
@@ -346,9 +346,9 @@ const AdminDashboard = () => {
           throw new Error(errorMessage);
         }
         
-        const data = await response.json();
-        console.log("Curso criado com sucesso:", data);
-        return data;
+        const responseData = await response.json();
+        console.log("Curso criado com sucesso:", responseData);
+        return responseData;
       } catch (error) {
         console.error("Exceção ao criar curso:", error);
         throw error;
