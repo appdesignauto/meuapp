@@ -136,7 +136,7 @@ const AdminDashboard = () => {
   const [isModuleDialogOpen, setIsModuleDialogOpen] = useState(false);
   const [isConfirmDeleteModuleOpen, setIsConfirmDeleteModuleOpen] = useState(false);
   const [currentModule, setCurrentModule] = useState<any | null>(null);
-  const [selectedCourseFilter, setSelectedCourseFilter] = useState<string>(''); // Filtro por curso (string vazia = todos)
+  const [selectedCourseFilter, setSelectedCourseFilter] = useState<string>('todos'); // Filtro por curso
   const [moduleViewMode, setModuleViewMode] = useState<'grid' | 'list'>('grid'); // Modo de visualização (grid ou lista)
   const [moduleForm, setModuleForm] = useState<any>({
     courseId: '', // String vazia para forçar seleção explícita
@@ -1589,7 +1589,7 @@ const AdminDashboard = () => {
                         <SelectValue placeholder="Filtrar por curso" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Todos os cursos</SelectItem>
+                        <SelectItem value="todos">Todos os cursos</SelectItem>
                         {courses.map((course: any) => (
                           <SelectItem key={course.id} value={course.id.toString()}>
                             {course.title}
@@ -1688,7 +1688,7 @@ const AdminDashboard = () => {
                     {/* Filtramos os módulos com base no curso selecionado */}
                     {(() => {
                       // Filtragem dos módulos
-                      const filteredModules = selectedCourseFilter 
+                      const filteredModules = selectedCourseFilter && selectedCourseFilter !== 'todos'
                         ? modules.filter((module: any) => module.courseId === parseInt(selectedCourseFilter))
                         : modules;
                       
@@ -1698,12 +1698,12 @@ const AdminDashboard = () => {
                           <div className="text-center py-8 border rounded-lg">
                             <BookOpen className="h-10 w-10 text-gray-400 mx-auto mb-3" />
                             <h3 className="text-lg font-medium text-gray-900 mb-1">
-                              {selectedCourseFilter 
+                              {selectedCourseFilter && selectedCourseFilter !== 'todos'
                                 ? "Nenhum módulo encontrado para o curso selecionado" 
                                 : "Nenhum módulo encontrado"}
                             </h3>
                             <p className="text-gray-500 mb-4">
-                              {selectedCourseFilter 
+                              {selectedCourseFilter && selectedCourseFilter !== 'todos'
                                 ? "Tente selecionar outro curso ou crie um novo módulo para este curso."
                                 : "Comece criando seu primeiro módulo de curso."}
                             </p>
