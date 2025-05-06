@@ -4638,31 +4638,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Nenhum campo válido para atualização' });
       }
       
-      // Construir e executar a query - corrigido erro de parâmetros SQL
-      const updateQuery = `
+      // Construir uma query SQL direta com os valores interpolados para evitar parâmetros
+      let setClause = [];
+      
+      if (bannerTitle !== undefined) {
+        setClause.push(`"bannerTitle" = '${bannerTitle.replace(/'/g, "''")}'`);
+      }
+      
+      if (bannerDescription !== undefined) {
+        setClause.push(`"bannerDescription" = '${bannerDescription.replace(/'/g, "''")}'`);
+      }
+      
+      if (bannerImageUrl !== undefined) {
+        setClause.push(`"bannerImageUrl" = '${bannerImageUrl.replace(/'/g, "''")}'`);
+      }
+      
+      if (welcomeMessage !== undefined) {
+        setClause.push(`"welcomeMessage" = '${welcomeMessage.replace(/'/g, "''")}'`);
+      }
+      
+      if (showModuleNumbers !== undefined) {
+        setClause.push(`"showModuleNumbers" = ${showModuleNumbers}`);
+      }
+      
+      if (useCustomPlayerColors !== undefined) {
+        setClause.push(`"useCustomPlayerColors" = ${useCustomPlayerColors}`);
+      }
+      
+      if (enableComments !== undefined) {
+        setClause.push(`"enableComments" = ${enableComments}`);
+      }
+      
+      if (allowNonPremiumEnrollment !== undefined) {
+        setClause.push(`"allowNonPremiumEnrollment" = ${allowNonPremiumEnrollment}`);
+      }
+      
+      // Adicionar sempre a data de atualização
+      setClause.push(`"updatedAt" = NOW()`);
+      
+      // Adicionar o usuário que atualizou, se fornecido
+      if (updatedBy !== undefined) {
+        setClause.push(`"updatedBy" = ${updatedBy}`);
+      }
+      
+      const directUpdateQuery = `
         UPDATE "courseSettings" 
-        SET ${updateFields.join(', ')} 
+        SET ${setClause.join(', ')} 
         WHERE id = 1 
         RETURNING *
       `;
       
-      console.log('[ROUTE ESPECÍFICA] Executando update com query:', updateQuery);
-      console.log('[ROUTE ESPECÍFICA] Valores:', updateValues);
+      console.log('[ROUTE ESPECÍFICA] Executando query direta:', directUpdateQuery);
       
-      // Usar string interpolação para a versão inicial (temporário)
-      let interpolatedQuery = updateQuery;
-      updateValues.forEach((value, index) => {
-        // Substituir $1, $2, etc. pelos valores reais (com escape básico)
-        const placeholder = `$${index + 1}`;
-        const escapedValue = typeof value === 'string' 
-          ? `'${value.replace(/'/g, "''")}'` 
-          : value;
-        interpolatedQuery = interpolatedQuery.replace(placeholder, escapedValue);
-      });
-      
-      console.log('[ROUTE ESPECÍFICA] Query interpolada:', interpolatedQuery);
-      
-      const updateResult = await db.execute(interpolatedQuery);
+      const updateResult = await db.execute(directUpdateQuery);
       
       if (!updateResult.rows || updateResult.rows.length === 0) {
         return res.status(500).json({ message: 'Erro ao atualizar configurações' });
