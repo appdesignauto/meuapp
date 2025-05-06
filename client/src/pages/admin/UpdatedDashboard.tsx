@@ -772,34 +772,9 @@ const AdminDashboard = () => {
     };
   }, [bannerPreviewUrl]);
   
-  // Carrega o curso "Tutoriais Design Auto" quando a página é aberta
-  // na aba de configurações de cursos, mas NÃO sincroniza automaticamente
-  useEffect(() => {
-    if (activeTab === 'coursesConfig' && courses.length > 0 && !isLoadingCourses) {
-      // Verifica se nenhum curso foi selecionado ainda
-      if (!selectedCourseForSettings) {
-        // Encontra o curso "Tutoriais Design Auto"
-        const tutorialsCourse = courses.find(course => 
-          course.title === "Tutoriais Design Auto" || course.id === 2
-        );
-        
-        if (tutorialsCourse) {
-          // Apenas seleciona o curso, sem sincronizar automaticamente
-          setSelectedCourseForSettings(tutorialsCourse);
-          
-          // Notifica o usuário que pode sincronizar manualmente se quiser
-          toast({
-            title: "Curso selecionado",
-            description: "Você pode editar o curso ou usar os botões de 'Salvar Curso' para aplicar as mudanças.",
-            duration: 5000,
-          });
-          
-          // NÃO sincroniza automaticamente com o banner - isso será feito apenas
-          // quando o usuário clicar explicitamente no botão de sincronização
-        }
-      }
-    }
-  }, [activeTab, courses, isLoadingCourses, selectedCourseForSettings, toast]);
+  // Não selecionamos automaticamente nenhum curso na aba de configurações
+  // O usuário deve selecionar manualmente qual curso deseja editar
+  // Isso evita conflitos com cursos que já existem em outras abas
 
   // Handlers para submits
   const handleCourseSubmit = () => {
