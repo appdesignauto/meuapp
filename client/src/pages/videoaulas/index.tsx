@@ -202,6 +202,13 @@ export default function VideoaulasPage() {
     enabled: !!user, // Só executa a query se o usuário estiver autenticado
   });
   
+  // Consulta para obter o histórico de aulas assistidas (quando o usuário está autenticado)
+  const { data: watchHistoryData, isLoading: isLoadingWatchHistory } = useQuery({
+    queryKey: ['/api/videoaulas/historico-aulas'],
+    retry: 1,
+    enabled: !!user, // Só executa a query se o usuário estiver autenticado
+  });
+  
   const tutorialDestaque = useMemo(() => {
     if (isLoadingModules || isLoadingLessons || isLoadingSiteSettings || isLoadingCourseSettings) {
       return null;
