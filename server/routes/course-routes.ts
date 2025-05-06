@@ -946,9 +946,12 @@ router.get('/settings', async (req, res) => {
 // Atualizar configurações dos cursos
 router.put('/settings', async (req, res) => {
   try {
-    console.log('[PUT /course/settings] Atualizando configurações de cursos:', req.body);
+    console.log('[PUT /course/settings] VERSÃO CORRIGIDA: Atualizando configurações de cursos:', req.body);
     
+    // Separa as propriedades específicas de configurações (courseSettings)
+    // de outras propriedades que podem pertencer ao curso principal
     const { 
+      // Campos da tabela courseSettings 
       bannerTitle,
       bannerDescription,
       bannerImageUrl,
@@ -956,8 +959,18 @@ router.put('/settings', async (req, res) => {
       showModuleNumbers,
       useCustomPlayerColors,
       enableComments,
-      allowNonPremiumEnrollment
+      allowNonPremiumEnrollment,
+      
+      // Ignoramos quaisquer outras propriedades que possam estar vindo
+      // do frontend para evitar conflitos com outros endpoints
+      ...ignoredProperties 
     } = req.body;
+    
+    // Registra no log se houver propriedades ignoradas (ajuda no diagnóstico)
+    if (Object.keys(ignoredProperties).length > 0) {
+      console.log('[PUT /course/settings] ATENÇÃO: Propriedades ignoradas (não pertencem a courseSettings):', 
+                  Object.keys(ignoredProperties));
+    }
     
     // Verificar se as configurações existem
     const checkQuery = `SELECT id FROM "courseSettings" WHERE id = 1`;
@@ -1026,60 +1039,95 @@ router.put('/settings', async (req, res) => {
       setClauses.push(`"updatedAt" = NOW()`);
       setClauses.push(`"updatedBy" = ${req.user?.id || 'NULL'}`);
       
-      if (bannerTitle !== undefined) {
-        setClauses.push(`"bannerTitle" = '${bannerTitle.replace(/'/g, "''")}'`);
+      // Construímos um objeto com apenas os campos específicos da tabela courseSettings
+      // e com valores específicos (não undefined) para garantir que só atualizamos
+      // o que foi explicitamente enviado
+      const settingsToUpdate = {
+        bannerTitle: bannerTitle !== undefined ? bannerTitle : undefined,
+        bannerDescription: bannerDescription !== undefined ? bannerDescription : undefined,
+        bannerImageUrl: bannerImageUrl !== undefined ? bannerImageUrl : undefined,
+        welcomeMessage: welcomeMessage !== undefined ? welcomeMessage : undefined,
+        showModuleNumbers: showModuleNumbers !== undefined ? showModuleNumbers : undefined,
+        useCustomPlayerColors: useCustomPlayerColors !== undefined ? useCustomPlayerColors : undefined,
+        enableComments: enableComments !== undefined ? enableComments : undefined,
+        allowNonPremiumEnrollment: allowNonPremiumEnrollment !== undefined ? allowNonPremiumEnrollment : undefined,
+      };
+      
+      // Mostrar no log o que exatamente vamos atualizar
+      console.log('[PUT /course/settings] Campos a serem atualizados:', 
+                  Object.keys(settingsToUpdate).filter(key => settingsToUpdate[key] !== undefined));
+      
+      // Função auxiliar segura para escapar strings SQL que pode ser null/undefined
+      const safeEscape = (value) => {
+        if (value === null || value === undefined) return null;
+        return `'${value.toString().replace(/'/g, "''")}'`;
+      };
+      
+      // Adicionar apenas campos que foram explicitamente enviados
+      if (settingsToUpdate.bannerTitle !== undefined) {
+        const safeTitle = safeEscape(settingsToUpdate.bannerTitle);
+        if (safeTitle) {
+          setClauses.push(`"bannerTitle" = ${safeTitle}`);
+        } else {
+          setClauses.push(`"bannerTitle" = NULL`);
+        }
       }
       
-      if (bannerDescription !== undefined) {
-        setClauses.push(`"bannerDescription" = '${bannerDescription.replace(/'/g, "''")}'`);
+      if (settingsToUpdate.bannerDescription !== undefined) {
+        const safeDescription = safeEscape(settingsToUpdate.bannerDescription);
+        if (safeDescription) {
+          setClauses.push(`"bannerDescription" = ${safeDescription}`);
+        } else {
+          setClauses.push(`"bannerDescription" = NULL`);
+        }
       }
       
-      if (bannerImageUrl !== undefined) {
-        setClauses.push(`"bannerImageUrl" = '${bannerImageUrl.replace(/'/g, "''")}'`);
+      if (settingsToUpdate.bannerImageUrl !== undefined) {
+        const safeBannerImageUrl = safeEscape(settingsToUpdate.bannerImageUrl);
+        if (safeBannerImageUrl) {
+          setClauses.push(`"bannerImageUrl" = ${safeBannerImageUrl}`);
+        } else {
+          setClauses.push(`"bannerImageUrl" = NULL`);
+        }
       }
       
-      if (welcomeMessage !== undefined) {
-        setClauses.push(`"welcomeMessage" = '${welcomeMessage.replace(/'/g, "''")}'`);
+      if (settingsToUpdate.welcomeMessage !== undefined) {
+        const safeWelcomeMessage = safeEscape(settingsToUpdate.welcomeMessage);
+        if (safeWelcomeMessage) {
+          setClauses.push(`"welcomeMessage" = ${safeWelcomeMessage}`);
+        } else {
+          setClauses.push(`"welcomeMessage" = NULL`);
+        }
       }
       
-      if (showModuleNumbers !== undefined) {
-        setClauses.push(`"showModuleNumbers" = ${showModuleNumbers}`);
+      if (settingsToUpdate.showModuleNumbers !== undefined) {
+        setClauses.push(`"showModuleNumbers" = ${settingsToUpdate.showModuleNumbers}`);
       }
       
-      if (useCustomPlayerColors !== undefined) {
-        setClauses.push(`"useCustomPlayerColors" = ${useCustomPlayerColors}`);
+      if (settingsToUpdate.useCustomPlayerColors !== undefined) {
+        setClauses.push(`"useCustomPlayerColors" = ${settingsToUpdate.useCustomPlayerColors}`);
       }
       
-      if (enableComments !== undefined) {
-        setClauses.push(`"enableComments" = ${enableComments}`);
+      if (settingsToUpdate.enableComments !== undefined) {
+        setClauses.push(`"enableComments" = ${settingsToUpdate.enableComments}`);
       }
       
-      if (allowNonPremiumEnrollment !== undefined) {
-        setClauses.push(`"allowNonPremiumEnrollment" = ${allowNonPremiumEnrollment}`);
+      if (settingsToUpdate.allowNonPremiumEnrollment !== undefined) {
+        setClauses.push(`"allowNonPremiumEnrollment" = ${settingsToUpdate.allowNonPremiumEnrollment}`);
       }
       
       // Verificar se temos algo para atualizar além do timestamp
       if (setClauses.length < 2) {
+        console.log('[PUT /course/settings] Nenhum dado fornecido para atualização');
         return res.status(400).json({ message: 'Nenhum dado fornecido para atualização' });
       }
       
+      // Registramos a query exata para diagnóstico
       const updateQuery = `
-        UPDATE "courseSettings"
-        SET ${setClauses.join(', ')}
-        WHERE id = 1
-        RETURNING 
-          id, 
-          "bannerTitle",
-          "bannerDescription", 
-          "bannerImageUrl",
-          "welcomeMessage",
-          "showModuleNumbers",
-          "useCustomPlayerColors",
-          "enableComments",
-          "allowNonPremiumEnrollment",
-          "createdAt",
-          "updatedAt",
-          "updatedBy"
+        UPDATE "courseSettings" 
+        SET ${setClauses.join(', ')} 
+        WHERE id = 1 
+        RETURNING *
       `;
       
       console.log('[PUT /course/settings] Query de atualização: ', updateQuery);
