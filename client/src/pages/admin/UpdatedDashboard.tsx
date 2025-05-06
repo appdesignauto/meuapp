@@ -721,18 +721,23 @@ const AdminDashboard = () => {
       };
       
       // Atualiza no servidor
-      updateCourseSettingsMutation.mutate(updatedSettings);
-      
-      // Limpa a pré-visualização e o arquivo selecionado após o upload bem-sucedido
-      setBannerFile(null);
-      if (bannerPreviewUrl) {
-        URL.revokeObjectURL(bannerPreviewUrl);
-        setBannerPreviewUrl(null);
-      }
-      
-      toast({
-        title: 'Banner enviado com sucesso',
-        description: 'A imagem do banner foi atualizada',
+      updateCourseSettingsMutation.mutate(updatedSettings, {
+        onSuccess: () => {
+          // Invalidar cache para garantir que as alterações apareçam na página de videoaulas
+          queryClient.invalidateQueries({ queryKey: ['/api/course/settings'] });
+          
+          // Limpa a pré-visualização e o arquivo selecionado após o upload bem-sucedido
+          setBannerFile(null);
+          if (bannerPreviewUrl) {
+            URL.revokeObjectURL(bannerPreviewUrl);
+            setBannerPreviewUrl(null);
+          }
+          
+          toast({
+            title: 'Banner enviado com sucesso',
+            description: 'A imagem do banner foi atualizada',
+          });
+        }
       });
     } catch (error) {
       console.error('Erro no upload do banner:', error);
@@ -792,7 +797,12 @@ const AdminDashboard = () => {
             };
             
             // Atualiza as configurações no servidor
-            updateCourseSettingsMutation.mutate(updatedSettings);
+            updateCourseSettingsMutation.mutate(updatedSettings, {
+              onSuccess: () => {
+                // Invalidar cache para garantir que as alterações apareçam na página de videoaulas
+                queryClient.invalidateQueries({ queryKey: ['/api/course/settings'] });
+              }
+            });
           }
         }
       }
@@ -824,7 +834,16 @@ const AdminDashboard = () => {
   };
   
   const handleSettingsSubmit = (data: any) => {
-    updateCourseSettingsMutation.mutate(data);
+    updateCourseSettingsMutation.mutate(data, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['/api/course/settings'] });
+        toast({
+          title: "Configurações salvas",
+          description: "As configurações foram atualizadas com sucesso",
+          duration: 3000,
+        });
+      }
+    });
   };
   
   const handleModuleSubmit = () => {
@@ -3195,11 +3214,16 @@ const AdminDashboard = () => {
                           <div className="flex justify-end mt-6">
                             <Button 
                               onClick={() => {
-                                updateCourseSettingsMutation.mutate(courseSettings);
-                                toast({
-                                  title: "Configurações salvas",
-                                  description: "Todas as configurações foram salvas com sucesso",
-                                  duration: 3000,
+                                updateCourseSettingsMutation.mutate(courseSettings, {
+                                  onSuccess: () => {
+                                    // Invalidar cache para garantir que as alterações apareçam na página de videoaulas
+                                    queryClient.invalidateQueries({ queryKey: ['/api/course/settings'] });
+                                    toast({
+                                      title: "Configurações salvas",
+                                      description: "Todas as configurações foram salvas com sucesso",
+                                      duration: 3000,
+                                    });
+                                  }
                                 });
                               }}
                               className="bg-blue-600 hover:bg-blue-700"
