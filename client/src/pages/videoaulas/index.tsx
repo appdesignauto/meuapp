@@ -332,63 +332,61 @@ export default function VideoaulasPage() {
                 </>
               )}
               
+              {/* Botões estilo Netflix */}
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
+                {/* Botão Assistir - principal, com ícone de Play */}
                 {tutorialDestaque ? (
-                  <Link href={`/videoaulas/${tutorialDestaque.id}`} className="w-full sm:w-auto">
-                    <Button className="bg-yellow-500 hover:bg-yellow-600 text-blue-950 border-0 py-4 md:py-6 px-6 md:px-10 text-base md:text-lg font-semibold w-full sm:w-auto shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group">
-                      <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-yellow-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      <div className="relative flex items-center justify-center">
-                        <Play className="h-5 w-5 md:h-6 md:w-6 mr-2" />
-                        <span>Começar Agora</span>
-                      </div>
-                    </Button>
-                  </Link>
-                ) : (
-                  <Button disabled className="bg-yellow-500/70 text-blue-950 border-0 py-4 md:py-6 px-6 md:px-10 text-base md:text-lg font-semibold w-full sm:w-auto shadow-lg transition-all duration-300 relative overflow-hidden">
-                    <div className="relative flex items-center justify-center">
-                      <Play className="h-5 w-5 md:h-6 md:w-6 mr-2" />
-                      <span>Carregando...</span>
-                    </div>
-                  </Button>
-                )}
-                {user ? (
                   <Link 
-                    href={lastWatchedData?.hasLastWatched 
+                    href={user && lastWatchedData?.hasLastWatched 
                       ? `/videoaulas/${lastWatchedData.lessonId}` 
                       : tutorialDestaque ? `/videoaulas/${tutorialDestaque.id}` : '#'
                     } 
                     className="w-full sm:w-auto"
                   >
                     <Button 
-                      variant="outline" 
-                      className="bg-white/10 text-white hover:bg-white/20 border-2 border-white/40 py-4 md:py-6 px-6 md:px-10 text-base md:text-lg font-medium w-full sm:w-auto transition-all duration-300 hover:scale-105"
+                      className="bg-white hover:bg-white/90 text-black border-0 py-3 md:py-5 px-6 md:px-8 text-base md:text-lg font-semibold w-full sm:w-auto shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
                       disabled={isLoadingLastWatched}
                     >
-                      <div className="flex items-center">
+                      <div className="relative flex items-center justify-center">
                         {isLoadingLastWatched ? (
-                          <span className="flex items-center">
-                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                            Carregando...
-                          </span>
+                          <>
+                            <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin mr-2"></div>
+                            <span>Carregando...</span>
+                          </>
                         ) : (
                           <>
-                            <Clock className="h-5 w-5 md:h-6 md:w-6 mr-2" />
-                            <span>Continuar Assistindo</span>
+                            <Play className="h-5 w-5 md:h-6 md:w-6 mr-2 text-black" fill="black" />
+                            <span>{user && lastWatchedData?.hasLastWatched ? 'Continuar Assistindo' : 'Assistir'}</span>
                           </>
                         )}
                       </div>
                     </Button>
                   </Link>
                 ) : (
-                  <Link href="#categorias" className="w-full sm:w-auto">
-                    <Button 
-                      variant="outline" 
-                      className="bg-white/10 text-white hover:bg-white/20 border-2 border-white/40 py-4 md:py-6 px-6 md:px-10 text-base md:text-lg font-medium w-full sm:w-auto transition-all duration-300 hover:scale-105"
-                    >
-                      Ver Categorias
-                    </Button>
-                  </Link>
+                  <Button disabled className="bg-white/70 text-black border-0 py-3 md:py-5 px-6 md:px-8 text-base md:text-lg font-semibold w-full sm:w-auto shadow-lg transition-all duration-300 relative overflow-hidden">
+                    <div className="relative flex items-center justify-center">
+                      <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin mr-2"></div>
+                      <span>Carregando...</span>
+                    </div>
+                  </Button>
                 )}
+                
+                {/* Botão de Informações - secundário, com ícone de Info */}
+                <Link 
+                  href={tutorialDestaque ? `#categorias` : '#'} 
+                  className="w-full sm:w-auto"
+                >
+                  <Button 
+                    variant="outline" 
+                    className="bg-gray-700/50 text-white hover:bg-gray-700/80 border border-gray-600 py-3 md:py-5 px-6 md:px-8 text-base md:text-lg font-medium w-full sm:w-auto transition-all duration-300"
+                    disabled={!tutorialDestaque}
+                  >
+                    <div className="flex items-center justify-center">
+                      <Info className="h-5 w-5 md:h-6 md:w-6 mr-2" />
+                      <span>Informações</span>
+                    </div>
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>
