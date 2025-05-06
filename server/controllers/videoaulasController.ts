@@ -130,15 +130,14 @@ export const markLessonAsViewed = async (req: Request, res: Response) => {
       );
       
       // Incrementar contagem de visualizações na aula
-      // Zeramos a contagem para cada usuário individual
       await db.execute(
         sql`UPDATE "courseLessons" 
-        SET "viewCount" = 1 
+        SET "viewCount" = COALESCE("viewCount", 0) + 1 
         WHERE "id" = ${lessonId} 
         RETURNING "viewCount"`
       );
       
-      console.log('Aula marcada como visualizada com contador zerado e reiniciado');
+      console.log('Aula marcada como visualizada com contador incrementado');
     } else {
       // Atualizar data de visualização
       await db.execute(
