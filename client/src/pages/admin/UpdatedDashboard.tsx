@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
 import {
@@ -166,6 +166,17 @@ const AdminDashboard = () => {
   const [selectedCourseForSettings, setSelectedCourseForSettings] = useState<any | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [uploadingBanner, setUploadingBanner] = useState(false);
+  
+  // Estado para armazenar as informações originais do banner do curso
+  const [courseBannerInfo, setCourseBannerInfo] = useState<{
+    title: string | null;
+    description: string | null;
+    imageUrl: string | null;
+  }>({
+    title: null,
+    description: null,
+    imageUrl: null
+  });
   
   // Consultas para obter cursos, módulos e aulas
   const { 
@@ -732,6 +743,60 @@ const AdminDashboard = () => {
       setBannerFile(e.target.files[0]);
     }
   };
+  
+  // Função para carregar os dados do curso "Tutoriais Design Auto"
+  const loadTutoriaisDesignAutoCourse = useCallback(() => {
+    // Encontra o curso "Tutoriais Design Auto"
+    const tutorialsCourse = courses.find(course => 
+      course.title === "Tutoriais Design Auto" || course.id === 2
+    );
+    
+    if (tutorialsCourse) {
+      setSelectedCourseForSettings(tutorialsCourse);
+      
+      // Se o curso tem imagens, popula os campos do banner
+      if (tutorialsCourse.thumbnailUrl) {
+        setCourseBannerInfo({
+          title: tutorialsCourse.title || null,
+          description: tutorialsCourse.description || null,
+          imageUrl: tutorialsCourse.thumbnailUrl || null
+        });
+        
+        // Atualiza também o estado global das configurações
+        const updatedSettings = {
+          ...courseSettings,
+          bannerTitle: tutorialsCourse.title || courseSettings.bannerTitle,
+          bannerDescription: tutorialsCourse.description || courseSettings.bannerDescription,
+          bannerImageUrl: tutorialsCourse.thumbnailUrl || courseSettings.bannerImageUrl
+        };
+        
+        // Atualiza as configurações no servidor
+        updateCourseSettingsMutation.mutate(updatedSettings);
+        
+        toast({
+          title: 'Informações importadas',
+          description: 'Dados do curso Tutoriais Design Auto aplicados ao banner',
+        });
+      }
+    } else {
+      toast({
+        title: 'Curso não encontrado',
+        description: 'Não foi possível encontrar o curso Tutoriais Design Auto',
+        variant: 'destructive',
+      });
+    }
+  }, [courses, courseSettings, updateCourseSettingsMutation, toast]);
+  
+  // Carrega automaticamente os dados do curso "Tutoriais Design Auto" quando a página é aberta
+  // na aba de configurações de cursos
+  useEffect(() => {
+    if (activeTab === 'coursesConfig' && courses.length > 0 && !isLoadingCourses) {
+      // Verifica se nenhum curso foi selecionado ainda
+      if (!selectedCourseForSettings) {
+        loadTutoriaisDesignAutoCourse();
+      }
+    }
+  }, [activeTab, courses, isLoadingCourses, selectedCourseForSettings, loadTutoriaisDesignAutoCourse]);
 
   // Handlers para submits
   const handleCourseSubmit = () => {
@@ -2843,7 +2908,19 @@ const AdminDashboard = () => {
                           
                           {/* Seleção de curso */}
                           <div className="grid gap-2 mt-2">
-                            <Label htmlFor="selectCourseForSettings">Selecionar Curso</Label>
+                            <div className="flex justify-between items-center">
+                              <Label htmlFor="selectCourseForSettings">Selecionar Curso</Label>
+                              <Button 
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={loadTutoriaisDesignAutoCourse}
+                                className="text-xs h-8"
+                              >
+                                <FileText className="h-3.5 w-3.5 mr-1.5" />
+                                Carregar Tutoriais Design Auto
+                              </Button>
+                            </div>
                             <Select 
                               onValueChange={(value) => {
                                 const selectedCourse = courses.find((course) => course.id.toString() === value);
