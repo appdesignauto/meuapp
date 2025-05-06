@@ -798,12 +798,7 @@ export default function VideoaulasPage() {
                                       </div>
                                     </div>
                                     
-                                    {/* Barra de progresso minimalista */}
-                                    {Math.random() > 0.7 && (
-                                      <div className="absolute bottom-0 left-0 right-0 h-[3px]">
-                                        <div className="h-full bg-red-600" style={{ width: `${Math.floor(Math.random() * 80)}%` }} />
-                                      </div>
-                                    )}
+                                    {/* Removida a barra de progresso aleatória - usaremos dados reais de progresso do usuário */}
                                   </div>
                                   
                                   {/* Conteúdo - estilo Netflix clean */}

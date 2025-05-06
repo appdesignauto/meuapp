@@ -114,8 +114,8 @@ const TutorialCard: React.FC<TutorialCardProps> = ({
     // Caso contrário, use o valor do tutorial completo, se disponível
     if (tutorial) {
       if (tutorial.isWatched) return 100;
-      // Se não tiver progresso explícito, simula um
-      return Math.floor(Math.random() * 80);
+      // Se não tiver progresso explícito, retorna 0 (não mais simulando valores aleatórios)
+      return 0;
     }
     
     return 0;
