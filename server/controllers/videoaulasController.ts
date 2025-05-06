@@ -426,3 +426,114 @@ export const getLastWatchedLesson = async (req: Request, res: Response) => {
     });
   }
 };
+
+// Obter histórico de aulas assistidas pelo usuário (para a seção "Continuar assistindo")
+export const getWatchHistory = async (req: Request, res: Response) => {
+  try {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Não autenticado' });
+    }
+    
+    const user = req.user as Express.User;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+    
+    // Buscar histórico combinando dados de progresso e visualizações
+    // Ordenamos por último acesso (mais recente primeiro) e limitamos ao número solicitado
+    const recentWatchedLessons = await db.execute(
+      sql`
+      WITH combined_history AS (
+        -- Resultados da tabela de progresso
+        SELECT 
+          cp."lessonId", 
+          cp."lastWatchedAt" as timestamp, 
+          cp."progress",
+          cp."isCompleted",
+          TRUE as has_progress
+        FROM "courseProgress" cp
+        WHERE cp."userId" = ${user.id}
+        
+        UNION ALL
+        
+        -- Resultados da tabela de visualizações que não estão na tabela de progresso
+        SELECT 
+          lv."lessonId", 
+          lv."viewedAt" as timestamp,
+          0 as progress,
+          FALSE as is_completed,
+          FALSE as has_progress
+        FROM "lessonViews" lv
+        WHERE lv."userId" = ${user.id}
+        AND NOT EXISTS (
+          SELECT 1 FROM "courseProgress" cp 
+          WHERE cp."lessonId" = lv."lessonId" AND cp."userId" = ${user.id}
+        )
+      )
+      
+      SELECT 
+        ch.*,
+        cl.title,
+        cl."moduleId",
+        cl."thumbnailUrl",
+        cl."videoUrl",
+        cl.duration,
+        cm.title as "moduleName",
+        cm.level
+      FROM (
+        -- Selecionamos o registro mais recente para cada aula
+        SELECT DISTINCT ON ("lessonId") *
+        FROM combined_history
+        ORDER BY "lessonId", timestamp DESC
+      ) ch
+      JOIN "courseLessons" cl ON ch."lessonId" = cl.id
+      JOIN "courseModules" cm ON cl."moduleId" = cm.id
+      ORDER BY ch.timestamp DESC
+      LIMIT ${limit}
+      `
+    );
+    
+    if (recentWatchedLessons.rows.length === 0) {
+      return res.status(200).json({
+        hasHistory: false,
+        lessons: []
+      });
+    }
+    
+    // Formatar a duração para cada aula no formato MM:SS
+    const formattedLessons = recentWatchedLessons.rows.map(lesson => {
+      let durationFormatted = '';
+      if (lesson.duration) {
+        const minutes = Math.floor(lesson.duration / 60);
+        const seconds = lesson.duration % 60;
+        durationFormatted = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      }
+      
+      return {
+        lessonId: lesson.lessonId,
+        title: lesson.title,
+        moduleId: lesson.moduleId,
+        moduleName: lesson.moduleName,
+        thumbnailUrl: lesson.thumbnailUrl,
+        videoUrl: lesson.videoUrl,
+        lastWatched: lesson.timestamp,
+        progress: lesson.progress,
+        isCompleted: lesson.isCompleted,
+        hasProgress: lesson.has_progress,
+        duration: lesson.duration,
+        durationFormatted,
+        level: lesson.level
+      };
+    });
+    
+    return res.status(200).json({
+      hasHistory: true,
+      lessons: formattedLessons
+    });
+  } catch (error) {
+    console.error('Erro ao buscar histórico de aulas:', error);
+    return res.status(500).json({ 
+      message: 'Erro ao buscar histórico de aulas',
+      hasHistory: false,
+      lessons: []
+    });
+  }
+};

@@ -8,7 +8,8 @@ import {
   getCourseProgress, 
   saveNote,
   getNotes,
-  getLastWatchedLesson
+  getLastWatchedLesson,
+  getWatchHistory
 } from '../controllers/videoaulasController';
 
 const router = express.Router();
@@ -26,5 +27,6 @@ router.get('/progresso/:id', getCourseProgress);
 router.post('/anotacao/:id', saveNote);
 router.get('/anotacao/:id', getNotes);
 router.get('/ultima-aula', getLastWatchedLesson);
+router.get('/historico-aulas', getWatchHistory);
 
 export default router;
