@@ -336,3 +336,93 @@ export const getNotes = async (req: Request, res: Response) => {
     return res.status(500).json({ message: 'Erro ao buscar anotações' });
   }
 };
+
+// Obter a última aula assistida pelo usuário
+export const getLastWatchedLesson = async (req: Request, res: Response) => {
+  try {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Não autenticado' });
+    }
+    
+    const user = req.user as Express.User;
+    
+    // Verificar se existem aulas marcadas como visualizadas pelo usuário
+    // Primeiro tentamos buscar na tabela de progresso (mais preciso)
+    const lastProgressResult = await db.execute(
+      sql`SELECT lp.*, cl.* 
+          FROM "courseProgress" lp
+          JOIN "courseLessons" cl ON lp."lessonId" = cl.id
+          WHERE lp."userId" = ${user.id}
+          ORDER BY lp."lastWatchedAt" DESC
+          LIMIT 1`
+    );
+    
+    // Se não encontrar na tabela de progresso, tentamos na tabela de visualizações
+    if (lastProgressResult.rows.length === 0) {
+      const lastViewedResult = await db.execute(
+        sql`SELECT lv.*, cl.* 
+            FROM "lessonViews" lv
+            JOIN "courseLessons" cl ON lv."lessonId" = cl.id
+            WHERE lv."userId" = ${user.id}
+            ORDER BY lv."viewedAt" DESC
+            LIMIT 1`
+      );
+      
+      if (lastViewedResult.rows.length === 0) {
+        // Se não houver nenhuma aula assistida, retornar a primeira aula do primeiro módulo
+        const firstLessonResult = await db.execute(
+          sql`SELECT cl.* 
+              FROM "courseLessons" cl
+              JOIN "courseModules" cm ON cl."moduleId" = cm.id
+              ORDER BY cm."order", cl."order"
+              LIMIT 1`
+        );
+        
+        if (firstLessonResult.rows.length === 0) {
+          return res.status(404).json({ 
+            message: 'Nenhuma aula disponível',
+            hasLastWatched: false
+          });
+        }
+        
+        const firstLesson = firstLessonResult.rows[0];
+        return res.status(200).json({
+          lessonId: firstLesson.id,
+          title: firstLesson.title,
+          moduleId: firstLesson.moduleId,
+          thumbnailUrl: firstLesson.thumbnailUrl,
+          hasLastWatched: false,
+          isRecommended: true
+        });
+      }
+      
+      const lastViewedLesson = lastViewedResult.rows[0];
+      return res.status(200).json({
+        lessonId: lastViewedLesson.lessonId,
+        title: lastViewedLesson.title,
+        moduleId: lastViewedLesson.moduleId,
+        thumbnailUrl: lastViewedLesson.thumbnailUrl,
+        lastWatched: lastViewedLesson.viewedAt,
+        hasLastWatched: true
+      });
+    }
+    
+    const lastWatchedLesson = lastProgressResult.rows[0];
+    return res.status(200).json({
+      lessonId: lastWatchedLesson.lessonId,
+      title: lastWatchedLesson.title,
+      moduleId: lastWatchedLesson.moduleId,
+      thumbnailUrl: lastWatchedLesson.thumbnailUrl,
+      lastWatched: lastWatchedLesson.lastWatchedAt,
+      progress: lastWatchedLesson.progress,
+      isCompleted: lastWatchedLesson.isCompleted,
+      hasLastWatched: true
+    });
+  } catch (error) {
+    console.error('Erro ao buscar última aula assistida:', error);
+    return res.status(500).json({ 
+      message: 'Erro ao buscar última aula assistida',
+      hasLastWatched: false
+    });
+  }
+};
