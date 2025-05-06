@@ -525,8 +525,8 @@ export default function VideoaulasPage() {
             {/* Visualização estilo Netflix quando não está pesquisando */}
             {!searchTerm && (
               <>
-                {/* Seção Continuar Assistindo - Exibida apenas quando o usuário tem histórico de aulas */}
-                {user && watchHistoryData?.hasHistory && !isLoadingWatchHistory && watchHistoryData.lessons && watchHistoryData.lessons.length > 0 && (
+                {/* Seção "Continuar Assistindo" - Exibida apenas quando o usuário tem histórico de aulas */}
+                {user && watchHistoryData?.hasHistory === true && !isLoadingWatchHistory && watchHistoryData.lessons && watchHistoryData.lessons.length > 0 && (
                   <div className="mb-8 sm:mb-12">
                     <h2 className="text-xl sm:text-2xl font-bold text-blue-800 mb-4 sm:mb-6 flex items-center">
                       <Clock className="mr-2 h-6 w-6 text-blue-600" />
@@ -686,12 +686,7 @@ export default function VideoaulasPage() {
                                   </div>
                                 </div>
                                 
-                                {/* Barra de progresso minimalista */}
-                                {Math.random() > 0.5 && (
-                                  <div className="absolute bottom-0 left-0 right-0 h-[3px]">
-                                    <div className="h-full bg-red-600" style={{ width: `${Math.floor(Math.random() * 90)}%` }} />
-                                  </div>
-                                )}
+                                {/* Removido o código de barra de progresso aleatória - agora é baseado apenas nos dados reais */}
                               </div>
                               
                               {/* Conteúdo - estilo Netflix clean */}
