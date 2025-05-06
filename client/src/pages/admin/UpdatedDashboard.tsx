@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
 import {
@@ -136,6 +136,8 @@ const AdminDashboard = () => {
   const [isModuleDialogOpen, setIsModuleDialogOpen] = useState(false);
   const [isConfirmDeleteModuleOpen, setIsConfirmDeleteModuleOpen] = useState(false);
   const [currentModule, setCurrentModule] = useState<any | null>(null);
+  const [selectedCourseFilter, setSelectedCourseFilter] = useState<string>(''); // Filtro por curso (string vazia = todos)
+  const [moduleViewMode, setModuleViewMode] = useState<'grid' | 'list'>('grid'); // Modo de visualização (grid ou lista)
   const [moduleForm, setModuleForm] = useState<any>({
     courseId: '', // String vazia para forçar seleção explícita
     title: '',
