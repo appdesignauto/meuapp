@@ -4719,6 +4719,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Rota para upload de thumbnails de cursos
   app.use(courseThumbnailUploadRouter);
+  
+  // Rota para upload de thumbnails de módulos
+  app.use(moduleUploadRouter);
 
   const httpServer = createServer(app);
   
