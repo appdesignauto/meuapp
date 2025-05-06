@@ -162,6 +162,11 @@ const AdminDashboard = () => {
     showLessonNumber: true
   });
   
+  // Estados para configurações de cursos
+  const [selectedCourseForSettings, setSelectedCourseForSettings] = useState<any | null>(null);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
+  
   // Consultas para obter cursos, módulos e aulas
   const { 
     data: courses = [], 
@@ -665,6 +670,66 @@ const AdminDashboard = () => {
       });
     } finally {
       setUploadingFeatured(false);
+    }
+  };
+  
+  // Handler para o upload de banner da configuração de cursos
+  const handleBannerUpload = async () => {
+    if (!bannerFile) return;
+    
+    setUploadingBanner(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append('banner', bannerFile);
+      
+      // Se temos um curso selecionado para configurações, incluir o ID
+      if (selectedCourseForSettings) {
+        formData.append('courseId', selectedCourseForSettings.id.toString());
+      }
+      
+      const response = await fetch('/api/admin/upload-banner', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('Erro no upload do banner:', errorData);
+        throw new Error('Falha no upload do banner');
+      }
+      
+      const data = await response.json();
+      
+      // Atualiza as configurações com a nova URL do banner
+      const updatedSettings = {
+        ...courseSettings,
+        bannerImageUrl: data.bannerUrl
+      };
+      
+      // Atualiza no servidor
+      updateCourseSettingsMutation.mutate(updatedSettings);
+      
+      toast({
+        title: 'Banner enviado com sucesso',
+        description: 'A imagem do banner foi atualizada',
+      });
+    } catch (error) {
+      console.error('Erro no upload do banner:', error);
+      toast({
+        title: 'Erro no upload',
+        description: error instanceof Error ? error.message : 'Não foi possível fazer o upload do banner',
+        variant: 'destructive',
+      });
+    } finally {
+      setUploadingBanner(false);
+    }
+  };
+  
+  // Handler para o input do arquivo de banner
+  const handleBannerFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setBannerFile(e.target.files[0]);
     }
   };
 
@@ -2757,12 +2822,12 @@ const AdminDashboard = () => {
                       </Button>
                     </div>
                     
-                    {isLoadingCourseSettings ? (
+                    {isLoadingCourseSettings || isLoadingCourses ? (
                       <div className="py-8 text-center">
                         <Loader2 className="h-8 w-8 animate-spin mx-auto text-gray-400" />
                         <p className="mt-2 text-gray-500">Carregando configurações...</p>
                       </div>
-                    ) : isCourseSettingsError ? (
+                    ) : isCourseSettingsError || isCoursesError ? (
                       <Alert variant="destructive" className="mb-4">
                         <AlertCircle className="h-4 w-4" />
                         <AlertTitle>Erro</AlertTitle>
@@ -2776,7 +2841,82 @@ const AdminDashboard = () => {
                           <h3 className="text-md font-medium">Configurações da Página de Cursos</h3>
                           <Separator />
                           
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                          {/* Seleção de curso */}
+                          <div className="grid gap-2 mt-2">
+                            <Label htmlFor="selectCourseForSettings">Selecionar Curso</Label>
+                            <Select 
+                              onValueChange={(value) => {
+                                const selectedCourse = courses.find((course) => course.id.toString() === value);
+                                setSelectedCourseForSettings(selectedCourse);
+                              }}
+                              value={selectedCourseForSettings?.id?.toString() || ''}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione um curso" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {courses.map((course) => (
+                                  <SelectItem key={course.id} value={course.id.toString()}>
+                                    {course.title}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Selecione um curso para visualizar e editar suas informações
+                            </p>
+                          </div>
+                          
+                          {selectedCourseForSettings && (
+                            <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
+                              <h4 className="font-medium text-lg mb-3">Editando: {selectedCourseForSettings.title}</h4>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid gap-2">
+                                  <Label htmlFor="courseTitle">Título do Curso</Label>
+                                  <Input
+                                    id="courseTitle"
+                                    value={selectedCourseForSettings.title || ''}
+                                    onChange={(e) => {
+                                      setSelectedCourseForSettings({
+                                        ...selectedCourseForSettings,
+                                        title: e.target.value
+                                      });
+                                    }}
+                                    onBlur={() => {
+                                      if (selectedCourseForSettings.id) {
+                                        updateCourseMutation.mutate(selectedCourseForSettings);
+                                      }
+                                    }}
+                                    placeholder="Título do curso"
+                                  />
+                                </div>
+                                
+                                <div className="grid gap-2">
+                                  <Label htmlFor="courseDescription">Descrição do Curso</Label>
+                                  <Textarea
+                                    id="courseDescription"
+                                    value={selectedCourseForSettings.description || ''}
+                                    onChange={(e) => {
+                                      setSelectedCourseForSettings({
+                                        ...selectedCourseForSettings,
+                                        description: e.target.value
+                                      });
+                                    }}
+                                    onBlur={() => {
+                                      if (selectedCourseForSettings.id) {
+                                        updateCourseMutation.mutate(selectedCourseForSettings);
+                                      }
+                                    }}
+                                    placeholder="Descrição do curso"
+                                    rows={3}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                             <div className="grid gap-2">
                               <Label htmlFor="settingsBannerTitle">Título do Banner</Label>
                               <Input
@@ -2808,19 +2948,53 @@ const AdminDashboard = () => {
                               />
                             </div>
                             
-                            <div className="grid gap-2">
-                              <Label htmlFor="settingsBannerImageUrl">URL da Imagem do Banner</Label>
-                              <Input
-                                id="settingsBannerImageUrl"
-                                name="bannerImageUrl"
-                                value={courseSettings.bannerImageUrl || ''}
-                                onChange={(e) => {
-                                  const value = e.target.value;
-                                  const updated = {...courseSettings, bannerImageUrl: value};
-                                  updateCourseSettingsMutation.mutate(updated);
-                                }}
-                                placeholder="Ex: https://example.com/banner.jpg"
-                              />
+                            <div className="grid gap-2 md:col-span-2">
+                              <Label>Banner da Página de Cursos</Label>
+                              
+                              {courseSettings.bannerImageUrl && (
+                                <div className="mt-2 mb-3 relative">
+                                  <img 
+                                    src={courseSettings.bannerImageUrl} 
+                                    alt="Banner atual" 
+                                    className="w-full h-auto max-h-48 object-cover rounded-md border"
+                                  />
+                                  <p className="text-xs text-gray-500 mt-1">Banner atual</p>
+                                </div>
+                              )}
+                              
+                              <div className="flex flex-col space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <Input
+                                    id="bannerFileInput"
+                                    type="file"
+                                    onChange={handleBannerFileChange}
+                                    accept="image/*"
+                                    disabled={uploadingBanner}
+                                    className="flex-1"
+                                  />
+                                  <Button 
+                                    type="button" 
+                                    size="sm"
+                                    onClick={handleBannerUpload}
+                                    disabled={!bannerFile || uploadingBanner}
+                                  >
+                                    {uploadingBanner ? (
+                                      <>
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                        Enviando...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Upload className="h-4 w-4 mr-2" />
+                                        Enviar
+                                      </>
+                                    )}
+                                  </Button>
+                                </div>
+                                <p className="text-xs text-gray-500">
+                                  Tamanho recomendado: 1920x600px. Formatos: JPG, PNG ou WebP.
+                                </p>
+                              </div>
                             </div>
                             
                             <div className="grid gap-2">
