@@ -784,12 +784,16 @@ router.delete('/:id', async (req, res) => {
 
 router.get('/settings', async (req, res) => {
   try {
-    console.log('[GET /course/settings] VERSÃO CORRIGIDA: Buscando configurações de cursos');
+    console.log('[ROUTE ESPECÍFICA] GET /api/course/settings: Buscando configurações');
     
-    // Buscar as configurações com SQL bruto para evitar problemas
-    const configQuery = `
+    // Verificar se foi especificado um curso
+    const courseId = req.query.courseId;
+    console.log(`[GET /course/settings] Parâmetro courseId: ${courseId}`);
+    
+    let configQuery = `
       SELECT 
         id, 
+        "courseId",
         "bannerTitle",
         "bannerDescription", 
         "bannerImageUrl",
@@ -803,10 +807,17 @@ router.get('/settings', async (req, res) => {
         "updatedBy"
       FROM 
         "courseSettings" 
-      WHERE 
-        id = 1
-      LIMIT 1
     `;
+    
+    // Se tiver courseId, buscamos configurações específicas para esse curso
+    if (courseId) {
+      configQuery += ` WHERE "courseId" = ${courseId} LIMIT 1`;
+      console.log(`[GET /course/settings] Buscando configurações para curso ID: ${courseId}`);
+    } else {
+      // Configurações padrão sem curso específico
+      configQuery += ` WHERE id = 1 LIMIT 1`;
+      console.log('[GET /course/settings] Sem courseId, buscando configurações padrão (id=1)');
+    }
     
     console.log('[GET /course/settings] Executando query para buscar configurações...');
     const configResult = await db.execute(configQuery);
@@ -951,7 +962,8 @@ router.put('/settings', async (req, res) => {
     // Separa as propriedades específicas de configurações (courseSettings)
     // de outras propriedades que podem pertencer ao curso principal
     const { 
-      // Campos da tabela courseSettings 
+      // Campos da tabela courseSettings
+      courseId, // Adicionado campo courseId
       bannerTitle,
       bannerDescription,
       bannerImageUrl,
@@ -972,8 +984,18 @@ router.put('/settings', async (req, res) => {
                   Object.keys(ignoredProperties));
     }
     
-    // Verificar se as configurações existem
-    const checkQuery = `SELECT id FROM "courseSettings" WHERE id = 1`;
+    // Verifica se temos um courseId
+    console.log(`[PUT /course/settings] courseId recebido: ${courseId}`);
+    
+    // Se tiver courseId, verificar se já existem configurações para este curso
+    let checkQuery = '';
+    if (courseId) {
+      checkQuery = `SELECT id FROM "courseSettings" WHERE "courseId" = ${courseId}`;
+    } else {
+      checkQuery = `SELECT id FROM "courseSettings" WHERE id = 1`;
+    }
+    
+    console.log(`[PUT /course/settings] Verificando configurações existentes com query: ${checkQuery}`);
     const checkResult = await db.execute(checkQuery);
     
     if (checkResult.rows.length === 0) {
@@ -982,6 +1004,7 @@ router.put('/settings', async (req, res) => {
       // Criar configurações se não existirem - usando abordagem mais segura com string interpolation
       const insertQuery = `
         INSERT INTO "courseSettings" (
+          ${courseId ? `"courseId",` : ''}
           "bannerTitle", 
           "bannerDescription", 
           "bannerImageUrl", 
@@ -993,6 +1016,7 @@ router.put('/settings', async (req, res) => {
           "updatedBy"
         ) 
         VALUES (
+          ${courseId ? `${courseId},` : ''}
           '${bannerTitle ? bannerTitle.replace(/'/g, "''") : "DesignAuto Videoaulas"}',
           '${bannerDescription ? bannerDescription.replace(/'/g, "''") : "A formação completa para você criar designs profissionais para seu negócio automotivo"}',
           '${bannerImageUrl ? bannerImageUrl.replace(/'/g, "''") : "https://images.unsplash.com/photo-1617651823081-270acchia626?q=80&w=1970&auto=format&fit=crop"}',
@@ -1005,6 +1029,7 @@ router.put('/settings', async (req, res) => {
         )
         RETURNING 
           id, 
+          "courseId",
           "bannerTitle",
           "bannerDescription", 
           "bannerImageUrl",
@@ -1038,6 +1063,11 @@ router.put('/settings', async (req, res) => {
       // Adicionar clauses que são seguros
       setClauses.push(`"updatedAt" = NOW()`);
       setClauses.push(`"updatedBy" = ${req.user?.id || 'NULL'}`);
+      
+      // Adicionamos o courseId, se fornecido
+      if (courseId !== undefined) {
+        setClauses.push(`"courseId" = ${courseId}`);
+      }
       
       // Construímos um objeto com apenas os campos específicos da tabela courseSettings
       // e com valores específicos (não undefined) para garantir que só atualizamos
@@ -1122,11 +1152,22 @@ router.put('/settings', async (req, res) => {
         return res.status(400).json({ message: 'Nenhum dado fornecido para atualização' });
       }
       
+      // Pegamos o ID das configurações existentes
+      const settingsId = checkResult.rows[0]?.id || 1;
+      
+      // Construir a cláusula WHERE de acordo com o caso
+      let whereClause = '';
+      if (courseId) {
+        whereClause = `"courseId" = ${courseId}`;
+      } else {
+        whereClause = `id = ${settingsId}`;
+      }
+      
       // Registramos a query exata para diagnóstico
       const updateQuery = `
         UPDATE "courseSettings" 
         SET ${setClauses.join(', ')} 
-        WHERE id = 1 
+        WHERE ${whereClause} 
         RETURNING *
       `;
       
