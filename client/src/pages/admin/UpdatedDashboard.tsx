@@ -566,7 +566,7 @@ const AdminDashboard = () => {
     }
   };
   
-  // Upload da thumbnail
+  // Upload da thumbnail (formato horizontal)
   const handleThumbnailUpload = async () => {
     if (!thumbnailFile) return;
     
@@ -581,10 +581,8 @@ const AdminDashboard = () => {
         formData.append('courseId', currentCourse.id.toString());
       }
       
-      // Orientação (horizontal ou vertical)
-      formData.append('orientation', 'horizontal'); // Padrão horizontal
-      
-      const response = await fetch('/api/course/upload-thumbnail', {
+      // Usar a rota específica para thumbnails horizontais
+      const response = await fetch('/api/courses/thumbnail-upload-horizontal', {
         method: 'POST',
         body: formData,
       });
@@ -600,12 +598,12 @@ const AdminDashboard = () => {
       // Atualiza o formulário com a URL da imagem
       setCourseForm(prev => ({
         ...prev,
-        thumbnailUrl: data.imageUrl
+        thumbnailUrl: data.thumbnailUrl
       }));
       
       toast({
         title: 'Upload realizado com sucesso',
-        description: 'A imagem foi carregada e associada ao curso',
+        description: 'A thumbnail foi carregada e associada ao curso',
       });
     } catch (error) {
       console.error('Erro no upload:', error);
@@ -619,7 +617,7 @@ const AdminDashboard = () => {
     }
   };
   
-  // Upload da imagem de destaque
+  // Upload da imagem de destaque (formato vertical)
   const handleFeaturedImageUpload = async () => {
     if (!featuredImageFile) return;
     
@@ -634,10 +632,8 @@ const AdminDashboard = () => {
         formData.append('courseId', currentCourse.id.toString());
       }
       
-      // Orientação (horizontal ou vertical)
-      formData.append('orientation', 'vertical'); // Imagem de destaque geralmente é vertical
-      
-      const response = await fetch('/api/course/upload-thumbnail', {
+      // Usar a rota específica para thumbnails verticais (imagem de destaque)
+      const response = await fetch('/api/courses/thumbnail-upload-vertical', {
         method: 'POST',
         body: formData,
       });
@@ -653,7 +649,7 @@ const AdminDashboard = () => {
       // Atualiza o formulário com a URL da imagem
       setCourseForm(prev => ({
         ...prev,
-        featuredImage: data.imageUrl
+        featuredImage: data.featuredImage
       }));
       
       toast({
