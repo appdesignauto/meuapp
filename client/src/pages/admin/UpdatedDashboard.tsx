@@ -2974,7 +2974,41 @@ const AdminDashboard = () => {
                           
                           {selectedCourseForSettings && (
                             <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
-                              <h4 className="font-medium text-lg mb-3">Editando: {selectedCourseForSettings.title}</h4>
+                              <div className="flex justify-between items-center mb-3">
+                                <h4 className="font-medium text-lg">Editando: {selectedCourseForSettings.title}</h4>
+                                <Button 
+                                  size="sm"
+                                  onClick={() => {
+                                    if (selectedCourseForSettings.id) {
+                                      updateCourseMutation.mutate(selectedCourseForSettings, {
+                                        onSuccess: () => {
+                                          toast({
+                                            title: "Curso atualizado",
+                                            description: "As informações do curso foram salvas com sucesso",
+                                            duration: 3000,
+                                          });
+                                          // Invalidar o cache para atualizar os dados
+                                          queryClient.invalidateQueries({ queryKey: ['/api/courses'] });
+                                        }
+                                      });
+                                    }
+                                  }}
+                                  className="bg-blue-600 hover:bg-blue-700"
+                                  disabled={updateCourseMutation.isPending}
+                                >
+                                  {updateCourseMutation.isPending ? (
+                                    <>
+                                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                      Salvando...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Save className="h-4 w-4 mr-2" />
+                                      Salvar Curso
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
                               
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="grid gap-2">
@@ -3004,11 +3038,7 @@ const AdminDashboard = () => {
                                         description: e.target.value
                                       });
                                     }}
-                                    onBlur={() => {
-                                      if (selectedCourseForSettings.id) {
-                                        updateCourseMutation.mutate(selectedCourseForSettings);
-                                      }
-                                    }}
+                                    // Não salva automaticamente
                                     placeholder="Descrição do curso"
                                     rows={3}
                                   />
@@ -3216,20 +3246,45 @@ const AdminDashboard = () => {
                               onClick={() => {
                                 updateCourseSettingsMutation.mutate(courseSettings, {
                                   onSuccess: () => {
-                                    // Invalidar cache para garantir que as alterações apareçam na página de videoaulas
+                                    // Invalidar todos os caches relacionados com as configurações de cursos
                                     queryClient.invalidateQueries({ queryKey: ['/api/course/settings'] });
+                                    queryClient.invalidateQueries({ queryKey: ['/api/courses/settings'] });
+                                    
+                                    // Também devemos atualizar as informações do curso selecionado
+                                    if (selectedCourseForSettings?.id) {
+                                      queryClient.invalidateQueries({ queryKey: ['/api/courses'] });
+                                    }
+                                    
                                     toast({
                                       title: "Configurações salvas",
                                       description: "Todas as configurações foram salvas com sucesso",
                                       duration: 3000,
                                     });
+                                  },
+                                  onError: (error) => {
+                                    toast({
+                                      title: "Erro ao salvar",
+                                      description: `Não foi possível salvar as configurações: ${error.message}`,
+                                      variant: "destructive",
+                                      duration: 5000,
+                                    });
                                   }
                                 });
                               }}
                               className="bg-blue-600 hover:bg-blue-700"
+                              disabled={updateCourseSettingsMutation.isPending}
                             >
-                              <Save className="h-4 w-4 mr-2" />
-                              Salvar todas as configurações
+                              {updateCourseSettingsMutation.isPending ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  Salvando...
+                                </>
+                              ) : (
+                                <>
+                                  <Save className="h-4 w-4 mr-2" />
+                                  Salvar todas as configurações
+                                </>
+                              )}
                             </Button>
                           </div>
                         </div>
