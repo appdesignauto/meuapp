@@ -52,7 +52,8 @@ import coursesAdapterRouter from './routes/courses-adapter'; // Adaptador para c
 import videoCommentsRouter from './routes/video-comments-routes'; // Rotas para comentários de videoaulas
 import lessonThumbnailUploadRouter from './routes/lesson-thumbnail-upload'; // Rota para upload de thumbnails de aulas
 import courseThumbnailUploadRouter from './routes/course-thumbnail-upload'; // Rota para upload de thumbnails de cursos
-import bannerUploadRouter from './routes/banner-upload'; // Rota para upload de banners de cursos
+import bannerUploadRouter from './routes/banner-upload'; // Rota para upload de banners de
+import moduleUploadRouter from './routes/module-upload'; // Rota para upload de thumbnails de módulos cursos
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Rota simples de verificação de saúde
