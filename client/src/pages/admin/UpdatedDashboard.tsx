@@ -112,6 +112,12 @@ const AdminDashboard = () => {
   const [isCourseDialogOpen, setIsCourseDialogOpen] = useState(false);
   const [isConfirmDeleteCourseOpen, setIsConfirmDeleteCourseOpen] = useState(false);
   const [currentCourse, setCurrentCourse] = useState<any | null>(null);
+  // Estado dos arquivos de upload
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [featuredImageFile, setFeaturedImageFile] = useState<File | null>(null);
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
+  const [uploadingFeatured, setUploadingFeatured] = useState(false);
+  
   const [courseForm, setCourseForm] = useState<any>({
     title: '',
     description: '',
