@@ -572,15 +572,17 @@ export default function VideoaulasPage() {
                                   
                                   <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                   
+                                  {/* Badge de módulo mais minimalista */}
                                   <div className="absolute top-2 left-2">
-                                    <div className="bg-black/70 backdrop-blur-sm px-2 py-1 rounded-sm text-xs font-medium text-white shadow-sm">
+                                    <div className="bg-black/40 backdrop-blur-sm px-1.5 py-0.5 rounded-sm text-[10px] font-medium text-white/90 shadow-sm">
                                       {lesson.moduleName || "Módulo"}
                                     </div>
                                   </div>
                                   
+                                  {/* Badge de duração mais minimalista */}
                                   <div className="absolute bottom-2 right-2">
-                                    <div className="bg-black/70 backdrop-blur-sm px-2 py-1 rounded-sm text-xs text-white shadow-sm flex items-center">
-                                      <Clock className="w-3 h-3 mr-1" />
+                                    <div className="bg-black/40 backdrop-blur-sm px-1.5 py-0.5 rounded-sm text-[10px] text-white/90 shadow-sm flex items-center">
+                                      <Clock className="w-2.5 h-2.5 mr-0.5" />
                                       {lesson.durationFormatted || "00:00"}
                                     </div>
                                   </div>
