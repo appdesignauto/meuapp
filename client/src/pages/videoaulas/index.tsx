@@ -526,12 +526,14 @@ export default function VideoaulasPage() {
             {!searchTerm && (
               <>
                 {/* Seção Continuar Assistindo - Exibida apenas quando o usuário tem histórico de aulas */}
-                {user && watchHistoryData?.hasHistory && !isLoadingWatchHistory && (
+                {user && watchHistoryData?.hasHistory && !isLoadingWatchHistory && watchHistoryData.lessons && watchHistoryData.lessons.length > 0 && (
                   <div className="mb-8 sm:mb-12">
                     <h2 className="text-xl sm:text-2xl font-bold text-blue-800 mb-4 sm:mb-6 flex items-center">
                       <Clock className="mr-2 h-6 w-6 text-blue-600" />
                       Continuar Assistindo
                     </h2>
+                    {/* Console log para debugging */}
+                    {console.log("Histórico de aulas:", watchHistoryData)}
                     <Carousel
                       opts={{
                         align: "start",
@@ -548,15 +550,15 @@ export default function VideoaulasPage() {
                             <TutorialCard
                               id={lesson.lessonId}
                               title={lesson.title}
-                              description=""
-                              thumbnailUrl={lesson.thumbnailUrl}
-                              durationFormatted={lesson.durationFormatted}
-                              level={lesson.level}
-                              isWatched={false}
+                              description={`Progresso: ${lesson.progress}%`}
+                              thumbnailUrl={lesson.thumbnailUrl || '/images/placeholder-thumbnail.jpg'}
+                              durationFormatted={lesson.durationFormatted || "00:00"}
+                              level={lesson.level || "iniciante"}
+                              isWatched={lesson.isCompleted || false}
                               isPremium={false}
                               moduloNome={lesson.moduleName}
                               showProgressBar={true}
-                              progress={lesson.progress}
+                              progress={lesson.progress || 0}
                             />
                           </CarouselItem>
                         ))}
