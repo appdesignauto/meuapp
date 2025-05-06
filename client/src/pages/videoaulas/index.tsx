@@ -532,8 +532,7 @@ export default function VideoaulasPage() {
                       <Clock className="mr-2 h-6 w-6 text-blue-600" />
                       Continuar Assistindo
                     </h2>
-                    {/* Console log para debugging */}
-                    {console.log("Histórico de aulas:", watchHistoryData)}
+                    
                     <Carousel
                       opts={{
                         align: "start",
@@ -544,22 +543,67 @@ export default function VideoaulasPage() {
                       }}
                       className="w-full overflow-visible relative"
                     >
-                      <CarouselContent className="-ml-2 md:-ml-4">
+                      <CarouselContent className="-ml-3 sm:-ml-4">
                         {watchHistoryData.lessons.map((lesson) => (
-                          <CarouselItem key={`history-${lesson.lessonId}`} className="pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
-                            <TutorialCard
-                              id={lesson.lessonId}
-                              title={lesson.title}
-                              description={`Progresso: ${lesson.progress}%`}
-                              thumbnailUrl={lesson.thumbnailUrl || '/images/placeholder-thumbnail.jpg'}
-                              durationFormatted={lesson.durationFormatted || "00:00"}
-                              level={lesson.level || "iniciante"}
-                              isWatched={lesson.isCompleted || false}
-                              isPremium={false}
-                              moduloNome={lesson.moduleName}
-                              showProgressBar={true}
-                              progress={lesson.progress || 0}
-                            />
+                          <CarouselItem 
+                            key={`history-${lesson.lessonId}`} 
+                            className="pl-3 sm:pl-4 basis-3/4 sm:basis-2/5 md:basis-1/3 lg:basis-1/4 xl:basis-1/4"
+                          >
+                            <Link href={`/videoaulas/${lesson.lessonId}`} className="block h-full">
+                              <div className="group relative h-full flex flex-col overflow-hidden">
+                                <div className="relative overflow-hidden rounded-md bg-gray-100 shadow-sm">
+                                  <div className="aspect-[16/9] overflow-hidden">
+                                    <img 
+                                      src={lesson.thumbnailUrl || '/images/placeholder-thumbnail.jpg'} 
+                                      alt={lesson.title} 
+                                      className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out"
+                                    />
+                                  </div>
+                                  
+                                  <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                  
+                                  <div className="absolute top-2 left-2">
+                                    <div className="bg-black/70 backdrop-blur-sm px-2 py-1 rounded-sm text-xs font-medium text-white shadow-sm">
+                                      {lesson.moduleName || "Módulo"}
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="absolute bottom-2 right-2">
+                                    <div className="bg-black/70 backdrop-blur-sm px-2 py-1 rounded-sm text-xs text-white shadow-sm flex items-center">
+                                      <Clock className="w-3 h-3 mr-1" />
+                                      {lesson.durationFormatted || "00:00"}
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                    <div className="bg-white/90 rounded-full p-3 transform scale-90 group-hover:scale-100 transition-all duration-300 shadow-md">
+                                      <Play className="h-6 w-6 text-blue-600" />
+                                    </div>
+                                  </div>
+                                  
+                                  {lesson.progress > 0 && lesson.progress < 100 && (
+                                    <div className="absolute bottom-0 left-0 right-0 h-[3px]">
+                                      <div className="h-full bg-blue-600" style={{ width: `${lesson.progress}%` }} />
+                                    </div>
+                                  )}
+                                  
+                                  {lesson.isCompleted && (
+                                    <div className="absolute top-2 right-2">
+                                      <div className="bg-green-600/80 px-2 py-0.5 rounded-sm text-xs font-medium text-white shadow-sm flex items-center">
+                                        <CheckCircle className="w-3 h-3 mr-1" />
+                                        Assistido
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                <div className="mt-3 flex flex-col flex-grow">
+                                  <h3 className="font-medium text-gray-800 mb-1.5 line-clamp-2 text-sm md:text-base">
+                                    {lesson.title || "Tutorial sem título"}
+                                  </h3>
+                                </div>
+                              </div>
+                            </Link>
                           </CarouselItem>
                         ))}
                       </CarouselContent>
