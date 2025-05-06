@@ -50,8 +50,16 @@ async function optimizeImage(buffer: Buffer): Promise<Buffer> {
 // Garante que o bucket do módulo exista
 async function ensureBucket() {
   try {
-    // O método initBucket() do SupabaseStorageService já tenta criar buckets necessários
+    // Inicializa o cliente Supabase Storage
     await supabaseStorage.initBucket();
+    
+    // Cria o bucket específico para thumbnails de módulos se não existir
+    const bucketCreated = await supabaseStorage.createBucketIfNotExists('module-thumbnails');
+    
+    if (!bucketCreated) {
+      console.warn('Não foi possível criar/verificar o bucket module-thumbnails, mas continuando o processo...');
+    }
+    
     return true;
   } catch (error) {
     console.error('Erro ao inicializar buckets:', error);
@@ -116,7 +124,7 @@ router.post('/module-thumbnail', upload.single('file'), async (req: Request, res
           format: 'webp' // Formato WebP
         },
         'module-thumbnails', // Pasta/bucket para os thumbnails
-        null // Sem designer ID específico
+        undefined // Sem designer ID específico
       );
       
       if (result && result.imageUrl) {

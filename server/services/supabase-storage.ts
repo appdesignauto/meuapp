@@ -1365,6 +1365,52 @@ export class SupabaseStorageService {
   }
   
   /**
+   * Cria um bucket no Supabase Storage se ele não existir
+   * @param bucketName Nome do bucket a ser criado
+   * @returns Promise<boolean> true se o bucket existir ou for criado com sucesso
+   */
+  async createBucketIfNotExists(bucketName: string): Promise<boolean> {
+    this.log(`Verificando se o bucket '${bucketName}' existe...`);
+    
+    try {
+      // Primeiro verifica se o bucket já existe tentando listar arquivos
+      try {
+        const { data, error } = await supabase.storage.from(bucketName).list();
+        
+        if (!error && Array.isArray(data)) {
+          this.log(`✓ Bucket '${bucketName}' já existe e está acessível.`);
+          return true;
+        }
+      } catch (listError) {
+        this.log(`Não foi possível listar arquivos do bucket '${bucketName}', pode não existir.`);
+      }
+      
+      // Se não conseguiu listar, tenta criar o bucket
+      this.log(`Tentando criar o bucket '${bucketName}'...`);
+      const { error } = await supabase.storage.createBucket(bucketName, {
+        public: true
+      });
+      
+      if (error) {
+        if (error.message.includes('violates row-level security policy')) {
+          this.log(`Aviso: O bucket '${bucketName}' provavelmente já existe mas você não tem permissão para criá-lo.`);
+          this.log(`Tentando usar mesmo assim, pois as permissões de upload podem ser diferentes.`);
+          return true;
+        } else {
+          this.log(`Erro ao criar o bucket '${bucketName}': ${error.message}`);
+          return false;
+        }
+      }
+      
+      this.log(`✅ Bucket '${bucketName}' criado com sucesso!`);
+      return true;
+    } catch (error: any) {
+      this.log(`Erro ao verificar/criar bucket '${bucketName}': ${error.message}`);
+      return false;
+    }
+  }
+  
+  /**
    * Método dedicado para fallback local de avatar quando o Supabase falha
    * Funciona em qualquer ambiente, inclusive em produção
    */
