@@ -137,7 +137,7 @@ const TutorialCard: React.FC<TutorialCardProps> = ({
   const actualLevel = level ?? tutorial?.level ?? "iniciante";
   const actualIsWatched = isWatched || (tutorial?.isWatched ?? false);
   const actualIsPremium = isPremium || (tutorial?.isPremium ?? false);
-  const actualViews = views ?? tutorial?.views ?? 0;
+  const actualViews = views ?? tutorial?.viewCount ?? tutorial?.views ?? 0;
 
   return (
     <motion.div

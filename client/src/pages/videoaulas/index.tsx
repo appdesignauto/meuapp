@@ -137,7 +137,8 @@ export default function VideoaulasPage() {
           level: modulo?.level || 'iniciante',
           isPremium: lesson.isPremium,
           isWatched: false, // Será implementado com histórico do usuário no futuro
-          views: lesson.viewCount || 0, // Usar dados reais do banco se disponíveis, ou zero
+          views: lesson.viewCount || 0, // Manter compatibilidade com código existente
+          viewCount: lesson.viewCount || 0, // Usar campo real do banco de dados
           moduleId: lesson.moduleId,
           moduloNome: modulo?.title || 'Módulo desconhecido',
           showLessonNumber: lesson.showLessonNumber !== false, // Por padrão, mostra número da aula
