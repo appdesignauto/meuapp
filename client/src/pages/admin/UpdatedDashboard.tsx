@@ -1578,21 +1578,64 @@ const AdminDashboard = () => {
                   </Button>
                 </div>
                 
-                <div className="flex justify-end mb-4">
-                  <Select
-                    value="recentes"
-                    onValueChange={(value) => console.log(value)}
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Ordenar por" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="recentes">Mais recentes</SelectItem>
-                      <SelectItem value="antigos">Mais antigos</SelectItem>
-                      <SelectItem value="ordem">Ordem de exibição</SelectItem>
-                      <SelectItem value="alfabetica">Ordem alfabética</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="flex flex-col md:flex-row justify-between gap-4 mb-4">
+                  {/* Filtro de curso */}
+                  <div className="flex-1">
+                    <Select
+                      value={selectedCourseFilter}
+                      onValueChange={setSelectedCourseFilter}
+                    >
+                      <SelectTrigger className="w-full md:w-[220px]">
+                        <SelectValue placeholder="Filtrar por curso" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Todos os cursos</SelectItem>
+                        {courses.map((course: any) => (
+                          <SelectItem key={course.id} value={course.id.toString()}>
+                            {course.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* Controles direita: Ordenação e Modo de Visualização */}
+                  <div className="flex gap-2 items-center">
+                    <Select
+                      value="recentes"
+                      onValueChange={(value) => console.log(value)}
+                    >
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Ordenar por" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="recentes">Mais recentes</SelectItem>
+                        <SelectItem value="antigos">Mais antigos</SelectItem>
+                        <SelectItem value="ordem">Ordem de exibição</SelectItem>
+                        <SelectItem value="alfabetica">Ordem alfabética</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    
+                    {/* Alternador de visualização */}
+                    <div className="flex bg-gray-100 rounded-md p-1">
+                      <Button 
+                        size="icon" 
+                        variant={moduleViewMode === 'grid' ? 'default' : 'ghost'}
+                        className="h-8 w-8"
+                        onClick={() => setModuleViewMode('grid')}
+                      >
+                        <LayoutGrid className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        size="icon" 
+                        variant={moduleViewMode === 'list' ? 'default' : 'ghost'}
+                        className="h-8 w-8"
+                        onClick={() => setModuleViewMode('list')}
+                      >
+                        <ListOrdered className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
                 </div>
                 
                 {isLoadingModules ? (
@@ -1641,8 +1684,57 @@ const AdminDashboard = () => {
                     </Button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {modules.map((module: any) => (
+                  <>
+                    {/* Filtramos os módulos com base no curso selecionado */}
+                    {(() => {
+                      // Filtragem dos módulos
+                      const filteredModules = selectedCourseFilter 
+                        ? modules.filter((module: any) => module.courseId === parseInt(selectedCourseFilter))
+                        : modules;
+                      
+                      // Se não houver módulos após a filtragem
+                      if (filteredModules.length === 0) {
+                        return (
+                          <div className="text-center py-8 border rounded-lg">
+                            <BookOpen className="h-10 w-10 text-gray-400 mx-auto mb-3" />
+                            <h3 className="text-lg font-medium text-gray-900 mb-1">
+                              {selectedCourseFilter 
+                                ? "Nenhum módulo encontrado para o curso selecionado" 
+                                : "Nenhum módulo encontrado"}
+                            </h3>
+                            <p className="text-gray-500 mb-4">
+                              {selectedCourseFilter 
+                                ? "Tente selecionar outro curso ou crie um novo módulo para este curso."
+                                : "Comece criando seu primeiro módulo de curso."}
+                            </p>
+                            <Button 
+                              onClick={() => {
+                                setCurrentModule(null);
+                                setModuleForm({
+                                  courseId: selectedCourseFilter || '',
+                                  title: '',
+                                  description: '',
+                                  thumbnailUrl: '',
+                                  level: 'iniciante',
+                                  order: 0,
+                                  isActive: true,
+                                  isPremium: false
+                                });
+                                setIsModuleDialogOpen(true);
+                              }}
+                            >
+                              <Plus className="h-4 w-4 mr-2" />
+                              Criar Módulo
+                            </Button>
+                          </div>
+                        );
+                      }
+                      
+                      // Grid view (modo de grade)
+                      if (moduleViewMode === 'grid') {
+                        return (
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {filteredModules.map((module: any) => (
                       <div key={module.id} className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow group">
                         <div className="aspect-video bg-gray-100 relative">
                           <img 
@@ -1716,6 +1808,127 @@ const AdminDashboard = () => {
                       </div>
                     ))}
                   </div>
+                        );
+                      } 
+                      // List view (modo de lista)
+                      else {
+                        return (
+                          <div className="border rounded-lg overflow-hidden">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead className="w-12"></TableHead>
+                                  <TableHead>Título</TableHead>
+                                  <TableHead>Curso</TableHead>
+                                  <TableHead>Nível</TableHead>
+                                  <TableHead className="text-center">Aulas</TableHead>
+                                  <TableHead className="text-center">Status</TableHead>
+                                  <TableHead className="text-right">Ações</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {filteredModules.map((module: any) => {
+                                  // Encontrar o nome do curso
+                                  const course = courses.find((c: any) => c.id === module.courseId);
+                                  return (
+                                    <TableRow key={module.id}>
+                                      <TableCell>
+                                        {module.isPremium && (
+                                          <Badge variant="secondary" className="bg-amber-100 text-amber-800 hover:bg-amber-100">
+                                            <Crown className="h-3 w-3 mr-1" />
+                                            PRO
+                                          </Badge>
+                                        )}
+                                      </TableCell>
+                                      <TableCell className="font-medium">
+                                        <div className="flex items-center gap-2">
+                                          {module.thumbnailUrl && (
+                                            <img 
+                                              src={module.thumbnailUrl} 
+                                              alt="" 
+                                              className="w-10 h-6 object-cover rounded"
+                                              onError={(e) => {
+                                                e.currentTarget.style.display = 'none';
+                                              }}
+                                            />
+                                          )}
+                                          <span className="line-clamp-1">{module.title}</span>
+                                        </div>
+                                      </TableCell>
+                                      <TableCell className="text-sm">
+                                        {course?.title || "Curso não encontrado"}
+                                      </TableCell>
+                                      <TableCell>
+                                        <span className={`px-2 py-0.5 rounded text-xs ${
+                                          module.level === 'iniciante' ? 'bg-blue-100 text-blue-800' :
+                                          module.level === 'intermediario' ? 'bg-yellow-100 text-yellow-800' :
+                                          'bg-red-100 text-red-800'
+                                        }`}>
+                                          {module.level === 'iniciante' ? 'Iniciante' :
+                                           module.level === 'intermediario' ? 'Intermediário' :
+                                           'Avançado'}
+                                        </span>
+                                      </TableCell>
+                                      <TableCell className="text-center">
+                                        {module.lessons?.length || 0}
+                                      </TableCell>
+                                      <TableCell className="text-center">
+                                        {module.isActive ? (
+                                          <Badge variant="outline" className="border-green-500 text-green-600">
+                                            <CheckCircle2 className="h-3 w-3 mr-1" /> Ativo
+                                          </Badge>
+                                        ) : (
+                                          <Badge variant="outline" className="border-gray-400 text-gray-600">
+                                            Inativo
+                                          </Badge>
+                                        )}
+                                      </TableCell>
+                                      <TableCell className="text-right">
+                                        <div className="flex justify-end gap-2">
+                                          <Button 
+                                            variant="ghost" 
+                                            size="sm"
+                                            onClick={() => {
+                                              setCurrentModule(module);
+                                              setModuleForm({
+                                                id: module.id,
+                                                courseId: module.courseId,
+                                                title: module.title,
+                                                description: module.description,
+                                                thumbnailUrl: module.thumbnailUrl,
+                                                level: module.level,
+                                                order: module.order,
+                                                isActive: module.isActive,
+                                                isPremium: module.isPremium
+                                              });
+                                              setIsModuleDialogOpen(true);
+                                            }}
+                                          >
+                                            <Pencil className="h-4 w-4" />
+                                          </Button>
+                                          <Button 
+                                            variant="ghost" 
+                                            size="sm" 
+                                            className="text-red-600 hover:text-red-700"
+                                            onClick={() => {
+                                              setCurrentModule(module);
+                                              setIsConfirmDeleteModuleOpen(true);
+                                            }}
+                                          >
+                                            <Trash2 className="h-4 w-4" />
+                                          </Button>
+                                        </div>
+                                      </TableCell>
+                                    </TableRow>
+                                  );
+                                })}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        );
+                      }
+                    })()}
+                  </>
                 )}
               </div>
               
