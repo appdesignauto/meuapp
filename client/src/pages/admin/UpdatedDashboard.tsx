@@ -1934,12 +1934,15 @@ const AdminDashboard = () => {
               
               {/* Diálogo para adicionar/editar módulo */}
               <Dialog open={isModuleDialogOpen} onOpenChange={setIsModuleDialogOpen}>
-                <DialogContent className="sm:max-w-[600px]">
+                <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                       <BookOpen className="h-5 w-5" />
                       {currentModule ? 'Editar Módulo' : 'Adicionar Módulo'}
                     </DialogTitle>
+                    <DialogDescription>
+                      Preencha todos os campos obrigatórios (*) para criar ou editar um módulo
+                    </DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1995,7 +1998,7 @@ const AdminDashboard = () => {
                         <Label htmlFor="moduleThumbnail">Miniatura do módulo *</Label>
                         <div className="flex flex-col gap-4">
                           {/* Área de upload */}
-                          <div className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-gray-50 transition-colors">
+                          <div className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-gray-50 transition-colors">
                             <input
                               type="file"
                               id="moduleThumbnailUpload"
@@ -2072,22 +2075,24 @@ const AdminDashboard = () => {
                           {/* Preview da imagem */}
                           {(moduleForm.thumbnailUrl || bannerPreviewUrl) && (
                             <div className="mt-2">
-                              <p className="text-sm font-medium mb-2">Preview:</p>
-                              <div className="relative aspect-video w-full max-w-md mx-auto border rounded-lg overflow-hidden">
-                                <img
-                                  src={bannerPreviewUrl || moduleForm.thumbnailUrl}
-                                  alt="Preview da miniatura"
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    e.currentTarget.src = "https://via.placeholder.com/640x360?text=Erro+ao+carregar";
-                                  }}
-                                />
-                                
-                                {uploadingThumbnail && (
-                                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                                    <Loader2 className="h-8 w-8 animate-spin text-white" />
-                                  </div>
-                                )}
+                              <div className="flex items-center gap-3">
+                                <p className="text-sm font-medium">Preview:</p>
+                                <div className="relative h-16 w-28 border rounded-lg overflow-hidden">
+                                  <img
+                                    src={bannerPreviewUrl || moduleForm.thumbnailUrl}
+                                    alt="Preview da miniatura"
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      e.currentTarget.src = "https://via.placeholder.com/640x360?text=Erro+ao+carregar";
+                                    }}
+                                  />
+                                  
+                                  {uploadingThumbnail && (
+                                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                      <Loader2 className="h-4 w-4 animate-spin text-white" />
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                               
                               {/* URL da imagem (opcional) */}
