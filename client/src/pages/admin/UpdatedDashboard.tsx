@@ -3099,7 +3099,7 @@ const AdminDashboard = () => {
                                   <div className="mt-2 relative bg-gray-50 p-3 rounded-md border border-blue-200">
                                     <div className="flex items-center gap-3">
                                       <div className="w-12 h-12 bg-blue-50 rounded-md flex items-center justify-center">
-                                        <FileImage className="h-6 w-6 text-blue-500" />
+                                        <Image className="h-6 w-6 text-blue-500" />
                                       </div>
                                       <div className="flex-1">
                                         <p className="text-sm font-medium truncate">{bannerFile.name}</p>
