@@ -166,6 +166,29 @@ const AdminDashboard = () => {
   
   // Estados para configurações de cursos
   const [selectedCourseForSettings, setSelectedCourseForSettings] = useState<any | null>(null);
+  
+  // Consulta para obter configurações específicas do curso selecionado
+  const { 
+    data: specificCourseSettings,
+    isLoading: isLoadingSpecificSettings,
+    isError: isSpecificSettingsError
+  } = useQuery({
+    queryKey: ['/api/course/settings', selectedCourseForSettings?.id],
+    queryFn: async () => {
+      if (!selectedCourseForSettings?.id) {
+        return null; // Não faz requisição se não houver curso selecionado
+      }
+      
+      const res = await fetch(`/api/course/settings?courseId=${selectedCourseForSettings.id}`);
+      if (!res.ok) {
+        console.error('Erro ao buscar configurações específicas:', res.status, res.statusText);
+        throw new Error(`Falha ao carregar configurações do curso ${selectedCourseForSettings.title}`);
+      }
+      return res.json();
+    },
+    enabled: !!selectedCourseForSettings?.id, // Só executa quando houver um curso selecionado
+    refetchOnWindowFocus: false,
+  });
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [bannerPreviewUrl, setBannerPreviewUrl] = useState<string | null>(null);
   const [uploadingBanner, setUploadingBanner] = useState(false);
@@ -232,13 +255,13 @@ const AdminDashboard = () => {
     }
   });
   
-  // Consulta para obter configurações dos cursos
+  // Consulta para obter configurações dos cursos (padrão, sem courseId específico)
   const { 
     data: courseSettingsData = {}, 
     isLoading: isLoadingCourseSettings,
     isError: isCourseSettingsError
   } = useQuery({
-    queryKey: ['/api/course/settings'],
+    queryKey: ['/api/course/settings', 'default'],
     queryFn: async () => {
       const res = await fetch('/api/course/settings');
       if (!res.ok) {
@@ -246,18 +269,31 @@ const AdminDashboard = () => {
         throw new Error('Falha ao carregar configurações dos cursos');
       }
       return res.json();
-    }
+    },
+    refetchOnWindowFocus: false
   });
   
   // Estado local para gerenciar edições antes de salvar
   const [courseSettings, setCourseSettings] = useState(courseSettingsData);
   
-  // Atualiza o estado local quando os dados da API são carregados
+  // Atualiza o estado local quando os dados da API são carregados ou quando o curso selecionado muda
   useEffect(() => {
-    if (!isLoadingCourseSettings && !isCourseSettingsError && courseSettingsData) {
+    if (selectedCourseForSettings?.id && specificCourseSettings) {
+      // Se temos um curso selecionado e configurações específicas para ele, usamos essas configurações
+      console.log(`Carregando configurações específicas do curso "${selectedCourseForSettings.title}":`, specificCourseSettings);
+      setCourseSettings(specificCourseSettings);
+    } else if (!isLoadingCourseSettings && !isCourseSettingsError && courseSettingsData) {
+      // Caso contrário, usamos as configurações padrão
+      console.log('Carregando configurações padrão:', courseSettingsData);
       setCourseSettings(courseSettingsData);
     }
-  }, [courseSettingsData, isLoadingCourseSettings, isCourseSettingsError]);
+  }, [
+    courseSettingsData, 
+    isLoadingCourseSettings, 
+    isCourseSettingsError, 
+    selectedCourseForSettings, 
+    specificCourseSettings
+  ]);
   
   // Handler para mudanças no formulário de curso
   const handleCourseFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -397,11 +433,21 @@ const AdminDashboard = () => {
       }
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/course/settings'] });
+    onSuccess: (data, variables) => {
+      // Invalida consulta padrão
+      queryClient.invalidateQueries({ queryKey: ['/api/course/settings', 'default'] });
+      
+      // Se houver um courseId, também invalida a consulta específica desse curso
+      if (variables.courseId) {
+        console.log(`Invalidando cache para o curso ${variables.courseId}`);
+        queryClient.invalidateQueries({ queryKey: ['/api/course/settings', variables.courseId] });
+      }
+      
       toast({
         title: 'Configurações atualizadas',
-        description: 'As configurações dos cursos foram atualizadas com sucesso',
+        description: variables.courseId 
+          ? `As configurações do curso foram atualizadas com sucesso` 
+          : 'As configurações padrão foram atualizadas com sucesso',
       });
     },
     onError: (error: Error) => {
@@ -724,7 +770,12 @@ const AdminDashboard = () => {
       updateCourseSettingsMutation.mutate(updatedSettings, {
         onSuccess: () => {
           // Invalidar cache para garantir que as alterações apareçam na página de videoaulas
-          queryClient.invalidateQueries({ queryKey: ['/api/course/settings'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/course/settings', 'default'] });
+          
+          // Se houver um curso selecionado, também invalidar a consulta específica desse curso
+          if (selectedCourseForSettings?.id) {
+            queryClient.invalidateQueries({ queryKey: ['/api/course/settings', selectedCourseForSettings.id] });
+          }
           
           // Limpa a pré-visualização e o arquivo selecionado após o upload bem-sucedido
           setBannerFile(null);
@@ -801,12 +852,20 @@ const AdminDashboard = () => {
   };
   
   const handleSettingsSubmit = (data: any) => {
-    updateCourseSettingsMutation.mutate(data, {
+    // Adiciona o courseId do curso selecionado, se existir
+    const settingsToUpdate = {
+      ...data,
+      courseId: selectedCourseForSettings?.id || undefined
+    };
+    
+    updateCourseSettingsMutation.mutate(settingsToUpdate, {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['/api/course/settings'] });
+        // A invalidação de cache já é tratada no onSuccess da mutation
         toast({
           title: "Configurações salvas",
-          description: "As configurações foram atualizadas com sucesso",
+          description: selectedCourseForSettings?.id
+            ? `As configurações do curso "${selectedCourseForSettings.title}" foram atualizadas`
+            : "As configurações padrão foram atualizadas com sucesso",
           duration: 3000,
         });
       }
