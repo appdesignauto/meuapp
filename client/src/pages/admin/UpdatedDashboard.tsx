@@ -38,6 +38,7 @@ import {
   CheckCircle2,
   Crown,
   Sparkles,
+  Upload,
   Zap,
   Award,
   FileVideo,
@@ -552,6 +553,125 @@ const AdminDashboard = () => {
     }
   });
   
+  // Handlers para upload de imagens
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setThumbnailFile(e.target.files[0]);
+    }
+  };
+  
+  const handleFeaturedImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFeaturedImageFile(e.target.files[0]);
+    }
+  };
+  
+  // Upload da thumbnail
+  const handleThumbnailUpload = async () => {
+    if (!thumbnailFile) return;
+    
+    setUploadingThumbnail(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append('thumbnail', thumbnailFile);
+      
+      // Se estamos editando um curso, incluir o ID
+      if (currentCourse && currentCourse.id) {
+        formData.append('courseId', currentCourse.id.toString());
+      }
+      
+      // Orientação (horizontal ou vertical)
+      formData.append('orientation', 'horizontal'); // Padrão horizontal
+      
+      const response = await fetch('/api/course/upload-thumbnail', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('Erro no upload:', errorData);
+        throw new Error('Falha no upload da imagem');
+      }
+      
+      const data = await response.json();
+      
+      // Atualiza o formulário com a URL da imagem
+      setCourseForm(prev => ({
+        ...prev,
+        thumbnailUrl: data.imageUrl
+      }));
+      
+      toast({
+        title: 'Upload realizado com sucesso',
+        description: 'A imagem foi carregada e associada ao curso',
+      });
+    } catch (error) {
+      console.error('Erro no upload:', error);
+      toast({
+        title: 'Erro no upload',
+        description: error instanceof Error ? error.message : 'Não foi possível fazer o upload da imagem',
+        variant: 'destructive',
+      });
+    } finally {
+      setUploadingThumbnail(false);
+    }
+  };
+  
+  // Upload da imagem de destaque
+  const handleFeaturedImageUpload = async () => {
+    if (!featuredImageFile) return;
+    
+    setUploadingFeatured(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append('thumbnail', featuredImageFile);
+      
+      // Se estamos editando um curso, incluir o ID
+      if (currentCourse && currentCourse.id) {
+        formData.append('courseId', currentCourse.id.toString());
+      }
+      
+      // Orientação (horizontal ou vertical)
+      formData.append('orientation', 'vertical'); // Imagem de destaque geralmente é vertical
+      
+      const response = await fetch('/api/course/upload-thumbnail', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('Erro no upload:', errorData);
+        throw new Error('Falha no upload da imagem de destaque');
+      }
+      
+      const data = await response.json();
+      
+      // Atualiza o formulário com a URL da imagem
+      setCourseForm(prev => ({
+        ...prev,
+        featuredImage: data.imageUrl
+      }));
+      
+      toast({
+        title: 'Upload realizado com sucesso',
+        description: 'A imagem de destaque foi carregada',
+      });
+    } catch (error) {
+      console.error('Erro no upload da imagem de destaque:', error);
+      toast({
+        title: 'Erro no upload',
+        description: error instanceof Error ? error.message : 'Não foi possível fazer o upload da imagem de destaque',
+        variant: 'destructive',
+      });
+    } finally {
+      setUploadingFeatured(false);
+    }
+  };
+
   // Handlers para submits
   const handleCourseSubmit = () => {
     if (!courseForm.title || !courseForm.description) {
@@ -2338,25 +2458,123 @@ const AdminDashboard = () => {
                       </div>
                       
                       <div className="grid gap-2">
-                        <Label htmlFor="courseThumbnailUrl">URL da thumbnail</Label>
-                        <Input
-                          id="courseThumbnailUrl"
-                          name="thumbnailUrl"
-                          value={courseForm.thumbnailUrl}
-                          onChange={handleCourseFormChange}
-                          placeholder="Ex: https://example.com/thumbnail.jpg"
-                        />
+                        <Label htmlFor="courseThumbnailUrl">Thumbnail do curso</Label>
+                        <div className="space-y-2">
+                          {/* Preview da imagem atual se existir */}
+                          {courseForm.thumbnailUrl && (
+                            <div className="mt-2 relative rounded-md overflow-hidden w-full h-32 bg-gray-100">
+                              <img 
+                                src={courseForm.thumbnailUrl} 
+                                alt="Thumbnail do curso" 
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center gap-2">
+                            <div className="relative flex-1">
+                              <Input
+                                id="courseThumbnailUpload"
+                                type="file"
+                                accept="image/*"
+                                onChange={handleThumbnailChange}
+                                className="cursor-pointer"
+                              />
+                            </div>
+                            <Button 
+                              type="button" 
+                              size="sm"
+                              onClick={handleThumbnailUpload}
+                              disabled={!thumbnailFile || uploadingThumbnail}
+                              className="min-w-24"
+                            >
+                              {uploadingThumbnail ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  Enviando...
+                                </>
+                              ) : (
+                                <>
+                                  <Upload className="h-4 w-4 mr-2" />
+                                  Upload
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                          
+                          {/* Campo oculto para manter a URL */}
+                          <Input
+                            id="courseThumbnailUrl"
+                            name="thumbnailUrl"
+                            value={courseForm.thumbnailUrl}
+                            onChange={handleCourseFormChange}
+                            type="hidden"
+                          />
+                          
+                          <p className="text-xs text-gray-500">
+                            Formato horizontal - Recomendado: 1280x720px (16:9)
+                          </p>
+                        </div>
                       </div>
                       
                       <div className="grid gap-2">
-                        <Label htmlFor="courseFeaturedImage">URL da imagem de destaque</Label>
-                        <Input
-                          id="courseFeaturedImage"
-                          name="featuredImage"
-                          value={courseForm.featuredImage}
-                          onChange={handleCourseFormChange}
-                          placeholder="Ex: https://example.com/featured.jpg"
-                        />
+                        <Label htmlFor="courseFeaturedImage">Imagem de destaque</Label>
+                        <div className="space-y-2">
+                          {/* Preview da imagem atual se existir */}
+                          {courseForm.featuredImage && (
+                            <div className="mt-2 relative rounded-md overflow-hidden w-32 h-48 bg-gray-100">
+                              <img 
+                                src={courseForm.featuredImage} 
+                                alt="Imagem de destaque" 
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center gap-2">
+                            <div className="relative flex-1">
+                              <Input
+                                id="courseFeaturedImageUpload"
+                                type="file"
+                                accept="image/*"
+                                onChange={handleFeaturedImageChange}
+                                className="cursor-pointer"
+                              />
+                            </div>
+                            <Button 
+                              type="button" 
+                              size="sm"
+                              onClick={handleFeaturedImageUpload}
+                              disabled={!featuredImageFile || uploadingFeatured}
+                              className="min-w-24"
+                            >
+                              {uploadingFeatured ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  Enviando...
+                                </>
+                              ) : (
+                                <>
+                                  <Upload className="h-4 w-4 mr-2" />
+                                  Upload
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                          
+                          {/* Campo oculto para manter a URL */}
+                          <Input
+                            id="courseFeaturedImage"
+                            name="featuredImage"
+                            value={courseForm.featuredImage}
+                            onChange={handleCourseFormChange}
+                            type="hidden"
+                          />
+                          
+                          <p className="text-xs text-gray-500">
+                            Formato vertical - Recomendado: 600x900px (2:3)
+                          </p>
+                        </div>
                       </div>
                       
                       <div className="grid gap-2">
