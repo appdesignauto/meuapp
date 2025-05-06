@@ -28,6 +28,7 @@ import {
   PanelLeft,
   Video,
   Trash2,
+  FileImage,
   FileText,
   Pencil,
   MoreVertical,
@@ -165,6 +166,7 @@ const AdminDashboard = () => {
   // Estados para configurações de cursos
   const [selectedCourseForSettings, setSelectedCourseForSettings] = useState<any | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [bannerPreviewUrl, setBannerPreviewUrl] = useState<string | null>(null);
   const [uploadingBanner, setUploadingBanner] = useState(false);
   
   // Consultas para obter cursos, módulos e aulas
@@ -720,6 +722,13 @@ const AdminDashboard = () => {
       // Atualiza no servidor
       updateCourseSettingsMutation.mutate(updatedSettings);
       
+      // Limpa a pré-visualização e o arquivo selecionado após o upload bem-sucedido
+      setBannerFile(null);
+      if (bannerPreviewUrl) {
+        URL.revokeObjectURL(bannerPreviewUrl);
+        setBannerPreviewUrl(null);
+      }
+      
       toast({
         title: 'Banner enviado com sucesso',
         description: 'A imagem do banner foi atualizada',
@@ -739,9 +748,23 @@ const AdminDashboard = () => {
   // Handler para o input do arquivo de banner
   const handleBannerFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setBannerFile(e.target.files[0]);
+      const file = e.target.files[0];
+      setBannerFile(file);
+      
+      // Criar uma URL de visualização da imagem
+      const previewUrl = URL.createObjectURL(file);
+      setBannerPreviewUrl(previewUrl);
     }
   };
+  
+  // Limpar a URL de visualização quando o componente for desmontado
+  useEffect(() => {
+    return () => {
+      if (bannerPreviewUrl) {
+        URL.revokeObjectURL(bannerPreviewUrl);
+      }
+    };
+  }, [bannerPreviewUrl]);
   
   // Carrega automaticamente os dados do curso "Tutoriais Design Auto" quando a página é aberta
   // na aba de configurações de cursos
@@ -3070,6 +3093,32 @@ const AdminDashboard = () => {
                                     )}
                                   </Button>
                                 </div>
+                                
+                                {/* Pré-visualização do arquivo selecionado */}
+                                {bannerPreviewUrl && bannerFile && (
+                                  <div className="mt-2 relative bg-gray-50 p-3 rounded-md border border-blue-200">
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-12 h-12 bg-blue-50 rounded-md flex items-center justify-center">
+                                        <FileImage className="h-6 w-6 text-blue-500" />
+                                      </div>
+                                      <div className="flex-1">
+                                        <p className="text-sm font-medium truncate">{bannerFile.name}</p>
+                                        <p className="text-xs text-gray-500">
+                                          {(bannerFile.size / 1024).toFixed(1)} KB
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <div className="mt-2">
+                                      <img 
+                                        src={bannerPreviewUrl} 
+                                        alt="Pré-visualização" 
+                                        className="w-full h-auto max-h-48 object-cover rounded-md border"
+                                      />
+                                      <p className="text-xs text-blue-600 mt-1">Imagem selecionada (pré-visualização)</p>
+                                    </div>
+                                  </div>
+                                )}
+                                
                                 <p className="text-xs text-gray-500">
                                   Tamanho recomendado: 1920x600px. Formatos: JPG, PNG ou WebP.
                                 </p>
