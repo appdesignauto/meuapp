@@ -365,47 +365,75 @@ export class SupabaseStorageService {
         this.log(`- Thumbnail: ${thumbnailPath}`);
       }
 
+      // Define o bucket para uso
+      const bucketToUse = bucketFolder || BUCKET_NAME;
+      this.log(`Bucket selecionado para upload: ${bucketToUse}`);
+      
+      // Garante que o bucket exista
+      await this.createBucketIfNotExists(bucketToUse);
+      
       // Upload da imagem principal para o Supabase
+      this.log(`Iniciando upload da imagem principal para bucket: ${bucketToUse}`);
       const { error: imageError, data: imageData } = await supabase.storage
-        .from(BUCKET_NAME)
+        .from(bucketToUse)
         .upload(imagePath, optimizedBuffer, {
           contentType: 'image/webp',
           upsert: false
         });
 
       if (imageError) {
+        this.log(`ERRO no upload da imagem principal: ${imageError.message}`);
         throw new Error(`Erro no upload da imagem principal: ${imageError.message}`);
       }
+      this.log(`Upload da imagem principal concluído com sucesso.`);
 
-      // Upload do thumbnail para o Supabase
-      const { error: thumbError } = await supabase.storage
-        .from(BUCKET_NAME)
-        .upload(thumbnailPath, thumbnailBuffer, {
-          contentType: 'image/webp',
-          upsert: false
-        });
+      // Upload do thumbnail para o Supabase (se houver)
+      if (thumbnailBuffer && thumbnailPath) {
+        this.log(`Iniciando upload do thumbnail para bucket: ${bucketToUse}`);
+        const { error: thumbError } = await supabase.storage
+          .from(bucketToUse)
+          .upload(thumbnailPath, thumbnailBuffer, {
+            contentType: 'image/webp',
+            upsert: false
+          });
 
-      if (thumbError) {
-        // Se falhar o upload do thumbnail, tenta remover a imagem principal para evitar inconsistência
-        await supabase.storage.from(BUCKET_NAME).remove([imagePath]);
-        throw new Error(`Erro no upload do thumbnail: ${thumbError.message}`);
+        if (thumbError) {
+          this.log(`ERRO no upload do thumbnail: ${thumbError.message}`);
+          // Se falhar o upload do thumbnail, tenta remover a imagem principal para evitar inconsistência
+          await supabase.storage.from(bucketToUse).remove([imagePath]);
+          throw new Error(`Erro no upload do thumbnail: ${thumbError.message}`);
+        }
+        this.log(`Upload do thumbnail concluído com sucesso.`);
+      } else {
+        this.log(`Nenhum thumbnail para upload.`);
       }
 
       console.log("Upload para Supabase Storage concluído com sucesso!");
 
-      // Obtém URLs públicas para acesso
+      // Obtém URLs públicas para acesso usando o bucket correto
       const { data: imageUrlData } = supabase.storage
-        .from(BUCKET_NAME)
+        .from(bucketToUse)
         .getPublicUrl(imagePath);
 
-      const { data: thumbnailUrlData } = supabase.storage
-        .from(BUCKET_NAME)
-        .getPublicUrl(thumbnailPath);
+      let thumbnailUrl = '';
+      if (thumbnailPath) {
+        const { data: thumbnailUrlData } = supabase.storage
+          .from(bucketToUse)
+          .getPublicUrl(thumbnailPath);
+        thumbnailUrl = thumbnailUrlData.publicUrl;
+      }
+
+      this.log(`URL pública da imagem: ${imageUrlData.publicUrl}`);
+      if (thumbnailUrl) {
+        this.log(`URL pública do thumbnail: ${thumbnailUrl}`);
+      }
 
       return {
         imageUrl: imageUrlData.publicUrl,
-        thumbnailUrl: thumbnailUrlData.publicUrl,
-        storageType: "supabase"
+        thumbnailUrl: thumbnailUrl,
+        storageType: "supabase",
+        bucket: bucketToUse,
+        logs: this.getLogs()
       };
     } catch (error) {
       console.error("Erro no upload para Supabase:", error);
@@ -453,7 +481,9 @@ export class SupabaseStorageService {
         return {
           imageUrl: relativeUrl,
           thumbnailUrl: thumbRelativeUrl,
-          storageType: "local"
+          storageType: "local",
+          bucket: "local-fallback",
+          logs: this.getLogs()
         };
       } catch (localError: any) {
         console.error("Erro no upload local:", localError);
