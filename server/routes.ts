@@ -4491,6 +4491,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log('[GET /api/course-settings-debug] TESTANDO CONFIGURAÇÕES DE CURSOS');
     
     try {
+      // Usar uma abordagem simples apenas para diagnosticar rotas de API
+      return res.json({
+        message: 'Diagnóstico das configurações de cursos',
+        timestamp: new Date().toISOString(),
+        routes: {
+          adminConfig: '/api/course/settings',
+          publicConfig: '/api/courses/settings',
+          routeConflicts: true,
+          recommendedFix: 'Verificar e resolver conflitos de rotas no arquivo server/routes.ts'
+        },
+        routesConfig: {
+          courseRouter: {
+            path: '/api/course/settings',
+            description: 'Gerencia as configurações dos cursos no painel administrativo'
+          },
+          coursesAdapterRouter: {
+            path: '/api/courses',
+            description: 'Adaptador para manter compatibilidade com rotas antigas'
+          }
+        }
+      });
+    
+      
       // Buscar as configurações diretamente do banco de dados
       const configQuery = `
         SELECT 
@@ -4513,8 +4536,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         LIMIT 1
       `;
       
-      const db = req.app.locals.db;
-      const configResult = await db.execute(configQuery);
+      const configResult = await pool.query(configQuery);
       const settings = configResult.rows && configResult.rows.length > 0 ? configResult.rows[0] : null;
       
       // Buscar informações do curso principal 
@@ -4538,7 +4560,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         LIMIT 1
       `;
       
-      const courseResult = await db.execute(courseQuery);
+      const courseResult = await pool.query(courseQuery);
       const course = courseResult.rows && courseResult.rows.length > 0 ? courseResult.rows[0] : null;
       
       // Retornar os dados de diagnóstico
