@@ -39,6 +39,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 
 import TutorialCard from '@/components/videoaulas/TutorialCard';
 import TutorialCategory from '@/components/videoaulas/TutorialCategory';
@@ -51,6 +52,7 @@ export default function VideoaulasPage() {
   const isPremiumUser = user && (user.nivelacesso === 'premium' || user.nivelacesso === 'admin');
   const [activeTab, setActiveTab] = useState('todos');
   const [searchTerm, setSearchTerm] = useState('');
+  const [infoModalOpen, setInfoModalOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   
   // Capturar eventos de pesquisa enviados pelo cabeçalho
@@ -372,21 +374,17 @@ export default function VideoaulasPage() {
                 )}
                 
                 {/* Botão de Informações - secundário, com ícone de Info */}
-                <Link 
-                  href={tutorialDestaque ? `#categorias` : '#'} 
-                  className="w-full sm:w-auto"
+                <Button 
+                  variant="outline" 
+                  className="bg-gray-700/50 text-white hover:bg-gray-700/80 border border-gray-600 py-3 md:py-5 px-6 md:px-8 text-base md:text-lg font-medium w-full sm:w-auto transition-all duration-300"
+                  disabled={!tutorialDestaque}
+                  onClick={() => setInfoModalOpen(true)}
                 >
-                  <Button 
-                    variant="outline" 
-                    className="bg-gray-700/50 text-white hover:bg-gray-700/80 border border-gray-600 py-3 md:py-5 px-6 md:px-8 text-base md:text-lg font-medium w-full sm:w-auto transition-all duration-300"
-                    disabled={!tutorialDestaque}
-                  >
-                    <div className="flex items-center justify-center">
-                      <Info className="h-5 w-5 md:h-6 md:w-6 mr-2" />
-                      <span>Informações</span>
-                    </div>
-                  </Button>
-                </Link>
+                  <div className="flex items-center justify-center">
+                    <Info className="h-5 w-5 md:h-6 md:w-6 mr-2" />
+                    <span>Informações</span>
+                  </div>
+                </Button>
               </div>
             </div>
           </div>
@@ -779,6 +777,144 @@ export default function VideoaulasPage() {
             )}
           </div>
         </div>
+        
+        {/* Modal de Informações estilo Netflix */}
+        <Dialog open={infoModalOpen} onOpenChange={setInfoModalOpen}>
+          <DialogContent className="sm:max-w-3xl bg-zinc-900 border-zinc-800 text-white p-0 overflow-hidden">
+            <div className="relative">
+              {/* Header com imagem de fundo e gradiente */}
+              <div className="relative h-64 sm:h-80 w-full overflow-hidden">
+                {tutorialDestaque?.thumbnailUrl ? (
+                  <img 
+                    src={tutorialDestaque.thumbnailUrl} 
+                    alt={tutorialDestaque.title || "Thumbnail"} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-r from-blue-800 to-blue-600"></div>
+                )}
+                
+                {/* Gradiente de sobreposição */}
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/70 to-transparent"></div>
+                
+                {/* Botão de fechar */}
+                <DialogClose className="absolute top-4 right-4 bg-zinc-800/60 p-2 rounded-full hover:bg-zinc-700/80 transition-colors">
+                  <X className="h-5 w-5 text-white" />
+                </DialogClose>
+                
+                {/* Título e metadados */}
+                <div className="absolute bottom-6 left-6 right-6">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                    {tutorialDestaque?.title || "Carregando..."}
+                  </h2>
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-sm text-zinc-300">
+                    {tutorialDestaque?.moduloNome && (
+                      <div className="flex items-center">
+                        <Folder className="h-4 w-4 mr-1 text-zinc-400" />
+                        <span>{tutorialDestaque.moduloNome}</span>
+                      </div>
+                    )}
+                    {tutorialDestaque?.durationFormatted && (
+                      <div className="flex items-center">
+                        <Clock className="h-4 w-4 mr-1 text-zinc-400" />
+                        <span>{tutorialDestaque.durationFormatted}</span>
+                      </div>
+                    )}
+                    {tutorialDestaque?.level && (
+                      <div className="flex items-center">
+                        <GraduationCap className="h-4 w-4 mr-1 text-zinc-400" />
+                        <span className="capitalize">{tutorialDestaque.level}</span>
+                      </div>
+                    )}
+                    {tutorialDestaque?.isPremium && (
+                      <Badge className="bg-yellow-500 hover:bg-yellow-600 text-black">Premium</Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Corpo do modal */}
+              <div className="p-6">
+                {/* Descrição */}
+                <div className="mb-8">
+                  <h3 className="text-lg font-medium text-white mb-2">Sobre esta aula</h3>
+                  <p className="text-zinc-300 leading-relaxed">
+                    {tutorialDestaque?.description || 
+                     "Aprenda passo a passo com este tutorial exclusivo do DesignAuto. Esta aula faz parte de um módulo completo para ajudar você a dominar a edição de designs automotivos."}
+                  </p>
+                </div>
+                
+                {/* Botões de ação */}
+                <div className="flex flex-col sm:flex-row gap-4 mt-2">
+                  <Link 
+                    href={user && lastWatchedData?.hasLastWatched && lastWatchedData.lessonId === tutorialDestaque?.id
+                      ? `/videoaulas/${tutorialDestaque.id}` 
+                      : tutorialDestaque ? `/videoaulas/${tutorialDestaque.id}` : '#'
+                    } 
+                    className="w-full sm:w-auto"
+                    onClick={() => setInfoModalOpen(false)}
+                  >
+                    <Button 
+                      className="bg-white hover:bg-white/90 text-black border-0 py-3 px-8 text-base font-semibold w-full sm:w-auto shadow-lg transition-all duration-300"
+                    >
+                      <div className="flex items-center justify-center">
+                        <Play className="h-5 w-5 mr-2 text-black" fill="black" />
+                        <span>{user && lastWatchedData?.hasLastWatched && lastWatchedData.lessonId === tutorialDestaque?.id ? 'Continuar Assistindo' : 'Assistir'}</span>
+                      </div>
+                    </Button>
+                  </Link>
+                  
+                  <DialogClose asChild>
+                    <Button 
+                      variant="outline" 
+                      className="bg-transparent text-white hover:bg-white/10 border border-white/20 py-3 px-8 text-base font-medium w-full sm:w-auto transition-all duration-300"
+                    >
+                      <div className="flex items-center justify-center">
+                        <X className="h-5 w-5 mr-2" />
+                        <span>Fechar</span>
+                      </div>
+                    </Button>
+                  </DialogClose>
+                </div>
+                
+                {/* Recomendações */}
+                <div className="mt-10">
+                  <h3 className="text-lg font-medium text-white mb-3">Do mesmo módulo</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {Array.isArray(tutoriais) && tutoriais
+                      .filter(t => t.moduleId === tutorialDestaque?.moduleId && t.id !== tutorialDestaque?.id)
+                      .slice(0, 3)
+                      .map(tutorial => (
+                        <Link 
+                          key={tutorial.id} 
+                          href={`/videoaulas/${tutorial.id}`}
+                          onClick={() => setInfoModalOpen(false)}
+                          className="flex gap-3 group"
+                        >
+                          <div className="w-20 h-20 rounded overflow-hidden flex-shrink-0">
+                            <img 
+                              src={tutorial.thumbnailUrl || ""}
+                              alt={tutorial.title || ""}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                            />
+                          </div>
+                          <div className="flex flex-col">
+                            <h4 className="text-sm font-medium text-zinc-200 group-hover:text-white transition-colors">
+                              {tutorial.title}
+                            </h4>
+                            <div className="flex items-center text-xs text-zinc-400 mt-1">
+                              <Clock className="h-3 w-3 mr-1" />
+                              <span>{tutorial.durationFormatted}</span>
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </>
   );
