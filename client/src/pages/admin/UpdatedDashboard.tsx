@@ -2901,16 +2901,38 @@ const AdminDashboard = () => {
                                 const selectedCourse = courses.find((course) => course.id.toString() === value);
                                 setSelectedCourseForSettings(selectedCourse);
                                 
-                                // Se for o curso "Tutoriais Design Auto", sincroniza com o banner (apenas localmente)
-                                if (selectedCourse?.title === "Tutoriais Design Auto" || selectedCourse?.id === 2) {
+                                if (selectedCourse?.id) {
+                                  // Para qualquer curso selecionado, sincronizar as informações
                                   if (selectedCourse.thumbnailUrl) {
-                                    // Atualiza apenas o estado local com os dados do curso
+                                    // Atualiza o estado local com os dados do curso e inclui courseId
                                     setCourseSettings({
                                       ...courseSettings,
+                                      courseId: selectedCourse.id,
                                       bannerTitle: selectedCourse.title || courseSettings.bannerTitle,
                                       bannerDescription: selectedCourse.description || courseSettings.bannerDescription,
                                       bannerImageUrl: selectedCourse.thumbnailUrl || courseSettings.bannerImageUrl
                                     });
+                                    
+                                    // Buscar as configurações específicas deste curso (se existirem)
+                                    fetch(`/api/course/settings?courseId=${selectedCourse.id}`)
+                                      .then(response => response.json())
+                                      .then(data => {
+                                        if (data && Object.keys(data).length > 0) {
+                                          // Se existirem configurações específicas, atualiza o estado
+                                          setCourseSettings({
+                                            ...data,
+                                            courseId: selectedCourse.id
+                                          });
+                                          toast({
+                                            title: "Configurações carregadas",
+                                            description: "As configurações específicas deste curso foram carregadas.",
+                                            duration: 3000,
+                                          });
+                                        }
+                                      })
+                                      .catch(error => {
+                                        console.error("Erro ao buscar configurações do curso:", error);
+                                      });
                                     
                                     // Notifica o usuário que as alterações precisam ser salvas
                                     toast({
@@ -3211,7 +3233,15 @@ const AdminDashboard = () => {
                           <div className="flex justify-end mt-6">
                             <Button 
                               onClick={() => {
-                                updateCourseSettingsMutation.mutate(courseSettings, {
+                                // Garante que o courseId está incluído se um curso estiver selecionado
+                                const settingsToSave = {
+                                  ...courseSettings,
+                                  courseId: selectedCourseForSettings?.id || undefined
+                                };
+                                
+                                console.log("Enviando configurações com courseId:", settingsToSave);
+                                
+                                updateCourseSettingsMutation.mutate(settingsToSave, {
                                   onSuccess: () => {
                                     // Invalidar todos os caches relacionados com as configurações de cursos
                                     queryClient.invalidateQueries({ queryKey: ['/api/course/settings'] });
@@ -3224,7 +3254,7 @@ const AdminDashboard = () => {
                                     
                                     toast({
                                       title: "Configurações salvas",
-                                      description: "Todas as configurações foram salvas com sucesso",
+                                      description: `As configurações${selectedCourseForSettings ? ` do curso '${selectedCourseForSettings.title}'` : ''} foram salvas com sucesso`,
                                       duration: 3000,
                                     });
                                   },
