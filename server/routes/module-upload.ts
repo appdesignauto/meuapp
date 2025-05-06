@@ -50,10 +50,11 @@ async function optimizeImage(buffer: Buffer): Promise<Buffer> {
 // Garante que o bucket do módulo exista
 async function ensureBucket() {
   try {
-    await supabaseStorage.createBucketIfNotExists('module-thumbnails');
+    // O método initBucket() do SupabaseStorageService já tenta criar buckets necessários
+    await supabaseStorage.initBucket();
     return true;
   } catch (error) {
-    console.error('Erro ao criar bucket:', error);
+    console.error('Erro ao inicializar buckets:', error);
     return false;
   }
 }
@@ -98,16 +99,28 @@ router.post('/module-thumbnail', upload.single('file'), async (req: Request, res
     // Tenta fazer upload para o Supabase
     let fileUrl = '';
     try {
-      // Upload para o Supabase Storage
-      const result = await supabaseStorage.uploadFile({
-        bucket: 'module-thumbnails',
-        path: filePath,
-        file: optimizedBuffer,
-        contentType: 'image/webp'
-      });
+      // Cria um objeto multer-like para compatibilidade com o método uploadImage
+      const multerCompatFile = {
+        buffer: optimizedBuffer,
+        originalname: uniqueFileName,
+        mimetype: 'image/webp',
+        size: optimizedBuffer.length
+      };
+
+      // Usa o método uploadImage do SupabaseStorageService
+      const result = await supabaseStorage.uploadImage(
+        multerCompatFile,
+        {
+          width: 800,  // Largura máxima para thumbnails de módulos
+          quality: 85, // Qualidade da imagem
+          format: 'webp' // Formato WebP
+        },
+        'module-thumbnails', // Pasta/bucket para os thumbnails
+        null // Sem designer ID específico
+      );
       
-      if (result.success && result.url) {
-        fileUrl = result.url;
+      if (result && result.imageUrl) {
+        fileUrl = result.imageUrl;
       } else {
         throw new Error('Falha no upload para o Supabase Storage');
       }
