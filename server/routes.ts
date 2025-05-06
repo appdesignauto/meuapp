@@ -4498,8 +4498,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         routes: {
           adminConfig: '/api/course/settings',
           publicConfig: '/api/courses/settings',
+          videoaulasConfig: '/api/courses/settings',
+          adminCourseRouter: '/api/course',
+          publicCourseRouter: '/api/courses',
           routeConflicts: true,
-          recommendedFix: 'Verificar e resolver conflitos de rotas no arquivo server/routes.ts'
+          recommendedFix: 'Verificar e resolver conflitos de rotas no arquivo server/routes.ts, garantindo que não haja sobreposição'
         },
         routesConfig: {
           courseRouter: {
@@ -4508,73 +4511,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           },
           coursesAdapterRouter: {
             path: '/api/courses',
-            description: 'Adaptador para manter compatibilidade com rotas antigas'
+            description: 'Adaptador para manter compatibilidade com rotas antigas usadas pela página de videoaulas'
           }
-        }
-      });
-    
-      
-      // Buscar as configurações diretamente do banco de dados
-      const configQuery = `
-        SELECT 
-          id, 
-          "bannerTitle",
-          "bannerDescription", 
-          "bannerImageUrl",
-          "welcomeMessage",
-          "showModuleNumbers",
-          "useCustomPlayerColors",
-          "enableComments",
-          "allowNonPremiumEnrollment",
-          "createdAt",
-          "updatedAt",
-          "updatedBy"
-        FROM 
-          "courseSettings" 
-        WHERE 
-          id = 1
-        LIMIT 1
-      `;
-      
-      const configResult = await pool.query(configQuery);
-      const settings = configResult.rows && configResult.rows.length > 0 ? configResult.rows[0] : null;
-      
-      // Buscar informações do curso principal 
-      const courseQuery = `
-        SELECT 
-          c.id, 
-          c.title, 
-          c.description, 
-          c."featuredImage", 
-          c.level, 
-          c.status, 
-          c."isPublished", 
-          c."isPremium",
-          c."createdBy",
-          c."createdAt",
-          c."updatedAt"
-        FROM 
-          courses c
-        WHERE 
-          c.id = 2
-        LIMIT 1
-      `;
-      
-      const courseResult = await pool.query(courseQuery);
-      const course = courseResult.rows && courseResult.rows.length > 0 ? courseResult.rows[0] : null;
-      
-      // Retornar os dados de diagnóstico
-      return res.json({
-        message: 'Diagnóstico das configurações de cursos',
-        timestamp: new Date().toISOString(),
-        settings,
-        course,
-        routes: {
-          courseSettings: '/api/course/settings',
-          coursesAdapter: '/api/courses',
-          courseDebug: '/api/course-debug',
-          thisRoute: '/api/course-settings-debug'
-        }
+        },
+        possibleIssues: [
+          'Conflitos de rotas entre /api/course/settings e /api/courses/settings',
+          'Múltiplas definições da mesma rota em rotas.ts',
+          'Problemas de invalidação do cache do React Query',
+          'Diferenças entre as estruturas de dados esperadas pelos componentes admin e públicos'
+        ]
       });
     } catch (error) {
       console.error('[GET /api/course-settings-debug] Erro:', error);
