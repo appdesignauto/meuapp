@@ -357,43 +357,7 @@ router.delete('/lessons/:id', async (req, res) => {
 
 // ENDPOINTS PARA CONFIGURAÇÕES DOS CURSOS
 
-// Buscar configurações dos cursos
-router.get('/settings', async (req, res) => {
-  try {
-    console.log('[GET /course/settings] Buscando configurações de cursos');
-    
-    // Buscar as configurações ou criar registros padrão se não existirem
-    const settings = await db.query.courseSettings.findFirst({
-      where: eq(courseSettings.id, 1) // Assumindo que há apenas um registro de configurações
-    });
-    
-    if (!settings) {
-      console.log('[GET /course/settings] Configurações não encontradas, criando padrão...');
-      
-      // Criar configurações padrão
-      const [newSettings] = await db.insert(courseSettings)
-        .values({
-          bannerTitle: 'DesignAuto Videoaulas',
-          bannerDescription: 'A formação completa para você criar designs profissionais para seu negócio automotivo',
-          bannerImageUrl: 'https://images.unsplash.com/photo-1617651823081-270acchia626?q=80&w=1970&auto=format&fit=crop',
-          welcomeMessage: 'Bem-vindo aos nossos cursos! Aprenda com os melhores profissionais.',
-          showModuleNumbers: true,
-          useCustomPlayerColors: false,
-          enableComments: true,
-          allowNonPremiumEnrollment: false,
-          updatedBy: req.user?.id
-        })
-        .returning();
-      
-      return res.json(newSettings);
-    }
-    
-    return res.json(settings);
-  } catch (error) {
-    console.error('[GET /course/settings] Erro ao buscar configurações:', error);
-    return res.status(500).json({ message: 'Erro ao buscar configurações', error: String(error) });
-  }
-});
+// Observação: Implementação anterior removida - usando apenas a versão melhorada abaixo
 
 // Atualizar configurações dos cursos
 router.put('/settings', async (req, res) => {
