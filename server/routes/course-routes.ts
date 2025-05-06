@@ -355,9 +355,7 @@ router.delete('/lessons/:id', async (req, res) => {
   }
 });
 
-// ENDPOINTS PARA CONFIGURAÇÕES DOS CURSOS
-
-// Observação: Implementação anterior removida - usando apenas a versão melhorada abaixo
+// ENDPOINTS PARA CONFIGURAÇÕES DOS CURSOS - Segunda implementação removida
 
 // Atualizar configurações dos cursos
 router.put('/settings', async (req, res) => {
@@ -830,9 +828,8 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// ENDPOINTS PARA CONFIGURAÇÕES DOS CURSOS
+// ENDPOINTS PARA CONFIGURAÇÕES DOS CURSOS - IMPLEMENTAÇÃO DA ROTA GET
 
-// Buscar configurações dos cursos - Versão MELHORADA
 router.get('/settings', async (req, res) => {
   try {
     console.log('[GET /course/settings] VERSÃO CORRIGIDA: Buscando configurações de cursos');
