@@ -98,10 +98,10 @@ export function Popup({
           animClass = 'animate-slide-in-bounce';
           break;
         case 'zoom':
-          animClass = 'animate-zoom-in-bounce';
+          animClass = 'animate-zoom-in-bounce animate-popupEntrance';
           break;
         default:
-          animClass = 'animate-fade-in';
+          animClass = 'animate-popupEntrance';
       }
       
       setAnimationClass(animClass);
@@ -312,7 +312,7 @@ export function Popup({
                   <div className="flex justify-center mt-6">
                     <button
                       onClick={handleButtonClick}
-                      className="px-8 py-4 text-lg font-bold transition-all duration-300 hover:brightness-110 hover:scale-105 flex items-center justify-center gap-2 shadow-lg"
+                      className="px-8 py-4 text-lg font-bold transition-all duration-300 hover:brightness-110 hover:scale-105 flex items-center justify-center gap-2 shadow-lg animate-pulse-glow"
                       style={{ 
                         backgroundColor: buttonColor, 
                         color: buttonTextColor,
@@ -323,7 +323,7 @@ export function Popup({
                       }}
                     >
                       {buttonText}
-                      <ChevronRight size={20} />
+                      <ArrowRight size={20} />
                     </button>
                   </div>
                 )}
