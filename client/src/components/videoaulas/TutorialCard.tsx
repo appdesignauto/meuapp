@@ -264,26 +264,14 @@ const TutorialCard: React.FC<TutorialCardProps> = ({
           )}
         </div>
         
-        {/* Título com destaque de pesquisa e avaliação */}
-        <div className="flex items-center justify-between gap-2 mb-1">
-          <h3 className="text-white font-bold text-base line-clamp-1">
-            {searchTerm ? (
-              <HighlightText text={actualTitle} searchTerm={searchTerm} />
-            ) : (
-              actualTitle
-            )}
-          </h3>
-          {/* Adicionando a avaliação ao lado do título com CourseRating */}
-          {actualId && (
-            <CourseRating 
-              lessonId={actualId} 
-              showCount={false}
-              interactive={false}
-              size="sm"
-              className="text-yellow-300"
-            />
+        {/* Título com destaque de pesquisa */}
+        <h3 className="text-white font-bold text-base line-clamp-1 mb-1">
+          {searchTerm ? (
+            <HighlightText text={actualTitle} searchTerm={searchTerm} />
+          ) : (
+            actualTitle
           )}
-        </div>
+        </h3>
         
         {/* Detalhes quando hover */}
         {isHovered && (
