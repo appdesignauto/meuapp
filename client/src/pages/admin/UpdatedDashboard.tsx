@@ -98,6 +98,7 @@ import CategoriesList from '@/components/admin/CategoriesList';
 import UserManagement from '@/components/admin/UserManagement';
 import SiteSettings from '@/components/admin/SiteSettings';
 import FormatsList from '@/components/admin/FormatsList';
+import CourseStatisticsPanel from '@/components/admin/CourseStatisticsPanel';
 import FileTypesList from '@/components/admin/FileTypesList';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from "@/lib/queryClient";

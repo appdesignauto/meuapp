@@ -427,6 +427,217 @@ export const getLastWatchedLesson = async (req: Request, res: Response) => {
   }
 };
 
+// Obter estatísticas gerais dos cursos para o painel administrativo
+export const getCoursesStatistics = async (req: Request, res: Response) => {
+  try {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Não autenticado' });
+    }
+    
+    const user = req.user as Express.User;
+    
+    // Verificar se o usuário é administrador
+    if (user.role !== 'admin') {
+      return res.status(403).json({ message: 'Acesso negado' });
+    }
+    
+    // Total de visualizações de todas as aulas
+    const totalViewsResult = await db.execute(
+      sql`SELECT SUM("viewCount") AS "totalViews" FROM "courseLessons"`
+    );
+    const totalViews = parseInt(totalViewsResult.rows[0]?.totalViews) || 0;
+    
+    // Total de usuários que assistiram pelo menos uma aula
+    const activeUsersResult = await db.execute(
+      sql`SELECT COUNT(DISTINCT "userId") AS "activeUsers" FROM "lessonViews"`
+    );
+    const activeUsers = parseInt(activeUsersResult.rows[0]?.activeUsers) || 0;
+    
+    // Total de aulas completadas
+    const completedLessonsResult = await db.execute(
+      sql`SELECT COUNT(*) AS "completedLessons" FROM "lessonProgress" WHERE "isCompleted" = true`
+    );
+    const completedLessons = parseInt(completedLessonsResult.rows[0]?.completedLessons) || 0;
+    
+    // Tempo médio de visualização por usuário (em segundos)
+    const averageViewTimeResult = await db.execute(
+      sql`
+      SELECT AVG(cl.duration) AS "averageViewTime"
+      FROM "lessonViews" lv
+      JOIN "courseLessons" cl ON lv."lessonId" = cl.id
+      WHERE cl.duration IS NOT NULL
+      `
+    );
+    const averageViewTime = parseFloat(averageViewTimeResult.rows[0]?.averageViewTime) || 0;
+    
+    // Total de comentários
+    const totalCommentsResult = await db.execute(
+      sql`SELECT COUNT(*) AS "totalComments" FROM "videoComments"`
+    );
+    const totalComments = parseInt(totalCommentsResult.rows[0]?.totalComments) || 0;
+    
+    // Aulas mais populares (top 5)
+    const popularLessonsResult = await db.execute(
+      sql`
+      SELECT 
+        cl.id, 
+        cl.title, 
+        cl."moduleId", 
+        cl."viewCount", 
+        cm.title AS "moduleName"
+      FROM "courseLessons" cl
+      JOIN "courseModules" cm ON cl."moduleId" = cm.id
+      ORDER BY cl."viewCount" DESC
+      LIMIT 5
+      `
+    );
+    
+    // Calcular a taxa de conclusão média dos cursos
+    const completionRateResult = await db.execute(
+      sql`
+      WITH user_progress AS (
+        SELECT 
+          "userId",
+          COUNT(DISTINCT "lessonId") AS "completedLessons"
+        FROM "lessonProgress"
+        WHERE "isCompleted" = true
+        GROUP BY "userId"
+      ),
+      total_lessons AS (
+        SELECT COUNT(*) AS "totalLessons" FROM "courseLessons"
+      )
+      SELECT 
+        AVG((up."completedLessons"::float / tl."totalLessons"::float) * 100) AS "completionRate"
+      FROM user_progress up, total_lessons tl
+      `
+    );
+    const completionRate = parseFloat(completionRateResult.rows[0]?.completionRate) || 0;
+    
+    return res.status(200).json({
+      totalViews,
+      activeUsers,
+      completedLessons,
+      averageViewTime,
+      totalComments,
+      completionRate: Math.round(completionRate * 10) / 10, // Arredondar para 1 casa decimal
+      popularLessons: popularLessonsResult.rows
+    });
+    
+  } catch (error) {
+    console.error('Erro ao obter estatísticas dos cursos:', error);
+    return res.status(500).json({ message: 'Erro ao obter estatísticas dos cursos' });
+  }
+};
+
+// Obter comentários recentes para o painel administrativo
+export const getRecentComments = async (req: Request, res: Response) => {
+  try {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Não autenticado' });
+    }
+    
+    const user = req.user as Express.User;
+    
+    // Verificar se o usuário é administrador
+    if (user.role !== 'admin') {
+      return res.status(403).json({ message: 'Acesso negado' });
+    }
+    
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+    
+    // Buscar comentários recentes com informações do usuário e da aula
+    const commentsResult = await db.execute(
+      sql`
+      SELECT 
+        vc.id,
+        vc.content,
+        vc."createdAt",
+        vc."userId",
+        vc."lessonId",
+        u.username,
+        u.name,
+        u."profileimageurl" AS "profileImageUrl",
+        cl.title AS "lessonTitle",
+        cm.title AS "moduleName"
+      FROM "videoComments" vc
+      JOIN users u ON vc."userId" = u.id
+      JOIN "courseLessons" cl ON vc."lessonId" = cl.id
+      JOIN "courseModules" cm ON cl."moduleId" = cm.id
+      ORDER BY vc."createdAt" DESC
+      LIMIT ${limit}
+      `
+    );
+    
+    return res.status(200).json(commentsResult.rows);
+    
+  } catch (error) {
+    console.error('Erro ao obter comentários recentes:', error);
+    return res.status(500).json({ message: 'Erro ao obter comentários recentes' });
+  }
+};
+
+// Obter as aulas mais assistidas agrupadas por módulo
+export const getMostWatchedLessons = async (req: Request, res: Response) => {
+  try {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Não autenticado' });
+    }
+    
+    const user = req.user as Express.User;
+    
+    // Verificar se o usuário é administrador
+    if (user.role !== 'admin') {
+      return res.status(403).json({ message: 'Acesso negado' });
+    }
+    
+    // Buscar estatísticas de visualização agrupadas por módulo
+    const moduleStatsResult = await db.execute(
+      sql`
+      SELECT 
+        cm.id AS "moduleId",
+        cm.title AS "moduleName",
+        COUNT(cl.id) AS "lessonCount",
+        SUM(cl."viewCount") AS "totalViews",
+        AVG(cl."viewCount") AS "averageViews"
+      FROM "courseModules" cm
+      JOIN "courseLessons" cl ON cl."moduleId" = cm.id
+      GROUP BY cm.id, cm.title
+      ORDER BY "totalViews" DESC
+      `
+    );
+    
+    // Para cada módulo, buscar suas 3 aulas mais assistidas
+    const moduleWithTopLessons = await Promise.all(
+      moduleStatsResult.rows.map(async (module) => {
+        const topLessonsResult = await db.execute(
+          sql`
+          SELECT 
+            cl.id,
+            cl.title,
+            cl."viewCount",
+            cl.duration
+          FROM "courseLessons" cl
+          WHERE cl."moduleId" = ${module.moduleId}
+          ORDER BY cl."viewCount" DESC
+          LIMIT 3
+          `
+        );
+        
+        return {
+          ...module,
+          topLessons: topLessonsResult.rows
+        };
+      })
+    );
+    
+    return res.status(200).json(moduleWithTopLessons);
+    
+  } catch (error) {
+    console.error('Erro ao obter aulas mais assistidas por módulo:', error);
+    return res.status(500).json({ message: 'Erro ao obter aulas mais assistidas por módulo' });
+  }
+};
+
 // Obter histórico de aulas assistidas pelo usuário (para a seção "Continuar assistindo")
 export const getWatchHistory = async (req: Request, res: Response) => {
   try {
