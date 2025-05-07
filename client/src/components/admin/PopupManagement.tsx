@@ -588,16 +588,15 @@ export default function PopupManagement() {
                           )}
                         </div>
                         {formValues.imageUrl && !imagePreview && (
-                          <div className="text-sm flex items-center gap-2">
-                            <span className="text-muted-foreground">Imagem atual:</span>
-                            <a 
-                              href={formValues.imageUrl} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-primary underline"
-                            >
-                              Ver imagem
-                            </a>
+                          <div className="mt-2">
+                            <p className="text-sm text-muted-foreground mb-2">Imagem atual:</p>
+                            <div className="border rounded-md p-2 max-h-48 overflow-hidden">
+                              <img 
+                                src={formValues.imageUrl} 
+                                alt="Imagem atual do popup" 
+                                className="object-contain w-full max-h-44" 
+                              />
+                            </div>
                           </div>
                         )}
                       </div>
@@ -834,7 +833,7 @@ export default function PopupManagement() {
                             <PopoverContent className="w-auto p-0">
                               <CalendarComponent
                                 mode="single"
-                                selected={formValues.startDate || undefined}
+                                selected={formValues.startDate || null}
                                 onSelect={(date) => handleDateChange('startDate', date)}
                                 locale={ptBR}
                               />
@@ -861,7 +860,7 @@ export default function PopupManagement() {
                             <PopoverContent className="w-auto p-0">
                               <CalendarComponent
                                 mode="single"
-                                selected={formValues.endDate || undefined}
+                                selected={formValues.endDate || null}
                                 onSelect={(date) => handleDateChange('endDate', date)}
                                 locale={ptBR}
                                 disabled={(date) => 
