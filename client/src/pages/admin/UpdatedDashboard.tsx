@@ -98,6 +98,7 @@ import ArtsList from '@/components/admin/ArtsList';
 import CategoriesList from '@/components/admin/CategoriesList';
 import UserManagement from '@/components/admin/UserManagement';
 import SiteSettings from '@/components/admin/SiteSettings';
+import CommentsManagement from '@/components/admin/CommentsManagement';
 import FormatsList from '@/components/admin/FormatsList';
 import CourseStatisticsPanel from '@/components/admin/CourseStatisticsPanel';
 import FileTypesList from '@/components/admin/FileTypesList';
