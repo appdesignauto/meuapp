@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'wouter';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Heart, MessageSquare, Share2, ArrowLeft, Flag, MoreHorizontal, Send, Trash2 } from 'lucide-react';
+import { Heart, MessageSquare, Share2, ArrowLeft, Flag, MoreHorizontal, Send, Trash2, ExternalLink } from 'lucide-react';
 
 import TopBar from '@/components/TopBar';
 import LoadingScreen from '@/components/LoadingScreen';
@@ -46,6 +46,7 @@ interface CommunityPost {
   title: string;
   content: string;
   imageUrl: string;
+  editLink?: string | null;
   createdAt: string;
   likesCount: number;
   commentsCount: number;
