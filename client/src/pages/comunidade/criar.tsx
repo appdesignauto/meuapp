@@ -33,6 +33,10 @@ const formSchema = z.object({
   content: z.string()
     .min(10, 'A descrição deve ter pelo menos 10 caracteres')
     .max(2000, 'A descrição não pode ter mais de 2000 caracteres'),
+  editLink: z.string()
+    .url('Digite uma URL válida')
+    .optional()
+    .or(z.literal('')),
   image: z.instanceof(File)
     .refine(file => file.size <= 5 * 1024 * 1024, 'O arquivo deve ter no máximo 5MB')
     .refine(
@@ -61,6 +65,7 @@ const CreatePostPage: React.FC = () => {
     defaultValues: {
       title: '',
       content: '',
+      editLink: '',
     },
   });
   
@@ -71,6 +76,11 @@ const CreatePostPage: React.FC = () => {
       formData.append('title', data.title);
       formData.append('content', data.content);
       formData.append('image', data.image);
+      
+      // Adicionar o link de edição se existir
+      if (data.editLink) {
+        formData.append('editLink', data.editLink);
+      }
       
       const response = await fetch('/api/community/posts', {
         method: 'POST',
@@ -219,6 +229,27 @@ const CreatePostPage: React.FC = () => {
                         />
                       </FormControl>
                       <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Campo de link de edição */}
+                <FormField
+                  control={form.control}
+                  name="editLink"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Link de edição (opcional)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Link do Canva ou Google Slides para edição do design" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                      <p className="text-xs text-zinc-500 mt-1">
+                        Cole aqui o link do Canva, Google Slides ou outra ferramenta para permitir que outras pessoas editem seu design.
+                      </p>
                     </FormItem>
                   )}
                 />

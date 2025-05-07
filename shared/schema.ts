@@ -271,10 +271,11 @@ export const communityPosts = pgTable("communityPosts", {
   title: text("title").notNull(),
   content: text("content").notNull(),
   imageUrl: text("imageUrl").notNull(),
+  editLink: text("editLink"), // Link para o Canva ou Google Slides para edição
   status: text("status").notNull().default("pending"), // pending, approved, rejected
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
-  views: integer("views").default(0).notNull(),
+  viewCount: integer("viewCount").default(0).notNull(), // Renomeado de views para viewCount para consistência
   featuredUntil: timestamp("featuredUntil"),
   isWeeklyFeatured: boolean("isWeeklyFeatured").default(false).notNull(),
 });
@@ -283,7 +284,7 @@ export const insertCommunityPostSchema = createInsertSchema(communityPosts).omit
   id: true,
   createdAt: true,
   updatedAt: true,
-  views: true,
+  viewCount: true,
   featuredUntil: true,
   isWeeklyFeatured: true,
 });
