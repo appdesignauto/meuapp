@@ -102,6 +102,7 @@ import CommentsManagement from '@/components/admin/CommentsManagement';
 import FormatsList from '@/components/admin/FormatsList';
 import CourseStatisticsPanel from '@/components/admin/CourseStatisticsPanel';
 import FileTypesList from '@/components/admin/FileTypesList';
+import { PopupManagement } from '@/components/admin/PopupManagement';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from "@/lib/queryClient";
 
