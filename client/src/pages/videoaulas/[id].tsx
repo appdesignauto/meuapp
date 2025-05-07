@@ -1084,119 +1084,114 @@ const VideoLessonPage: React.FC = () => {
                 </div>
               </div>
               
-              {/* Tutoriais relacionados - estilo minimalista */}
+              {/* Navegação de módulos dropdown moderno */}
               <div className="bg-white rounded-lg border border-blue-100 p-3 sm:p-5 shadow-sm">
                 <h3 className="text-gray-800 font-bold text-base sm:text-lg mb-3 sm:mb-4 flex items-center">
-                  <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2 text-blue-600" />
-                  <span>Tutoriais Relacionados</span>
+                  <Layers className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2 text-blue-600" />
+                  <span>Módulos do Curso</span>
                 </h3>
-                
-                {/* Mesma série */}
-                <div className="mb-3 sm:mb-4">
-                  <h4 className="text-xs sm:text-sm font-medium text-gray-500 mb-2 sm:mb-3 flex items-center">
-                    <PlayCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5 text-blue-500" />
-                    <span>Mesma série</span>
-                  </h4>
-                  <div className="space-y-2 sm:space-y-2.5">
-                    {tutoriaisRelacionados.slice(0, 2).map((t) => (
-                      <Link key={t.id} href={`/videoaulas/${t.id}`}>
-                        <div className="group flex items-center gap-2 sm:gap-3 p-1.5 sm:p-2 hover:bg-blue-50 rounded-md transition-colors cursor-pointer">
-                          {/* Thumbnail pequena melhorada */}
-                          <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 rounded-md overflow-hidden shadow-sm">
-                            <img 
-                              src={t.thumbnailUrl} 
-                              alt={t.title}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            />
-                            
-                            {/* Indicador de Play hover */}
-                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Play className="h-4 w-4 sm:h-5 sm:w-5 text-white" fill="white" />
+
+                <div className="space-y-3 sm:space-y-4">
+                  {modulosData.map((modulo) => {
+                    const moduleLessons = lessonsData?.filter(l => l.moduleId === modulo.id) || [];
+                    const watchedCount = moduleLessons.filter(l => watchedLessons.includes(l.id)).length;
+                    const progressPercent = moduleLessons.length > 0 
+                      ? (watchedCount / moduleLessons.length) * 100 
+                      : 0;
+                    
+                    // Estado de expansão para este módulo específico
+                    const isExpanded = expandedModules.includes(modulo.id);
+                    
+                    return (
+                      <div key={modulo.id} className="border border-blue-100 rounded-md overflow-hidden shadow-sm">
+                        {/* Cabeçalho do módulo (clicável) */}
+                        <button 
+                          className="w-full flex justify-between items-center px-3 py-2.5 sm:px-4 sm:py-3 bg-gradient-to-r from-blue-50 to-white hover:from-blue-100 hover:to-blue-50 transition-all"
+                          onClick={() => toggleModuleExpansion(modulo.id)}
+                        >
+                          <div className="flex items-center gap-2 text-left">
+                            <div className="bg-blue-500 text-white w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center flex-shrink-0">
+                              <span className="text-xs sm:text-sm font-medium">{modulo.id}</span>
                             </div>
-                            
-                            {/* Indicadores de status */}
-                            {t.isWatched && (
-                              <div className="absolute bottom-1 right-1 bg-green-500 h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-full border border-white flex items-center justify-center">
-                                <CheckCircle2 className="h-1.5 w-1.5 sm:h-2 sm:w-2 text-white" />
-                              </div>
-                            )}
-                            {t.isPremium && !t.isWatched && (
-                              <div className="absolute bottom-1 right-1 bg-yellow-500 h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-full border border-white flex items-center justify-center">
-                                <Lock className="h-1.5 w-1.5 sm:h-2 sm:w-2 text-white" />
-                              </div>
-                            )}
-                          </div>
-                          
-                          {/* Informações */}
-                          <div className="min-w-0 flex-1">
-                            <h4 className="text-gray-800 text-xs sm:text-sm font-medium group-hover:text-blue-700 transition-colors line-clamp-2">
-                              {t.title}
-                            </h4>
-                            <div className="flex items-center gap-1.5 sm:gap-2 mt-1">
-                              <span className="text-gray-500 text-[10px] sm:text-xs flex items-center">
-                                <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1 inline-block" />
-                                {t.duration}
-                              </span>
+                            <div>
+                              <h4 className="text-gray-800 text-xs sm:text-sm font-medium">{modulo.title}</h4>
+                              <p className="text-gray-500 text-[10px] sm:text-xs mt-0.5">
+                                {watchedCount}/{moduleLessons.length} aulas • {Math.round(progressPercent)}% concluído
+                              </p>
                             </div>
                           </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs bg-blue-50 border-blue-200 text-blue-700">
+                              {modulo.level || 'Iniciante'}
+                            </Badge>
+                            <ChevronDown className={`h-4 w-4 sm:h-5 sm:w-5 text-blue-600 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                          </div>
+                        </button>
+                        
+                        {/* Barra de progresso */}
+                        <div className="w-full h-1 bg-gray-100">
+                          <div 
+                            className="h-full bg-blue-600 transition-all duration-300" 
+                            style={{ width: `${progressPercent}%` }}
+                          ></div>
                         </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-                
-                {/* Recomendados para você */}
-                <div className="pt-2 sm:pt-3 border-t border-blue-100">
-                  <h4 className="text-xs sm:text-sm font-medium text-gray-500 mb-2 sm:mb-3 flex items-center">
-                    <ThumbsUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5 text-blue-500" />
-                    <span>Recomendados para você</span>
-                  </h4>
-                  <div className="space-y-2 sm:space-y-2.5">
-                    {tutoriaisRelacionados.slice(2, 5).map((t) => (
-                      <Link key={t.id} href={`/videoaulas/${t.id}`}>
-                        <div className="group flex items-center gap-2 sm:gap-3 p-1.5 sm:p-2 hover:bg-blue-50 rounded-md transition-colors cursor-pointer">
-                          {/* Thumbnail pequena */}
-                          <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 rounded-md overflow-hidden shadow-sm">
-                            <img 
-                              src={t.thumbnailUrl} 
-                              alt={t.title}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            />
-                            
-                            {/* Indicador de Play hover */}
-                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Play className="h-4 w-4 sm:h-5 sm:w-5 text-white" fill="white" />
-                            </div>
-                            
-                            {/* Indicadores de status */}
-                            {t.isWatched && (
-                              <div className="absolute bottom-1 right-1 bg-green-500 h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-full border border-white flex items-center justify-center">
-                                <CheckCircle2 className="h-1.5 w-1.5 sm:h-2 sm:w-2 text-white" />
-                              </div>
-                            )}
-                            {t.isPremium && !t.isWatched && (
-                              <div className="absolute bottom-1 right-1 bg-yellow-500 h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-full border border-white flex items-center justify-center">
-                                <Lock className="h-1.5 w-1.5 sm:h-2 sm:w-2 text-white" />
-                              </div>
-                            )}
+                        
+                        {/* Aulas do módulo (expansíveis) */}
+                        {isExpanded && (
+                          <div className="p-2 sm:p-3 space-y-2 sm:space-y-3 divide-y divide-gray-100">
+                            {moduleLessons.map((aula) => (
+                              <Link 
+                                key={aula.id} 
+                                href={`/videoaulas/${aula.id}`}
+                                className={`flex items-center p-2 sm:p-3 rounded-md transition-colors ${
+                                  aula.id === id 
+                                    ? "bg-blue-50" 
+                                    : "hover:bg-gray-50"
+                                }`}
+                              >
+                                <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-md overflow-hidden mr-3 sm:mr-4 relative">
+                                  <img 
+                                    src={aula.thumbnailUrl} 
+                                    alt={aula.title} 
+                                    className="w-full h-full object-cover"
+                                    loading="lazy"
+                                  />
+                                  {watchedLessons.includes(aula.id) && (
+                                    <div className="absolute bottom-0.5 right-0.5 bg-green-600 rounded-full h-4 w-4 flex items-center justify-center">
+                                      <Check className="h-2.5 w-2.5 text-white" />
+                                    </div>
+                                  )}
+                                  {aula.id === id && (
+                                    <div className="absolute inset-0 bg-blue-900/20 flex items-center justify-center">
+                                      <div className="bg-blue-600 h-6 w-6 rounded-full flex items-center justify-center shadow-sm">
+                                        <Play fill="white" className="h-3.5 w-3.5 text-white ml-0.5" />
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h4 className={`${aula.id === id ? "text-blue-700" : "text-gray-800"} text-xs sm:text-sm font-medium line-clamp-2`}>
+                                    {aula.title}
+                                  </h4>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <span className="text-gray-500 text-[10px] sm:text-xs flex items-center">
+                                      <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 inline-block" />
+                                      {aula.durationFormatted || "00:00"}
+                                    </span>
+                                    {aula.isPremium && (
+                                      <span className="bg-amber-100 text-amber-700 text-[8px] sm:text-[10px] px-1 py-0.5 rounded">
+                                        PREMIUM
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </Link>
+                            ))}
                           </div>
-                          
-                          {/* Informações */}
-                          <div className="min-w-0 flex-1">
-                            <h4 className="text-gray-800 text-xs sm:text-sm font-medium group-hover:text-blue-700 transition-colors line-clamp-2">
-                              {t.title}
-                            </h4>
-                            <div className="flex items-center gap-1.5 sm:gap-2 mt-1">
-                              <span className="text-gray-500 text-[10px] sm:text-xs flex items-center">
-                                <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1 inline-block" />
-                                {t.duration}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
                 
                 {/* Navegação de tutoriais (anterior/próximo) */}
