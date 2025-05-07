@@ -104,9 +104,9 @@ const CommentsManagement: React.FC = () => {
     error,
     refetch
   } = useQuery<Comment[]>({
-    queryKey: ['/api/comments/admin', filter],
+    queryKey: ['/api/video-comments/admin', filter],
     queryFn: async () => {
-      const response = await apiRequest('GET', `/api/comments/admin?filter=${filter}`);
+      const response = await apiRequest('GET', `/api/video-comments/admin?filter=${filter}`);
       if (!response.ok) {
         throw new Error('Falha ao carregar comentários');
       }
@@ -127,7 +127,7 @@ const CommentsManagement: React.FC = () => {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/comments/admin'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/video-comments/admin'] });
       toast({
         title: 'Comentário atualizado',
         description: 'A visibilidade do comentário foi alterada com sucesso.',
@@ -155,7 +155,7 @@ const CommentsManagement: React.FC = () => {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/comments/admin'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/video-comments/admin'] });
       toast({
         title: 'Comentário excluído',
         description: 'O comentário foi excluído permanentemente.',
