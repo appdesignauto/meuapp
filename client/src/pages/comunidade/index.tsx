@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
-import { Settings, Plus, Filter, User, Trophy, Clock, Info, Award, Medal, Sparkles, Users, ImageIcon, ExternalLink, FileEdit } from 'lucide-react';
+import { Settings, Plus, Filter, User, Trophy, Clock, Info, Award, Medal, Sparkles, Users, ImageIcon, ExternalLink, FileEdit, RefreshCw, Loader2 } from 'lucide-react';
 
 import TopBar from '@/components/TopBar';
 import FooterMenu from '@/components/FooterMenu';
@@ -214,7 +214,8 @@ const CommunityPage: React.FC = () => {
   // Buscar posts da comunidade
   const { data: posts, isLoading: postsLoading, error: postsError, refetch: refetchPosts } = useQuery({
     queryKey: ['/api/community/posts'],
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
+    refetchInterval: 30000, // Recarrega a cada 30 segundos
   });
   
   // Buscar ranking dos usuários
@@ -364,6 +365,20 @@ const CommunityPage: React.FC = () => {
               
               {/* Tab de Posts */}
               <TabsContent value="posts" className="space-y-0">
+                {/* Botão de atualização para mostrar posts mais recentes */}
+                <div className="mb-3 flex justify-between items-center">
+                  <h2 className="text-lg font-semibold">Posts Recentes</h2>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => refetchPosts()}
+                    className="gap-1"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5" />
+                    Atualizar
+                  </Button>
+                </div>
+                
                 {/* Caixa de criação de post - estilo Facebook (visível apenas em desktop) */}
                 {user && (
                   <Card className="mb-6 overflow-hidden border border-zinc-100 dark:border-zinc-800 hidden md:block">
