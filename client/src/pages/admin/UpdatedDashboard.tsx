@@ -48,6 +48,7 @@ import {
   Eye, 
   RefreshCw,
   ListOrdered,
+  BellRing,
   Palette,
   Save,
   Calendar
@@ -102,7 +103,7 @@ import CommentsManagement from '@/components/admin/CommentsManagement';
 import FormatsList from '@/components/admin/FormatsList';
 import CourseStatisticsPanel from '@/components/admin/CourseStatisticsPanel';
 import FileTypesList from '@/components/admin/FileTypesList';
-import { PopupManagement } from '@/components/admin/PopupManagement';
+import PopupManagement from '@/components/admin/PopupManagement';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from "@/lib/queryClient";
 
@@ -1138,6 +1139,29 @@ const AdminDashboard = () => {
               </CollapsibleContent>
             </Collapsible>
             
+            {/* Marketing */}
+            <Collapsible 
+              className="bg-gray-50 rounded-lg py-1 mb-1"
+              defaultOpen={['popups'].includes(activeTab)}
+            >
+              <CollapsibleTrigger className="flex items-center w-full px-4 py-2 text-gray-700 font-medium">
+                <BellRing className="w-5 h-5 mr-3" />
+                <span>Marketing</span>
+                <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pl-4 space-y-1 pt-1 pb-2">
+                <button
+                  onClick={() => setActiveTab('popups')}
+                  className={`flex items-center w-full px-4 py-2 rounded-md ${
+                    activeTab === 'popups' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <BellRing className="w-4 h-4 mr-3" />
+                  <span>Gerenciar Popups</span>
+                </button>
+              </CollapsibleContent>
+            </Collapsible>
+            
             {/* Configurações */}
             <Collapsible 
               className="bg-gray-50 rounded-lg py-1 mb-1"
@@ -1235,6 +1259,7 @@ const AdminDashboard = () => {
                 {activeTab === 'coursesConfig' && 'Configurações de Cursos'}
                 {activeTab === 'courseStats' && 'Estatísticas dos Cursos'}
                 {activeTab === 'comments' && 'Gerenciamento de Comentários'}
+                {activeTab === 'popups' && 'Gerenciamento de Popups'}
               </h1>
             </div>
             
@@ -1359,6 +1384,19 @@ const AdminDashboard = () => {
               </div>
               
               <CommentsManagement />
+            </TabsContent>
+            
+            <TabsContent value="popups">
+              <div className="mb-6">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-800">Gerenciamento de Popups</h2>
+                    <p className="text-gray-500 mt-1">Crie e gerencie popups promocionais para exibir em seu site</p>
+                  </div>
+                </div>
+              </div>
+              
+              <PopupManagement />
             </TabsContent>
             
             <TabsContent value="courseStats">
