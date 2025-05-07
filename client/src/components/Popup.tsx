@@ -6,8 +6,8 @@ import { apiRequest } from '@/lib/queryClient';
 
 export interface PopupProps {
   id: number;
-  title: string;
-  content: string;
+  title?: string | null;
+  content?: string | null;
   imageUrl?: string | null;
   buttonText?: string | null;
   buttonUrl?: string | null;
