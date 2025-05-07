@@ -1396,6 +1396,30 @@ const AdminDashboard = () => {
                       </div>
                       <div className="font-medium">327</div>
                     </div>
+
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center text-gray-600">
+                        <BookOpen className="w-5 h-5 mr-2 text-green-500" />
+                        <span>Cursos</span>
+                      </div>
+                      <div className="font-medium">{courses?.length || 0}</div>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center text-gray-600">
+                        <Layers className="w-5 h-5 mr-2 text-purple-500" />
+                        <span>Módulos</span>
+                      </div>
+                      <div className="font-medium">{modules?.length || 0}</div>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center text-gray-600">
+                        <FileText className="w-5 h-5 mr-2 text-indigo-500" />
+                        <span>Aulas</span>
+                      </div>
+                      <div className="font-medium">{lessons?.length || 0}</div>
+                    </div>
                   </div>
                 </div>
                 
