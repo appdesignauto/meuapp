@@ -115,6 +115,56 @@ export default {
             opacity: "1",
           },
         },
+        "slide-in-bounce": {
+          "0%": {
+            transform: "translateY(30px)",
+            opacity: "0",
+          },
+          "70%": {
+            transform: "translateY(-5px)",
+            opacity: "1",
+          },
+          "100%": {
+            transform: "translateY(0)",
+            opacity: "1",
+          },
+        },
+        "zoom-in-bounce": {
+          "0%": {
+            transform: "scale(0.9)",
+            opacity: "0",
+          },
+          "70%": {
+            transform: "scale(1.05)",
+            opacity: "1",
+          },
+          "100%": {
+            transform: "scale(1)",
+            opacity: "1",
+          },
+        },
+        "pulse-glow": {
+          "0%, 100%": {
+            boxShadow: "0 0 0 rgba(79, 70, 229, 0)",
+          },
+          "50%": {
+            boxShadow: "0 0 15px rgba(79, 70, 229, 0.5)",
+          },
+        },
+        "popupEntrance": {
+          "0%": {
+            transform: "scale(0.95)",
+            opacity: "0",
+          },
+          "60%": {
+            transform: "scale(1.03)",
+            opacity: "1",
+          },
+          "100%": {
+            transform: "scale(1)",
+            opacity: "1",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",

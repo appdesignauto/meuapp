@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X } from 'lucide-react';
+import { X, ArrowRight, ChevronRight } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
 import { apiRequest } from '@/lib/queryClient';
@@ -83,7 +83,7 @@ export function Popup({
     registerView();
   }, [id, sessionId]);
 
-  // Mostrar popup com delay
+  // Mostrar popup com delay e aplicar animação de entrada
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(true);
@@ -95,10 +95,10 @@ export function Popup({
           animClass = 'animate-fade-in';
           break;
         case 'slide':
-          animClass = 'animate-slide-in';
+          animClass = 'animate-slide-in-bounce';
           break;
         case 'zoom':
-          animClass = 'animate-zoom-in';
+          animClass = 'animate-zoom-in-bounce';
           break;
         default:
           animClass = 'animate-fade-in';
@@ -109,9 +109,6 @@ export function Popup({
     
     return () => clearTimeout(timer);
   }, [delay, animation]);
-
-  // Removido o comportamento de clique fora para fechar o popup
-  // Agora o popup só fecha quando o usuário clicar no X
 
   const handleButtonClick = async () => {
     try {
@@ -176,7 +173,7 @@ export function Popup({
   }
 
   // Definir classes de tamanho - mais adaptáveis
-  let sizeClasses = 'w-[90%] sm:w-auto sm:max-w-2xl';
+  let sizeClasses = 'w-[90%] sm:w-auto sm:max-w-2xl md:max-w-3xl';
   switch (size) {
     case 'small':
       sizeClasses = 'w-[90%] sm:w-auto sm:max-w-lg';
@@ -185,7 +182,7 @@ export function Popup({
       sizeClasses = 'w-[95%] sm:w-auto sm:max-w-4xl';
       break;
     default:
-      sizeClasses = 'w-[90%] sm:w-auto sm:max-w-2xl';
+      sizeClasses = 'w-[90%] sm:w-auto sm:max-w-2xl md:max-w-3xl';
   }
 
   // Determinar se precisamos de classes especiais baseado nas dimensões da imagem
@@ -207,13 +204,14 @@ export function Popup({
   return (
     <div className={positionClasses}>
       {position === 'center' && (
-        <div className="fixed inset-0 bg-black/70" />
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-[2px]" />
       )}
       
       <div
         ref={popupRef}
         className={cn(
-          "rounded-lg shadow-xl border-4 border-white overflow-hidden z-50 flex flex-col",
+          "rounded-lg shadow-2xl border-4 border-white overflow-hidden z-50 flex flex-col",
+          "p-[6px]", // Moldura interna com padding
           sizeClasses,
           animationClass,
           isImageOnly ? "popup-image-only" : "",
@@ -221,114 +219,117 @@ export function Popup({
         )}
         style={{ backgroundColor }}
       >
-        {/* Botão de fechar */}
-        <button 
-          onClick={handleDismiss}
-          className="absolute top-3 right-3 p-2 rounded-full hover:bg-opacity-90 transition-all duration-200 bg-indigo-800 w-10 h-10 flex items-center justify-center z-10"
-          aria-label="Fechar"
-        >
-          <X size={24} color="white" strokeWidth={3} />
-        </button>
-        
-        {/* Conteúdo do popup */}
-        <div className={cn("p-0", !title && !content && !buttonText ? "flex-1" : "")}>
-          {imageUrl && (
-            <div className={cn(
-              "flex justify-center w-full",
-              !title && !content && !buttonText ? "h-full" : ""
-            )}>
-              <img 
-                src={imageUrl} 
-                alt={title || "Popup promocional"} 
-                className={cn(
-                  "w-full h-auto", 
-                  !title && !content && !buttonText ? "object-contain max-h-full" : "object-contain"
-                )}
-                style={{ 
-                  maxHeight: !title && !content && !buttonText 
-                    ? '85vh' 
-                    : size === 'large' ? '80vh' : size === 'small' ? '50vh' : '65vh',
-                  maxWidth: '100%'
-                }}
-                onLoad={(e) => {
-                  // Ajusta o tamanho do popup com base na imagem carregada
-                  const img = e.target as HTMLImageElement;
-                  
-                  // Armazena as dimensões da imagem
-                  setImageDimensions({
-                    width: img.naturalWidth,
-                    height: img.naturalHeight
-                  });
-                  setHasLoaded(true);
-                  
-                  const ratio = img.naturalWidth / img.naturalHeight;
-                  console.log(`Popup imagem carregada - Proporção: ${ratio.toFixed(2)}, Tamanho: ${img.naturalWidth}x${img.naturalHeight}`);
-                  
-                  // Ajustar tamanho do container baseado na imagem
-                  const popupElement = popupRef.current;
-                  if (popupElement && !title && !content && !buttonText) {
-                    // Para popups somente com imagem
-                    if (ratio > 1.8) {
-                      // Imagem panorâmica/paisagem - ajustar largura
-                      popupElement.style.width = 'auto';
-                      popupElement.style.maxWidth = '90vw';
-                      img.classList.replace('object-contain', 'object-scale-down');
-                    } else if (ratio < 0.6) {
-                      // Imagem vertical/retrato - ajustar altura
-                      popupElement.style.height = 'auto';
-                      popupElement.style.maxHeight = '90vh';
-                      img.classList.replace('object-contain', 'object-scale-down');
-                    }
-                  } else {
-                    // Para popups com texto/botão
-                    if (ratio > 2 || ratio < 0.5) {
-                      img.classList.replace('object-contain', 'object-scale-down');
-                    }
-                  }
-                }}
-              />
-            </div>
-          )}
+        <div className="relative w-full h-full rounded-md overflow-hidden flex flex-col">
+          {/* Botão de fechar */}
+          <button 
+            onClick={handleDismiss}
+            className="absolute top-3 right-3 p-2 rounded-full hover:bg-opacity-90 hover:scale-110 transition-all duration-200 bg-indigo-800 w-10 h-10 flex items-center justify-center z-10 shadow-md"
+            aria-label="Fechar"
+          >
+            <X size={24} color="white" strokeWidth={3} />
+          </button>
           
-          {(title || content || buttonText) && (
-            <div className="p-6">
-              {title && (
-                <h2 
-                  className="text-2xl sm:text-3xl font-bold mb-4 text-center" 
-                  style={{ color: textColor }}
-                >
-                  {title}
-                </h2>
-              )}
-              
-              {content && (
-                <div 
-                  className="mb-6 whitespace-pre-wrap text-center text-base sm:text-lg"
-                  style={{ color: textColor }}
-                  dangerouslySetInnerHTML={{ __html: content }}
+          {/* Conteúdo do popup */}
+          <div className={cn("p-0", !title && !content && !buttonText ? "flex-1" : "")}>
+            {imageUrl && (
+              <div className={cn(
+                "flex justify-center w-full",
+                !title && !content && !buttonText ? "h-full" : ""
+              )}>
+                <img 
+                  src={imageUrl} 
+                  alt={title || "Popup promocional"} 
+                  className={cn(
+                    "w-full h-auto", 
+                    !title && !content && !buttonText ? "object-contain max-h-full" : "object-contain"
+                  )}
+                  style={{ 
+                    maxHeight: !title && !content && !buttonText 
+                      ? '85vh' 
+                      : size === 'large' ? '80vh' : size === 'small' ? '50vh' : '65vh',
+                    maxWidth: '100%'
+                  }}
+                  onLoad={(e) => {
+                    // Ajusta o tamanho do popup com base na imagem carregada
+                    const img = e.target as HTMLImageElement;
+                    
+                    // Armazena as dimensões da imagem
+                    setImageDimensions({
+                      width: img.naturalWidth,
+                      height: img.naturalHeight
+                    });
+                    setHasLoaded(true);
+                    
+                    const ratio = img.naturalWidth / img.naturalHeight;
+                    console.log(`Popup imagem carregada - Proporção: ${ratio.toFixed(2)}, Tamanho: ${img.naturalWidth}x${img.naturalHeight}`);
+                    
+                    // Ajustar tamanho do container baseado na imagem
+                    const popupElement = popupRef.current;
+                    if (popupElement && !title && !content && !buttonText) {
+                      // Para popups somente com imagem
+                      if (ratio > 1.8) {
+                        // Imagem panorâmica/paisagem - ajustar largura
+                        popupElement.style.width = 'auto';
+                        popupElement.style.maxWidth = '90vw';
+                        img.classList.replace('object-contain', 'object-scale-down');
+                      } else if (ratio < 0.6) {
+                        // Imagem vertical/retrato - ajustar altura
+                        popupElement.style.height = 'auto';
+                        popupElement.style.maxHeight = '90vh';
+                        img.classList.replace('object-contain', 'object-scale-down');
+                      }
+                    } else {
+                      // Para popups com texto/botão
+                      if (ratio > 2 || ratio < 0.5) {
+                        img.classList.replace('object-contain', 'object-scale-down');
+                      }
+                    }
+                  }}
                 />
-              )}
-              
-              {buttonText && (
-                <div className="flex justify-center mt-6">
-                  <button
-                    onClick={handleButtonClick}
-                    className="px-8 py-4 text-lg font-bold transition-all duration-200 hover:brightness-110 hover:scale-105 animate-pulse-glow"
-                    style={{ 
-                      backgroundColor: buttonColor, 
-                      color: buttonTextColor,
-                      borderRadius: `${buttonRadius}px`,
-                      width: buttonWidth,
-                      border: 'none',
-                      cursor: 'pointer'
-                    }}
+              </div>
+            )}
+            
+            {(title || content || buttonText) && (
+              <div className="p-6 lg:p-8">
+                {title && (
+                  <h2 
+                    className="text-2xl sm:text-3xl font-bold mb-4 text-center" 
+                    style={{ color: textColor }}
                   >
-                    {buttonText}
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+                    {title}
+                  </h2>
+                )}
+                
+                {content && (
+                  <div 
+                    className="mb-6 whitespace-pre-wrap text-center text-base sm:text-lg"
+                    style={{ color: textColor }}
+                    dangerouslySetInnerHTML={{ __html: content }}
+                  />
+                )}
+                
+                {buttonText && (
+                  <div className="flex justify-center mt-6">
+                    <button
+                      onClick={handleButtonClick}
+                      className="px-8 py-4 text-lg font-bold transition-all duration-300 hover:brightness-110 hover:scale-105 flex items-center justify-center gap-2 shadow-lg"
+                      style={{ 
+                        backgroundColor: buttonColor, 
+                        color: buttonTextColor,
+                        borderRadius: `${buttonRadius}px`,
+                        width: buttonWidth,
+                        border: 'none',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {buttonText}
+                      <ChevronRight size={20} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
