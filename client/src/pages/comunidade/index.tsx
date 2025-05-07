@@ -240,10 +240,10 @@ const CommunityPage: React.FC = () => {
           )}
         </div>
         
-        {/* Layout estilo Facebook/Instagram para desktop */}
+        {/* Layout estilo Facebook/Instagram para desktop - com colunas laterais */}
         <div className="flex flex-col md:flex-row gap-6">
           {/* Sidebar esquerda - similar ao Facebook */}
-          <div className="hidden md:block w-full md:w-80 lg:w-96 shrink-0">
+          <div className="hidden md:block w-full md:w-72 lg:w-80 shrink-0">
             <div className="sticky top-20">
               <Card className="overflow-hidden mb-4 border border-zinc-100 dark:border-zinc-800">
                 <CardHeader className="pb-2">
@@ -339,8 +339,8 @@ const CommunityPage: React.FC = () => {
             </div>
           </div>
           
-          {/* Área principal de conteúdo */}
-          <div className="flex-1">
+          {/* Área principal de conteúdo - feed central */}
+          <div className="w-full md:max-w-[550px] lg:max-w-[600px] flex-shrink-0">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid grid-cols-2 mb-6">
                 <TabsTrigger value="posts">
@@ -558,6 +558,198 @@ const CommunityPage: React.FC = () => {
                 <RankingList />
               </TabsContent>
             </Tabs>
+          </div>
+          
+          {/* Coluna Direita - Conteúdo adicional similar ao Facebook/Instagram */}
+          <div className="hidden md:block w-full md:w-72 lg:w-80 shrink-0">
+            <div className="sticky top-20">
+              {/* Card de usuários populares */}
+              <Card className="overflow-hidden mb-4 border border-zinc-100 dark:border-zinc-800">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">Designers em Destaque</CardTitle>
+                  <CardDescription>Criadores populares para seguir</CardDescription>
+                </CardHeader>
+                
+                <CardContent className="p-0">
+                  {/* Lista de designers populares */}
+                  <div className="flex items-center gap-3 p-3 border-b border-zinc-100 dark:border-zinc-800">
+                    <div className="w-10 h-10 relative rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden">
+                      <img 
+                        src="/images/avatars/designer1.jpg" 
+                        alt="Designer" 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = "/images/avatars/placeholder.png";
+                        }}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">Ana Oliveira</p>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                        Designer de Carros
+                      </p>
+                    </div>
+                    <Button size="sm" variant="outline" className="text-xs h-8">
+                      Seguir
+                    </Button>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 p-3 border-b border-zinc-100 dark:border-zinc-800">
+                    <div className="w-10 h-10 relative rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden">
+                      <img 
+                        src="/images/avatars/designer2.jpg" 
+                        alt="Designer" 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = "/images/avatars/placeholder.png";
+                        }}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">Carlos Mendes</p>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                        Especialista em Motos
+                      </p>
+                    </div>
+                    <Button size="sm" variant="outline" className="text-xs h-8">
+                      Seguir
+                    </Button>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 p-3">
+                    <div className="w-10 h-10 relative rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden">
+                      <img 
+                        src="/images/avatars/designer3.jpg" 
+                        alt="Designer" 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = "/images/avatars/placeholder.png";
+                        }}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">Mariana Silva</p>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                        Artes para Concessionárias
+                      </p>
+                    </div>
+                    <Button size="sm" variant="outline" className="text-xs h-8">
+                      Seguir
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* Card de posts em destaque */}
+              <Card className="overflow-hidden mb-4 border border-zinc-100 dark:border-zinc-800">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">Posts Populares</CardTitle>
+                  <CardDescription>Conteúdo mais engajado</CardDescription>
+                </CardHeader>
+                
+                <CardContent className="space-y-4 p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-16 h-16 rounded-md overflow-hidden shrink-0">
+                      <img 
+                        src="/uploads/featured-post-1.jpg" 
+                        alt="Post em destaque" 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = "https://placehold.co/200x200/gray/white?text=DesignAuto";
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm line-clamp-2">Banner Promocional para Loja de Peças</p>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                        248 curtidas • 37 comentários
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="w-16 h-16 rounded-md overflow-hidden shrink-0">
+                      <img 
+                        src="/uploads/featured-post-2.jpg" 
+                        alt="Post em destaque" 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = "https://placehold.co/200x200/gray/white?text=DesignAuto";
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm line-clamp-2">Cartaz Promoção de Troca de Óleo</p>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                        156 curtidas • 21 comentários
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="w-16 h-16 rounded-md overflow-hidden shrink-0">
+                      <img 
+                        src="/uploads/featured-post-3.jpg" 
+                        alt="Post em destaque" 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = "https://placehold.co/200x200/gray/white?text=DesignAuto";
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm line-clamp-2">Stories para Lançamento de Novo Modelo</p>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                        183 curtidas • 29 comentários
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* Card de dicas e tutoriais */}
+              <Card className="overflow-hidden border border-zinc-100 dark:border-zinc-800">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">Dicas & Tutoriais</CardTitle>
+                </CardHeader>
+                
+                <CardContent className="space-y-3">
+                  <div className="rounded-md p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800">
+                    <p className="text-sm font-medium text-blue-800 dark:text-blue-300 mb-1">Dica do dia:</p>
+                    <p className="text-xs text-blue-700 dark:text-blue-400">
+                      Use cores contrastantes para destacar as informações principais em seus anúncios.
+                    </p>
+                  </div>
+                  
+                  <p className="text-sm">
+                    Confira nossos recursos para melhorar suas artes:
+                  </p>
+                  
+                  <div className="space-y-2">
+                    <Link href="/videoaulas" className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                      <span className="w-5 h-5 rounded-full flex items-center justify-center bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400">1</span>
+                      <span>Curso de Artes para Instagram</span>
+                    </Link>
+                    
+                    <Link href="/videoaulas" className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                      <span className="w-5 h-5 rounded-full flex items-center justify-center bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400">2</span>
+                      <span>Como criar anúncios atrativos</span>
+                    </Link>
+                    
+                    <Link href="/videoaulas" className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                      <span className="w-5 h-5 rounded-full flex items-center justify-center bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400">3</span>
+                      <span>Edição rápida no Canva</span>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </div>
