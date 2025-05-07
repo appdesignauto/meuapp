@@ -1202,51 +1202,9 @@ const VideoLessonPage: React.FC = () => {
                   })}
                 </div>
                 
-                {/* Navegação de tutoriais (anterior/próximo) */}
+                {/* Espaço adicional no final da seção (substituindo os botões de navegação) */}
                 <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-blue-100">
-                  <div className="flex gap-2 sm:gap-3">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className="flex-1 text-blue-700 border-blue-200 hover:bg-blue-50 shadow-sm text-xs sm:text-sm h-8 sm:h-10"
-                      onClick={() => {
-                        // Navegar para o tutorial anterior com base nos dados da API
-                        const prevLesson = lessonsData?.find(l => l.moduleId === currentLesson?.moduleId && l.id < id);
-                        if (prevLesson) {
-                          navigate(`/videoaulas/${prevLesson.id}`);
-                        }
-                      }}
-                    >
-                      <ChevronLeft className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                      <span className="hidden xs:inline">Tutorial</span> Anterior
-                    </Button>
-                    
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className="flex-1 text-blue-700 border-blue-200 hover:bg-blue-50 shadow-sm text-xs sm:text-sm h-8 sm:h-10"
-                      onClick={() => {
-                        // Navegar para o próximo tutorial com base nos dados da API
-                        const nextLesson = lessonsData?.find(l => l.moduleId === currentLesson?.moduleId && l.id > id);
-                        if (nextLesson) {
-                          navigate(`/videoaulas/${nextLesson.id}`);
-                        }
-                      }}
-                    >
-                      <span className="hidden xs:inline">Próximo</span> Tutorial
-                      <ChevronRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
-                    </Button>
-                  </div>
-                  
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="w-full mt-2 sm:mt-3 text-blue-700 border-blue-200 hover:bg-blue-50 shadow-sm text-xs sm:text-sm h-8 sm:h-10"
-                    onClick={() => navigate("/videoaulas")}
-                  >
-                    Ver todos os tutoriais
-                    <ChevronRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
-                  </Button>
+                  {/* Botões de navegação removidos conforme solicitado */}
                 </div>
               </div>
             </div>
