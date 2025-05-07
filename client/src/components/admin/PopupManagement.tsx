@@ -56,6 +56,8 @@ interface PopupFormValues {
   textColor: string;
   buttonColor: string;
   buttonTextColor: string;
+  buttonRadius?: number;
+  buttonWidth?: string;
   position: 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
   size: 'small' | 'medium' | 'large';
   animation: 'fade' | 'slide' | 'zoom';
@@ -78,6 +80,8 @@ const defaultFormValues: PopupFormValues = {
   textColor: '#000000',
   buttonColor: '#4F46E5',
   buttonTextColor: '#FFFFFF',
+  buttonRadius: 4,
+  buttonWidth: 'auto',
   position: 'center',
   size: 'medium',
   animation: 'fade',
@@ -267,6 +271,8 @@ export default function PopupManagement() {
       textColor: popup.textColor,
       buttonColor: popup.buttonColor,
       buttonTextColor: popup.buttonTextColor,
+      buttonRadius: popup.buttonRadius || 4,
+      buttonWidth: popup.buttonWidth || 'auto',
       position: popup.position,
       size: popup.size,
       animation: popup.animation,
@@ -278,6 +284,10 @@ export default function PopupManagement() {
       pages: popup.pages || [],
       userRoles: popup.userRoles || []
     });
+    
+    // Atualizar os estados locais para sincronizar com o formulário
+    setButtonRadius(popup.buttonRadius || 4);
+    setButtonWidth(popup.buttonWidth || 'auto');
     
     setCurrentPopupId(popup.id);
     setIsEditMode(true);
@@ -352,6 +362,23 @@ export default function PopupManagement() {
 
   const handlePreviewToggle = () => {
     setPreviewOpen(!previewOpen);
+  };
+  
+  const handleRadiusChange = (value: number[]) => {
+    const newRadius = value[0];
+    setButtonRadius(newRadius);
+    setFormValues(prev => ({
+      ...prev,
+      buttonRadius: newRadius
+    }));
+  };
+  
+  const handleWidthChange = (value: string) => {
+    setButtonWidth(value);
+    setFormValues(prev => ({
+      ...prev,
+      buttonWidth: value
+    }));
   };
 
   if (loading && popups.length === 0) {
