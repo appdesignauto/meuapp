@@ -48,6 +48,7 @@ import testCreateGroupRouter from './routes/test-create-group'; // Rota de teste
 import videoaulasRouter from './routes/videoaulas-routes'; // Rotas para as videoaulas
 import courseRouter from './routes/course-routes'; // Rotas para gerenciamento de módulos e aulas
 import coursesRouter from './routes/courses-routes'; // Rotas para gerenciamento de cursos
+import popupRouter from './routes/popup-routes'; // Rotas para gerenciamento de popups promocionais
 import coursesAdapterRouter from './routes/courses-adapter'; // Adaptador para compatibilidade com rotas antigas
 import videoCommentsRouter from './routes/video-comments-routes'; // Rotas para comentários de videoaulas
 import courseRatingsRouter from './routes/course-ratings-routes'; // Rotas para avaliações de cursos
@@ -55,7 +56,6 @@ import lessonThumbnailUploadRouter from './routes/lesson-thumbnail-upload'; // R
 import courseThumbnailUploadRouter from './routes/course-thumbnail-upload'; // Rota para upload de thumbnails de cursos
 import bannerUploadRouter from './routes/banner-upload'; // Rota para upload de banners de
 import moduleUploadRouter from './routes/module-upload'; // Rota para upload de thumbnails de módulos cursos
-import popupRouter from './routes/popup-routes'; // Rotas para popups promocionais
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Rota simples de verificação de saúde

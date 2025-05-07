@@ -1,18 +1,16 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { useToast } from '@/hooks/use-toast';
+import { Button } from './ui/button';
+import { cn } from '@/lib/utils';
 import { apiRequest } from '@/lib/queryClient';
-import { useAuth } from '@/hooks/use-auth';
-import { motion, AnimatePresence } from 'framer-motion';
 
-// Tipos para o popup
-interface PopupProps {
+export interface PopupProps {
+  id: number;
   title: string;
   content: string;
-  imageUrl?: string;
-  buttonText?: string;
-  buttonUrl?: string;
+  imageUrl?: string | null;
+  buttonText?: string | null;
+  buttonUrl?: string | null;
   backgroundColor?: string;
   textColor?: string;
   buttonColor?: string;
@@ -20,13 +18,13 @@ interface PopupProps {
   position?: 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
   size?: 'small' | 'medium' | 'large';
   animation?: 'fade' | 'slide' | 'zoom';
-  sessionId?: string;
-  popupId: number;
+  delay?: number;
   onClose: () => void;
+  sessionId: string;
 }
 
-// Componente de popup
-export const Popup = ({
+export function Popup({
+  id,
   title,
   content,
   imageUrl,
@@ -39,272 +37,271 @@ export const Popup = ({
   position = 'center',
   size = 'medium',
   animation = 'fade',
-  sessionId,
-  popupId,
-  onClose
-}: PopupProps) => {
-  const { toast } = useToast();
-  const { user } = useAuth();
-  const [isVisible, setIsVisible] = useState(true);
+  delay = 2,
+  onClose,
+  sessionId
+}: PopupProps) {
+  const [isVisible, setIsVisible] = useState(false);
+  const [animationClass, setAnimationClass] = useState('opacity-0');
+  const popupRef = useRef<HTMLDivElement>(null);
 
-  // Registrar visualização do popup
+  // Registrar visualização
   useEffect(() => {
     const registerView = async () => {
       try {
         await apiRequest('POST', '/api/popups/view', {
-          popupId,
+          popupId: id,
           sessionId,
           action: 'view'
         });
       } catch (error) {
-        console.error('Erro ao registrar visualização do popup:', error);
+        console.error('Erro ao registrar visualização:', error);
       }
     };
-
-    registerView();
-  }, [popupId, sessionId]);
-
-  // Função para fechar o popup
-  const handleClose = async () => {
-    setIsVisible(false);
     
-    try {
-      await apiRequest('POST', '/api/popups/view', {
-        popupId,
-        sessionId,
-        action: 'dismiss'
-      });
-    } catch (error) {
-      console.error('Erro ao registrar fechamento do popup:', error);
+    registerView();
+  }, [id, sessionId]);
+
+  // Mostrar popup com delay
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsVisible(true);
+      
+      // Aplicar animação de entrada
+      let animClass = '';
+      switch (animation) {
+        case 'fade':
+          animClass = 'animate-fade-in';
+          break;
+        case 'slide':
+          animClass = 'animate-slide-in';
+          break;
+        case 'zoom':
+          animClass = 'animate-zoom-in';
+          break;
+        default:
+          animClass = 'animate-fade-in';
+      }
+      
+      setAnimationClass(animClass);
+    }, delay * 1000);
+    
+    return () => clearTimeout(timer);
+  }, [delay, animation]);
+
+  // Fechar popup quando clicar fora dele
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (popupRef.current && !popupRef.current.contains(event.target as Node)) {
+        handleDismiss();
+      }
+    };
+    
+    if (isVisible) {
+      document.addEventListener('mousedown', handleClickOutside);
     }
     
-    setTimeout(() => {
-      onClose();
-    }, 300); // Esperar a animação terminar
-  };
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isVisible]);
 
-  // Função para clicar no botão
   const handleButtonClick = async () => {
     try {
+      // Registrar clique no botão
       await apiRequest('POST', '/api/popups/view', {
-        popupId,
+        popupId: id,
         sessionId,
         action: 'click'
       });
       
+      // Se tiver URL, abrir em nova aba
       if (buttonUrl) {
         window.open(buttonUrl, '_blank');
       }
       
-      handleClose();
+      // Fechar popup
+      onClose();
     } catch (error) {
-      console.error('Erro ao registrar clique no botão do popup:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível processar sua ação. Tente novamente.',
-        variant: 'destructive'
+      console.error('Erro ao registrar clique:', error);
+      onClose();
+    }
+  };
+
+  const handleDismiss = async () => {
+    try {
+      // Registrar fechamento
+      await apiRequest('POST', '/api/popups/view', {
+        popupId: id,
+        sessionId,
+        action: 'dismiss'
       });
+      
+      // Fechar popup
+      onClose();
+    } catch (error) {
+      console.error('Erro ao registrar fechamento:', error);
+      onClose();
     }
   };
 
-  // Determinar a posição do popup
-  const getPositionClass = () => {
-    switch (position) {
-      case 'top-left':
-        return 'top-4 left-4';
-      case 'top-right':
-        return 'top-4 right-4';
-      case 'bottom-left':
-        return 'bottom-4 left-4';
-      case 'bottom-right':
-        return 'bottom-4 right-4';
-      default:
-        return 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2';
-    }
-  };
+  if (!isVisible) {
+    return null;
+  }
 
-  // Determinar o tamanho do popup
-  const getSizeClass = () => {
-    switch (size) {
-      case 'small':
-        return 'max-w-sm';
-      case 'large':
-        return 'max-w-2xl';
-      default:
-        return 'max-w-md';
-    }
-  };
+  // Definir classes de posição
+  let positionClasses = 'fixed inset-0 flex items-center justify-center z-50';
+  switch (position) {
+    case 'top-left':
+      positionClasses = 'fixed top-4 left-4 z-50';
+      break;
+    case 'top-right':
+      positionClasses = 'fixed top-4 right-4 z-50';
+      break;
+    case 'bottom-left':
+      positionClasses = 'fixed bottom-4 left-4 z-50';
+      break;
+    case 'bottom-right':
+      positionClasses = 'fixed bottom-4 right-4 z-50';
+      break;
+    default:
+      positionClasses = 'fixed inset-0 flex items-center justify-center z-50';
+  }
 
-  // Definir variantes de animação
-  const getAnimationVariants = () => {
-    switch (animation) {
-      case 'slide':
-        return {
-          hidden: { y: 50, opacity: 0 },
-          visible: { y: 0, opacity: 1 },
-          exit: { y: 50, opacity: 0 }
-        };
-      case 'zoom':
-        return {
-          hidden: { scale: 0.8, opacity: 0 },
-          visible: { scale: 1, opacity: 1 },
-          exit: { scale: 0.8, opacity: 0 }
-        };
-      default:
-        return {
-          hidden: { opacity: 0 },
-          visible: { opacity: 1 },
-          exit: { opacity: 0 }
-        };
-    }
-  };
+  // Definir classes de tamanho
+  let sizeClasses = 'w-[90%] sm:w-[500px] md:w-[600px]';
+  switch (size) {
+    case 'small':
+      sizeClasses = 'w-[90%] sm:w-[300px] md:w-[350px]';
+      break;
+    case 'large':
+      sizeClasses = 'w-[95%] sm:w-[700px] md:w-[800px]';
+      break;
+    default:
+      sizeClasses = 'w-[90%] sm:w-[500px] md:w-[600px]';
+  }
 
   return (
-    <AnimatePresence>
-      {isVisible && (
-        <>
-          {/* Overlay para fechar ao clicar fora */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.5 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black z-50"
-            onClick={handleClose}
+    <div className={positionClasses}>
+      {position === 'center' && (
+        <div className="fixed inset-0 bg-black/50" onClick={handleDismiss} />
+      )}
+      
+      <div
+        ref={popupRef}
+        className={cn(
+          "rounded-lg shadow-lg overflow-hidden",
+          sizeClasses,
+          animationClass
+        )}
+        style={{ backgroundColor }}
+      >
+        {/* Botão de fechar */}
+        <button 
+          onClick={handleDismiss}
+          className="absolute top-2 right-2 p-1 rounded-full hover:bg-gray-200 transition-colors duration-200"
+          aria-label="Fechar"
+        >
+          <X size={20} color={textColor} />
+        </button>
+        
+        {/* Conteúdo do popup */}
+        <div className="p-6">
+          {imageUrl && (
+            <div className="mb-4 flex justify-center">
+              <img 
+                src={imageUrl} 
+                alt={title} 
+                className="max-w-full h-auto rounded-md object-cover"
+                style={{ maxHeight: size === 'large' ? '400px' : size === 'small' ? '150px' : '250px' }}
+              />
+            </div>
+          )}
+          
+          <h2 
+            className="text-xl font-bold mb-2" 
+            style={{ color: textColor }}
+          >
+            {title}
+          </h2>
+          
+          <div 
+            className="mb-4 whitespace-pre-wrap"
+            style={{ color: textColor }}
+            dangerouslySetInnerHTML={{ __html: content }}
           />
           
-          {/* Popup */}
-          <motion.div
-            className={`fixed z-50 shadow-lg rounded-lg overflow-hidden ${getPositionClass()} ${getSizeClass()}`}
-            style={{ backgroundColor }}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            variants={getAnimationVariants()}
-            transition={{ duration: 0.3 }}
-          >
-            {/* Botão de fechar */}
-            <button
-              onClick={handleClose}
-              className="absolute top-2 right-2 p-1 rounded-full hover:bg-gray-200/20 transition-colors"
-              aria-label="Fechar"
-            >
-              <X size={24} style={{ color: textColor }} />
-            </button>
-            
-            {/* Conteúdo do popup */}
-            <div className="p-6">
-              {/* Imagem (se existir) */}
-              {imageUrl && (
-                <div className="mb-4">
-                  <img 
-                    src={imageUrl} 
-                    alt={title} 
-                    className="w-full rounded-md object-cover" 
-                    style={{ maxHeight: '200px' }}
-                  />
-                </div>
-              )}
-              
-              {/* Título */}
-              <h2 
-                className="text-2xl font-bold mb-2" 
-                style={{ color: textColor }}
+          {buttonText && (
+            <div className="flex justify-center mt-4">
+              <Button
+                onClick={handleButtonClick}
+                className="px-6 py-2 rounded-md transition-all duration-200 hover:opacity-90"
+                style={{ 
+                  backgroundColor: buttonColor, 
+                  color: buttonTextColor,
+                }}
               >
-                {title}
-              </h2>
-              
-              {/* Conteúdo */}
-              <div 
-                className="mb-4 whitespace-pre-wrap" 
-                style={{ color: textColor }}
-                dangerouslySetInnerHTML={{ __html: content.replace(/\\n/g, '<br>') }}
-              />
-              
-              {/* Botão (se existir) */}
-              {buttonText && (
-                <Button
-                  onClick={handleButtonClick}
-                  className="w-full"
-                  style={{
-                    backgroundColor: buttonColor,
-                    color: buttonTextColor,
-                    border: 'none'
-                  }}
-                >
-                  {buttonText}
-                </Button>
-              )}
+                {buttonText}
+              </Button>
             </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+          )}
+        </div>
+      </div>
+    </div>
   );
-};
-
-// Componente de container de popups
-interface PopupContainerProps {
-  checkInterval?: number; // Intervalo para verificar popups disponíveis (em ms)
 }
 
-export const PopupContainer = ({ checkInterval = 30000 }: PopupContainerProps) => {
-  const [popup, setPopup] = useState<any>(null);
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const { user } = useAuth();
-  
-  // Função para buscar popups disponíveis
+export function PopupContainer() {
+  const [popup, setPopup] = useState<Omit<PopupProps, 'onClose'> | null>(null);
+  const [sessionId, setSessionId] = useState<string>('');
+
+  // Buscar popups ativos
   const fetchActivePopup = async () => {
     try {
-      const res = await apiRequest('GET', `/api/popups/active${sessionId ? `?sessionId=${sessionId}` : ''}`);
-      const data = await res.json();
+      const response = await apiRequest('GET', `/api/popups/active?sessionId=${sessionId}`);
+      const data = await response.json();
       
-      if (data.hasActivePopup) {
-        setPopup(data.popup);
+      if (data.sessionId && !sessionId) {
         setSessionId(data.sessionId);
+      }
+      
+      if (data.hasActivePopup && data.popup) {
+        setPopup({
+          id: data.popup.id,
+          title: data.popup.title,
+          content: data.popup.content,
+          imageUrl: data.popup.imageUrl,
+          buttonText: data.popup.buttonText,
+          buttonUrl: data.popup.buttonUrl,
+          backgroundColor: data.popup.backgroundColor,
+          textColor: data.popup.textColor,
+          buttonColor: data.popup.buttonColor,
+          buttonTextColor: data.popup.buttonTextColor,
+          position: data.popup.position,
+          size: data.popup.size,
+          animation: data.popup.animation,
+          delay: data.popup.delay,
+          sessionId: data.sessionId
+        });
       }
     } catch (error) {
       console.error('Erro ao buscar popups ativos:', error);
     }
   };
-  
-  // Iniciar a verificação de popups quando o componente montar
+
   useEffect(() => {
     fetchActivePopup();
-    
-    // Configurar verificação periódica
-    const interval = setInterval(() => {
-      if (!popup) {
-        fetchActivePopup();
-      }
-    }, checkInterval);
-    
-    return () => clearInterval(interval);
-  }, [user?.id]);
-  
-  // Fechar o popup
-  const handleClosePopup = () => {
+  }, []);
+
+  const handleClose = () => {
     setPopup(null);
   };
-  
-  if (!popup) return null;
-  
+
+  if (!popup) {
+    return null;
+  }
+
   return (
-    <Popup
-      title={popup.title}
-      content={popup.content}
-      imageUrl={popup.imageUrl}
-      buttonText={popup.buttonText}
-      buttonUrl={popup.buttonUrl}
-      backgroundColor={popup.backgroundColor}
-      textColor={popup.textColor}
-      buttonColor={popup.buttonColor}
-      buttonTextColor={popup.buttonTextColor}
-      position={popup.position}
-      size={popup.size}
-      animation={popup.animation}
-      sessionId={sessionId || undefined}
-      popupId={popup.id}
-      onClose={handleClosePopup}
-    />
+    <Popup {...popup} onClose={handleClose} />
   );
-};
+}
