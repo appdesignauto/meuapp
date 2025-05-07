@@ -255,7 +255,7 @@ router.post('/api/community/posts', upload.single('image'), async (req, res) => 
       return res.status(400).json({ message: 'Imagem é obrigatória' });
     }
     
-    const { title, content } = req.body;
+    const { title, content, editLink } = req.body;
     
     // Validar campos obrigatórios
     if (!title) {
@@ -286,8 +286,9 @@ router.post('/api/community/posts', upload.single('image'), async (req, res) => 
         title,
         content: content || '',
         imageUrl,
+        editLink: editLink || null,
         status,
-        views: 0,
+        viewCount: 0,
         createdAt: new Date(),
         updatedAt: new Date()
       })
