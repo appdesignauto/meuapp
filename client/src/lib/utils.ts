@@ -34,38 +34,45 @@ export function formatDate(dateString: string): string {
   }
 }
 
-// Função auxiliar para formatar o tempo relativo a partir de uma data
+// Função auxiliar para formatar o tempo relativo a partir de uma data (similar ao Instagram)
 function formatRelativeTime(date: Date): string {
-  // Usar Intl.DateTimeFormat para obter a data no fuso horário de Brasília
-  // Primeiro converter para string no formato ISO para garantir compatibilidade
   try {
-    const dateFormatter = new Intl.DateTimeFormat('pt-BR', {
-      timeZone: 'America/Sao_Paulo'
-    });
-    const fmtDate = new Date(dateFormatter.format(date));
-    
-    // Calcular diferença em dias
     const now = new Date();
-    const nowBrasilia = new Date(dateFormatter.format(now));
-    const diffTime = Math.abs(nowBrasilia.getTime() - fmtDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffMs = now.getTime() - date.getTime();
     
-    if (diffDays === 1) {
-      return "Atualizado há 1 dia";
+    // Evitar tempos negativos (futuro)
+    if (diffMs < 0) return "agora";
+    
+    // Convertendo para segundos, minutos, horas, etc.
+    const diffSeconds = Math.floor(diffMs / 1000);
+    const diffMinutes = Math.floor(diffSeconds / 60);
+    const diffHours = Math.floor(diffMinutes / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    const diffWeeks = Math.floor(diffDays / 7);
+    const diffMonths = Math.floor(diffDays / 30);
+    const diffYears = Math.floor(diffDays / 365);
+    
+    // Formatação estilo Instagram
+    if (diffSeconds < 60) {
+      return diffSeconds <= 5 ? "agora" : `${diffSeconds} s`;
+    } else if (diffMinutes < 60) {
+      return `${diffMinutes} m`;
+    } else if (diffHours < 24) {
+      return `${diffHours} h`;
     } else if (diffDays < 7) {
-      return `Atualizado há ${diffDays} dias`;
-    } else if (diffDays < 30) {
-      const weeks = Math.floor(diffDays / 7);
-      return `Atualizado há ${weeks} ${weeks === 1 ? 'semana' : 'semanas'}`;
+      return `${diffDays} d`;
+    } else if (diffWeeks < 4) {
+      return `${diffWeeks} sem`;
+    } else if (diffMonths < 12) {
+      return `${diffMonths} m`;
     } else {
-      const months = Math.floor(diffDays / 30);
-      return `Atualizado há ${months} ${months === 1 ? 'mês' : 'meses'}`;
+      return `${diffYears} a`;
     }
   } catch (error) {
     console.error("Erro ao calcular tempo relativo:", error);
     
     // Fallback para formato mais simples
-    return `Atualizado em ${date.toLocaleDateString('pt-BR')}`;
+    return date.toLocaleDateString('pt-BR');
   }
 }
 
