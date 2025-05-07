@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
-import { Settings, Plus, Filter, User, Trophy, Clock, Info } from 'lucide-react';
+import { Settings, Plus, Filter, User, Trophy, Clock, Info, Award, Medal, Sparkles } from 'lucide-react';
 
 import TopBar from '@/components/TopBar';
 import FooterMenu from '@/components/FooterMenu';
