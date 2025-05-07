@@ -66,7 +66,7 @@ interface RankingUser {
 // Componente de Card do Post
 const PostCard: React.FC<{ post: CommunityPost }> = ({ post }) => {
   return (
-    <Card className="mb-4 overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow">
+    <Card className="mb-4 overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow w-full max-w-[470px] mx-auto">
       {/* Cabeçalho do post - estilo Facebook/Instagram */}
       <div className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -96,21 +96,14 @@ const PostCard: React.FC<{ post: CommunityPost }> = ({ post }) => {
         </p>
       </div>
       
-      {/* Imagem do post - estilo Facebook/Instagram com imagem completa e preenchimento lateral */}
+      {/* Imagem do post - estilo Instagram com dimensões fixas e sem sobras */}
       <Link href={`/comunidade/post/${post.id}`}>
-        <div className="relative w-full overflow-hidden bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center py-3">
-          <div className="max-w-full w-auto max-h-[500px] overflow-hidden flex items-center justify-center">
+        <div className="relative w-full bg-white dark:bg-black">
+          <div className="aspect-square w-full overflow-hidden">
             <img 
               src={post.imageUrl} 
               alt={post.title} 
-              className="hover:scale-[1.02] transition-transform duration-500 cursor-pointer"
-              style={{ 
-                objectFit: 'contain',
-                maxHeight: '500px',
-                maxWidth: '100%',
-                display: 'block',
-                margin: '0 auto'
-              }}
+              className="hover:scale-[1.02] transition-transform duration-500 cursor-pointer w-full h-full object-cover"
             />
           </div>
         </div>
@@ -236,7 +229,7 @@ const CommunityPage: React.FC = () => {
         )}
       </TopBar>
       
-      <div className="container max-w-7xl px-4 py-6">
+      <div className="container max-w-7xl px-0 md:px-4 py-6">
         <div className="md:hidden flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Comunidade</h1>
           
@@ -349,8 +342,8 @@ const CommunityPage: React.FC = () => {
             </div>
           </div>
           
-          {/* Área principal de conteúdo - feed central (mais estreito, estilo Facebook/Instagram) */}
-          <div className="w-full md:max-w-[480px] lg:max-w-[500px] flex-shrink-0">
+          {/* Área principal de conteúdo - feed central (estilo Instagram) */}
+          <div className="w-full md:w-[470px] flex-shrink-0">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid grid-cols-2 mb-6">
                 <TabsTrigger value="posts">
