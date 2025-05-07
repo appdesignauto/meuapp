@@ -782,4 +782,192 @@ export const popupViewsRelations = relations(popupViews, ({ one }) => ({
   }),
 }));
 
+// Community Likes (Curtidas em posts da comunidade)
+export const communityLikes = pgTable("communityLikes", {
+  id: serial("id").primaryKey(),
+  postId: integer("postId").notNull().references(() => communityPosts.id, { onDelete: "cascade" }),
+  userId: integer("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+}, (table) => {
+  return {
+    postUserUnique: primaryKey({ columns: [table.postId, table.userId] }),
+  };
+});
+
+export const insertCommunityLikeSchema = createInsertSchema(communityLikes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Community Saves (Salvamentos em posts da comunidade)
+export const communitySaves = pgTable("communitySaves", {
+  id: serial("id").primaryKey(),
+  postId: integer("postId").notNull().references(() => communityPosts.id, { onDelete: "cascade" }),
+  userId: integer("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+}, (table) => {
+  return {
+    postUserUnique: primaryKey({ columns: [table.postId, table.userId] }),
+  };
+});
+
+export const insertCommunitySaveSchema = createInsertSchema(communitySaves).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Community Points (Sistema de pontos para gamificação)
+export const communityPoints = pgTable("communityPoints", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  points: integer("points").notNull(),
+  reason: text("reason").notNull(), // post, like, save, weekly_featured
+  sourceId: integer("sourceId"), // ID relacionado (post, comment, etc)
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  period: text("period").notNull(), // Formato: YYYY-MM (ano-mês)
+});
+
+export const insertCommunityPointSchema = createInsertSchema(communityPoints).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Community Leaderboard (Ranking de usuários por pontos)
+export const communityLeaderboard = pgTable("communityLeaderboard", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  totalPoints: integer("totalPoints").default(0).notNull(),
+  postCount: integer("postCount").default(0).notNull(),
+  likesReceived: integer("likesReceived").default(0).notNull(),
+  savesReceived: integer("savesReceived").default(0).notNull(),
+  featuredCount: integer("featuredCount").default(0).notNull(),
+  period: text("period").notNull(), // all_time, YYYY (ano), YYYY-MM (ano-mês), YYYY-WW (ano-semana)
+  rank: integer("rank").default(0).notNull(),
+  level: text("level").default("Iniciante KDG").notNull(),
+  lastUpdated: timestamp("lastUpdated").defaultNow().notNull(),
+}, (table) => {
+  return {
+    userPeriodUnique: primaryKey({ columns: [table.userId, table.period] }),
+  };
+});
+
+export const insertCommunityLeaderboardSchema = createInsertSchema(communityLeaderboard).omit({
+  id: true,
+  lastUpdated: true,
+});
+
+// Community Settings (Configurações do sistema de comunidade e gamificação)
+export const communitySettings = pgTable("communitySettings", {
+  id: serial("id").primaryKey(),
+  pointsForPost: integer("pointsForPost").default(20).notNull(),
+  pointsForLike: integer("pointsForLike").default(5).notNull(),
+  pointsForSave: integer("pointsForSave").default(10).notNull(),
+  pointsForWeeklyFeatured: integer("pointsForWeeklyFeatured").default(50).notNull(),
+  prize1stPlace: text("prize1stPlace").default("R$ 0").notNull(),
+  prize2ndPlace: text("prize2ndPlace").default("R$ 0").notNull(),
+  prize3rdPlace: text("prize3rdPlace").default("R$ 0").notNull(),
+  levelThresholds: jsonb("levelThresholds").default({
+    "Iniciante KDG": 0,
+    "Colaborador KDG": 501,
+    "Destaque KDG": 2001,
+    "Elite KDG": 5001,
+    "Lenda KDG": 10001
+  }).notNull(),
+  requireApproval: boolean("requireApproval").default(true).notNull(),
+  allowComments: boolean("allowComments").default(true).notNull(),
+  showRanking: boolean("showRanking").default(true).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+  updatedBy: integer("updatedBy").references(() => users.id),
+});
+
+export const insertCommunitySettingsSchema = createInsertSchema(communitySettings).omit({
+  id: true,
+  updatedAt: true,
+});
+
+// Adicionando relações entre as tabelas
+export const communityPostsRelations = relations(communityPosts, ({ one, many }) => ({
+  user: one(users, {
+    fields: [communityPosts.userId],
+    references: [users.id],
+  }),
+  likes: many(communityLikes),
+  saves: many(communitySaves),
+  comments: many(communityComments),
+}));
+
+export const communityLikesRelations = relations(communityLikes, ({ one }) => ({
+  post: one(communityPosts, {
+    fields: [communityLikes.postId],
+    references: [communityPosts.id],
+  }),
+  user: one(users, {
+    fields: [communityLikes.userId],
+    references: [users.id],
+  }),
+}));
+
+export const communitySavesRelations = relations(communitySaves, ({ one }) => ({
+  post: one(communityPosts, {
+    fields: [communitySaves.postId],
+    references: [communityPosts.id],
+  }),
+  user: one(users, {
+    fields: [communitySaves.userId],
+    references: [users.id],
+  }),
+}));
+
+export const communityCommentsRelations = relations(communityComments, ({ one }) => ({
+  post: one(communityPosts, {
+    fields: [communityComments.postId],
+    references: [communityPosts.id],
+  }),
+  user: one(users, {
+    fields: [communityComments.userId],
+    references: [users.id],
+  }),
+}));
+
+export const communityPointsRelations = relations(communityPoints, ({ one }) => ({
+  user: one(users, {
+    fields: [communityPoints.userId],
+    references: [users.id],
+  }),
+}));
+
+export const communityLeaderboardRelations = relations(communityLeaderboard, ({ one }) => ({
+  user: one(users, {
+    fields: [communityLeaderboard.userId],
+    references: [users.id],
+  }),
+}));
+
+export const communitySettingsRelations = relations(communitySettings, ({ one }) => ({
+  updatedByUser: one(users, {
+    fields: [communitySettings.updatedBy],
+    references: [users.id],
+  }),
+}));
+
+// Tipos para o sistema de comunidade
+export type CommunityLike = typeof communityLikes.$inferSelect;
+export type InsertCommunityLike = z.infer<typeof insertCommunityLikeSchema>;
+
+export type CommunitySave = typeof communitySaves.$inferSelect;
+export type InsertCommunitySave = z.infer<typeof insertCommunitySaveSchema>;
+
+export type CommunityPoint = typeof communityPoints.$inferSelect;
+export type InsertCommunityPoint = z.infer<typeof insertCommunityPointSchema>;
+
+export type CommunityLeaderboard = typeof communityLeaderboard.$inferSelect;
+export type InsertCommunityLeaderboard = z.infer<typeof insertCommunityLeaderboardSchema>;
+
+export type CommunitySettings = typeof communitySettings.$inferSelect;
+export type InsertCommunitySettings = z.infer<typeof insertCommunitySettingsSchema>;
+
 
