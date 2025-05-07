@@ -96,13 +96,18 @@ const PostCard: React.FC<{ post: CommunityPost }> = ({ post }) => {
         </p>
       </div>
       
-      {/* Imagem do post - ajustado para mostrar imagem completa sem cortes */}
+      {/* Imagem do post - estilo Instagram/Facebook */}
       <Link href={`/comunidade/post/${post.id}`}>
-        <div className="relative w-full overflow-hidden">
+        <div className="relative w-full overflow-hidden bg-zinc-50 dark:bg-zinc-900 flex justify-center">
           <img 
             src={post.imageUrl} 
             alt={post.title} 
-            className="w-full max-h-[600px] object-contain hover:scale-[1.02] transition-transform duration-500 cursor-pointer mx-auto"
+            className="w-full hover:scale-[1.02] transition-transform duration-500 cursor-pointer"
+            style={{ 
+              objectFit: 'cover',
+              height: '450px',
+              objectPosition: 'center center'
+            }}
           />
         </div>
       </Link>
