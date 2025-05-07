@@ -38,16 +38,20 @@ const VerifiedUsername: React.FC<VerifiedUsernameProps> = ({
   };
   
   return (
-    <div className={cn("flex items-center gap-1", className)}>
-      <span>{user.name || user.username}</span>
-      
-      {isAdmin && (
-        <BadgeCheck className={cn(
-          "text-blue-500 flex-shrink-0",
-          badgeSizes[badgeSize],
-          badgeClassName
-        )} />
-      )}
+    <div className={cn("flex items-center", className)}>
+      {/* Exibe o nome do usuário */}
+      <span className="flex items-center mr-1">
+        {user.name || user.username}
+        
+        {/* Selo de verificação para administradores */}
+        {isAdmin && (
+          <BadgeCheck className={cn(
+            "text-blue-500 flex-shrink-0 ml-1",
+            badgeSizes[badgeSize],
+            badgeClassName
+          )} />
+        )}
+      </span>
     </div>
   );
 };
