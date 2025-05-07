@@ -56,6 +56,7 @@ import lessonThumbnailUploadRouter from './routes/lesson-thumbnail-upload'; // R
 import courseThumbnailUploadRouter from './routes/course-thumbnail-upload'; // Rota para upload de thumbnails de cursos
 import bannerUploadRouter from './routes/banner-upload'; // Rota para upload de banners de
 import moduleUploadRouter from './routes/module-upload'; // Rota para upload de thumbnails de módulos cursos
+import communityRouter from './routes/community-routes'; // Rotas para o sistema de comunidade
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Rota simples de verificação de saúde
@@ -4733,6 +4734,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Rotas para gerenciamento de popups promocionais
   app.use('/api/popups', popupRouter);
+  
+  // Rotas para o sistema de comunidade
+  app.use(communityRouter);
 
   const httpServer = createServer(app);
   
