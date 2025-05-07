@@ -348,8 +348,8 @@ const CommunityPage: React.FC = () => {
             </div>
           </div>
           
-          {/* Área principal de conteúdo - feed central */}
-          <div className="w-full md:max-w-[550px] lg:max-w-[600px] flex-shrink-0">
+          {/* Área principal de conteúdo - feed central (mais estreito, estilo Facebook/Instagram) */}
+          <div className="w-full md:max-w-[480px] lg:max-w-[500px] flex-shrink-0">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid grid-cols-2 mb-6">
                 <TabsTrigger value="posts">
