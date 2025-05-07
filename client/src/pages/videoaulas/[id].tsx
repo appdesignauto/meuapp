@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { 
   ChevronLeft, 
+  ChevronDown,
   Play, 
   Pause, 
   Volume2, 
@@ -129,10 +130,46 @@ const VideoLessonPage: React.FC = () => {
   const { user } = useAuth();
   const isPremiumUser = user && (user.nivelacesso === 'premium' || user.nivelacesso === 'admin');
   const [, navigate] = useLocation();
-  // Inicializar isDesktop com um valor padrão que será ajustado no useEffect
+  
+  // Buscar dados do banco - primeiro os hooks de consulta
+  const { data: moduleData, isLoading: isLoadingModules } = useQuery({
+    queryKey: ['/api/courses/modules'],
+    retry: 1,
+  });
+  
+  const { data: lessonsData, isLoading: isLoadingLessons } = useQuery({
+    queryKey: ['/api/courses/lessons'],
+    retry: 1,
+  });
+  
+  // Encontrar a lição atual pelo ID - depois das consultas
+  const currentLesson = lessonsData?.find(lesson => lesson.id === id);
+  const currentModule = currentLesson ? moduleData?.find(module => module.id === currentLesson.moduleId) : null;
+  
+  // Estados
   const [isDesktop, setIsDesktop] = useState(true);
   const [expandedModules, setExpandedModules] = useState<number[]>([]);
   const [currentModuleId, setCurrentModuleId] = useState<number | null>(null);
+  
+  const [watchedLessons, setWatchedLessons] = useState<number[]>(() => {
+    // Recuperar aulas assistidas do localStorage
+    const saved = localStorage.getItem('watchedLessons');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  // Estados para o sistema de avaliação
+  const [userRating, setUserRating] = useState<number>(() => {
+    // Carregar avaliação atual do localStorage
+    const savedRatings = localStorage.getItem('videoRatings');
+    if (savedRatings) {
+      const parsedRatings = JSON.parse(savedRatings);
+      return parsedRatings[id] || 0;
+    }
+    return 0;
+  });
+  
+  const [hoverRating, setHoverRating] = useState<number>(0);
+  const [hasRated, setHasRated] = useState<boolean>(userRating > 0);
   
   // Função para alternar a expansão do módulo
   const toggleModuleExpansion = (moduleId: number) => {
@@ -142,7 +179,18 @@ const VideoLessonPage: React.FC = () => {
         : [...prev, moduleId]
     );
   };
-
+  
+  // Estado para controlar se a aula atual está concluída
+  const isCompleted = watchedLessons.includes(id);
+  
+  // Formatar duração de segundos para string "MM:SS"
+  const formatarDuracao = (segundos?: number) => {
+    if (!segundos) return "00:00";
+    const minutos = Math.floor(segundos / 60);
+    const segsRestantes = segundos % 60;
+    return `${minutos}:${segsRestantes.toString().padStart(2, '0')}`;
+  };
+  
   // Detectar se é desktop após montagem do componente e rolar para o topo
   useEffect(() => {
     // Rolar para o topo da página quando a página é carregada ou o ID muda
@@ -162,51 +210,6 @@ const VideoLessonPage: React.FC = () => {
       window.removeEventListener('resize', handleResize);
     };
   }, [id]); // Adicionar 'id' como dependência para rolar para o topo quando a aula mudar
-  
-  const [watchedLessons, setWatchedLessons] = useState<number[]>(() => {
-    // Recuperar aulas assistidas do localStorage
-    const saved = localStorage.getItem('watchedLessons');
-    return saved ? JSON.parse(saved) : [];
-  });
-  
-  // Estado para controlar se a aula atual está concluída
-  const isCompleted = watchedLessons.includes(id);
-  
-  // Estados para o sistema de avaliação
-  const [userRating, setUserRating] = useState<number>(() => {
-    // Carregar avaliação atual do localStorage
-    const savedRatings = localStorage.getItem('videoRatings');
-    if (savedRatings) {
-      const parsedRatings = JSON.parse(savedRatings);
-      return parsedRatings[id] || 0;
-    }
-    return 0;
-  });
-  const [hoverRating, setHoverRating] = useState<number>(0);
-  const [hasRated, setHasRated] = useState<boolean>(userRating > 0);
-
-  // Buscar dados do banco
-  const { data: moduleData, isLoading: isLoadingModules } = useQuery({
-    queryKey: ['/api/courses/modules'],
-    retry: 1,
-  });
-  
-  const { data: lessonsData, isLoading: isLoadingLessons } = useQuery({
-    queryKey: ['/api/courses/lessons'],
-    retry: 1,
-  });
-  
-  // Formatar duração de segundos para string "MM:SS"
-  const formatarDuracao = (segundos?: number) => {
-    if (!segundos) return "00:00";
-    const minutos = Math.floor(segundos / 60);
-    const segsRestantes = segundos % 60;
-    return `${minutos}:${segsRestantes.toString().padStart(2, '0')}`;
-  };
-  
-  // Encontrar a lição atual pelo ID
-  const currentLesson = lessonsData?.find(lesson => lesson.id === id);
-  const currentModule = currentLesson ? moduleData?.find(module => module.id === currentLesson.moduleId) : null;
   
   // Expandir automaticamente o módulo da aula atual
   useEffect(() => {
