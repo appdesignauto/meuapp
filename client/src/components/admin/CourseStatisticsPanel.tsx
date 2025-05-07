@@ -195,7 +195,56 @@ const CourseStatisticsPanel = () => {
 
         <TabsContent value="overview" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Cards de estatísticas gerais */}
+            {/* Estatísticas de Conteúdo - Agora aparecem primeiro */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Database className="h-4 w-4 text-blue-600" />
+                  Total de Cursos
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loadingStats ? (
+                  <Skeleton className="h-8 w-20" />
+                ) : (
+                  <div className="text-2xl font-bold">{formatNumber(statistics?.totalCourses || 0)}</div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <FolderTree className="h-4 w-4 text-purple-600" />
+                  Total de Módulos
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loadingStats ? (
+                  <Skeleton className="h-8 w-20" />
+                ) : (
+                  <div className="text-2xl font-bold">{formatNumber(statistics?.totalModules || 0)}</div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-orange-500" />
+                  Total de Aulas
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loadingStats ? (
+                  <Skeleton className="h-8 w-20" />
+                ) : (
+                  <div className="text-2xl font-bold">{formatNumber(statistics?.totalLessons || 0)}</div>
+                )}
+              </CardContent>
+            </Card>
+            
+            {/* Cards de estatísticas gerais - Agora aparecem depois */}
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -291,55 +340,6 @@ const CourseStatisticsPanel = () => {
                 )}
                 {!loadingStats && (
                   <Progress value={statistics?.completionRate || 0} className="h-2 mt-2" />
-                )}
-              </CardContent>
-            </Card>
-            
-            {/* Estatísticas de Conteúdo */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Database className="h-4 w-4 text-blue-600" />
-                  Total de Cursos
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {loadingStats ? (
-                  <Skeleton className="h-8 w-20" />
-                ) : (
-                  <div className="text-2xl font-bold">{formatNumber(statistics?.totalCourses || 0)}</div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <FolderTree className="h-4 w-4 text-purple-600" />
-                  Total de Módulos
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {loadingStats ? (
-                  <Skeleton className="h-8 w-20" />
-                ) : (
-                  <div className="text-2xl font-bold">{formatNumber(statistics?.totalModules || 0)}</div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-orange-500" />
-                  Total de Aulas
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {loadingStats ? (
-                  <Skeleton className="h-8 w-20" />
-                ) : (
-                  <div className="text-2xl font-bold">{formatNumber(statistics?.totalLessons || 0)}</div>
                 )}
               </CardContent>
             </Card>
