@@ -49,7 +49,8 @@ import {
   RefreshCw,
   ListOrdered,
   Palette,
-  Save
+  Save,
+  Calendar
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -1231,6 +1232,7 @@ const AdminDashboard = () => {
                 {activeTab === 'modules' && 'Módulos dos Cursos'}
                 {activeTab === 'lessons' && 'Aulas dos Cursos'}
                 {activeTab === 'coursesConfig' && 'Configurações de Cursos'}
+                {activeTab === 'courseStats' && 'Estatísticas dos Cursos'}
               </h1>
             </div>
             
@@ -1344,6 +1346,33 @@ const AdminDashboard = () => {
         
         <main className="p-6">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsContent value="courseStats">
+              <div className="mb-6">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-800">Estatísticas dos Cursos</h2>
+                    <p className="text-gray-500 mt-1">Análise de desempenho e métricas dos cursos</p>
+                  </div>
+                  <div className="flex gap-4">
+                    <Select defaultValue="7dias">
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Período" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="hoje">Hoje</SelectItem>
+                        <SelectItem value="7dias">Últimos 7 dias</SelectItem>
+                        <SelectItem value="30dias">Últimos 30 dias</SelectItem>
+                        <SelectItem value="90dias">Últimos 90 dias</SelectItem>
+                        <SelectItem value="total">Todo período</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+              
+              <CourseStatisticsPanel />
+            </TabsContent>
+
             <TabsContent value="stats">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="bg-white rounded-lg shadow-sm p-6">
