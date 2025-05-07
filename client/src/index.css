@@ -350,4 +350,19 @@
   .link-hover:hover:after {
     @apply w-full;
   }
+  
+  /* Estilos para o popup com apenas imagem */
+  .popup-image-only {
+    max-height: 90vh;
+    width: auto !important;
+    max-width: 95vw;
+  }
+
+  .popup-image-only img {
+    display: block;
+    max-height: 90vh;
+    max-width: 100%;
+    object-fit: contain;
+    border-radius: 0.5rem;
+  }
 }

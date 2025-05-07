@@ -154,17 +154,17 @@ export function Popup({
       positionClasses = 'fixed inset-0 flex items-center justify-center z-50';
   }
 
-  // Definir classes de tamanho
-  let sizeClasses = 'w-[90%] sm:w-[500px] md:w-[600px]';
+  // Definir classes de tamanho - mais adaptáveis
+  let sizeClasses = 'w-[90%] sm:w-auto sm:max-w-2xl';
   switch (size) {
     case 'small':
-      sizeClasses = 'w-[90%] sm:w-[300px] md:w-[350px]';
+      sizeClasses = 'w-[90%] sm:w-auto sm:max-w-lg';
       break;
     case 'large':
-      sizeClasses = 'w-[95%] sm:w-[700px] md:w-[800px]';
+      sizeClasses = 'w-[95%] sm:w-auto sm:max-w-4xl';
       break;
     default:
-      sizeClasses = 'w-[90%] sm:w-[500px] md:w-[600px]';
+      sizeClasses = 'w-[90%] sm:w-auto sm:max-w-2xl';
   }
 
   return (
@@ -176,9 +176,10 @@ export function Popup({
       <div
         ref={popupRef}
         className={cn(
-          "rounded-lg shadow-xl border-4 border-white overflow-hidden z-50",
+          "rounded-lg shadow-xl border-4 border-white overflow-hidden z-50 flex flex-col",
           sizeClasses,
-          animationClass
+          animationClass,
+          !title && !content && !buttonText ? "popup-image-only" : ""
         )}
         style={{ backgroundColor }}
       >
@@ -192,14 +193,37 @@ export function Popup({
         </button>
         
         {/* Conteúdo do popup */}
-        <div className="p-0">
+        <div className={cn("p-0", !title && !content && !buttonText ? "flex-1" : "")}>
           {imageUrl && (
-            <div className="flex justify-center w-full">
+            <div className={cn(
+              "flex justify-center w-full",
+              !title && !content && !buttonText ? "h-full" : ""
+            )}>
               <img 
                 src={imageUrl} 
                 alt={title || "Popup promocional"} 
-                className="w-full h-auto object-cover"
-                style={{ maxHeight: size === 'large' ? '600px' : size === 'small' ? '300px' : '450px' }}
+                className={cn(
+                  "w-full h-auto", 
+                  !title && !content && !buttonText ? "object-contain max-h-full" : "object-contain"
+                )}
+                style={{ 
+                  maxHeight: !title && !content && !buttonText 
+                    ? '85vh' 
+                    : size === 'large' ? '80vh' : size === 'small' ? '50vh' : '65vh',
+                  maxWidth: '100%'
+                }}
+                onLoad={(e) => {
+                  // Ajusta o tamanho do popup com base na imagem carregada
+                  const img = e.target as HTMLImageElement;
+                  const ratio = img.naturalWidth / img.naturalHeight;
+                  
+                  // Ajusta classes de acordo com proporções da imagem
+                  if (ratio > 2) { // Imagem muito larga
+                    img.classList.replace('object-contain', 'object-scale-down');
+                  } else if (ratio < 0.5) { // Imagem muito alta
+                    img.classList.replace('object-contain', 'object-scale-down');
+                  }
+                }}
               />
             </div>
           )}
