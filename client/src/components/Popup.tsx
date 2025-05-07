@@ -290,7 +290,10 @@ export function Popup({
             )}
             
             {(title || content || buttonText) && (
-              <div className="p-6">
+              <div className={cn(
+                "p-6", 
+                !title && !content ? "pt-2 pb-4 px-4" : ""
+              )}>
                 {title && (
                   <h2 
                     className="text-2xl font-bold mb-4 text-center" 
@@ -309,7 +312,10 @@ export function Popup({
                 )}
                 
                 {buttonText && (
-                  <div className="flex justify-center mt-6">
+                  <div className={cn(
+                    "flex justify-center",
+                    title || content ? "mt-6" : "mt-2"
+                  )}>
                     <button
                       onClick={handleButtonClick}
                       className="px-6 py-3 text-base font-bold transition-all duration-300 hover:brightness-110 hover:scale-105 flex items-center justify-center gap-2 shadow-lg animate-pulse-glow"
