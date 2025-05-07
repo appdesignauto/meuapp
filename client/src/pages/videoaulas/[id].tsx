@@ -908,26 +908,8 @@ const VideoLessonPage: React.FC = () => {
                   <TabsContent value="aulas" className="mt-3 sm:mt-4 bg-white p-3 sm:p-5 rounded-lg border border-blue-100 shadow-sm">
                     <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Lista de Reprodução</h3>
                     
-                    {/* Utilizar estado para controlar módulos expandidos */}
+                    {/* Renderização da lista de módulos e aulas */}
                     {(() => {
-                      // Definir estado local para controlar quais módulos estão expandidos
-                      const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>(() => {
-                        // Por padrão, expande apenas o módulo da aula atual
-                        const initialState: Record<string, boolean> = {};
-                        if (currentLesson?.moduleId) {
-                          initialState[currentLesson.moduleId] = true;
-                        }
-                        return initialState;
-                      });
-                      
-                      // Função para alternar a expansão de um módulo
-                      const toggleModule = (moduleId: number) => {
-                        setExpandedModules(prev => ({
-                          ...prev,
-                          [moduleId]: !prev[moduleId]
-                        }));
-                      };
-                      
                       // Calcular progresso para cada módulo
                       const moduleProgress: Record<string, {completed: number, total: number}> = {};
                       
@@ -956,14 +938,14 @@ const VideoLessonPage: React.FC = () => {
                               ? Math.round((progress.completed / progress.total) * 100) 
                               : 0;
                               
-                            const isExpanded = expandedModules[modulo.id] || false;
+                            const isExpanded = expandedModules.includes(modulo.id);
                             const containsCurrentLesson = currentLesson?.moduleId === modulo.id;
                             
                             return (
                               <div key={modulo.id} className="border border-blue-100 rounded-lg overflow-hidden shadow-sm">
                                 {/* Cabeçalho do módulo (clicável) */}
                                 <button 
-                                  onClick={() => toggleModule(modulo.id)}
+                                  onClick={() => toggleModuleExpansion(modulo.id)}
                                   className={`w-full flex justify-between items-center p-3 sm:p-4 text-left transition-colors ${
                                     containsCurrentLesson 
                                       ? "bg-blue-50 hover:bg-blue-100" 
