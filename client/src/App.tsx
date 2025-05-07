@@ -22,7 +22,6 @@ import Designers from "@/pages/Designers";
 import DesignerProfile from "@/pages/DesignerProfile";
 import PlanosPage from "@/pages/PlanosPage";
 import ProfilePage from "@/pages/profile-page";
-import AdminDashboard from "@/pages/admin/Dashboard";
 import UpdatedDashboard from "@/pages/admin/UpdatedDashboard";
 import LogoUploadPage from "@/pages/admin/LogoUploadPage";
 import StorageTestPage from "@/pages/admin/StorageTestPage";
