@@ -452,16 +452,7 @@ const VideoLessonPage: React.FC = () => {
               </div>
             </div>
             
-            {/* Barra de progresso - estilo mais suave */}
-            <div className="mt-4 flex items-center gap-2">
-              <div className="flex-1 h-1.5 bg-blue-50 rounded-full overflow-hidden shadow-inner relative">
-                <div 
-                  className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-400 to-blue-500 rounded-full shadow-sm transition-all duration-500 ease-out"
-                  style={{ width: `${tutorial.progress || 15}%` }}
-                ></div>
-              </div>
-              <div className="text-xs text-blue-500 font-medium">{tutorial.progress || 15}%</div>
-            </div>
+            {/* Removida a barra de progresso do módulo que estava duplicada */}
           </div>
         </div>
         
