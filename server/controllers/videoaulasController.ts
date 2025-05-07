@@ -181,20 +181,20 @@ export const markLessonAsCompleted = async (req: Request, res: Response) => {
     
     // Verificar se já foi marcada como completada
     const completedExists = await db.execute(
-      sql`SELECT * FROM "lessonProgress" WHERE "userId" = ${user.id} AND "lessonId" = ${lessonId}`
+      sql`SELECT * FROM "courseProgress" WHERE "userId" = ${user.id} AND "lessonId" = ${lessonId}`
     );
     
     if (completedExists.rows.length === 0) {
       // Registrar como completada
       await db.execute(
-        sql`INSERT INTO "lessonProgress" ("userId", "lessonId", "completedAt", "isCompleted") 
+        sql`INSERT INTO "courseProgress" ("userId", "lessonId", "lastWatchedAt", "isCompleted") 
         VALUES (${user.id}, ${lessonId}, CURRENT_TIMESTAMP, true)`
       );
     } else {
       // Atualizar status
       await db.execute(
-        sql`UPDATE "lessonProgress" 
-        SET "completedAt" = CURRENT_TIMESTAMP, "isCompleted" = true 
+        sql`UPDATE "courseProgress" 
+        SET "lastWatchedAt" = CURRENT_TIMESTAMP, "isCompleted" = true 
         WHERE "userId" = ${user.id} AND "lessonId" = ${lessonId}`
       );
     }
@@ -229,7 +229,7 @@ export const getCourseProgress = async (req: Request, res: Response) => {
     // Contar aulas completadas pelo usuário neste módulo
     const completedLessonsResult = await db.execute(
       sql`SELECT COUNT(*) as "completedLessons" 
-      FROM "lessonProgress" lp
+      FROM "courseProgress" lp
       JOIN "courseLessons" cl ON lp."lessonId" = cl.id
       WHERE lp."userId" = ${user.id} 
       AND cl."moduleId" = ${moduleId}
@@ -455,7 +455,7 @@ export const getCoursesStatistics = async (req: Request, res: Response) => {
     
     // Total de aulas completadas
     const completedLessonsResult = await db.execute(
-      sql`SELECT COUNT(*) AS "completedLessons" FROM "lessonProgress" WHERE "isCompleted" = true`
+      sql`SELECT COUNT(*) AS "completedLessons" FROM "courseProgress" WHERE "isCompleted" = true`
     );
     const completedLessons = parseInt(completedLessonsResult.rows[0]?.completedLessons) || 0;
     
@@ -499,7 +499,7 @@ export const getCoursesStatistics = async (req: Request, res: Response) => {
         SELECT 
           "userId",
           COUNT(DISTINCT "lessonId") AS "completedLessons"
-        FROM "lessonProgress"
+        FROM "courseProgress"
         WHERE "isCompleted" = true
         GROUP BY "userId"
       ),
