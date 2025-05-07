@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
-import { Settings, Plus, Filter, User, Trophy, Clock } from 'lucide-react';
+import { Settings, Plus, Filter, User, Trophy, Clock, Info } from 'lucide-react';
 
 import TopBar from '@/components/TopBar';
 import FooterMenu from '@/components/FooterMenu';
 import LoadingScreen from '@/components/LoadingScreen';
 import ErrorContainer from '@/components/ErrorContainer';
 import UserAvatar from '@/components/users/UserAvatar';
+import RankingList from '@/components/community/RankingList';
 
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -15,6 +16,12 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDate } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
+import { Badge } from '@/components/ui/badge';
+import { 
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 // Interface para post na comunidade
 interface CommunityPost {
@@ -238,70 +245,60 @@ const CommunityPage: React.FC = () => {
           
           {/* Tab de Ranking */}
           <TabsContent value="ranking" className="space-y-4">
-            <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2 -mx-2 px-2">
-              <Button 
-                variant={rankingPeriod === 'week' ? 'default' : 'outline'} 
-                size="sm"
-                onClick={() => setRankingPeriod('week')}
-              >
-                <Clock className="h-3 w-3 mr-1" /> Semanal
-              </Button>
-              <Button 
-                variant={rankingPeriod === 'month' ? 'default' : 'outline'} 
-                size="sm"
-                onClick={() => setRankingPeriod('month')}
-              >
-                <Clock className="h-3 w-3 mr-1" /> Mensal
-              </Button>
-              <Button 
-                variant={rankingPeriod === 'year' ? 'default' : 'outline'} 
-                size="sm"
-                onClick={() => setRankingPeriod('year')}
-              >
-                <Clock className="h-3 w-3 mr-1" /> Anual
-              </Button>
-              <Button 
-                variant={rankingPeriod === 'all' ? 'default' : 'outline'} 
-                size="sm"
-                onClick={() => setRankingPeriod('all')}
-              >
-                <Trophy className="h-3 w-3 mr-1" /> Geral
-              </Button>
+            <div className="flex justify-between items-center mb-2">
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-medium">Ranking KDGPRO</h3>
+                <HoverCard>
+                  <HoverCardTrigger>
+                    <Button variant="ghost" size="icon" className="h-6 w-6">
+                      <Info className="h-4 w-4 text-zinc-400" />
+                    </Button>
+                  </HoverCardTrigger>
+                  <HoverCardContent className="w-80">
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium">Sobre o Sistema KDGPRO</h4>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                        O ranking KDGPRO premia os criadores mais ativos da comunidade com base em pontos ganhos por
+                        contribuições, curtidas e destaques recebidos.
+                      </p>
+                      <h5 className="text-xs font-medium mt-2">Níveis e Pontos:</h5>
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-1 text-xs">
+                          <User className="h-3 w-3 text-zinc-500" /> <span className="font-medium">Iniciante KDG:</span> <span className="text-zinc-500">0-500 pontos</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-xs">
+                          <Award className="h-3 w-3 text-blue-500" /> <span className="font-medium">Colaborador KDG:</span> <span className="text-zinc-500">501-2000 pontos</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-xs">
+                          <Medal className="h-3 w-3 text-yellow-500" /> <span className="font-medium">Destaque KDG:</span> <span className="text-zinc-500">2001-5000 pontos</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-xs">
+                          <Trophy className="h-3 w-3 text-amber-500" /> <span className="font-medium">Elite KDG:</span> <span className="text-zinc-500">5001-10000 pontos</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-xs">
+                          <Sparkles className="h-3 w-3 text-purple-500" /> <span className="font-medium">Lenda KDG:</span> <span className="text-zinc-500">10001+ pontos</span>
+                        </div>
+                      </div>
+                    </div>
+                  </HoverCardContent>
+                </HoverCard>
+              </div>
+              
+              <Badge variant="outline" className="text-xs py-0 px-2 h-6 gap-1">
+                <Trophy className="h-3 w-3 text-yellow-500" />
+                Premiação mensal
+              </Badge>
             </div>
             
-            <Card>
-              <CardContent className="p-0">
-                {rankingLoading ? (
-                  <div className="p-6 flex justify-center">
-                    <LoadingScreen label="Carregando ranking..." />
-                  </div>
-                ) : rankingError ? (
-                  <div className="p-4">
-                    <ErrorContainer 
-                      title="Erro ao carregar ranking" 
-                      description="Não foi possível carregar o ranking da comunidade."
-                      onAction={() => refetchRanking()}
-                    />
-                  </div>
-                ) : ranking && ranking.length > 0 ? (
-                  <div>
-                    {ranking.map((user: RankingUser) => (
-                      <RankingUserCard key={user.id} user={user} />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 px-4">
-                    <Trophy className="h-12 w-12 mx-auto text-zinc-300 dark:text-zinc-600 mb-3" />
-                    <h3 className="text-lg font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
-                      Ranking não disponível
-                    </h3>
-                    <p className="text-zinc-500 dark:text-zinc-400 mb-4 max-w-md mx-auto">
-                      Não há dados de ranking suficientes para este período. Comece a participar da comunidade para aparecer no ranking!
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <RankingList 
+              title="" 
+              description=""
+              showPeriodSelector={true} 
+              showPrizes={true}
+              initialPeriod="week"
+              limit={10}
+            />
+            
           </TabsContent>
         </Tabs>
       </div>
