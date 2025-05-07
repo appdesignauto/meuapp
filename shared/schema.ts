@@ -700,8 +700,8 @@ export type InsertCourseRating = z.infer<typeof insertCourseRatingSchema>;
 // Popups promocionais
 export const popups = pgTable("popups", {
   id: serial("id").primaryKey(),
-  title: text("title").notNull(),
-  content: text("content").notNull(),
+  title: text("title"),
+  content: text("content"),
   imageUrl: text("imageUrl"),
   buttonText: text("buttonText"),
   buttonUrl: text("buttonUrl"),

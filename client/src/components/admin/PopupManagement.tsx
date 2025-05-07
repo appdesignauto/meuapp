@@ -519,27 +519,25 @@ export default function PopupManagement() {
               <TabsContent value="content" className="space-y-4">
                 <div className="grid gap-4">
                   <div>
-                    <Label htmlFor="title">Título</Label>
+                    <Label htmlFor="title">Título (opcional)</Label>
                     <Input
                       id="title"
                       name="title"
                       value={formValues.title}
                       onChange={handleInputChange}
-                      placeholder="Digite o título do popup"
-                      required
+                      placeholder="Digite o título do popup (opcional)"
                     />
                   </div>
                   
                   <div>
-                    <Label htmlFor="content">Conteúdo</Label>
+                    <Label htmlFor="content">Conteúdo (opcional)</Label>
                     <Textarea
                       id="content"
                       name="content"
                       value={formValues.content}
                       onChange={handleInputChange}
-                      placeholder="Digite o conteúdo do popup"
+                      placeholder="Digite o conteúdo do popup (opcional)"
                       rows={4}
-                      required
                     />
                   </div>
                   
