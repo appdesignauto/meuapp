@@ -83,15 +83,6 @@ const PostCard: React.FC<{ post: CommunityPost }> = ({ post }) => {
         </button>
       </div>
       
-      {/* Título */}
-      <div className="px-4 pb-3">
-        <Link href={`/comunidade/post/${post.id}`}>
-          <h3 className="text-base font-semibold mb-1.5 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer">
-            {post.title}
-          </h3>
-        </Link>
-      </div>
-      
       {/* Imagem do post - estilo adaptado para mostrar imagem completa com aspecto profissional */}
       <Link href={`/comunidade/post/${post.id}`}>
         <div className="relative w-full overflow-hidden bg-black">
@@ -107,9 +98,18 @@ const PostCard: React.FC<{ post: CommunityPost }> = ({ post }) => {
         </div>
       </Link>
       
-      {/* Conteúdo/descrição abaixo da imagem */}
+      {/* Título abaixo da imagem */}
+      <div className="px-4 pt-3 pb-1">
+        <Link href={`/comunidade/post/${post.id}`}>
+          <h3 className="text-base font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer">
+            {post.title}
+          </h3>
+        </Link>
+      </div>
+      
+      {/* Conteúdo/descrição abaixo do título */}
       {post.content && (
-        <div className="px-4 pt-3">
+        <div className="px-4 pt-1 pb-2">
           <p className="text-sm text-zinc-600 dark:text-zinc-300">
             {post.content}
           </p>

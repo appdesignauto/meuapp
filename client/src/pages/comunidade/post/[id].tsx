@@ -304,15 +304,8 @@ const PostDetailPage: React.FC = () => {
       
       <div className="container max-w-2xl px-4 py-6">
         <Card className="overflow-hidden">
-          <div className="relative w-full">
-            <img 
-              src={post.imageUrl} 
-              alt={post.title} 
-              className="w-full max-h-[300px] object-cover"
-            />
-          </div>
-          
-          <CardContent className="p-4">
+          {/* Cabeçalho do post com avatar e informações do usuário */}
+          <CardContent className="pt-4 pb-0 px-4">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <UserAvatar user={post.user} size="sm" linkToProfile={true} />
@@ -344,11 +337,29 @@ const PostDetailPage: React.FC = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            
+          </CardContent>
+          
+          {/* Imagem do post */}
+          <div className="relative w-full overflow-hidden bg-black">
+            <div className="relative w-full">
+              <div className="aspect-[4/5] w-full sm:aspect-auto sm:max-h-[500px]">
+                <img 
+                  src={post.imageUrl} 
+                  alt={post.title} 
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            </div>
+          </div>
+          
+          {/* Título e conteúdo abaixo da imagem */}
+          <CardContent className="p-4">
             <h1 className="text-xl font-bold mb-2">{post.title}</h1>
-            <p className="text-zinc-700 dark:text-zinc-300 whitespace-pre-line mb-4">
-              {post.content}
-            </p>
+            {post.content && (
+              <p className="text-zinc-700 dark:text-zinc-300 whitespace-pre-line mb-4">
+                {post.content}
+              </p>
+            )}
             
             {post.editLink && (
               <div className="mb-4 mt-2">
