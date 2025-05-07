@@ -165,14 +165,32 @@ const PostDetailPage: React.FC = () => {
   
   // Buscar detalhes do post
   const { 
-    data: post, 
+    data, 
     isLoading, 
     error, 
     refetch 
-  } = useQuery<CommunityPost>({
+  } = useQuery({
     queryKey: [`/api/community/posts/${postId}`],
     refetchOnWindowFocus: false,
   });
+  
+  // Mapear a estrutura da API para o formato esperado pelo componente
+  const post = data ? {
+    id: data.post?.id,
+    title: data.post?.title,
+    content: data.post?.content,
+    imageUrl: data.post?.imageUrl,
+    editLink: data.post?.editLink,
+    createdAt: data.post?.createdAt,
+    likesCount: data.likesCount || 0,
+    commentsCount: data.commentsCount || 0,
+    sharesCount: data.post?.sharesCount || 0,
+    isApproved: data.post?.status === 'approved',
+    userId: data.post?.userId,
+    isLikedByUser: data.userHasLiked,
+    user: data.user,
+    comments: data.comments
+  } as CommunityPost : undefined;
   
   // Mutação para curtir um post
   const likeMutation = useMutation({

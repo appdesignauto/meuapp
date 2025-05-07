@@ -216,11 +216,25 @@ const CommunityPage: React.FC = () => {
                 description="Não foi possível carregar os posts da comunidade."
                 onAction={() => refetchPosts()}
               />
-            ) : posts && posts.length > 0 ? (
+            ) : posts && Array.isArray(posts) && posts.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {posts.map((post: CommunityPost) => (
-                  <PostCard key={post.id} post={post} />
-                ))}
+                {posts.map((item) => {
+                  // Mapear a estrutura da API para o formato esperado pelo PostCard
+                  const formattedPost: CommunityPost = {
+                    id: item.post.id,
+                    title: item.post.title,
+                    content: item.post.content,
+                    imageUrl: item.post.imageUrl,
+                    createdAt: item.post.createdAt,
+                    likesCount: item.likesCount || 0,
+                    commentsCount: item.commentsCount || 0,
+                    sharesCount: 0,
+                    isApproved: item.post.status === 'approved',
+                    userId: item.post.userId,
+                    user: item.user
+                  };
+                  return <PostCard key={item.post.id} post={formattedPost} />;
+                })}
               </div>
             ) : (
               <div className="text-center py-10">
