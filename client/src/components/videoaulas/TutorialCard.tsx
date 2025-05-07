@@ -11,13 +11,15 @@ import {
   Search,
   Sparkles,
   BookmarkPlus,
-  CheckCircle2
+  CheckCircle2,
+  Star
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tutorial } from './TutorialData';
 import { formatDistanceToNow, isAfter, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import CourseRating from './CourseRating';
 
 // Componente para destacar termos de pesquisa no texto
 const HighlightText = ({ text, searchTerm }: { text: string, searchTerm?: string }) => {
@@ -262,14 +264,23 @@ const TutorialCard: React.FC<TutorialCardProps> = ({
           )}
         </div>
         
-        {/* Título com destaque de pesquisa */}
-        <h3 className="text-white font-bold text-base line-clamp-1">
-          {searchTerm ? (
-            <HighlightText text={actualTitle} searchTerm={searchTerm} />
-          ) : (
-            actualTitle
+        {/* Título com destaque de pesquisa e avaliação */}
+        <div className="flex items-center justify-between gap-2 mb-1">
+          <h3 className="text-white font-bold text-base line-clamp-1">
+            {searchTerm ? (
+              <HighlightText text={actualTitle} searchTerm={searchTerm} />
+            ) : (
+              actualTitle
+            )}
+          </h3>
+          {/* Adicionando a avaliação ao lado do título */}
+          {actualId && (
+            <div className="flex items-center">
+              <Star className="h-3.5 w-3.5 text-yellow-400 fill-yellow-400 mr-0.5" />
+              <span className="text-yellow-300 text-xs font-medium">4.8</span>
+            </div>
           )}
-        </h3>
+        </div>
         
         {/* Detalhes quando hover */}
         {isHovered && (
