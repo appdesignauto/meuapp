@@ -273,12 +273,15 @@ const TutorialCard: React.FC<TutorialCardProps> = ({
               actualTitle
             )}
           </h3>
-          {/* Adicionando a avaliação ao lado do título */}
+          {/* Adicionando a avaliação ao lado do título com CourseRating */}
           {actualId && (
-            <div className="flex items-center">
-              <Star className="h-3.5 w-3.5 text-yellow-400 fill-yellow-400 mr-0.5" />
-              <span className="text-yellow-300 text-xs font-medium">4.8</span>
-            </div>
+            <CourseRating 
+              lessonId={actualId} 
+              showCount={false}
+              interactive={false}
+              size="sm"
+              className="text-yellow-300"
+            />
           )}
         </div>
         
