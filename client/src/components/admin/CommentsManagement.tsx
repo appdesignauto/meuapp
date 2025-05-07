@@ -126,8 +126,25 @@ const CommentsManagement: React.FC = () => {
       }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (_, params) => {
+      // Obter comentário para saber a qual aula ele pertence
+      const comment = comments?.find(c => c.id === params.commentId);
+      
+      if (comment) {
+        // Disparar evento de sincronização para atualizar a página de videoaulas
+        import('@/lib/queryClient').then(({ triggerCommentSyncEvent }) => {
+          triggerCommentSyncEvent({
+            type: params.isHidden ? 'hide' : 'show',
+            commentId: comment.id,
+            lessonId: comment.lessonId,
+            timestamp: Date.now()
+          });
+        });
+      }
+      
+      // Invalidar consulta do painel admin
       queryClient.invalidateQueries({ queryKey: ['/api/video-comments/admin'] });
+      
       toast({
         title: 'Comentário atualizado',
         description: 'A visibilidade do comentário foi alterada com sucesso.',
@@ -154,8 +171,25 @@ const CommentsManagement: React.FC = () => {
       }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (_, commentId) => {
+      // Obter comentário excluído para saber a qual aula ele pertencia
+      const deletedComment = comments?.find(c => c.id === commentId);
+      
+      if (deletedComment) {
+        // Disparar evento de sincronização para atualizar a página de videoaulas
+        import('@/lib/queryClient').then(({ triggerCommentSyncEvent }) => {
+          triggerCommentSyncEvent({
+            type: 'delete',
+            commentId: deletedComment.id,
+            lessonId: deletedComment.lessonId,
+            timestamp: Date.now()
+          });
+        });
+      }
+      
+      // Invalidar consulta do painel admin
       queryClient.invalidateQueries({ queryKey: ['/api/video-comments/admin'] });
+      
       toast({
         title: 'Comentário excluído',
         description: 'O comentário foi excluído permanentemente.',

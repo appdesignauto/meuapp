@@ -96,3 +96,22 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+// Cache de sincronização para comentários
+// Este sistema permite que ações no painel admin sejam sincronizadas com o frontend
+export interface CommentSyncEvent {
+  type: 'delete' | 'hide' | 'show';
+  commentId: number;
+  lessonId: number;
+  timestamp: number;
+}
+
+// Função para disparar um evento de sincronização
+export const triggerCommentSyncEvent = (event: CommentSyncEvent) => {
+  // Armazenar o evento no cache de sincronização
+  const currentEvents = queryClient.getQueryData<CommentSyncEvent[]>(['commentSyncEvents']) || [];
+  queryClient.setQueryData(['commentSyncEvents'], [...currentEvents, event]);
+  
+  // Invalidar a consulta específica da aula afetada
+  queryClient.invalidateQueries({ queryKey: ['/api/video-comments', event.lessonId] });
+};

@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest, CommentSyncEvent } from '@/lib/queryClient';
 import { ThumbsUp, Trash2, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -30,7 +30,7 @@ const VideoComments: React.FC<VideoCommentsProps> = ({ lessonId }) => {
   const queryClient = useQueryClient();
   
   // Buscar comentários
-  const { data: comments = [], isLoading, error } = useQuery<Comment[]>({
+  const { data: comments = [], isLoading, error, refetch } = useQuery<Comment[]>({
     queryKey: ['/api/video-comments', lessonId],
     queryFn: async () => {
       const response = await fetch(`/api/video-comments/${lessonId}`);
@@ -41,6 +41,35 @@ const VideoComments: React.FC<VideoCommentsProps> = ({ lessonId }) => {
     },
     retry: 1,
   });
+  
+  // Escutar eventos de sincronização do painel de administração
+  useEffect(() => {
+    // Esta função verificará periodicamente se há eventos de sincronização
+    const checkForSyncEvents = () => {
+      const syncEvents = queryClient.getQueryData<CommentSyncEvent[]>(['commentSyncEvents']) || [];
+      
+      // Filtramos apenas eventos para esta aula específica
+      const relevantEvents = syncEvents.filter(event => event.lessonId === lessonId);
+      
+      if (relevantEvents.length > 0) {
+        // Se houver eventos relevantes, recarregamos os comentários
+        refetch();
+        
+        // Limpar os eventos processados do cache
+        const remainingEvents = syncEvents.filter(event => event.lessonId !== lessonId);
+        queryClient.setQueryData(['commentSyncEvents'], remainingEvents);
+      }
+    };
+    
+    // Verificar imediatamente se há eventos
+    checkForSyncEvents();
+    
+    // Configurar intervalo para verificar periodicamente
+    const intervalId = setInterval(checkForSyncEvents, 1000);
+    
+    // Limpar intervalo ao desmontar o componente
+    return () => clearInterval(intervalId);
+  }, [lessonId, queryClient, refetch]);
   
   // Mutação para adicionar comentário
   const addCommentMutation = useMutation({
