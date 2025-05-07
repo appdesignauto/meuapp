@@ -15,6 +15,8 @@ export interface PopupProps {
   textColor?: string;
   buttonColor?: string;
   buttonTextColor?: string;
+  buttonRadius?: number;
+  buttonWidth?: string;
   position?: 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
   size?: 'small' | 'medium' | 'large';
   animation?: 'fade' | 'slide' | 'zoom';
@@ -34,6 +36,8 @@ export function Popup({
   textColor = '#000000',
   buttonColor = '#4F46E5',
   buttonTextColor = '#FFFFFF',
+  buttonRadius = 4,
+  buttonWidth = 'auto',
   position = 'center',
   size = 'medium',
   animation = 'fade',
@@ -307,16 +311,20 @@ export function Popup({
               
               {buttonText && (
                 <div className="flex justify-center mt-6">
-                  <Button
+                  <button
                     onClick={handleButtonClick}
-                    className="w-full sm:w-auto px-8 py-4 text-lg font-bold rounded-md transition-all duration-200 hover:brightness-110 hover:scale-105 animate-pulse-glow"
+                    className="px-8 py-4 text-lg font-bold transition-all duration-200 hover:brightness-110 hover:scale-105 animate-pulse-glow"
                     style={{ 
                       backgroundColor: buttonColor, 
                       color: buttonTextColor,
+                      borderRadius: `${buttonRadius}px`,
+                      width: buttonWidth,
+                      border: 'none',
+                      cursor: 'pointer'
                     }}
                   >
                     {buttonText}
-                  </Button>
+                  </button>
                 </div>
               )}
             </div>
@@ -360,6 +368,8 @@ export function PopupContainer() {
           textColor: data.popup.textColor,
           buttonColor: data.popup.buttonColor,
           buttonTextColor: data.popup.buttonTextColor,
+          buttonRadius: data.popup.buttonRadius || 4,
+          buttonWidth: data.popup.buttonWidth || 'auto',
           position: data.popup.position,
           size: data.popup.size,
           animation: data.popup.animation,

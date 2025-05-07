@@ -1024,7 +1024,7 @@ export default function PopupManagement() {
                 <div className="rounded-lg border overflow-hidden bg-background p-6">
                   <div className="relative flex items-center justify-center min-h-[400px]">
                     <Popup 
-                      isOpen={true}
+                      id={999}
                       title={formValues.title}
                       content={formValues.content}
                       imageUrl={imagePreview || formValues.imageUrl}
