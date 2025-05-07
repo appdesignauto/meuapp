@@ -19,15 +19,14 @@ interface UserAvatarProps {
   size?: 'xs' | 'sm' | 'md' | 'lg';
   className?: string;
   linkToProfile?: boolean;
-  showVerification?: boolean;
 }
 
+// O componente Avatar básico para o usuário
 const UserAvatar: React.FC<UserAvatarProps> = ({
   user,
   size = 'md',
   className,
-  linkToProfile = false,
-  showVerification = true
+  linkToProfile = false
 }) => {
   // Tamanhos de avatar para diferentes opções
   const sizeClasses = {
@@ -37,38 +36,15 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
     lg: 'h-16 w-16 text-xl',
   };
   
-  // Verificar se o usuário é administrador
-  const isAdmin = user.nivelacesso === 'admin' || user.role === 'admin';
-  
-  // Tamanhos do selo de verificação com base no tamanho do avatar
-  const badgeSizeClasses = {
-    xs: 'h-3 w-3 -right-0.5 -bottom-0.5',
-    sm: 'h-4 w-4 -right-1 -bottom-1',
-    md: 'h-5 w-5 -right-1 -bottom-1',
-    lg: 'h-6 w-6 -right-1.5 -bottom-1',
-  };
-  
-  // O componente Avatar em si, com selo de verificação para administradores
+  // O componente Avatar em si
   const AvatarComponent = (
-    <div className="relative">
-      <Avatar className={cn(sizeClasses[size], className)}>
-        <AvatarImage 
-          src={user.profileimageurl || undefined} 
-          alt={user.name || user.username} 
-        />
-        <AvatarFallback>{getInitials(user.name || user.username)}</AvatarFallback>
-      </Avatar>
-      
-      {/* Selo de verificação para administradores */}
-      {showVerification && isAdmin && (
-        <div className={cn(
-          "absolute bg-blue-500 rounded-full flex items-center justify-center text-white",
-          badgeSizeClasses[size]
-        )}>
-          <BadgeCheck className="w-full h-full p-0.5" />
-        </div>
-      )}
-    </div>
+    <Avatar className={cn(sizeClasses[size], className)}>
+      <AvatarImage 
+        src={user.profileimageurl || undefined} 
+        alt={user.name || user.username} 
+      />
+      <AvatarFallback>{getInitials(user.name || user.username)}</AvatarFallback>
+    </Avatar>
   );
   
   // Retornar com ou sem link, dependendo da prop
@@ -83,4 +59,32 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
   return AvatarComponent;
 };
 
+// Exportação do componente principal
 export default UserAvatar;
+
+// Interface para o nome do usuário com verificação
+interface UserNameWithVerificationProps {
+  user: User;
+  className?: string;
+  showVerificationBadge?: boolean;
+}
+
+// Componente para mostrar o nome do usuário com selo de verificação para administradores
+export const UserNameWithVerification: React.FC<UserNameWithVerificationProps> = ({
+  user,
+  className,
+  showVerificationBadge = true
+}) => {
+  // Verificar se o usuário é administrador
+  const isAdmin = user.nivelacesso === 'admin' || user.role === 'admin';
+  
+  return (
+    <div className={cn("flex items-center gap-1", className)}>
+      <span className="font-medium">{user.name || user.username}</span>
+      
+      {showVerificationBadge && isAdmin && (
+        <BadgeCheck className="h-4 w-4 text-blue-500 flex-shrink-0" />
+      )}
+    </div>
+  );
+};

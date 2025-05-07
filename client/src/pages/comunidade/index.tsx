@@ -8,6 +8,7 @@ import FooterMenu from '@/components/FooterMenu';
 import LoadingScreen from '@/components/LoadingScreen';
 import ErrorContainer from '@/components/ErrorContainer';
 import UserAvatar from '@/components/users/UserAvatar';
+import VerifiedUsername from '@/components/users/VerifiedUsername';
 import RankingList from '@/components/community/RankingList';
 
 import { Button } from '@/components/ui/button';
@@ -72,7 +73,7 @@ const PostCard: React.FC<{ post: CommunityPost }> = ({ post }) => {
         <div className="flex items-center gap-3">
           <UserAvatar user={post.user} size="sm" linkToProfile={true} />
           <div>
-            <p className="font-medium text-sm">{post.user.name || post.user.username}</p>
+            <VerifiedUsername user={post.user} className="text-sm" />
             <p className="text-xs text-zinc-500 dark:text-zinc-400">{formatDate(post.createdAt)}</p>
           </div>
         </div>
@@ -171,7 +172,7 @@ const RankingUserCard: React.FC<{ user: RankingUser }> = ({ user }) => {
       </div>
       <UserAvatar user={user} size="sm" linkToProfile={true} />
       <div className="flex-1">
-        <p className="font-medium text-sm">{user.name || user.username}</p>
+        <VerifiedUsername user={user} className="text-sm" />
         <p className="text-xs text-zinc-500 dark:text-zinc-400">
           {user.points} pontos
         </p>
