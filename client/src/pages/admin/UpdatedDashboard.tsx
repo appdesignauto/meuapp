@@ -1080,15 +1080,6 @@ const AdminDashboard = () => {
               </CollapsibleTrigger>
               <CollapsibleContent className="pl-4 space-y-1 pt-1 pb-2">
                 <button
-                  onClick={() => setActiveTab('courses')}
-                  className={`flex items-center w-full px-4 py-2 rounded-md ${
-                    activeTab === 'courses' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  <LayoutDashboard className="w-4 h-4 mr-3" />
-                  <span>Dashboard</span>
-                </button>
-                <button
                   onClick={() => setActiveTab('coursesList')}
                   className={`flex items-center w-full px-4 py-2 rounded-md ${
                     activeTab === 'coursesList' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
@@ -1227,7 +1218,6 @@ const AdminDashboard = () => {
                 {activeTab === 'community' && 'Comunidade'}
                 {activeTab === 'stats' && 'Visão Geral'}
                 {activeTab === 'settings' && 'Configurações'}
-                {activeTab === 'courses' && 'Dashboard de Cursos'}
                 {activeTab === 'coursesList' && 'Gerenciamento de Cursos'}
                 {activeTab === 'modules' && 'Módulos dos Cursos'}
                 {activeTab === 'lessons' && 'Aulas dos Cursos'}
