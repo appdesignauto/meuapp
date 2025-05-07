@@ -563,15 +563,12 @@ export const courseProgress = pgTable("courseProgress", {
 export const courseRatings = pgTable("courseRatings", {
   id: serial("id").primaryKey(),
   userId: integer("userId").notNull().references(() => users.id),
-  lessonId: integer("lessonId").notNull().references(() => courseLessons.id),
+  lessonId: integer("lessonId").references(() => courseLessons.id),
+  courseId: integer("courseId").references(() => courses.id),
   rating: integer("rating").notNull(), // 1-5 estrelas
   comment: text("comment"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
-}, (table) => {
-  return {
-    uniqueUserLessonRating: primaryKey({ columns: [table.userId, table.lessonId] }),
-  };
 });
 
 // Videoaulas: Configurações
@@ -596,6 +593,7 @@ export const coursesRelations = relations(courses, ({ one, many }) => ({
     references: [users.id],
   }),
   modules: many(courseModules),
+  ratings: many(courseRatings, { relationName: 'courseRatings' }),
 }));
 
 export const courseModulesRelations = relations(courseModules, ({ one, many }) => ({
@@ -643,6 +641,12 @@ export const courseRatingsRelations = relations(courseRatings, ({ one }) => ({
   lesson: one(courseLessons, {
     fields: [courseRatings.lessonId],
     references: [courseLessons.id],
+    relationName: 'lessonRatings',
+  }),
+  course: one(courses, {
+    fields: [courseRatings.courseId],
+    references: [courses.id],
+    relationName: 'courseRatings',
   }),
 }));
 
