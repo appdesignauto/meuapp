@@ -7,7 +7,7 @@ import { eq, and, desc, sql } from 'drizzle-orm';
 const router = Router();
 
 // Rota para administração de comentários (apenas admin)
-router.get('/comments/admin', checkUserAuth, checkUserRole(['admin']), async (req: Request, res: Response) => {
+router.get('/video-comments/admin', checkUserAuth, checkUserRole(['admin']), async (req: Request, res: Response) => {
   try {
     const { filter = 'all' } = req.query;
     
