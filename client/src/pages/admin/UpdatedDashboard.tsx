@@ -1125,6 +1125,15 @@ const AdminDashboard = () => {
                   <Settings className="w-4 h-4 mr-3" />
                   <span>Configurações</span>
                 </button>
+                <button
+                  onClick={() => setActiveTab('comments')}
+                  className={`flex items-center w-full px-4 py-2 rounded-md ${
+                    activeTab === 'comments' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <MessageSquare className="w-4 h-4 mr-3" />
+                  <span>Comentários</span>
+                </button>
               </CollapsibleContent>
             </Collapsible>
             
@@ -1224,6 +1233,7 @@ const AdminDashboard = () => {
                 {activeTab === 'lessons' && 'Aulas dos Cursos'}
                 {activeTab === 'coursesConfig' && 'Configurações de Cursos'}
                 {activeTab === 'courseStats' && 'Estatísticas dos Cursos'}
+                {activeTab === 'comments' && 'Gerenciamento de Comentários'}
               </h1>
             </div>
             
@@ -1337,6 +1347,19 @@ const AdminDashboard = () => {
         
         <main className="p-6">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsContent value="comments">
+              <div className="mb-6">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-800">Gerenciamento de Comentários</h2>
+                    <p className="text-gray-500 mt-1">Visualize, modere e gerencie os comentários dos usuários nas aulas</p>
+                  </div>
+                </div>
+              </div>
+              
+              <CommentsManagement />
+            </TabsContent>
+            
             <TabsContent value="courseStats">
               <div className="mb-6">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
