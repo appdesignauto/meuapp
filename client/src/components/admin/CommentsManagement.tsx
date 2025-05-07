@@ -243,11 +243,7 @@ const CommentsManagement: React.FC = () => {
         </Alert>
       )}
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h2 className="text-2xl font-bold flex items-center gap-2">
-          <MessageSquare className="h-6 w-6 text-purple-500" />
-          Gerenciamento de Comentários
-        </h2>
+      <div className="flex justify-end mb-6">
         <Button 
           variant="outline" 
           size="sm" 
