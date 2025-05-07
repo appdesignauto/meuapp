@@ -96,19 +96,23 @@ const PostCard: React.FC<{ post: CommunityPost }> = ({ post }) => {
         </p>
       </div>
       
-      {/* Imagem do post - estilo Instagram/Facebook */}
+      {/* Imagem do post - estilo Facebook/Instagram com imagem completa e preenchimento lateral */}
       <Link href={`/comunidade/post/${post.id}`}>
-        <div className="relative w-full overflow-hidden bg-zinc-50 dark:bg-zinc-900 flex justify-center">
-          <img 
-            src={post.imageUrl} 
-            alt={post.title} 
-            className="w-full hover:scale-[1.02] transition-transform duration-500 cursor-pointer"
-            style={{ 
-              objectFit: 'cover',
-              height: '450px',
-              objectPosition: 'center center'
-            }}
-          />
+        <div className="relative w-full overflow-hidden bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center py-3">
+          <div className="max-w-full w-auto max-h-[500px] overflow-hidden flex items-center justify-center">
+            <img 
+              src={post.imageUrl} 
+              alt={post.title} 
+              className="hover:scale-[1.02] transition-transform duration-500 cursor-pointer"
+              style={{ 
+                objectFit: 'contain',
+                maxHeight: '500px',
+                maxWidth: '100%',
+                display: 'block',
+                margin: '0 auto'
+              }}
+            />
+          </div>
         </div>
       </Link>
       
