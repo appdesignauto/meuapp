@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
-import { Settings, Plus, Filter, User, Trophy, Clock, Info, Award, Medal, Sparkles, Users, ImageIcon, ExternalLink, FileEdit, RefreshCw, Loader2 } from 'lucide-react';
+import { Settings, Plus, Filter, User, Trophy, Clock, Info, Award, Medal, Sparkles, Users, ImageIcon, ExternalLink, FileEdit, RefreshCw, Loader2, ZoomIn, X } from 'lucide-react';
 
 import TopBar from '@/components/TopBar';
 import FooterMenu from '@/components/FooterMenu';
@@ -96,14 +96,14 @@ const PostCard: React.FC<{ post: CommunityPost }> = ({ post }) => {
         </p>
       </div>
       
-      {/* Imagem do post - estilo Instagram com dimensões fixas e sem sobras */}
+      {/* Imagem do post - estilo adaptado para mostrar imagem completa */}
       <Link href={`/comunidade/post/${post.id}`}>
-        <div className="relative w-full bg-white dark:bg-black">
-          <div className="aspect-square w-full overflow-hidden">
+        <div className="relative w-full bg-zinc-50 dark:bg-zinc-900">
+          <div className="w-full max-h-[470px] flex items-center justify-center py-2">
             <img 
               src={post.imageUrl} 
               alt={post.title} 
-              className="hover:scale-[1.02] transition-transform duration-500 cursor-pointer w-full h-full object-cover"
+              className="hover:scale-[1.02] transition-transform duration-500 cursor-pointer max-w-full max-h-[450px] object-contain"
             />
           </div>
         </div>
