@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 
 interface CourseRatingProps {
   courseId?: number;
+  lessonId?: number | null;
   className?: string;
   showCount?: boolean;
   interactive?: boolean;
@@ -16,6 +17,7 @@ interface CourseRatingProps {
 
 const CourseRating: React.FC<CourseRatingProps> = ({
   courseId = 2, // ID padrão do curso principal
+  lessonId = null,
   className = '',
   showCount = true,
   interactive = false,
@@ -35,15 +37,25 @@ const CourseRating: React.FC<CourseRatingProps> = ({
     lg: 'w-6 h-6'
   };
   
-  // Consulta para obter avaliações do curso
+  // Consulta para obter avaliações do curso ou da aula
   const { data: ratingData, isLoading } = useQuery({
-    queryKey: ['/api/course-ratings', courseId],
+    queryKey: ['/api/course-ratings', courseId, lessonId],
     queryFn: async () => {
-      const response = await fetch(`/api/course-ratings/${courseId}`);
-      if (!response.ok) {
-        throw new Error('Erro ao buscar avaliações');
+      // Se tiver lessonId, busca avaliações da aula específica
+      if (lessonId) {
+        const response = await fetch(`/api/lesson-ratings/${lessonId}`);
+        if (!response.ok) {
+          throw new Error('Erro ao buscar avaliações da aula');
+        }
+        return response.json();
+      } else {
+        // Caso contrário, busca avaliações do curso inteiro
+        const response = await fetch(`/api/course-ratings/${courseId}`);
+        if (!response.ok) {
+          throw new Error('Erro ao buscar avaliações do curso');
+        }
+        return response.json();
       }
-      return response.json();
     },
     enabled: !!courseId,
     refetchOnWindowFocus: false,
@@ -51,9 +63,15 @@ const CourseRating: React.FC<CourseRatingProps> = ({
   
   // Consulta para obter a avaliação do usuário atual
   const { data: userRating } = useQuery({
-    queryKey: ['/api/user-rating', courseId, user?.id],
+    queryKey: ['/api/user-rating', courseId, lessonId, user?.id],
     queryFn: async () => {
-      const response = await fetch(`/api/user-rating?courseId=${courseId}`);
+      const params = new URLSearchParams();
+      params.append('courseId', courseId.toString());
+      if (lessonId) {
+        params.append('lessonId', lessonId.toString());
+      }
+      
+      const response = await fetch(`/api/user-rating?${params.toString()}`);
       if (!response.ok) {
         throw new Error('Erro ao buscar avaliação do usuário');
       }
@@ -79,7 +97,7 @@ const CourseRating: React.FC<CourseRatingProps> = ({
         body: JSON.stringify({ 
           courseId, 
           rating,
-          lessonId: null
+          lessonId
         }),
       });
       
@@ -90,14 +108,21 @@ const CourseRating: React.FC<CourseRatingProps> = ({
       return response.json();
     },
     onSuccess: () => {
+      const itemType = lessonId ? 'aula' : 'curso';
+      
       toast({
         title: 'Avaliação enviada',
-        description: 'Obrigado pelo seu feedback!',
+        description: `Obrigado pela sua avaliação deste ${itemType}!`,
       });
       
       // Invalidar consultas para atualizar os dados
-      queryClient.invalidateQueries({ queryKey: ['/api/course-ratings', courseId] });
-      queryClient.invalidateQueries({ queryKey: ['/api/user-rating', courseId, user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/course-ratings', courseId, lessonId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user-rating', courseId, lessonId, user?.id] });
+      
+      // Também invalidar consultas relacionadas
+      if (lessonId) {
+        queryClient.invalidateQueries({ queryKey: ['/api/lesson-ratings', lessonId] });
+      }
     },
     onError: (error) => {
       toast({
@@ -191,13 +216,17 @@ const CourseRating: React.FC<CourseRatingProps> = ({
         
         {showCount && (
           <span className={cn(
-            "ml-2 text-white/90 font-medium",
+            "ml-2 font-medium",
+            className.includes("text-white") ? "text-white/90" : "text-gray-700",
             size === 'sm' ? "text-xs" : size === 'md' ? "text-sm" : "text-base"
           )}>
             {!isLoading ? (
               <>
                 {averageRating.toFixed(1)}
-                <span className="text-white/70 ml-1">
+                <span className={cn(
+                  "ml-1",
+                  className.includes("text-white") ? "text-white/70" : "text-gray-500"
+                )}>
                   ({formatRatingsCount(ratingsCount)})
                 </span>
               </>

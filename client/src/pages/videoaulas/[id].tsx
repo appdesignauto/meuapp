@@ -860,6 +860,12 @@ const VideoLessonPage: React.FC = () => {
                           Comentários
                         </TabsTrigger>
                         <TabsTrigger 
+                          value="avaliacoes" 
+                          className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-700 data-[state=active]:text-white data-[state=active]:shadow-md transition-all text-xs sm:text-sm py-1.5 px-2 sm:px-4 sm:py-2 flex-1 rounded-md"
+                        >
+                          Avaliações
+                        </TabsTrigger>
+                        <TabsTrigger 
                           value="aulas" 
                           className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-700 data-[state=active]:text-white data-[state=active]:shadow-md transition-all text-xs sm:text-sm py-1.5 px-2 sm:px-4 sm:py-2 flex-1 rounded-md"
                         >
@@ -887,6 +893,12 @@ const VideoLessonPage: React.FC = () => {
                           Comentários
                         </TabsTrigger>
                         <TabsTrigger 
+                          value="avaliacoes" 
+                          className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-700 data-[state=active]:text-white data-[state=active]:shadow-md transition-all text-xs sm:text-sm py-1.5 px-2 sm:px-4 sm:py-2 flex-1 rounded-md"
+                        >
+                          Avaliações
+                        </TabsTrigger>
+                        <TabsTrigger 
                           value="materiais" 
                           className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-700 data-[state=active]:text-white data-[state=active]:shadow-md transition-all text-xs sm:text-sm py-1.5 px-2 sm:px-4 sm:py-2 flex-1 rounded-md"
                         >
@@ -904,6 +916,60 @@ const VideoLessonPage: React.FC = () => {
                         <p>Nenhuma aula selecionada</p>
                       </div>
                     )}
+                  </TabsContent>
+                  
+                  <TabsContent value="avaliacoes" className="mt-3 sm:mt-4 bg-white p-3 sm:p-5 rounded-lg border border-blue-100 shadow-sm">
+                    <div className="space-y-5">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold text-gray-800">Avaliações</h3>
+                        <CourseRating 
+                          courseId={currentModule?.courseId || 2}
+                          size="md"
+                          className="text-gray-700"
+                          showCount={true}
+                        />
+                      </div>
+                      
+                      <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
+                        <h4 className="text-md font-medium text-gray-800 mb-3">Avalie este curso</h4>
+                        <div className="flex flex-col gap-4">
+                          <div>
+                            <p className="text-sm text-gray-600 mb-2">Avaliação geral do curso:</p>
+                            <div className="flex items-center">
+                              <CourseRating 
+                                courseId={currentModule?.courseId || 2}
+                                size="lg"
+                                interactive={true}
+                                showCount={false}
+                                className="text-gray-700"
+                              />
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <p className="text-sm text-gray-600 mb-2">Avaliação desta aula específica:</p>
+                            <div className="flex items-center">
+                              <CourseRating 
+                                courseId={currentModule?.courseId || 2}
+                                lessonId={id}
+                                size="lg"
+                                interactive={true}
+                                showCount={false}
+                                className="text-gray-700"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="pt-3 border-t border-gray-100">
+                        <h4 className="text-md font-medium text-gray-800 mb-3">Por que sua avaliação é importante</h4>
+                        <p className="text-sm text-gray-600">
+                          Suas avaliações nos ajudam a melhorar o conteúdo e a experiência de aprendizado para todos. 
+                          Além disso, suas avaliações ajudam outros usuários a encontrar os melhores conteúdos para suas necessidades.
+                        </p>
+                      </div>
+                    </div>
                   </TabsContent>
                   
                   <TabsContent value="materiais" className="mt-3 sm:mt-4 bg-white p-3 sm:p-5 rounded-lg border border-blue-100 shadow-sm">
