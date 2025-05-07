@@ -89,22 +89,8 @@ export function Popup({
     return () => clearTimeout(timer);
   }, [delay, animation]);
 
-  // Fechar popup quando clicar fora dele
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (popupRef.current && !popupRef.current.contains(event.target as Node)) {
-        handleDismiss();
-      }
-    };
-    
-    if (isVisible) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isVisible]);
+  // Removido o comportamento de clique fora para fechar o popup
+  // Agora o popup só fecha quando o usuário clicar no X
 
   const handleButtonClick = async () => {
     try {
@@ -184,13 +170,13 @@ export function Popup({
   return (
     <div className={positionClasses}>
       {position === 'center' && (
-        <div className="fixed inset-0 bg-black/50" onClick={handleDismiss} />
+        <div className="fixed inset-0 bg-black/70" />
       )}
       
       <div
         ref={popupRef}
         className={cn(
-          "rounded-lg shadow-lg overflow-hidden",
+          "rounded-lg shadow-xl border-4 border-white overflow-hidden z-50",
           sizeClasses,
           animationClass
         )}
@@ -199,52 +185,54 @@ export function Popup({
         {/* Botão de fechar */}
         <button 
           onClick={handleDismiss}
-          className="absolute top-2 right-2 p-1 rounded-full hover:bg-gray-200 transition-colors duration-200"
+          className="absolute top-3 right-3 p-2 rounded-full hover:bg-opacity-90 transition-all duration-200 bg-indigo-800 w-10 h-10 flex items-center justify-center z-10"
           aria-label="Fechar"
         >
-          <X size={20} color={textColor} />
+          <X size={24} color="white" strokeWidth={3} />
         </button>
         
         {/* Conteúdo do popup */}
-        <div className="p-6">
+        <div className="p-0">
           {imageUrl && (
-            <div className="mb-4 flex justify-center">
+            <div className="flex justify-center w-full">
               <img 
                 src={imageUrl} 
                 alt={title} 
-                className="max-w-full h-auto rounded-md object-cover"
-                style={{ maxHeight: size === 'large' ? '400px' : size === 'small' ? '150px' : '250px' }}
+                className="w-full h-auto object-cover"
+                style={{ maxHeight: size === 'large' ? '600px' : size === 'small' ? '300px' : '450px' }}
               />
             </div>
           )}
           
-          <h2 
-            className="text-xl font-bold mb-2" 
-            style={{ color: textColor }}
-          >
-            {title}
-          </h2>
-          
-          <div 
-            className="mb-4 whitespace-pre-wrap"
-            style={{ color: textColor }}
-            dangerouslySetInnerHTML={{ __html: content }}
-          />
-          
-          {buttonText && (
-            <div className="flex justify-center mt-4">
-              <Button
-                onClick={handleButtonClick}
-                className="px-6 py-2 rounded-md transition-all duration-200 hover:opacity-90"
-                style={{ 
-                  backgroundColor: buttonColor, 
-                  color: buttonTextColor,
-                }}
-              >
-                {buttonText}
-              </Button>
-            </div>
-          )}
+          <div className="p-6">
+            <h2 
+              className="text-2xl sm:text-3xl font-bold mb-4 text-center" 
+              style={{ color: textColor }}
+            >
+              {title}
+            </h2>
+            
+            <div 
+              className="mb-6 whitespace-pre-wrap text-center text-base sm:text-lg"
+              style={{ color: textColor }}
+              dangerouslySetInnerHTML={{ __html: content }}
+            />
+            
+            {buttonText && (
+              <div className="flex justify-center mt-6">
+                <Button
+                  onClick={handleButtonClick}
+                  className="w-full sm:w-auto px-8 py-4 text-lg font-bold rounded-md transition-all duration-200 hover:brightness-110 hover:scale-105 animate-pulse-glow"
+                  style={{ 
+                    backgroundColor: buttonColor, 
+                    color: buttonTextColor,
+                  }}
+                >
+                  {buttonText}
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -254,18 +242,25 @@ export function Popup({
 export function PopupContainer() {
   const [popup, setPopup] = useState<Omit<PopupProps, 'onClose'> | null>(null);
   const [sessionId, setSessionId] = useState<string>('');
+  const [fetched, setFetched] = useState(false);
 
   // Buscar popups ativos
   const fetchActivePopup = async () => {
     try {
-      const response = await apiRequest('GET', `/api/popups/active?sessionId=${sessionId}`);
+      // Usar sessionId existente se disponível
+      const storedSessionId = localStorage.getItem('popup_session_id') || sessionId;
+      
+      const response = await apiRequest('GET', `/api/popups/active?sessionId=${storedSessionId}`);
       const data = await response.json();
       
-      if (data.sessionId && !sessionId) {
+      // Salvar o sessionId no estado e localStorage para consistência entre sessões
+      if (data.sessionId) {
         setSessionId(data.sessionId);
+        localStorage.setItem('popup_session_id', data.sessionId);
       }
       
       if (data.hasActivePopup && data.popup) {
+        console.log('Popup ativo encontrado:', data.popup.title);
         setPopup({
           id: data.popup.id,
           title: data.popup.title,
@@ -283,17 +278,39 @@ export function PopupContainer() {
           delay: data.popup.delay,
           sessionId: data.sessionId
         });
+      } else {
+        console.log('Nenhum popup ativo disponível');
       }
+      
+      setFetched(true);
     } catch (error) {
       console.error('Erro ao buscar popups ativos:', error);
+      setFetched(true);
     }
   };
 
+  // Buscar popups quando o componente montar
   useEffect(() => {
+    // Tentar buscar imediatamente
     fetchActivePopup();
+    
+    // E depois a cada 5 minutos para verificar novos popups
+    const interval = setInterval(() => {
+      fetchActivePopup();
+    }, 5 * 60 * 1000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   const handleClose = () => {
+    // Registrar no localstorage que o popup foi fechado 
+    // para evitar exibição repetida no mesmo dia (se for showOnce)
+    if (popup) {
+      const popupHistory = JSON.parse(localStorage.getItem('popup_history') || '{}');
+      popupHistory[popup.id] = new Date().toISOString();
+      localStorage.setItem('popup_history', JSON.stringify(popupHistory));
+    }
+    
     setPopup(null);
   };
 
