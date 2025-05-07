@@ -165,6 +165,16 @@ function AppRoutes() {
           );
         }}
       </Route>
+      <ProtectedRoute path="/comunidade/criar">
+        {() => {
+          const CreatePostPage = lazy(() => import("@/pages/comunidade/criar"));
+          return (
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+              <CreatePostPage />
+            </Suspense>
+          );
+        }}
+      </ProtectedRoute>
       
       {/* Rota de perfil do usuário */}
       <ProtectedRoute path="/profile" component={ProfilePage} />
