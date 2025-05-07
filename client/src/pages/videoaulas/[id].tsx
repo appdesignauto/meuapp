@@ -908,7 +908,7 @@ const VideoLessonPage: React.FC = () => {
                   <TabsContent value="aulas" className="mt-3 sm:mt-4 bg-white p-3 sm:p-5 rounded-lg border border-blue-100 shadow-sm">
                     <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Lista de Reprodução</h3>
                     
-                    {/* Renderização da lista de módulos e aulas */}
+                    {/* Renderização da lista de módulos e aulas com rolagem vertical */}
                     {(() => {
                       // Calcular progresso para cada módulo
                       const moduleProgress: Record<string, {completed: number, total: number}> = {};
@@ -926,7 +926,7 @@ const VideoLessonPage: React.FC = () => {
                       });
                       
                       return (
-                        <div className="space-y-3 sm:space-y-4">
+                        <div className="space-y-3 sm:space-y-4 max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar">
                           {/* Ordenar e agrupar todas as aulas por módulo */}
                           {moduleData?.map(modulo => {
                             const moduleLessons = lessonsData
@@ -1099,7 +1099,7 @@ const VideoLessonPage: React.FC = () => {
                   <span>Módulos do Curso</span>
                 </h3>
 
-                <div className="space-y-3 sm:space-y-4">
+                <div className="space-y-3 sm:space-y-4 max-h-[calc(100vh-400px)] overflow-y-auto pr-1 custom-scrollbar">
                   {moduleData && moduleData.map((modulo) => {
                     const moduleLessons = lessonsData?.filter(l => l.moduleId === modulo.id) || [];
                     const watchedCount = moduleLessons.filter(l => watchedLessons.includes(l.id)).length;
