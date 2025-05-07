@@ -1137,4 +1137,311 @@ async function updateRanks(period: string) {
   }
 }
 
+// ========== ROTAS ADMINISTRATIVAS ==========
+
+// GET: Estatísticas administrativas da comunidade
+router.get('/api/community/admin/stats', async (req, res) => {
+  try {
+    // Verificar permissão - apenas admin pode acessar
+    if (!req.user || (req.user.nivelacesso !== 'admin' && req.user.nivelacesso !== 'designer_adm')) {
+      return res.status(403).json({ message: 'Sem permissão para esta ação' });
+    }
+
+    // Contar total de posts
+    const totalPostsResult = await db
+      .select({ count: count() })
+      .from(communityPosts);
+
+    // Contar posts pendentes
+    const pendingPostsResult = await db
+      .select({ count: count() })
+      .from(communityPosts)
+      .where(eq(communityPosts.status, 'pending'));
+
+    // Contar posts aprovados
+    const approvedPostsResult = await db
+      .select({ count: count() })
+      .from(communityPosts)
+      .where(eq(communityPosts.status, 'approved'));
+
+    // Retornar as estatísticas
+    return res.json({
+      totalPosts: totalPostsResult[0].count,
+      pendingPosts: pendingPostsResult[0].count,
+      approvedPosts: approvedPostsResult[0].count
+    });
+  } catch (error) {
+    console.error('Erro ao buscar estatísticas de administração:', error);
+    return res.status(500).json({ 
+      message: 'Erro ao buscar estatísticas de administração',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
+  }
+});
+
+// GET: Listar posts para administração (com filtros e paginação)
+router.get('/api/community/admin/posts', async (req, res) => {
+  try {
+    // Verificar permissão - apenas admin pode acessar
+    if (!req.user || (req.user.nivelacesso !== 'admin' && req.user.nivelacesso !== 'designer_adm')) {
+      return res.status(403).json({ message: 'Sem permissão para esta ação' });
+    }
+
+    // Parâmetros de filtro e paginação
+    const status = req.query.status as string || 'pending';
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const search = req.query.search as string;
+    const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
+    const sortBy = req.query.sortBy as string || 'newest';
+    
+    const offset = (page - 1) * limit;
+    
+    // Construir condições WHERE
+    let conditions = and();
+    
+    // Filtrar por status
+    if (status !== 'all') {
+      conditions = and(conditions, eq(communityPosts.status, status));
+    }
+    
+    // Filtrar por userId se especificado
+    if (userId) {
+      conditions = and(conditions, eq(communityPosts.userId, userId));
+    }
+    
+    // Filtrar por termo de pesquisa se especificado
+    if (search) {
+      conditions = and(
+        conditions,
+        sql`(${communityPosts.title} ILIKE ${'%' + search + '%'} OR ${communityPosts.content} ILIKE ${'%' + search + '%'})`
+      );
+    }
+
+    // Contar total de posts com os filtros aplicados
+    const countResult = await db
+      .select({ count: count() })
+      .from(communityPosts)
+      .where(conditions);
+    
+    const total = countResult[0].count;
+    
+    // Definir ordenação
+    let orderBy;
+    switch (sortBy) {
+      case 'oldest':
+        orderBy = asc(communityPosts.createdAt);
+        break;
+      case 'most_likes':
+        orderBy = desc(sql`COUNT(DISTINCT ${communityLikes.id})`);
+        break;
+      case 'most_comments':
+        orderBy = desc(sql`COUNT(DISTINCT ${communityComments.id})`);
+        break;
+      case 'newest':
+      default:
+        orderBy = desc(communityPosts.createdAt);
+    }
+
+    // Buscar posts com informações do usuário e contagens
+    const posts = await db
+      .select({
+        id: communityPosts.id,
+        title: communityPosts.title,
+        content: communityPosts.content,
+        imageUrl: communityPosts.imageUrl,
+        editLink: communityPosts.editLink,
+        status: communityPosts.status,
+        createdAt: communityPosts.createdAt,
+        updatedAt: communityPosts.updatedAt,
+        viewCount: communityPosts.viewCount,
+        userId: communityPosts.userId,
+        likesCount: sql<number>`COUNT(DISTINCT ${communityLikes.id})`,
+        commentsCount: sql<number>`COUNT(DISTINCT ${communityComments.id})`,
+        savesCount: sql<number>`COUNT(DISTINCT ${communitySaves.id})`,
+        user: {
+          id: users.id,
+          username: users.username,
+          name: users.name,
+          profileimageurl: users.profileimageurl,
+          nivelacesso: users.nivelacesso,
+        }
+      })
+      .from(communityPosts)
+      .leftJoin(users, eq(communityPosts.userId, users.id))
+      .leftJoin(communityLikes, eq(communityPosts.id, communityLikes.postId))
+      .leftJoin(communityComments, eq(communityPosts.id, communityComments.postId))
+      .leftJoin(communitySaves, eq(communityPosts.id, communitySaves.postId))
+      .where(conditions)
+      .groupBy(
+        communityPosts.id,
+        users.id,
+      )
+      .orderBy(orderBy)
+      .limit(limit)
+      .offset(offset);
+
+    // Retornar posts e informações de paginação
+    return res.json({
+      posts,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit)
+    });
+  } catch (error) {
+    console.error('Erro ao buscar posts para administração:', error);
+    return res.status(500).json({
+      message: 'Erro ao buscar posts para administração',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
+  }
+});
+
+// POST: Aprovar um post
+router.post('/api/community/admin/posts/:id/approve', async (req, res) => {
+  try {
+    // Verificar permissão - apenas admin pode aprovar
+    if (!req.user || (req.user.nivelacesso !== 'admin' && req.user.nivelacesso !== 'designer_adm')) {
+      return res.status(403).json({ message: 'Sem permissão para esta ação' });
+    }
+
+    const postId = parseInt(req.params.id);
+    
+    // Verificar se o post existe
+    const [post] = await db
+      .select()
+      .from(communityPosts)
+      .where(eq(communityPosts.id, postId));
+      
+    if (!post) {
+      return res.status(404).json({ message: 'Post não encontrado' });
+    }
+    
+    // Atualizar status para 'approved'
+    const [updatedPost] = await db
+      .update(communityPosts)
+      .set({ 
+        status: 'approved',
+        updatedAt: new Date()
+      })
+      .where(eq(communityPosts.id, postId))
+      .returning();
+      
+    // Se o post estava pendente e foi aprovado, adicionar pontos ao usuário
+    if (post.status === 'pending') {
+      // Buscar configurações
+      const [settings] = await db.select().from(communitySettings);
+      const pointsForPost = settings?.pointsForPost || 20;
+      const currentMonth = new Date().toISOString().substring(0, 7); // Formato YYYY-MM
+      
+      // Adicionar pontos
+      await db
+        .insert(communityPoints)
+        .values({
+          userId: post.userId,
+          points: pointsForPost,
+          reason: 'post',
+          sourceId: postId,
+          period: currentMonth,
+          createdAt: new Date(),
+        });
+        
+      // Atualizar leaderboard
+      await updateLeaderboard(post.userId);
+    }
+    
+    return res.json({
+      message: 'Post aprovado com sucesso',
+      post: updatedPost
+    });
+  } catch (error) {
+    console.error('Erro ao aprovar post:', error);
+    return res.status(500).json({
+      message: 'Erro ao aprovar post',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
+  }
+});
+
+// POST: Rejeitar um post
+router.post('/api/community/admin/posts/:id/reject', async (req, res) => {
+  try {
+    // Verificar permissão - apenas admin pode rejeitar
+    if (!req.user || (req.user.nivelacesso !== 'admin' && req.user.nivelacesso !== 'designer_adm')) {
+      return res.status(403).json({ message: 'Sem permissão para esta ação' });
+    }
+
+    const postId = parseInt(req.params.id);
+    
+    // Verificar se o post existe
+    const [post] = await db
+      .select()
+      .from(communityPosts)
+      .where(eq(communityPosts.id, postId));
+      
+    if (!post) {
+      return res.status(404).json({ message: 'Post não encontrado' });
+    }
+    
+    // Atualizar status para 'rejected'
+    const [updatedPost] = await db
+      .update(communityPosts)
+      .set({ 
+        status: 'rejected',
+        updatedAt: new Date()
+      })
+      .where(eq(communityPosts.id, postId))
+      .returning();
+    
+    return res.json({
+      message: 'Post rejeitado com sucesso',
+      post: updatedPost
+    });
+  } catch (error) {
+    console.error('Erro ao rejeitar post:', error);
+    return res.status(500).json({
+      message: 'Erro ao rejeitar post',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
+  }
+});
+
+// DELETE: Excluir um post
+router.delete('/api/community/admin/posts/:id', async (req, res) => {
+  try {
+    // Verificar permissão - apenas admin pode excluir
+    if (!req.user || (req.user.nivelacesso !== 'admin' && req.user.nivelacesso !== 'designer_adm')) {
+      return res.status(403).json({ message: 'Sem permissão para esta ação' });
+    }
+
+    const postId = parseInt(req.params.id);
+    
+    // Verificar se o post existe
+    const [post] = await db
+      .select()
+      .from(communityPosts)
+      .where(eq(communityPosts.id, postId));
+      
+    if (!post) {
+      return res.status(404).json({ message: 'Post não encontrado' });
+    }
+    
+    // Excluir post
+    await db
+      .delete(communityPosts)
+      .where(eq(communityPosts.id, postId));
+    
+    return res.json({
+      message: 'Post excluído com sucesso'
+    });
+  } catch (error) {
+    console.error('Erro ao excluir post:', error);
+    return res.status(500).json({
+      message: 'Erro ao excluir post',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
+  }
+});
+
 export default router;
