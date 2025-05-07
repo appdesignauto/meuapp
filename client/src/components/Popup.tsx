@@ -44,6 +44,23 @@ export function Popup({
   const [isVisible, setIsVisible] = useState(false);
   const [animationClass, setAnimationClass] = useState('opacity-0');
   const popupRef = useRef<HTMLDivElement>(null);
+  
+  // Estado para controlar as dimensões da imagem
+  const [imageDimensions, setImageDimensions] = useState<{width: number, height: number} | null>(null);
+  const [hasLoaded, setHasLoaded] = useState(false);
+  
+  // Função para calcular o tamanho ideal do popup baseado na imagem
+  const calculateOptimalSize = (width: number, height: number) => {
+    const ratio = width / height;
+    if (ratio > 1.8) {
+      // Imagem muito larga
+      return 'landscape';
+    } else if (ratio < 0.6) {
+      // Imagem muito alta
+      return 'portrait';
+    }
+    return 'balanced';
+  };
 
   // Registrar visualização
   useEffect(() => {
@@ -167,6 +184,22 @@ export function Popup({
       sizeClasses = 'w-[90%] sm:w-auto sm:max-w-2xl';
   }
 
+  // Determinar se precisamos de classes especiais baseado nas dimensões da imagem
+  const getImageFormatClass = () => {
+    if (!imageDimensions || !hasLoaded) return '';
+    
+    const ratio = imageDimensions.width / imageDimensions.height;
+    if (ratio > 1.8) {
+      return 'popup-image-landscape';
+    } else if (ratio < 0.6) {
+      return 'popup-image-portrait';
+    }
+    return '';
+  };
+
+  const imageFormatClass = getImageFormatClass();
+  const isImageOnly = !title && !content && !buttonText;
+
   return (
     <div className={positionClasses}>
       {position === 'center' && (
@@ -179,7 +212,8 @@ export function Popup({
           "rounded-lg shadow-xl border-4 border-white overflow-hidden z-50 flex flex-col",
           sizeClasses,
           animationClass,
-          !title && !content && !buttonText ? "popup-image-only" : ""
+          isImageOnly ? "popup-image-only" : "",
+          isImageOnly && imageFormatClass ? imageFormatClass : ""
         )}
         style={{ backgroundColor }}
       >
@@ -215,13 +249,37 @@ export function Popup({
                 onLoad={(e) => {
                   // Ajusta o tamanho do popup com base na imagem carregada
                   const img = e.target as HTMLImageElement;
-                  const ratio = img.naturalWidth / img.naturalHeight;
                   
-                  // Ajusta classes de acordo com proporções da imagem
-                  if (ratio > 2) { // Imagem muito larga
-                    img.classList.replace('object-contain', 'object-scale-down');
-                  } else if (ratio < 0.5) { // Imagem muito alta
-                    img.classList.replace('object-contain', 'object-scale-down');
+                  // Armazena as dimensões da imagem
+                  setImageDimensions({
+                    width: img.naturalWidth,
+                    height: img.naturalHeight
+                  });
+                  setHasLoaded(true);
+                  
+                  const ratio = img.naturalWidth / img.naturalHeight;
+                  console.log(`Popup imagem carregada - Proporção: ${ratio.toFixed(2)}, Tamanho: ${img.naturalWidth}x${img.naturalHeight}`);
+                  
+                  // Ajustar tamanho do container baseado na imagem
+                  const popupElement = popupRef.current;
+                  if (popupElement && !title && !content && !buttonText) {
+                    // Para popups somente com imagem
+                    if (ratio > 1.8) {
+                      // Imagem panorâmica/paisagem - ajustar largura
+                      popupElement.style.width = 'auto';
+                      popupElement.style.maxWidth = '90vw';
+                      img.classList.replace('object-contain', 'object-scale-down');
+                    } else if (ratio < 0.6) {
+                      // Imagem vertical/retrato - ajustar altura
+                      popupElement.style.height = 'auto';
+                      popupElement.style.maxHeight = '90vh';
+                      img.classList.replace('object-contain', 'object-scale-down');
+                    }
+                  } else {
+                    // Para popups com texto/botão
+                    if (ratio > 2 || ratio < 0.5) {
+                      img.classList.replace('object-contain', 'object-scale-down');
+                    }
                   }
                 }}
               />
