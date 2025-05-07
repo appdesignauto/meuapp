@@ -31,8 +31,9 @@ const formSchema = z.object({
     .min(3, 'O título deve ter pelo menos 3 caracteres')
     .max(100, 'O título não pode ter mais de 100 caracteres'),
   content: z.string()
-    .min(10, 'A descrição deve ter pelo menos 10 caracteres')
-    .max(2000, 'A descrição não pode ter mais de 2000 caracteres'),
+    .max(2000, 'A descrição não pode ter mais de 2000 caracteres')
+    .optional()
+    .or(z.literal('')),
   editLink: z.string()
     .url('Digite uma URL válida')
     .optional()
@@ -74,7 +75,12 @@ const CreatePostPage: React.FC = () => {
     mutationFn: async (data: FormValues) => {
       const formData = new FormData();
       formData.append('title', data.title);
-      formData.append('content', data.content);
+      
+      // Adicionar conteúdo apenas se existir
+      if (data.content) {
+        formData.append('content', data.content);
+      }
+      
       formData.append('image', data.image);
       
       // Adicionar o link de edição se existir
@@ -214,13 +220,13 @@ const CreatePostPage: React.FC = () => {
                   )}
                 />
                 
-                {/* Campo de conteúdo */}
+                {/* Campo de conteúdo (opcional) */}
                 <FormField
                   control={form.control}
                   name="content"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Descrição</FormLabel>
+                      <FormLabel>Descrição (opcional)</FormLabel>
                       <FormControl>
                         <Textarea 
                           placeholder="Descreva seu trabalho, conte como foi feito e dicas que você tenha para outros designers..." 
@@ -229,6 +235,9 @@ const CreatePostPage: React.FC = () => {
                         />
                       </FormControl>
                       <FormMessage />
+                      <p className="text-xs text-zinc-500 mt-1">
+                        Descreva seu design ou deixe em branco para mostrar apenas a imagem.
+                      </p>
                     </FormItem>
                   )}
                 />
