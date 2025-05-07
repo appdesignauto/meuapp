@@ -189,32 +189,42 @@ const VideoLessonPage: React.FC = () => {
   // Estado para controlar se a aula atual está concluída
   const isCompleted = watchedLessons.includes(id);
   
-  // Função para formatar duração
-  const formatarDuracao = (duration: any) => {
-    // Se já for string formatada com ":", retornar direto
-    if (typeof duration === 'string' && duration.includes(':')) {
-      return duration;
-    }
-    
-    // Se for número ou string numérica válida
-    let seconds = 0;
-    if (typeof duration === 'number') {
-      seconds = duration;
-    } else if (typeof duration === 'string') {
-      seconds = parseInt(duration, 10);
-    }
-    
-    // Se for inválido, retornar formato padrão
-    if (isNaN(seconds) || seconds < 0) {
+  // Função simples para formatação de duração
+  const formatarDuracao = (segundos: number | string | null | undefined): string => {
+    // Se for undefined ou null, retornar valor padrão
+    if (segundos === undefined || segundos === null) {
       return "00:00";
     }
     
-    // Calcular minutos e segundos
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
+    // Se já for uma string formatada (contém ':'), retornar direto
+    if (typeof segundos === 'string' && segundos.includes(':')) {
+      return segundos;
+    }
     
-    // Formatar com padding zeros
-    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+    // Converter para número
+    let totalSegundos = 0;
+    try {
+      if (typeof segundos === 'string') {
+        totalSegundos = parseInt(segundos, 10);
+      } else if (typeof segundos === 'number') {
+        totalSegundos = segundos;
+      }
+      
+      // Verificar se é um número válido
+      if (isNaN(totalSegundos) || totalSegundos < 0) {
+        return "00:00";
+      }
+      
+      // Calcular minutos e segundos
+      const minutos = Math.floor(totalSegundos / 60);
+      const segundosRestantes = Math.floor(totalSegundos % 60);
+      
+      // Retornar no formato MM:SS
+      return `${minutos.toString().padStart(2, '0')}:${segundosRestantes.toString().padStart(2, '0')}`;
+    } catch (e) {
+      console.error("Erro ao formatar duração:", e);
+      return "00:00";
+    }
   };
   
   // Detectar se é desktop após montagem do componente e rolar para o topo
