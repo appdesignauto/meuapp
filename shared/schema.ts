@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, primaryKey, date } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, primaryKey, date, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -696,3 +696,78 @@ export type InsertCourseProgress = z.infer<typeof insertCourseProgressSchema>;
 
 export type CourseRating = typeof courseRatings.$inferSelect;
 export type InsertCourseRating = z.infer<typeof insertCourseRatingSchema>;
+
+// Popups promocionais
+export const popups = pgTable("popups", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  imageUrl: text("imageUrl"),
+  buttonText: text("buttonText"),
+  buttonUrl: text("buttonUrl"),
+  backgroundColor: text("backgroundColor").default("#FFFFFF"),
+  textColor: text("textColor").default("#000000"),
+  buttonColor: text("buttonColor").default("#4F46E5"),
+  buttonTextColor: text("buttonTextColor").default("#FFFFFF"),
+  position: text("position").default("center"), // center, top-left, top-right, bottom-left, bottom-right
+  size: text("size").default("medium"), // small, medium, large
+  animation: text("animation").default("fade"), // fade, slide, zoom
+  startDate: timestamp("startDate").notNull(),
+  endDate: timestamp("endDate").notNull(),
+  showOnce: boolean("showOnce").default(false),
+  showToLoggedUsers: boolean("showToLoggedUsers").default(true),
+  showToGuestUsers: boolean("showToGuestUsers").default(true),
+  showToPremiumUsers: boolean("showToPremiumUsers").default(true),
+  frequency: integer("frequency").default(1), // 1 = show every time, 2 = show every 2 times, etc.
+  delay: integer("delay").default(2), // delay in seconds before showing the popup
+  isActive: boolean("isActive").default(true),
+  createdBy: integer("createdBy").notNull().references(() => users.id),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export const insertPopupSchema = createInsertSchema(popups).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Registro de visualizações de popups
+export const popupViews = pgTable("popupViews", {
+  id: serial("id").primaryKey(),
+  popupId: integer("popupId").notNull().references(() => popups.id),
+  userId: integer("userId").references(() => users.id),
+  sessionId: text("sessionId"),
+  action: text("action").default("view"), // view, click, dismiss
+  viewedAt: timestamp("viewedAt").notNull().defaultNow(),
+});
+
+export const insertPopupViewSchema = createInsertSchema(popupViews).omit({
+  id: true,
+  viewedAt: true,
+});
+
+export type Popup = typeof popups.$inferSelect;
+export type InsertPopup = z.infer<typeof insertPopupSchema>;
+export type PopupView = typeof popupViews.$inferSelect;
+export type InsertPopupView = z.infer<typeof insertPopupViewSchema>;
+
+// Relations para popups
+export const popupsRelations = relations(popups, ({ one, many }) => ({
+  creator: one(users, {
+    fields: [popups.createdBy],
+    references: [users.id],
+  }),
+  views: many(popupViews),
+}));
+
+export const popupViewsRelations = relations(popupViews, ({ one }) => ({
+  popup: one(popups, {
+    fields: [popupViews.popupId],
+    references: [popups.id],
+  }),
+  user: one(users, {
+    fields: [popupViews.userId],
+    references: [users.id],
+  }),
+}));
