@@ -98,6 +98,7 @@ import SimpleFormMultiDialog from "@/components/admin/SimpleFormMultiDialog";
 import ArtsList from '@/components/admin/ArtsList';
 import CategoriesList from '@/components/admin/CategoriesList';
 import UserManagement from '@/components/admin/UserManagement';
+import CommunityManagement from './community/CommunityManagement';
 import SiteSettings from '@/components/admin/SiteSettings';
 import CommentsManagement from '@/components/admin/CommentsManagement';
 import FormatsList from '@/components/admin/FormatsList';
@@ -2881,6 +2882,10 @@ const AdminDashboard = () => {
             
             <TabsContent value="users">
               <UserManagement />
+            </TabsContent>
+            
+            <TabsContent value="community">
+              <CommunityManagement />
             </TabsContent>
             
             <TabsContent value="arts">
