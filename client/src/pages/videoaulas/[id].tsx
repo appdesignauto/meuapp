@@ -126,10 +126,18 @@ const VideoPlayer: React.FC<{ videoUrl: string; thumbnailUrl: string; videoProvi
 
 const VideoLessonPage: React.FC = () => {
   const params = useParams<{ id: string }>();
-  const id = parseInt(params.id);
   const { user } = useAuth();
   const isPremiumUser = user && (user.nivelacesso === 'premium' || user.nivelacesso === 'admin');
   const [, navigate] = useLocation();
+
+  // Conversão segura do id para número, com tratamento de erro
+  const id = params.id ? parseInt(params.id) : null;
+  
+  // Garantir que id é um número válido
+  if (id === null || isNaN(id)) {
+    navigate("/videoaulas");
+    return null;
+  }
   
   // Buscar dados do banco - primeiro os hooks de consulta
   const { data: moduleData, isLoading: isLoadingModules } = useQuery({
@@ -185,40 +193,45 @@ const VideoLessonPage: React.FC = () => {
   
   // Formatar duração de segundos para string "MM:SS" ou "HH:MM:SS"
   const formatarDuracao = (segundos?: number | string | null) => {
-    if (segundos === undefined || segundos === null) return "00:00";
-    
-    // Verificar se já é uma string formatada como "MM:SS" ou "HH:MM:SS"
-    if (typeof segundos === 'string' && segundos.includes(':')) {
-      // Se já estiver no formato adequado, retorna a string diretamente
-      return segundos;
+    try {
+      if (segundos === undefined || segundos === null) return "00:00";
+      
+      // Verificar se já é uma string formatada como "MM:SS" ou "HH:MM:SS"
+      if (typeof segundos === 'string' && segundos.includes(':')) {
+        // Se já estiver no formato adequado, retorna a string diretamente
+        return segundos;
+      }
+      
+      // Garantir que segundos seja um número
+      let totalSegundos = 0;
+      
+      if (typeof segundos === 'string') {
+        totalSegundos = parseInt(segundos, 10);
+      } else if (typeof segundos === 'number') {
+        totalSegundos = segundos;
+      }
+      
+      if (isNaN(totalSegundos) || totalSegundos < 0) {
+        console.warn(`Valor inválido para formatação de duração: ${segundos}`);
+        return "00:00";
+      }
+      
+      // Calcular horas, minutos e segundos
+      const horas = Math.floor(totalSegundos / 3600);
+      const minutos = Math.floor((totalSegundos % 3600) / 60);
+      const segsRestantes = totalSegundos % 60;
+      
+      // Formatar com horas se for necessário
+      if (horas > 0) {
+        return `${horas}:${minutos.toString().padStart(2, '0')}:${segsRestantes.toString().padStart(2, '0')}`;
+      }
+      
+      // Formatar sempre com padding para minutos e segundos
+      return `${minutos.toString().padStart(2, '0')}:${segsRestantes.toString().padStart(2, '0')}`;
+    } catch (error) {
+      console.error("Erro ao formatar duração:", error);
+      return "00:00"; // Valor padrão seguro em caso de erro
     }
-    
-    // Garantir que segundos seja um número
-    let totalSegundos = 0;
-    
-    if (typeof segundos === 'string') {
-      totalSegundos = parseInt(segundos, 10);
-    } else if (typeof segundos === 'number') {
-      totalSegundos = segundos;
-    }
-    
-    if (isNaN(totalSegundos) || totalSegundos < 0) {
-      console.warn(`Valor inválido para formatação de duração: ${segundos}`);
-      return "00:00";
-    }
-    
-    // Calcular horas, minutos e segundos
-    const horas = Math.floor(totalSegundos / 3600);
-    const minutos = Math.floor((totalSegundos % 3600) / 60);
-    const segsRestantes = totalSegundos % 60;
-    
-    // Formatar com horas se for necessário
-    if (horas > 0) {
-      return `${horas}:${minutos.toString().padStart(2, '0')}:${segsRestantes.toString().padStart(2, '0')}`;
-    }
-    
-    // Formatar sempre com padding para minutos e segundos
-    return `${minutos.toString().padStart(2, '0')}:${segsRestantes.toString().padStart(2, '0')}`;
   };
   
   // Detectar se é desktop após montagem do componente e rolar para o topo
