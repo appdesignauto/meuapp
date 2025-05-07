@@ -709,8 +709,8 @@ export const popups = pgTable("popups", {
   textColor: text("textColor").default("#000000"),
   buttonColor: text("buttonColor").default("#4F46E5"),
   buttonTextColor: text("buttonTextColor").default("#FFFFFF"),
-  buttonRadius: integer("buttonRadius").default(4), // Raio de arredondamento do botão em pixels
-  buttonWidth: text("buttonWidth").default("auto"), // Largura do botão: auto, 100%, 75%, 50%, 25%
+  buttonRadius: integer("buttonradius").default(4), // Raio de arredondamento do botão em pixels
+  buttonWidth: text("buttonwidth").default("auto"), // Largura do botão: auto, 100%, 75%, 50%, 25%
   position: text("position").default("center"), // center, top-left, top-right, bottom-left, bottom-right
   size: text("size").default("medium"), // small, medium, large
   animation: text("animation").default("fade"), // fade, slide, zoom
