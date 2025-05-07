@@ -513,6 +513,24 @@ export const getCoursesStatistics = async (req: Request, res: Response) => {
     );
     const completionRate = parseFloat(completionRateResult.rows[0]?.completionRate) || 0;
     
+    // Obter contagem de cursos
+    const coursesCountResult = await db.execute(
+      sql`SELECT COUNT(*) AS "totalCourses" FROM "courses" WHERE "isPublished" = true`
+    );
+    const totalCourses = parseInt(coursesCountResult.rows[0]?.totalCourses) || 0;
+    
+    // Obter contagem de módulos
+    const modulesCountResult = await db.execute(
+      sql`SELECT COUNT(*) AS "totalModules" FROM "courseModules" WHERE "isActive" = true`
+    );
+    const totalModules = parseInt(modulesCountResult.rows[0]?.totalModules) || 0;
+    
+    // Obter contagem total de aulas
+    const lessonsCountResult = await db.execute(
+      sql`SELECT COUNT(*) AS "totalLessons" FROM "courseLessons"`
+    );
+    const totalLessons = parseInt(lessonsCountResult.rows[0]?.totalLessons) || 0;
+    
     return res.status(200).json({
       totalViews,
       activeUsers,
@@ -520,7 +538,10 @@ export const getCoursesStatistics = async (req: Request, res: Response) => {
       averageViewTime,
       totalComments,
       completionRate: Math.round(completionRate * 10) / 10, // Arredondar para 1 casa decimal
-      popularLessons: popularLessonsResult.rows
+      popularLessons: popularLessonsResult.rows,
+      totalCourses,
+      totalModules,
+      totalLessons
     });
     
   } catch (error) {
