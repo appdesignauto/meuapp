@@ -881,64 +881,141 @@ const VideoLessonPage: React.FC = () => {
                   
                   <TabsContent value="aulas" className="mt-3 sm:mt-4 bg-white p-3 sm:p-5 rounded-lg border border-blue-100 shadow-sm">
                     <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Lista de Reprodução</h3>
-                    <div className="space-y-2 sm:space-y-3">
-                      {/* Ordenar e agrupar todas as aulas por módulo */}
-                      {moduleData?.map(modulo => (
-                        <div key={modulo.id} className="mb-4">
-                          {/* Título do módulo */}
-                          <div className="bg-blue-50 rounded-md p-2 mb-2 border border-blue-100">
-                            <h4 className="font-semibold text-blue-800 text-sm">{modulo.title}</h4>
-                          </div>
-                          
-                          {/* Aulas do módulo */}
-                          <div className="pl-2 space-y-2">
-                            {lessonsData
+                    
+                    {/* Utilizar estado para controlar módulos expandidos */}
+                    {(() => {
+                      // Definir estado local para controlar quais módulos estão expandidos
+                      const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>(() => {
+                        // Por padrão, expande apenas o módulo da aula atual
+                        const initialState: Record<string, boolean> = {};
+                        if (currentLesson?.moduleId) {
+                          initialState[currentLesson.moduleId] = true;
+                        }
+                        return initialState;
+                      });
+                      
+                      // Função para alternar a expansão de um módulo
+                      const toggleModule = (moduleId: number) => {
+                        setExpandedModules(prev => ({
+                          ...prev,
+                          [moduleId]: !prev[moduleId]
+                        }));
+                      };
+                      
+                      // Calcular progresso para cada módulo
+                      const moduleProgress: Record<string, {completed: number, total: number}> = {};
+                      
+                      moduleData?.forEach(modulo => {
+                        const moduleLessons = lessonsData?.filter(lesson => lesson.moduleId === modulo.id) || [];
+                        const completedLessons = moduleLessons.filter(lesson => 
+                          watchedLessons.includes(lesson.id)
+                        ).length;
+                        
+                        moduleProgress[modulo.id] = {
+                          completed: completedLessons,
+                          total: moduleLessons.length
+                        };
+                      });
+                      
+                      return (
+                        <div className="space-y-3 sm:space-y-4">
+                          {/* Ordenar e agrupar todas as aulas por módulo */}
+                          {moduleData?.map(modulo => {
+                            const moduleLessons = lessonsData
                               ?.filter(lesson => lesson.moduleId === modulo.id)
-                              .sort((a, b) => a.order - b.order)
-                              .map((aula) => (
-                                <Link 
-                                  key={aula.id} 
-                                  href={`/videoaulas/${aula.id}`}
-                                  className={`flex items-center p-2 sm:p-3 rounded-md transition-colors ${
-                                    aula.id === id 
-                                      ? "bg-blue-50 border border-blue-200" 
-                                      : "hover:bg-gray-50 border border-gray-100"
+                              .sort((a, b) => a.order - b.order) || [];
+                              
+                            const progress = moduleProgress[modulo.id] || { completed: 0, total: 0 };
+                            const progressPercent = progress.total > 0 
+                              ? Math.round((progress.completed / progress.total) * 100) 
+                              : 0;
+                              
+                            const isExpanded = expandedModules[modulo.id] || false;
+                            const containsCurrentLesson = currentLesson?.moduleId === modulo.id;
+                            
+                            return (
+                              <div key={modulo.id} className="border border-blue-100 rounded-lg overflow-hidden shadow-sm">
+                                {/* Cabeçalho do módulo (clicável) */}
+                                <button 
+                                  onClick={() => toggleModule(modulo.id)}
+                                  className={`w-full flex justify-between items-center p-3 sm:p-4 text-left transition-colors ${
+                                    containsCurrentLesson 
+                                      ? "bg-blue-50 hover:bg-blue-100" 
+                                      : "bg-white hover:bg-gray-50"
                                   }`}
                                 >
-                                  <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-md overflow-hidden mr-3 sm:mr-4">
-                                    <img 
-                                      src={aula.thumbnailUrl} 
-                                      alt={aula.title} 
-                                      className="w-full h-full object-cover"
-                                      loading="lazy"
-                                    />
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-start justify-between">
-                                      <h4 className={`font-medium text-sm sm:text-base truncate ${
-                                        aula.id === id ? "text-blue-700" : "text-gray-800"
-                                      }`}>
-                                        {aula.title}
-                                      </h4>
-                                      {watchedLessons.includes(aula.id) && (
-                                        <div className="ml-2 sm:ml-3 flex-shrink-0">
-                                          <div className="relative flex-shrink-0">
-                                            <Check className="h-4 w-4 text-blue-600" />
-                                            <Check className="h-4 w-4 text-blue-600 absolute -top-0.5 -left-0.5" />
-                                          </div>
-                                        </div>
-                                      )}
+                                  <div className="flex items-center">
+                                    <div className={`flex-shrink-0 mr-3 ${isExpanded ? 'transform rotate-90' : ''} transition-transform`}>
+                                      <ChevronRight className="h-4 w-4 text-blue-600" />
                                     </div>
-                                    <p className="text-xs sm:text-sm text-gray-500 truncate max-w-full">
-                                      {formatarDuracao(aula.duration)} • {aula.isPremium ? 'Premium' : 'Gratuito'}
-                                    </p>
+                                    <div>
+                                      <h4 className="font-semibold text-gray-800 text-sm sm:text-base">{modulo.title}</h4>
+                                      <p className="text-xs text-gray-500">{progress.completed} de {progress.total} aulas concluídas</p>
+                                    </div>
                                   </div>
-                                </Link>
-                              ))}
-                          </div>
+                                  <Badge variant="outline" className="text-xs bg-blue-50 border-blue-200 text-blue-700">
+                                    {modulo.level || 'Iniciante'}
+                                  </Badge>
+                                </button>
+                                
+                                {/* Barra de progresso */}
+                                <div className="w-full h-1 bg-gray-100">
+                                  <div 
+                                    className="h-full bg-blue-600 transition-all duration-300" 
+                                    style={{ width: `${progressPercent}%` }}
+                                  ></div>
+                                </div>
+                                
+                                {/* Aulas do módulo (expansíveis) */}
+                                {isExpanded && (
+                                  <div className="p-2 sm:p-3 space-y-2 sm:space-y-3 divide-y divide-gray-100">
+                                    {moduleLessons.map((aula) => (
+                                      <Link 
+                                        key={aula.id} 
+                                        href={`/videoaulas/${aula.id}`}
+                                        className={`flex items-center p-2 sm:p-3 rounded-md transition-colors ${
+                                          aula.id === id 
+                                            ? "bg-blue-50" 
+                                            : "hover:bg-gray-50"
+                                        }`}
+                                      >
+                                        <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-md overflow-hidden mr-3 sm:mr-4">
+                                          <img 
+                                            src={aula.thumbnailUrl} 
+                                            alt={aula.title} 
+                                            className="w-full h-full object-cover"
+                                            loading="lazy"
+                                          />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <div className="flex items-start justify-between">
+                                            <h4 className={`font-medium text-sm sm:text-base truncate ${
+                                              aula.id === id ? "text-blue-700" : "text-gray-800"
+                                            }`}>
+                                              {aula.title}
+                                            </h4>
+                                            {watchedLessons.includes(aula.id) && (
+                                              <div className="ml-2 sm:ml-3 flex-shrink-0">
+                                                <div className="relative flex-shrink-0">
+                                                  <Check className="h-4 w-4 text-blue-600" />
+                                                </div>
+                                              </div>
+                                            )}
+                                          </div>
+                                          <p className="text-xs sm:text-sm text-gray-500 truncate max-w-full">
+                                            {formatarDuracao(aula.duration)} • {aula.isPremium ? 'Premium' : 'Gratuito'}
+                                          </p>
+                                        </div>
+                                      </Link>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
-                      ))}
-                    </div>
+                      );
+                    })()}
                   </TabsContent>
                 </Tabs>
               </div>
