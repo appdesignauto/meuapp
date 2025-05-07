@@ -33,6 +33,7 @@ import NotFound from "@/pages/not-found";
 import AvatarTestPage from "@/pages/AvatarTestPage";
 import SupabaseAuthTestPage from "@/pages/SupabaseAuthTestPage";
 import VideoaulasPage from "@/pages/videoaulas";
+import ComunidadePage from "@/pages/comunidade";
 
 // Páginas do Painel do Usuário
 import { ProtectedPainelRoute } from "@/components/painel/ProtectedPainelRoute";
@@ -147,6 +148,19 @@ function AppRoutes() {
           return (
             <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
               <VideoLessonPage />
+            </Suspense>
+          );
+        }}
+      </Route>
+      
+      {/* Rotas da Comunidade */}
+      <Route path="/comunidade" component={ComunidadePage} />
+      <Route path="/comunidade/post/:id">
+        {() => {
+          const PostDetailPage = lazy(() => import("@/pages/comunidade/post/[id]"));
+          return (
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+              <PostDetailPage />
             </Suspense>
           );
         }}

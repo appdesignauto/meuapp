@@ -77,3 +77,16 @@ export function truncateText(text: string, maxLength: number): string {
 export function generatePlaceholderImage(width: number, height: number, text: string): string {
   return `https://via.placeholder.com/${width}x${height}.webp?text=${encodeURIComponent(text)}`;
 }
+
+// Função para obter iniciais do nome
+export function getInitials(name: string): string {
+  if (!name) return '';
+  
+  // Dividir o nome em partes e pegar a primeira letra de cada parte
+  return name
+    .split(' ')
+    .map(part => part[0])
+    .join('')
+    .toUpperCase()
+    .substring(0, 2); // Limitar a 2 caracteres
+}
