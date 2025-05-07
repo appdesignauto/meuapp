@@ -291,6 +291,7 @@ router.post('/api/community/posts', upload.single('image'), async (req, res) => 
         viewCount: 0,
         createdAt: new Date(),
         updatedAt: new Date()
+        // Nota: featuredUntil e isWeeklyFeatured estão definidos com valores padrão no schema
       })
       .returning();
     
