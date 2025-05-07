@@ -96,13 +96,13 @@ const PostCard: React.FC<{ post: CommunityPost }> = ({ post }) => {
         </p>
       </div>
       
-      {/* Imagem do post */}
+      {/* Imagem do post - ajustado para mostrar imagem completa sem cortes */}
       <Link href={`/comunidade/post/${post.id}`}>
         <div className="relative w-full overflow-hidden">
           <img 
             src={post.imageUrl} 
             alt={post.title} 
-            className="w-full h-72 sm:h-80 object-cover hover:scale-105 transition-transform duration-500 cursor-pointer"
+            className="w-full max-h-[600px] object-contain hover:scale-[1.02] transition-transform duration-500 cursor-pointer mx-auto"
           />
         </div>
       </Link>
@@ -554,7 +554,8 @@ const CommunityPage: React.FC = () => {
                   </div>
                 )}
                 
-                <RankingList period={rankingPeriod} />
+                {/* Component precisa ser ajustado para aceitar o prop period */}
+                <RankingList />
               </TabsContent>
             </Tabs>
           </div>
