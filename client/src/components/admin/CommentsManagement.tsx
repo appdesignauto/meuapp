@@ -104,9 +104,9 @@ const CommentsManagement: React.FC = () => {
     error,
     refetch
   } = useQuery<Comment[]>({
-    queryKey: ['/api/admin/comments', filter],
+    queryKey: ['/api/comments/admin', filter],
     queryFn: async () => {
-      const response = await apiRequest('GET', `/api/admin/comments?filter=${filter}`);
+      const response = await apiRequest('GET', `/api/comments/admin?filter=${filter}`);
       if (!response.ok) {
         throw new Error('Falha ao carregar comentários');
       }
@@ -117,7 +117,7 @@ const CommentsManagement: React.FC = () => {
   // Mutação para alternar visibilidade de um comentário
   const toggleVisibilityMutation = useMutation({
     mutationFn: async ({ commentId, isHidden }: { commentId: number, isHidden: boolean }) => {
-      const response = await apiRequest('PATCH', `/api/admin/comments/${commentId}/visibility`, {
+      const response = await apiRequest('PATCH', `/api/video-comments/${commentId}/visibility`, {
         isHidden
       });
       if (!response.ok) {
@@ -127,7 +127,7 @@ const CommentsManagement: React.FC = () => {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/comments'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/comments/admin'] });
       toast({
         title: 'Comentário atualizado',
         description: 'A visibilidade do comentário foi alterada com sucesso.',
@@ -147,7 +147,7 @@ const CommentsManagement: React.FC = () => {
   // Mutação para excluir comentário
   const deleteCommentMutation = useMutation({
     mutationFn: async (commentId: number) => {
-      const response = await apiRequest('DELETE', `/api/admin/comments/${commentId}`);
+      const response = await apiRequest('DELETE', `/api/video-comments/${commentId}`);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Erro ao excluir comentário');
@@ -155,7 +155,7 @@ const CommentsManagement: React.FC = () => {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/comments'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/comments/admin'] });
       toast({
         title: 'Comentário excluído',
         description: 'O comentário foi excluído permanentemente.',

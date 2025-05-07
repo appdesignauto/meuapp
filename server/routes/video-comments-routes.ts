@@ -1,10 +1,53 @@
 import { Router, Request, Response } from 'express';
 import { checkUserAuth, checkUserRole } from '../middlewares/auth';
 import { db } from '../db';
-import { videoComments, users, courseLessons } from '@shared/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { videoComments, users, courseLessons, courseModules } from '@shared/schema';
+import { eq, and, desc, sql } from 'drizzle-orm';
 
 const router = Router();
+
+// Rota para administração de comentários (apenas admin)
+router.get('/comments/admin', checkUserAuth, checkUserRole(['admin']), async (req: Request, res: Response) => {
+  try {
+    const { filter = 'all' } = req.query;
+    
+    // Construir a consulta base com junção para as tabelas relacionadas
+    let query = db
+      .select({
+        id: videoComments.id,
+        content: videoComments.content,
+        createdAt: videoComments.createdAt,
+        userId: videoComments.userId,
+        lessonId: videoComments.lessonId,
+        likes: videoComments.likes,
+        isHidden: videoComments.isHidden,
+        username: users.username,
+        name: users.name,
+        profileImageUrl: users.profileimageurl,
+        lessonTitle: courseLessons.title,
+        moduleName: courseModules.title
+      })
+      .from(videoComments)
+      .leftJoin(users, eq(videoComments.userId, users.id))
+      .leftJoin(courseLessons, eq(videoComments.lessonId, courseLessons.id))
+      .leftJoin(courseModules, eq(courseLessons.moduleId, courseModules.id));
+    
+    // Aplicar filtro se necessário
+    if (filter === 'visible') {
+      query = query.where(eq(videoComments.isHidden, false));
+    } else if (filter === 'hidden') {
+      query = query.where(eq(videoComments.isHidden, true));
+    }
+    
+    // Ordenar por data de criação (mais recentes primeiro)
+    const commentsList = await query.orderBy(desc(videoComments.createdAt));
+    
+    return res.status(200).json(commentsList);
+  } catch (error) {
+    console.error('Erro ao buscar comentários para administração:', error);
+    return res.status(500).json({ error: 'Erro ao buscar comentários' });
+  }
+});
 
 // Rota para obter todos os comentários de uma lição específica
 router.get('/video-comments/:lessonId', async (req: Request, res: Response) => {
