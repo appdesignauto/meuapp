@@ -172,8 +172,8 @@ export function Popup({
       positionClasses = 'fixed inset-0 flex items-center justify-center z-50';
   }
 
-  // Definir classes de tamanho - mais adaptáveis
-  let sizeClasses = 'w-[90%] sm:w-auto sm:max-w-2xl md:max-w-3xl';
+  // Definir classes de tamanho - voltando ao tamanho anterior
+  let sizeClasses = 'w-[90%] sm:w-auto sm:max-w-2xl';
   switch (size) {
     case 'small':
       sizeClasses = 'w-[90%] sm:w-auto sm:max-w-lg';
@@ -182,7 +182,7 @@ export function Popup({
       sizeClasses = 'w-[95%] sm:w-auto sm:max-w-4xl';
       break;
     default:
-      sizeClasses = 'w-[90%] sm:w-auto sm:max-w-2xl md:max-w-3xl';
+      sizeClasses = 'w-[90%] sm:w-auto sm:max-w-2xl';
   }
 
   // Determinar se precisamos de classes especiais baseado nas dimensões da imagem
@@ -211,7 +211,7 @@ export function Popup({
         ref={popupRef}
         className={cn(
           "rounded-lg shadow-2xl border-4 border-white overflow-hidden z-50 flex flex-col",
-          "p-[6px]", // Moldura interna com padding
+          "p-[2px]", // Moldura interna com padding mínimo
           sizeClasses,
           animationClass,
           isImageOnly ? "popup-image-only" : "",
@@ -290,10 +290,10 @@ export function Popup({
             )}
             
             {(title || content || buttonText) && (
-              <div className="p-6 lg:p-8">
+              <div className="p-6">
                 {title && (
                   <h2 
-                    className="text-2xl sm:text-3xl font-bold mb-4 text-center" 
+                    className="text-2xl font-bold mb-4 text-center" 
                     style={{ color: textColor }}
                   >
                     {title}
@@ -302,7 +302,7 @@ export function Popup({
                 
                 {content && (
                   <div 
-                    className="mb-6 whitespace-pre-wrap text-center text-base sm:text-lg"
+                    className="mb-6 whitespace-pre-wrap text-center text-base"
                     style={{ color: textColor }}
                     dangerouslySetInnerHTML={{ __html: content }}
                   />
@@ -312,7 +312,7 @@ export function Popup({
                   <div className="flex justify-center mt-6">
                     <button
                       onClick={handleButtonClick}
-                      className="px-8 py-4 text-lg font-bold transition-all duration-300 hover:brightness-110 hover:scale-105 flex items-center justify-center gap-2 shadow-lg animate-pulse-glow"
+                      className="px-6 py-3 text-base font-bold transition-all duration-300 hover:brightness-110 hover:scale-105 flex items-center justify-center gap-2 shadow-lg animate-pulse-glow"
                       style={{ 
                         backgroundColor: buttonColor, 
                         color: buttonTextColor,
@@ -323,7 +323,7 @@ export function Popup({
                       }}
                     >
                       {buttonText}
-                      <ArrowRight size={20} />
+                      <ArrowRight size={16} />
                     </button>
                   </div>
                 )}
