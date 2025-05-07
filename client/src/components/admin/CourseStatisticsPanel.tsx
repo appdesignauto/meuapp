@@ -11,7 +11,10 @@ import {
   Award,
   TrendingUp,
   Clock,
-  Star
+  Star,
+  Database,
+  FolderTree,
+  FileText
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -31,6 +34,9 @@ interface CourseStatistics {
   totalComments: number;
   completionRate: number;
   popularLessons: PopularLesson[];
+  totalCourses: number;
+  totalModules: number;
+  totalLessons: number;
 }
 
 interface PopularLesson {
@@ -285,6 +291,55 @@ const CourseStatisticsPanel = () => {
                 )}
                 {!loadingStats && (
                   <Progress value={statistics?.completionRate || 0} className="h-2 mt-2" />
+                )}
+              </CardContent>
+            </Card>
+            
+            {/* Estatísticas de Conteúdo */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Database className="h-4 w-4 text-blue-600" />
+                  Total de Cursos
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loadingStats ? (
+                  <Skeleton className="h-8 w-20" />
+                ) : (
+                  <div className="text-2xl font-bold">{formatNumber(statistics?.totalCourses || 0)}</div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <FolderTree className="h-4 w-4 text-purple-600" />
+                  Total de Módulos
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loadingStats ? (
+                  <Skeleton className="h-8 w-20" />
+                ) : (
+                  <div className="text-2xl font-bold">{formatNumber(statistics?.totalModules || 0)}</div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-orange-500" />
+                  Total de Aulas
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loadingStats ? (
+                  <Skeleton className="h-8 w-20" />
+                ) : (
+                  <div className="text-2xl font-bold">{formatNumber(statistics?.totalLessons || 0)}</div>
                 )}
               </CardContent>
             </Card>
