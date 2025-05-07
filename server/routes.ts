@@ -4469,6 +4469,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/videoaulas/completar', isAuthenticated);
   app.use('/api/videoaulas/progresso', isAuthenticated);
   app.use('/api/videoaulas/anotacao', isAuthenticated);
+  app.use('/api/videoaulas/estatisticas', isAuthenticated, isAdmin);
+  app.use('/api/videoaulas/comentarios-recentes', isAuthenticated, isAdmin);
+  app.use('/api/videoaulas/aulas-mais-assistidas', isAuthenticated, isAdmin);
   
   // Registrar o router de videoaulas
   app.use('/api/videoaulas', videoaulasRouter);
