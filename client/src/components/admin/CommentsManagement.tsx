@@ -277,46 +277,10 @@ const CommentsManagement: React.FC = () => {
     setIsViewDialogOpen(true);
   };
 
-  // Aplicar filtros avançados
-  const applyAdvancedFilters = (comments: Comment[]) => {
-    return comments.filter(comment => {
-      // Filtro por data
-      if (advancedFilters.dateRange.enabled) {
-        const commentDate = parseISO(comment.createdAt);
-        const cutoffDate = subDays(new Date(), advancedFilters.dateRange.days);
-        if (isBefore(commentDate, cutoffDate)) {
-          return false;
-        }
-      }
-      
-      // Filtro por curtidas
-      if (advancedFilters.likesCount.enabled) {
-        const { min, max } = advancedFilters.likesCount;
-        if (comment.likes < min || comment.likes > max) {
-          return false;
-        }
-      }
-      
-      // Filtro por módulo
-      if (advancedFilters.modules.enabled && advancedFilters.modules.selected.length > 0) {
-        if (!advancedFilters.modules.selected.includes(comment.moduleName)) {
-          return false;
-        }
-      }
-      
-      // Filtro por usuário
-      if (advancedFilters.users.enabled && advancedFilters.users.selected.length > 0) {
-        if (!advancedFilters.users.selected.includes(comment.username)) {
-          return false;
-        }
-      }
-      
-      return true;
-    });
-  };
-  
-  // Filtrar comentários por termo de busca e aplicar filtros avançados
-  const filteredComments = comments?.filter(comment => {
+  // Filtro por termo de busca
+  const passesSearchFilter = (comment: Comment): boolean => {
+    if (!searchTerm) return true;
+    
     const searchLower = searchTerm.toLowerCase();
     return (
       comment.content.toLowerCase().includes(searchLower) ||
@@ -325,16 +289,25 @@ const CommentsManagement: React.FC = () => {
       comment.lessonTitle.toLowerCase().includes(searchLower) ||
       comment.moduleName.toLowerCase().includes(searchLower)
     );
-  }).filter(comment => {
-    // Aplicar filtros avançados adicionais
+  };
+  
+  // Função para verificar se um comentário passa pelos filtros avançados
+  const passesAdvancedFilters = (comment: Comment): boolean => {
+    // Filtro por data
     if (advancedFilters.dateRange.enabled) {
-      const commentDate = parseISO(comment.createdAt);
-      const cutoffDate = subDays(new Date(), advancedFilters.dateRange.days);
-      if (isBefore(commentDate, cutoffDate)) {
-        return false;
+      try {
+        const commentDate = parseISO(comment.createdAt);
+        const cutoffDate = subDays(new Date(), advancedFilters.dateRange.days);
+        if (isBefore(commentDate, cutoffDate)) {
+          return false;
+        }
+      } catch (error) {
+        console.error("Erro ao processar data:", error);
+        // Em caso de erro de formatação da data, vamos considerar que o comentário passa
       }
     }
     
+    // Filtro por curtidas
     if (advancedFilters.likesCount.enabled) {
       const { min, max } = advancedFilters.likesCount;
       if (comment.likes < min || comment.likes > max) {
@@ -342,12 +315,14 @@ const CommentsManagement: React.FC = () => {
       }
     }
     
+    // Filtro por módulo
     if (advancedFilters.modules.enabled && advancedFilters.modules.selected.length > 0) {
       if (!advancedFilters.modules.selected.includes(comment.moduleName)) {
         return false;
       }
     }
     
+    // Filtro por usuário
     if (advancedFilters.users.enabled && advancedFilters.users.selected.length > 0) {
       if (!advancedFilters.users.selected.includes(comment.username)) {
         return false;
@@ -355,7 +330,7 @@ const CommentsManagement: React.FC = () => {
     }
     
     return true;
-  });
+  };
 
   // Extrair módulos e usuários únicos dos comentários para filtros avançados
   const uniqueModules = React.useMemo(() => {
@@ -367,6 +342,15 @@ const CommentsManagement: React.FC = () => {
     if (!comments) return [];
     return [...new Set(comments.map(comment => comment.username))].sort();
   }, [comments]);
+  
+  // Aplicar todos os filtros aos comentários
+  const filteredComments = React.useMemo(() => {
+    if (!comments) return [];
+    
+    return comments.filter(comment => {
+      return passesSearchFilter(comment) && passesAdvancedFilters(comment);
+    });
+  }, [comments, searchTerm, advancedFilters]);
   
   // Funções para manipular filtros avançados
   const updateDateRange = (enabled: boolean, days?: number) => {
