@@ -766,27 +766,7 @@ const VideoLessonPage: React.FC = () => {
                 </div>
               </div>
               
-              {/* Indicador de progresso do módulo */}
-              <div className="mt-4 p-3 sm:p-4 bg-blue-50 border border-blue-100 rounded-lg shadow-sm">
-                <div className="flex flex-col sm:flex-row justify-between gap-2 sm:items-center mb-2">
-                  <div className="flex items-center gap-1.5">
-                    <Layers className="h-4 w-4 text-blue-600" />
-                    <h3 className="font-semibold text-blue-800 text-sm">Progresso no módulo: {currentModule?.title}</h3>
-                  </div>
-                  <div className="text-xs text-blue-700 font-medium">
-                    Aula {currentLessonIndex >= 0 ? currentLessonIndex + 1 : 1} de {moduleLessons?.length || '?'}
-                  </div>
-                </div>
-                {/* Barra de progresso do módulo */}
-                <div className="relative w-full h-2 bg-blue-100 rounded-full overflow-hidden shadow-inner">
-                  <div 
-                    className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"
-                    style={{ 
-                      width: `${Math.round((((currentLessonIndex >= 0 ? currentLessonIndex : 0) + 1) / (moduleLessons?.length || 1)) * 100)}%` 
-                    }}
-                  ></div>
-                </div>
-              </div>
+
 
               {/* Abas de conteúdo adicional - estilo aprimorado */}
               <div className="mt-4 sm:mt-6">
