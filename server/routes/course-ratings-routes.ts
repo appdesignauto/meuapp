@@ -1,158 +1,264 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
+import { checkUserAuth } from '../middlewares/auth';
 import { db } from '../db';
-import { courses, courseRatings } from '@shared/schema';
-import { eq, and, avg, count } from 'drizzle-orm';
+import { courseRatings, users, courses, courseLessons } from '@shared/schema';
+import { eq, and, avg, count, sql } from 'drizzle-orm';
 
 const router = Router();
 
-// Rota para obter as avaliações médias de um curso
-router.get('/course/ratings/:courseId', async (req, res) => {
+// Rota para obter avaliações de um curso
+router.get('/course-ratings/:courseId', async (req: Request, res: Response) => {
   try {
-    const courseId = parseInt(req.params.courseId);
-    
-    if (isNaN(courseId)) {
-      return res.status(400).json({ message: 'ID do curso inválido' });
-    }
+    const { courseId } = req.params;
     
     // Verificar se o curso existe
-    const courseExists = await db.select({ id: courses.id })
-      .from(courses)
-      .where(eq(courses.id, courseId))
-      .limit(1);
-      
-    if (courseExists.length === 0) {
-      return res.status(404).json({ message: 'Curso não encontrado' });
+    const [course] = await db.select().from(courses).where(eq(courses.id, parseInt(courseId)));
+    
+    if (!course) {
+      return res.status(404).json({ error: 'Curso não encontrado' });
     }
     
-    // Buscar a média de avaliações e contagem
-    const ratingsStats = await db
+    // Obter todas as avaliações do curso
+    const ratings = await db
       .select({
-        averageRating: avg(courseRatings.rating).mapWith(Number) as any,
-        count: count(courseRatings.id).mapWith(Number),
+        id: courseRatings.id,
+        rating: courseRatings.rating,
+        review: courseRatings.review,
+        createdAt: courseRatings.createdAt,
+        userId: courseRatings.userId,
+        userName: users.name,
+        userUsername: users.username,
+        userProfileImage: users.profileimageurl
       })
       .from(courseRatings)
-      .where(eq(courseRatings.courseId, courseId));
-      
-    const result = {
-      courseId,
-      averageRating: ratingsStats[0]?.averageRating || 0,
-      count: ratingsStats[0]?.count || 0,
-    };
+      .leftJoin(users, eq(courseRatings.userId, users.id))
+      .where(and(
+        eq(courseRatings.courseId, parseInt(courseId)),
+        eq(courseRatings.lessonId, null)
+      ));
     
-    return res.status(200).json(result);
+    // Calcular média de avaliações
+    const [ratingStats] = await db
+      .select({
+        avgRating: avg(courseRatings.rating).as('avgRating'),
+        totalRatings: count(courseRatings.id).as('totalRatings')
+      })
+      .from(courseRatings)
+      .where(and(
+        eq(courseRatings.courseId, parseInt(courseId)),
+        eq(courseRatings.lessonId, null)
+      ));
+    
+    return res.json({
+      ratings,
+      stats: {
+        averageRating: ratingStats?.avgRating || 0,
+        totalRatings: ratingStats?.totalRatings || 0
+      }
+    });
   } catch (error) {
     console.error('Erro ao buscar avaliações do curso:', error);
-    return res.status(500).json({ message: 'Erro interno do servidor' });
+    return res.status(500).json({ error: 'Erro ao buscar avaliações do curso' });
   }
 });
 
-// Rota para obter a avaliação do usuário atual para um curso específico
-router.get('/course/user-rating/:courseId', async (req, res) => {
+// Rota para obter avaliações de uma lição
+router.get('/lesson-ratings/:lessonId', async (req: Request, res: Response) => {
   try {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: 'Usuário não autenticado' });
+    const { lessonId } = req.params;
+    
+    // Verificar se a lição existe
+    const [lesson] = await db.select().from(courseLessons).where(eq(courseLessons.id, parseInt(lessonId)));
+    
+    if (!lesson) {
+      return res.status(404).json({ error: 'Lição não encontrada' });
     }
     
-    const userId = req.user.id;
-    const courseId = parseInt(req.params.courseId);
-    
-    if (isNaN(courseId)) {
-      return res.status(400).json({ message: 'ID do curso inválido' });
-    }
-    
-    // Buscar a avaliação do usuário para o curso
-    const userRating = await db
-      .select({ rating: courseRatings.rating })
+    // Obter todas as avaliações da lição
+    const ratings = await db
+      .select({
+        id: courseRatings.id,
+        rating: courseRatings.rating,
+        review: courseRatings.review,
+        createdAt: courseRatings.createdAt,
+        userId: courseRatings.userId,
+        userName: users.name,
+        userUsername: users.username,
+        userProfileImage: users.profileimageurl
+      })
       .from(courseRatings)
-      .where(
-        and(
-          eq(courseRatings.userId, userId),
-          eq(courseRatings.courseId, courseId)
-        )
-      )
-      .limit(1);
-      
-    if (userRating.length === 0) {
-      return res.status(200).json({ hasRated: false });
-    }
+      .leftJoin(users, eq(courseRatings.userId, users.id))
+      .where(eq(courseRatings.lessonId, parseInt(lessonId)));
     
-    return res.status(200).json({
-      hasRated: true,
-      rating: userRating[0].rating,
+    // Calcular média de avaliações
+    const [ratingStats] = await db
+      .select({
+        avgRating: avg(courseRatings.rating).as('avgRating'),
+        totalRatings: count(courseRatings.id).as('totalRatings')
+      })
+      .from(courseRatings)
+      .where(eq(courseRatings.lessonId, parseInt(lessonId)));
+    
+    return res.json({
+      ratings,
+      stats: {
+        averageRating: ratingStats?.avgRating || 0,
+        totalRatings: ratingStats?.totalRatings || 0
+      }
     });
   } catch (error) {
-    console.error('Erro ao buscar avaliação do usuário:', error);
-    return res.status(500).json({ message: 'Erro interno do servidor' });
+    console.error('Erro ao buscar avaliações da lição:', error);
+    return res.status(500).json({ error: 'Erro ao buscar avaliações da lição' });
+  }
+});
+
+// Rota para verificar se o usuário já avaliou um curso/lição
+router.get('/user-rating', checkUserAuth, async (req: Request, res: Response) => {
+  try {
+    const { courseId, lessonId } = req.query;
+    const userId = req.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Usuário não autenticado' });
+    }
+    
+    let query = db
+      .select()
+      .from(courseRatings)
+      .where(eq(courseRatings.userId, userId));
+    
+    if (courseId && !lessonId) {
+      // Avaliação de curso
+      query = query.where(and(
+        eq(courseRatings.courseId, parseInt(courseId as string)),
+        eq(courseRatings.lessonId, null)
+      ));
+    } else if (lessonId) {
+      // Avaliação de lição
+      query = query.where(eq(courseRatings.lessonId, parseInt(lessonId as string)));
+    } else {
+      return res.status(400).json({ error: 'É necessário fornecer courseId ou lessonId' });
+    }
+    
+    const [existingRating] = await query;
+    
+    return res.json({
+      hasRated: !!existingRating,
+      rating: existingRating || null
+    });
+  } catch (error) {
+    console.error('Erro ao verificar avaliação do usuário:', error);
+    return res.status(500).json({ error: 'Erro ao verificar avaliação do usuário' });
   }
 });
 
 // Rota para avaliar um curso
-router.post('/course/rate/:courseId', async (req, res) => {
+router.post('/course-ratings', checkUserAuth, async (req: Request, res: Response) => {
   try {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: 'Usuário não autenticado' });
+    const { courseId, lessonId, rating, review } = req.body;
+    const userId = req.user?.id;
+    
+    // Validação básica dos dados de entrada
+    if (!userId) {
+      return res.status(401).json({ error: 'Usuário não autenticado' });
     }
     
-    const userId = req.user.id;
-    const courseId = parseInt(req.params.courseId);
-    const { rating } = req.body;
-    
-    if (isNaN(courseId)) {
-      return res.status(400).json({ message: 'ID do curso inválido' });
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ error: 'Avaliação deve ser um valor entre 1 e 5' });
     }
     
-    if (!rating || !Number.isInteger(rating) || rating < 1 || rating > 5) {
-      return res.status(400).json({ message: 'Avaliação inválida (deve ser um número inteiro entre 1 e 5)' });
+    if (!courseId && !lessonId) {
+      return res.status(400).json({ error: 'É necessário fornecer courseId ou lessonId' });
     }
     
-    // Verificar se o curso existe
-    const courseExists = await db.select({ id: courses.id })
-      .from(courses)
-      .where(eq(courses.id, courseId))
-      .limit(1);
-      
-    if (courseExists.length === 0) {
-      return res.status(404).json({ message: 'Curso não encontrado' });
+    // Verificar se o curso/lição existe
+    if (courseId) {
+      const [course] = await db.select().from(courses).where(eq(courses.id, courseId));
+      if (!course) {
+        return res.status(404).json({ error: 'Curso não encontrado' });
+      }
     }
     
-    // Verificar se o usuário já avaliou este curso
-    const existingRating = await db
-      .select({ id: courseRatings.id })
+    if (lessonId) {
+      const [lesson] = await db.select().from(courseLessons).where(eq(courseLessons.id, lessonId));
+      if (!lesson) {
+        return res.status(404).json({ error: 'Lição não encontrada' });
+      }
+    }
+    
+    // Verificar se o usuário já avaliou
+    let existingRatingQuery = db
+      .select()
       .from(courseRatings)
-      .where(
-        and(
-          eq(courseRatings.userId, userId),
-          eq(courseRatings.courseId, courseId)
-        )
-      )
-      .limit(1);
-      
-    // Se o usuário já avaliou, atualizar a avaliação existente
-    if (existingRating.length > 0) {
-      await db
-        .update(courseRatings)
-        .set({ 
-          rating, 
-          updatedAt: new Date() 
-        })
-        .where(eq(courseRatings.id, existingRating[0].id));
-        
-      return res.status(200).json({ message: 'Avaliação atualizada com sucesso', updated: true });
+      .where(eq(courseRatings.userId, userId));
+    
+    if (courseId && !lessonId) {
+      existingRatingQuery = existingRatingQuery.where(and(
+        eq(courseRatings.courseId, courseId),
+        eq(courseRatings.lessonId, null)
+      ));
+    } else if (lessonId) {
+      existingRatingQuery = existingRatingQuery.where(eq(courseRatings.lessonId, lessonId));
     }
     
-    // Se o usuário ainda não avaliou, criar uma nova avaliação
-    await db.insert(courseRatings).values({
-      userId,
-      courseId,
-      rating,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
+    const [existingRating] = await existingRatingQuery;
     
-    return res.status(201).json({ message: 'Avaliação enviada com sucesso', created: true });
+    if (existingRating) {
+      // Atualizar avaliação existente
+      const [updatedRating] = await db
+        .update(courseRatings)
+        .set({
+          rating,
+          review: review || null,
+          updatedAt: new Date()
+        })
+        .where(eq(courseRatings.id, existingRating.id))
+        .returning();
+      
+      return res.json(updatedRating);
+    } else {
+      // Criar nova avaliação
+      const [newRating] = await db
+        .insert(courseRatings)
+        .values({
+          userId,
+          courseId: courseId || null,
+          lessonId: lessonId || null,
+          rating,
+          review: review || null,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+        .returning();
+      
+      return res.status(201).json(newRating);
+    }
   } catch (error) {
-    console.error('Erro ao avaliar curso:', error);
-    return res.status(500).json({ message: 'Erro interno do servidor' });
+    console.error('Erro ao avaliar curso/lição:', error);
+    return res.status(500).json({ error: 'Erro ao avaliar curso/lição' });
+  }
+});
+
+// Rota para obter estatísticas resumidas de todos os cursos (para admin)
+router.get('/course-ratings-stats', async (req: Request, res: Response) => {
+  try {
+    const courseStats = await db
+      .select({
+        courseId: courseRatings.courseId,
+        courseTitle: courses.title,
+        avgRating: avg(courseRatings.rating).as('avgRating'),
+        totalRatings: count(courseRatings.id).as('totalRatings')
+      })
+      .from(courseRatings)
+      .leftJoin(courses, eq(courseRatings.courseId, courses.id))
+      .where(eq(courseRatings.lessonId, null))
+      .groupBy(courseRatings.courseId, courses.title)
+      .orderBy(sql`"avgRating" DESC`);
+    
+    return res.json(courseStats);
+  } catch (error) {
+    console.error('Erro ao buscar estatísticas de avaliações:', error);
+    return res.status(500).json({ error: 'Erro ao buscar estatísticas de avaliações' });
   }
 });
 

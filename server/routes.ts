@@ -50,6 +50,7 @@ import courseRouter from './routes/course-routes'; // Rotas para gerenciamento d
 import coursesRouter from './routes/courses-routes'; // Rotas para gerenciamento de cursos
 import coursesAdapterRouter from './routes/courses-adapter'; // Adaptador para compatibilidade com rotas antigas
 import videoCommentsRouter from './routes/video-comments-routes'; // Rotas para comentários de videoaulas
+import courseRatingsRouter from './routes/course-ratings-routes'; // Rotas para avaliações de cursos
 import lessonThumbnailUploadRouter from './routes/lesson-thumbnail-upload'; // Rota para upload de thumbnails de aulas
 import courseThumbnailUploadRouter from './routes/course-thumbnail-upload'; // Rota para upload de thumbnails de cursos
 import bannerUploadRouter from './routes/banner-upload'; // Rota para upload de banners de
@@ -4476,6 +4477,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Registrar o router de videoaulas
   app.use('/api/videoaulas', videoaulasRouter);
   
+  // Registrar rotas para comentários de vídeos
+  app.use('/api', videoCommentsRouter);
+  
+  // Registrar rotas para avaliações de cursos
+  app.use('/api', courseRatingsRouter);
+  
   // Adaptador para manter compatibilidade com rotas antigas
   app.use('/api/courses', coursesAdapterRouter);
   
@@ -4710,9 +4717,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Rotas para gerenciamento de cursos, módulos, aulas e configurações
   // Montado apenas uma vez para evitar conflitos de rotas duplicadas
   app.use('/api/course', courseRouter);
-  
-  // Rotas para gerenciamento de comentários em vídeos
-  app.use('/api', videoCommentsRouter);
   
   // Rota para upload de banners de cursos
   app.use('/api/upload', bannerUploadRouter);
