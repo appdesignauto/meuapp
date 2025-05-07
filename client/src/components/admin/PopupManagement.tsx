@@ -181,6 +181,19 @@ export default function PopupManagement() {
       }
     });
   };
+  
+  // Função para controlar o raio de borda do botão
+  const handleRadiusChange = (value: number[]) => {
+    const radius = value[0];
+    setButtonRadius(radius);
+    setFormValues(prev => ({ ...prev, buttonRadius: radius }));
+  };
+  
+  // Função para controlar a largura do botão
+  const handleWidthChange = (width: string) => {
+    setButtonWidth(width);
+    setFormValues(prev => ({ ...prev, buttonWidth: width }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -363,23 +376,6 @@ export default function PopupManagement() {
 
   const handlePreviewToggle = () => {
     setPreviewOpen(!previewOpen);
-  };
-  
-  const handleRadiusChange = (value: number[]) => {
-    const newRadius = value[0];
-    setButtonRadius(newRadius);
-    setFormValues(prev => ({
-      ...prev,
-      buttonRadius: newRadius
-    }));
-  };
-  
-  const handleWidthChange = (value: string) => {
-    setButtonWidth(value);
-    setFormValues(prev => ({
-      ...prev,
-      buttonWidth: value
-    }));
   };
 
   if (loading && popups.length === 0) {
@@ -655,73 +651,9 @@ export default function PopupManagement() {
                         name="buttonUrl"
                         value={formValues.buttonUrl}
                         onChange={handleInputChange}
-                        placeholder="https://exemplo.com/pagina"
+                        placeholder="Ex: https://exemplo.com/promocao"
                       />
                     </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="buttonWidth">Largura do botão</Label>
-                        <Select
-                          value={buttonWidth}
-                          onValueChange={(value) => setButtonWidth(value)}
-                        >
-                          <SelectTrigger id="buttonWidth">
-                            <SelectValue placeholder="Selecione a largura" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="auto">Automática</SelectItem>
-                            <SelectItem value="100%">100% (largura total)</SelectItem>
-                            <SelectItem value="75%">75%</SelectItem>
-                            <SelectItem value="50%">50%</SelectItem>
-                            <SelectItem value="25%">25%</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="buttonRadius">Arredondamento</Label>
-                        <div className="flex items-center space-x-2">
-                          <Slider
-                            id="buttonRadius"
-                            min={0}
-                            max={24}
-                            step={1}
-                            value={[buttonRadius]}
-                            onValueChange={(value) => setButtonRadius(value[0])}
-                            className="flex-1"
-                          />
-                          <span className="text-sm">{buttonRadius}px</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {formValues.buttonText && (
-                      <div className="mt-4">
-                        <Label className="mb-2 block">Prévia do botão</Label>
-                        <div 
-                          className="p-4 border rounded-md flex items-center justify-center"
-                          style={{ backgroundColor: '#f9f9f9' }}
-                        >
-                          <button
-                            style={{
-                              backgroundColor: formValues.buttonColor,
-                              color: formValues.buttonTextColor,
-                              padding: '8px 16px',
-                              borderRadius: `${buttonRadius}px`,
-                              width: buttonWidth,
-                              border: 'none',
-                              cursor: 'pointer',
-                              fontWeight: 500,
-                              transition: 'transform 0.1s ease',
-                            }}
-                            className="hover:opacity-90 active:scale-[0.98]"
-                          >
-                            {formValues.buttonText}
-                          </button>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
               </TabsContent>
@@ -962,16 +894,17 @@ export default function PopupManagement() {
                                 {formValues.startDate ? (
                                   format(formValues.startDate, "PPP", { locale: ptBR })
                                 ) : (
-                                  <span className="text-muted-foreground">Selecione uma data</span>
+                                  <span className="text-muted-foreground">Selecione a data</span>
                                 )}
-                                <Calendar className="ml-auto h-4 w-4" />
+                                <Calendar className="ml-auto h-4 w-4 opacity-50" />
                               </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0">
+                            <PopoverContent className="w-auto p-0" align="start">
                               <CalendarComponent
                                 mode="single"
-                                selected={formValues.startDate || null}
+                                selected={formValues.startDate || undefined}
                                 onSelect={(date) => handleDateChange('startDate', date)}
+                                initialFocus
                                 locale={ptBR}
                               />
                             </PopoverContent>
@@ -989,22 +922,18 @@ export default function PopupManagement() {
                                 {formValues.endDate ? (
                                   format(formValues.endDate, "PPP", { locale: ptBR })
                                 ) : (
-                                  <span className="text-muted-foreground">Selecione uma data</span>
+                                  <span className="text-muted-foreground">Selecione a data</span>
                                 )}
-                                <Calendar className="ml-auto h-4 w-4" />
+                                <Calendar className="ml-auto h-4 w-4 opacity-50" />
                               </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0">
+                            <PopoverContent className="w-auto p-0" align="start">
                               <CalendarComponent
                                 mode="single"
-                                selected={formValues.endDate || null}
+                                selected={formValues.endDate || undefined}
                                 onSelect={(date) => handleDateChange('endDate', date)}
+                                initialFocus
                                 locale={ptBR}
-                                disabled={(date) => 
-                                  formValues.startDate ? 
-                                    date < new Date(formValues.startDate) : 
-                                    false
-                                }
                               />
                             </PopoverContent>
                           </Popover>
@@ -1013,41 +942,46 @@ export default function PopupManagement() {
                     </div>
                     
                     <div>
-                      <Label htmlFor="frequency">Frequência de exibição</Label>
+                      <Label htmlFor="frequency">Frequência</Label>
                       <Select
-                        value={formValues.frequency ? formValues.frequency.toString() : '0'}
+                        value={formValues.frequency === null ? '0' : formValues.frequency.toString()}
                         onValueChange={(value) => handleSelectChange('frequency', value)}
                       >
                         <SelectTrigger id="frequency">
                           <SelectValue placeholder="Selecione a frequência" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="0">Mostrar sempre</SelectItem>
+                          <SelectItem value="0">Sempre (todas as visitas)</SelectItem>
                           <SelectItem value="1">Uma vez por dia</SelectItem>
-                          <SelectItem value="3">Uma vez a cada 3 dias</SelectItem>
+                          <SelectItem value="3">A cada 3 dias</SelectItem>
                           <SelectItem value="7">Uma vez por semana</SelectItem>
-                          <SelectItem value="14">Uma vez a cada 2 semanas</SelectItem>
                           <SelectItem value="30">Uma vez por mês</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     
-                    <div className="flex items-center space-x-2 pt-2">
-                      <Switch
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
                         id="isActive"
                         checked={formValues.isActive}
-                        onCheckedChange={(checked) => handleSwitchChange('isActive', checked)}
+                        onCheckedChange={(checked) => 
+                          handleSwitchChange('isActive', checked === true)
+                        }
                       />
-                      <Label htmlFor="isActive">Popup ativo</Label>
+                      <Label htmlFor="isActive">Ativo</Label>
                     </div>
                   </div>
                   
                   <div className="space-y-4">
                     <div>
-                      <Label className="mb-2 block">Páginas (deixe em branco para todas)</Label>
-                      <div className="space-y-2 border rounded-md p-3 max-h-40 overflow-y-auto">
+                      <h4 className="font-medium mb-2">Páginas (opcional)</h4>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Selecione em quais páginas este popup deve ser exibido. Se nenhuma for selecionada, será exibido em todas.
+                      </p>
+                      
+                      <div className="grid gap-2">
                         {availablePages.map(page => (
-                          <div key={page.id} className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-2" key={page.id}>
                             <Checkbox
                               id={`page-${page.id}`}
                               checked={formValues.pages.includes(page.id)}
@@ -1055,22 +989,21 @@ export default function PopupManagement() {
                                 handleCheckboxChange('pages', page.id, checked === true)
                               }
                             />
-                            <Label 
-                              htmlFor={`page-${page.id}`}
-                              className="text-sm font-normal cursor-pointer"
-                            >
-                              {page.name}
-                            </Label>
+                            <Label htmlFor={`page-${page.id}`}>{page.name}</Label>
                           </div>
                         ))}
                       </div>
                     </div>
                     
                     <div>
-                      <Label className="mb-2 block">Tipos de usuário (deixe em branco para todos)</Label>
-                      <div className="space-y-2 border rounded-md p-3 max-h-40 overflow-y-auto">
+                      <h4 className="font-medium mb-2">Grupos de usuários (opcional)</h4>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Selecione quais grupos de usuários devem ver este popup. Se nenhum for selecionado, será exibido para todos.
+                      </p>
+                      
+                      <div className="grid gap-2">
                         {availableRoles.map(role => (
-                          <div key={role.id} className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-2" key={role.id}>
                             <Checkbox
                               id={`role-${role.id}`}
                               checked={formValues.userRoles.includes(role.id)}
@@ -1078,12 +1011,7 @@ export default function PopupManagement() {
                                 handleCheckboxChange('userRoles', role.id, checked === true)
                               }
                             />
-                            <Label 
-                              htmlFor={`role-${role.id}`}
-                              className="text-sm font-normal cursor-pointer"
-                            >
-                              {role.name}
-                            </Label>
+                            <Label htmlFor={`role-${role.id}`}>{role.name}</Label>
                           </div>
                         ))}
                       </div>
@@ -1092,46 +1020,37 @@ export default function PopupManagement() {
                 </div>
               </TabsContent>
               
-              <TabsContent value="preview" className="pt-4">
-                <div className="border rounded-lg p-6 relative">
-                  {previewOpen ? (
-                    <>
-                      <Popup 
-                        id={0}
-                        title={formValues.title}
-                        content={formValues.content}
-                        imageUrl={formValues.imageUrl || undefined}
-                        buttonText={formValues.buttonText || undefined}
-                        buttonUrl={formValues.buttonUrl || undefined}
-                        backgroundColor={formValues.backgroundColor}
-                        textColor={formValues.textColor}
-                        buttonColor={formValues.buttonColor}
-                        buttonTextColor={formValues.buttonTextColor}
-                        position={formValues.position}
-                        size={formValues.size}
-                        animation={formValues.animation}
-                        delay={0}
-                        onClose={() => setPreviewOpen(false)}
-                        sessionId="preview"
-                      />
-                      <p className="text-center text-sm text-muted-foreground mt-4">
-                        Clique fora do popup ou no botão X para fechar a visualização
-                      </p>
-                    </>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-12">
-                      <p className="text-muted-foreground mb-4">
-                        Clique no botão abaixo para visualizar como o popup vai aparecer
-                      </p>
-                      <Button onClick={handlePreviewToggle}>
-                        Visualizar Popup
-                      </Button>
-                    </div>
-                  )}
+              <TabsContent value="preview" className="space-y-4">
+                <div className="rounded-lg border overflow-hidden bg-background p-6">
+                  <div className="relative flex items-center justify-center min-h-[400px]">
+                    <Popup 
+                      isOpen={true}
+                      title={formValues.title}
+                      content={formValues.content}
+                      imageUrl={imagePreview || formValues.imageUrl}
+                      onClose={() => {}}
+                      backgroundColor={formValues.backgroundColor}
+                      textColor={formValues.textColor}
+                      buttonText={formValues.buttonText}
+                      buttonUrl={formValues.buttonUrl}
+                      buttonColor={formValues.buttonColor}
+                      buttonTextColor={formValues.buttonTextColor}
+                      buttonRadius={buttonRadius}
+                      buttonWidth={buttonWidth}
+                      position={formValues.position}
+                      size={formValues.size}
+                      animation={formValues.animation}
+                      sessionId="preview"
+                    />
+                  </div>
                 </div>
+                
+                <p className="text-sm text-muted-foreground">
+                  Esta é uma pré-visualização do popup conforme suas configurações atuais. A aparência final pode variar ligeiramente dependendo do dispositivo e do navegador do usuário.
+                </p>
               </TabsContent>
               
-              <div className="flex justify-end gap-2 mt-6">
+              <div className="mt-6 flex justify-end space-x-4">
                 <Button
                   type="button"
                   variant="outline"
@@ -1139,14 +1058,22 @@ export default function PopupManagement() {
                 >
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={loading}>
+                
+                <Button 
+                  type="submit"
+                  disabled={loading}
+                  className="min-w-[120px]"
+                >
                   {loading ? (
-                    <>
-                      <span className="animate-spin mr-2">⟳</span>
+                    <span className="flex items-center">
+                      <span className="animate-spin mr-2 h-4 w-4 border-2 border-current border-t-transparent rounded-full"></span>
                       Salvando...
-                    </>
+                    </span>
                   ) : (
-                    isEditMode ? 'Atualizar' : 'Criar'
+                    <span className="flex items-center gap-1">
+                      <Check size={18} />
+                      Salvar popup
+                    </span>
                   )}
                 </Button>
               </div>
