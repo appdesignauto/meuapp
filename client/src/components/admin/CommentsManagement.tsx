@@ -160,7 +160,8 @@ const CommentsManagement: React.FC = () => {
     data: comments, 
     isLoading, 
     error,
-    refetch
+    refetch,
+    isRefetching
   } = useQuery<Comment[]>({
     queryKey: ['/api/video-comments/admin', filter],
     queryFn: async () => {
@@ -648,13 +649,14 @@ const CommentsManagement: React.FC = () => {
             </Button>
           )}
           <Button 
-            variant="outline" 
+            variant={isRefetching ? "default" : "outline"}
             size="sm" 
             onClick={() => refetch()}
             className="flex items-center gap-1.5"
+            disabled={isRefetching}
           >
-            <RefreshCw className="h-3.5 w-3.5" />
-            Atualizar
+            <RefreshCw className={`h-3.5 w-3.5 ${isRefetching ? 'animate-spin text-primary-foreground' : ''}`} />
+            {isRefetching ? 'Atualizando...' : 'Atualizar'}
           </Button>
         </div>
       </div>
@@ -752,26 +754,29 @@ const CommentsManagement: React.FC = () => {
                             commentId: comment.id, 
                             isHidden: !comment.isHidden 
                           })}
+                          disabled={toggleVisibilityMutation.isPending}
+                          className={toggleVisibilityMutation.isPending ? "opacity-70" : ""}
                         >
                           {comment.isHidden ? (
                             <>
-                              <Eye className="mr-2 h-4 w-4" />
-                              Tornar visível
+                              <Eye className={`mr-2 h-4 w-4 ${toggleVisibilityMutation.isPending ? "animate-pulse" : ""}`} />
+                              {toggleVisibilityMutation.isPending && comment.id === toggleVisibilityMutation.variables?.commentId ? "Processando..." : "Tornar visível"}
                             </>
                           ) : (
                             <>
-                              <EyeOff className="mr-2 h-4 w-4" />
-                              Ocultar comentário
+                              <EyeOff className={`mr-2 h-4 w-4 ${toggleVisibilityMutation.isPending ? "animate-pulse" : ""}`} />
+                              {toggleVisibilityMutation.isPending && comment.id === toggleVisibilityMutation.variables?.commentId ? "Processando..." : "Ocultar comentário"}
                             </>
                           )}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem 
                           onClick={() => confirmDelete(comment.id)}
-                          className="text-red-600"
+                          className={`text-red-600 ${deleteCommentMutation.isPending ? "opacity-70" : ""}`}
+                          disabled={deleteCommentMutation.isPending}
                         >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Excluir
+                          <Trash2 className={`mr-2 h-4 w-4 ${deleteCommentMutation.isPending ? "animate-pulse" : ""}`} />
+                          {deleteCommentMutation.isPending && comment.id === deleteCommentMutation.variables ? "Excluindo..." : "Excluir"}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -866,8 +871,8 @@ const CommentsManagement: React.FC = () => {
                     onClick={() => confirmDelete(selectedComment.id)}
                     disabled={deleteCommentMutation.isPending}
                   >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Excluir
+                    <Trash2 className={`mr-2 h-4 w-4 ${deleteCommentMutation.isPending ? "animate-pulse" : ""}`} />
+                    {deleteCommentMutation.isPending && selectedComment.id === deleteCommentMutation.variables ? "Excluindo..." : "Excluir"}
                   </Button>
                 </div>
                 <div className="flex gap-2">
@@ -881,13 +886,13 @@ const CommentsManagement: React.FC = () => {
                   >
                     {selectedComment.isHidden ? (
                       <>
-                        <Eye className="mr-2 h-4 w-4" />
-                        Tornar Visível
+                        <Eye className={`mr-2 h-4 w-4 ${toggleVisibilityMutation.isPending ? "animate-pulse" : ""}`} />
+                        {toggleVisibilityMutation.isPending && selectedComment.id === toggleVisibilityMutation.variables?.commentId ? "Processando..." : "Tornar Visível"}
                       </>
                     ) : (
                       <>
-                        <EyeOff className="mr-2 h-4 w-4" />
-                        Ocultar
+                        <EyeOff className={`mr-2 h-4 w-4 ${toggleVisibilityMutation.isPending ? "animate-pulse" : ""}`} />
+                        {toggleVisibilityMutation.isPending && selectedComment.id === toggleVisibilityMutation.variables?.commentId ? "Processando..." : "Ocultar"}
                       </>
                     )}
                   </Button>
