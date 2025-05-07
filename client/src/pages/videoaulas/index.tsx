@@ -348,8 +348,8 @@ export default function VideoaulasPage() {
                 {tutorialDestaque ? (
                   <Link 
                     href={user && lastWatchedData?.hasLastWatched 
-                      ? `/videoaulas/${lastWatchedData.lessonId}` 
-                      : tutorialDestaque ? `/videoaulas/${tutorialDestaque.id}` : '#'
+                      ? `/videoaulas/${lastWatchedData.lessonId}` // Estilo Netflix: continua de onde parou
+                      : tutorialDestaque ? `/videoaulas/${tutorialDestaque.id}` : '#' // Primeira vez: vai para a primeira aula
                     } 
                     className="w-full sm:w-auto"
                   >
@@ -366,7 +366,11 @@ export default function VideoaulasPage() {
                         ) : (
                           <>
                             <Play className="h-5 w-5 md:h-6 md:w-6 mr-2 text-black" fill="black" />
-                            <span>Assistir</span>
+                            <span>
+                              {user && lastWatchedData?.hasLastWatched 
+                                ? 'Continuar Assistindo' 
+                                : 'Assistir'}
+                            </span>
                           </>
                         )}
                       </div>
