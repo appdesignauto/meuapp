@@ -1,5 +1,4 @@
 import React from 'react';
-import { BadgeCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface User {
@@ -43,13 +42,23 @@ const VerifiedUsername: React.FC<VerifiedUsernameProps> = ({
       <span className="flex items-center mr-1">
         {user.name || user.username}
         
-        {/* Selo de verificação para administradores */}
+        {/* Selo de verificação preenchido para administradores */}
         {isAdmin && (
-          <BadgeCheck className={cn(
-            "text-blue-500 flex-shrink-0 ml-1",
-            badgeSizes[badgeSize],
-            badgeClassName
-          )} />
+          <svg 
+            className={cn(
+              "flex-shrink-0 ml-1",
+              badgeSizes[badgeSize],
+              badgeClassName
+            )} 
+            viewBox="0 0 24 24" 
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle cx="12" cy="12" r="10" fill="#1d9bf0" />
+            <path 
+              d="M9.5 15.5l-3.5-3.5 1.5-1.5 2 2 5-5 1.5 1.5-6.5 6.5z" 
+              fill="white" 
+            />
+          </svg>
         )}
       </span>
     </div>
