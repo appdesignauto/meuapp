@@ -66,6 +66,32 @@ router.get('/active', async (req, res) => {
     // Obter data atual
     const now = new Date();
     
+    console.log('DEBUG - Verificando popups ativos:');
+    console.log('- Data atual:', now);
+    console.log('- Usuário logado:', userId ? 'Sim' : 'Não', 'ID:', userId);
+    console.log('- Nível de acesso:', userRole);
+    
+    // Primeiro, buscar todos os popups ativos no banco
+    const allActivePopups = await db.query.popups.findMany({
+      where: eq(popups.isActive, true),
+      orderBy: [desc(popups.createdAt)],
+    });
+    
+    console.log('- Total de popups ativos no banco:', allActivePopups.length);
+    
+    if (allActivePopups.length > 0) {
+      // Verificar condições de data e segmentação para cada popup
+      allActivePopups.forEach(popup => {
+        console.log('Popup ID:', popup.id, 'Título:', popup.title);
+        console.log('- É ativo:', popup.isActive);
+        console.log('- Data de início:', popup.startDate, popup.startDate <= now ? 'VÁLIDA' : 'INVÁLIDA');
+        console.log('- Data de término:', popup.endDate, popup.endDate >= now ? 'VÁLIDA' : 'INVÁLIDA');
+        console.log('- Mostra para usuários logados:', popup.showToLoggedUsers);
+        console.log('- Mostra para visitantes:', popup.showToGuestUsers);
+        console.log('- Mostra para usuários premium:', popup.showToPremiumUsers);
+      });
+    }
+    
     // Construir condições de filtro para seleção de popups
     const conditions = and(
       eq(popups.isActive, true),
@@ -87,6 +113,8 @@ router.get('/active', async (req, res) => {
       where: conditions,
       orderBy: [desc(popups.createdAt)],
     });
+    
+    console.log('- Popups que passaram em todas as condições:', availablePopups.length);
     
     if (availablePopups.length === 0) {
       return res.json({ hasActivePopup: false, sessionId: currentSessionId });
