@@ -131,7 +131,18 @@ const VideoLessonPage: React.FC = () => {
   const [, navigate] = useLocation();
   // Inicializar isDesktop com um valor padrão que será ajustado no useEffect
   const [isDesktop, setIsDesktop] = useState(true);
+  const [expandedModules, setExpandedModules] = useState<number[]>([]);
+  const [currentModuleId, setCurrentModuleId] = useState<number | null>(null);
   
+  // Função para alternar a expansão do módulo
+  const toggleModuleExpansion = (moduleId: number) => {
+    setExpandedModules(prev => 
+      prev.includes(moduleId) 
+        ? prev.filter(id => id !== moduleId) 
+        : [...prev, moduleId]
+    );
+  };
+
   // Detectar se é desktop após montagem do componente e rolar para o topo
   useEffect(() => {
     // Rolar para o topo da página quando a página é carregada ou o ID muda
@@ -196,6 +207,18 @@ const VideoLessonPage: React.FC = () => {
   // Encontrar a lição atual pelo ID
   const currentLesson = lessonsData?.find(lesson => lesson.id === id);
   const currentModule = currentLesson ? moduleData?.find(module => module.id === currentLesson.moduleId) : null;
+  
+  // Expandir automaticamente o módulo da aula atual
+  useEffect(() => {
+    if (currentLesson && currentLesson.moduleId) {
+      setCurrentModuleId(currentLesson.moduleId);
+      
+      // Expandir automaticamente o módulo da aula atual se não estiver expandido
+      if (!expandedModules.includes(currentLesson.moduleId)) {
+        setExpandedModules(prev => [...prev, currentLesson.moduleId]);
+      }
+    }
+  }, [currentLesson, expandedModules]);
   
   // Preparar o objeto tutorial no formato necessário para o componente
   const tutorial = currentLesson ? {
@@ -1092,7 +1115,7 @@ const VideoLessonPage: React.FC = () => {
                 </h3>
 
                 <div className="space-y-3 sm:space-y-4">
-                  {modulosData.map((modulo) => {
+                  {moduleData && moduleData.map((modulo) => {
                     const moduleLessons = lessonsData?.filter(l => l.moduleId === modulo.id) || [];
                     const watchedCount = moduleLessons.filter(l => watchedLessons.includes(l.id)).length;
                     const progressPercent = moduleLessons.length > 0 
