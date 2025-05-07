@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, Plus, Calendar, Clock, ChevronDown, Eye, EyeOff, Edit, Trash2, Check } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Plus, Calendar, Clock, ChevronDown, Eye, EyeOff, Edit, Trash2, Check, Image, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -112,6 +112,9 @@ export default function PopupManagement() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [colorPickerOpen, setColorPickerOpen] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   // Buscar popups existentes
@@ -172,27 +175,56 @@ export default function PopupManagement() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Preparar dados para envio
-    const formattedData = {
-      ...formValues,
-      startDate: formValues.startDate ? format(formValues.startDate, 'yyyy-MM-dd') : null,
-      endDate: formValues.endDate ? format(formValues.endDate, 'yyyy-MM-dd') : null,
-      frequency: formValues.frequency === 0 ? null : formValues.frequency
-    };
-
     try {
       setLoading(true);
       
+      // Preparar dados para envio como FormData
+      const formData = new FormData();
+      
+      // Adicionar arquivo de imagem se selecionado
+      if (selectedImage) {
+        formData.append('image', selectedImage);
+      }
+      
+      // Converter objetos de formulário em JSON e adicionar como campo 'data'
+      const jsonData = {
+        ...formValues,
+        startDate: formValues.startDate ? format(formValues.startDate, 'yyyy-MM-dd') : null,
+        endDate: formValues.endDate ? format(formValues.endDate, 'yyyy-MM-dd') : null,
+        frequency: formValues.frequency === 0 ? null : formValues.frequency
+      };
+      
+      formData.append('data', JSON.stringify(jsonData));
+      
+      // Enviar requisição com FormData
       if (isEditMode && currentPopupId) {
         // Atualizar popup existente
-        await apiRequest('PUT', `/api/popups/${currentPopupId}`, formattedData);
+        const response = await fetch(`/api/popups/${currentPopupId}`, {
+          method: 'PUT',
+          body: formData,
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Erro ao atualizar popup: ${response.statusText}`);
+        }
+        
         toast({
           title: 'Sucesso',
           description: 'Popup atualizado com sucesso.',
         });
       } else {
         // Criar novo popup
-        await apiRequest('POST', '/api/popups', formattedData);
+        const response = await fetch('/api/popups', {
+          method: 'POST',
+          body: formData,
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Erro ao criar popup: ${response.statusText}`);
+        }
+        
         toast({
           title: 'Sucesso',
           description: 'Popup criado com sucesso.',
@@ -210,7 +242,7 @@ export default function PopupManagement() {
       console.error('Erro ao salvar popup:', error);
       toast({
         title: 'Erro',
-        description: 'Não foi possível salvar o popup.',
+        description: error instanceof Error ? error.message : 'Não foi possível salvar o popup.',
         variant: 'destructive'
       });
     } finally {
@@ -297,6 +329,20 @@ export default function PopupManagement() {
     setIsEditMode(false);
     setCurrentPopupId(null);
     setPreviewOpen(false);
+    setSelectedImage(null);
+    setImagePreview(null);
+  };
+  
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handlePreviewToggle = () => {
@@ -498,14 +544,66 @@ export default function PopupManagement() {
                   </div>
                   
                   <div>
-                    <Label htmlFor="imageUrl">URL da imagem</Label>
-                    <Input
-                      id="imageUrl"
-                      name="imageUrl"
-                      value={formValues.imageUrl}
-                      onChange={handleInputChange}
-                      placeholder="https://exemplo.com/imagem.jpg"
-                    />
+                    <Label htmlFor="imageUpload">Imagem do popup</Label>
+                    <div className="mt-1">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        id="imageUpload"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                      />
+                      <div className="flex flex-col gap-2">
+                        <div 
+                          className="flex flex-col items-center justify-center h-32 border-2 border-dashed rounded-md cursor-pointer hover:bg-muted/50 transition-colors"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          {imagePreview ? (
+                            <div className="relative w-full h-full">
+                              <img 
+                                src={imagePreview} 
+                                alt="Imagem do popup" 
+                                className="object-contain w-full h-full p-2" 
+                              />
+                              <button
+                                type="button"
+                                className="absolute top-1 right-1 bg-background/80 rounded-full p-1 hover:bg-background"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedImage(null);
+                                  setImagePreview(null);
+                                  if (fileInputRef.current) {
+                                    fileInputRef.current.value = '';
+                                  }
+                                }}
+                              >
+                                <X size={16} />
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <Image className="w-8 h-8 mb-2 text-muted-foreground" />
+                              <p className="text-sm text-muted-foreground">Clique para fazer upload de uma imagem</p>
+                              <p className="text-xs text-muted-foreground">PNG, JPG ou WebP até 10MB</p>
+                            </>
+                          )}
+                        </div>
+                        {formValues.imageUrl && !imagePreview && (
+                          <div className="text-sm flex items-center gap-2">
+                            <span className="text-muted-foreground">Imagem atual:</span>
+                            <a 
+                              href={formValues.imageUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-primary underline"
+                            >
+                              Ver imagem
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                   
                   <div>
