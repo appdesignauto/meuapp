@@ -270,16 +270,22 @@ export const communityPosts = pgTable("communityPosts", {
   userId: integer("userId").notNull().references(() => users.id),
   title: text("title").notNull(),
   content: text("content").notNull(),
-  imageUrl: text("imageUrl"),
+  imageUrl: text("imageUrl").notNull(),
   status: text("status").notNull().default("pending"), // pending, approved, rejected
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+  views: integer("views").default(0).notNull(),
+  featuredUntil: timestamp("featuredUntil"),
+  isWeeklyFeatured: boolean("isWeeklyFeatured").default(false).notNull(),
 });
 
 export const insertCommunityPostSchema = createInsertSchema(communityPosts).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+  views: true,
+  featuredUntil: true,
+  isWeeklyFeatured: true,
 });
 
 export type Testimonial = typeof testimonials.$inferSelect;
@@ -775,3 +781,5 @@ export const popupViewsRelations = relations(popupViews, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+
