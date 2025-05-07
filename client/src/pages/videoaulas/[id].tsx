@@ -32,6 +32,7 @@ import {
   Menu
 } from "lucide-react";
 import VideoComments from "@/components/videoaulas/VideoComments";
+import CourseRating from "@/components/videoaulas/CourseRating";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
@@ -486,6 +487,15 @@ const VideoLessonPage: React.FC = () => {
                   <Menu className="h-4 w-4 mr-1" />
                   Módulos
                 </Button>
+                
+                {/* Avaliação por estrelas */}
+                <div className="hidden md:block">
+                  <CourseRating 
+                    courseId={currentModule?.courseId || 2}
+                    size="sm" 
+                    className="bg-white/10 backdrop-blur-sm px-2 py-1 rounded-md"
+                  />
+                </div>
                 
                 {tutorial.isPremium && (
                   <Badge className="bg-gradient-to-r from-yellow-500 to-amber-500 text-white border-0 shadow-sm font-medium px-3 py-1">

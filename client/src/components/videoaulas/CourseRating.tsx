@@ -37,9 +37,9 @@ const CourseRating: React.FC<CourseRatingProps> = ({
   
   // Consulta para obter avaliações do curso
   const { data: ratingData, isLoading } = useQuery({
-    queryKey: ['/api/course/ratings', courseId],
+    queryKey: ['/api/course-ratings', courseId],
     queryFn: async () => {
-      const response = await fetch(`/api/course/ratings/${courseId}`);
+      const response = await fetch(`/api/course-ratings/${courseId}`);
       if (!response.ok) {
         throw new Error('Erro ao buscar avaliações');
       }
@@ -51,9 +51,9 @@ const CourseRating: React.FC<CourseRatingProps> = ({
   
   // Consulta para obter a avaliação do usuário atual
   const { data: userRating } = useQuery({
-    queryKey: ['/api/course/user-rating', courseId, user?.id],
+    queryKey: ['/api/user-rating', courseId, user?.id],
     queryFn: async () => {
-      const response = await fetch(`/api/course/user-rating/${courseId}`);
+      const response = await fetch(`/api/user-rating?courseId=${courseId}`);
       if (!response.ok) {
         throw new Error('Erro ao buscar avaliação do usuário');
       }
@@ -62,8 +62,8 @@ const CourseRating: React.FC<CourseRatingProps> = ({
     enabled: !!courseId && !!user?.id,
     refetchOnWindowFocus: false,
     onSuccess: (data) => {
-      if (data?.rating) {
-        setSelectedRating(data.rating);
+      if (data?.rating?.rating) {
+        setSelectedRating(data.rating.rating);
       }
     }
   });
@@ -71,12 +71,16 @@ const CourseRating: React.FC<CourseRatingProps> = ({
   // Mutação para enviar a avaliação do usuário
   const ratingMutation = useMutation({
     mutationFn: async (rating: number) => {
-      const response = await fetch(`/api/course/rate/${courseId}`, {
+      const response = await fetch('/api/course-ratings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ rating }),
+        body: JSON.stringify({ 
+          courseId, 
+          rating,
+          lessonId: null
+        }),
       });
       
       if (!response.ok) {
@@ -92,8 +96,8 @@ const CourseRating: React.FC<CourseRatingProps> = ({
       });
       
       // Invalidar consultas para atualizar os dados
-      queryClient.invalidateQueries({ queryKey: ['/api/course/ratings', courseId] });
-      queryClient.invalidateQueries({ queryKey: ['/api/course/user-rating', courseId, user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/course-ratings', courseId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user-rating', courseId, user?.id] });
     },
     onError: (error) => {
       toast({
@@ -105,8 +109,8 @@ const CourseRating: React.FC<CourseRatingProps> = ({
   });
   
   // Valores padrão caso não haja dados
-  const averageRating = ratingData?.averageRating || 4.5;
-  const ratingsCount = ratingData?.count || 0;
+  const averageRating = ratingData?.stats?.averageRating || 0;
+  const ratingsCount = ratingData?.stats?.totalRatings || 0;
   
   // Calcula as estrelas completas e metade
   const fullStars = Math.floor(averageRating);
