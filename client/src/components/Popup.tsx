@@ -197,42 +197,48 @@ export function Popup({
             <div className="flex justify-center w-full">
               <img 
                 src={imageUrl} 
-                alt={title} 
+                alt={title || "Popup promocional"} 
                 className="w-full h-auto object-cover"
                 style={{ maxHeight: size === 'large' ? '600px' : size === 'small' ? '300px' : '450px' }}
               />
             </div>
           )}
           
-          <div className="p-6">
-            <h2 
-              className="text-2xl sm:text-3xl font-bold mb-4 text-center" 
-              style={{ color: textColor }}
-            >
-              {title}
-            </h2>
-            
-            <div 
-              className="mb-6 whitespace-pre-wrap text-center text-base sm:text-lg"
-              style={{ color: textColor }}
-              dangerouslySetInnerHTML={{ __html: content }}
-            />
-            
-            {buttonText && (
-              <div className="flex justify-center mt-6">
-                <Button
-                  onClick={handleButtonClick}
-                  className="w-full sm:w-auto px-8 py-4 text-lg font-bold rounded-md transition-all duration-200 hover:brightness-110 hover:scale-105 animate-pulse-glow"
-                  style={{ 
-                    backgroundColor: buttonColor, 
-                    color: buttonTextColor,
-                  }}
+          {(title || content || buttonText) && (
+            <div className="p-6">
+              {title && (
+                <h2 
+                  className="text-2xl sm:text-3xl font-bold mb-4 text-center" 
+                  style={{ color: textColor }}
                 >
-                  {buttonText}
-                </Button>
-              </div>
-            )}
-          </div>
+                  {title}
+                </h2>
+              )}
+              
+              {content && (
+                <div 
+                  className="mb-6 whitespace-pre-wrap text-center text-base sm:text-lg"
+                  style={{ color: textColor }}
+                  dangerouslySetInnerHTML={{ __html: content }}
+                />
+              )}
+              
+              {buttonText && (
+                <div className="flex justify-center mt-6">
+                  <Button
+                    onClick={handleButtonClick}
+                    className="w-full sm:w-auto px-8 py-4 text-lg font-bold rounded-md transition-all duration-200 hover:brightness-110 hover:scale-105 animate-pulse-glow"
+                    style={{ 
+                      backgroundColor: buttonColor, 
+                      color: buttonTextColor,
+                    }}
+                  >
+                    {buttonText}
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
