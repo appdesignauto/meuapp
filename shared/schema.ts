@@ -727,7 +727,7 @@ export const popups = pgTable("popups", {
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
   pages: text("pages").array(), // Lista de IDs das páginas onde o popup será exibido
-  userRoles: text("userRoles").array(), // Lista de roles que podem ver o popup
+  userRoles: text("userroles").array(), // Lista de roles que podem ver o popup
 });
 
 export const insertPopupSchema = createInsertSchema(popups).omit({

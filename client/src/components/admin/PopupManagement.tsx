@@ -19,6 +19,7 @@ import { Popup } from '@/components/Popup';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { ButtonCustomization } from './button-customization';
 
 interface Popup {
   id: number;
@@ -727,113 +728,151 @@ export default function PopupManagement() {
               
               <TabsContent value="appearance" className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <Label>Cores</Label>
-                    <div className="grid grid-cols-2 gap-4 mt-2">
-                      <div>
-                        <Label htmlFor="backgroundColor" className="text-xs">Fundo</Label>
-                        <div className="flex mt-1">
-                          <div
-                            className="w-10 h-10 border rounded-l flex items-center justify-center cursor-pointer"
-                            style={{ backgroundColor: formValues.backgroundColor }}
-                            onClick={() => setColorPickerOpen(colorPickerOpen === 'backgroundColor' ? null : 'backgroundColor')}
-                          ></div>
-                          <Input
-                            id="backgroundColor"
-                            name="backgroundColor"
-                            value={formValues.backgroundColor}
-                            onChange={handleInputChange}
-                            className="rounded-l-none"
-                          />
-                        </div>
-                        {colorPickerOpen === 'backgroundColor' && (
-                          <div className="absolute z-10 mt-1">
-                            <HexColorPicker
-                              color={formValues.backgroundColor}
-                              onChange={(color) => handleColorChange('backgroundColor', color)}
+                  <div className="space-y-6">
+                    <div>
+                      <Label>Cores</Label>
+                      <div className="grid grid-cols-2 gap-4 mt-2">
+                        <div>
+                          <Label htmlFor="backgroundColor" className="text-xs">Fundo</Label>
+                          <div className="flex mt-1">
+                            <div
+                              className="w-10 h-10 border rounded-l flex items-center justify-center cursor-pointer"
+                              style={{ backgroundColor: formValues.backgroundColor }}
+                              onClick={() => setColorPickerOpen(colorPickerOpen === 'backgroundColor' ? null : 'backgroundColor')}
+                            ></div>
+                            <Input
+                              id="backgroundColor"
+                              name="backgroundColor"
+                              value={formValues.backgroundColor}
+                              onChange={handleInputChange}
+                              className="rounded-l-none"
                             />
                           </div>
-                        )}
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="textColor" className="text-xs">Texto</Label>
-                        <div className="flex mt-1">
-                          <div
-                            className="w-10 h-10 border rounded-l flex items-center justify-center cursor-pointer"
-                            style={{ backgroundColor: formValues.textColor }}
-                            onClick={() => setColorPickerOpen(colorPickerOpen === 'textColor' ? null : 'textColor')}
-                          ></div>
-                          <Input
-                            id="textColor"
-                            name="textColor"
-                            value={formValues.textColor}
-                            onChange={handleInputChange}
-                            className="rounded-l-none"
-                          />
+                          {colorPickerOpen === 'backgroundColor' && (
+                            <div className="absolute z-10 mt-1">
+                              <HexColorPicker
+                                color={formValues.backgroundColor}
+                                onChange={(color) => handleColorChange('backgroundColor', color)}
+                              />
+                            </div>
+                          )}
                         </div>
-                        {colorPickerOpen === 'textColor' && (
-                          <div className="absolute z-10 mt-1">
-                            <HexColorPicker
-                              color={formValues.textColor}
-                              onChange={(color) => handleColorChange('textColor', color)}
+                        
+                        <div>
+                          <Label htmlFor="textColor" className="text-xs">Texto</Label>
+                          <div className="flex mt-1">
+                            <div
+                              className="w-10 h-10 border rounded-l flex items-center justify-center cursor-pointer"
+                              style={{ backgroundColor: formValues.textColor }}
+                              onClick={() => setColorPickerOpen(colorPickerOpen === 'textColor' ? null : 'textColor')}
+                            ></div>
+                            <Input
+                              id="textColor"
+                              name="textColor"
+                              value={formValues.textColor}
+                              onChange={handleInputChange}
+                              className="rounded-l-none"
                             />
                           </div>
-                        )}
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="buttonColor" className="text-xs">Fundo do botão</Label>
-                        <div className="flex mt-1">
-                          <div
-                            className="w-10 h-10 border rounded-l flex items-center justify-center cursor-pointer"
-                            style={{ backgroundColor: formValues.buttonColor }}
-                            onClick={() => setColorPickerOpen(colorPickerOpen === 'buttonColor' ? null : 'buttonColor')}
-                          ></div>
-                          <Input
-                            id="buttonColor"
-                            name="buttonColor"
-                            value={formValues.buttonColor}
-                            onChange={handleInputChange}
-                            className="rounded-l-none"
-                          />
+                          {colorPickerOpen === 'textColor' && (
+                            <div className="absolute z-10 mt-1">
+                              <HexColorPicker
+                                color={formValues.textColor}
+                                onChange={(color) => handleColorChange('textColor', color)}
+                              />
+                            </div>
+                          )}
                         </div>
-                        {colorPickerOpen === 'buttonColor' && (
-                          <div className="absolute z-10 mt-1">
-                            <HexColorPicker
-                              color={formValues.buttonColor}
-                              onChange={(color) => handleColorChange('buttonColor', color)}
+                        
+                        <div>
+                          <Label htmlFor="buttonColor" className="text-xs">Fundo do botão</Label>
+                          <div className="flex mt-1">
+                            <div
+                              className="w-10 h-10 border rounded-l flex items-center justify-center cursor-pointer"
+                              style={{ backgroundColor: formValues.buttonColor }}
+                              onClick={() => setColorPickerOpen(colorPickerOpen === 'buttonColor' ? null : 'buttonColor')}
+                            ></div>
+                            <Input
+                              id="buttonColor"
+                              name="buttonColor"
+                              value={formValues.buttonColor}
+                              onChange={handleInputChange}
+                              className="rounded-l-none"
                             />
                           </div>
-                        )}
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="buttonTextColor" className="text-xs">Texto do botão</Label>
-                        <div className="flex mt-1">
-                          <div
-                            className="w-10 h-10 border rounded-l flex items-center justify-center cursor-pointer"
-                            style={{ backgroundColor: formValues.buttonTextColor }}
-                            onClick={() => setColorPickerOpen(colorPickerOpen === 'buttonTextColor' ? null : 'buttonTextColor')}
-                          ></div>
-                          <Input
-                            id="buttonTextColor"
-                            name="buttonTextColor"
-                            value={formValues.buttonTextColor}
-                            onChange={handleInputChange}
-                            className="rounded-l-none"
-                          />
+                          {colorPickerOpen === 'buttonColor' && (
+                            <div className="absolute z-10 mt-1">
+                              <HexColorPicker
+                                color={formValues.buttonColor}
+                                onChange={(color) => handleColorChange('buttonColor', color)}
+                              />
+                            </div>
+                          )}
                         </div>
-                        {colorPickerOpen === 'buttonTextColor' && (
-                          <div className="absolute z-10 mt-1">
-                            <HexColorPicker
-                              color={formValues.buttonTextColor}
-                              onChange={(color) => handleColorChange('buttonTextColor', color)}
+                        
+                        <div>
+                          <Label htmlFor="buttonTextColor" className="text-xs">Texto do botão</Label>
+                          <div className="flex mt-1">
+                            <div
+                              className="w-10 h-10 border rounded-l flex items-center justify-center cursor-pointer"
+                              style={{ backgroundColor: formValues.buttonTextColor }}
+                              onClick={() => setColorPickerOpen(colorPickerOpen === 'buttonTextColor' ? null : 'buttonTextColor')}
+                            ></div>
+                            <Input
+                              id="buttonTextColor"
+                              name="buttonTextColor"
+                              value={formValues.buttonTextColor}
+                              onChange={handleInputChange}
+                              className="rounded-l-none"
                             />
                           </div>
-                        )}
+                          {colorPickerOpen === 'buttonTextColor' && (
+                            <div className="absolute z-10 mt-1">
+                              <HexColorPicker
+                                color={formValues.buttonTextColor}
+                                onChange={(color) => handleColorChange('buttonTextColor', color)}
+                              />
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
+                    
+                    {/* Adicionando o componente de customização de botão */}
+                    <ButtonCustomization 
+                      buttonRadius={buttonRadius}
+                      buttonWidth={buttonWidth}
+                      onRadiusChange={handleRadiusChange}
+                      onWidthChange={handleWidthChange}
+                    />
+                    
+                    {/* Prévia do botão */}
+                    {formValues.buttonText && (
+                      <div className="mt-4">
+                        <Label className="mb-2 block">Prévia do botão</Label>
+                        <div 
+                          className="p-4 border rounded-md flex items-center justify-center"
+                          style={{ backgroundColor: '#f9f9f9' }}
+                        >
+                          <button
+                            style={{
+                              backgroundColor: formValues.buttonColor,
+                              color: formValues.buttonTextColor,
+                              padding: '8px 16px',
+                              borderRadius: `${buttonRadius}px`,
+                              width: buttonWidth,
+                              border: 'none',
+                              cursor: 'pointer',
+                              fontWeight: 500,
+                              transition: 'transform 0.1s ease',
+                            }}
+                            className="hover:opacity-90 active:scale-[0.98]"
+                          >
+                            {formValues.buttonText}
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
                   <div className="space-y-4">
