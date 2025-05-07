@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { formatDistance } from 'date-fns';
+import { formatDistance, subDays, parseISO, isAfter, isBefore } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   MessageSquare,
@@ -14,7 +14,14 @@ import {
   CheckCircle2,
   XCircle,
   AlertTriangle,
-  Search
+  Search,
+  Calendar,
+  ThumbsUp,
+  User,
+  BookOpen,
+  FileText,
+  SlidersHorizontal,
+  ChevronDown
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -49,6 +56,14 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from "@/components/ui/popover";
+import { Slider } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 
 // Definição das interfaces para tipagem
 interface Comment {
@@ -89,6 +104,27 @@ const formatRelativeDate = (dateString: string): string => {
   }
 };
 
+// Interface para filtros avançados
+interface AdvancedFilters {
+  dateRange: {
+    enabled: boolean;
+    days: number;
+  };
+  likesCount: {
+    enabled: boolean;
+    min: number;
+    max: number;
+  };
+  modules: {
+    enabled: boolean;
+    selected: string[];
+  };
+  users: {
+    enabled: boolean;
+    selected: string[];
+  };
+}
+
 const CommentsManagement: React.FC = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -96,7 +132,29 @@ const CommentsManagement: React.FC = () => {
   const [filter, setFilter] = useState<'all' | 'hidden' | 'visible'>('all');
   const [selectedComment, setSelectedComment] = useState<Comment | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-
+  const [isAdvancedFiltersOpen, setIsAdvancedFiltersOpen] = useState(false);
+  
+  // Estados para filtros avançados
+  const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>({
+    dateRange: {
+      enabled: false,
+      days: 7,
+    },
+    likesCount: {
+      enabled: false,
+      min: 0,
+      max: 10
+    },
+    modules: {
+      enabled: false,
+      selected: []
+    },
+    users: {
+      enabled: false,
+      selected: []
+    }
+  });
+  
   // Consulta para obter todos os comentários
   const { 
     data: comments, 
@@ -219,7 +277,45 @@ const CommentsManagement: React.FC = () => {
     setIsViewDialogOpen(true);
   };
 
-  // Filtrar comentários por termo de busca
+  // Aplicar filtros avançados
+  const applyAdvancedFilters = (comments: Comment[]) => {
+    return comments.filter(comment => {
+      // Filtro por data
+      if (advancedFilters.dateRange.enabled) {
+        const commentDate = parseISO(comment.createdAt);
+        const cutoffDate = subDays(new Date(), advancedFilters.dateRange.days);
+        if (isBefore(commentDate, cutoffDate)) {
+          return false;
+        }
+      }
+      
+      // Filtro por curtidas
+      if (advancedFilters.likesCount.enabled) {
+        const { min, max } = advancedFilters.likesCount;
+        if (comment.likes < min || comment.likes > max) {
+          return false;
+        }
+      }
+      
+      // Filtro por módulo
+      if (advancedFilters.modules.enabled && advancedFilters.modules.selected.length > 0) {
+        if (!advancedFilters.modules.selected.includes(comment.moduleName)) {
+          return false;
+        }
+      }
+      
+      // Filtro por usuário
+      if (advancedFilters.users.enabled && advancedFilters.users.selected.length > 0) {
+        if (!advancedFilters.users.selected.includes(comment.username)) {
+          return false;
+        }
+      }
+      
+      return true;
+    });
+  };
+  
+  // Filtrar comentários por termo de busca e aplicar filtros avançados
   const filteredComments = comments?.filter(comment => {
     const searchLower = searchTerm.toLowerCase();
     return (
@@ -229,7 +325,130 @@ const CommentsManagement: React.FC = () => {
       comment.lessonTitle.toLowerCase().includes(searchLower) ||
       comment.moduleName.toLowerCase().includes(searchLower)
     );
+  }).filter(comment => {
+    // Aplicar filtros avançados adicionais
+    if (advancedFilters.dateRange.enabled) {
+      const commentDate = parseISO(comment.createdAt);
+      const cutoffDate = subDays(new Date(), advancedFilters.dateRange.days);
+      if (isBefore(commentDate, cutoffDate)) {
+        return false;
+      }
+    }
+    
+    if (advancedFilters.likesCount.enabled) {
+      const { min, max } = advancedFilters.likesCount;
+      if (comment.likes < min || comment.likes > max) {
+        return false;
+      }
+    }
+    
+    if (advancedFilters.modules.enabled && advancedFilters.modules.selected.length > 0) {
+      if (!advancedFilters.modules.selected.includes(comment.moduleName)) {
+        return false;
+      }
+    }
+    
+    if (advancedFilters.users.enabled && advancedFilters.users.selected.length > 0) {
+      if (!advancedFilters.users.selected.includes(comment.username)) {
+        return false;
+      }
+    }
+    
+    return true;
   });
+
+  // Extrair módulos e usuários únicos dos comentários para filtros avançados
+  const uniqueModules = React.useMemo(() => {
+    if (!comments) return [];
+    return [...new Set(comments.map(comment => comment.moduleName))].sort();
+  }, [comments]);
+  
+  const uniqueUsers = React.useMemo(() => {
+    if (!comments) return [];
+    return [...new Set(comments.map(comment => comment.username))].sort();
+  }, [comments]);
+  
+  // Funções para manipular filtros avançados
+  const updateDateRange = (enabled: boolean, days?: number) => {
+    setAdvancedFilters(prev => ({
+      ...prev,
+      dateRange: {
+        enabled,
+        days: days !== undefined ? days : prev.dateRange.days
+      }
+    }));
+  };
+  
+  const updateLikesRange = (enabled: boolean, min?: number, max?: number) => {
+    setAdvancedFilters(prev => ({
+      ...prev,
+      likesCount: {
+        enabled,
+        min: min !== undefined ? min : prev.likesCount.min,
+        max: max !== undefined ? max : prev.likesCount.max
+      }
+    }));
+  };
+  
+  const updateModuleFilter = (enabled: boolean, modules?: string[]) => {
+    setAdvancedFilters(prev => ({
+      ...prev,
+      modules: {
+        enabled,
+        selected: modules || prev.modules.selected
+      }
+    }));
+  };
+  
+  const updateUserFilter = (enabled: boolean, users?: string[]) => {
+    setAdvancedFilters(prev => ({
+      ...prev,
+      users: {
+        enabled,
+        selected: users || prev.users.selected
+      }
+    }));
+  };
+  
+  const toggleModuleSelection = (moduleName: string) => {
+    setAdvancedFilters(prev => {
+      const isSelected = prev.modules.selected.includes(moduleName);
+      const newSelected = isSelected
+        ? prev.modules.selected.filter(m => m !== moduleName)
+        : [...prev.modules.selected, moduleName];
+        
+      return {
+        ...prev,
+        modules: {
+          ...prev.modules,
+          selected: newSelected
+        }
+      };
+    });
+  };
+  
+  const toggleUserSelection = (username: string) => {
+    setAdvancedFilters(prev => {
+      const isSelected = prev.users.selected.includes(username);
+      const newSelected = isSelected
+        ? prev.users.selected.filter(u => u !== username)
+        : [...prev.users.selected, username];
+        
+      return {
+        ...prev,
+        users: {
+          ...prev.users,
+          selected: newSelected
+        }
+      };
+    });
+  };
+  
+  // Função para verificar se algum filtro avançado está ativo
+  const hasActiveAdvancedFilters = advancedFilters.dateRange.enabled || 
+                                  advancedFilters.likesCount.enabled || 
+                                  (advancedFilters.modules.enabled && advancedFilters.modules.selected.length > 0) ||
+                                  (advancedFilters.users.enabled && advancedFilters.users.selected.length > 0);
 
   return (
     <div className="space-y-6">
@@ -243,16 +462,217 @@ const CommentsManagement: React.FC = () => {
         </Alert>
       )}
 
-      <div className="flex justify-end mb-6">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={() => refetch()}
-          className="flex items-center gap-1.5"
-        >
-          <RefreshCw className="h-3.5 w-3.5" />
-          Atualizar
-        </Button>
+      <div className="flex justify-between items-center mb-6">
+        <Popover open={isAdvancedFiltersOpen} onOpenChange={setIsAdvancedFiltersOpen}>
+          <PopoverTrigger asChild>
+            <Button 
+              variant={hasActiveAdvancedFilters ? "default" : "outline"} 
+              size="sm"
+              className="flex items-center gap-1.5"
+            >
+              <Filter className="h-4 w-4" />
+              Filtros Avançados
+              {hasActiveAdvancedFilters && (
+                <Badge className="ml-1 h-5 w-5 p-0 flex items-center justify-center rounded-full text-[10px]">
+                  {(advancedFilters.dateRange.enabled ? 1 : 0) + 
+                   (advancedFilters.likesCount.enabled ? 1 : 0) + 
+                   (advancedFilters.modules.enabled && advancedFilters.modules.selected.length > 0 ? 1 : 0) +
+                   (advancedFilters.users.enabled && advancedFilters.users.selected.length > 0 ? 1 : 0)}
+                </Badge>
+              )}
+              <ChevronDown className="h-3.5 w-3.5 ml-1" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-96 p-5" align="start">
+            <div className="space-y-4">
+              <h4 className="font-medium text-sm">Filtros Avançados</h4>
+              
+              {/* Filtro por Data */}
+              <div className="border border-border rounded-md p-3 pb-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <h5 className="text-sm font-medium">Filtrar por data</h5>
+                  </div>
+                  <Checkbox 
+                    checked={advancedFilters.dateRange.enabled}
+                    onCheckedChange={(checked) => updateDateRange(checked === true)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-xs text-muted-foreground">Período: Últimos {advancedFilters.dateRange.days} dias</span>
+                  </div>
+                  <Slider 
+                    min={1}
+                    max={30}
+                    step={1}
+                    value={[advancedFilters.dateRange.days]}
+                    onValueChange={(value) => updateDateRange(advancedFilters.dateRange.enabled, value[0])}
+                    disabled={!advancedFilters.dateRange.enabled}
+                  />
+                </div>
+              </div>
+              
+              {/* Filtro por Curtidas */}
+              <div className="border border-border rounded-md p-3 pb-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ThumbsUp className="h-4 w-4 text-muted-foreground" />
+                    <h5 className="text-sm font-medium">Filtrar por curtidas</h5>
+                  </div>
+                  <Checkbox 
+                    checked={advancedFilters.likesCount.enabled}
+                    onCheckedChange={(checked) => updateLikesRange(checked === true)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-xs text-muted-foreground">Entre {advancedFilters.likesCount.min} e {advancedFilters.likesCount.max} curtidas</span>
+                  </div>
+                  <Slider 
+                    min={0}
+                    max={50}
+                    step={1}
+                    value={[advancedFilters.likesCount.min, advancedFilters.likesCount.max]}
+                    onValueChange={(value) => updateLikesRange(advancedFilters.likesCount.enabled, value[0], value[1])}
+                    disabled={!advancedFilters.likesCount.enabled}
+                  />
+                </div>
+              </div>
+              
+              {/* Filtro por Módulo */}
+              <div className="border border-border rounded-md p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="h-4 w-4 text-muted-foreground" />
+                    <h5 className="text-sm font-medium">Filtrar por módulo</h5>
+                  </div>
+                  <Checkbox 
+                    checked={advancedFilters.modules.enabled}
+                    onCheckedChange={(checked) => updateModuleFilter(checked === true)}
+                  />
+                </div>
+                {uniqueModules.length > 0 ? (
+                  <div className="max-h-36 overflow-y-auto p-1 space-y-1.5">
+                    {uniqueModules.map(moduleName => (
+                      <div key={moduleName} className="flex items-center gap-2">
+                        <Checkbox 
+                          id={`module-${moduleName}`}
+                          disabled={!advancedFilters.modules.enabled}
+                          checked={advancedFilters.modules.selected.includes(moduleName)}
+                          onCheckedChange={() => toggleModuleSelection(moduleName)}
+                        />
+                        <Label 
+                          htmlFor={`module-${moduleName}`} 
+                          className="text-xs hover:cursor-pointer"
+                        >
+                          {moduleName}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-2">
+                    <span className="text-xs text-muted-foreground">Nenhum módulo disponível</span>
+                  </div>
+                )}
+              </div>
+              
+              {/* Filtro por Usuário */}
+              <div className="border border-border rounded-md p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <h5 className="text-sm font-medium">Filtrar por usuário</h5>
+                  </div>
+                  <Checkbox 
+                    checked={advancedFilters.users.enabled}
+                    onCheckedChange={(checked) => updateUserFilter(checked === true)}
+                  />
+                </div>
+                {uniqueUsers.length > 0 ? (
+                  <div className="max-h-36 overflow-y-auto p-1 space-y-1.5">
+                    {uniqueUsers.map(username => (
+                      <div key={username} className="flex items-center gap-2">
+                        <Checkbox 
+                          id={`user-${username}`}
+                          disabled={!advancedFilters.users.enabled}
+                          checked={advancedFilters.users.selected.includes(username)}
+                          onCheckedChange={() => toggleUserSelection(username)}
+                        />
+                        <Label 
+                          htmlFor={`user-${username}`} 
+                          className="text-xs hover:cursor-pointer"
+                        >
+                          {username}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-2">
+                    <span className="text-xs text-muted-foreground">Nenhum usuário disponível</span>
+                  </div>
+                )}
+              </div>
+              
+              {/* Botões de ação */}
+              <div className="flex justify-end gap-2 pt-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    setAdvancedFilters({
+                      dateRange: { enabled: false, days: 7 },
+                      likesCount: { enabled: false, min: 0, max: 10 },
+                      modules: { enabled: false, selected: [] },
+                      users: { enabled: false, selected: [] }
+                    });
+                  }}
+                >
+                  Limpar filtros
+                </Button>
+                <Button 
+                  size="sm"
+                  onClick={() => setIsAdvancedFiltersOpen(false)}
+                >
+                  Aplicar
+                </Button>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+        
+        <div className="flex items-center gap-2">
+          {hasActiveAdvancedFilters && (
+            <Button 
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setAdvancedFilters({
+                  dateRange: { enabled: false, days: 7 },
+                  likesCount: { enabled: false, min: 0, max: 10 },
+                  modules: { enabled: false, selected: [] },
+                  users: { enabled: false, selected: [] }
+                });
+              }}
+              className="flex items-center gap-1.5"
+            >
+              <XCircle className="h-3.5 w-3.5" />
+              Limpar filtros
+            </Button>
+          )}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => refetch()}
+            className="flex items-center gap-1.5"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Atualizar
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
