@@ -83,7 +83,7 @@ export function setupAuth(app: Express) {
       secure: process.env.NODE_ENV === "production",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       sameSite: process.env.NODE_ENV === "production" ? 'none' : 'lax',
-      domain: undefined, // Permitir cookies em qualquer domínio para facilitar teste
+      domain: process.env.NODE_ENV === "production" ? '.designauto.com.br' : undefined, // Usar .designauto.com.br em produção
       path: '/'
     },
     store: new PostgresSessionStore({

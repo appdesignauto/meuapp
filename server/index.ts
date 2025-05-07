@@ -19,6 +19,23 @@ app.use(express.urlencoded({ extended: false }));
 // Configuração para servir arquivos estáticos da pasta public
 app.use(express.static(path.join(process.cwd(), 'public')));
 
+// Redirecionar HTTP para HTTPS em produção
+if (process.env.NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    // Verificar se estamos no domínio designauto.com.br e se a conexão não é HTTPS
+    if (
+      req.hostname && 
+      req.hostname.includes('designauto.com.br') && 
+      !req.secure && 
+      req.headers['x-forwarded-proto'] !== 'https'
+    ) {
+      // Redirecionar para HTTPS
+      return res.redirect(301, `https://${req.hostname}${req.url}`);
+    }
+    next();
+  });
+}
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
