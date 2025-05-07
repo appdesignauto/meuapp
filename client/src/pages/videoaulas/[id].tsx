@@ -183,12 +183,42 @@ const VideoLessonPage: React.FC = () => {
   // Estado para controlar se a aula atual está concluída
   const isCompleted = watchedLessons.includes(id);
   
-  // Formatar duração de segundos para string "MM:SS"
-  const formatarDuracao = (segundos?: number) => {
-    if (!segundos) return "00:00";
-    const minutos = Math.floor(segundos / 60);
-    const segsRestantes = segundos % 60;
-    return `${minutos}:${segsRestantes.toString().padStart(2, '0')}`;
+  // Formatar duração de segundos para string "MM:SS" ou "HH:MM:SS"
+  const formatarDuracao = (segundos?: number | string | null) => {
+    if (segundos === undefined || segundos === null) return "00:00";
+    
+    // Verificar se já é uma string formatada como "MM:SS" ou "HH:MM:SS"
+    if (typeof segundos === 'string' && segundos.includes(':')) {
+      // Se já estiver no formato adequado, retorna a string diretamente
+      return segundos;
+    }
+    
+    // Garantir que segundos seja um número
+    let totalSegundos = 0;
+    
+    if (typeof segundos === 'string') {
+      totalSegundos = parseInt(segundos, 10);
+    } else if (typeof segundos === 'number') {
+      totalSegundos = segundos;
+    }
+    
+    if (isNaN(totalSegundos) || totalSegundos < 0) {
+      console.warn(`Valor inválido para formatação de duração: ${segundos}`);
+      return "00:00";
+    }
+    
+    // Calcular horas, minutos e segundos
+    const horas = Math.floor(totalSegundos / 3600);
+    const minutos = Math.floor((totalSegundos % 3600) / 60);
+    const segsRestantes = totalSegundos % 60;
+    
+    // Formatar com horas se for necessário
+    if (horas > 0) {
+      return `${horas}:${minutos.toString().padStart(2, '0')}:${segsRestantes.toString().padStart(2, '0')}`;
+    }
+    
+    // Formatar sempre com padding para minutos e segundos
+    return `${minutos.toString().padStart(2, '0')}:${segsRestantes.toString().padStart(2, '0')}`;
   };
   
   // Detectar se é desktop após montagem do componente e rolar para o topo
@@ -1074,7 +1104,10 @@ const VideoLessonPage: React.FC = () => {
                           <h4 className={`${t.id === id ? 'text-blue-700' : 'text-gray-800'} font-medium text-xs sm:text-sm truncate`}>
                             {t.title}
                           </h4>
-                          <p className="text-gray-500 text-[10px] sm:text-xs">{t.duration}</p>
+                          <p className="text-gray-500 text-[10px] sm:text-xs flex items-center">
+                            <Clock className="h-2.5 w-2.5 mr-0.5 inline-block" />
+                            {formatarDuracao(t.duration)}
+                          </p>
                         </div>
                       </div>
                     </Link>
@@ -1184,7 +1217,7 @@ const VideoLessonPage: React.FC = () => {
                                   <div className="flex items-center gap-2 mt-1">
                                     <span className="text-gray-500 text-[10px] sm:text-xs flex items-center">
                                       <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 inline-block" />
-                                      {aula.durationFormatted || "00:00"}
+                                      {formatarDuracao(aula.duration)}
                                     </span>
                                     {aula.isPremium && (
                                       <span className="bg-amber-100 text-amber-700 text-[8px] sm:text-[10px] px-1 py-0.5 rounded">
