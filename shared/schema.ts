@@ -709,6 +709,8 @@ export const popups = pgTable("popups", {
   textColor: text("textColor").default("#000000"),
   buttonColor: text("buttonColor").default("#4F46E5"),
   buttonTextColor: text("buttonTextColor").default("#FFFFFF"),
+  buttonRadius: integer("buttonRadius").default(4), // Raio de arredondamento do botão em pixels
+  buttonWidth: text("buttonWidth").default("auto"), // Largura do botão: auto, 100%, 75%, 50%, 25%
   position: text("position").default("center"), // center, top-left, top-right, bottom-left, bottom-right
   size: text("size").default("medium"), // small, medium, large
   animation: text("animation").default("fade"), // fade, slide, zoom
@@ -724,6 +726,8 @@ export const popups = pgTable("popups", {
   createdBy: integer("createdBy").notNull().references(() => users.id),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+  pages: text("pages").array(), // Lista de IDs das páginas onde o popup será exibido
+  userRoles: text("userRoles").array(), // Lista de roles que podem ver o popup
 });
 
 export const insertPopupSchema = createInsertSchema(popups).omit({

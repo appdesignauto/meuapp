@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Slider } from '@/components/ui/slider';
 import { HexColorPicker } from 'react-colorful';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -30,6 +31,8 @@ interface Popup {
   textColor: string;
   buttonColor: string;
   buttonTextColor: string;
+  buttonRadius?: number;
+  buttonWidth?: string;
   position: 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
   size: 'small' | 'medium' | 'large';
   animation: 'fade' | 'slide' | 'zoom';
@@ -115,6 +118,8 @@ export default function PopupManagement() {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [buttonRadius, setButtonRadius] = useState<number>(4);
+  const [buttonWidth, setButtonWidth] = useState<string>('auto');
   const { toast } = useToast();
 
   // Buscar popups existentes
@@ -603,26 +608,92 @@ export default function PopupManagement() {
                     </div>
                   </div>
                   
-                  <div>
-                    <Label htmlFor="buttonText">Texto do botão</Label>
-                    <Input
-                      id="buttonText"
-                      name="buttonText"
-                      value={formValues.buttonText}
-                      onChange={handleInputChange}
-                      placeholder="Ex: Saiba mais"
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="buttonUrl">URL do botão</Label>
-                    <Input
-                      id="buttonUrl"
-                      name="buttonUrl"
-                      value={formValues.buttonUrl}
-                      onChange={handleInputChange}
-                      placeholder="https://exemplo.com/pagina"
-                    />
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="buttonText">Texto do botão</Label>
+                      <Input
+                        id="buttonText"
+                        name="buttonText"
+                        value={formValues.buttonText}
+                        onChange={handleInputChange}
+                        placeholder="Ex: Saiba mais"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="buttonUrl">URL do botão</Label>
+                      <Input
+                        id="buttonUrl"
+                        name="buttonUrl"
+                        value={formValues.buttonUrl}
+                        onChange={handleInputChange}
+                        placeholder="https://exemplo.com/pagina"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="buttonWidth">Largura do botão</Label>
+                        <Select
+                          value={buttonWidth}
+                          onValueChange={(value) => setButtonWidth(value)}
+                        >
+                          <SelectTrigger id="buttonWidth">
+                            <SelectValue placeholder="Selecione a largura" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="auto">Automática</SelectItem>
+                            <SelectItem value="100%">100% (largura total)</SelectItem>
+                            <SelectItem value="75%">75%</SelectItem>
+                            <SelectItem value="50%">50%</SelectItem>
+                            <SelectItem value="25%">25%</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="buttonRadius">Arredondamento</Label>
+                        <div className="flex items-center space-x-2">
+                          <Slider
+                            id="buttonRadius"
+                            min={0}
+                            max={24}
+                            step={1}
+                            value={[buttonRadius]}
+                            onValueChange={(value) => setButtonRadius(value[0])}
+                            className="flex-1"
+                          />
+                          <span className="text-sm">{buttonRadius}px</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {formValues.buttonText && (
+                      <div className="mt-4">
+                        <Label className="mb-2 block">Prévia do botão</Label>
+                        <div 
+                          className="p-4 border rounded-md flex items-center justify-center"
+                          style={{ backgroundColor: '#f9f9f9' }}
+                        >
+                          <button
+                            style={{
+                              backgroundColor: formValues.buttonColor,
+                              color: formValues.buttonTextColor,
+                              padding: '8px 16px',
+                              borderRadius: `${buttonRadius}px`,
+                              width: buttonWidth,
+                              border: 'none',
+                              cursor: 'pointer',
+                              fontWeight: 500,
+                              transition: 'transform 0.1s ease',
+                            }}
+                            className="hover:opacity-90 active:scale-[0.98]"
+                          >
+                            {formValues.buttonText}
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </TabsContent>
