@@ -177,6 +177,67 @@ const VideoLessonPage: React.FC = () => {
   const [hoverRating, setHoverRating] = useState<number>(0);
   const [hasRated, setHasRated] = useState<boolean>(userRating > 0);
   
+  // Estado para controlar se a aula foi salva pelo usuário
+  const [savedLessons, setSavedLessons] = useState<number[]>(() => {
+    // Recuperar aulas salvas do localStorage
+    const saved = localStorage.getItem('savedLessons');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  // Estado para a aula salva
+  const isSaved = savedLessons.includes(id);
+  
+  // Função para salvar/remover aula dos favoritos
+  const toggleSaveLesson = () => {
+    const newSavedLessons = isSaved
+      ? savedLessons.filter(lessonId => lessonId !== id)
+      : [...savedLessons, id];
+    
+    setSavedLessons(newSavedLessons);
+    localStorage.setItem('savedLessons', JSON.stringify(newSavedLessons));
+  };
+  
+  // Função para compartilhar a aula
+  const shareLesson = async () => {
+    const lessonUrl = window.location.href;
+    const lessonTitle = currentLesson?.title || 'Tutorial';
+    
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: lessonTitle,
+          text: `Confira este tutorial: ${lessonTitle}`,
+          url: lessonUrl,
+        });
+      } else {
+        // Fallback para navegadores que não suportam a Web Share API
+        navigator.clipboard.writeText(lessonUrl);
+        toast({
+          title: "Link copiado!",
+          description: "O link foi copiado para a área de transferência.",
+          variant: "default",
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao compartilhar:', error);
+      // Tenta copiar para a área de transferência como fallback
+      try {
+        navigator.clipboard.writeText(lessonUrl);
+        toast({
+          title: "Link copiado!",
+          description: "O link foi copiado para a área de transferência.",
+          variant: "default",
+        });
+      } catch (clipboardError) {
+        toast({
+          title: "Erro ao compartilhar",
+          description: "Não foi possível compartilhar ou copiar o link.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+  
   // Função para alternar a expansão do módulo
   const toggleModuleExpansion = (moduleId: number) => {
     setExpandedModules(prev => 
@@ -752,14 +813,22 @@ const VideoLessonPage: React.FC = () => {
                         </Button>
                       )}
                       
-                      <Button variant="outline" className="text-blue-700 border-blue-200 hover:bg-blue-50 transition-colors">
+                      <Button 
+                        variant="outline" 
+                        className="text-blue-700 border-blue-200 hover:bg-blue-50 transition-colors"
+                        onClick={shareLesson}
+                      >
                         <Share2 className="mr-2 h-4 w-4" />
                         Compartilhar
                       </Button>
                       
-                      <Button variant="outline" className="text-blue-700 border-blue-200 hover:bg-blue-50 transition-colors">
-                        <Bookmark className="mr-2 h-4 w-4" />
-                        Salvar
+                      <Button 
+                        variant="outline" 
+                        className={`text-blue-700 border-blue-200 hover:bg-blue-50 transition-colors ${isSaved ? 'bg-blue-50' : ''}`}
+                        onClick={toggleSaveLesson}
+                      >
+                        <Bookmark className={`mr-2 h-4 w-4 ${isSaved ? 'fill-blue-600' : ''}`} />
+                        {isSaved ? 'Salvo' : 'Salvar'}
                       </Button>
                     </div>
                   </div>
