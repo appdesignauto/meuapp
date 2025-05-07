@@ -1,506 +1,491 @@
-import express from 'express';
+import { Router } from 'express';
 import { db } from '../db';
-import { sql } from 'drizzle-orm';
-import { popups, popupViews, insertPopupSchema, insertPopupViewSchema } from '@shared/schema';
-import { eq, and, gte, lte, desc, or, isNull } from 'drizzle-orm';
-import { v4 as uuidv4 } from 'uuid';
+import { popups, popupViews } from '../../shared/schema';
+import { eq, and, or, inArray, gte, lte, desc, count, sql } from 'drizzle-orm';
 import multer from 'multer';
+import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import fs from 'fs';
-import sharp from 'sharp';
 
-const router = express.Router();
+const router = Router();
 
 // Configuração do multer para upload de imagens
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadDir = 'public/uploads/popups';
-    
-    // Criar o diretório se não existir
+    // Criar diretório se não existir
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
-    
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
-    const uniqueFilename = `${uuidv4()}${path.extname(file.originalname)}`;
-    cb(null, uniqueFilename);
-  }
+    const fileExtension = path.extname(file.originalname);
+    const fileName = `popup-${uuidv4()}${fileExtension}`;
+    cb(null, fileName);
+  },
 });
 
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
   fileFilter: (req, file, cb) => {
-    // Apenas imagens permitidas
-    const allowedTypes = /jpeg|jpg|png|gif|webp/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
-    
-    if (extname && mimetype) {
-      return cb(null, true);
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
     } else {
-      cb(new Error('Apenas arquivos de imagem são permitidos (jpg, jpeg, png, gif, webp)'));
+      cb(new Error('Tipo de arquivo não suportado. Apenas imagens JPG, PNG, WebP e GIF são permitidas.'));
     }
+  },
+});
+
+// Obter todos os popups
+router.get('/', async (req, res) => {
+  try {
+    const popupsList = await db.query.popups.findMany({
+      orderBy: [desc(popups.createdAt)],
+    });
+    
+    res.json(popupsList);
+  } catch (error) {
+    console.error('Erro ao obter popups:', error);
+    res.status(500).json({ message: 'Erro ao obter popups' });
   }
 });
 
-// Middleware para verificar se o usuário é admin
-const isAdmin = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ message: 'Não autenticado' });
-  }
-  
-  const user = req.user as Express.User;
-  if (user.nivelacesso !== 'admin' && user.role !== 'admin') {
-    return res.status(403).json({ message: 'Acesso negado' });
-  }
-  
-  next();
-};
-
-// Obter popups ativos para exibir para o usuário
+// Obter um popup ativo para o usuário/sessão atual
 router.get('/active', async (req, res) => {
   try {
-    const now = new Date();
-    const sessionId = req.query.sessionId as string || uuidv4();
+    const { sessionId } = req.query;
+    const userId = req.isAuthenticated() ? req.user?.id : undefined;
+    const userRole = req.isAuthenticated() ? req.user?.nivelacesso : 'visitante';
     
-    // Para usuários autenticados, verificamos as regras específicas para eles
-    if (req.isAuthenticated()) {
-      const user = req.user as Express.User;
-      const isPremium = user.nivelacesso === 'premium' || user.acessovitalicio || 
-                        user.dataexpiracao ? new Date(user.dataexpiracao) > now : false;
-      
-      // Buscar popups ativos para o usuário logado, considerando restrições
-      const activePopups = await db.select()
-        .from(popups)
-        .where(
-          and(
-            eq(popups.isActive, true),
-            lte(popups.startDate, now),
-            gte(popups.endDate, now),
-            eq(popups.showToLoggedUsers, true),
-            or(
-              eq(popups.showToPremiumUsers, true),
-              eq(isPremium, false)
-            )
-          )
-        )
-        .orderBy(desc(popups.createdAt))
-        .limit(1);
-      
-      if (activePopups.length === 0) {
-        return res.status(200).json({ hasActivePopup: false });
-      }
-      
-      const popup = activePopups[0];
-      
-      // Verificar se o popup já foi visualizado, caso seja showOnce
+    // Criar sessionId para visitantes se não existir
+    const currentSessionId = sessionId || uuidv4();
+    
+    // Obter data atual
+    const now = new Date();
+    
+    // Construir condições de filtro para seleção de popups
+    const conditions = and(
+      eq(popups.isActive, true),
+      lte(popups.startDate, now),
+      gte(popups.endDate, now),
+      // Verificar segmentação por tipo de usuário
+      or(
+        // Para usuários logados
+        userId && eq(popups.showToLoggedUsers, true),
+        // Para visitantes (não logados)
+        !userId && eq(popups.showToGuestUsers, true),
+        // Para usuários premium
+        userId && userRole === 'premium' && eq(popups.showToPremiumUsers, true)
+      )
+    );
+    
+    // Buscar popups adequados para o usuário atual
+    const availablePopups = await db.query.popups.findMany({
+      where: conditions,
+      orderBy: [desc(popups.createdAt)],
+    });
+    
+    if (availablePopups.length === 0) {
+      return res.json({ hasActivePopup: false, sessionId: currentSessionId });
+    }
+    
+    // Para cada popup disponível, verificar regras adicionais
+    for (const popup of availablePopups) {
+      // 1. Se popup é para ser mostrado apenas uma vez, verificar se já foi visto
       if (popup.showOnce) {
-        const viewedCount = await db.select({ count: sql`count(*)` })
-          .from(popupViews)
-          .where(
-            and(
-              eq(popupViews.popupId, popup.id),
-              eq(popupViews.userId, user.id)
-            )
-          );
-        
-        if (parseInt(viewedCount[0].count) > 0) {
-          return res.status(200).json({ hasActivePopup: false });
+        if (userId) {
+          // Verificar se o usuário já viu este popup
+          const viewCount = await db
+            .select({ count: count() })
+            .from(popupViews)
+            .where(
+              and(
+                eq(popupViews.popupId, popup.id),
+                eq(popupViews.userId, userId)
+              )
+            );
+            
+          if (viewCount[0].count > 0) {
+            // Usuário já viu este popup, verificar próximo
+            continue;
+          }
+        } else if (sessionId) {
+          // Verificar se esta sessão já viu este popup
+          const viewCount = await db
+            .select({ count: count() })
+            .from(popupViews)
+            .where(
+              and(
+                eq(popupViews.popupId, popup.id),
+                eq(popupViews.sessionId, sessionId as string)
+              )
+            );
+            
+          if (viewCount[0].count > 0) {
+            // Esta sessão já viu este popup, verificar próximo
+            continue;
+          }
         }
       }
       
-      // Verificar a frequência de exibição
+      // 2. Verificar frequência (se frequency > 1)
       if (popup.frequency > 1) {
-        const viewCount = await db.select({ count: sql`count(*)` })
-          .from(popupViews)
-          .where(
-            and(
-              eq(popupViews.popupId, popup.id),
-              eq(popupViews.userId, user.id)
-            )
-          );
-          
-        const count = parseInt(viewCount[0].count);
-        if (count % popup.frequency !== 0) {
-          return res.status(200).json({ hasActivePopup: false });
+        let viewCount = 0;
+        
+        if (userId) {
+          // Contar visualizações do usuário
+          const result = await db
+            .select({ count: count() })
+            .from(popupViews)
+            .where(eq(popupViews.userId, userId));
+            
+          viewCount = result[0].count;
+        } else if (sessionId) {
+          // Contar visualizações da sessão
+          const result = await db
+            .select({ count: count() })
+            .from(popupViews)
+            .where(eq(popupViews.sessionId, sessionId as string));
+            
+          viewCount = result[0].count;
+        }
+        
+        // Verificar se é a vez de mostrar este popup com base na frequência
+        if (viewCount % popup.frequency !== 0) {
+          continue;
         }
       }
       
-      return res.status(200).json({ 
-        hasActivePopup: true, 
+      // Popup válido para exibição, retornar
+      return res.json({
+        hasActivePopup: true,
         popup,
-        sessionId
+        sessionId: currentSessionId
       });
     }
-    // Para usuários não autenticados (visitantes)
-    else {
-      // Buscar popups ativos para visitantes
-      const activePopups = await db.select()
-        .from(popups)
-        .where(
-          and(
-            eq(popups.isActive, true),
-            lte(popups.startDate, now),
-            gte(popups.endDate, now),
-            eq(popups.showToGuestUsers, true)
-          )
-        )
-        .orderBy(desc(popups.createdAt))
-        .limit(1);
-      
-      if (activePopups.length === 0) {
-        return res.status(200).json({ hasActivePopup: false });
-      }
-      
-      const popup = activePopups[0];
-      
-      // Verificar se o popup já foi visualizado, caso seja showOnce
-      if (popup.showOnce) {
-        const viewedCount = await db.select({ count: sql`count(*)` })
-          .from(popupViews)
-          .where(
-            and(
-              eq(popupViews.popupId, popup.id),
-              eq(popupViews.sessionId, sessionId)
-            )
-          );
-        
-        if (parseInt(viewedCount[0].count) > 0) {
-          return res.status(200).json({ hasActivePopup: false });
-        }
-      }
-      
-      // Verificar a frequência de exibição
-      if (popup.frequency > 1) {
-        const viewCount = await db.select({ count: sql`count(*)` })
-          .from(popupViews)
-          .where(
-            and(
-              eq(popupViews.popupId, popup.id),
-              eq(popupViews.sessionId, sessionId)
-            )
-          );
-          
-        const count = parseInt(viewCount[0].count);
-        if (count % popup.frequency !== 0) {
-          return res.status(200).json({ hasActivePopup: false });
-        }
-      }
-      
-      return res.status(200).json({ 
-        hasActivePopup: true, 
-        popup,
-        sessionId
-      });
-    }
+    
+    // Nenhum popup adequado encontrado
+    res.json({ hasActivePopup: false, sessionId: currentSessionId });
   } catch (error) {
     console.error('Erro ao buscar popups ativos:', error);
-    return res.status(500).json({ message: 'Erro ao buscar popups ativos' });
+    res.status(500).json({ message: 'Erro ao buscar popups ativos' });
   }
 });
 
-// Registrar visualização de popup
+// Criar novo popup
+router.post('/', upload.single('image'), async (req, res) => {
+  try {
+    const jsonData = JSON.parse(req.body.data);
+    
+    // Verificar usuário autenticado
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Não autorizado' });
+    }
+    
+    // Verificar datas
+    const startDate = new Date(jsonData.startDate);
+    const endDate = new Date(jsonData.endDate);
+    
+    if (startDate > endDate) {
+      return res.status(400).json({ message: 'A data de início deve ser anterior à data de término' });
+    }
+    
+    // Processar upload de imagem
+    let imageUrl = jsonData.imageUrl;
+    if (req.file) {
+      imageUrl = `/uploads/popups/${req.file.filename}`;
+    }
+    
+    // Criar novo popup
+    const [newPopup] = await db.insert(popups).values({
+      title: jsonData.title,
+      content: jsonData.content,
+      imageUrl,
+      buttonText: jsonData.buttonText,
+      buttonUrl: jsonData.buttonUrl,
+      backgroundColor: jsonData.backgroundColor || '#FFFFFF',
+      textColor: jsonData.textColor || '#000000',
+      buttonColor: jsonData.buttonColor || '#4F46E5',
+      buttonTextColor: jsonData.buttonTextColor || '#FFFFFF',
+      position: jsonData.position || 'center',
+      size: jsonData.size || 'medium',
+      animation: jsonData.animation || 'fade',
+      startDate,
+      endDate,
+      showOnce: jsonData.showOnce || false,
+      showToLoggedUsers: jsonData.showToLoggedUsers !== undefined ? jsonData.showToLoggedUsers : true,
+      showToGuestUsers: jsonData.showToGuestUsers !== undefined ? jsonData.showToGuestUsers : true,
+      showToPremiumUsers: jsonData.showToPremiumUsers !== undefined ? jsonData.showToPremiumUsers : true,
+      frequency: jsonData.frequency || 1,
+      delay: jsonData.delay || 2,
+      isActive: jsonData.isActive !== undefined ? jsonData.isActive : true,
+      createdBy: req.user.id,
+    }).returning();
+    
+    res.status(201).json(newPopup);
+  } catch (error) {
+    console.error('Erro ao criar popup:', error);
+    res.status(500).json({ message: 'Erro ao criar popup' });
+  }
+});
+
+// Atualizar popup
+router.put('/:id', upload.single('image'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const jsonData = JSON.parse(req.body.data);
+    
+    // Verificar usuário autenticado
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Não autorizado' });
+    }
+    
+    // Verificar se popup existe
+    const existingPopup = await db.query.popups.findFirst({
+      where: eq(popups.id, parseInt(id)),
+    });
+    
+    if (!existingPopup) {
+      return res.status(404).json({ message: 'Popup não encontrado' });
+    }
+    
+    // Verificar datas
+    const startDate = new Date(jsonData.startDate);
+    const endDate = new Date(jsonData.endDate);
+    
+    if (startDate > endDate) {
+      return res.status(400).json({ message: 'A data de início deve ser anterior à data de término' });
+    }
+    
+    // Processar upload de imagem
+    let imageUrl = jsonData.imageUrl;
+    if (req.file) {
+      // Remover imagem antiga se existir
+      if (existingPopup.imageUrl && existingPopup.imageUrl.startsWith('/uploads/popups/')) {
+        const oldImagePath = path.join(process.cwd(), 'public', existingPopup.imageUrl);
+        try {
+          if (fs.existsSync(oldImagePath)) {
+            fs.unlinkSync(oldImagePath);
+          }
+        } catch (err) {
+          console.error('Erro ao excluir imagem antiga:', err);
+        }
+      }
+      
+      imageUrl = `/uploads/popups/${req.file.filename}`;
+    }
+    
+    // Atualizar popup
+    const [updatedPopup] = await db.update(popups)
+      .set({
+        title: jsonData.title,
+        content: jsonData.content,
+        imageUrl,
+        buttonText: jsonData.buttonText,
+        buttonUrl: jsonData.buttonUrl,
+        backgroundColor: jsonData.backgroundColor || '#FFFFFF',
+        textColor: jsonData.textColor || '#000000',
+        buttonColor: jsonData.buttonColor || '#4F46E5',
+        buttonTextColor: jsonData.buttonTextColor || '#FFFFFF',
+        position: jsonData.position || 'center',
+        size: jsonData.size || 'medium',
+        animation: jsonData.animation || 'fade',
+        startDate,
+        endDate,
+        showOnce: jsonData.showOnce || false,
+        showToLoggedUsers: jsonData.showToLoggedUsers !== undefined ? jsonData.showToLoggedUsers : true,
+        showToGuestUsers: jsonData.showToGuestUsers !== undefined ? jsonData.showToGuestUsers : true,
+        showToPremiumUsers: jsonData.showToPremiumUsers !== undefined ? jsonData.showToPremiumUsers : true,
+        frequency: jsonData.frequency || 1,
+        delay: jsonData.delay || 2,
+        isActive: jsonData.isActive !== undefined ? jsonData.isActive : true,
+        updatedAt: new Date(),
+      })
+      .where(eq(popups.id, parseInt(id)))
+      .returning();
+    
+    res.json(updatedPopup);
+  } catch (error) {
+    console.error('Erro ao atualizar popup:', error);
+    res.status(500).json({ message: 'Erro ao atualizar popup' });
+  }
+});
+
+// Excluir popup
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Verificar usuário autenticado
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Não autorizado' });
+    }
+    
+    // Verificar se popup existe
+    const existingPopup = await db.query.popups.findFirst({
+      where: eq(popups.id, parseInt(id)),
+    });
+    
+    if (!existingPopup) {
+      return res.status(404).json({ message: 'Popup não encontrado' });
+    }
+    
+    // Remover imagem se existir
+    if (existingPopup.imageUrl && existingPopup.imageUrl.startsWith('/uploads/popups/')) {
+      const imagePath = path.join(process.cwd(), 'public', existingPopup.imageUrl);
+      try {
+        if (fs.existsSync(imagePath)) {
+          fs.unlinkSync(imagePath);
+        }
+      } catch (err) {
+        console.error('Erro ao excluir imagem:', err);
+      }
+    }
+    
+    // Primeiro excluir as visualizações relacionadas
+    await db.delete(popupViews).where(eq(popupViews.popupId, parseInt(id)));
+    
+    // Depois excluir o popup
+    await db.delete(popups).where(eq(popups.id, parseInt(id)));
+    
+    res.json({ message: 'Popup excluído com sucesso' });
+  } catch (error) {
+    console.error('Erro ao excluir popup:', error);
+    res.status(500).json({ message: 'Erro ao excluir popup' });
+  }
+});
+
+// Registrar visualização/interação com popup
 router.post('/view', async (req, res) => {
   try {
     const { popupId, sessionId, action } = req.body;
+    const userId = req.isAuthenticated() ? req.user.id : null;
     
-    if (!popupId) {
-      return res.status(400).json({ message: 'PopupId é obrigatório' });
+    // Verificar se popup existe
+    const existingPopup = await db.query.popups.findFirst({
+      where: eq(popups.id, popupId),
+    });
+    
+    if (!existingPopup) {
+      return res.status(404).json({ message: 'Popup não encontrado' });
     }
     
-    const viewData: any = {
+    // Registrar visualização
+    await db.insert(popupViews).values({
       popupId,
-      action: action || 'view'
-    };
+      userId,
+      sessionId,
+      action: action || 'view',
+    });
     
-    if (req.isAuthenticated()) {
-      const user = req.user as Express.User;
-      viewData.userId = user.id;
-    } else if (sessionId) {
-      viewData.sessionId = sessionId;
-    } else {
-      return res.status(400).json({ message: 'SessionId é obrigatório para usuários não autenticados' });
-    }
-    
-    await db.insert(popupViews).values(viewData);
-    
-    return res.status(200).json({ success: true });
+    res.status(201).json({ message: 'Visualização registrada com sucesso' });
   } catch (error) {
-    console.error('Erro ao registrar visualização de popup:', error);
-    return res.status(500).json({ message: 'Erro ao registrar visualização de popup' });
+    console.error('Erro ao registrar visualização:', error);
+    res.status(500).json({ message: 'Erro ao registrar visualização' });
   }
 });
 
-// ADMIN: Listar todos os popups
-router.get('/', isAdmin, async (req, res) => {
+// Obter estatísticas de um popup
+router.get('/:id/stats', async (req, res) => {
   try {
-    const allPopups = await db.select()
-      .from(popups)
-      .orderBy(desc(popups.createdAt));
+    const { id } = req.params;
     
-    return res.status(200).json(allPopups);
-  } catch (error) {
-    console.error('Erro ao listar popups:', error);
-    return res.status(500).json({ message: 'Erro ao listar popups' });
-  }
-});
-
-// ADMIN: Obter um popup específico
-router.get('/:id', isAdmin, async (req, res) => {
-  try {
-    const popupId = parseInt(req.params.id);
-    
-    if (isNaN(popupId)) {
-      return res.status(400).json({ message: 'ID inválido' });
+    // Verificar usuário autenticado
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Não autorizado' });
     }
     
-    const [popup] = await db.select()
-      .from(popups)
-      .where(eq(popups.id, popupId));
-    
-    if (!popup) {
-      return res.status(404).json({ message: 'Popup não encontrado' });
-    }
-    
-    return res.status(200).json(popup);
-  } catch (error) {
-    console.error('Erro ao buscar popup:', error);
-    return res.status(500).json({ message: 'Erro ao buscar popup' });
-  }
-});
-
-// ADMIN: Criar novo popup
-router.post('/', isAdmin, upload.single('image'), async (req, res) => {
-  try {
-    const user = req.user as Express.User;
-    let popupData = JSON.parse(req.body.data);
-    
-    // Validar os dados usando o schema
-    const validationResult = insertPopupSchema.safeParse(popupData);
-    
-    if (!validationResult.success) {
-      return res.status(400).json({ 
-        message: 'Dados inválidos', 
-        errors: validationResult.error.errors 
-      });
-    }
-    
-    // Processar a imagem, se existir
-    if (req.file) {
-      const filePath = req.file.path;
-      const webpPath = `${filePath.slice(0, filePath.lastIndexOf('.'))}.webp`;
-      
-      // Otimizar a imagem e converter para webp
-      await sharp(filePath)
-        .resize(800) // Largura máxima
-        .webp({ quality: 85 })
-        .toFile(webpPath);
-      
-      // Remover o arquivo original
-      fs.unlinkSync(filePath);
-      
-      // Atualizar o caminho da imagem
-      const imageUrl = `/uploads/popups/${path.basename(webpPath)}`;
-      popupData.imageUrl = imageUrl;
-    }
-    
-    // Adicionar o ID do usuário criador
-    popupData.createdBy = user.id;
-    
-    // Criar o popup
-    const [newPopup] = await db.insert(popups)
-      .values(popupData)
-      .returning();
-    
-    return res.status(201).json(newPopup);
-  } catch (error) {
-    console.error('Erro ao criar popup:', error);
-    return res.status(500).json({ message: 'Erro ao criar popup' });
-  }
-});
-
-// ADMIN: Atualizar popup
-router.put('/:id', isAdmin, upload.single('image'), async (req, res) => {
-  try {
-    const popupId = parseInt(req.params.id);
-    
-    if (isNaN(popupId)) {
-      return res.status(400).json({ message: 'ID inválido' });
-    }
-    
-    // Verificar se o popup existe
-    const [existingPopup] = await db.select()
-      .from(popups)
-      .where(eq(popups.id, popupId));
+    // Verificar se popup existe
+    const existingPopup = await db.query.popups.findFirst({
+      where: eq(popups.id, parseInt(id)),
+    });
     
     if (!existingPopup) {
       return res.status(404).json({ message: 'Popup não encontrado' });
-    }
-    
-    let popupData = JSON.parse(req.body.data);
-    
-    // Processar a imagem, se existir
-    if (req.file) {
-      const filePath = req.file.path;
-      const webpPath = `${filePath.slice(0, filePath.lastIndexOf('.'))}.webp`;
-      
-      // Otimizar a imagem e converter para webp
-      await sharp(filePath)
-        .resize(800) // Largura máxima
-        .webp({ quality: 85 })
-        .toFile(webpPath);
-      
-      // Remover o arquivo original
-      fs.unlinkSync(filePath);
-      
-      // Atualizar o caminho da imagem
-      const imageUrl = `/uploads/popups/${path.basename(webpPath)}`;
-      popupData.imageUrl = imageUrl;
-      
-      // Remover a imagem anterior, se existir
-      if (existingPopup.imageUrl) {
-        const oldImagePath = path.join('public', existingPopup.imageUrl);
-        if (fs.existsSync(oldImagePath)) {
-          fs.unlinkSync(oldImagePath);
-        }
-      }
-    }
-    
-    // Atualizar o popup
-    const [updatedPopup] = await db.update(popups)
-      .set({
-        ...popupData,
-        updatedAt: new Date()
-      })
-      .where(eq(popups.id, popupId))
-      .returning();
-    
-    return res.status(200).json(updatedPopup);
-  } catch (error) {
-    console.error('Erro ao atualizar popup:', error);
-    return res.status(500).json({ message: 'Erro ao atualizar popup' });
-  }
-});
-
-// ADMIN: Excluir popup
-router.delete('/:id', isAdmin, async (req, res) => {
-  try {
-    const popupId = parseInt(req.params.id);
-    
-    if (isNaN(popupId)) {
-      return res.status(400).json({ message: 'ID inválido' });
-    }
-    
-    // Verificar se o popup existe
-    const [existingPopup] = await db.select()
-      .from(popups)
-      .where(eq(popups.id, popupId));
-    
-    if (!existingPopup) {
-      return res.status(404).json({ message: 'Popup não encontrado' });
-    }
-    
-    // Remover a imagem, se existir
-    if (existingPopup.imageUrl) {
-      const imagePath = path.join('public', existingPopup.imageUrl);
-      if (fs.existsSync(imagePath)) {
-        fs.unlinkSync(imagePath);
-      }
-    }
-    
-    // Excluir as visualizações associadas
-    await db.delete(popupViews)
-      .where(eq(popupViews.popupId, popupId));
-    
-    // Excluir o popup
-    await db.delete(popups)
-      .where(eq(popups.id, popupId));
-    
-    return res.status(200).json({ message: 'Popup excluído com sucesso' });
-  } catch (error) {
-    console.error('Erro ao excluir popup:', error);
-    return res.status(500).json({ message: 'Erro ao excluir popup' });
-  }
-});
-
-// ADMIN: Obter estatísticas de popup
-router.get('/:id/stats', isAdmin, async (req, res) => {
-  try {
-    const popupId = parseInt(req.params.id);
-    
-    if (isNaN(popupId)) {
-      return res.status(400).json({ message: 'ID inválido' });
     }
     
     // Total de visualizações
-    const viewsResult = await db.select({ count: sql`count(*)` })
+    const totalViewsResult = await db
+      .select({ count: count() })
       .from(popupViews)
       .where(
         and(
-          eq(popupViews.popupId, popupId),
+          eq(popupViews.popupId, parseInt(id)),
           eq(popupViews.action, 'view')
         )
       );
     
+    const totalViews = totalViewsResult[0].count;
+    
     // Total de cliques
-    const clicksResult = await db.select({ count: sql`count(*)` })
+    const totalClicksResult = await db
+      .select({ count: count() })
       .from(popupViews)
       .where(
         and(
-          eq(popupViews.popupId, popupId),
+          eq(popupViews.popupId, parseInt(id)),
           eq(popupViews.action, 'click')
         )
       );
     
-    // Total de dismisses (fechamentos)
-    const dismissesResult = await db.select({ count: sql`count(*)` })
+    const totalClicks = totalClicksResult[0].count;
+    
+    // Total de fechamentos
+    const totalDismissesResult = await db
+      .select({ count: count() })
       .from(popupViews)
       .where(
         and(
-          eq(popupViews.popupId, popupId),
+          eq(popupViews.popupId, parseInt(id)),
           eq(popupViews.action, 'dismiss')
         )
       );
     
+    const totalDismisses = totalDismissesResult[0].count;
+    
     // Usuários únicos
-    const uniqueUsersResult = await db.select({ count: sql`count(distinct "userId")` })
+    const uniqueUsersResult = await db
+      .select({ count: sql<number>`count(distinct ${popupViews.userId})` })
       .from(popupViews)
       .where(
         and(
-          eq(popupViews.popupId, popupId),
-          sql`"userId" is not null`
+          eq(popupViews.popupId, parseInt(id)),
+          sql`${popupViews.userId} is not null`
         )
       );
+    
+    const uniqueUsers = uniqueUsersResult[0].count;
     
     // Sessões únicas
-    const uniqueSessionsResult = await db.select({ count: sql`count(distinct "sessionId")` })
+    const uniqueSessionsResult = await db
+      .select({ count: sql<number>`count(distinct ${popupViews.sessionId})` })
       .from(popupViews)
       .where(
         and(
-          eq(popupViews.popupId, popupId),
-          sql`"sessionId" is not null`
+          eq(popupViews.popupId, parseInt(id)),
+          sql`${popupViews.sessionId} is not null`
         )
       );
     
-    // Taxa de conversão (cliques/visualizações)
-    const totalViews = parseInt(viewsResult[0].count);
-    const totalClicks = parseInt(clicksResult[0].count);
-    const conversionRate = totalViews > 0 ? (totalClicks / totalViews) * 100 : 0;
+    const uniqueSessions = uniqueSessionsResult[0].count;
     
-    return res.status(200).json({
+    // Taxa de conversão (cliques / visualizações)
+    const conversionRate = totalViews > 0 ? Math.round((totalClicks / totalViews) * 100) : 0;
+    
+    res.json({
       totalViews,
       totalClicks,
-      totalDismisses: parseInt(dismissesResult[0].count),
-      uniqueUsers: parseInt(uniqueUsersResult[0].count),
-      uniqueSessions: parseInt(uniqueSessionsResult[0].count),
-      conversionRate: Math.round(conversionRate * 100) / 100 // Arredondar para 2 casas decimais
+      totalDismisses,
+      uniqueUsers,
+      uniqueSessions,
+      conversionRate
     });
   } catch (error) {
-    console.error('Erro ao buscar estatísticas do popup:', error);
-    return res.status(500).json({ message: 'Erro ao buscar estatísticas do popup' });
+    console.error('Erro ao obter estatísticas:', error);
+    res.status(500).json({ message: 'Erro ao obter estatísticas' });
   }
 });
 
