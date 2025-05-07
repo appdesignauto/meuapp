@@ -56,7 +56,7 @@ router.get('/', async (req, res) => {
 // Obter um popup ativo para o usuário/sessão atual
 router.get('/active', async (req, res) => {
   try {
-    const { sessionId } = req.query;
+    const { sessionId, currentPath } = req.query;
     const userId = req.isAuthenticated() ? req.user?.id : undefined;
     const userRole = req.isAuthenticated() ? req.user?.nivelacesso : 'visitante';
     
@@ -70,6 +70,7 @@ router.get('/active', async (req, res) => {
     console.log('- Data atual:', now);
     console.log('- Usuário logado:', userId ? 'Sim' : 'Não', 'ID:', userId);
     console.log('- Nível de acesso:', userRole);
+    console.log('- Página atual:', currentPath);
     
     // Primeiro, buscar todos os popups ativos no banco
     const allActivePopups = await db.query.popups.findMany({
@@ -89,6 +90,8 @@ router.get('/active', async (req, res) => {
         console.log('- Mostra para usuários logados:', popup.showToLoggedUsers);
         console.log('- Mostra para visitantes:', popup.showToGuestUsers);
         console.log('- Mostra para usuários premium:', popup.showToPremiumUsers);
+        console.log('- Páginas permitidas:', popup.pages ? popup.pages.join(', ') : 'Todas');
+        console.log('- Funções de usuário permitidas:', popup.userRoles ? popup.userRoles.join(', ') : 'Todas');
       });
     }
     
@@ -100,11 +103,11 @@ router.get('/active', async (req, res) => {
       // Verificar segmentação por tipo de usuário
       or(
         // Para usuários logados
-        userId && eq(popups.showToLoggedUsers, true),
+        userId ? eq(popups.showToLoggedUsers, true) : undefined,
         // Para visitantes (não logados)
-        !userId && eq(popups.showToGuestUsers, true),
+        !userId ? eq(popups.showToGuestUsers, true) : undefined,
         // Para usuários premium
-        userId && userRole === 'premium' && eq(popups.showToPremiumUsers, true)
+        userId && userRole === 'premium' ? eq(popups.showToPremiumUsers, true) : undefined
       )
     );
     
@@ -114,14 +117,34 @@ router.get('/active', async (req, res) => {
       orderBy: [desc(popups.createdAt)],
     });
     
-    console.log('- Popups que passaram em todas as condições:', availablePopups.length);
+    console.log('- Popups que passaram em todas as condições iniciais:', availablePopups.length);
     
     if (availablePopups.length === 0) {
       return res.json({ hasActivePopup: false, sessionId: currentSessionId });
     }
     
+    // Filtrar ainda mais com base na página atual
+    const pageFilteredPopups = availablePopups.filter(popup => {
+      // Se o campo pages estiver vazio ou for null, mostrar em todas as páginas
+      if (!popup.pages || popup.pages.length === 0) {
+        return true;
+      }
+      
+      // Converter currentPath para string para comparação segura
+      const pathToCheck = currentPath?.toString() || 'home';
+      
+      // Verificar se a página atual está na lista de páginas permitidas
+      return popup.pages.includes(pathToCheck);
+    });
+    
+    console.log('- Popups que passaram no filtro de páginas:', pageFilteredPopups.length);
+    
+    if (pageFilteredPopups.length === 0) {
+      return res.json({ hasActivePopup: false, sessionId: currentSessionId });
+    }
+    
     // Para cada popup disponível, verificar regras adicionais
-    for (const popup of availablePopups) {
+    for (const popup of pageFilteredPopups) {
       // 1. Se popup é para ser mostrado apenas uma vez, verificar se já foi visto
       if (popup.showOnce) {
         if (userId) {
@@ -160,7 +183,7 @@ router.get('/active', async (req, res) => {
       }
       
       // 2. Verificar frequência (se frequency > 1)
-      if (popup.frequency > 1) {
+      if (popup.frequency && popup.frequency > 1) {
         let viewCount = 0;
         
         if (userId) {
@@ -182,7 +205,8 @@ router.get('/active', async (req, res) => {
         }
         
         // Verificar se é a vez de mostrar este popup com base na frequência
-        if (viewCount % popup.frequency !== 0) {
+        const frequency = popup.frequency || 1; // Fallback para 1 se for null
+        if (viewCount % frequency !== 0) {
           continue;
         }
       }
@@ -253,6 +277,8 @@ router.post('/', upload.single('image'), async (req, res) => {
       delay: jsonData.delay || 2,
       isActive: jsonData.isActive !== undefined ? jsonData.isActive : true,
       createdBy: req.user.id,
+      pages: jsonData.pages || [], // Lista de páginas onde o popup será exibido
+      userRoles: jsonData.userRoles || [], // Lista de funções de usuário que podem ver o popup
     }).returning();
     
     res.status(201).json(newPopup);
@@ -335,6 +361,8 @@ router.put('/:id', upload.single('image'), async (req, res) => {
         delay: jsonData.delay || 2,
         isActive: jsonData.isActive !== undefined ? jsonData.isActive : true,
         updatedAt: new Date(),
+        pages: jsonData.pages || [], // Lista de páginas onde o popup será exibido
+        userRoles: jsonData.userRoles || [], // Lista de funções de usuário que podem ver o popup
       })
       .where(eq(popups.id, parseInt(id)))
       .returning();

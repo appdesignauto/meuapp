@@ -3,6 +3,7 @@ import { X, ArrowRight, ChevronRight } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
 import { apiRequest } from '@/lib/queryClient';
+import { useLocation } from 'wouter';
 
 export interface PopupProps {
   id: number;
@@ -346,6 +347,7 @@ export function PopupContainer() {
   const [popup, setPopup] = useState<Omit<PopupProps, 'onClose'> | null>(null);
   const [sessionId, setSessionId] = useState<string>('');
   const [fetched, setFetched] = useState(false);
+  const [location] = useLocation();
 
   // Buscar popups ativos
   const fetchActivePopup = async () => {
@@ -353,7 +355,11 @@ export function PopupContainer() {
       // Usar sessionId existente se disponível
       const storedSessionId = localStorage.getItem('popup_session_id') || sessionId;
       
-      const response = await apiRequest('GET', `/api/popups/active?sessionId=${storedSessionId}`);
+      // Obter o path atual sem a "/" inicial para simplificar a correspondência
+      const currentPath = location === '/' ? 'home' : location.substring(1);
+      console.log('Verificando popups para a página atual:', currentPath);
+      
+      const response = await apiRequest('GET', `/api/popups/active?sessionId=${storedSessionId}&currentPath=${currentPath}`);
       const data = await response.json();
       
       // Salvar o sessionId no estado e localStorage para consistência entre sessões
@@ -384,7 +390,7 @@ export function PopupContainer() {
           sessionId: data.sessionId
         });
       } else {
-        console.log('Nenhum popup ativo disponível');
+        console.log('Nenhum popup ativo disponível para esta página');
       }
       
       setFetched(true);
@@ -394,7 +400,7 @@ export function PopupContainer() {
     }
   };
 
-  // Buscar popups quando o componente montar
+  // Buscar popups quando o componente montar ou quando mudar de página
   useEffect(() => {
     // Tentar buscar imediatamente
     fetchActivePopup();
@@ -405,7 +411,7 @@ export function PopupContainer() {
     }, 5 * 60 * 1000);
     
     return () => clearInterval(interval);
-  }, []);
+  }, [location]); // Re-executar quando a localização (rota) mudar
 
   const handleClose = () => {
     // Registrar no localstorage que o popup foi fechado 
