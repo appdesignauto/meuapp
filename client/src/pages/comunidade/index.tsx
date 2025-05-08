@@ -11,6 +11,7 @@ import ErrorContainer from '@/components/ErrorContainer';
 import UserAvatar from '@/components/users/UserAvatar';
 import VerifiedUsername from '@/components/users/VerifiedUsername';
 import RankingList from '@/components/community/RankingList';
+import { CreatePostDialog } from '@/components/community/CreatePostDialog';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 
@@ -552,6 +553,7 @@ const CommunityPage: React.FC = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('posts');
   const [rankingPeriod, setRankingPeriod] = useState('week');
+  const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
   
   // Buscar posts da comunidade
   const { data: posts, isLoading: postsLoading, error: postsError, refetch: refetchPosts } = useQuery({
