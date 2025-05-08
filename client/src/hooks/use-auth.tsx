@@ -1,4 +1,4 @@
-import React, { createContext, ReactNode, useContext, useEffect } from "react";
+import { createContext, ReactNode, useContext, useEffect } from "react";
 import {
   useQuery,
   useMutation,
@@ -8,6 +8,7 @@ import { User } from "../types";
 import { apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+// Tipos
 type AuthContextType = {
   user: User | null;
   isLoading: boolean;
@@ -40,10 +41,11 @@ type VerifyEmailData = {
   code: string;
 };
 
-export const AuthContext = createContext<AuthContextType | null>(null);
+// Criação do contexto
+const AuthContext = createContext<AuthContextType | null>(null);
 
 // Função utilitária para verificar expiração do token
-const checkTokenExpiration = () => {
+function checkTokenExpiration() {
   try {
     const authToken = localStorage.getItem('authToken');
     const authTokenExpires = localStorage.getItem('authTokenExpires');
@@ -73,9 +75,10 @@ const checkTokenExpiration = () => {
     console.error("Erro ao verificar expiração do token:", error);
     return false;
   }
-};
+}
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+// Provider Component
+function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   
   // Verificar token ao iniciar
@@ -316,10 +319,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useAuth() {
+// Hook personalizado para acessar o contexto
+function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error("useAuth deve ser usado dentro de um AuthProvider");
   }
   return context;
 }
+
+// Exportar componentes e hooks
+export { AuthContext, AuthProvider, useAuth };

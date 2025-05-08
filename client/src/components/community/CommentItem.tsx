@@ -89,16 +89,25 @@ export const CommentItem = ({
       setIsLiked(!isLiked);
       setLikes(isLiked ? likes - 1 : likes + 1);
 
-      // Obter o token de autenticação do localStorage
+      // Obter o token de autenticação do localStorage e verificar validade
       const authToken = localStorage.getItem('authToken');
+      const isTokenValid = (() => {
+        try {
+          const authTokenExpires = localStorage.getItem('authTokenExpires');
+          if (!authToken || !authTokenExpires) return false;
+          return Date.now() < parseInt(authTokenExpires);
+        } catch (e) {
+          return false;
+        }
+      })();
       
-      // Vamos usar fetch diretamente para evitar problemas com o apiRequest
+      // Usar fetch com o token Bearer se disponível
       const response = await fetch(`/api/community/comments/${comment.id}/like`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // Incluir o token de autenticação no cabeçalho se disponível
-          ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+          // Incluir o token de autenticação no cabeçalho se disponível e válido
+          ...(isTokenValid && authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
         },
         credentials: 'include' // Manter credentials para cookies como fallback
       });
@@ -164,7 +173,27 @@ export const CommentItem = ({
     
     setLoadingReplies(true);
     try {
-      const response = await apiRequest('GET', `/api/community/comments/${comment.id}/replies`);
+      // Verificar se temos um token válido no localStorage
+      const authToken = localStorage.getItem('authToken');
+      const isTokenValid = (() => {
+        try {
+          const authTokenExpires = localStorage.getItem('authTokenExpires');
+          if (!authToken || !authTokenExpires) return false;
+          return Date.now() < parseInt(authTokenExpires);
+        } catch (e) {
+          return false;
+        }
+      })();
+      
+      // Usar apiRequest, mas adicionar cabeçalho de autorização manualmente se necessário
+      const options = {};
+      if (isTokenValid && authToken) {
+        options.headers = {
+          'Authorization': `Bearer ${authToken}`
+        };
+      }
+      
+      const response = await apiRequest('GET', `/api/community/comments/${comment.id}/replies`, null, options);
       const data = await response.json();
       setReplies(data);
       setShowReplies(true);
@@ -208,10 +237,30 @@ export const CommentItem = ({
 
     setSubmittingReply(true);
     try {
+      // Verificar se temos um token válido no localStorage
+      const authToken = localStorage.getItem('authToken');
+      const isTokenValid = (() => {
+        try {
+          const authTokenExpires = localStorage.getItem('authTokenExpires');
+          if (!authToken || !authTokenExpires) return false;
+          return Date.now() < parseInt(authTokenExpires);
+        } catch (e) {
+          return false;
+        }
+      })();
+      
+      // Usar apiRequest, mas adicionar cabeçalho de autorização manualmente se necessário
+      const options = {};
+      if (isTokenValid && authToken) {
+        options.headers = {
+          'Authorization': `Bearer ${authToken}`
+        };
+      }
+      
       const response = await apiRequest('POST', `/api/community/posts/${comment.postId}/comments`, {
         content: replyContent,
         parentId: comment.id
-      });
+      }, options);
       
       const data = await response.json();
       
