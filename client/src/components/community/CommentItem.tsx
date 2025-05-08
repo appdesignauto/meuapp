@@ -101,16 +101,15 @@ export const CommentItem = ({
         }
       })();
       
-      // Usar fetch com o token Bearer se disponível
-      const response = await fetch(`/api/community/comments/${comment.id}/like`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          // Incluir o token de autenticação no cabeçalho se disponível e válido
-          ...(isTokenValid && authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
-        },
-        credentials: 'include' // Manter credentials para cookies como fallback
-      });
+      // Usar apiRequest com headers personalizados para consistência
+      const requestOptions: { headers?: Record<string, string> } = {};
+      if (isTokenValid && authToken) {
+        requestOptions.headers = {
+          'Authorization': `Bearer ${authToken}`
+        };
+      }
+      
+      const response = await apiRequest('POST', `/api/community/comments/${comment.id}/like`, null, requestOptions);
       
       console.log("Resposta recebida, status:", response.status);
       
@@ -185,15 +184,15 @@ export const CommentItem = ({
         }
       })();
       
-      // Usar apiRequest, mas adicionar cabeçalho de autorização manualmente se necessário
-      const options: { headers?: Record<string, string> } = {};
+      // Usar apiRequest com headers personalizados
+      const requestOptions: { headers?: Record<string, string> } = {};
       if (isTokenValid && authToken) {
-        options.headers = {
+        requestOptions.headers = {
           'Authorization': `Bearer ${authToken}`
         };
       }
       
-      const response = await apiRequest('GET', `/api/community/comments/${comment.id}/replies`, null, options);
+      const response = await apiRequest('GET', `/api/community/comments/${comment.id}/replies`, null, requestOptions);
       const data = await response.json();
       setReplies(data);
       setShowReplies(true);
