@@ -150,21 +150,12 @@ export const CommentItem = ({
     
     setLoadingReplies(true);
     try {
-      // Verificar se temos um token válido no localStorage
-      const authToken = localStorage.getItem('authToken');
-      const isTokenValid = (() => {
-        try {
-          const authTokenExpires = localStorage.getItem('authTokenExpires');
-          if (!authToken || !authTokenExpires) return false;
-          return Date.now() < parseInt(authTokenExpires);
-        } catch (e) {
-          return false;
-        }
-      })();
+      // Usar a função auxiliar para obter o token válido
+      const authToken = getValidAuthToken();
       
       // Usar apiRequest com headers personalizados
       const requestOptions: { headers?: Record<string, string> } = {};
-      if (isTokenValid && authToken) {
+      if (authToken) {
         requestOptions.headers = {
           'Authorization': `Bearer ${authToken}`
         };
@@ -214,21 +205,12 @@ export const CommentItem = ({
 
     setSubmittingReply(true);
     try {
-      // Verificar se temos um token válido no localStorage
-      const authToken = localStorage.getItem('authToken');
-      const isTokenValid = (() => {
-        try {
-          const authTokenExpires = localStorage.getItem('authTokenExpires');
-          if (!authToken || !authTokenExpires) return false;
-          return Date.now() < parseInt(authTokenExpires);
-        } catch (e) {
-          return false;
-        }
-      })();
+      // Usar a função auxiliar para obter o token válido
+      const authToken = getValidAuthToken();
       
       // Usar apiRequest com headers personalizados
       const requestOptions: { headers?: Record<string, string> } = {};
-      if (isTokenValid && authToken) {
+      if (authToken) {
         requestOptions.headers = {
           'Authorization': `Bearer ${authToken}`
         };
