@@ -1,4 +1,5 @@
 import React from 'react';
+import { BadgeCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface User {
@@ -18,7 +19,7 @@ interface VerifiedUsernameProps {
 
 /**
  * Componente que exibe o nome do usuário com um selo de verificação azul 
- * para administradores, reproduzindo o estilo oficial do Facebook
+ * para administradores, similar às redes sociais
  */
 const VerifiedUsername: React.FC<VerifiedUsernameProps> = ({
   user,
@@ -37,33 +38,19 @@ const VerifiedUsername: React.FC<VerifiedUsernameProps> = ({
   };
   
   return (
-    <div className={cn("flex items-center", className)}>
-      {/* Exibe o nome do usuário */}
-      <span className="flex items-center gap-1">
-        {user.name || user.username}
-        
-        {/* Selo de verificação oficial do Facebook para administradores */}
-        {isAdmin && (
-          <svg 
-            className={cn(
-              "flex-shrink-0",
-              badgeSizes[badgeSize],
-              badgeClassName
-            )} 
-            viewBox="0 0 512 512" 
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path 
-              d="M256 48L216 99l-59 18-37 51-58 19 4 63-37 51 37 51-4 62 58 20 37 51 59 19 40 50 40-50 59-19 37-51 58-20-4-62 37-51-37-51 4-63-58-19-37-51-59-18z"
-              fill="#1877F2" 
-            />
-            <path 
-              d="M224 330l-70-70c-6-6-6-16 0-22 6-6 16-6 22 0l48 48 99-99c6-6 16-6 22 0 6 6 6 16 0 22L224 330z" 
-              fill="white" 
-            />
-          </svg>
-        )}
-      </span>
+    <div className={cn("flex items-center gap-1", className)}>
+      <span>{user.name || user.username}</span>
+      
+      {isAdmin && (
+        <BadgeCheck 
+          className={cn(
+            "flex-shrink-0",
+            "text-[#1877F2] fill-[#1877F2] stroke-white",
+            badgeSizes[badgeSize],
+            badgeClassName
+          )} 
+        />
+      )}
     </div>
   );
 };
