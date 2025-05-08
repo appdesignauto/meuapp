@@ -118,6 +118,7 @@ const CommunityManagement: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterUser, setFilterUser] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('newest');
+  const [visibilityFilter, setVisibilityFilter] = useState<string>('all');
   
   const itemsPerPage = 10;
   
@@ -163,6 +164,50 @@ const CommunityManagement: React.FC = () => {
   const posts = postsQuery.data?.posts || [];
   const totalPosts = postsQuery.data?.total || 0;
   const totalPages = Math.ceil(totalPosts / itemsPerPage);
+  
+  // Buscar comentários para a aba de moderação de comentários
+  const commentsQuery = useQuery<{comments: CommentData[], total: number, totalPages: number}>({
+    queryKey: [
+      '/api/community/admin/comments', 
+      currentPage, 
+      searchQuery, 
+      filterUser,
+      sortBy,
+      visibilityFilter
+    ],
+    queryFn: async () => {
+      if (activeTab !== 'comments') {
+        return { comments: [], total: 0, totalPages: 0 };
+      }
+      
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: itemsPerPage.toString(),
+        hideStatus: visibilityFilter
+      });
+      
+      if (searchQuery) {
+        params.append('search', searchQuery);
+      }
+      
+      if (filterUser) {
+        params.append('userId', filterUser);
+      }
+      
+      if (sortBy) {
+        params.append('sortBy', sortBy);
+      }
+      
+      const result = await apiRequest('GET', `/api/community/admin/comments?${params.toString()}`);
+      return result.json();
+    },
+    enabled: activeTab === 'comments',
+    refetchOnWindowFocus: false,
+  });
+  
+  const comments = commentsQuery.data?.comments || [];
+  const totalComments = commentsQuery.data?.total || 0;
+  const totalCommentsPages = commentsQuery.data?.totalPages || 0;
   
   // Mutação para aprovar um post
   const approvePostMutation = useMutation({
@@ -227,6 +272,48 @@ const CommunityManagement: React.FC = () => {
     }
   });
   
+  // Mutação para alternar visibilidade de um comentário
+  const toggleCommentVisibilityMutation = useMutation({
+    mutationFn: async (commentId: number) => {
+      await apiRequest('PATCH', `/api/community/admin/comments/${commentId}/toggle-visibility`);
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/community/admin/comments'] });
+      const action = data.comment.isHidden ? "ocultado" : "mostrado";
+      toast({
+        description: `Comentário ${action} com sucesso!`
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: `Não foi possível alterar a visibilidade do comentário: ${error.message}`,
+      });
+    }
+  });
+  
+  // Mutação para excluir um comentário
+  const deleteCommentMutation = useMutation({
+    mutationFn: async (commentId: number) => {
+      await apiRequest('DELETE', `/api/community/admin/comments/${commentId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/community/admin/comments'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/community/admin/stats'] });
+      toast({
+        description: "Comentário excluído com sucesso!"
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: `Não foi possível excluir o comentário: ${error.message}`,
+      });
+    }
+  });
+  
   // Função para mudar de página
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -250,7 +337,10 @@ const CommunityManagement: React.FC = () => {
   
   // Componente para exibir a paginação
   const Pagination = () => {
-    if (totalPages <= 1) return null;
+    const isCommentsTab = activeTab === 'comments';
+    const pages = isCommentsTab ? totalCommentsPages : totalPages;
+    
+    if (pages <= 1) return null;
     
     return (
       <div className="flex items-center justify-center gap-1 mt-4">
@@ -263,16 +353,16 @@ const CommunityManagement: React.FC = () => {
           <ChevronLeft className="h-4 w-4" />
         </Button>
         
-        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+        {Array.from({ length: Math.min(5, pages) }, (_, i) => {
           let pageNumber;
           
-          if (totalPages <= 5) {
+          if (pages <= 5) {
             pageNumber = i + 1;
           } else {
             if (currentPage <= 3) {
               pageNumber = i + 1;
-            } else if (currentPage >= totalPages - 2) {
-              pageNumber = totalPages - 4 + i;
+            } else if (currentPage >= pages - 2) {
+              pageNumber = pages - 4 + i;
             } else {
               pageNumber = currentPage - 2 + i;
             }
@@ -293,8 +383,8 @@ const CommunityManagement: React.FC = () => {
         <Button
           variant="outline"
           size="icon"
-          onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-          disabled={currentPage === totalPages}
+          onClick={() => handlePageChange(Math.min(pages, currentPage + 1))}
+          disabled={currentPage === pages}
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
@@ -391,8 +481,16 @@ const CommunityManagement: React.FC = () => {
       </Card>
       
       {/* Tabs de navegação */}
-      <Tabs value={activeTab} onValueChange={(value) => { setActiveTab(value); setCurrentPage(1); }}>
-        <TabsList className="grid grid-cols-2 mb-4">
+      <Tabs value={activeTab} onValueChange={(value) => { 
+          setActiveTab(value); 
+          setCurrentPage(1); 
+          
+          // Atualizar placeholder e filtros específicos para a aba de comentários
+          if (value === 'comments') {
+            setVisibilityFilter('all');
+          }
+        }}>
+        <TabsList className="grid grid-cols-3 mb-4">
           <TabsTrigger value="pending">
             Pendentes
             {stats?.pendingPosts ? (
@@ -403,6 +501,12 @@ const CommunityManagement: React.FC = () => {
             Aprovados
             {stats?.approvedPosts ? (
               <Badge variant="secondary" className="ml-2">{stats.approvedPosts}</Badge>
+            ) : null}
+          </TabsTrigger>
+          <TabsTrigger value="comments">
+            Comentários
+            {stats?.totalComments ? (
+              <Badge variant="secondary" className="ml-2">{stats.totalComments}</Badge>
             ) : null}
           </TabsTrigger>
         </TabsList>
@@ -555,7 +659,7 @@ const CommunityManagement: React.FC = () => {
                         </div>
                         
                         <div className="flex items-center gap-2">
-                          <Badge variant="success" className="bg-green-100 text-green-800 hover:bg-green-100">
+                          <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
                             <Check className="h-3 w-3 mr-1" />
                             Aprovado
                           </Badge>
@@ -612,6 +716,138 @@ const CommunityManagement: React.FC = () => {
                       </div>
                     </div>
                   </div>
+                </Card>
+              ))}
+              
+              <Pagination />
+            </>
+          )}
+        </TabsContent>
+        
+        {/* Aba de comentários */}
+        <TabsContent value="comments" className="space-y-4">
+          {/* Filtros específicos para comentários */}
+          <Card className="mb-4">
+            <CardContent className="p-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Select
+                  value={visibilityFilter}
+                  onValueChange={setVisibilityFilter}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Filtrar por visibilidade" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os comentários</SelectItem>
+                    <SelectItem value="visible">Comentários visíveis</SelectItem>
+                    <SelectItem value="hidden">Comentários ocultos</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {commentsQuery.isLoading ? (
+            <div className="py-20 flex justify-center">
+              <LoadingScreen label="Carregando comentários..." />
+            </div>
+          ) : commentsQuery.error ? (
+            <ErrorContainer 
+              title="Erro ao carregar comentários" 
+              description="Não foi possível carregar os comentários." 
+              onAction={() => commentsQuery.refetch()}
+            />
+          ) : comments.length === 0 ? (
+            <div className="py-20 text-center">
+              <User className="mx-auto h-12 w-12 text-muted-foreground opacity-25 mb-2" />
+              <h3 className="text-lg font-medium">Nenhum comentário encontrado</h3>
+              <p className="text-muted-foreground mt-1">
+                Não há comentários que correspondam aos critérios de filtro atuais.
+              </p>
+            </div>
+          ) : (
+            <>
+              {comments.map(({comment, user, post}) => (
+                <Card key={comment.id} className="overflow-hidden">
+                  <CardContent className="p-4">
+                    <div className="flex flex-col space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <UserAvatar user={user} size="sm" linkToProfile={true} />
+                          <div>
+                            <p className="text-sm font-medium">{user.name || user.username}</p>
+                            <p className="text-xs text-muted-foreground">{formatDate(comment.createdAt)}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className={comment.isHidden 
+                              ? "text-amber-600 hover:text-amber-700 hover:bg-amber-50 border-amber-200"
+                              : "text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"}
+                            onClick={() => toggleCommentVisibilityMutation.mutate(comment.id)}
+                            disabled={toggleCommentVisibilityMutation.isPending}
+                          >
+                            {comment.isHidden ? (
+                              <Eye className="h-4 w-4 mr-1" />
+                            ) : (
+                              <Eye className="h-4 w-4 mr-1" />
+                            )}
+                            {comment.isHidden ? "Mostrar" : "Ocultar"}
+                          </Button>
+                          
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                              >
+                                <X className="h-4 w-4 mr-1" />
+                                Excluir
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Excluir comentário</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Tem certeza que deseja excluir este comentário? Esta ação não pode ser desfeita.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction 
+                                  onClick={() => deleteCommentMutation.mutate(comment.id)}
+                                  className="bg-red-600 hover:bg-red-700"
+                                >
+                                  Excluir
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-muted/40 p-3 rounded-md">
+                        <p className="text-sm">{comment.content}</p>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <Badge variant="outline" className="text-muted-foreground">
+                          {comment.isHidden ? "Oculto" : "Visível"}
+                        </Badge>
+                        
+                        <Link href={`/comunidade/post/${post.id}`} target="_blank">
+                          <Button variant="outline" size="sm">
+                            <Eye className="h-4 w-4 mr-1" />
+                            Ver post: {post.title}
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </CardContent>
                 </Card>
               ))}
               
