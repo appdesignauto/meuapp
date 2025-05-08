@@ -249,28 +249,36 @@ router.get('/api/community/posts/:id', async (req, res) => {
 // POST: Criar um novo post na comunidade
 router.post('/api/community/posts', upload.single('image'), async (req, res) => {
   try {
+    console.log('Recebendo solicitação para criar novo post da comunidade');
+    console.log('Body:', req.body);
+    console.log('Arquivo:', req.file ? `${req.file.originalname} (${req.file.size} bytes)` : 'Nenhum arquivo');
+    
     if (!req.user) {
+      console.log('Erro: Usuário não autenticado');
       return res.status(401).json({ message: 'Usuário não autenticado' });
     }
     
     if (!req.file) {
+      console.log('Erro: Nenhuma imagem enviada no campo "image"');
       return res.status(400).json({ message: 'Imagem é obrigatória' });
     }
     
     const { title, content, editLink } = req.body;
+    console.log('Dados do formulário:', { title, content, editLink });
     
-    // Validar campos obrigatórios
-    if (!title) {
-      return res.status(400).json({ message: 'Título é obrigatório' });
-    }
+    // Validamos o título apenas se estiver presente na rota original
+    // mas agora vamos torná-lo opcional para compatibilidade com o formulário
+    const postTitle = title || `Post de ${req.user.username} - ${new Date().toLocaleDateString()}`;
     
     // Otimizar imagem
     const filePath = req.file.path;
+    console.log('Otimizando imagem:', filePath);
     await optimizeImage(filePath);
     
     // Caminho da imagem após otimização (agora em webp)
     const webpPath = filePath.replace(/\.[^.]+$/, '.webp');
     const imageUrl = `/uploads/community/${path.basename(webpPath)}`;
+    console.log('URL da imagem após otimização:', imageUrl);
     
     // Consultar configurações para saber se post precisa de aprovação
     const [settings] = await db.select().from(communitySettings);
@@ -279,13 +287,14 @@ router.post('/api/community/posts', upload.single('image'), async (req, res) => 
     // Status padrão com base na configuração e no nível do usuário
     const isAdmin = req.user.nivelacesso === 'admin' || req.user.nivelacesso === 'designer_adm';
     const status = requireApproval && !isAdmin ? 'pending' : 'approved';
+    console.log('Status do post:', status, 'Aprovação necessária:', requireApproval, 'Usuário é admin:', isAdmin);
     
     // Inserir novo post
     const [newPost] = await db
       .insert(communityPosts)
       .values({
         userId: req.user.id,
-        title,
+        title: postTitle,
         content: content || '',
         imageUrl,
         editLink: editLink || null,
