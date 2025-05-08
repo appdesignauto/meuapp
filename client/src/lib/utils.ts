@@ -34,7 +34,7 @@ export function formatDate(dateString: string): string {
   }
 }
 
-// Função auxiliar para formatar o tempo relativo a partir de uma data (similar ao Instagram)
+// Função auxiliar para formatar o tempo relativo a partir de uma data (formato híbrido mais descritivo)
 function formatRelativeTime(date: Date): string {
   try {
     const now = new Date();
@@ -48,25 +48,26 @@ function formatRelativeTime(date: Date): string {
     const diffMinutes = Math.floor(diffSeconds / 60);
     const diffHours = Math.floor(diffMinutes / 60);
     const diffDays = Math.floor(diffHours / 24);
-    const diffWeeks = Math.floor(diffDays / 7);
-    const diffMonths = Math.floor(diffDays / 30);
-    const diffYears = Math.floor(diffDays / 365);
     
-    // Formatação estilo Instagram
+    // Formatação híbrida mais descritiva
     if (diffSeconds < 60) {
-      return diffSeconds <= 5 ? "agora" : `${diffSeconds} s`;
+      return diffSeconds <= 5 ? "agora" : `há ${diffSeconds} segundos`;
     } else if (diffMinutes < 60) {
-      return `${diffMinutes} m`;
+      return `há ${diffMinutes} ${diffMinutes === 1 ? 'minuto' : 'minutos'}`;
     } else if (diffHours < 24) {
-      return `${diffHours} h`;
+      return `há ${diffHours} ${diffHours === 1 ? 'hora' : 'horas'}`;
     } else if (diffDays < 7) {
-      return `${diffDays} d`;
-    } else if (diffWeeks < 4) {
-      return `${diffWeeks} sem`;
-    } else if (diffMonths < 12) {
-      return `${diffMonths} m`;
+      return `há ${diffDays} ${diffDays === 1 ? 'dia' : 'dias'}`;
     } else {
-      return `${diffYears} a`;
+      // Para posts mais antigos que 7 dias, mostrar a data completa
+      return new Intl.DateTimeFormat('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'America/Sao_Paulo'
+      }).format(date);
     }
   } catch (error) {
     console.error("Erro ao calcular tempo relativo:", error);
