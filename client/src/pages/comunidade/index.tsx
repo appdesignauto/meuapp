@@ -10,6 +10,8 @@ import ErrorContainer from '@/components/ErrorContainer';
 import UserAvatar from '@/components/users/UserAvatar';
 import VerifiedUsername from '@/components/users/VerifiedUsername';
 import RankingList from '@/components/community/RankingList';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -44,6 +46,7 @@ interface CommunityPost {
   sharesCount: number;
   isApproved: boolean;
   userId: number;
+  isLikedByUser?: boolean;
   user: {
     id: number;
     username: string;
@@ -65,7 +68,108 @@ interface RankingUser {
 }
 
 // Componente de Card do Post
-const PostCard: React.FC<{ post: CommunityPost }> = ({ post }) => {
+const PostCard: React.FC<{ post: CommunityPost; refetch?: () => void }> = ({ post, refetch }) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [isLiked, setIsLiked] = useState(post.isLikedByUser || false);
+  const [likesCount, setLikesCount] = useState(post.likesCount);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Função para curtir ou descurtir um post
+  const handleLike = async () => {
+    if (!user) {
+      toast({
+        title: "Faça login",
+        description: "Você precisa estar logado para curtir posts",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      if (isLiked) {
+        // Remover curtida
+        const response = await apiRequest("DELETE", `/api/community/posts/${post.id}/like`);
+        
+        if (response.ok) {
+          setIsLiked(false);
+          setLikesCount(prev => Math.max(0, prev - 1));
+          toast({
+            title: "Curtida removida",
+            description: "Você removeu sua curtida deste post",
+          });
+        } else {
+          throw new Error("Não foi possível remover sua curtida");
+        }
+      } else {
+        // Adicionar curtida
+        const response = await apiRequest("POST", `/api/community/posts/${post.id}/like`);
+        
+        if (response.ok) {
+          setIsLiked(true);
+          setLikesCount(prev => prev + 1);
+          toast({
+            title: "Post curtido",
+            description: "Você curtiu este post",
+          });
+        } else {
+          throw new Error("Não foi possível curtir o post");
+        }
+      }
+
+      // Atualizar lista de posts se necessário
+      if (refetch) {
+        refetch();
+      }
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao processar sua ação",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Função para compartilhar um post
+  const handleShare = () => {
+    if (!navigator.share) {
+      // Fallback para dispositivos que não suportam Web Share API
+      toast({
+        title: "Compartilhar",
+        description: "Copie o link e compartilhe: " + window.location.origin + `/comunidade/post/${post.id}`,
+      });
+      
+      // Copiar para a área de transferência
+      navigator.clipboard.writeText(window.location.origin + `/comunidade/post/${post.id}`)
+        .then(() => {
+          toast({
+            title: "Link copiado",
+            description: "Link copiado para a área de transferência!",
+          });
+        })
+        .catch(() => {
+          toast({
+            title: "Erro",
+            description: "Não foi possível copiar o link",
+            variant: "destructive",
+          });
+        });
+      return;
+    }
+
+    // Web Share API
+    navigator.share({
+      title: post.title,
+      text: post.content || "Confira este post na comunidade DesignAuto!",
+      url: window.location.origin + `/comunidade/post/${post.id}`,
+    }).catch((error) => {
+      console.error("Erro ao compartilhar:", error);
+    });
+  };
+
   return (
     <Card className="mb-4 overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow w-full max-w-[470px] mx-auto">
       {/* Cabeçalho do post - estilo Facebook/Instagram */}
@@ -127,7 +231,7 @@ const PostCard: React.FC<{ post: CommunityPost }> = ({ post }) => {
               </svg>
             </div>
           </div>
-          <span>{post.likesCount} pessoas curtiram isso</span>
+          <span>{likesCount} pessoas curtiram isso</span>
         </div>
         <div>
           {post.commentsCount > 0 && `${post.commentsCount} comentários`}
@@ -136,11 +240,26 @@ const PostCard: React.FC<{ post: CommunityPost }> = ({ post }) => {
       
       {/* Botões de ação - estilo Facebook */}
       <div className="px-2 py-1 flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800">
-        <button className="flex-1 flex items-center justify-center gap-2 p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+        <button 
+          className={`flex-1 flex items-center justify-center gap-2 p-2 rounded-md transition-colors ${
+            isLiked 
+              ? "text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20" 
+              : "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+          }`}
+          onClick={handleLike}
+          disabled={isLoading}
+        >
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            className={`h-5 w-5 ${isLoading ? "animate-pulse" : ""}`} 
+            viewBox="0 0 20 20" 
+            fill="currentColor"
+          >
             <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
           </svg>
-          <span className="text-sm font-medium">Curtir</span>
+          <span className="text-sm font-medium">
+            {isLiked ? "Curtido" : "Curtir"}
+          </span>
         </button>
         
         <Link href={`/comunidade/post/${post.id}`} className="flex-1">
@@ -152,7 +271,10 @@ const PostCard: React.FC<{ post: CommunityPost }> = ({ post }) => {
           </button>
         </Link>
         
-        <button className="flex-1 flex items-center justify-center gap-2 p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors">
+        <button 
+          className="flex-1 flex items-center justify-center gap-2 p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors"
+          onClick={handleShare}
+        >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
             <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
           </svg>
