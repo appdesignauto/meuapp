@@ -8,6 +8,7 @@ import LoadingScreen from '@/components/LoadingScreen';
 import ErrorContainer from '@/components/ErrorContainer';
 import UserAvatar from '@/components/users/UserAvatar';
 import FooterMenu from '@/components/FooterMenu';
+import { CommentItem } from '@/components/community/CommentItem';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
