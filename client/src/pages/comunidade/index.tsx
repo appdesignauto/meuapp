@@ -213,9 +213,14 @@ const PostCard: React.FC<{
         }
       }
 
-      // Atualizar lista de posts se necessário
+      // Atualizar lista de posts e posts populares se necessário
       if (refetch) {
         refetch();
+      }
+      
+      // Atualizar posts populares após curtir/descurtir
+      if (refetchPopularPosts) {
+        refetchPopularPosts();
       }
     } catch (error) {
       toast({
@@ -827,7 +832,12 @@ const CommunityPage: React.FC = () => {
                         isLikedByUser: item.isLikedByUser || item.userHasLiked || false,
                         user: item.user
                       };
-                      return <PostCard key={item.post.id} post={formattedPost} refetch={refetchPosts} />;
+                      return <PostCard 
+                        key={item.post.id} 
+                        post={formattedPost} 
+                        refetch={refetchPosts} 
+                        refetchPopularPosts={refetchPopularPosts} 
+                      />;
                     })}
                   </div>
                 ) : (
