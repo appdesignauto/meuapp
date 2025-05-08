@@ -313,12 +313,14 @@ const PostDetailPage: React.FC = () => {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className={`gap-2 ${post.isLikedByUser ? 'text-red-500 dark:text-red-400' : ''}`}
+                className={`gap-2 ${post.isLikedByUser ? 'text-blue-600 dark:text-blue-400' : ''}`}
                 onClick={() => likeMutation.mutate()}
                 disabled={likeMutation.isPending || !user}
               >
                 <Heart className="h-4 w-4" />
-                <span>{post.likesCount}</span>
+                <span>
+                  {post.likesCount} · {post.isLikedByUser ? "Curtido" : "Curtir"}
+                </span>
               </Button>
               
               <Button 
@@ -328,7 +330,9 @@ const PostDetailPage: React.FC = () => {
                 onClick={() => document.getElementById('comment-input')?.focus()}
               >
                 <MessageSquare className="h-4 w-4" />
-                <span>{post.commentsCount}</span>
+                <span>
+                  {post.commentsCount} · Comentar
+                </span>
               </Button>
               
               <Button 
@@ -338,7 +342,7 @@ const PostDetailPage: React.FC = () => {
                 onClick={handleShare}
               >
                 <Share2 className="h-4 w-4" />
-                <span>{post.sharesCount}</span>
+                <span>Compartilhar</span>
               </Button>
             </div>
           </CardContent>
