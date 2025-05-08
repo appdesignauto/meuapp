@@ -319,7 +319,7 @@ const PostDetailPage: React.FC = () => {
               >
                 <Heart className="h-4 w-4" />
                 <span>
-                  {post.likesCount > 0 ? post.likesCount : ""} {post.isLikedByUser ? "Curtido" : "Curtir"}
+                  {post.isLikedByUser ? "Curtido" : "Curtir"}
                 </span>
               </Button>
               
