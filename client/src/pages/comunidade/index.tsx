@@ -131,7 +131,11 @@ const CommentItem: React.FC<{ comment: any }> = ({ comment }) => {
   );
 };
 
-const PostCard: React.FC<{ post: CommunityPost; refetch?: () => void }> = ({ post, refetch }) => {
+const PostCard: React.FC<{ 
+  post: CommunityPost; 
+  refetch?: () => void;
+  refetchPopularPosts?: () => void; // Adicionado para atualizar posts populares
+}> = ({ post, refetch, refetchPopularPosts }) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isLiked, setIsLiked] = useState(post.isLikedByUser || false);
@@ -570,8 +574,8 @@ const CommunityPage: React.FC = () => {
     refetch: refetchPopularPosts
   } = useQuery({
     queryKey: ['/api/community/populares'], // NOVA ROTA COM NOME DIFERENTE
-    refetchOnWindowFocus: false,
-    refetchInterval: 300000, // Recarrega a cada 5 minutos
+    refetchOnWindowFocus: true, // Recarregar ao focar na janela
+    refetchInterval: 60000, // Recarrega a cada 1 minuto para manter mais atualizado
     retry: 3, // Tenta até 3 vezes em caso de falha
     retryDelay: 3000, // Espera 3 segundos entre as tentativas
     onError: (error) => {
