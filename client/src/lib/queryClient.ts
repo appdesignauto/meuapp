@@ -36,14 +36,27 @@ export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
+  options?: { isFormData?: boolean }
 ): Promise<Response> {
-  const res = await fetch(url, {
+  // Configuração padrão para requisições
+  const fetchOptions: RequestInit = {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
-  });
+  };
 
+  // Se temos dados para enviar
+  if (data) {
+    // Se é FormData, não definimos Content-Type (o navegador define automaticamente com o boundary)
+    if (options?.isFormData) {
+      fetchOptions.body = data as FormData;
+    } else {
+      // Para dados JSON normais
+      fetchOptions.headers = { "Content-Type": "application/json" };
+      fetchOptions.body = JSON.stringify(data);
+    }
+  }
+
+  const res = await fetch(url, fetchOptions);
   await throwIfResNotOk(res);
   return res;
 }

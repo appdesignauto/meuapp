@@ -81,7 +81,7 @@ export function CreatePostDialog({ open, onOpenChange }: CreatePostDialogProps) 
   const createPostMutation = useMutation({
     mutationFn: async (data: FormData) => {
       const response = await apiRequest("POST", "/api/community/posts", data, {
-        isFormData: true,
+        isFormData: true 
       });
       return response.json();
     },
