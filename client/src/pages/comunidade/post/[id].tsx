@@ -110,7 +110,21 @@ const PostDetailPage: React.FC = () => {
   
   // Depurar os dados recebidos do backend
   console.log("Dados recebidos do backend:", data);
-  console.log("Comentários recebidos:", data?.comments);
+  
+  if (data?.comments) {
+    console.log("Comentários recebidos:", data.comments);
+    // Verificar a estrutura do primeiro comentário, se existir
+    if (data.comments.length > 0) {
+      const firstComment = data.comments[0];
+      console.log("Estrutura do primeiro comentário:", {
+        hasCommentProperty: !!firstComment.comment,
+        directId: firstComment.id,
+        nestedId: firstComment.comment?.id,
+        directLikesCount: firstComment.likesCount,
+        directUserHasLiked: firstComment.userHasLiked,
+      });
+    }
+  }
   
   // Mapear a estrutura da API para o formato esperado pelo componente
   const post = data ? {
@@ -432,14 +446,21 @@ const PostDetailPage: React.FC = () => {
                   content: comment.content?.substring(0, 20)
                 });
                 
+                // Verificar a estrutura do comentário e normalizá-la
+                const commentData = comment.comment ? comment.comment : comment;
+                const userData = comment.user;
+                const commentLikes = comment.likesCount !== undefined ? comment.likesCount : 0;
+                const commentReplies = comment.repliesCount !== undefined ? comment.repliesCount : 0;
+                const hasLiked = comment.userHasLiked !== undefined ? comment.userHasLiked : false;
+
                 return (
                   <CommentItem 
-                    key={comment.id} 
-                    comment={comment} 
-                    user={comment.user}
-                    likesCount={comment.likesCount}
-                    repliesCount={comment.repliesCount || 0}
-                    userHasLiked={comment.userHasLiked || false}
+                    key={commentData.id} 
+                    comment={commentData} 
+                    user={userData}
+                    likesCount={commentLikes}
+                    repliesCount={commentReplies}
+                    userHasLiked={hasLiked}
                     isReply={false}
                     onRefresh={() => {
                       queryClient.invalidateQueries({ queryKey: [`/api/community/posts/${postId}`] });
