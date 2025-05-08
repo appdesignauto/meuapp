@@ -1175,7 +1175,7 @@ const CommunityPage: React.FC = () => {
                                 {title}
                               </p>
                               <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                                {likes} curtidas • {comments} comentários
+                                {likes === 1 ? '1 curtida' : `${likes} curtidas`} • {comments === 1 ? '1 comentário' : `${comments} comentários`}
                               </p>
                             </div>
                           </Link>
