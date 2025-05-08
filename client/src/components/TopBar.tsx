@@ -1,4 +1,4 @@
-import { ChevronLeft, Menu, Home, Video, Users, Grid3X3 } from 'lucide-react';
+import { ChevronLeft, Menu, Users } from 'lucide-react';
 import { Link } from 'wouter';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -32,7 +32,7 @@ const TopBar: React.FC<TopBarProps> = ({
               </Button>
             </Link>
           ) : (
-            <Link href="/" className="flex items-center mr-4">
+            <Link href="/" className="flex items-center">
               <span className="text-lg font-semibold text-blue-600 dark:text-blue-400">
                 DesignAuto
               </span>
@@ -52,35 +52,16 @@ const TopBar: React.FC<TopBarProps> = ({
           {children}
         </div>
         
-        {/* Navegação principal - versão desktop */}
-        <div className="hidden md:flex items-center">
-          <nav className="flex mr-4 space-x-1">
-            <Link href="/">
-              <Button variant="ghost" size="sm" className="flex items-center gap-1.5">
-                <Home className="h-4 w-4" />
-                <span>Início</span>
-              </Button>
-            </Link>
-            <Link href="/categories">
-              <Button variant="ghost" size="sm" className="flex items-center gap-1.5">
-                <Grid3X3 className="h-4 w-4" />
-                <span>Categorias</span>
-              </Button>
-            </Link>
-            <Link href="/videoaulas">
-              <Button variant="ghost" size="sm" className="flex items-center gap-1.5">
-                <Video className="h-4 w-4" />
-                <span>Videoaulas</span>
-              </Button>
-            </Link>
-            <Link href="/comunidade">
-              <Button variant="ghost" size="sm" className="flex items-center gap-1.5">
-                <Users className="h-4 w-4" />
-                <span>Comunidade</span>
-              </Button>
-            </Link>
-          </nav>
+        <div className="flex items-center gap-2">
+          {/* Link para comunidade - único atalho adicional */}
+          <Link href="/comunidade">
+            <Button variant="ghost" size="sm" className="flex items-center gap-1.5">
+              <Users className="h-4 w-4" />
+              <span className="hidden sm:inline">Comunidade</span>
+            </Button>
+          </Link>
           
+          {/* Perfil e menu móvel */}
           {user ? (
             <Link href="/painel/perfil">
               <Avatar className="h-8 w-8 cursor-pointer">
@@ -93,18 +74,15 @@ const TopBar: React.FC<TopBarProps> = ({
             </Link>
           ) : (
             <Link href="/login">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="hidden sm:flex">
                 Entrar
               </Button>
             </Link>
           )}
-        </div>
-        
-        {/* Menu móvel */}
-        <div className="md:hidden flex items-center">
+          
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="ml-1">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
@@ -113,25 +91,21 @@ const TopBar: React.FC<TopBarProps> = ({
                 <div className="flex flex-col gap-4 px-2">
                   <Link href="/">
                     <Button variant="ghost" className="w-full justify-start">
-                      <Home className="h-4 w-4 mr-2" />
                       Início
                     </Button>
                   </Link>
                   <Link href="/categories">
                     <Button variant="ghost" className="w-full justify-start">
-                      <Grid3X3 className="h-4 w-4 mr-2" />
                       Categorias
                     </Button>
                   </Link>
                   <Link href="/videoaulas">
                     <Button variant="ghost" className="w-full justify-start">
-                      <Video className="h-4 w-4 mr-2" />
                       Videoaulas
                     </Button>
                   </Link>
                   <Link href="/comunidade">
                     <Button variant="ghost" className="w-full justify-start">
-                      <Users className="h-4 w-4 mr-2" />
                       Comunidade
                     </Button>
                   </Link>
