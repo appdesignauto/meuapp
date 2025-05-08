@@ -303,8 +303,36 @@ const CommentItem: React.FC<{
                             {reply.content}
                           </p>
                           <div className="mt-1 flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
-                            <button className={`hover:underline ${reply.isLikedByUser ? 'text-blue-600 dark:text-blue-400' : ''}`}>
+                            <button 
+                              className={`hover:underline ${reply.isLikedByUser ? 'text-blue-600 dark:text-blue-400' : ''}`}
+                              onClick={() => {
+                                const endpoint = reply.isLikedByUser 
+                                  ? `DELETE` 
+                                  : `POST`;
+                                
+                                apiRequest(endpoint, `/api/community/comments/${reply.id}/like`)
+                                  .then(() => {
+                                    // Recarregar as respostas
+                                    fetchReplies();
+                                    // Atualizar também o post principal para manter contagens atualizadas
+                                    queryClient.invalidateQueries({ queryKey: [`/api/community/posts/${postId}`] });
+                                    toast({
+                                      description: reply.isLikedByUser 
+                                        ? "Curtida removida com sucesso" 
+                                        : "Resposta curtida com sucesso",
+                                    });
+                                  })
+                                  .catch(error => {
+                                    toast({
+                                      variant: "destructive",
+                                      title: "Erro",
+                                      description: `Não foi possível processar sua ação: ${error.message}`,
+                                    });
+                                  });
+                              }}
+                            >
                               {reply.isLikedByUser ? 'Curtiu' : 'Curtir'}
+                              {reply.likesCount > 0 && ` · ${reply.likesCount}`}
                             </button>
                             <span className="text-zinc-400 dark:text-zinc-500">{formatDate(reply.createdAt)}</span>
                           </div>
@@ -371,11 +399,13 @@ const PostDetailPage: React.FC = () => {
   // Mutação para curtir um post
   const likeMutation = useMutation({
     mutationFn: async () => {
-      const endpoint = post?.isLikedByUser 
-        ? `/api/community/posts/${postId}/unlike` 
-        : `/api/community/posts/${postId}/like`;
-      
-      await apiRequest('POST', endpoint);
+      if (post?.isLikedByUser) {
+        // Se já curtiu, usa método DELETE para remover a curtida
+        await apiRequest('DELETE', `/api/community/posts/${postId}/like`);
+      } else {
+        // Se não curtiu, usa método POST para adicionar curtida
+        await apiRequest('POST', `/api/community/posts/${postId}/like`);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/community/posts/${postId}`] });
