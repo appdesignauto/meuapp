@@ -16,6 +16,7 @@ import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import fs from 'fs';
 import sharp from 'sharp';
+import { communityStorageService } from '../services/community-storage';
 
 const router = Router();
 
@@ -132,25 +133,10 @@ router.get('/api/community/populares', async (req, res) => {
   }
 });
 
-// Configuração do multer para upload de imagens
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = 'public/uploads/community';
-    // Criar diretório se não existir
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const fileExtension = path.extname(file.originalname);
-    const fileName = `community-${uuidv4()}${fileExtension}`;
-    cb(null, fileName);
-  },
-});
-
+// Configuração do multer para upload de imagens com armazenamento em memória
+// para depois enviar para o Supabase
 const upload = multer({ 
-  storage,
+  storage: multer.memoryStorage(), // Armazenar o arquivo em memória
   limits: { fileSize: 10 * 1024 * 1024 }, // Limite de 10MB
   fileFilter: (req, file, cb) => {
     // Permitir apenas imagens
