@@ -147,26 +147,8 @@ const upload = multer({
   }
 });
 
-// Helper para otimizar imagens com sharp
-const optimizeImage = async (filePath: string): Promise<void> => {
-  try {
-    // Criar versão WebP otimizada
-    const webpPath = filePath.replace(/\.[^.]+$/, '.webp');
-    await sharp(filePath)
-      .resize(1500, 1500, { fit: 'inside', withoutEnlargement: true })
-      .webp({ quality: 85 })
-      .toFile(webpPath);
-
-    // Se a conversão for bem-sucedida, remova o arquivo original
-    fs.unlinkSync(filePath);
-
-    // Renomear o arquivo WebP para o nome original com extensão .webp
-    fs.renameSync(webpPath, filePath.replace(/\.[^.]+$/, '.webp'));
-  } catch (error) {
-    console.error('Erro ao otimizar imagem:', error);
-    // Continue mesmo se a otimização falhar
-  }
-};
+// Este helper não é mais necessário pois agora usamos o comunidade-storage.ts 
+// para otimizar e fazer upload diretamente para o Supabase
 
 // GET: Listar posts da comunidade 
 // Parâmetros opcionais: ?page=1&limit=20&status=approved
@@ -432,15 +414,43 @@ router.post('/api/community/posts', upload.single('image'), async (req, res) => 
     // mas agora vamos torná-lo opcional para compatibilidade com o formulário
     const postTitle = title || `Post de ${req.user.username} - ${new Date().toLocaleDateString()}`;
     
-    // Otimizar imagem
-    const filePath = req.file.path;
-    console.log('Otimizando imagem:', filePath);
-    await optimizeImage(filePath);
+    // Fazer upload da imagem para o Supabase usando o novo serviço
+    console.log('Enviando imagem para o Supabase via community-storage...');
+    let imageUrl = '';
+    let storageType = 'local';
     
-    // Caminho da imagem após otimização (agora em webp)
-    const webpPath = filePath.replace(/\.[^.]+$/, '.webp');
-    const imageUrl = `/uploads/community/${path.basename(webpPath)}`;
-    console.log('URL da imagem após otimização:', imageUrl);
+    try {
+      // Usar o novo serviço de armazenamento da comunidade para o Supabase
+      const uploadResult = await communityStorageService.uploadCommunityImage(
+        req.file,
+        req.user.id
+      );
+      
+      console.log('Resultado do upload para Supabase:', uploadResult);
+      
+      imageUrl = uploadResult.imageUrl;
+      storageType = uploadResult.storageType;
+      
+      console.log(`Imagem salva em ${storageType} com URL: ${imageUrl}`);
+    } catch (uploadError) {
+      console.error('Erro no upload para Supabase:', uploadError);
+      
+      // Se falhar completamente, usar o fluxo antigo
+      console.warn('Não foi possível fazer upload para o Supabase, usando fallback completo');
+      
+      // Caminho da imagem antigo (fallback)
+      if (req.file.path) {
+        const filePath = req.file.path;
+        const webpPath = filePath.replace(/\.[^.]+$/, '.webp');
+        imageUrl = `/uploads/community/${path.basename(webpPath)}`;
+      } else {
+        return res.status(500).json({ message: 'Falha ao processar a imagem' });
+      }
+    }
+    
+    if (!imageUrl) {
+      return res.status(500).json({ message: 'Falha ao processar a imagem' });
+    }
     
     // Consultar configurações para saber se post precisa de aprovação
     const [settings] = await db.select().from(communitySettings);
@@ -494,7 +504,8 @@ router.post('/api/community/posts', upload.single('image'), async (req, res) => 
         ? 'Post criado com sucesso!' 
         : 'Post enviado e aguardando aprovação',
       post: newPost,
-      status
+      status,
+      storageType
     });
   } catch (error) {
     console.error('Erro ao criar post da comunidade:', error);
