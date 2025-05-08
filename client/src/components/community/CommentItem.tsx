@@ -327,53 +327,38 @@ export const CommentItem = ({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  {(() => {
-                    // Verificar se o usuário atual pode excluir esse comentário
-                    const isAdmin = currentUser.nivelacesso === 'admin' || 
-                                   currentUser.nivelacesso === 'administrador' ||
-                                   currentUser.nivelacesso === 'designer_adm';
-                                   
-                    const canDelete = currentUser.id === comment.userId || isAdmin;
-                    
-                    console.log("Debug exclusão:", { 
-                      "Comentário ID": comment.id,
-                      "Usuário atual ID": currentUser.id, 
-                      "ID autor do comentário": comment.userId,
-                      "Nível do usuário": currentUser.nivelacesso,
-                      "É admin?": isAdmin,
-                      "Pode excluir?": canDelete
-                    });
-                    
-                    // Só mostra a opção de exclusão se o usuário puder excluir
-                    return canDelete && (
-                      <DropdownMenuItem 
-                        onClick={async (e) => {
-                          e.preventDefault();
-                          console.log("Botão excluir clicado para comentário:", comment.id);
-                          try {
-                            if (onDelete) {
-                              console.log("Usando função onDelete passada via props");
-                              await onDelete(comment.id);
-                            } else {
-                              console.log("Usando função handleDeleteComment local");
-                              await handleDeleteComment();
-                            }
-                          } catch (error) {
-                            console.error("Erro ao processar exclusão:", error);
-                            toast({
-                              title: "Erro ao excluir comentário",
-                              description: error instanceof Error ? error.message : "Ocorreu um erro ao excluir este comentário.",
-                              variant: "destructive"
-                            });
+                  {/* Verificar se este usuário pode excluir o comentário */}
+                  {(currentUser.id === comment.userId || 
+                    currentUser.nivelacesso === 'admin' ||
+                    currentUser.nivelacesso === 'administrador' || 
+                    currentUser.nivelacesso === 'designer_adm') && (
+                    <DropdownMenuItem 
+                      onClick={async (e) => {
+                        e.preventDefault();
+                        console.log("Botão excluir clicado para comentário:", comment.id);
+                        try {
+                          if (onDelete) {
+                            console.log("Usando função onDelete passada via props");
+                            await onDelete(comment.id);
+                          } else {
+                            console.log("Usando função handleDeleteComment local");
+                            await handleDeleteComment();
                           }
-                        }} 
-                        className="text-red-500 dark:text-red-400"
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Excluir
-                      </DropdownMenuItem>
-                    );
-                  })()}
+                        } catch (error) {
+                          console.error("Erro ao processar exclusão:", error);
+                          toast({
+                            title: "Erro ao excluir comentário",
+                            description: error instanceof Error ? error.message : "Ocorreu um erro ao excluir este comentário.",
+                            variant: "destructive"
+                          });
+                        }
+                      }} 
+                      className="text-red-500 dark:text-red-400"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Excluir
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
