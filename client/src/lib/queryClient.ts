@@ -41,8 +41,17 @@ export async function apiRequest(
   // Configuração padrão para requisições
   const fetchOptions: RequestInit = {
     method,
-    credentials: "include",
+    credentials: "include", // Mantém suporte a cookies
   };
+
+  // Headers iniciais
+  const headers: Record<string, string> = {};
+  
+  // Adicionar token de autenticação do localStorage se disponível
+  const authToken = localStorage.getItem('authToken');
+  if (authToken) {
+    headers['Authorization'] = `Bearer ${authToken}`;
+  }
 
   // Se temos dados para enviar
   if (data) {
@@ -51,10 +60,13 @@ export async function apiRequest(
       fetchOptions.body = data as FormData;
     } else {
       // Para dados JSON normais
-      fetchOptions.headers = { "Content-Type": "application/json" };
+      headers['Content-Type'] = 'application/json';
       fetchOptions.body = JSON.stringify(data);
     }
   }
+  
+  // Adicionar headers ao fetchOptions
+  fetchOptions.headers = headers;
 
   const res = await fetch(url, fetchOptions);
   await throwIfResNotOk(res);
@@ -83,8 +95,18 @@ export const getQueryFn: <T>(options: {
     
     console.log("Fazendo requisição para:", url.toString(), "com parâmetros:", params);
     
+    // Headers iniciais
+    const headers: Record<string, string> = {};
+    
+    // Adicionar token de autenticação do localStorage se disponível
+    const authToken = localStorage.getItem('authToken');
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`;
+    }
+    
     const res = await fetch(url.toString(), {
-      credentials: "include",
+      credentials: "include", // Mantém suporte a cookies
+      headers
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {

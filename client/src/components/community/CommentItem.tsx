@@ -82,8 +82,8 @@ export const CommentItem = ({
 
     try {
       // Guardar os valores originais antes da atualização
-      const previousIsLiked = isLiked;
-      const previousLikes = likes;
+      const initialIsLiked = isLiked;
+      const initialLikes = likes;
       
       // Atualizar UI imediatamente para feedback instantâneo
       setIsLiked(!isLiked);
@@ -147,9 +147,9 @@ export const CommentItem = ({
     } catch (error: any) {
       console.error("Erro na requisição de curtir:", error);
       
-      // Reverter mudanças em caso de erro usando os valores guardados na ref
-      setIsLiked(previousIsLiked);
-      setLikes(previousLikes);
+      // Reverter mudanças em caso de erro usando os valores guardados
+      setIsLiked(initialIsLiked);
+      setLikes(initialLikes);
       
       toast({
         title: "Erro ao curtir comentário",
