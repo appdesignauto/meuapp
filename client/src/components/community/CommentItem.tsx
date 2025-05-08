@@ -62,6 +62,7 @@ export const CommentItem = ({
   const [repliesCountState, setRepliesCount] = useState(initialRepliesCount);
 
   const handleLikeComment = async () => {
+    console.log("Função handleLikeComment chamada para o comentário:", comment.id);
     if (!currentUser) {
       toast({
         title: "Ação não permitida",
@@ -72,8 +73,10 @@ export const CommentItem = ({
     }
 
     try {
+      console.log("Enviando requisição para curtir comentário:", comment.id);
       const response = await apiRequest('POST', `/api/community/comments/${comment.id}/like`);
       const data = await response.json();
+      console.log("Resposta recebida:", data);
       
       setIsLiked(data.liked);
       setLikes(data.likesCount);
@@ -83,8 +86,14 @@ export const CommentItem = ({
           title: "Comentário curtido",
           description: "Você curtiu este comentário."
         });
+      } else {
+        toast({
+          title: "Curtida removida",
+          description: "Você removeu sua curtida deste comentário."
+        });
       }
     } catch (error) {
+      console.error("Erro ao curtir comentário:", error);
       toast({
         title: "Erro ao curtir comentário",
         description: "Ocorreu um erro ao curtir este comentário.",
@@ -217,32 +226,42 @@ export const CommentItem = ({
         </div>
         
         <div className="flex items-center gap-4 text-xs text-gray-500 mt-1 ml-2">
-          <button 
+          <Button 
+            type="button"
+            variant="ghost" 
+            size="sm"
             onClick={handleLikeComment}
-            className={`flex items-center gap-1 hover:text-primary transition-colors ${isLiked ? 'text-primary font-medium' : ''}`}
+            className={`flex items-center gap-1 p-0 h-auto hover:text-primary transition-colors ${isLiked ? 'text-primary font-medium' : ''}`}
           >
             <ThumbsUp className="h-3.5 w-3.5" />
-            {likes > 0 && <span>{likes}</span>}
-            <span>{isLiked ? 'Curtido' : 'Curtir'}</span>
-          </button>
+            {likes > 0 && <span>{likes === 1 ? '1 curtida' : `${likes} curtidas`}</span>}
+            {likes === 0 && <span>{isLiked ? 'Curtido' : 'Curtir'}</span>}
+          </Button>
           
           {!isReply && (
-            <button 
+            <Button 
+              type="button"
+              variant="ghost" 
+              size="sm"
               onClick={() => setShowReplyForm(!showReplyForm)}
-              className="flex items-center gap-1 hover:text-primary transition-colors"
+              className="flex items-center gap-1 p-0 h-auto hover:text-primary transition-colors"
             >
               <MessageCircle className="h-3.5 w-3.5" />
               <span>Responder</span>
-            </button>
+            </Button>
           )}
           
           <span>{formatTimeAgo(comment.createdAt)}</span>
         </div>
         
         {repliesCountState > 0 && !isReply && (
-          <button 
+          <Button 
+            type="button"
+            variant="link" 
+            size="sm"
             onClick={handleToggleReplies}
-            className="text-xs text-primary font-medium ml-2 mt-2 flex items-center"
+            className="text-xs text-primary font-medium ml-2 h-auto p-0"
+            disabled={loadingReplies}
           >
             {loadingReplies ? (
               <span className="flex items-center">
@@ -254,7 +273,7 @@ export const CommentItem = ({
                 {showReplies ? 'Ocultar respostas' : `Ver ${repliesCountState} ${repliesCountState === 1 ? 'resposta' : 'respostas'}`}
               </>
             )}
-          </button>
+          </Button>
         )}
         
         {showReplyForm && !isReply && (
