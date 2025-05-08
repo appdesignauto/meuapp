@@ -177,21 +177,40 @@ const PostDetailPage: React.FC = () => {
   const deleteCommentMutation = useMutation({
     mutationFn: async (commentId: number) => {
       console.log("PostDetailPage: Excluindo comentário ID:", commentId);
-      await apiRequest('DELETE', `/api/community/comments/${commentId}`);
+      
+      // Verificar se o usuário atual existe
+      if (!user) {
+        throw new Error("Você precisa estar logado para excluir comentários");
+      }
+      
+      const response = await apiRequest('DELETE', `/api/community/comments/${commentId}`);
+      
+      // Verificar se a resposta foi bem-sucedida
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Erro ${response.status} ao excluir comentário`);
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       console.log("PostDetailPage: Comentário excluído com sucesso");
+      
+      // Invalidar queries para atualizar a lista de comentários
       queryClient.invalidateQueries({ queryKey: [`/api/community/posts/${postId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/community/posts/${postId}/comments`] });
+      
       toast({
-        description: "Comentário excluído com sucesso",
+        title: "Comentário excluído",
+        description: "Seu comentário foi excluído com sucesso",
       });
     },
     onError: (error: Error) => {
       console.error("PostDetailPage: Erro ao excluir comentário:", error);
       toast({
         variant: "destructive",
-        title: "Erro",
-        description: `Não foi possível excluir o comentário: ${error.message}`,
+        title: "Erro ao excluir comentário",
+        description: error.message || "Não foi possível excluir o comentário. Tente novamente mais tarde.",
       });
     }
   });
