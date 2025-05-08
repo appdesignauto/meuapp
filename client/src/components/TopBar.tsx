@@ -1,4 +1,4 @@
-import { ChevronLeft, Menu } from 'lucide-react';
+import { ChevronLeft, Menu, Home, Video, Users, Grid3X3 } from 'lucide-react';
 import { Link } from 'wouter';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -24,13 +24,23 @@ const TopBar: React.FC<TopBarProps> = ({
   return (
     <div className="sticky top-0 z-40 bg-white dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 shadow-sm">
       <div className="container h-14 max-w-5xl flex items-center justify-between">
-        <div className="flex items-center gap-x-2">
-          {showBack && (
+        <div className="flex items-center">
+          {showBack ? (
             <Link href={backPath}>
               <Button variant="ghost" size="icon" className="mr-1">
                 <ChevronLeft className="h-5 w-5" />
               </Button>
             </Link>
+          ) : (
+            <Link href="/" className="flex items-center mr-4">
+              <span className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+                DesignAuto
+              </span>
+            </Link>
+          )}
+          
+          {title && !showBack && (
+            <span className="mx-4 text-zinc-300 dark:text-zinc-700">|</span>
           )}
           
           {title && (
@@ -42,10 +52,59 @@ const TopBar: React.FC<TopBarProps> = ({
           {children}
         </div>
         
-        <div className="flex items-center gap-x-2">
+        {/* Navegação principal - versão desktop */}
+        <div className="hidden md:flex items-center">
+          <nav className="flex mr-4 space-x-1">
+            <Link href="/">
+              <Button variant="ghost" size="sm" className="flex items-center gap-1.5">
+                <Home className="h-4 w-4" />
+                <span>Início</span>
+              </Button>
+            </Link>
+            <Link href="/categories">
+              <Button variant="ghost" size="sm" className="flex items-center gap-1.5">
+                <Grid3X3 className="h-4 w-4" />
+                <span>Categorias</span>
+              </Button>
+            </Link>
+            <Link href="/videoaulas">
+              <Button variant="ghost" size="sm" className="flex items-center gap-1.5">
+                <Video className="h-4 w-4" />
+                <span>Videoaulas</span>
+              </Button>
+            </Link>
+            <Link href="/comunidade">
+              <Button variant="ghost" size="sm" className="flex items-center gap-1.5">
+                <Users className="h-4 w-4" />
+                <span>Comunidade</span>
+              </Button>
+            </Link>
+          </nav>
+          
+          {user ? (
+            <Link href="/painel/perfil">
+              <Avatar className="h-8 w-8 cursor-pointer">
+                <AvatarImage 
+                  src={user.profileimageurl || undefined} 
+                  alt={user.name || user.username} 
+                />
+                <AvatarFallback>{getInitials(user.name || user.username)}</AvatarFallback>
+              </Avatar>
+            </Link>
+          ) : (
+            <Link href="/login">
+              <Button variant="outline" size="sm">
+                Entrar
+              </Button>
+            </Link>
+          )}
+        </div>
+        
+        {/* Menu móvel */}
+        <div className="md:hidden flex items-center">
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
+              <Button variant="ghost" size="icon">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
@@ -54,21 +113,25 @@ const TopBar: React.FC<TopBarProps> = ({
                 <div className="flex flex-col gap-4 px-2">
                   <Link href="/">
                     <Button variant="ghost" className="w-full justify-start">
+                      <Home className="h-4 w-4 mr-2" />
                       Início
                     </Button>
                   </Link>
                   <Link href="/categories">
                     <Button variant="ghost" className="w-full justify-start">
+                      <Grid3X3 className="h-4 w-4 mr-2" />
                       Categorias
                     </Button>
                   </Link>
                   <Link href="/videoaulas">
                     <Button variant="ghost" className="w-full justify-start">
+                      <Video className="h-4 w-4 mr-2" />
                       Videoaulas
                     </Button>
                   </Link>
                   <Link href="/comunidade">
                     <Button variant="ghost" className="w-full justify-start">
+                      <Users className="h-4 w-4 mr-2" />
                       Comunidade
                     </Button>
                   </Link>
@@ -96,36 +159,6 @@ const TopBar: React.FC<TopBarProps> = ({
               </div>
             </SheetContent>
           </Sheet>
-          
-          <div className="hidden md:flex items-center gap-x-1 mr-2">
-            <Link href="/">
-              <Button variant="ghost" size="sm">Início</Button>
-            </Link>
-            <Link href="/videoaulas">
-              <Button variant="ghost" size="sm">Videoaulas</Button>
-            </Link>
-            <Link href="/comunidade">
-              <Button variant="ghost" size="sm">Comunidade</Button>
-            </Link>
-          </div>
-          
-          {user ? (
-            <Link href="/painel/perfil">
-              <Avatar className="h-8 w-8 cursor-pointer">
-                <AvatarImage 
-                  src={user.profileimageurl || undefined} 
-                  alt={user.name || user.username} 
-                />
-                <AvatarFallback>{getInitials(user.name || user.username)}</AvatarFallback>
-              </Avatar>
-            </Link>
-          ) : (
-            <Link href="/login">
-              <Button variant="outline" size="sm" className="hidden md:flex">
-                Entrar
-              </Button>
-            </Link>
-          )}
         </div>
       </div>
     </div>
