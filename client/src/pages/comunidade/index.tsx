@@ -563,10 +563,29 @@ const CommunityPage: React.FC = () => {
   });
   
   // Buscar posts populares
-  const { data: popularPosts, isLoading: popularPostsLoading, error: popularPostsError } = useQuery({
+  const { 
+    data: popularPosts, 
+    isLoading: popularPostsLoading, 
+    error: popularPostsError,
+    refetch: refetchPopularPosts
+  } = useQuery({
     queryKey: ['/api/community/posts/popular'],
     refetchOnWindowFocus: false,
     refetchInterval: 300000, // Recarrega a cada 5 minutos
+    retry: 3, // Tenta até 3 vezes em caso de falha
+    retryDelay: 3000, // Espera 3 segundos entre as tentativas
+    onError: (error) => {
+      console.error("Erro ao buscar posts populares:", error);
+    },
+    onSuccess: (data) => {
+      if (!data || !Array.isArray(data)) {
+        console.warn("Resposta da API de posts populares não é um array:", data);
+      } else if (data.length === 0) {
+        console.info("Nenhum post popular encontrado");
+      } else {
+        console.info(`${data.length} posts populares carregados com sucesso`);
+      }
+    }
   });
   
   // Buscar ranking dos usuários
@@ -1027,8 +1046,22 @@ const CommunityPage: React.FC = () => {
               {/* Card de posts populares */}
               <Card className="overflow-hidden mb-4 border border-zinc-100 dark:border-zinc-800">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Posts Populares</CardTitle>
-                  <CardDescription>Conteúdo mais engajado</CardDescription>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle className="text-lg">Posts Populares</CardTitle>
+                      <CardDescription>Conteúdo mais engajado</CardDescription>
+                    </div>
+                    {popularPostsError && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => refetchPopularPosts()}
+                        title="Tentar novamente"
+                      >
+                        <RefreshCw className="h-4 w-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
+                      </Button>
+                    )}
+                  </div>
                 </CardHeader>
                 
                 <CardContent className="space-y-4 p-4">
@@ -1055,10 +1088,11 @@ const CommunityPage: React.FC = () => {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={() => window.location.reload()}
+                        onClick={() => refetchPopularPosts()}
                         className="mt-2"
                       >
-                        Tentar novamente
+                        <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                        Atualizar
                       </Button>
                     </div>
                   ) : !popularPosts || popularPosts.length === 0 ? (
@@ -1072,33 +1106,53 @@ const CommunityPage: React.FC = () => {
                   ) : (
                     // Lista de posts populares
                     <>
-                      {Array.isArray(popularPosts) && popularPosts.map((item: any) => (
-                        <Link 
-                          key={item.post.id} 
-                          href={`/comunidade/post/${item.post.id}`}
-                          className="flex items-start gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-800 p-2 rounded-md transition-colors"
-                        >
-                          <div className="w-16 h-16 rounded-md overflow-hidden shrink-0">
-                            <img 
-                              src={item.post.imageUrl} 
-                              alt={item.post.title || 'Post em destaque'} 
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.src = "https://placehold.co/200x200/gray/white?text=DesignAuto";
-                              }}
-                            />
-                          </div>
-                          <div>
-                            <p className="font-medium text-sm line-clamp-2">
-                              {item.post.title || 'Post sem título'}
-                            </p>
-                            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                              {item.likesCount || 0} curtidas • {item.commentsCount || 0} comentários
-                            </p>
-                          </div>
-                        </Link>
-                      ))}
+                      {Array.isArray(popularPosts) && popularPosts.map((item: any) => {
+                        // Verificar se o objeto e suas propriedades existem antes de renderizar
+                        if (!item || !item.post) {
+                          console.log('Item de post popular inválido:', item);
+                          return null;
+                        }
+                        
+                        const postId = item.post?.id || 0;
+                        const imageUrl = item.post?.imageUrl || '';
+                        const title = item.post?.title || 'Post sem título';
+                        const likes = item.likesCount || 0;
+                        const comments = item.commentsCount || 0;
+                        
+                        return (
+                          <Link 
+                            key={postId} 
+                            href={`/comunidade/post/${postId}`}
+                            className="flex items-start gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-800 p-2 rounded-md transition-colors"
+                          >
+                            <div className="w-16 h-16 rounded-md overflow-hidden shrink-0 bg-zinc-100 dark:bg-zinc-800">
+                              {imageUrl ? (
+                                <img 
+                                  src={imageUrl} 
+                                  alt={title} 
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.src = "https://placehold.co/200x200/gray/white?text=DesignAuto";
+                                  }}
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-zinc-400">
+                                  <ImageIcon className="h-8 w-8" />
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm line-clamp-2">
+                                {title}
+                              </p>
+                              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                                {likes} curtidas • {comments} comentários
+                              </p>
+                            </div>
+                          </Link>
+                        );
+                      })}
                     </>
                   )}
                 </CardContent>
