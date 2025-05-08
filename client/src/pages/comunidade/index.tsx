@@ -185,32 +185,22 @@ const PostCard: React.FC<{
     try {
       if (isLiked) {
         // Remover curtida
-        const response = await apiRequest("DELETE", `/api/community/posts/${post.id}/like`);
+        await apiRequest("DELETE", `/api/community/posts/${post.id}/like`);
         
-        if (response.ok) {
-          setIsLiked(false);
-          setLikesCount(prev => Math.max(0, prev - 1));
-          toast({
-            title: "Curtida removida",
-            description: "Você removeu sua curtida deste post",
-          });
-        } else {
-          throw new Error("Não foi possível remover sua curtida");
-        }
+        // Não alteramos o estado local para evitar duplicações
+        toast({
+          title: "Curtida removida",
+          description: "Você removeu sua curtida deste post",
+        });
       } else {
         // Adicionar curtida
-        const response = await apiRequest("POST", `/api/community/posts/${post.id}/like`);
+        await apiRequest("POST", `/api/community/posts/${post.id}/like`);
         
-        if (response.ok) {
-          setIsLiked(true);
-          setLikesCount(prev => prev + 1);
-          toast({
-            title: "Post curtido",
-            description: "Você curtiu este post",
-          });
-        } else {
-          throw new Error("Não foi possível curtir o post");
-        }
+        // Não alteramos o estado local para evitar duplicações
+        toast({
+          title: "Post curtido",
+          description: "Você curtiu este post",
+        });
       }
 
       // Atualizar lista de posts e posts populares se necessário

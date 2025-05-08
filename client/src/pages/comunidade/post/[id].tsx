@@ -147,11 +147,13 @@ const PostDetailPage: React.FC = () => {
   // Mutação para curtir um post
   const likeMutation = useMutation({
     mutationFn: async () => {
-      const endpoint = post?.isLikedByUser 
-        ? `/api/community/posts/${postId}/unlike` 
-        : `/api/community/posts/${postId}/like`;
-      
-      await apiRequest('POST', endpoint);
+      if (post?.isLikedByUser) {
+        // Se já curtiu, usa método DELETE para remover a curtida
+        await apiRequest('DELETE', `/api/community/posts/${postId}/like`);
+      } else {
+        // Se não curtiu, usa método POST para adicionar curtida
+        await apiRequest('POST', `/api/community/posts/${postId}/like`);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/community/posts/${postId}`] });
