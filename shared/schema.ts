@@ -946,13 +946,30 @@ export const communitySavesRelations = relations(communitySaves, ({ one }) => ({
   }),
 }));
 
-export const communityCommentsRelations = relations(communityComments, ({ one }) => ({
+export const communityCommentsRelations = relations(communityComments, ({ one, many }) => ({
   post: one(communityPosts, {
     fields: [communityComments.postId],
     references: [communityPosts.id],
   }),
   user: one(users, {
     fields: [communityComments.userId],
+    references: [users.id],
+  }),
+  parent: one(communityComments, {
+    fields: [communityComments.parentId],
+    references: [communityComments.id],
+  }),
+  likes: many(communityCommentLikes),
+}));
+
+// Relações para curtidas em comentários
+export const communityCommentLikesRelations = relations(communityCommentLikes, ({ one }) => ({
+  comment: one(communityComments, {
+    fields: [communityCommentLikes.commentId],
+    references: [communityComments.id],
+  }),
+  user: one(users, {
+    fields: [communityCommentLikes.userId],
     references: [users.id],
   }),
 }));

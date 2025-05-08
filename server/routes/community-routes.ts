@@ -8,7 +8,8 @@ import {
   communitySaves,
   communityPoints,
   communityLeaderboard,
-  communitySettings
+  communitySettings,
+  communityCommentLikes
 } from '../../shared/schema';
 import { eq, and, gt, gte, lte, desc, asc, sql, inArray, count } from 'drizzle-orm';
 import multer from 'multer';
@@ -840,29 +841,78 @@ router.get('/api/community/posts/:id/comments', async (req, res) => {
   try {
     const postId = parseInt(req.params.id);
     
-    // Buscar comentários com informações do usuário
-    const comments = await db
-      .select({
-        comment: communityComments,
-        user: {
-          id: users.id,
-          username: users.username,
-          name: users.name,
-          profileimageurl: users.profileimageurl,
-          nivelacesso: users.nivelacesso
-        }
-      })
-      .from(communityComments)
-      .leftJoin(users, eq(communityComments.userId, users.id))
-      .where(
-        and(
-          eq(communityComments.postId, postId),
-          eq(communityComments.isHidden, false)
-        )
-      )
-      .orderBy(desc(communityComments.createdAt));
+    // Verificar se devemos incluir respostas ou apenas comentários principais
+    const includeReplies = req.query.includeReplies === 'true';
+    const parentIdFilter = includeReplies 
+      ? sql`1=1` 
+      : sql`"parentId" IS NULL`;
+
+    // Buscar comentários com informações do usuário e contagem de curtidas
+    const comments = await db.execute(sql`
+      SELECT 
+        c.id, c."postId", c."userId", c.content, c."isHidden", c."parentId", c."createdAt", c."updatedAt",
+        u.id as user_id, u.username, u.name, u.profileimageurl, u.nivelacesso,
+        COUNT(DISTINCT cl.id) as likes_count,
+        (SELECT COUNT(*) FROM "communityComments" as replies WHERE replies."parentId" = c.id) as replies_count
+      FROM "communityComments" c
+      LEFT JOIN users u ON c."userId" = u.id
+      LEFT JOIN "communityCommentLikes" cl ON c.id = cl."commentId"
+      WHERE c."postId" = ${postId}
+        AND c."isHidden" = false
+        AND ${parentIdFilter}
+      GROUP BY c.id, u.id
+      ORDER BY c."createdAt" DESC
+    `);
+
+    // Processar os resultados para o formato que o frontend espera
+    const formattedComments = comments.rows.map(row => ({
+      comment: {
+        id: row.id,
+        postId: row.postId,
+        userId: row.userId,
+        content: row.content,
+        isHidden: row.isHidden,
+        parentId: row.parentId,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt
+      },
+      user: {
+        id: row.user_id,
+        username: row.username,
+        name: row.name,
+        profileimageurl: row.profileimageurl,
+        nivelacesso: row.nivelacesso
+      },
+      likesCount: parseInt(row.likes_count) || 0,
+      repliesCount: parseInt(row.replies_count) || 0,
+      userHasLiked: false // será atualizado abaixo para usuários autenticados
+    }));
+
+    // Adicionar info se o usuário autenticado curtiu cada comentário
+    if (req.user?.id) {
+      const userId = req.user.id;
+      const commentIds = formattedComments.map(c => c.comment.id);
+      
+      if (commentIds.length > 0) {
+        const userLikes = await db
+          .select()
+          .from(communityCommentLikes)
+          .where(
+            and(
+              inArray(communityCommentLikes.commentId, commentIds),
+              eq(communityCommentLikes.userId, userId)
+            )
+          );
+        
+        const likedCommentIds = new Set(userLikes.map(like => like.commentId));
+        
+        formattedComments.forEach(comment => {
+          comment.userHasLiked = likedCommentIds.has(comment.comment.id);
+        });
+      }
+    }
     
-    return res.json(comments);
+    return res.json(formattedComments);
   } catch (error) {
     console.error('Erro ao buscar comentários:', error);
     return res.status(500).json({ 
@@ -880,7 +930,7 @@ router.post('/api/community/posts/:id/comments', async (req, res) => {
     }
     
     const postId = parseInt(req.params.id);
-    const { content } = req.body;
+    const { content, parentId } = req.body;
     
     if (!content) {
       return res.status(400).json({ message: 'Conteúdo do comentário é obrigatório' });
@@ -907,6 +957,24 @@ router.post('/api/community/posts/:id/comments', async (req, res) => {
       return res.status(403).json({ message: 'Comentários estão desabilitados' });
     }
     
+    // Se for resposta, verificar se o comentário pai existe
+    if (parentId) {
+      const [parentComment] = await db
+        .select()
+        .from(communityComments)
+        .where(
+          and(
+            eq(communityComments.id, parentId),
+            eq(communityComments.postId, postId),
+            eq(communityComments.isHidden, false)
+          )
+        );
+      
+      if (!parentComment) {
+        return res.status(404).json({ message: 'Comentário pai não encontrado' });
+      }
+    }
+    
     // Adicionar comentário
     const [comment] = await db
       .insert(communityComments)
@@ -915,6 +983,7 @@ router.post('/api/community/posts/:id/comments', async (req, res) => {
         userId: req.user.id,
         content,
         isHidden: false,
+        parentId: parentId || null,
         createdAt: new Date(),
         updatedAt: new Date()
       })
@@ -935,12 +1004,197 @@ router.post('/api/community/posts/:id/comments', async (req, res) => {
     return res.status(201).json({
       message: 'Comentário adicionado com sucesso',
       comment,
-      user
+      user,
+      likesCount: 0,
+      repliesCount: 0,
+      userHasLiked: false
     });
   } catch (error) {
     console.error('Erro ao adicionar comentário:', error);
     return res.status(500).json({ 
       message: 'Erro ao adicionar comentário',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
+  }
+});
+
+// GET: Buscar respostas de um comentário
+router.get('/api/community/comments/:id/replies', async (req, res) => {
+  try {
+    const commentId = parseInt(req.params.id);
+    
+    // Verificar se o comentário existe
+    const [commentExists] = await db
+      .select()
+      .from(communityComments)
+      .where(eq(communityComments.id, commentId));
+      
+    if (!commentExists) {
+      return res.status(404).json({ message: 'Comentário não encontrado' });
+    }
+    
+    // Buscar respostas do comentário
+    const replies = await db.execute(sql`
+      SELECT 
+        c.id, c."postId", c."userId", c.content, c."isHidden", c."parentId", c."createdAt", c."updatedAt",
+        u.id as user_id, u.username, u.name, u.profileimageurl, u.nivelacesso,
+        COUNT(DISTINCT cl.id) as likes_count
+      FROM "communityComments" c
+      LEFT JOIN users u ON c."userId" = u.id
+      LEFT JOIN "communityCommentLikes" cl ON c.id = cl."commentId"
+      WHERE c."parentId" = ${commentId}
+        AND c."isHidden" = false
+      GROUP BY c.id, u.id
+      ORDER BY c."createdAt" ASC
+    `);
+    
+    // Processar os resultados para o formato esperado pelo frontend
+    const formattedReplies = replies.rows.map(row => ({
+      comment: {
+        id: row.id,
+        postId: row.postId,
+        userId: row.userId,
+        content: row.content,
+        isHidden: row.isHidden,
+        parentId: row.parentId,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt
+      },
+      user: {
+        id: row.user_id,
+        username: row.username,
+        name: row.name,
+        profileimageurl: row.profileimageurl,
+        nivelacesso: row.nivelacesso
+      },
+      likesCount: parseInt(row.likes_count) || 0,
+      userHasLiked: false // será atualizado abaixo para usuários autenticados
+    }));
+    
+    // Adicionar informação se o usuário curtiu cada resposta
+    if (req.user?.id && formattedReplies.length > 0) {
+      const userId = req.user.id;
+      const replyIds = formattedReplies.map(r => r.comment.id);
+      
+      const userLikes = await db
+        .select()
+        .from(communityCommentLikes)
+        .where(
+          and(
+            inArray(communityCommentLikes.commentId, replyIds),
+            eq(communityCommentLikes.userId, userId)
+          )
+        );
+      
+      const likedReplyIds = new Set(userLikes.map(like => like.commentId));
+      
+      formattedReplies.forEach(reply => {
+        reply.userHasLiked = likedReplyIds.has(reply.comment.id);
+      });
+    }
+    
+    return res.json(formattedReplies);
+  } catch (error) {
+    console.error('Erro ao buscar respostas:', error);
+    return res.status(500).json({ 
+      message: 'Erro ao buscar respostas',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
+  }
+});
+
+// POST: Curtir um comentário
+router.post('/api/community/comments/:id/like', async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Usuário não autenticado' });
+    }
+    
+    const commentId = parseInt(req.params.id);
+    
+    // Verificar se o comentário existe
+    const [comment] = await db
+      .select({
+        comment: communityComments,
+        post: {
+          id: communityPosts.id,
+          status: communityPosts.status
+        }
+      })
+      .from(communityComments)
+      .leftJoin(communityPosts, eq(communityComments.postId, communityPosts.id))
+      .where(
+        and(
+          eq(communityComments.id, commentId),
+          eq(communityComments.isHidden, false),
+          eq(communityPosts.status, 'approved')
+        )
+      );
+      
+    if (!comment) {
+      return res.status(404).json({ message: 'Comentário não encontrado ou não disponível' });
+    }
+    
+    // Verificar se o usuário já curtiu este comentário
+    const [existingLike] = await db
+      .select()
+      .from(communityCommentLikes)
+      .where(
+        and(
+          eq(communityCommentLikes.commentId, commentId),
+          eq(communityCommentLikes.userId, req.user.id)
+        )
+      );
+    
+    if (existingLike) {
+      // Remover curtida
+      await db
+        .delete(communityCommentLikes)
+        .where(
+          and(
+            eq(communityCommentLikes.commentId, commentId),
+            eq(communityCommentLikes.userId, req.user.id)
+          )
+        );
+      
+      // Contar curtidas totais do comentário
+      const [{ count }] = await db
+        .select({ count: count() })
+        .from(communityCommentLikes)
+        .where(eq(communityCommentLikes.commentId, commentId));
+      
+      return res.json({
+        message: 'Curtida removida com sucesso',
+        liked: false,
+        likesCount: Number(count)
+      });
+    } else {
+      // Adicionar curtida
+      await db
+        .insert(communityCommentLikes)
+        .values({
+          commentId,
+          userId: req.user.id,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+      
+      // Contar curtidas totais do comentário
+      const [{ count }] = await db
+        .select({ count: count() })
+        .from(communityCommentLikes)
+        .where(eq(communityCommentLikes.commentId, commentId));
+      
+      return res.json({
+        message: 'Comentário curtido com sucesso',
+        liked: true,
+        likesCount: Number(count)
+      });
+    }
+  } catch (error) {
+    console.error('Erro ao curtir comentário:', error);
+    return res.status(500).json({ 
+      message: 'Erro ao curtir comentário',
       error: error instanceof Error ? error.message : 'Erro desconhecido'
     });
   }
