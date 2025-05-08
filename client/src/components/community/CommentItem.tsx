@@ -43,7 +43,7 @@ interface CommentItemProps {
   userHasLiked: boolean;
   onRefresh?: () => void;
   isReply?: boolean;
-  onDelete?: (commentId: number) => void;
+  onDelete?: (commentId: number) => Promise<void> | void;
 }
 
 export const CommentItem = ({
@@ -229,7 +229,7 @@ export const CommentItem = ({
       // Primeiro tentamos usar o handler passado pela prop
       if (onDelete) {
         console.log("Usando função onDelete passada por props para comentário:", comment.id);
-        onDelete(comment.id);
+        await onDelete(comment.id);
         return;
       }
       
@@ -347,14 +347,24 @@ export const CommentItem = ({
                     // Só mostra a opção de exclusão se o usuário puder excluir
                     return canDelete && (
                       <DropdownMenuItem 
-                        onClick={() => {
+                        onClick={async (e) => {
+                          e.preventDefault();
                           console.log("Botão excluir clicado para comentário:", comment.id);
-                          if (onDelete) {
-                            console.log("Usando função onDelete passada via props");
-                            onDelete(comment.id);
-                          } else {
-                            console.log("Usando função handleDeleteComment local");
-                            handleDeleteComment();
+                          try {
+                            if (onDelete) {
+                              console.log("Usando função onDelete passada via props");
+                              await onDelete(comment.id);
+                            } else {
+                              console.log("Usando função handleDeleteComment local");
+                              await handleDeleteComment();
+                            }
+                          } catch (error) {
+                            console.error("Erro ao processar exclusão:", error);
+                            toast({
+                              title: "Erro ao excluir comentário",
+                              description: error instanceof Error ? error.message : "Ocorreu um erro ao excluir este comentário.",
+                              variant: "destructive"
+                            });
                           }
                         }} 
                         className="text-red-500 dark:text-red-400"
