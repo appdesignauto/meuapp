@@ -1,22 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
-// Função auxiliar para verificar se o token de autenticação é válido
-export function isAuthTokenValid(): boolean {
-  try {
-    const authToken = localStorage.getItem('authToken');
-    const authTokenExpires = localStorage.getItem('authTokenExpires');
-    if (!authToken || !authTokenExpires) return false;
-    return Date.now() < parseInt(authTokenExpires);
-  } catch (e) {
-    return false;
-  }
-}
-
-// Função auxiliar para obter o token de autenticação válido
-export function getValidAuthToken(): string | null {
-  return isAuthTokenValid() ? localStorage.getItem('authToken') : null;
-}
-
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     let errorMessage = res.statusText;
@@ -53,29 +36,13 @@ export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
-  options?: { isFormData?: boolean, headers?: Record<string, string> }
+  options?: { isFormData?: boolean }
 ): Promise<Response> {
   // Configuração padrão para requisições
   const fetchOptions: RequestInit = {
     method,
-    credentials: "include", // Mantém suporte a cookies
+    credentials: "include",
   };
-
-  // Headers iniciais
-  const headers: Record<string, string> = {};
-  
-  // Adicionar headers personalizados se fornecidos
-  if (options?.headers) {
-    Object.entries(options.headers).forEach(([key, value]) => {
-      headers[key] = value;
-    });
-  } else {
-    // Adicionar token de autenticação do localStorage se disponível e válido
-    const authToken = getValidAuthToken();
-    if (authToken && !headers['Authorization']) {
-      headers['Authorization'] = `Bearer ${authToken}`;
-    }
-  }
 
   // Se temos dados para enviar
   if (data) {
@@ -84,15 +51,10 @@ export async function apiRequest(
       fetchOptions.body = data as FormData;
     } else {
       // Para dados JSON normais
-      if (!headers['Content-Type']) {
-        headers['Content-Type'] = 'application/json';
-      }
+      fetchOptions.headers = { "Content-Type": "application/json" };
       fetchOptions.body = JSON.stringify(data);
     }
   }
-  
-  // Adicionar headers ao fetchOptions
-  fetchOptions.headers = headers;
 
   const res = await fetch(url, fetchOptions);
   await throwIfResNotOk(res);
@@ -121,18 +83,8 @@ export const getQueryFn: <T>(options: {
     
     console.log("Fazendo requisição para:", url.toString(), "com parâmetros:", params);
     
-    // Headers iniciais
-    const headers: Record<string, string> = {};
-    
-    // Adicionar token de autenticação do localStorage se disponível e válido
-    const authToken = getValidAuthToken();
-    if (authToken) {
-      headers['Authorization'] = `Bearer ${authToken}`;
-    }
-    
     const res = await fetch(url.toString(), {
-      credentials: "include", // Mantém suporte a cookies
-      headers
+      credentials: "include",
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {

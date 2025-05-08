@@ -1,20 +1,15 @@
-#!/usr/bin/env node
-
 /**
  * Script para adicionar coluna parentId à tabela communityComments e
  * criar a tabela communityCommentLikes para funcionalidades de curtir comentários e
  * responder comentários
  */
 
+import { Pool } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-serverless';
-import { Pool, neonConfig } from '@neondatabase/serverless';
 import { sql } from 'drizzle-orm';
-import ws from 'ws';
 import dotenv from 'dotenv';
 
-// Configurar ambiente
 dotenv.config();
-neonConfig.webSocketConstructor = ws;
 
 async function getDatabase() {
   try {

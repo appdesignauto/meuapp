@@ -18,7 +18,6 @@ import path from 'path';
 import fs from 'fs';
 import sharp from 'sharp';
 import { communityStorageService } from '../services/community-storage';
-import { flexibleAuth } from '../auth-flexible';
 
 const router = Router();
 
@@ -924,12 +923,11 @@ router.get('/api/community/posts/:id/comments', async (req, res) => {
 });
 
 // POST: Adicionar comentário a um post
-router.post('/api/community/posts/:id/comments', flexibleAuth, async (req, res) => {
+router.post('/api/community/posts/:id/comments', async (req, res) => {
   try {
-    // A autenticação já é verificada pelo middleware flexibleAuth
-    console.log('Recebida solicitação para adicionar comentário ao post:', req.params.id);
-    console.log('Usuário autenticado:', req.user?.id, req.user?.username);
-    console.log('Dados recebidos:', { content: req.body.content?.substring(0, 30) + '...', parentId: req.body.parentId });
+    if (!req.user) {
+      return res.status(401).json({ message: 'Usuário não autenticado' });
+    }
     
     const postId = parseInt(req.params.id);
     const { content, parentId } = req.body;
@@ -1013,23 +1011,6 @@ router.post('/api/community/posts/:id/comments', flexibleAuth, async (req, res) 
     });
   } catch (error) {
     console.error('Erro ao adicionar comentário:', error);
-    // Registrar mais detalhes do erro para diagnóstico
-    console.error('Detalhes da requisição de adicionar comentário:', {
-      postId: req.params.id,
-      userId: req.user?.id,
-      parentId: req.body.parentId,
-      method: req.method,
-      path: req.path,
-      headers: {
-        'content-type': req.headers['content-type'],
-        'authorization': req.headers['authorization'] ? 'Presente' : 'Ausente'
-      }
-    });
-
-    if (error instanceof Error) {
-      console.error('Stack trace do erro:', error.stack);
-    }
-
     return res.status(500).json({ 
       message: 'Erro ao adicionar comentário',
       error: error instanceof Error ? error.message : 'Erro desconhecido'
@@ -1038,7 +1019,7 @@ router.post('/api/community/posts/:id/comments', flexibleAuth, async (req, res) 
 });
 
 // GET: Buscar respostas de um comentário
-router.get('/api/community/comments/:id/replies', flexibleAuth, async (req, res) => {
+router.get('/api/community/comments/:id/replies', async (req, res) => {
   try {
     const commentId = parseInt(req.params.id);
     
@@ -1123,11 +1104,11 @@ router.get('/api/community/comments/:id/replies', flexibleAuth, async (req, res)
 });
 
 // POST: Curtir um comentário
-router.post('/api/community/comments/:id/like', flexibleAuth, async (req, res) => {
+router.post('/api/community/comments/:id/like', async (req, res) => {
   try {
-    // A autenticação já é verificada pelo middleware flexibleAuth
-    console.log('Recebida solicitação para curtir comentário:', req.params.id);
-    console.log('Usuário autenticado:', req.user?.id, req.user?.username);
+    if (!req.user) {
+      return res.status(401).json({ message: 'Usuário não autenticado' });
+    }
     
     const commentId = parseInt(req.params.id);
     
@@ -1212,22 +1193,6 @@ router.post('/api/community/comments/:id/like', flexibleAuth, async (req, res) =
     }
   } catch (error) {
     console.error('Erro ao curtir comentário:', error);
-    // Registrar mais detalhes do erro para diagnóstico
-    console.error('Detalhes da requisição:', {
-      commentId: req.params.id,
-      userId: req.user?.id,
-      method: req.method,
-      path: req.path,
-      headers: {
-        'content-type': req.headers['content-type'],
-        'authorization': req.headers['authorization'] ? 'Presente' : 'Ausente'
-      }
-    });
-
-    if (error instanceof Error) {
-      console.error('Stack trace do erro:', error.stack);
-    }
-
     return res.status(500).json({ 
       message: 'Erro ao curtir comentário',
       error: error instanceof Error ? error.message : 'Erro desconhecido'

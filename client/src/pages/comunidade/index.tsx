@@ -185,22 +185,32 @@ const PostCard: React.FC<{
     try {
       if (isLiked) {
         // Remover curtida
-        await apiRequest("DELETE", `/api/community/posts/${post.id}/like`);
+        const response = await apiRequest("DELETE", `/api/community/posts/${post.id}/like`);
         
-        // Não alteramos o estado local para evitar duplicações
-        toast({
-          title: "Curtida removida",
-          description: "Você removeu sua curtida deste post",
-        });
+        if (response.ok) {
+          setIsLiked(false);
+          setLikesCount(prev => Math.max(0, prev - 1));
+          toast({
+            title: "Curtida removida",
+            description: "Você removeu sua curtida deste post",
+          });
+        } else {
+          throw new Error("Não foi possível remover sua curtida");
+        }
       } else {
         // Adicionar curtida
-        await apiRequest("POST", `/api/community/posts/${post.id}/like`);
+        const response = await apiRequest("POST", `/api/community/posts/${post.id}/like`);
         
-        // Não alteramos o estado local para evitar duplicações
-        toast({
-          title: "Post curtido",
-          description: "Você curtiu este post",
-        });
+        if (response.ok) {
+          setIsLiked(true);
+          setLikesCount(prev => prev + 1);
+          toast({
+            title: "Post curtido",
+            description: "Você curtiu este post",
+          });
+        } else {
+          throw new Error("Não foi possível curtir o post");
+        }
       }
 
       // Atualizar lista de posts e posts populares se necessário
@@ -370,9 +380,9 @@ const PostCard: React.FC<{
         </div>
       )}
       
-      {/* Estatísticas de interação - estilo exato do Facebook */}
-      <div className="px-4 py-2 flex items-center text-sm text-zinc-500 dark:text-zinc-400 border-b border-zinc-100 dark:border-zinc-800">
-        <div className="flex items-center gap-1 mr-4">
+      {/* Estatísticas de interação - similar ao Facebook */}
+      <div className="px-4 py-2 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400 border-b border-zinc-100 dark:border-zinc-800">
+        <div className="flex items-center gap-1">
           <div className="flex -space-x-1">
             <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
@@ -382,18 +392,12 @@ const PostCard: React.FC<{
           </div>
           <span>{likesCount === 1 ? '1 pessoa curtiu isso' : `${likesCount} pessoas curtiram isso`}</span>
         </div>
-        
-        <div className="flex">
-          {post.commentsCount > 0 && (
-            <span className="mr-3">
-              {post.commentsCount === 1 ? '1 comentário' : `${post.commentsCount} comentários`}
-            </span>
-          )}
-          {post.sharesCount > 0 && (
-            <span>
-              {post.sharesCount === 1 ? '1 compartilhamento' : `${post.sharesCount} compartilhamentos`}
-            </span>
-          )}
+        <div>
+          {post.commentsCount === 1 
+            ? '1 comentário' 
+            : post.commentsCount > 1 
+              ? `${post.commentsCount} comentários` 
+              : ''}
         </div>
       </div>
       
@@ -428,9 +432,7 @@ const PostCard: React.FC<{
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clipRule="evenodd" />
           </svg>
-          <span className="text-sm font-medium">
-            Comentar
-          </span>
+          <span className="text-sm font-medium">Comentar</span>
         </button>
         
         <button 
@@ -1165,7 +1167,7 @@ const CommunityPage: React.FC = () => {
                                 {title}
                               </p>
                               <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                                {likes === 1 ? '1 curtida' : `${likes} curtidas`} • {comments === 1 ? '1 comentário' : `${comments} comentários`}
+                                {likes} curtidas • {comments} comentários
                               </p>
                             </div>
                           </Link>
