@@ -36,7 +36,7 @@ export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
-  options?: { isFormData?: boolean }
+  options?: { isFormData?: boolean, headers?: Record<string, string> }
 ): Promise<Response> {
   // Configuração padrão para requisições
   const fetchOptions: RequestInit = {
@@ -47,10 +47,17 @@ export async function apiRequest(
   // Headers iniciais
   const headers: Record<string, string> = {};
   
-  // Adicionar token de autenticação do localStorage se disponível
-  const authToken = localStorage.getItem('authToken');
-  if (authToken) {
-    headers['Authorization'] = `Bearer ${authToken}`;
+  // Adicionar headers personalizados se fornecidos
+  if (options?.headers) {
+    Object.entries(options.headers).forEach(([key, value]) => {
+      headers[key] = value;
+    });
+  } else {
+    // Adicionar token de autenticação do localStorage se disponível (caso não tenha sido adicionado explicitamente)
+    const authToken = localStorage.getItem('authToken');
+    if (authToken && !headers['Authorization']) {
+      headers['Authorization'] = `Bearer ${authToken}`;
+    }
   }
 
   // Se temos dados para enviar
@@ -60,7 +67,9 @@ export async function apiRequest(
       fetchOptions.body = data as FormData;
     } else {
       // Para dados JSON normais
-      headers['Content-Type'] = 'application/json';
+      if (!headers['Content-Type']) {
+        headers['Content-Type'] = 'application/json';
+      }
       fetchOptions.body = JSON.stringify(data);
     }
   }

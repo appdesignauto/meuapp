@@ -186,7 +186,7 @@ export const CommentItem = ({
       })();
       
       // Usar apiRequest, mas adicionar cabeçalho de autorização manualmente se necessário
-      const options = {};
+      const options: { headers?: Record<string, string> } = {};
       if (isTokenValid && authToken) {
         options.headers = {
           'Authorization': `Bearer ${authToken}`
@@ -249,10 +249,10 @@ export const CommentItem = ({
         }
       })();
       
-      // Usar apiRequest, mas adicionar cabeçalho de autorização manualmente se necessário
-      const options = {};
+      // Usar apiRequest com headers personalizados
+      const requestOptions: { headers?: Record<string, string> } = {};
       if (isTokenValid && authToken) {
-        options.headers = {
+        requestOptions.headers = {
           'Authorization': `Bearer ${authToken}`
         };
       }
@@ -260,7 +260,7 @@ export const CommentItem = ({
       const response = await apiRequest('POST', `/api/community/posts/${comment.postId}/comments`, {
         content: replyContent,
         parentId: comment.id
-      }, options);
+      }, requestOptions);
       
       const data = await response.json();
       
