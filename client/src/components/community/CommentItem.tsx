@@ -203,6 +203,8 @@ export const CommentItem = ({
 
   // Nova função para excluir um comentário
   const handleDeleteComment = async () => {
+    console.log("Excluindo comentário:", comment.id);
+    
     if (!currentUser) {
       toast({
         title: "Ação não permitida",
@@ -213,7 +215,8 @@ export const CommentItem = ({
     }
 
     // Verificar se o usuário pode excluir este comentário
-    if (currentUser.id !== comment.userId && currentUser.nivelacesso !== 'administrador') {
+    const isAdmin = currentUser.nivelacesso === 'admin' || currentUser.nivelacesso === 'administrador';
+    if (currentUser.id !== comment.userId && !isAdmin) {
       toast({
         title: "Ação não permitida",
         description: "Você só pode excluir seus próprios comentários.",
@@ -223,6 +226,13 @@ export const CommentItem = ({
     }
 
     try {
+      // Primeiro tentamos usar o handler passado pela prop
+      if (onDelete) {
+        onDelete(comment.id);
+        return;
+      }
+      
+      // Se não houver handler externo, executamos nossa própria lógica
       await apiRequest('DELETE', `/api/community/comments/${comment.id}`);
       
       toast({
@@ -239,6 +249,7 @@ export const CommentItem = ({
         queryClient.invalidateQueries({ queryKey: [`/api/community/posts/${comment.postId}`] });
       }
     } catch (error) {
+      console.error("Erro ao excluir comentário:", error);
       toast({
         title: "Erro ao excluir comentário",
         description: "Ocorreu um erro ao excluir este comentário.",
@@ -271,7 +282,7 @@ export const CommentItem = ({
             <div>
               <VerifiedUsername user={user} />
             </div>
-            {currentUser && (currentUser.id === comment.userId || currentUser.nivelacesso === 'administrador') && (
+            {currentUser && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-6 w-6">
@@ -279,13 +290,15 @@ export const CommentItem = ({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem 
-                    onClick={() => onDelete ? onDelete(comment.id) : handleDeleteComment()} 
-                    className="text-red-500 dark:text-red-400"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Excluir
-                  </DropdownMenuItem>
+                  {(currentUser.id === comment.userId || currentUser.nivelacesso === 'admin' || currentUser.nivelacesso === 'administrador') && (
+                    <DropdownMenuItem 
+                      onClick={() => onDelete ? onDelete(comment.id) : handleDeleteComment()} 
+                      className="text-red-500 dark:text-red-400"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Excluir
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
@@ -392,6 +405,7 @@ export const CommentItem = ({
                 userHasLiked={reply.userHasLiked}
                 isReply={true}
                 onRefresh={onRefresh}
+                onDelete={onDelete}
               />
             ))}
           </div>
