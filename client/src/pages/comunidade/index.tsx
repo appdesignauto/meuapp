@@ -5,7 +5,7 @@ import {
   Settings, Plus, Filter, User, Trophy, Clock, Info, Award, Medal, 
   Sparkles, Users, ImageIcon, ExternalLink, FileEdit, RefreshCw, 
   Loader2, ZoomIn, X, MessageSquare, XCircle, FileQuestion, Globe, 
-  Share, MoreHorizontal, Trash2, MessageCircle
+  Share, MoreHorizontal, Trash2, MessageCircle, Heart, ThumbsUp
 } from 'lucide-react';
 import { differenceInMinutes, differenceInHours, differenceInDays, differenceInMonths } from 'date-fns';
 
@@ -273,7 +273,7 @@ const CommentItem: React.FC<{
             {isLiking ? (
               <Loader2 className="h-3 w-3 animate-spin" />
             ) : (
-              <Heart className={`h-3 w-3 ${isLiked ? 'fill-blue-500 dark:fill-blue-400 text-blue-500 dark:text-blue-400' : ''}`} />
+              <ThumbsUp className={`h-3 w-3 ${isLiked ? 'fill-blue-500 dark:fill-blue-400 text-blue-500 dark:text-blue-400' : ''}`} />
             )}
             {likeCount > 0 && <span>{likeCount}</span>}
           </Button>
