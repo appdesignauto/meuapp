@@ -171,7 +171,7 @@ const PostCard: React.FC<{ post: CommunityPost; refetch?: () => void }> = ({ pos
   };
 
   return (
-    <Card className="mb-4 overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow w-full max-w-[470px] mx-auto">
+    <Card className="mb-4 overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow w-full max-w-[500px] mx-auto">
       {/* Cabeçalho do post - estilo Facebook/Instagram */}
       <div className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -359,8 +359,8 @@ const CommunityPage: React.FC = () => {
         )}
       </TopBar>
       
-      <div className="container max-w-7xl px-0 md:px-4 py-6">
-        <div className="md:hidden flex justify-between items-center mb-6">
+      <div className="container max-w-6xl px-0 md:px-4 py-6 mx-auto">
+        <div className="md:hidden flex justify-between items-center mb-6 px-4">
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Comunidade</h1>
           
           {user && (
@@ -373,8 +373,8 @@ const CommunityPage: React.FC = () => {
           )}
         </div>
         
-        {/* Layout estilo Facebook/Instagram para desktop - com colunas laterais */}
-        <div className="flex flex-col md:flex-row gap-6">
+        {/* Layout centralizado com colunas laterais */}
+        <div className="flex flex-col md:flex-row gap-6 justify-center">
           {/* Sidebar esquerda - similar ao Facebook */}
           <div className="hidden md:block w-full md:w-72 lg:w-80 shrink-0">
             <div className="sticky top-20">
