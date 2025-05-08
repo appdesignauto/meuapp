@@ -1701,156 +1701,111 @@ router.delete('/api/community/admin/comments/:id', async (req, res) => {
   }
 });
 
-// GET: Buscar posts populares
+// GET: Buscar posts populares (ESTA ROTA DEVE ESTAR ANTES DA ROTA DE DETALHES DO POST)
 router.get('/api/community/posts/popular', async (req, res) => {
   try {
+    console.log('==== BUSCANDO POSTS POPULARES (NOVA IMPLEMENTAÇÃO) ====');
+    
     // Validação robusta do parâmetro de limite
     let limit = 5;
     if (req.query.limit && typeof req.query.limit === 'string') {
       const parsedLimit = parseInt(req.query.limit);
       if (!isNaN(parsedLimit) && parsedLimit > 0) {
-        limit = parsedLimit;
+        limit = Math.min(parsedLimit, 20); // Limita a no máximo 20 para proteger o banco
       }
     }
     
-    console.log('==== BUSCANDO POSTS POPULARES ====');
     console.log('Limite validado:', limit);
-
-    // Retornar mock de dados em vez de consulta ao banco de dados para debug
-    // e garantir que o cliente receba uma resposta sem erros
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Usando dados fixos para debugging.');
-      return res.json([]);
-    }
     
-    // ============ IMPLEMENTAÇÃO COMPLETAMENTE REESCRITA ============
-    // Vamos simplificar a abordagem para eliminar qualquer possibilidade de NaN
-    
+    // Nova implementação usando SQL direto e com tratamento de erro aprimorado
     try {
-      // Buscar IDs dos posts aprovados com maior número de visualizações
-      const rawPostIds = await db.execute(sql`
-        SELECT id 
-        FROM "communityPosts" 
-        WHERE status = 'approved' 
-        ORDER BY "viewCount" DESC 
-        LIMIT ${limit}
+      // Consulta SQL direta e simples que evita problemas de NaN
+      const result = await db.execute(sql`
+        WITH popular_posts AS (
+          SELECT 
+            cp.id, 
+            cp.title, 
+            cp.content, 
+            cp."imageUrl", 
+            cp."editLink", 
+            cp.status, 
+            cp."createdAt", 
+            cp."updatedAt", 
+            COALESCE(cp."viewCount", 0) as "viewCount",
+            cp."userId",
+            cp."featuredUntil",
+            cp."isWeeklyFeatured",
+            u.id as user_id,
+            u.username,
+            u.name,
+            u.profileimageurl,
+            u.nivelacesso,
+            COUNT(DISTINCT cl.id) as likes_count,
+            COUNT(DISTINCT cc.id) as comments_count
+          FROM "communityPosts" cp
+          LEFT JOIN users u ON cp."userId" = u.id
+          LEFT JOIN "communityLikes" cl ON cp.id = cl."postId"
+          LEFT JOIN "communityComments" cc ON cp.id = cc."postId"
+          WHERE cp.status = 'approved'
+          GROUP BY cp.id, u.id
+          ORDER BY "viewCount" DESC
+          LIMIT ${limit}
+        )
+        SELECT * FROM popular_posts
       `);
       
-      // Validar resultado para garantir que temos IDs numéricos válidos
-      const postIds = rawPostIds.rows
-        .map(row => typeof row.id === 'number' && !isNaN(row.id) ? row.id : null)
-        .filter(id => id !== null);
+      // Processar os resultados com muita segurança
+      const formattedResults = [];
       
-      if (postIds.length === 0) {
-        console.log('Nenhum ID de post válido encontrado');
-        return res.json([]);
-      }
-      
-      console.log('IDs de posts válidos encontrados:', postIds);
-      
-      // Buscar posts completos
-      const results = [];
-      
-      // Processar cada post individualmente para isolar erros
-      for (const postId of postIds) {
-        try {
-          // Buscar post
-          const [post] = await db
-            .select()
-            .from(communityPosts)
-            .where(eq(communityPosts.id, postId));
-          
-          if (!post) {
-            console.log(`Post ${postId} não encontrado`);
-            continue;
-          }
-          
-          // Buscar dados do usuário com segurança
-          let userData = {
-            id: 0,
-            username: 'usuário removido',
-            name: 'Usuário não encontrado',
-            profileimageurl: null,
-            nivelacesso: 'free'
-          };
-          
-          if (post.userId && typeof post.userId === 'number' && !isNaN(post.userId)) {
-            const [user] = await db
-              .select()
-              .from(users)
-              .where(eq(users.id, post.userId));
-              
-            if (user) {
-              userData = user;
-            }
-          }
-          
-          // Contar curtidas com segurança
-          let likesCount = 0;
+      if (result && result.rows && Array.isArray(result.rows)) {
+        // Mapear cada resultado em um formato seguro
+        for (const row of result.rows) {
           try {
-            const [likesData] = await db
-              .select({ count: sql<number>`count(*)` })
-              .from(communityLikes)
-              .where(eq(communityLikes.postId, postId));
-              
-            likesCount = Number(likesData?.count || 0);
-          } catch (error) {
-            console.error(`Erro seguro ao contar curtidas para post ${postId}:`, error);
+            formattedResults.push({
+              post: {
+                id: row.id ? Number(row.id) : 0,
+                title: row.title || 'Sem título',
+                content: row.content || '',
+                imageUrl: row.imageUrl || '',
+                editLink: row.editLink || '',
+                status: row.status || 'approved',
+                createdAt: row.createdAt || new Date(),
+                updatedAt: row.updatedAt || new Date(),
+                viewCount: (typeof row.viewCount === 'number' || typeof row.viewCount === 'string') 
+                    ? Number(row.viewCount) : 0,
+                userId: row.userId ? Number(row.userId) : 0,
+                featuredUntil: row.featuredUntil,
+                isWeeklyFeatured: !!row.isWeeklyFeatured
+              },
+              user: {
+                id: row.user_id ? Number(row.user_id) : 0,
+                username: row.username || 'usuário',
+                name: row.name || 'Usuário',
+                profileimageurl: row.profileimageurl || null,
+                nivelacesso: row.nivelacesso || 'free'
+              },
+              likesCount: (typeof row.likes_count === 'number' || typeof row.likes_count === 'string') 
+                  ? Number(row.likes_count) : 0,
+              commentsCount: (typeof row.comments_count === 'number' || typeof row.comments_count === 'string') 
+                  ? Number(row.comments_count) : 0
+            });
+          } catch (rowError) {
+            console.error('Erro ao processar linha em popular posts:', rowError);
+            // Continuar para a próxima linha
           }
-          
-          // Contar comentários com segurança
-          let commentsCount = 0;
-          try {
-            const [commentsData] = await db
-              .select({ count: sql<number>`count(*)` })
-              .from(communityComments)
-              .where(eq(communityComments.postId, postId));
-              
-            commentsCount = Number(commentsData?.count || 0);
-          } catch (error) {
-            console.error(`Erro seguro ao contar comentários para post ${postId}:`, error);
-          }
-          
-          results.push({
-            post: {
-              id: post.id,
-              title: post.title || 'Sem título',
-              content: post.content || '',
-              imageUrl: post.imageUrl || '',
-              editLink: post.editLink || '',
-              status: post.status || 'approved',
-              createdAt: post.createdAt || new Date(),
-              updatedAt: post.updatedAt || new Date(),
-              viewCount: typeof post.viewCount === 'number' ? post.viewCount : 0,
-              userId: typeof post.userId === 'number' ? post.userId : 0,
-            },
-            user: {
-              id: userData.id || 0,
-              username: userData.username || 'usuário',
-              name: userData.name || 'Usuário',
-              profileimageurl: userData.profileimageurl || null,
-              nivelacesso: userData.nivelacesso || 'free'
-            },
-            likesCount,
-            commentsCount,
-          });
-        } catch (postError) {
-          console.error(`Erro isolado ao processar post ${postId}:`, postError);
-          // Continue para o próximo post, ignorando este
         }
       }
       
-      console.log(`Retornando ${results.length} posts populares processados com sucesso`);
-      return res.json(results);
+      console.log(`Retornando ${formattedResults.length} posts populares (nova implementação)`);
+      return res.json(formattedResults);
       
     } catch (dbError) {
-      console.error('ERRO CRÍTICO em posts populares:', dbError);
+      console.error('ERRO CRÍTICO em posts populares (nova implementação):', dbError);
       // Em caso de erro crítico, retornar array vazio em vez de erro 500
-      // para garantir que o frontend não quebre
       return res.json([]);
     }
   } catch (error) {
-    console.error('Erro ao buscar posts populares:', error);
+    console.error('Erro ao buscar posts populares (nova implementação):', error);
     // Em último caso, retornar array vazio para evitar quebra do frontend
     return res.json([]);
   }
