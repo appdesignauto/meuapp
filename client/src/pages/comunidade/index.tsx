@@ -569,7 +569,7 @@ const CommunityPage: React.FC = () => {
     error: popularPostsError,
     refetch: refetchPopularPosts
   } = useQuery({
-    queryKey: ['/api/community/posts/popular'],
+    queryKey: ['/api/community/populares'], // NOVA ROTA COM NOME DIFERENTE
     refetchOnWindowFocus: false,
     refetchInterval: 300000, // Recarrega a cada 5 minutos
     retry: 3, // Tenta até 3 vezes em caso de falha

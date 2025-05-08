@@ -19,6 +19,119 @@ import sharp from 'sharp';
 
 const router = Router();
 
+// IMPORTANTE: Rotas específicas ANTES das rotas com parâmetros dinâmicos
+// para evitar conflitos de captura
+
+// GET: Buscar posts populares - ESTA ROTA DEVE ESTAR NO INÍCIO DO ARQUIVO
+router.get('/api/community/populares', async (req, res) => {
+  try {
+    console.log('==== BUSCANDO POSTS POPULARES (NOVA URL) ====');
+    
+    // Validação robusta do parâmetro de limite
+    let limit = 5;
+    if (req.query.limit && typeof req.query.limit === 'string') {
+      const parsedLimit = parseInt(req.query.limit);
+      if (!isNaN(parsedLimit) && parsedLimit > 0) {
+        limit = Math.min(parsedLimit, 20); // Limita a no máximo 20 para proteger o banco
+      }
+    }
+    
+    console.log('Limite validado:', limit);
+    
+    // Nova implementação usando SQL direto e com tratamento de erro aprimorado
+    try {
+      // Consulta SQL direta e simples que evita problemas de NaN
+      const result = await db.execute(sql`
+        WITH popular_posts AS (
+          SELECT 
+            cp.id, 
+            cp.title, 
+            cp.content, 
+            cp."imageUrl", 
+            cp."editLink", 
+            cp.status, 
+            cp."createdAt", 
+            cp."updatedAt", 
+            COALESCE(cp."viewCount", 0) as "viewCount",
+            cp."userId",
+            cp."featuredUntil",
+            cp."isWeeklyFeatured",
+            u.id as user_id,
+            u.username,
+            u.name,
+            u.profileimageurl,
+            u.nivelacesso,
+            COUNT(DISTINCT cl.id) as likes_count,
+            COUNT(DISTINCT cc.id) as comments_count
+          FROM "communityPosts" cp
+          LEFT JOIN users u ON cp."userId" = u.id
+          LEFT JOIN "communityLikes" cl ON cp.id = cl."postId"
+          LEFT JOIN "communityComments" cc ON cp.id = cc."postId"
+          WHERE cp.status = 'approved'
+          GROUP BY cp.id, u.id
+          ORDER BY "viewCount" DESC
+          LIMIT ${limit}
+        )
+        SELECT * FROM popular_posts
+      `);
+      
+      // Processar os resultados com muita segurança
+      const formattedResults = [];
+      
+      if (result && result.rows && Array.isArray(result.rows)) {
+        // Mapear cada resultado em um formato seguro
+        for (const row of result.rows) {
+          try {
+            formattedResults.push({
+              post: {
+                id: row.id ? Number(row.id) : 0,
+                title: row.title || 'Sem título',
+                content: row.content || '',
+                imageUrl: row.imageUrl || '',
+                editLink: row.editLink || '',
+                status: row.status || 'approved',
+                createdAt: row.createdAt || new Date(),
+                updatedAt: row.updatedAt || new Date(),
+                viewCount: (typeof row.viewCount === 'number' || typeof row.viewCount === 'string') 
+                    ? Number(row.viewCount) : 0,
+                userId: row.userId ? Number(row.userId) : 0,
+                featuredUntil: row.featuredUntil,
+                isWeeklyFeatured: !!row.isWeeklyFeatured
+              },
+              user: {
+                id: row.user_id ? Number(row.user_id) : 0,
+                username: row.username || 'usuário',
+                name: row.name || 'Usuário',
+                profileimageurl: row.profileimageurl || null,
+                nivelacesso: row.nivelacesso || 'free'
+              },
+              likesCount: (typeof row.likes_count === 'number' || typeof row.likes_count === 'string') 
+                  ? Number(row.likes_count) : 0,
+              commentsCount: (typeof row.comments_count === 'number' || typeof row.comments_count === 'string') 
+                  ? Number(row.comments_count) : 0
+            });
+          } catch (rowError) {
+            console.error('Erro ao processar linha em popular posts:', rowError);
+            // Continuar para a próxima linha
+          }
+        }
+      }
+      
+      console.log(`Retornando ${formattedResults.length} posts populares (nova URL)`);
+      return res.json(formattedResults);
+      
+    } catch (dbError) {
+      console.error('ERRO CRÍTICO em posts populares (nova URL):', dbError);
+      // Em caso de erro crítico, retornar array vazio em vez de erro 500
+      return res.json([]);
+    }
+  } catch (error) {
+    console.error('Erro ao buscar posts populares (nova URL):', error);
+    // Em último caso, retornar array vazio para evitar quebra do frontend
+    return res.json([]);
+  }
+});
+
 // Configuração do multer para upload de imagens
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -1702,7 +1815,9 @@ router.delete('/api/community/admin/comments/:id', async (req, res) => {
 });
 
 // GET: Buscar posts populares (ESTA ROTA DEVE ESTAR ANTES DA ROTA DE DETALHES DO POST)
-router.get('/api/community/posts/popular', async (req, res) => {
+// ROTA DESATIVADA - USAR /api/community/populares
+// Esta rota não funcionará devido ao conflito com a rota dinâmica /api/community/posts/:id
+router.get('/api/community/posts/popular_DESATIVADO', async (req, res) => {
   try {
     console.log('==== BUSCANDO POSTS POPULARES (NOVA IMPLEMENTAÇÃO) ====');
     
