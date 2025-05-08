@@ -18,6 +18,7 @@ import path from 'path';
 import fs from 'fs';
 import sharp from 'sharp';
 import { communityStorageService } from '../services/community-storage';
+import { flexibleAuth } from '../auth-flexible';
 
 const router = Router();
 
@@ -923,11 +924,9 @@ router.get('/api/community/posts/:id/comments', async (req, res) => {
 });
 
 // POST: Adicionar comentário a um post
-router.post('/api/community/posts/:id/comments', async (req, res) => {
+router.post('/api/community/posts/:id/comments', flexibleAuth, async (req, res) => {
   try {
-    if (!req.user) {
-      return res.status(401).json({ message: 'Usuário não autenticado' });
-    }
+    // A autenticação já é verificada pelo middleware flexibleAuth
     
     const postId = parseInt(req.params.id);
     const { content, parentId } = req.body;
@@ -1104,11 +1103,9 @@ router.get('/api/community/comments/:id/replies', async (req, res) => {
 });
 
 // POST: Curtir um comentário
-router.post('/api/community/comments/:id/like', async (req, res) => {
+router.post('/api/community/comments/:id/like', flexibleAuth, async (req, res) => {
   try {
-    if (!req.user) {
-      return res.status(401).json({ message: 'Usuário não autenticado' });
-    }
+    // A autenticação já é verificada pelo middleware flexibleAuth
     
     const commentId = parseInt(req.params.id);
     
