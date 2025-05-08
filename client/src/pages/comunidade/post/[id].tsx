@@ -319,7 +319,7 @@ const PostDetailPage: React.FC = () => {
               >
                 <Heart className="h-4 w-4" />
                 <span>
-                  {post.likesCount} · {post.isLikedByUser ? "Curtido" : "Curtir"}
+                  {post.likesCount > 0 ? post.likesCount : ""} {post.isLikedByUser ? "Curtido" : "Curtir"}
                 </span>
               </Button>
               
@@ -331,7 +331,7 @@ const PostDetailPage: React.FC = () => {
               >
                 <MessageSquare className="h-4 w-4" />
                 <span>
-                  {post.commentsCount} · Comentar
+                  {post.commentsCount > 0 ? post.commentsCount : ""} Comentar
                 </span>
               </Button>
               
