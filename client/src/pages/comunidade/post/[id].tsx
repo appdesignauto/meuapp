@@ -418,9 +418,15 @@ const PostDetailPage: React.FC = () => {
           
           {post.comments && post.comments.length > 0 ? (
             <div>
+              {console.log("Dados dos comentários:", post.comments)}
               {post.comments.map((comment) => {
                 // Verificar se o usuário atual pode excluir o comentário
                 const canDelete = user && (user.id === comment.userId || user.nivelacesso === 'admin');
+                console.log(`Comentário ${comment.id}:`, { 
+                  likesCount: comment.likesCount,
+                  userHasLiked: comment.userHasLiked,
+                  content: comment.content?.substring(0, 20)
+                });
                 
                 return (
                   <CommentItem 
@@ -429,7 +435,7 @@ const PostDetailPage: React.FC = () => {
                     user={comment.user}
                     likesCount={comment.likesCount}
                     repliesCount={comment.repliesCount || 0}
-                    userHasLiked={comment.isLikedByUser || false}
+                    userHasLiked={comment.userHasLiked || false}
                     isReply={false}
                     onRefresh={() => {
                       queryClient.invalidateQueries({ queryKey: [`/api/community/posts/${postId}`] });

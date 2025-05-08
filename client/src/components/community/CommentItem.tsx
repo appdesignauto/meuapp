@@ -271,6 +271,16 @@ export const CommentItem = ({
     }
   };
 
+  // Adicionar console.log para depuração
+  console.log(`Renderizando CommentItem (template):`, { 
+    commentId: comment.id, 
+    content: comment.content.substring(0, 20),
+    likes,
+    isLiked,
+    repliesCount: repliesCountState,
+    user: user.username
+  });
+
   return (
     <div className={`flex gap-2 ${isReply ? 'ml-8 mt-2' : 'mb-4'}`}>
       <Avatar className="h-8 w-8">
@@ -292,7 +302,7 @@ export const CommentItem = ({
           <p className="text-sm mt-1 whitespace-pre-wrap">{comment.content}</p>
         </div>
         
-        <div className="flex items-center gap-4 text-xs text-gray-500 mt-1 ml-2">
+        <div className="flex items-center gap-4 text-xs text-gray-500 mt-1 ml-2" data-debug-likes={likes} data-debug-id={comment.id}>
           <Button 
             type="button"
             variant="ghost" 
