@@ -69,7 +69,7 @@ router.get('/api/community/populares', async (req, res) => {
           LEFT JOIN "communityComments" cc ON cp.id = cc."postId"
           WHERE cp.status = 'approved'
           GROUP BY cp.id, u.id
-          ORDER BY "viewCount" DESC
+          ORDER BY likes_count DESC, cp."createdAt" DESC
           LIMIT ${limit}
         )
         SELECT * FROM popular_posts
