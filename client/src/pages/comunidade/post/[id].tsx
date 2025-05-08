@@ -108,6 +108,10 @@ const PostDetailPage: React.FC = () => {
     refetchOnWindowFocus: false,
   });
   
+  // Depurar os dados recebidos do backend
+  console.log("Dados recebidos do backend:", data);
+  console.log("Comentários recebidos:", data?.comments);
+  
   // Mapear a estrutura da API para o formato esperado pelo componente
   const post = data ? {
     id: data.post?.id,
