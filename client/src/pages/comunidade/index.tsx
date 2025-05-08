@@ -736,7 +736,7 @@ const CommunityPage: React.FC = () => {
                           className="flex-1 text-left p-3 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 rounded-full cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
                           onClick={() => setIsCreatePostOpen(true)}
                         >
-                          No que você está pensando, {user.name || user.username}?
+                          Já compartilhou sua arte hoje?
                         </button>
                       </div>
                       <Separator className="my-3" />
