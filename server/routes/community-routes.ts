@@ -1625,4 +1625,48 @@ router.delete('/api/community/admin/comments/:id', async (req, res) => {
   }
 });
 
+// GET: Buscar posts populares
+router.get('/api/community/posts/popular', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 5;
+    
+    console.log('Buscando posts populares, limite:', limit);
+    
+    // Buscar posts populares com base em visualizações e curtidas
+    // Apenas posts aprovados são considerados
+    const popularPosts = await db
+      .select({
+        post: communityPosts,
+        user: {
+          id: users.id,
+          username: users.username,
+          name: users.name,
+          profileimageurl: users.profileimageurl,
+          nivelacesso: users.nivelacesso
+        },
+        likesCount: sql`COUNT(DISTINCT ${communityLikes.id})`,
+        commentsCount: sql`COUNT(DISTINCT ${communityComments.id})`,
+      })
+      .from(communityPosts)
+      .leftJoin(users, eq(communityPosts.userId, users.id))
+      .leftJoin(communityLikes, eq(communityPosts.id, communityLikes.postId))
+      .leftJoin(communityComments, eq(communityPosts.id, communityComments.postId))
+      .where(eq(communityPosts.status, 'approved'))
+      .groupBy(communityPosts.id, users.id)
+      // Ordenar por visualizações e curtidas (50/50)
+      .orderBy(sql`(${communityPosts.viewCount} * 0.5) + (COUNT(DISTINCT ${communityLikes.id}) * 0.5) DESC`)
+      .limit(limit);
+    
+    console.log(`Encontrados ${popularPosts.length} posts populares`);
+    
+    return res.json(popularPosts);
+  } catch (error) {
+    console.error('Erro ao buscar posts populares:', error);
+    return res.status(500).json({ 
+      message: 'Erro ao buscar posts populares',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
+  }
+});
+
 export default router;
