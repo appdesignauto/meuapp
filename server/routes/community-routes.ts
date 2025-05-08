@@ -198,11 +198,17 @@ router.get('/api/community/posts/:id', async (req, res) => {
     }
     
     // Incrementar contador de visualizações
-    await db.update(communityPosts)
-      .set({ 
-        views: sql`${communityPosts.views} + 1` 
-      })
-      .where(eq(communityPosts.id, postId));
+    try {
+      await db.update(communityPosts)
+        .set({ 
+          viewCount: sql`${communityPosts.viewCount} + 1` 
+        })
+        .where(eq(communityPosts.id, postId));
+      console.log(`Contador de visualizações atualizado para o post ${postId}`);
+    } catch (error) {
+      console.error(`Erro ao atualizar contador de visualizações para o post ${postId}:`, error);
+      // Não interromper a operação principal se a atualização de visualizações falhar
+    }
     
     // Adicionar informações para o usuário logado
     if (req.user?.id) {
