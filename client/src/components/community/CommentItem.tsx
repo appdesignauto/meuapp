@@ -48,6 +48,8 @@ export const CommentItem = ({
   onRefresh,
   isReply = false
 }: CommentItemProps) => {
+  console.log(`Renderizando CommentItem: ${comment.id}, likes: ${likesCount}, userHasLiked: ${userHasLiked}`);
+  
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
   const [isLiked, setIsLiked] = useState(userHasLiked);
