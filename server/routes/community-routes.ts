@@ -1630,65 +1630,121 @@ router.get('/api/community/posts/popular', async (req, res) => {
   try {
     const limit = parseInt(req.query.limit as string) || 5;
     
-    console.log('Buscando posts populares, limite:', limit);
+    console.log('==== BUSCANDO POSTS POPULARES ====');
+    console.log('Limite:', limit);
     
-    // Buscar posts populares com base em visualizações e curtidas
-    // Apenas posts aprovados são considerados
-    const popularPosts = await db
-      .select({
-        id: communityPosts.id,
-        title: communityPosts.title,
-        content: communityPosts.content,
-        imageUrl: communityPosts.imageUrl,
-        editLink: communityPosts.editLink,
-        status: communityPosts.status,
-        createdAt: communityPosts.createdAt,
-        updatedAt: communityPosts.updatedAt,
-        viewCount: communityPosts.viewCount,
-        userId: communityPosts.userId,
-        user: {
-          id: users.id,
-          username: users.username,
-          name: users.name,
-          profileimageurl: users.profileimageurl,
-          nivelacesso: users.nivelacesso
-        },
-        likesCount: sql<number>`COUNT(DISTINCT ${communityLikes.id})`,
-        commentsCount: sql<number>`COUNT(DISTINCT ${communityComments.id})`,
-      })
+    // Abordagem mais simples: primeiro buscar os posts mais visualizados
+    const posts = await db
+      .select()
       .from(communityPosts)
-      .leftJoin(users, eq(communityPosts.userId, users.id))
-      .leftJoin(communityLikes, eq(communityPosts.id, communityLikes.postId))
-      .leftJoin(communityComments, eq(communityPosts.id, communityComments.postId))
       .where(eq(communityPosts.status, 'approved'))
-      .groupBy(
-        communityPosts.id,
-        users.id,
-      )
-      // Ordenar por visualizações e curtidas (50/50)
-      .orderBy(sql`(${communityPosts.viewCount} * 0.5) + (COUNT(DISTINCT ${communityLikes.id}) * 0.5) DESC`)
+      .orderBy(desc(communityPosts.viewCount))
       .limit(limit);
     
-    console.log(`Encontrados ${popularPosts.length} posts populares`);
-    
-    // Formatar os resultados para manter compatibilidade com o frontend
-    const formattedPosts = popularPosts.map(post => ({
-      post: {
-        id: post.id,
-        title: post.title,
-        content: post.content,
-        imageUrl: post.imageUrl,
-        editLink: post.editLink,
-        status: post.status,
-        createdAt: post.createdAt,
-        updatedAt: post.updatedAt,
-        viewCount: post.viewCount,
-        userId: post.userId,
-      },
-      user: post.user,
-      likesCount: Number(post.likesCount),
-      commentsCount: Number(post.commentsCount),
+    // Depois, buscar detalhes adicionais para cada post
+    const formattedPosts = await Promise.all(posts.map(async (post) => {
+      try {
+        // Buscar dados do usuário (com fallback para caso o usuário não exista mais)
+        let userData;
+        try {
+          const userResult = await db
+            .select()
+            .from(users)
+            .where(eq(users.id, post.userId));
+          
+          if (userResult && userResult.length > 0) {
+            userData = userResult[0];
+          } else {
+            // Usuário não encontrado, usar dados padrão
+            userData = {
+              id: 0,
+              username: 'usuário removido',
+              name: 'Usuário não encontrado',
+              profileimageurl: null,
+              nivelacesso: 'free'
+            };
+          }
+        } catch (userError) {
+          console.error(`Erro ao buscar dados do usuário para post ${post.id}:`, userError);
+          // Fallback para dados de usuário
+          userData = {
+            id: 0,
+            username: 'erro',
+            name: 'Erro ao carregar usuário',
+            profileimageurl: null,
+            nivelacesso: 'free'
+          };
+        }
+        
+        // Contar curtidas
+        const [likesData] = await db
+          .select({
+            count: sql<number>`count(*)`
+          })
+          .from(communityLikes)
+          .where(eq(communityLikes.postId, post.id));
+        
+        // Contar comentários
+        const [commentsData] = await db
+          .select({
+            count: sql<number>`count(*)`
+          })
+          .from(communityComments)
+          .where(eq(communityComments.postId, post.id));
+        
+        return {
+          post: {
+            id: post.id,
+            title: post.title,
+            content: post.content,
+            imageUrl: post.imageUrl,
+            editLink: post.editLink,
+            status: post.status,
+            createdAt: post.createdAt,
+            updatedAt: post.updatedAt,
+            viewCount: post.viewCount,
+            userId: post.userId,
+          },
+          user: {
+            id: userData.id,
+            username: userData.username,
+            name: userData.name,
+            profileimageurl: userData.profileimageurl,
+            nivelacesso: userData.nivelacesso
+          },
+          likesCount: Number(likesData?.count || 0),
+          commentsCount: Number(commentsData?.count || 0),
+        };
+      } catch (error) {
+        console.error(`Erro ao processar post popular ${post.id}:`, error);
+        // Retornar um objeto com formato compatível em caso de erro
+        return {
+          post: {
+            id: post.id,
+            title: post.title || 'Post sem título',
+            content: post.content || '',
+            imageUrl: post.imageUrl || '',
+            editLink: post.editLink || '',
+            status: post.status,
+            createdAt: post.createdAt,
+            updatedAt: post.updatedAt,
+            viewCount: post.viewCount || 0,
+            userId: post.userId || 0,
+          },
+          user: {
+            id: 0,
+            username: 'erro',
+            name: 'Erro',
+            profileimageurl: null,
+            nivelacesso: 'free'
+          },
+          likesCount: 0,
+          commentsCount: 0,
+        };
+      }
     }));
+    
+    console.log(`Encontrados ${formattedPosts.length} posts populares`);
     
     return res.json(formattedPosts);
   } catch (error) {

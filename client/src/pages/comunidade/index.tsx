@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
-import { Settings, Plus, Filter, User, Trophy, Clock, Info, Award, Medal, Sparkles, Users, ImageIcon, ExternalLink, FileEdit, RefreshCw, Loader2, ZoomIn, X, MessageSquare } from 'lucide-react';
+import { Settings, Plus, Filter, User, Trophy, Clock, Info, Award, Medal, Sparkles, Users, ImageIcon, ExternalLink, FileEdit, RefreshCw, Loader2, ZoomIn, X, MessageSquare, XCircle, FileQuestion, Globe, Share } from 'lucide-react';
 import { differenceInMinutes, differenceInHours, differenceInDays, differenceInMonths } from 'date-fns';
 
 import TopBar from '@/components/TopBar';
@@ -1061,7 +1061,7 @@ const CommunityPage: React.FC = () => {
                         Tentar novamente
                       </Button>
                     </div>
-                  ) : !popularPosts || !popularPosts.length ? (
+                  ) : !popularPosts || popularPosts.length === 0 ? (
                     // Nenhum post encontrado
                     <div className="text-center py-4">
                       <FileQuestion className="h-8 w-8 mx-auto text-zinc-400 mb-2" />
@@ -1072,7 +1072,7 @@ const CommunityPage: React.FC = () => {
                   ) : (
                     // Lista de posts populares
                     <>
-                      {popularPosts.map((item) => (
+                      {Array.isArray(popularPosts) && popularPosts.map((item: any) => (
                         <Link 
                           key={item.post.id} 
                           href={`/comunidade/post/${item.post.id}`}
@@ -1094,7 +1094,7 @@ const CommunityPage: React.FC = () => {
                               {item.post.title || 'Post sem título'}
                             </p>
                             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                              {item.likesCount} curtidas • {item.commentsCount} comentários
+                              {item.likesCount || 0} curtidas • {item.commentsCount || 0} comentários
                             </p>
                           </div>
                         </Link>
