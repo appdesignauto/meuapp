@@ -161,88 +161,145 @@ router.get('/api/community/posts', async (req, res) => {
 // GET: Buscar um post específico por ID
 router.get('/api/community/posts/:id', async (req, res) => {
   try {
-    const postId = parseInt(req.params.id);
+    // Validação robusta do ID do post
+    const postIdParam = req.params.id;
+    console.log(`Requisição para post ID: '${postIdParam}'`);
     
-    // Buscar o post com informações do usuário criador e contagens
-    const [post] = await db.select({
-      post: communityPosts,
-      user: {
-        id: users.id,
-        username: users.username,
-        name: users.name,
-        profileimageurl: users.profileimageurl,
-        nivelacesso: users.nivelacesso
-      },
-      likesCount: sql<number>`COUNT(DISTINCT ${communityLikes.id})`,
-      savesCount: sql<number>`COUNT(DISTINCT ${communitySaves.id})`,
-      commentsCount: sql<number>`COUNT(DISTINCT ${communityComments.id})`
-    })
-    .from(communityPosts)
-    .leftJoin(users, eq(communityPosts.userId, users.id))
-    .leftJoin(communityLikes, eq(communityPosts.id, communityLikes.postId))
-    .leftJoin(communitySaves, eq(communityPosts.id, communitySaves.postId))
-    .leftJoin(communityComments, eq(communityPosts.id, communityComments.postId))
-    .where(eq(communityPosts.id, postId))
-    .groupBy(communityPosts.id, users.id);
-    
-    if (!post) {
-      return res.status(404).json({ message: 'Post não encontrado' });
-    }
-
-    // Verificar se o usuário pode ver o post
-    const isAdmin = req.user?.nivelacesso === 'admin' || req.user?.nivelacesso === 'designer_adm';
-    const isOwner = req.user?.id === post.user.id;
-    
-    if (post.post.status !== 'approved' && !isAdmin && !isOwner) {
-      return res.status(403).json({ message: 'Você não tem permissão para visualizar este post' });
+    // Validação completa para garantir que postId seja um número válido
+    if (!postIdParam || postIdParam === 'popular') {
+      console.log('ID inválido ou rota especial detectada:', postIdParam);
+      return res.status(404).json({ message: 'Post não encontrado - ID inválido' });
     }
     
-    // Incrementar contador de visualizações
+    const postId = parseInt(postIdParam);
+    if (isNaN(postId) || postId <= 0) {
+      console.log('ID não numérico ou inválido:', postIdParam);
+      return res.status(404).json({ message: 'Post não encontrado - ID inválido' });
+    }
+    
+    console.log(`ID do post validado: ${postId}`);
+    
     try {
-      await db.update(communityPosts)
-        .set({ 
-          viewCount: sql`${communityPosts.viewCount} + 1` 
-        })
-        .where(eq(communityPosts.id, postId));
-      console.log(`Contador de visualizações atualizado para o post ${postId}`);
-    } catch (error) {
-      console.error(`Erro ao atualizar contador de visualizações para o post ${postId}:`, error);
-      // Não interromper a operação principal se a atualização de visualizações falhar
-    }
-    
-    // Adicionar informações para o usuário logado
-    if (req.user?.id) {
-      const userId = req.user.id;
+      // Usar SQL bruto para melhor controle e prevenir NaN
+      const postResult = await db.execute(sql`
+        SELECT p.*, 
+               u.id as "userId", 
+               u.username, 
+               u.name, 
+               u.profileimageurl, 
+               u.nivelacesso,
+               COUNT(DISTINCT l.id) as "likesCount",
+               COUNT(DISTINCT s.id) as "savesCount",
+               COUNT(DISTINCT c.id) as "commentsCount"
+        FROM "communityPosts" p
+        LEFT JOIN users u ON p."userId" = u.id
+        LEFT JOIN "communityLikes" l ON p.id = l."postId"
+        LEFT JOIN "communitySaves" s ON p.id = s."postId"
+        LEFT JOIN "communityComments" c ON p.id = c."postId"
+        WHERE p.id = ${postId}
+        GROUP BY p.id, u.id
+      `);
       
-      const [userLike] = await db
-        .select()
-        .from(communityLikes)
-        .where(
-          and(
-            eq(communityLikes.postId, postId),
-            eq(communityLikes.userId, userId)
-          )
-        );
+      if (!postResult.rows || postResult.rows.length === 0) {
+        console.log(`Post ${postId} não encontrado na consulta SQL`);
+        return res.status(404).json({ message: 'Post não encontrado' });
+      }
+      
+      const rawPost = postResult.rows[0];
+      console.log(`Post ${postId} encontrado:`, rawPost ? 'Sim' : 'Não');
+      
+      // Estruturar dados no formato esperado pelo frontend
+      const post = {
+        post: {
+          id: postId,
+          title: rawPost.title || 'Sem título',
+          content: rawPost.content || '',
+          imageUrl: rawPost.imageUrl || '',
+          editLink: rawPost.editLink || '',
+          status: rawPost.status || 'pending',
+          createdAt: rawPost.createdAt || new Date(),
+          updatedAt: rawPost.updatedAt || new Date(),
+          viewCount: typeof rawPost.viewCount === 'number' ? rawPost.viewCount : 0,
+          userId: typeof rawPost.userId === 'number' ? rawPost.userId : 0,
+          featuredUntil: rawPost.featuredUntil,
+          isWeeklyFeatured: !!rawPost.isWeeklyFeatured,
+        },
+        user: {
+          id: typeof rawPost.userId === 'number' ? rawPost.userId : 0,
+          username: rawPost.username || 'usuário',
+          name: rawPost.name || 'Usuário',
+          profileimageurl: rawPost.profileimageurl || null,
+          nivelacesso: rawPost.nivelacesso || 'free'
+        },
+        likesCount: parseInt(rawPost.likesCount) || 0,
+        commentsCount: parseInt(rawPost.commentsCount) || 0,
+        savesCount: parseInt(rawPost.savesCount) || 0
+      };
+      
+      // Verificar se o usuário pode ver o post
+      const isAdmin = req.user?.nivelacesso === 'admin' || req.user?.nivelacesso === 'designer_adm';
+      const isOwner = req.user?.id === post.user.id;
+      
+      if (post.post.status !== 'approved' && !isAdmin && !isOwner) {
+        return res.status(403).json({ message: 'Você não tem permissão para visualizar este post' });
+      }
+      
+      // Incrementar contador de visualizações com tratamento de erro
+      try {
+        await db.execute(sql`
+          UPDATE "communityPosts"
+          SET "viewCount" = COALESCE("viewCount", 0) + 1
+          WHERE id = ${postId}
+        `);
+        console.log(`Contador de visualizações atualizado para o post ${postId}`);
+      } catch (error) {
+        console.error(`Erro ao atualizar contador de visualizações para o post ${postId}:`, error);
+        // Erro não fatal, continuar processamento
+      }
+      
+      // Adicionar informações para o usuário logado
+      if (req.user?.id) {
+        const userId = req.user.id;
         
-      const [userSave] = await db
-        .select()
-        .from(communitySaves)
-        .where(
-          and(
-            eq(communitySaves.postId, postId),
-            eq(communitySaves.userId, userId)
-          )
-        );
+        // Verificar se o usuário curtiu o post
+        let userHasLiked = false;
+        try {
+          const likeResult = await db.execute(sql`
+            SELECT 1 FROM "communityLikes"
+            WHERE "postId" = ${postId} AND "userId" = ${userId}
+            LIMIT 1
+          `);
+          userHasLiked = likeResult.rows.length > 0;
+        } catch (error) {
+          console.error(`Erro ao verificar curtida do usuário para post ${postId}:`, error);
+        }
+        
+        // Verificar se o usuário salvou o post
+        let userHasSaved = false;
+        try {
+          const saveResult = await db.execute(sql`
+            SELECT 1 FROM "communitySaves"
+            WHERE "postId" = ${postId} AND "userId" = ${userId}
+            LIMIT 1
+          `);
+          userHasSaved = saveResult.rows.length > 0;
+        } catch (error) {
+          console.error(`Erro ao verificar save do usuário para post ${postId}:`, error);
+        }
+        
+        return res.json({
+          ...post,
+          userHasLiked,
+          isLikedByUser: userHasLiked, // Para compatibilidade com frontend
+          userHasSaved,
+        });
+      }
       
-      return res.json({
-        ...post,
-        userHasLiked: !!userLike,
-        isLikedByUser: !!userLike, // Campo adicional para compatibilidade com frontend
-        userHasSaved: !!userSave,
-      });
+      return res.json(post);
+    } catch (dbError) {
+      console.error(`Erro crítico ao buscar post ${postId}:`, dbError);
+      throw dbError; // Propagar para tratamento global
     }
-    
-    return res.json(post);
   } catch (error) {
     console.error('Erro ao buscar post da comunidade:', error);
     return res.status(500).json({ 
