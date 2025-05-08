@@ -43,6 +43,7 @@ interface CommentItemProps {
   userHasLiked: boolean;
   onRefresh?: () => void;
   isReply?: boolean;
+  onDelete?: (commentId: number) => void;
 }
 
 export const CommentItem = ({
@@ -52,7 +53,8 @@ export const CommentItem = ({
   repliesCount: initialRepliesCount,
   userHasLiked,
   onRefresh,
-  isReply = false
+  isReply = false,
+  onDelete
 }: CommentItemProps) => {
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
@@ -277,7 +279,10 @@ export const CommentItem = ({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={handleDeleteComment} className="text-red-500 dark:text-red-400">
+                  <DropdownMenuItem 
+                    onClick={() => onDelete ? onDelete(comment.id) : handleDeleteComment()} 
+                    className="text-red-500 dark:text-red-400"
+                  >
                     <Trash2 className="h-4 w-4 mr-2" />
                     Excluir
                   </DropdownMenuItem>

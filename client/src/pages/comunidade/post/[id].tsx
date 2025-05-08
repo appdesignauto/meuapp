@@ -434,6 +434,7 @@ const PostDetailPage: React.FC = () => {
                     onRefresh={() => {
                       queryClient.invalidateQueries({ queryKey: [`/api/community/posts/${postId}`] });
                     }}
+                    onDelete={(commentId) => deleteCommentMutation.mutate(commentId)}
                   />
                 );
               })}
