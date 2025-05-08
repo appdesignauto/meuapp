@@ -139,6 +139,7 @@ router.get('/api/community/posts', async (req, res) => {
           return {
             ...post,
             userHasLiked: !!userLike,
+            isLikedByUser: !!userLike, // Campo adicional para compatibilidade com frontend
             userHasSaved: !!userSave,
           };
         })
@@ -230,6 +231,7 @@ router.get('/api/community/posts/:id', async (req, res) => {
       return res.json({
         ...post,
         userHasLiked: !!userLike,
+        isLikedByUser: !!userLike, // Campo adicional para compatibilidade com frontend
         userHasSaved: !!userSave,
       });
     }

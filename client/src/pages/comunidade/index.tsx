@@ -566,9 +566,10 @@ const CommunityPage: React.FC = () => {
                         sharesCount: 0,
                         isApproved: item.post.status === 'approved',
                         userId: item.post.userId,
+                        isLikedByUser: item.isLikedByUser || item.userHasLiked || false,
                         user: item.user
                       };
-                      return <PostCard key={item.post.id} post={formattedPost} />;
+                      return <PostCard key={item.post.id} post={formattedPost} refetch={refetchPosts} />;
                     })}
                   </div>
                 ) : (
