@@ -176,15 +176,18 @@ const PostDetailPage: React.FC = () => {
   // Mutação para deletar um comentário
   const deleteCommentMutation = useMutation({
     mutationFn: async (commentId: number) => {
+      console.log("PostDetailPage: Excluindo comentário ID:", commentId);
       await apiRequest('DELETE', `/api/community/comments/${commentId}`);
     },
     onSuccess: () => {
+      console.log("PostDetailPage: Comentário excluído com sucesso");
       queryClient.invalidateQueries({ queryKey: [`/api/community/posts/${postId}`] });
       toast({
         description: "Comentário excluído com sucesso",
       });
     },
     onError: (error: Error) => {
+      console.error("PostDetailPage: Erro ao excluir comentário:", error);
       toast({
         variant: "destructive",
         title: "Erro",
@@ -420,7 +423,8 @@ const PostDetailPage: React.FC = () => {
             <div>
               {post.comments.map((comment) => {
                 // Verificar se o usuário atual pode excluir o comentário
-                const canDelete = user && (user.id === comment.userId || user.nivelacesso === 'admin');
+                console.log("Verificando permissão no post:", comment.id, user?.id, comment.userId, user?.nivelacesso);
+                const canDelete = user && (user.id === comment.userId || user.nivelacesso === 'admin' || user.nivelacesso === 'administrador');
                 
                 return (
                   <CommentItem 

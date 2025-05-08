@@ -290,15 +290,37 @@ export const CommentItem = ({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  {(currentUser.id === comment.userId || currentUser.nivelacesso === 'admin' || currentUser.nivelacesso === 'administrador') && (
-                    <DropdownMenuItem 
-                      onClick={() => onDelete ? onDelete(comment.id) : handleDeleteComment()} 
-                      className="text-red-500 dark:text-red-400"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Excluir
-                    </DropdownMenuItem>
-                  )}
+                  {(() => {
+                    console.log("Debug exclusão:", { 
+                      "Usuário atual ID": currentUser?.id, 
+                      "ID autor do comentário": comment.userId,
+                      "Nível do usuário": currentUser?.nivelacesso,
+                      "Pode excluir?": currentUser?.id === comment.userId || 
+                                      currentUser?.nivelacesso === 'admin' || 
+                                      currentUser?.nivelacesso === 'administrador'
+                    });
+                    
+                    return (currentUser.id === comment.userId || 
+                           currentUser.nivelacesso === 'admin' || 
+                           currentUser.nivelacesso === 'administrador') && (
+                      <DropdownMenuItem 
+                        onClick={() => {
+                          console.log("Botão excluir clicado para comentário:", comment.id);
+                          if (onDelete) {
+                            console.log("Usando função onDelete passada via props");
+                            onDelete(comment.id);
+                          } else {
+                            console.log("Usando função handleDeleteComment local");
+                            handleDeleteComment();
+                          }
+                        }} 
+                        className="text-red-500 dark:text-red-400"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Excluir
+                      </DropdownMenuItem>
+                    );
+                  })()}
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
