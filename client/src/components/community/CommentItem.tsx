@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import VerifiedUsername from '@/components/users/VerifiedUsername';
 import { getInitials } from '@/lib/utils';
-import { apiRequest, queryClient } from '@/lib/queryClient';
+import { apiRequest, queryClient, getValidAuthToken } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { Textarea } from '@/components/ui/textarea';
@@ -89,43 +89,21 @@ export const CommentItem = ({
       setIsLiked(!isLiked);
       setLikes(isLiked ? likes - 1 : likes + 1);
 
-      // Obter o token de autenticação do localStorage e verificar validade
-      const authToken = localStorage.getItem('authToken');
-      const isTokenValid = (() => {
-        try {
-          const authTokenExpires = localStorage.getItem('authTokenExpires');
-          if (!authToken || !authTokenExpires) return false;
-          return Date.now() < parseInt(authTokenExpires);
-        } catch (e) {
-          return false;
-        }
-      })();
+      // Usar a função auxiliar para obter o token válido
+      const authToken = getValidAuthToken();
       
       // Usar apiRequest com headers personalizados para consistência
       const requestOptions: { headers?: Record<string, string> } = {};
-      if (isTokenValid && authToken) {
+      if (authToken) {
         requestOptions.headers = {
           'Authorization': `Bearer ${authToken}`
         };
       }
       
+      // O apiRequest já faz a verificação de response.ok e lança exceção se necessário
       const response = await apiRequest('POST', `/api/community/comments/${comment.id}/like`, null, requestOptions);
       
       console.log("Resposta recebida, status:", response.status);
-      
-      if (!response.ok) {
-        // Se o erro for 401 (não autenticado), podemos tentar atualizar o token
-        if (response.status === 401) {
-          console.log("Tentando novamente com refresh de autenticação...");
-          
-          // Aqui poderíamos adicionar lógica para atualizar o token se necessário
-          
-          throw new Error("Sessão expirada. Por favor, faça login novamente.");
-        }
-        
-        const errorText = await response.text();
-        throw new Error(`Erro ${response.status}: ${errorText}`);
-      }
       
       const data = await response.json();
       console.log("Dados da resposta:", data);

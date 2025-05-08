@@ -1,5 +1,22 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
+// Função auxiliar para verificar se o token de autenticação é válido
+export function isAuthTokenValid(): boolean {
+  try {
+    const authToken = localStorage.getItem('authToken');
+    const authTokenExpires = localStorage.getItem('authTokenExpires');
+    if (!authToken || !authTokenExpires) return false;
+    return Date.now() < parseInt(authTokenExpires);
+  } catch (e) {
+    return false;
+  }
+}
+
+// Função auxiliar para obter o token de autenticação válido
+export function getValidAuthToken(): string | null {
+  return isAuthTokenValid() ? localStorage.getItem('authToken') : null;
+}
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     let errorMessage = res.statusText;
@@ -53,8 +70,8 @@ export async function apiRequest(
       headers[key] = value;
     });
   } else {
-    // Adicionar token de autenticação do localStorage se disponível (caso não tenha sido adicionado explicitamente)
-    const authToken = localStorage.getItem('authToken');
+    // Adicionar token de autenticação do localStorage se disponível e válido
+    const authToken = getValidAuthToken();
     if (authToken && !headers['Authorization']) {
       headers['Authorization'] = `Bearer ${authToken}`;
     }
@@ -107,8 +124,8 @@ export const getQueryFn: <T>(options: {
     // Headers iniciais
     const headers: Record<string, string> = {};
     
-    // Adicionar token de autenticação do localStorage se disponível
-    const authToken = localStorage.getItem('authToken');
+    // Adicionar token de autenticação do localStorage se disponível e válido
+    const authToken = getValidAuthToken();
     if (authToken) {
       headers['Authorization'] = `Bearer ${authToken}`;
     }
