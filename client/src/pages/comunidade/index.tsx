@@ -130,6 +130,9 @@ const CommentItem: React.FC<{
   const { user } = useAuth();
   const { toast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isLiked, setIsLiked] = useState(comment.isLikedByUser || false);
+  const [likeCount, setLikeCount] = useState(comment.likesCount || 0);
+  const [isLiking, setIsLiking] = useState(false);
   
   // Verificar se o usuário atual pode excluir o comentário
   const canDelete = user && (
@@ -138,6 +141,56 @@ const CommentItem: React.FC<{
     user.nivelacesso === 'administrador' || 
     user.nivelacesso === 'designer_adm'
   );
+  
+  // Função para curtir/descurtir comentário
+  const handleLikeComment = async () => {
+    if (!user) {
+      toast({
+        title: "Ação não permitida",
+        description: "Você precisa estar logado para curtir comentários.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsLiking(true);
+    try {
+      const response = await apiRequest('POST', `/api/community/comments/${comment.comment.id}/like`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Erro ${response.status} ao curtir comentário`);
+      }
+      
+      const data = await response.json();
+      
+      // Atualizar estado local
+      setIsLiked(data.liked);
+      setLikeCount(data.likesCount);
+      
+      // Mostrar feedback
+      if (data.liked) {
+        toast({
+          title: "Comentário curtido",
+          description: "Você curtiu este comentário."
+        });
+      } else {
+        toast({
+          title: "Curtida removida",
+          description: "Você removeu sua curtida deste comentário."
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao curtir comentário:", error);
+      toast({
+        title: "Erro ao curtir comentário",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao curtir este comentário.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLiking(false);
+    }
+  };
   
   const handleDeleteComment = async () => {
     if (!canDelete) return;
@@ -208,9 +261,27 @@ const CommentItem: React.FC<{
           
           <p className="text-xs mt-0.5">{comment.comment.content}</p>
         </div>
-        <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5">
-          {formatRelativeTime(comment.comment.createdAt)}
-        </p>
+        
+        <div className="flex items-center gap-2 mt-1">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className={`p-0 h-auto text-[10px] text-zinc-500 dark:text-zinc-400 hover:text-primary dark:hover:text-primary flex items-center gap-1 ${isLiked ? 'text-blue-500 dark:text-blue-400 font-medium' : ''}`}
+            onClick={handleLikeComment}
+            disabled={isLiking}
+          >
+            {isLiking ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <Heart className={`h-3 w-3 ${isLiked ? 'fill-blue-500 dark:fill-blue-400 text-blue-500 dark:text-blue-400' : ''}`} />
+            )}
+            {likeCount > 0 && <span>{likeCount}</span>}
+          </Button>
+          
+          <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
+            {formatRelativeTime(comment.comment.createdAt)}
+          </p>
+        </div>
       </div>
     </div>
   );
