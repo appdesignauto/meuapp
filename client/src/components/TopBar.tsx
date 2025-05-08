@@ -19,117 +19,23 @@ const TopBar: React.FC<TopBarProps> = ({
   backPath = '/',
   children
 }) => {
-  const { user } = useAuth();
-  
-  return (
-    <div className="sticky top-0 z-40 bg-white dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 shadow-sm">
-      <div className="container h-14 max-w-5xl flex items-center justify-between">
-        <div className="flex items-center">
-          {showBack ? (
-            <Link href={backPath}>
-              <Button variant="ghost" size="icon" className="mr-1">
-                <ChevronLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-          ) : (
-            <Link href="/" className="flex items-center">
-              <span className="text-lg font-semibold text-blue-600 dark:text-blue-400">
-                DesignAuto
-              </span>
-            </Link>
-          )}
-          
-          {title && !showBack && (
-            <span className="mx-4 text-zinc-300 dark:text-zinc-700">|</span>
-          )}
-          
-          {title && (
-            <h1 className="text-lg font-semibold text-zinc-900 dark:text-white">
-              {title}
-            </h1>
-          )}
-          
-          {children}
-        </div>
-        
-        <div className="flex items-center gap-2">
-          {/* Perfil */}
-          {user ? (
-            <Link href="/painel/perfil">
-              <Avatar className="h-8 w-8 cursor-pointer">
-                <AvatarImage 
-                  src={user.profileimageurl || undefined} 
-                  alt={user.name || user.username} 
-                />
-                <AvatarFallback>{getInitials(user.name || user.username)}</AvatarFallback>
-              </Avatar>
-            </Link>
-          ) : (
-            <Link href="/login">
-              <Button variant="outline" size="sm">
-                Entrar
-              </Button>
-            </Link>
-          )}
-          
-          {/* Menu de navegação */}
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="ml-1">
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[250px] sm:w-[300px]">
-              <div className="py-4">
-                <div className="flex flex-col gap-4 px-2">
-                  <Link href="/">
-                    <Button variant="ghost" className="w-full justify-start">
-                      Início
-                    </Button>
-                  </Link>
-                  <Link href="/categories">
-                    <Button variant="ghost" className="w-full justify-start">
-                      Categorias
-                    </Button>
-                  </Link>
-                  <Link href="/videoaulas">
-                    <Button variant="ghost" className="w-full justify-start">
-                      Videoaulas
-                    </Button>
-                  </Link>
-                  <Link href="/comunidade">
-                    <Button variant="ghost" className="w-full justify-start">
-                      Comunidade
-                    </Button>
-                  </Link>
-                  {user ? (
-                    <>
-                      <Link href="/painel/inicio">
-                        <Button variant="ghost" className="w-full justify-start">
-                          Meu Painel
-                        </Button>
-                      </Link>
-                      <Link href="/painel/perfil">
-                        <Button variant="ghost" className="w-full justify-start">
-                          Meu Perfil
-                        </Button>
-                      </Link>
-                    </>
-                  ) : (
-                    <Link href="/login">
-                      <Button variant="ghost" className="w-full justify-start">
-                        Entrar / Cadastrar
-                      </Button>
-                    </Link>
-                  )}
-                </div>
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
+  // Apenas renderiza o botão de voltar quando necessário,
+  // sem o cabeçalho completo
+  if (showBack) {
+    return (
+      <div className="pt-2 pl-2">
+        <Link href={backPath}>
+          <Button variant="ghost" size="icon">
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+        </Link>
+        {children}
       </div>
-    </div>
-  );
+    );
+  }
+  
+  // Não renderiza nenhum elemento de cabeçalho
+  return null;
 };
 
 export default TopBar;
