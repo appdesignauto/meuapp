@@ -1636,7 +1636,16 @@ router.get('/api/community/posts/popular', async (req, res) => {
     // Apenas posts aprovados são considerados
     const popularPosts = await db
       .select({
-        post: communityPosts,
+        id: communityPosts.id,
+        title: communityPosts.title,
+        content: communityPosts.content,
+        imageUrl: communityPosts.imageUrl,
+        editLink: communityPosts.editLink,
+        status: communityPosts.status,
+        createdAt: communityPosts.createdAt,
+        updatedAt: communityPosts.updatedAt,
+        viewCount: communityPosts.viewCount,
+        userId: communityPosts.userId,
         user: {
           id: users.id,
           username: users.username,
@@ -1644,22 +1653,44 @@ router.get('/api/community/posts/popular', async (req, res) => {
           profileimageurl: users.profileimageurl,
           nivelacesso: users.nivelacesso
         },
-        likesCount: sql`COUNT(DISTINCT ${communityLikes.id})`,
-        commentsCount: sql`COUNT(DISTINCT ${communityComments.id})`,
+        likesCount: sql<number>`COUNT(DISTINCT ${communityLikes.id})`,
+        commentsCount: sql<number>`COUNT(DISTINCT ${communityComments.id})`,
       })
       .from(communityPosts)
       .leftJoin(users, eq(communityPosts.userId, users.id))
       .leftJoin(communityLikes, eq(communityPosts.id, communityLikes.postId))
       .leftJoin(communityComments, eq(communityPosts.id, communityComments.postId))
       .where(eq(communityPosts.status, 'approved'))
-      .groupBy(communityPosts.id, users.id)
+      .groupBy(
+        communityPosts.id,
+        users.id,
+      )
       // Ordenar por visualizações e curtidas (50/50)
       .orderBy(sql`(${communityPosts.viewCount} * 0.5) + (COUNT(DISTINCT ${communityLikes.id}) * 0.5) DESC`)
       .limit(limit);
     
     console.log(`Encontrados ${popularPosts.length} posts populares`);
     
-    return res.json(popularPosts);
+    // Formatar os resultados para manter compatibilidade com o frontend
+    const formattedPosts = popularPosts.map(post => ({
+      post: {
+        id: post.id,
+        title: post.title,
+        content: post.content,
+        imageUrl: post.imageUrl,
+        editLink: post.editLink,
+        status: post.status,
+        createdAt: post.createdAt,
+        updatedAt: post.updatedAt,
+        viewCount: post.viewCount,
+        userId: post.userId,
+      },
+      user: post.user,
+      likesCount: Number(post.likesCount),
+      commentsCount: Number(post.commentsCount),
+    }));
+    
+    return res.json(formattedPosts);
   } catch (error) {
     console.error('Erro ao buscar posts populares:', error);
     return res.status(500).json({ 

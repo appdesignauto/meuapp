@@ -562,6 +562,13 @@ const CommunityPage: React.FC = () => {
     refetchInterval: 30000, // Recarrega a cada 30 segundos
   });
   
+  // Buscar posts populares
+  const { data: popularPosts, isLoading: popularPostsLoading, error: popularPostsError } = useQuery({
+    queryKey: ['/api/community/posts/popular'],
+    refetchOnWindowFocus: false,
+    refetchInterval: 300000, // Recarrega a cada 5 minutos
+  });
+  
   // Buscar ranking dos usuários
   const { data: ranking, isLoading: rankingLoading, error: rankingError, refetch: refetchRanking } = useQuery({
     queryKey: ['/api/community/ranking', rankingPeriod],
@@ -1017,7 +1024,7 @@ const CommunityPage: React.FC = () => {
                 </CardContent>
               </Card>
               
-              {/* Card de posts em destaque */}
+              {/* Card de posts populares */}
               <Card className="overflow-hidden mb-4 border border-zinc-100 dark:border-zinc-800">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg">Posts Populares</CardTitle>
@@ -1025,65 +1032,75 @@ const CommunityPage: React.FC = () => {
                 </CardHeader>
                 
                 <CardContent className="space-y-4 p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-16 h-16 rounded-md overflow-hidden shrink-0">
-                      <img 
-                        src="/uploads/featured-post-1.jpg" 
-                        alt="Post em destaque" 
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = "https://placehold.co/200x200/gray/white?text=DesignAuto";
-                        }}
-                      />
+                  {popularPostsLoading ? (
+                    // Skeleton loading state
+                    <>
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="flex items-start gap-3">
+                          <Skeleton className="w-16 h-16 rounded-md shrink-0" />
+                          <div className="flex-1">
+                            <Skeleton className="h-4 w-full mb-2" />
+                            <Skeleton className="h-3 w-24" />
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  ) : popularPostsError ? (
+                    // Erro ao carregar
+                    <div className="text-center py-4">
+                      <XCircle className="h-8 w-8 mx-auto text-red-500 mb-2" />
+                      <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                        Erro ao carregar posts populares
+                      </p>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => window.location.reload()}
+                        className="mt-2"
+                      >
+                        Tentar novamente
+                      </Button>
                     </div>
-                    <div>
-                      <p className="font-medium text-sm line-clamp-2">Banner Promocional para Loja de Peças</p>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                        248 curtidas • 37 comentários
+                  ) : !popularPosts || !popularPosts.length ? (
+                    // Nenhum post encontrado
+                    <div className="text-center py-4">
+                      <FileQuestion className="h-8 w-8 mx-auto text-zinc-400 mb-2" />
+                      <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                        Nenhum post popular disponível
                       </p>
                     </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="w-16 h-16 rounded-md overflow-hidden shrink-0">
-                      <img 
-                        src="/uploads/featured-post-2.jpg" 
-                        alt="Post em destaque" 
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = "https://placehold.co/200x200/gray/white?text=DesignAuto";
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <p className="font-medium text-sm line-clamp-2">Cartaz Promoção de Troca de Óleo</p>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                        156 curtidas • 21 comentários
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="w-16 h-16 rounded-md overflow-hidden shrink-0">
-                      <img 
-                        src="/uploads/featured-post-3.jpg" 
-                        alt="Post em destaque" 
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = "https://placehold.co/200x200/gray/white?text=DesignAuto";
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <p className="font-medium text-sm line-clamp-2">Stories para Lançamento de Novo Modelo</p>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                        183 curtidas • 29 comentários
-                      </p>
-                    </div>
-                  </div>
+                  ) : (
+                    // Lista de posts populares
+                    <>
+                      {popularPosts.map((item) => (
+                        <Link 
+                          key={item.post.id} 
+                          href={`/comunidade/post/${item.post.id}`}
+                          className="flex items-start gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-800 p-2 rounded-md transition-colors"
+                        >
+                          <div className="w-16 h-16 rounded-md overflow-hidden shrink-0">
+                            <img 
+                              src={item.post.imageUrl} 
+                              alt={item.post.title || 'Post em destaque'} 
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = "https://placehold.co/200x200/gray/white?text=DesignAuto";
+                              }}
+                            />
+                          </div>
+                          <div>
+                            <p className="font-medium text-sm line-clamp-2">
+                              {item.post.title || 'Post sem título'}
+                            </p>
+                            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                              {item.likesCount} curtidas • {item.commentsCount} comentários
+                            </p>
+                          </div>
+                        </Link>
+                      ))}
+                    </>
+                  )}
                 </CardContent>
               </Card>
               
