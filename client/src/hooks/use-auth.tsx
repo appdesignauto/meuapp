@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext } from "react";
+import React, { createContext, ReactNode, useContext, useEffect } from "react";
 import {
   useQuery,
   useMutation,
@@ -42,8 +42,47 @@ type VerifyEmailData = {
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
+// Função utilitária para verificar expiração do token
+const checkTokenExpiration = () => {
+  try {
+    const authToken = localStorage.getItem('authToken');
+    const authTokenExpires = localStorage.getItem('authTokenExpires');
+    
+    if (!authToken || !authTokenExpires) {
+      return false; // Não há token para verificar
+    }
+    
+    const expirationTime = parseInt(authTokenExpires);
+    if (isNaN(expirationTime)) {
+      // Token inválido, remover
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('authTokenExpires');
+      return false;
+    }
+    
+    // Verificar se expirou (data atual > data de expiração)
+    if (Date.now() > expirationTime) {
+      // Token expirado, remover
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('authTokenExpires');
+      return false;
+    }
+    
+    return true; // Token válido
+  } catch (error) {
+    console.error("Erro ao verificar expiração do token:", error);
+    return false;
+  }
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  
+  // Verificar token ao iniciar
+  useEffect(() => {
+    checkTokenExpiration();
+  }, []);
+  
   const {
     data: user,
     error,
@@ -53,6 +92,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryKey: ['/api/user'],
     queryFn: async () => {
       try {
+        // Verificar se o token expirou antes de fazer a requisição
+        checkTokenExpiration();
+        
         const res = await apiRequest('GET', '/api/user');
         if (res.status === 401) {
           return null;
@@ -72,6 +114,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const res = await apiRequest('POST', '/api/login', credentials);
         const userData = await res.json();
         console.log("Login bem-sucedido:", userData);
+        
+        // Gerar e armazenar token no localStorage
+        if (userData && userData.id) {
+          // Gerar uma string aleatória como parte de segurança do token
+          const randomString = btoa(Math.random().toString(36).substring(2));
+          // Formato do token: base64String:userId
+          const authToken = `${randomString}:${userData.id}`;
+          
+          // Armazenar no localStorage
+          localStorage.setItem('authToken', authToken);
+          console.log("Token de autenticação armazenado no localStorage");
+          
+          // Definir tempo de expiração se "lembrar-me" estiver ativado
+          if (credentials.rememberMe) {
+            // 30 dias para lembrar-me
+            localStorage.setItem('authTokenExpires', String(Date.now() + 30 * 24 * 60 * 60 * 1000));
+          } else {
+            // 1 dia para sessão normal
+            localStorage.setItem('authTokenExpires', String(Date.now() + 24 * 60 * 60 * 1000));
+          }
+        }
+        
         return userData;
       } catch (error) {
         console.error("Erro de login:", error);
@@ -146,6 +210,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logoutMutation = useMutation({
     mutationFn: async () => {
       await apiRequest('POST', '/api/logout');
+      // Limpar tokens do localStorage
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('authTokenExpires');
     },
     onSuccess: () => {
       queryClient.setQueryData(['/api/user'], null);
@@ -155,11 +222,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     },
     onError: (error: Error) => {
+      // Mesmo com erro no servidor, limpar tokens locais
+      try {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('authTokenExpires');
+      } catch (localStorageError) {
+        console.error("Erro ao limpar localStorage:", localStorageError);
+      }
+      
       toast({
-        title: "Falha ao desconectar",
-        description: error.message,
+        title: "Falha ao desconectar do servidor",
+        description: "Seu login local foi encerrado, mas houve um problema com o servidor: " + error.message,
         variant: "destructive",
       });
+      
+      // Mesmo com erro, consideramos o usuário deslogado localmente
+      queryClient.setQueryData(['/api/user'], null);
     },
   });
   
