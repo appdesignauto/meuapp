@@ -22,7 +22,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { X, Upload, FileImage } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { X, Upload, FileImage, CloudUpload } from "lucide-react";
 import LoadingScreen from "@/components/LoadingScreen";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -32,6 +39,11 @@ import { useMutation } from "@tanstack/react-query";
 const formSchema = z.object({
   title: z.string().min(3, "O título deve ter pelo menos 3 caracteres").max(100),
   content: z.string().optional(),
+  status: z.string().optional(),
+  category: z.string().optional(),
+  postFormat: z.string().optional(),
+  fileFormat: z.string().optional(),
+  tags: z.string().optional(),
   imageFile: z
     .instanceof(File)
     .refine((file) => file.size < 5 * 1024 * 1024, {
@@ -64,6 +76,11 @@ export function CreatePostDialog({ open, onOpenChange }: CreatePostDialogProps) 
       title: "",
       content: "",
       editLink: "",
+      status: "approved",
+      category: "",
+      postFormat: "",
+      fileFormat: "",
+      tags: "",
     },
   });
 
@@ -156,6 +173,12 @@ export function CreatePostDialog({ open, onOpenChange }: CreatePostDialogProps) 
     formData.append("title", values.title);
     if (values.content) formData.append("content", values.content);
     if (values.editLink) formData.append("editLink", values.editLink);
+    // Anexa campos adicionais do formulário se necessário
+    // No backend, apenas os campos conhecidos são processados,
+    // então é seguro enviar campos extras que podem ser ignorados
+    if (values.category) formData.append("category", values.category);
+    if (values.postFormat) formData.append("postFormat", values.postFormat);
+    if (values.tags) formData.append("tags", values.tags);
     formData.append("image", values.imageFile);
 
     createPostMutation.mutate(formData);
@@ -163,25 +186,199 @@ export function CreatePostDialog({ open, onOpenChange }: CreatePostDialogProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[620px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl">Criar Postagem</DialogTitle>
+          <DialogTitle className="text-xl font-medium mb-4">Postagem</DialogTitle>
         </DialogHeader>
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {/* Primeira linha: Nome da Imagem e Status */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">
+                      Nome da Imagem<span className="text-red-500">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="Digite o nome da imagem" className="rounded-md" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">
+                      Status <span className="text-red-500">*</span>
+                    </FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="rounded-md">
+                          <SelectValue placeholder="Selecionar" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="approved">Aprovado</SelectItem>
+                        <SelectItem value="pending">Pendente</SelectItem>
+                        <SelectItem value="draft">Rascunho</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            {/* Categoria */}
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium">
+                    Categoria <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="rounded-md">
+                        <SelectValue placeholder="Selecionar" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="vendas">Vendas</SelectItem>
+                      <SelectItem value="mecanica">Mecânica</SelectItem>
+                      <SelectItem value="locacao">Locação</SelectItem>
+                      <SelectItem value="lavagem">Lavagem</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            {/* Segunda linha: Formato do post e Formato do Arquivo */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="postFormat"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">
+                      Formato do post<span className="text-red-500">*</span>
+                    </FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="rounded-md">
+                          <SelectValue placeholder="Selecionar" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="feed">Feed</SelectItem>
+                        <SelectItem value="story">Story</SelectItem>
+                        <SelectItem value="cartaz">Cartaz</SelectItem>
+                        <SelectItem value="banner">Banner</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="fileFormat"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">
+                      Formato do Arquivo<span className="text-red-500">*</span>
+                    </FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="rounded-md">
+                          <SelectValue placeholder="Selecionar" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="jpg">JPG</SelectItem>
+                        <SelectItem value="png">PNG</SelectItem>
+                        <SelectItem value="webp">WEBP</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            {/* Tags */}
+            <FormField
+              control={form.control}
+              name="tags"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium">
+                    Tags <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input placeholder="Selecione as tags" className="rounded-md" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            {/* Link de edição */}
+            <FormField
+              control={form.control}
+              name="editLink"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium">URL</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Digite a url do"
+                      className="rounded-md"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
             {/* Upload de imagem */}
-            <div className="space-y-2">
-              <Label>
-                Imagem do Post <span className="text-red-500">*</span>
-              </Label>
+            <div>
+              <FormLabel className="text-sm font-medium block mb-1">
+                Envio de imagem PNG/JPG<span className="text-red-500">*</span> 
+                <span className="text-xs text-gray-500 font-normal ml-1">(Tamanho máximo: 5MB)</span>
+              </FormLabel>
               
               {previewUrl ? (
-                <div className="relative mt-2 border rounded-md overflow-hidden">
+                <div className="relative mt-2 border rounded-md overflow-hidden bg-gray-50">
                   <img
                     src={previewUrl}
                     alt="Preview"
-                    className="w-full h-auto max-h-[300px] object-contain bg-slate-50"
+                    className="w-full h-auto max-h-[300px] object-contain"
                   />
                   <Button
                     type="button"
@@ -196,14 +393,11 @@ export function CreatePostDialog({ open, onOpenChange }: CreatePostDialogProps) 
               ) : (
                 <div
                   onClick={() => fileInputRef.current?.click()}
-                  className="border-2 border-dashed border-gray-300 rounded-md p-8 text-center cursor-pointer hover:bg-slate-50 transition-colors duration-200"
+                  className="border-2 border-dashed border-gray-300 rounded-md p-10 text-center cursor-pointer hover:bg-gray-50 transition-colors duration-200 bg-[#f8f9fa]"
                 >
-                  <FileImage className="mx-auto h-12 w-12 text-muted-foreground mb-2" />
-                  <p className="text-sm font-medium mb-1">
-                    Clique para fazer upload
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    PNG, JPG ou WEBP (Máx. 5MB)
+                  <CloudUpload className="mx-auto h-10 w-10 text-blue-500 mb-2" />
+                  <p className="text-base font-medium mb-1 text-gray-700">
+                    Clique aqui para upload
                   </p>
                 </div>
               )}
@@ -223,76 +417,23 @@ export function CreatePostDialog({ open, onOpenChange }: CreatePostDialogProps) 
               )}
             </div>
             
-            {/* Título */}
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Título <span className="text-red-500">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input placeholder="Digite o título do post" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            {/* Descrição */}
-            <FormField
-              control={form.control}
-              name="content"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Descrição</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Escreva uma descrição (opcional)"
-                      className="resize-none"
-                      rows={4}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            {/* Link de edição */}
-            <FormField
-              control={form.control}
-              name="editLink"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Link de Edição</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Link para edição (Canva, Google Slides, etc.)"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Descrição - Removido conforme o modelo da imagem */}
             
             <DialogFooter className="flex justify-between pt-4">
               <DialogClose asChild>
-                <Button type="button" variant="outline">
+                <Button type="button" variant="outline" className="rounded-md">
                   Cancelar
                 </Button>
               </DialogClose>
               <Button 
                 type="submit" 
                 disabled={createPostMutation.isPending}
-                className="gap-2"
+                className="gap-2 rounded-md"
               >
                 {createPostMutation.isPending && (
-                  <LoadingScreen size="xs" label="" />
+                  <LoadingScreen size="sm" label="" />
                 )}
-                Publicar
+                Salvar
               </Button>
             </DialogFooter>
           </form>
