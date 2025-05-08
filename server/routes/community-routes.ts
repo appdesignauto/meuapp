@@ -1018,7 +1018,7 @@ router.post('/api/community/posts/:id/comments', flexibleAuth, async (req, res) 
 });
 
 // GET: Buscar respostas de um comentário
-router.get('/api/community/comments/:id/replies', async (req, res) => {
+router.get('/api/community/comments/:id/replies', flexibleAuth, async (req, res) => {
   try {
     const commentId = parseInt(req.params.id);
     
