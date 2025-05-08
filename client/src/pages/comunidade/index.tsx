@@ -84,15 +84,15 @@ const PostCard: React.FC<{ post: CommunityPost }> = ({ post }) => {
         </button>
       </div>
       
-      {/* Imagem do post - estilo adaptado para mostrar imagem completa com aspecto profissional */}
+      {/* Imagem do post - estilo adaptado para mostrar imagem completa com aspecto variável */}
       <Link href={`/comunidade/post/${post.id}`}>
         <div className="relative w-full overflow-hidden bg-black">
           <div className="relative w-full">
-            <div className="aspect-[4/5] w-full">
+            <div className="w-full max-h-[600px] min-h-[200px] flex items-center justify-center">
               <img 
                 src={post.imageUrl} 
                 alt={post.title}
-                className="hover:scale-[1.02] transition-transform duration-500 cursor-pointer w-full h-full object-contain"
+                className="hover:scale-[1.02] transition-transform duration-500 cursor-pointer max-w-full max-h-[600px] object-contain"
               />
             </div>
           </div>
