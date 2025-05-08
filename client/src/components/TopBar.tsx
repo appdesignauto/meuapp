@@ -97,6 +97,18 @@ const TopBar: React.FC<TopBarProps> = ({
             </SheetContent>
           </Sheet>
           
+          <div className="hidden md:flex items-center gap-x-1 mr-2">
+            <Link href="/">
+              <Button variant="ghost" size="sm">Início</Button>
+            </Link>
+            <Link href="/videoaulas">
+              <Button variant="ghost" size="sm">Videoaulas</Button>
+            </Link>
+            <Link href="/comunidade">
+              <Button variant="ghost" size="sm">Comunidade</Button>
+            </Link>
+          </div>
+          
           {user ? (
             <Link href="/painel/perfil">
               <Avatar className="h-8 w-8 cursor-pointer">
