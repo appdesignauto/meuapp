@@ -1686,13 +1686,22 @@ router.get('/api/community/posts/popular', async (req, res) => {
     // Depois, buscar detalhes adicionais para cada post
     const formattedPosts = await Promise.all(posts.map(async (post) => {
       try {
+        // Garantir que o ID do post é válido
+        if (!post || !post.id || isNaN(post.id)) {
+          console.error('Post inválido encontrado:', post);
+          return null; // Será filtrado posteriormente
+        }
+
+        // Garantir que o userId é válido
+        const userId = post.userId && !isNaN(post.userId) ? post.userId : 0;
+        
         // Buscar dados do usuário (com fallback para caso o usuário não exista mais)
         let userData;
         try {
           const userResult = await db
             .select()
             .from(users)
-            .where(eq(users.id, post.userId));
+            .where(eq(users.id, userId));
           
           if (userResult && userResult.length > 0) {
             userData = userResult[0];
@@ -1718,21 +1727,33 @@ router.get('/api/community/posts/popular', async (req, res) => {
           };
         }
         
-        // Contar curtidas
-        const [likesData] = await db
-          .select({
-            count: sql<number>`count(*)`
-          })
-          .from(communityLikes)
-          .where(eq(communityLikes.postId, post.id));
+        // Contar curtidas com validação
+        let likesData;
+        try {
+          [likesData] = await db
+            .select({
+              count: sql<number>`count(*)`
+            })
+            .from(communityLikes)
+            .where(eq(communityLikes.postId, post.id));
+        } catch (error) {
+          console.error(`Erro ao contar curtidas para post ${post.id}:`, error);
+          likesData = { count: 0 };
+        }
         
-        // Contar comentários
-        const [commentsData] = await db
-          .select({
-            count: sql<number>`count(*)`
-          })
-          .from(communityComments)
-          .where(eq(communityComments.postId, post.id));
+        // Contar comentários com validação
+        let commentsData;
+        try {
+          [commentsData] = await db
+            .select({
+              count: sql<number>`count(*)`
+            })
+            .from(communityComments)
+            .where(eq(communityComments.postId, post.id));
+        } catch (error) {
+          console.error(`Erro ao contar comentários para post ${post.id}:`, error);
+          commentsData = { count: 0 };
+        }
         
         return {
           post: {
@@ -1786,9 +1807,12 @@ router.get('/api/community/posts/popular', async (req, res) => {
       }
     }));
     
-    console.log(`Encontrados ${formattedPosts.length} posts populares`);
+    // Filtrar posts nulos que podem ter surgido devido a problemas de validação
+    const validPosts = formattedPosts.filter(post => post !== null);
     
-    return res.json(formattedPosts);
+    console.log(`Encontrados ${formattedPosts.length} posts populares, ${validPosts.length} válidos`);
+    
+    return res.json(validPosts);
   } catch (error) {
     console.error('Erro ao buscar posts populares:', error);
     return res.status(500).json({ 
