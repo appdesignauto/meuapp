@@ -1446,4 +1446,174 @@ router.delete('/api/community/admin/posts/:id', async (req, res) => {
   }
 });
 
+// GET: Listar todos os comentários para administração
+router.get('/api/community/admin/comments', async (req, res) => {
+  try {
+    // Verificar permissão - apenas admin pode acessar
+    if (!req.user || (req.user.nivelacesso !== 'admin' && req.user.nivelacesso !== 'designer_adm')) {
+      return res.status(403).json({ message: 'Sem permissão para esta ação' });
+    }
+
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const offset = (page - 1) * limit;
+    
+    // Parâmetros de filtro
+    const postId = req.query.postId ? parseInt(req.query.postId as string) : null;
+    const userId = req.query.userId ? parseInt(req.query.userId as string) : null;
+    const search = req.query.search as string || '';
+    const hideStatus = req.query.hideStatus as string || 'all'; // 'hidden', 'visible', 'all'
+    
+    // Construir condição WHERE baseada nos filtros
+    let conditions: SQL<unknown>[] = [];
+    
+    if (postId) {
+      conditions.push(eq(communityComments.postId, postId));
+    }
+    
+    if (userId) {
+      conditions.push(eq(communityComments.userId, userId));
+    }
+    
+    if (search) {
+      conditions.push(like(communityComments.content, `%${search}%`));
+    }
+    
+    if (hideStatus === 'hidden') {
+      conditions.push(eq(communityComments.isHidden, true));
+    } else if (hideStatus === 'visible') {
+      conditions.push(eq(communityComments.isHidden, false));
+    }
+    
+    const whereClause = conditions.length > 0 
+      ? and(...conditions) 
+      : undefined;
+    
+    // Contar total para paginação
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(communityComments)
+      .where(whereClause);
+      
+    // Buscar comentários com informações do usuário e post
+    const comments = await db
+      .select({
+        comment: communityComments,
+        user: {
+          id: users.id,
+          username: users.username,
+          name: users.name,
+          profileimageurl: users.profileimageurl,
+          nivelacesso: users.nivelacesso
+        },
+        post: {
+          id: communityPosts.id,
+          title: communityPosts.title
+        }
+      })
+      .from(communityComments)
+      .leftJoin(users, eq(communityComments.userId, users.id))
+      .leftJoin(communityPosts, eq(communityComments.postId, communityPosts.id))
+      .where(whereClause)
+      .orderBy(desc(communityComments.createdAt))
+      .limit(limit)
+      .offset(offset);
+    
+    return res.json({
+      comments,
+      total: Number(count),
+      page,
+      limit,
+      totalPages: Math.ceil(Number(count) / limit)
+    });
+  } catch (error) {
+    console.error('Erro ao buscar comentários para administração:', error);
+    return res.status(500).json({ 
+      message: 'Erro ao buscar comentários',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
+  }
+});
+
+// PATCH: Ocultar/mostrar um comentário
+router.patch('/api/community/admin/comments/:id/toggle-visibility', async (req, res) => {
+  try {
+    // Verificar permissão - apenas admin pode modificar
+    if (!req.user || (req.user.nivelacesso !== 'admin' && req.user.nivelacesso !== 'designer_adm')) {
+      return res.status(403).json({ message: 'Sem permissão para esta ação' });
+    }
+
+    const commentId = parseInt(req.params.id);
+    
+    // Verificar se o comentário existe
+    const [comment] = await db
+      .select()
+      .from(communityComments)
+      .where(eq(communityComments.id, commentId));
+      
+    if (!comment) {
+      return res.status(404).json({ message: 'Comentário não encontrado' });
+    }
+    
+    // Inverter o estado de visibilidade
+    const currentVisibility = comment.isHidden;
+    const [updatedComment] = await db
+      .update(communityComments)
+      .set({ 
+        isHidden: !currentVisibility,
+        updatedAt: new Date()
+      })
+      .where(eq(communityComments.id, commentId))
+      .returning();
+    
+    return res.json({
+      message: updatedComment.isHidden ? 'Comentário ocultado com sucesso' : 'Comentário mostrado com sucesso',
+      comment: updatedComment
+    });
+  } catch (error) {
+    console.error('Erro ao alterar visibilidade do comentário:', error);
+    return res.status(500).json({ 
+      message: 'Erro ao alterar visibilidade do comentário',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
+  }
+});
+
+// DELETE: Excluir um comentário
+router.delete('/api/community/admin/comments/:id', async (req, res) => {
+  try {
+    // Verificar permissão - apenas admin pode excluir
+    if (!req.user || (req.user.nivelacesso !== 'admin' && req.user.nivelacesso !== 'designer_adm')) {
+      return res.status(403).json({ message: 'Sem permissão para esta ação' });
+    }
+
+    const commentId = parseInt(req.params.id);
+    
+    // Verificar se o comentário existe
+    const [comment] = await db
+      .select()
+      .from(communityComments)
+      .where(eq(communityComments.id, commentId));
+      
+    if (!comment) {
+      return res.status(404).json({ message: 'Comentário não encontrado' });
+    }
+    
+    // Excluir comentário
+    await db
+      .delete(communityComments)
+      .where(eq(communityComments.id, commentId));
+    
+    return res.json({
+      message: 'Comentário excluído com sucesso'
+    });
+  } catch (error) {
+    console.error('Erro ao excluir comentário:', error);
+    return res.status(500).json({ 
+      message: 'Erro ao excluir comentário',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
+  }
+});
+
 export default router;

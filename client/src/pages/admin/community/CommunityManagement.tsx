@@ -73,10 +73,40 @@ interface CommunityPost {
   };
 }
 
+interface CommentData {
+  comment: {
+    id: number;
+    postId: number;
+    userId: number;
+    content: string;
+    isHidden: boolean;
+    createdAt: string;
+    updatedAt: string;
+  };
+  user: {
+    id: number;
+    username: string;
+    name: string | null;
+    profileimageurl: string | null;
+    nivelacesso: string;
+  };
+  post: {
+    id: number;
+    title: string;
+  };
+}
+
+interface CommentStats {
+  totalComments: number;
+  hiddenComments: number;
+  visibleComments: number;
+}
+
 interface PostStats {
   totalPosts: number;
   pendingPosts: number;
   approvedPosts: number;
+  totalComments?: number;
 }
 
 // Componente Principal
