@@ -37,13 +37,10 @@ import { useMutation } from "@tanstack/react-query";
 
 // Esquema de validação para o formulário
 const formSchema = z.object({
-  title: z.string().min(3, "O título deve ter pelo menos 3 caracteres").max(100),
+  title: z.string().min(3, "O título deve ter pelo menos 3 caracteres").max(100).optional(),
   content: z.string().optional(),
-  status: z.string().optional(),
   category: z.string().optional(),
   postFormat: z.string().optional(),
-  fileFormat: z.string().optional(),
-  tags: z.string().optional(),
   imageFile: z
     .instanceof(File)
     .refine((file) => file.size < 5 * 1024 * 1024, {
@@ -76,11 +73,8 @@ export function CreatePostDialog({ open, onOpenChange }: CreatePostDialogProps) 
       title: "",
       content: "",
       editLink: "",
-      status: "approved",
       category: "",
       postFormat: "",
-      fileFormat: "",
-      tags: "",
     },
   });
 
@@ -169,16 +163,22 @@ export function CreatePostDialog({ open, onOpenChange }: CreatePostDialogProps) 
       return;
     }
 
+    if (!values.editLink) {
+      toast({
+        variant: "destructive",
+        title: "URL obrigatória",
+        description: "É necessário fornecer um link para edição",
+      });
+      return;
+    }
+
     const formData = new FormData();
-    formData.append("title", values.title);
+    if (values.title) formData.append("title", values.title);
     if (values.content) formData.append("content", values.content);
-    if (values.editLink) formData.append("editLink", values.editLink);
+    formData.append("editLink", values.editLink);
     // Anexa campos adicionais do formulário se necessário
-    // No backend, apenas os campos conhecidos são processados,
-    // então é seguro enviar campos extras que podem ser ignorados
     if (values.category) formData.append("category", values.category);
     if (values.postFormat) formData.append("postFormat", values.postFormat);
-    if (values.tags) formData.append("tags", values.tags);
     formData.append("image", values.imageFile);
 
     createPostMutation.mutate(formData);
@@ -193,52 +193,22 @@ export function CreatePostDialog({ open, onOpenChange }: CreatePostDialogProps) 
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Primeira linha: Nome da Imagem e Status */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium">
-                      Nome da Imagem<span className="text-red-500">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input placeholder="Digite o nome da imagem" className="rounded-md" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium">
-                      Status <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="rounded-md">
-                          <SelectValue placeholder="Selecionar" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="approved">Aprovado</SelectItem>
-                        <SelectItem value="pending">Pendente</SelectItem>
-                        <SelectItem value="draft">Rascunho</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            {/* Título da Postagem */}
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium">
+                    Título da Postagem
+                  </FormLabel>
+                  <FormControl>
+                    <Input placeholder="Digite o título da postagem" className="rounded-md" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
             {/* Categoria */}
             <FormField
@@ -247,7 +217,7 @@ export function CreatePostDialog({ open, onOpenChange }: CreatePostDialogProps) 
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm font-medium">
-                    Categoria <span className="text-red-500">*</span>
+                    Categoria
                   </FormLabel>
                   <Select 
                     onValueChange={field.onChange} 
@@ -263,6 +233,9 @@ export function CreatePostDialog({ open, onOpenChange }: CreatePostDialogProps) 
                       <SelectItem value="mecanica">Mecânica</SelectItem>
                       <SelectItem value="locacao">Locação</SelectItem>
                       <SelectItem value="lavagem">Lavagem</SelectItem>
+                      <SelectItem value="seminovos">Seminovos</SelectItem>
+                      <SelectItem value="promocoes">Promoções</SelectItem>
+                      <SelectItem value="lancamentos">Lançamentos</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -270,77 +243,51 @@ export function CreatePostDialog({ open, onOpenChange }: CreatePostDialogProps) 
               )}
             />
             
-            {/* Segunda linha: Formato do post e Formato do Arquivo */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="postFormat"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium">
-                      Formato do post<span className="text-red-500">*</span>
-                    </FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="rounded-md">
-                          <SelectValue placeholder="Selecionar" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="feed">Feed</SelectItem>
-                        <SelectItem value="story">Story</SelectItem>
-                        <SelectItem value="cartaz">Cartaz</SelectItem>
-                        <SelectItem value="banner">Banner</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="fileFormat"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium">
-                      Formato do Arquivo<span className="text-red-500">*</span>
-                    </FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="rounded-md">
-                          <SelectValue placeholder="Selecionar" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="jpg">JPG</SelectItem>
-                        <SelectItem value="png">PNG</SelectItem>
-                        <SelectItem value="webp">WEBP</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            {/* Tags */}
+            {/* Formato do post */}
             <FormField
               control={form.control}
-              name="tags"
+              name="postFormat"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm font-medium">
-                    Tags <span className="text-red-500">*</span>
+                    Formato do post
                   </FormLabel>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="rounded-md">
+                        <SelectValue placeholder="Selecionar" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="feed">Feed</SelectItem>
+                      <SelectItem value="stories">Stories</SelectItem>
+                      <SelectItem value="cartaz">Cartaz</SelectItem>
+                      <SelectItem value="banner">Banner</SelectItem>
+                      <SelectItem value="web banner">Web Banner</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            {/* Descrição */}
+            <FormField
+              control={form.control}
+              name="content"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium">Descrição</FormLabel>
                   <FormControl>
-                    <Input placeholder="Selecione as tags" className="rounded-md" {...field} />
+                    <Textarea
+                      placeholder="Escreva uma descrição (opcional)"
+                      className="resize-none rounded-md"
+                      rows={3}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -353,10 +300,12 @@ export function CreatePostDialog({ open, onOpenChange }: CreatePostDialogProps) 
               name="editLink"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium">URL</FormLabel>
+                  <FormLabel className="text-sm font-medium">
+                    URL <span className="text-red-500">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Digite a url do"
+                      placeholder="Cole aqui o link do Canva ou Google Drive"
                       className="rounded-md"
                       {...field}
                     />
@@ -369,7 +318,7 @@ export function CreatePostDialog({ open, onOpenChange }: CreatePostDialogProps) 
             {/* Upload de imagem */}
             <div>
               <FormLabel className="text-sm font-medium block mb-1">
-                Envio de imagem PNG/JPG<span className="text-red-500">*</span> 
+                Envio de imagem PNG/JPG <span className="text-red-500">*</span> 
                 <span className="text-xs text-gray-500 font-normal ml-1">(Tamanho máximo: 5MB)</span>
               </FormLabel>
               
@@ -416,8 +365,6 @@ export function CreatePostDialog({ open, onOpenChange }: CreatePostDialogProps) 
                 </p>
               )}
             </div>
-            
-            {/* Descrição - Removido conforme o modelo da imagem */}
             
             <DialogFooter className="flex justify-between pt-4">
               <DialogClose asChild>
