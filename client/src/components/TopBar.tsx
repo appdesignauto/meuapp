@@ -1,4 +1,4 @@
-import { ChevronLeft, Menu, Users } from 'lucide-react';
+import { ChevronLeft, Menu } from 'lucide-react';
 import { Link } from 'wouter';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -53,15 +53,7 @@ const TopBar: React.FC<TopBarProps> = ({
         </div>
         
         <div className="flex items-center gap-2">
-          {/* Link para comunidade - único atalho adicional */}
-          <Link href="/comunidade">
-            <Button variant="ghost" size="sm" className="flex items-center gap-1.5">
-              <Users className="h-4 w-4" />
-              <span className="hidden sm:inline">Comunidade</span>
-            </Button>
-          </Link>
-          
-          {/* Perfil e menu móvel */}
+          {/* Perfil */}
           {user ? (
             <Link href="/painel/perfil">
               <Avatar className="h-8 w-8 cursor-pointer">
@@ -74,12 +66,13 @@ const TopBar: React.FC<TopBarProps> = ({
             </Link>
           ) : (
             <Link href="/login">
-              <Button variant="outline" size="sm" className="hidden sm:flex">
+              <Button variant="outline" size="sm">
                 Entrar
               </Button>
             </Link>
           )}
           
+          {/* Menu de navegação */}
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="ml-1">
