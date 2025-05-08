@@ -80,58 +80,54 @@ export const CommentItem = ({
       setIsLiked(!isLiked);
       setLikes(isLiked ? likes - 1 : likes + 1);
 
-      console.log("Enviando requisição para curtir comentário:", comment.id);
-      console.log("URL completa:", `/api/community/comments/${comment.id}/like`);
-      
-      fetch(`/api/community/comments/${comment.id}/like`, {
+      // Vamos usar fetch diretamente para evitar problemas com o apiRequest
+      const response = await fetch(`/api/community/comments/${comment.id}/like`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         credentials: 'include'
-      })
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error(`Status: ${response.status} - ${await response.text()}`);
-        }
-        return response.json();
-      })
-      .then((data) => {
-        console.log("Resposta recebida:", data);
-        
-        // Atualizar com os valores do servidor
-        setIsLiked(data.liked);
-        setLikes(data.likesCount);
-        
-        if (data.liked) {
-          toast({
-            title: "Comentário curtido",
-            description: "Você curtiu este comentário."
-          });
-        } else {
-          toast({
-            title: "Curtida removida",
-            description: "Você removeu sua curtida deste comentário."
-          });
-        }
-      })
-      .catch((error) => {
-        console.error("Erro na requisição de curtir:", error);
-        // Reverter mudanças em caso de erro
-        setIsLiked(oldIsLiked);
-        setLikes(oldLikes);
-        
-        toast({
-          title: "Erro ao curtir comentário",
-          description: `Ocorreu um erro ao curtir este comentário: ${error.message}`,
-          variant: "destructive"
-        });
       });
-    } catch (error) {
-      console.error("Erro ao curtir comentário:", error);
+      
+      console.log("Resposta recebida, status:", response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Erro ${response.status}: ${errorText}`);
+      }
+      
+      const data = await response.json();
+      console.log("Dados da resposta:", data);
+      
+      // Atualizar com os valores do servidor
+      setIsLiked(data.liked);
+      setLikes(data.likesCount);
+      
+      if (data.liked) {
+        toast({
+          title: "Comentário curtido",
+          description: "Você curtiu este comentário."
+        });
+      } else {
+        toast({
+          title: "Curtida removida",
+          description: "Você removeu sua curtida deste comentário."
+        });
+      }
+      
+      // Atualizar dados do post se necessário
+      if (onRefresh) onRefresh();
+      
+    } catch (error: any) {
+      console.error("Erro na requisição de curtir:", error);
+      
+      // Reverter mudanças em caso de erro
+      setIsLiked(oldIsLiked);
+      setLikes(oldLikes);
+      
       toast({
         title: "Erro ao curtir comentário",
-        description: "Ocorreu um erro ao curtir este comentário.",
+        description: `Ocorreu um erro ao curtir este comentário: ${error.message}`,
         variant: "destructive"
       });
     }
