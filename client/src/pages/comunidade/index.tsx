@@ -74,19 +74,7 @@ const PostCard: React.FC<{ post: CommunityPost }> = ({ post }) => {
           <UserAvatar user={post.user} size="sm" linkToProfile={true} />
           <div>
             <VerifiedUsername user={post.user} className="text-sm" />
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-3 w-3"
-                viewBox="0 0 16 16"
-                fill="currentColor"
-              >
-                <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm0 1c.81 0 1.603.216 2.271.627A6.93 6.93 0 0 1 12.898 4H11.97c-.468-1.116-1.16-2.022-2.07-2.622a6.11 6.11 0 0 0-1.9-.632V1zm0 0c-.813 0-1.605.216-2.272.627A6.93 6.93 0 0 0 3.102 4h.928c.468-1.116 1.16-2.022 2.07-2.622a6.11 6.11 0 0 1 1.9-.632V1zm0 14c.81 0 1.603-.216 2.271-.627A6.93 6.93 0 0 0 12.898 12H11.97c-.468 1.116-1.16 2.022-2.07 2.622a6.11 6.11 0 0 1-1.9.632V15zm0 0c-.813 0-1.605-.216-2.272-.627A6.93 6.93 0 0 1 3.102 12h.928c.468 1.116 1.16 2.022 2.07 2.622a6.11 6.11 0 0 0 1.9.632V15zm4.5-8.5H8v.75h4.5V6.5z"/>
-                <path d="M7.25 4v4.5h1.5V4h-1.5z"/>
-                <path d="M3.102 4C2.398 4.909 2 6.005 2 7.188v.124 1.376 1.375c0 1.182.398 2.279 1.102 3.188h.929a7.2 7.2 0 0 1-.906-3.188V8.688 7.312c0-1.182.317-2.279.906-3.188h-.929V4zM12.898 4c.704.909 1.102 2.005 1.102 3.188v.124 1.376 1.375c0 1.182-.398 2.279-1.102 3.188h-.929a7.2 7.2 0 0 0 .906-3.188V8.688 7.312c0-1.182-.317-2.279-.906-3.188h.929V4z"/>
-              </svg>
-              {formatDate(post.createdAt)}
-            </p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">{formatDate(post.createdAt)}</p>
           </div>
         </div>
         <button className="text-zinc-400 hover:text-zinc-500 dark:text-zinc-500 dark:hover:text-zinc-400">
