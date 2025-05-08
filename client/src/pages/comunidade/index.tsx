@@ -390,10 +390,14 @@ const PostCard: React.FC<{
               </svg>
             </div>
           </div>
-          <span>{likesCount} pessoas curtiram isso</span>
+          <span>{likesCount === 1 ? '1 pessoa curtiu isso' : `${likesCount} pessoas curtiram isso`}</span>
         </div>
         <div>
-          {post.commentsCount > 0 && `${post.commentsCount} comentários`}
+          {post.commentsCount === 1 
+            ? '1 comentário' 
+            : post.commentsCount > 1 
+              ? `${post.commentsCount} comentários` 
+              : ''}
         </div>
       </div>
       
@@ -461,7 +465,9 @@ const PostCard: React.FC<{
                   {post.commentsCount > comments.length && (
                     <Link href={`/comunidade/post/${post.id}`}>
                       <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2 hover:underline cursor-pointer">
-                        Ver todos os {post.commentsCount} comentários
+                        Ver {post.commentsCount === 1 
+                          ? 'o comentário' 
+                          : `todos os ${post.commentsCount} comentários`}
                       </p>
                     </Link>
                   )}
