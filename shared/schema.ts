@@ -314,6 +314,7 @@ export const communityComments = pgTable("communityComments", {
   userId: integer("userId").notNull().references(() => users.id),
   content: text("content").notNull(),
   isHidden: boolean("isHidden").notNull().default(false),
+  parentId: integer("parentId").references(() => communityComments.id), // Para respostas a comentários
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 });
@@ -801,6 +802,28 @@ export const insertCommunityLikeSchema = createInsertSchema(communityLikes).omit
   createdAt: true,
   updatedAt: true,
 });
+
+// Community Comment Likes (Curtidas em comentários)
+export const communityCommentLikes = pgTable("communityCommentLikes", {
+  id: serial("id").primaryKey(),
+  commentId: integer("commentId").notNull().references(() => communityComments.id, { onDelete: "cascade" }),
+  userId: integer("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+}, (table) => {
+  return {
+    commentUserUnique: primaryKey({ columns: [table.commentId, table.userId] }),
+  };
+});
+
+export const insertCommunityCommentLikeSchema = createInsertSchema(communityCommentLikes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type CommunityCommentLike = typeof communityCommentLikes.$inferSelect;
+export type InsertCommunityCommentLike = z.infer<typeof insertCommunityCommentLikeSchema>;
 
 // Community Saves (Salvamentos em posts da comunidade)
 export const communitySaves = pgTable("communitySaves", {
