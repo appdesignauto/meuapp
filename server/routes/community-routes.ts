@@ -1633,13 +1633,35 @@ router.get('/api/community/posts/popular', async (req, res) => {
     console.log('==== BUSCANDO POSTS POPULARES ====');
     console.log('Limite:', limit);
     
-    // Abordagem mais simples: primeiro buscar os posts mais visualizados
-    const posts = await db
-      .select()
-      .from(communityPosts)
-      .where(eq(communityPosts.status, 'approved'))
-      .orderBy(desc(communityPosts.viewCount))
-      .limit(limit);
+    let posts = [];
+    
+    try {
+      // Abordagem mais simples: primeiro buscar os posts mais visualizados
+      posts = await db
+        .select()
+        .from(communityPosts)
+        .where(eq(communityPosts.status, 'approved'))
+        .orderBy(desc(communityPosts.viewCount))
+        .limit(limit);
+      
+      console.log(`Query inicial: ${posts.length} posts encontrados`);
+    } catch (error) {
+      console.error('ERRO na query inicial de posts populares:', error);
+      
+      // Fallback: buscar todos os posts aprovados sem ordenação específica
+      try {
+        posts = await db
+          .select()
+          .from(communityPosts)
+          .where(eq(communityPosts.status, 'approved'))
+          .limit(limit);
+        
+        console.log(`Query fallback: ${posts.length} posts encontrados`);
+      } catch (fallbackError) {
+        console.error('ERRO na query fallback:', fallbackError);
+        // Não lançar erro aqui, apenas retornar array vazio (já inicializado)
+      }
+    }
     
     // Depois, buscar detalhes adicionais para cada post
     const formattedPosts = await Promise.all(posts.map(async (post) => {
