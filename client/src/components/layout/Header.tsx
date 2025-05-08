@@ -215,6 +215,7 @@ const Header = () => {
     { name: 'Início', path: '/' },
     { name: 'Categorias', path: '/categories' },
     { name: 'Vídeo Aulas', path: '/videoaulas' },
+    { name: 'Comunidade', path: '/comunidade' },
     { name: 'Suporte', path: '/support' },
   ];
 
