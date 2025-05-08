@@ -927,6 +927,9 @@ router.get('/api/community/posts/:id/comments', async (req, res) => {
 router.post('/api/community/posts/:id/comments', flexibleAuth, async (req, res) => {
   try {
     // A autenticação já é verificada pelo middleware flexibleAuth
+    console.log('Recebida solicitação para adicionar comentário ao post:', req.params.id);
+    console.log('Usuário autenticado:', req.user?.id, req.user?.username);
+    console.log('Dados recebidos:', { content: req.body.content?.substring(0, 30) + '...', parentId: req.body.parentId });
     
     const postId = parseInt(req.params.id);
     const { content, parentId } = req.body;
@@ -1010,6 +1013,23 @@ router.post('/api/community/posts/:id/comments', flexibleAuth, async (req, res) 
     });
   } catch (error) {
     console.error('Erro ao adicionar comentário:', error);
+    // Registrar mais detalhes do erro para diagnóstico
+    console.error('Detalhes da requisição de adicionar comentário:', {
+      postId: req.params.id,
+      userId: req.user?.id,
+      parentId: req.body.parentId,
+      method: req.method,
+      path: req.path,
+      headers: {
+        'content-type': req.headers['content-type'],
+        'authorization': req.headers['authorization'] ? 'Presente' : 'Ausente'
+      }
+    });
+
+    if (error instanceof Error) {
+      console.error('Stack trace do erro:', error.stack);
+    }
+
     return res.status(500).json({ 
       message: 'Erro ao adicionar comentário',
       error: error instanceof Error ? error.message : 'Erro desconhecido'
