@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ThumbsUp, MessageCircle, MoreHorizontal } from 'lucide-react';
@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import VerifiedUsername from '@/components/users/VerifiedUsername';
 import { getInitials } from '@/lib/utils';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { Textarea } from '@/components/ui/textarea';
@@ -61,6 +61,14 @@ export const CommentItem = ({
   // Estado local para controlar contagem de respostas
   const [repliesCountState, setRepliesCount] = useState(initialRepliesCount);
 
+  // Referência para armazenar os valores originais para uso na reversão
+  const originalValues = useRef({ isLiked, likes });
+  
+  useEffect(() => {
+    // Atualizar os valores originais quando as props mudam
+    originalValues.current = { isLiked, likes };
+  }, [isLiked, likes]);
+  
   const handleLikeComment = async () => {
     console.log("Função handleLikeComment chamada para o comentário:", comment.id);
     if (!currentUser) {
@@ -73,25 +81,40 @@ export const CommentItem = ({
     }
 
     try {
-      // Atualizar UI imediatamente para feedback instantâneo
-      const oldIsLiked = isLiked;
-      const oldLikes = likes;
+      // Guardar os valores originais antes da atualização
+      const previousIsLiked = isLiked;
+      const previousLikes = likes;
       
+      // Atualizar UI imediatamente para feedback instantâneo
       setIsLiked(!isLiked);
       setLikes(isLiked ? likes - 1 : likes + 1);
 
+      // Obter o token de autenticação do localStorage
+      const authToken = localStorage.getItem('authToken');
+      
       // Vamos usar fetch diretamente para evitar problemas com o apiRequest
       const response = await fetch(`/api/community/comments/${comment.id}/like`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          // Incluir o token de autenticação no cabeçalho se disponível
+          ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
         },
-        credentials: 'include'
+        credentials: 'include' // Manter credentials para cookies como fallback
       });
       
       console.log("Resposta recebida, status:", response.status);
       
       if (!response.ok) {
+        // Se o erro for 401 (não autenticado), podemos tentar atualizar o token
+        if (response.status === 401) {
+          console.log("Tentando novamente com refresh de autenticação...");
+          
+          // Aqui poderíamos adicionar lógica para atualizar o token se necessário
+          
+          throw new Error("Sessão expirada. Por favor, faça login novamente.");
+        }
+        
         const errorText = await response.text();
         throw new Error(`Erro ${response.status}: ${errorText}`);
       }
@@ -102,6 +125,9 @@ export const CommentItem = ({
       // Atualizar com os valores do servidor
       setIsLiked(data.liked);
       setLikes(data.likesCount);
+      
+      // Atualizar também os valores originais
+      originalValues.current = { isLiked: data.liked, likes: data.likesCount };
       
       if (data.liked) {
         toast({
@@ -121,9 +147,9 @@ export const CommentItem = ({
     } catch (error: any) {
       console.error("Erro na requisição de curtir:", error);
       
-      // Reverter mudanças em caso de erro
-      setIsLiked(oldIsLiked);
-      setLikes(oldLikes);
+      // Reverter mudanças em caso de erro usando os valores guardados na ref
+      setIsLiked(previousIsLiked);
+      setLikes(previousLikes);
       
       toast({
         title: "Erro ao curtir comentário",

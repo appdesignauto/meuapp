@@ -14,7 +14,50 @@ export const flexibleAuth = (req: Request, res: Response, next: NextFunction) =>
     return next();
   }
   
-  // 2. Verificar se o ID do usuário foi fornecido no corpo da requisição
+  // 2. Verificar autenticação por Bearer token no cabeçalho Authorization
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    // Extrair o token
+    const token = authHeader.substring(7);
+    console.log('[FlexAuth] Tentando autenticar via Bearer token');
+    
+    // Aqui assumimos que o token é simplesmente o ID do usuário
+    // Em uma implementação real, você usaria um JWT ou outro mecanismo de token seguro
+    try {
+      const userId = parseInt(token);
+      
+      if (isNaN(userId)) {
+        console.log('[FlexAuth] Token Bearer inválido (não é um número)');
+        // Continue tentando outros métodos de autenticação
+      } else {
+        // Procurar usuário no banco de dados
+        return db.select()
+          .from(users)
+          .where(eq(users.id, userId))
+          .limit(1)
+          .then(([user]) => {
+            if (user) {
+              // Simular autenticação
+              console.log('[FlexAuth] Usuário encontrado via Bearer token:', user.username);
+              req.user = user;
+              return next();
+            } else {
+              // Usuário não encontrado, continue tentando outros métodos
+              console.log('[FlexAuth] Usuário não encontrado via Bearer token');
+            }
+          })
+          .catch(error => {
+            console.error('[FlexAuth] Erro ao buscar usuário via Bearer token:', error);
+            // Continue tentando outros métodos de autenticação em vez de falhar imediatamente
+          });
+      }
+    } catch (error) {
+      console.error('[FlexAuth] Erro ao processar Bearer token:', error);
+      // Continue tentando outros métodos de autenticação
+    }
+  }
+  
+  // 3. Verificar se o ID do usuário foi fornecido no corpo da requisição
   if (req.body && req.body.userId) {
     console.log('[FlexAuth] Tentando autenticar via userId no corpo:', req.body.userId);
     
@@ -43,7 +86,7 @@ export const flexibleAuth = (req: Request, res: Response, next: NextFunction) =>
     return;
   }
   
-  // 3. Verificar se o ID do usuário foi fornecido como parâmetro de rota
+  // 4. Verificar se o ID do usuário foi fornecido como parâmetro de rota
   if (req.params && req.params.id) {
     console.log('[FlexAuth] Tentando autenticar via id na rota:', req.params.id);
     
@@ -72,7 +115,7 @@ export const flexibleAuth = (req: Request, res: Response, next: NextFunction) =>
     return;
   }
   
-  // 4. Se chegou aqui, nenhuma estratégia de autenticação funcionou
+  // 5. Se chegou aqui, nenhuma estratégia de autenticação funcionou
   console.log('[FlexAuth] Autenticação falhou - nenhuma estratégia funcionou');
   res.status(401).json({ message: 'Não autenticado' });
 };
