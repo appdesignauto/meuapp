@@ -43,7 +43,7 @@ export const CommentItem = ({
   comment,
   user,
   likesCount,
-  repliesCount,
+  repliesCount: initialRepliesCount,
   userHasLiked,
   onRefresh,
   isReply = false
@@ -58,7 +58,8 @@ export const CommentItem = ({
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [replyContent, setReplyContent] = useState('');
   const [submittingReply, setSubmittingReply] = useState(false);
-  const [repliesCountState, setRepliesCount] = useState(repliesCount);
+  // Estado local para controlar contagem de respostas
+  const [repliesCountState, setRepliesCount] = useState(initialRepliesCount);
 
   const handleLikeComment = async () => {
     if (!currentUser) {
@@ -93,7 +94,7 @@ export const CommentItem = ({
   };
 
   const loadReplies = async () => {
-    if (repliesCount === 0) return;
+    if (repliesCountState === 0) return;
     
     setLoadingReplies(true);
     try {
@@ -160,7 +161,7 @@ export const CommentItem = ({
       ]);
       setReplyContent('');
       setShowReplyForm(false);
-      setRepliesCount(prev => prev + 1);
+      setRepliesCount((prev: number) => prev + 1);
       
       toast({
         title: "Resposta enviada",
@@ -182,8 +183,6 @@ export const CommentItem = ({
       setSubmittingReply(false);
     }
   };
-
-  const [repliesCount, setRepliesCount] = useState(repliesCount);
 
   const formatTimeAgo = (date: string) => {
     try {
@@ -207,7 +206,7 @@ export const CommentItem = ({
         <div className="bg-slate-100 dark:bg-slate-800 rounded-lg p-3">
           <div className="flex justify-between">
             <div>
-              <VerifiedUsername username={user.username} nivelAcesso={user.nivelacesso} />
+              <VerifiedUsername user={user} />
             </div>
             <Button variant="ghost" size="icon" className="h-6 w-6">
               <MoreHorizontal className="h-4 w-4" />
@@ -240,7 +239,7 @@ export const CommentItem = ({
           <span>{formatTimeAgo(comment.createdAt)}</span>
         </div>
         
-        {repliesCount > 0 && !isReply && (
+        {repliesCountState > 0 && !isReply && (
           <button 
             onClick={handleToggleReplies}
             className="text-xs text-primary font-medium ml-2 mt-2 flex items-center"
@@ -252,7 +251,7 @@ export const CommentItem = ({
               </span>
             ) : (
               <>
-                {showReplies ? 'Ocultar respostas' : `Ver ${repliesCount} ${repliesCount === 1 ? 'resposta' : 'respostas'}`}
+                {showReplies ? 'Ocultar respostas' : `Ver ${repliesCountState} ${repliesCountState === 1 ? 'resposta' : 'respostas'}`}
               </>
             )}
           </button>
