@@ -1,180 +1,283 @@
-import React, { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { MoreHorizontal, Trash2, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
-
-import UserAvatar from '@/components/users/UserAvatar';
+import { useState } from 'react';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { ThumbsUp, MessageCircle, MoreHorizontal, Trash2 } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import VerifiedUsername from '@/components/users/VerifiedUsername';
+import { getInitials } from '@/lib/utils';
+import { apiRequest, queryClient } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 import { Textarea } from '@/components/ui/textarea';
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { formatDate } from '@/lib/utils';
-import { useAuth } from '@/hooks/use-auth';
-import { useToast } from '@/hooks/use-toast';
-import { apiRequest, queryClient } from '@/lib/queryClient';
 
-interface CommentUser {
+interface User {
   id: number;
   username: string;
-  name: string | null;
+  name: string;
   profileimageurl: string | null;
   nivelacesso: string;
 }
 
-export interface Comment {
+interface Comment {
   id: number;
-  content: string;
-  createdAt: string;
-  userId: number;
   postId: number;
-  likesCount: number;
-  repliesCount?: number;
-  parentId?: number | null;
-  user: CommentUser;
-  isLikedByUser?: boolean;
+  userId: number;
+  content: string;
+  parentId: number | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface CommentItemProps {
   comment: Comment;
-  postId: number;
-  onDelete: (commentId: number) => void;
+  user: User;
+  likesCount: number;
+  repliesCount: number;
+  userHasLiked: boolean;
+  onRefresh?: () => void;
+  isReply?: boolean;
 }
 
-const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, onDelete }) => {
-  const { user } = useAuth();
+export const CommentItem = ({
+  comment,
+  user,
+  likesCount,
+  repliesCount: initialRepliesCount,
+  userHasLiked,
+  onRefresh,
+  isReply = false
+}: CommentItemProps) => {
   const { toast } = useToast();
-  const [showReplyInput, setShowReplyInput] = useState(false);
-  const [replyText, setReplyText] = useState('');
+  const { user: currentUser } = useAuth();
+  const [isLiked, setIsLiked] = useState(userHasLiked);
+  const [likes, setLikes] = useState(likesCount);
   const [showReplies, setShowReplies] = useState(false);
-  const [replies, setReplies] = useState<Comment[]>([]);
+  const [replies, setReplies] = useState<any[]>([]);
   const [loadingReplies, setLoadingReplies] = useState(false);
-  
-  const canDelete = user && (user.id === comment.userId || user.nivelacesso === 'administrador');
-  
-  // Mutação para curtir um comentário
-  const likeMutation = useMutation({
-    mutationFn: async () => {
-      if (comment.isLikedByUser) {
-        // Se já curtiu, usa método DELETE para remover a curtida
-        await apiRequest('DELETE', `/api/community/comments/${comment.id}/like`);
-      } else {
-        // Se não curtiu, usa método POST para adicionar curtida
-        await apiRequest('POST', `/api/community/comments/${comment.id}/like`);
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/community/posts/${postId}`] });
+  const [showReplyForm, setShowReplyForm] = useState(false);
+  const [replyContent, setReplyContent] = useState('');
+  const [submittingReply, setSubmittingReply] = useState(false);
+  // Estado local para controlar contagem de respostas
+  const [repliesCountState, setRepliesCount] = useState(initialRepliesCount);
+
+  const handleLikeComment = async () => {
+    console.log("Função handleLikeComment chamada para o comentário:", comment.id);
+    if (!currentUser) {
       toast({
-        description: comment.isLikedByUser 
-          ? "Curtida removida com sucesso" 
-          : "Comentário curtido com sucesso",
+        title: "Ação não permitida",
+        description: "Você precisa estar logado para curtir comentários.",
+        variant: "destructive"
       });
-    },
-    onError: (error: Error) => {
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: `Não foi possível processar sua ação: ${error.message}`,
-      });
-    }
-  });
-  
-  // Mutação para responder a um comentário
-  const replyMutation = useMutation({
-    mutationFn: async () => {
-      await apiRequest('POST', `/api/community/comments/${comment.id}/replies`, {
-        content: replyText.trim()
-      });
-    },
-    onSuccess: () => {
-      setReplyText('');
-      setShowReplyInput(false);
-      // Força a busca das respostas após adicionar uma nova
-      fetchReplies();
-      // Força a atualização da contagem no post
-      queryClient.invalidateQueries({ queryKey: [`/api/community/posts/${postId}`] });
-      toast({
-        description: "Resposta adicionada com sucesso",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: `Não foi possível adicionar sua resposta: ${error.message}`,
-      });
-    }
-  });
-  
-  // Função para buscar respostas (replies) de um comentário
-  const fetchReplies = async () => {
-    if (!comment.repliesCount || comment.repliesCount === 0) {
       return;
     }
-    
-    setLoadingReplies(true);
+
     try {
-      const response = await fetch(`/api/community/comments/${comment.id}/replies`);
+      console.log("Enviando requisição para curtir comentário:", comment.id);
+      const response = await apiRequest('POST', `/api/community/comments/${comment.id}/like`);
+      const data = await response.json();
+      console.log("Resposta recebida:", data);
       
-      if (response.ok) {
-        const data = await response.json();
-        setReplies(data);
-        setShowReplies(true);
+      setIsLiked(data.liked);
+      setLikes(data.likesCount);
+      
+      if (data.liked) {
+        toast({
+          title: "Comentário curtido",
+          description: "Você curtiu este comentário."
+        });
       } else {
         toast({
-          variant: "destructive",
-          title: "Erro",
-          description: "Não foi possível carregar as respostas",
+          title: "Curtida removida",
+          description: "Você removeu sua curtida deste comentário."
         });
       }
     } catch (error) {
+      console.error("Erro ao curtir comentário:", error);
       toast({
-        variant: "destructive",
-        title: "Erro",
-        description: "Erro ao carregar as respostas",
+        title: "Erro ao curtir comentário",
+        description: "Ocorreu um erro ao curtir este comentário.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const loadReplies = async () => {
+    if (repliesCountState === 0) return;
+    
+    setLoadingReplies(true);
+    try {
+      const response = await apiRequest('GET', `/api/community/comments/${comment.id}/replies`);
+      const data = await response.json();
+      setReplies(data);
+      setShowReplies(true);
+    } catch (error) {
+      toast({
+        title: "Erro ao carregar respostas",
+        description: "Ocorreu um erro ao carregar as respostas deste comentário.",
+        variant: "destructive"
       });
     } finally {
       setLoadingReplies(false);
     }
   };
-  
-  // Manipulador para o botão "Ver respostas"
-  const handleViewReplies = () => {
+
+  const handleToggleReplies = () => {
     if (showReplies) {
       setShowReplies(false);
     } else {
-      fetchReplies();
+      loadReplies();
     }
   };
-  
+
+  const handleSubmitReply = async () => {
+    if (!currentUser) {
+      toast({
+        title: "Ação não permitida",
+        description: "Você precisa estar logado para responder comentários.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!replyContent.trim()) {
+      toast({
+        title: "Comentário vazio",
+        description: "Digite um comentário antes de enviar.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setSubmittingReply(true);
+    try {
+      const response = await apiRequest('POST', `/api/community/posts/${comment.postId}/comments`, {
+        content: replyContent,
+        parentId: comment.id
+      });
+      
+      const data = await response.json();
+      
+      // Adicionar resposta à lista e limpar formulário
+      setReplies([
+        {
+          comment: data.comment,
+          user: data.user,
+          likesCount: 0,
+          userHasLiked: false
+        },
+        ...replies
+      ]);
+      setReplyContent('');
+      setShowReplyForm(false);
+      setRepliesCount((prev: number) => prev + 1);
+      
+      toast({
+        title: "Resposta enviada",
+        description: "Sua resposta foi adicionada com sucesso."
+      });
+      
+      // Garantir que as respostas estejam visíveis
+      setShowReplies(true);
+      
+      // Atualizar dados caso necessário
+      if (onRefresh) onRefresh();
+    } catch (error) {
+      toast({
+        title: "Erro ao enviar resposta",
+        description: "Ocorreu um erro ao responder este comentário.",
+        variant: "destructive"
+      });
+    } finally {
+      setSubmittingReply(false);
+    }
+  };
+
+  // Nova função para excluir um comentário
+  const handleDeleteComment = async () => {
+    if (!currentUser) {
+      toast({
+        title: "Ação não permitida",
+        description: "Você precisa estar logado para excluir comentários.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Verificar se o usuário pode excluir este comentário
+    if (currentUser.id !== comment.userId && currentUser.nivelacesso !== 'administrador') {
+      toast({
+        title: "Ação não permitida",
+        description: "Você só pode excluir seus próprios comentários.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      await apiRequest('DELETE', `/api/community/comments/${comment.id}`);
+      
+      toast({
+        title: "Comentário excluído",
+        description: "Seu comentário foi excluído com sucesso."
+      });
+      
+      // Atualizar dados caso necessário
+      if (onRefresh) onRefresh();
+      
+      // Se for uma resposta, atualizar a lista de respostas do comentário pai
+      if (isReply && comment.parentId) {
+        // Isso irá atualizar o post inteiro, incluindo todos os comentários
+        queryClient.invalidateQueries({ queryKey: [`/api/community/posts/${comment.postId}`] });
+      }
+    } catch (error) {
+      toast({
+        title: "Erro ao excluir comentário",
+        description: "Ocorreu um erro ao excluir este comentário.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const formatTimeAgo = (date: string) => {
+    try {
+      return formatDistanceToNow(new Date(date), {
+        addSuffix: true,
+        locale: ptBR
+      });
+    } catch (error) {
+      return 'há algum tempo';
+    }
+  };
+
   return (
-    <div className="py-4 border-b border-zinc-100 dark:border-zinc-800 last:border-0">
-      <div className="flex gap-3">
-        <UserAvatar user={comment.user} size="sm" linkToProfile={true} />
-        
-        <div className="flex-1">
-          <div className="flex items-center justify-between">
+    <div className={`flex gap-2 ${isReply ? 'ml-8 mt-2' : 'mb-4'}`}>
+      <Avatar className="h-8 w-8">
+        <AvatarImage src={user.profileimageurl || undefined} alt={user.name} />
+        <AvatarFallback>{getInitials(user.name || user.username)}</AvatarFallback>
+      </Avatar>
+      
+      <div className="flex-1">
+        <div className="bg-slate-100 dark:bg-slate-800 rounded-lg p-3">
+          <div className="flex justify-between">
             <div>
-              <p className="font-medium text-sm">
-                {comment.user.name || comment.user.username}
-              </p>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                {formatDate(comment.createdAt)}
-              </p>
+              <VerifiedUsername user={user} />
             </div>
-            
-            {canDelete && (
+            {currentUser && (currentUser.id === comment.userId || currentUser.nivelacesso === 'administrador') && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Button variant="ghost" size="icon" className="h-6 w-6">
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => onDelete(comment.id)} className="text-red-500 dark:text-red-400">
+                  <DropdownMenuItem onClick={handleDeleteComment} className="text-red-500 dark:text-red-400">
                     <Trash2 className="h-4 w-4 mr-2" />
                     Excluir
                   </DropdownMenuItem>
@@ -183,150 +286,112 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, onDelete }) 
             )}
           </div>
           
-          <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-300">
-            {comment.content}
-          </p>
-          
-          {/* Botões de interação estilo Facebook */}
-          <div className="mt-2 flex items-center gap-4 text-xs text-zinc-500 dark:text-zinc-400">
-            <button 
-              className={`font-medium hover:underline ${comment.isLikedByUser ? 'text-blue-600 dark:text-blue-400' : ''}`}
-              onClick={() => likeMutation.mutate()}
-              disabled={likeMutation.isPending}
-            >
-              {comment.isLikedByUser ? 'Curtiu' : 'Curtir'}
-              {comment.likesCount > 0 && ` · ${comment.likesCount}`}
-            </button>
-            
-            {user && (
-              <button 
-                className="font-medium hover:underline"
-                onClick={() => setShowReplyInput(!showReplyInput)}
-              >
-                Responder
-              </button>
-            )}
-          </div>
-          
-          {/* Área de resposta */}
-          {showReplyInput && user && (
-            <div className="mt-3 flex gap-2">
-              <UserAvatar user={user} size="xs" />
-              <div className="flex-1">
-                <Textarea
-                  placeholder="Escreva uma resposta..."
-                  className="min-h-[60px] text-sm"
-                  value={replyText}
-                  onChange={(e) => setReplyText(e.target.value)}
-                />
-                <div className="flex justify-end gap-2 mt-2">
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => setShowReplyInput(false)}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button 
-                    size="sm"
-                    onClick={() => replyMutation.mutate()}
-                    disabled={replyMutation.isPending || !replyText.trim()}
-                  >
-                    {replyMutation.isPending ? "Enviando..." : "Responder"}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {/* Link para ver respostas */}
-          {!showReplies && comment.repliesCount && comment.repliesCount > 0 && (
-            <button 
-              className="mt-2 flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300"
-              onClick={handleViewReplies}
-            >
-              <ChevronDown className="h-4 w-4" />
-              Ver {comment.repliesCount} {comment.repliesCount === 1 ? 'resposta' : 'respostas'}
-            </button>
-          )}
-          
-          {/* Exibição de respostas */}
-          {showReplies && (
-            <div className="mt-3 pl-4 border-l border-zinc-100 dark:border-zinc-800">
-              {loadingReplies ? (
-                <div className="py-2 flex justify-center">
-                  <Loader2 className="h-4 w-4 animate-spin text-zinc-400" />
-                </div>
-              ) : (
-                <>
-                  {replies.map((reply) => (
-                    <div key={reply.id} className="py-3 border-b border-zinc-50 dark:border-zinc-800 last:border-0">
-                      <div className="flex gap-2">
-                        <UserAvatar user={reply.user} size="xs" linkToProfile />
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <p className="font-medium text-xs">
-                              {reply.user.name || reply.user.username}
-                            </p>
-                          </div>
-                          <p className="text-xs text-zinc-700 dark:text-zinc-300">
-                            {reply.content}
-                          </p>
-                          <div className="mt-1 flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
-                            <button 
-                              className={`hover:underline ${reply.isLikedByUser ? 'text-blue-600 dark:text-blue-400' : ''}`}
-                              onClick={() => {
-                                const endpoint = reply.isLikedByUser 
-                                  ? `DELETE` 
-                                  : `POST`;
-                                
-                                apiRequest(endpoint, `/api/community/comments/${reply.id}/like`)
-                                  .then(() => {
-                                    // Recarregar as respostas
-                                    fetchReplies();
-                                    // Atualizar também o post principal para manter contagens atualizadas
-                                    queryClient.invalidateQueries({ queryKey: [`/api/community/posts/${postId}`] });
-                                    toast({
-                                      description: reply.isLikedByUser 
-                                        ? "Curtida removida com sucesso" 
-                                        : "Resposta curtida com sucesso",
-                                    });
-                                  })
-                                  .catch(error => {
-                                    toast({
-                                      variant: "destructive",
-                                      title: "Erro",
-                                      description: `Não foi possível processar sua ação: ${error.message}`,
-                                    });
-                                  });
-                              }}
-                            >
-                              {reply.isLikedByUser ? 'Curtiu' : 'Curtir'}
-                              {reply.likesCount > 0 && ` · ${reply.likesCount}`}
-                            </button>
-                            <span className="text-zinc-400 dark:text-zinc-500">{formatDate(reply.createdAt)}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </>
-              )}
-              
-              {/* Botão para ocultar respostas */}
-              <button 
-                className="mt-2 flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300"
-                onClick={() => setShowReplies(false)}
-              >
-                <ChevronUp className="h-4 w-4" />
-                Ocultar respostas
-              </button>
-            </div>
-          )}
+          <p className="text-sm mt-1 whitespace-pre-wrap">{comment.content}</p>
         </div>
+        
+        <div className="flex items-center gap-4 text-xs text-gray-500 mt-1 ml-2">
+          <Button 
+            type="button"
+            variant="ghost" 
+            size="sm"
+            onClick={handleLikeComment}
+            className={`flex items-center gap-1 p-0 h-auto hover:text-primary transition-colors ${isLiked ? 'text-primary font-medium' : ''}`}
+          >
+            <ThumbsUp className="h-3.5 w-3.5" />
+            {likes > 0 && <span>{likes === 1 ? '1 curtida' : `${likes} curtidas`}</span>}
+            {likes === 0 && <span>{isLiked ? 'Curtido' : 'Curtir'}</span>}
+          </Button>
+          
+          {!isReply && (
+            <Button 
+              type="button"
+              variant="ghost" 
+              size="sm"
+              onClick={() => setShowReplyForm(!showReplyForm)}
+              className="flex items-center gap-1 p-0 h-auto hover:text-primary transition-colors"
+            >
+              <MessageCircle className="h-3.5 w-3.5" />
+              <span>Responder</span>
+            </Button>
+          )}
+          
+          <span>{formatTimeAgo(comment.createdAt)}</span>
+        </div>
+        
+        {repliesCountState > 0 && !isReply && (
+          <Button 
+            type="button"
+            variant="link" 
+            size="sm"
+            onClick={handleToggleReplies}
+            className="text-xs text-primary font-medium ml-2 h-auto p-0"
+            disabled={loadingReplies}
+          >
+            {loadingReplies ? (
+              <span className="flex items-center">
+                <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin mr-2"></div>
+                Carregando...
+              </span>
+            ) : (
+              <>
+                {showReplies ? 'Ocultar respostas' : `Ver ${repliesCountState} ${repliesCountState === 1 ? 'resposta' : 'respostas'}`}
+              </>
+            )}
+          </Button>
+        )}
+        
+        {showReplyForm && !isReply && (
+          <div className="mt-2 ml-2">
+            <Textarea
+              placeholder="Escreva uma resposta..."
+              value={replyContent}
+              onChange={(e) => setReplyContent(e.target.value)}
+              className="min-h-[80px] text-sm"
+            />
+            <div className="flex justify-end gap-2 mt-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowReplyForm(false)}
+                disabled={submittingReply}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                size="sm"
+                onClick={handleSubmitReply}
+                disabled={submittingReply || !replyContent.trim()}
+              >
+                {submittingReply ? (
+                  <span className="flex items-center">
+                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Enviando...
+                  </span>
+                ) : (
+                  'Responder'
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
+        
+        {showReplies && replies.length > 0 && (
+          <div className="mt-2">
+            {replies.map((reply) => (
+              <CommentItem
+                key={reply.comment.id}
+                comment={reply.comment}
+                user={reply.user}
+                likesCount={reply.likesCount}
+                repliesCount={0} // Não permitimos respostas aninhadas além do segundo nível
+                userHasLiked={reply.userHasLiked}
+                isReply={true}
+                onRefresh={onRefresh}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 };
-
-export default CommentItem;

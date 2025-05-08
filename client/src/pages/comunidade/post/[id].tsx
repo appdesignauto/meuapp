@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'wouter';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Heart, MessageSquare, Share2, Flag, MoreHorizontal, Send, ExternalLink } from 'lucide-react';
+import { Heart, MessageSquare, Share2, ArrowLeft, Flag, MoreHorizontal, Send, Trash2, ExternalLink } from 'lucide-react';
 
 import TopBar from '@/components/TopBar';
 import LoadingScreen from '@/components/LoadingScreen';
 import ErrorContainer from '@/components/ErrorContainer';
 import UserAvatar from '@/components/users/UserAvatar';
 import FooterMenu from '@/components/FooterMenu';
-import CommentItem, { Comment } from '@/components/community/CommentItem';
+import { CommentItem } from '@/components/community/CommentItem';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -24,6 +24,25 @@ import { formatDate } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
+
+interface Comment {
+  id: number;
+  content: string;
+  createdAt: string;
+  userId: number;
+  postId: number;
+  likesCount: number;
+  repliesCount?: number;
+  parentId?: number | null;
+  user: {
+    id: number;
+    username: string;
+    name: string | null;
+    profileimageurl: string | null;
+    nivelacesso: string;
+  };
+  isLikedByUser?: boolean;
+}
 
 interface CommunityPost {
   id: number;
@@ -47,6 +66,28 @@ interface CommunityPost {
   };
   comments?: Comment[];
 }
+
+// Componente de gerenciamento de exclusão de comentário
+const DeleteCommentButton: React.FC<{ 
+  commentId: number,
+  onDelete: (commentId: number) => void
+}> = ({ commentId, onDelete }) => {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-8 w-8">
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => onDelete(commentId)} className="text-red-500 dark:text-red-400">
+          <Trash2 className="h-4 w-4 mr-2" />
+          Excluir
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
 
 // Página de detalhe do post
 const PostDetailPage: React.FC = () => {
@@ -88,13 +129,11 @@ const PostDetailPage: React.FC = () => {
   // Mutação para curtir um post
   const likeMutation = useMutation({
     mutationFn: async () => {
-      if (post?.isLikedByUser) {
-        // Se já curtiu, usa método DELETE para remover a curtida
-        await apiRequest('DELETE', `/api/community/posts/${postId}/like`);
-      } else {
-        // Se não curtiu, usa método POST para adicionar curtida
-        await apiRequest('POST', `/api/community/posts/${postId}/like`);
-      }
+      const endpoint = post?.isLikedByUser 
+        ? `/api/community/posts/${postId}/unlike` 
+        : `/api/community/posts/${postId}/like`;
+      
+      await apiRequest('POST', endpoint);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/community/posts/${postId}`] });
@@ -270,16 +309,45 @@ const PostDetailPage: React.FC = () => {
               </div>
             )}
             
+            {/* Estatísticas de interação - estilo exato do Facebook */}
+            <div className="py-2 flex items-center text-sm text-zinc-500 dark:text-zinc-400 border-t border-zinc-100 dark:border-zinc-800">
+              <div className="flex items-center gap-1 mr-4">
+                <div className="flex -space-x-1">
+                  <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white">
+                    <Heart className="h-3 w-3" />
+                  </div>
+                </div>
+                <span>
+                  {post.likesCount === 1 ? '1 pessoa curtiu isso' : `${post.likesCount} pessoas curtiram isso`}
+                </span>
+              </div>
+              
+              <div className="flex">
+                {post.commentsCount > 0 && (
+                  <span className="mr-3">
+                    {post.commentsCount === 1 ? '1 comentário' : `${post.commentsCount} comentários`}
+                  </span>
+                )}
+                {post.sharesCount > 0 && (
+                  <span>
+                    {post.sharesCount === 1 ? '1 compartilhamento' : `${post.sharesCount} compartilhamentos`}
+                  </span>
+                )}
+              </div>
+            </div>
+            
             <div className="flex items-center gap-4 border-t border-zinc-100 dark:border-zinc-800 pt-3">
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className={`gap-2 ${post.isLikedByUser ? 'text-red-500 dark:text-red-400' : ''}`}
+                className={`gap-2 ${post.isLikedByUser ? 'text-blue-600 dark:text-blue-400' : ''}`}
                 onClick={() => likeMutation.mutate()}
                 disabled={likeMutation.isPending || !user}
               >
                 <Heart className="h-4 w-4" />
-                <span>{post.likesCount}</span>
+                <span>
+                  {post.isLikedByUser ? "Curtido" : "Curtir"}
+                </span>
               </Button>
               
               <Button 
@@ -289,7 +357,9 @@ const PostDetailPage: React.FC = () => {
                 onClick={() => document.getElementById('comment-input')?.focus()}
               >
                 <MessageSquare className="h-4 w-4" />
-                <span>{post.commentsCount}</span>
+                <span>
+                  Comentar
+                </span>
               </Button>
               
               <Button 
@@ -299,7 +369,7 @@ const PostDetailPage: React.FC = () => {
                 onClick={handleShare}
               >
                 <Share2 className="h-4 w-4" />
-                <span>{post.sharesCount}</span>
+                <span>Compartilhar</span>
               </Button>
             </div>
           </CardContent>
@@ -348,14 +418,25 @@ const PostDetailPage: React.FC = () => {
           
           {post.comments && post.comments.length > 0 ? (
             <div>
-              {post.comments.map((comment) => (
-                <CommentItem 
-                  key={comment.id} 
-                  comment={comment} 
-                  postId={post.id} 
-                  onDelete={(commentId) => deleteCommentMutation.mutate(commentId)}
-                />
-              ))}
+              {post.comments.map((comment) => {
+                // Verificar se o usuário atual pode excluir o comentário
+                const canDelete = user && (user.id === comment.userId || user.nivelacesso === 'admin');
+                
+                return (
+                  <CommentItem 
+                    key={comment.id} 
+                    comment={comment} 
+                    user={comment.user}
+                    likesCount={comment.likesCount}
+                    repliesCount={comment.repliesCount || 0}
+                    userHasLiked={comment.isLikedByUser || false}
+                    isReply={false}
+                    onRefresh={() => {
+                      queryClient.invalidateQueries({ queryKey: [`/api/community/posts/${postId}`] });
+                    }}
+                  />
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-8">
