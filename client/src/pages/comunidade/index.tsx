@@ -74,6 +74,9 @@ const PostCard: React.FC<{ post: CommunityPost; refetch?: () => void }> = ({ pos
   const [isLiked, setIsLiked] = useState(post.isLikedByUser || false);
   const [likesCount, setLikesCount] = useState(post.likesCount);
   const [isLoading, setIsLoading] = useState(false);
+  const [showCommentInput, setShowCommentInput] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
 
   // Função para curtir ou descurtir um post
   const handleLike = async () => {
@@ -133,6 +136,59 @@ const PostCard: React.FC<{ post: CommunityPost; refetch?: () => void }> = ({ pos
     }
   };
 
+  // Função para adicionar um comentário
+  const handleAddComment = async () => {
+    if (!user) {
+      toast({
+        title: "Faça login",
+        description: "Você precisa estar logado para comentar",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!commentText.trim()) {
+      toast({
+        title: "Comentário vazio",
+        description: "Por favor, digite um comentário",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmittingComment(true);
+    try {
+      const response = await apiRequest("POST", `/api/community/posts/${post.id}/comments`, {
+        content: commentText.trim()
+      });
+      
+      if (response.ok) {
+        toast({
+          title: "Comentário adicionado",
+          description: "Seu comentário foi publicado com sucesso",
+        });
+        
+        setCommentText('');
+        setShowCommentInput(false);
+        
+        // Atualizar a lista de posts se necessário
+        if (refetch) {
+          refetch();
+        }
+      } else {
+        throw new Error("Erro ao adicionar comentário");
+      }
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao adicionar seu comentário",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmittingComment(false);
+    }
+  };
+  
   // Função para compartilhar um post
   const handleShare = () => {
     if (!navigator.share) {
@@ -262,14 +318,15 @@ const PostCard: React.FC<{ post: CommunityPost; refetch?: () => void }> = ({ pos
           </span>
         </button>
         
-        <Link href={`/comunidade/post/${post.id}`} className="flex-1">
-          <button className="w-full flex items-center justify-center gap-2 p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clipRule="evenodd" />
-            </svg>
-            <span className="text-sm font-medium">Comentar</span>
-          </button>
-        </Link>
+        <button 
+          className="flex-1 flex items-center justify-center gap-2 p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors"
+          onClick={() => setShowCommentInput(!showCommentInput)}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clipRule="evenodd" />
+          </svg>
+          <span className="text-sm font-medium">Comentar</span>
+        </button>
         
         <button 
           className="flex-1 flex items-center justify-center gap-2 p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors"
@@ -281,6 +338,49 @@ const PostCard: React.FC<{ post: CommunityPost; refetch?: () => void }> = ({ pos
           <span className="text-sm font-medium">Compartilhar</span>
         </button>
       </div>
+      
+      {/* Seção de comentários abaixo dos botões (estilo Instagram) */}
+      {showCommentInput && (
+        <div className="px-4 py-3 border-t border-zinc-100 dark:border-zinc-800">
+          {user ? (
+            <div className="flex gap-2 items-start">
+              <UserAvatar user={user} size="sm" />
+              <div className="flex-1 space-y-2">
+                <Textarea
+                  placeholder="Adicione um comentário..."
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  className="min-h-[60px] text-sm resize-none"
+                />
+                <div className="flex justify-between items-center">
+                  <p className="text-xs text-zinc-500">Mantenha o respeito na comunidade.</p>
+                  <Button 
+                    size="sm" 
+                    onClick={handleAddComment}
+                    disabled={isSubmittingComment || !commentText.trim()}
+                  >
+                    {isSubmittingComment ? (
+                      <span className="flex items-center gap-1">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Enviando...
+                      </span>
+                    ) : (
+                      <span>Comentar</span>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center p-4 space-y-2">
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">Faça login para comentar.</p>
+              <Link href="/login">
+                <Button size="sm" variant="outline">Fazer Login</Button>
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
     </Card>
   );
 };
