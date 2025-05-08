@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
-import { Settings, Plus, Filter, User, Trophy, Clock, Info, Award, Medal, Sparkles, Users, ImageIcon, ExternalLink, FileEdit, RefreshCw, Loader2, ZoomIn, X } from 'lucide-react';
+import { Settings, Plus, Filter, User, Trophy, Clock, Info, Award, Medal, Sparkles, Users, ImageIcon, ExternalLink, FileEdit, RefreshCw, Loader2, ZoomIn, X, MessageSquare } from 'lucide-react';
+import { differenceInMinutes, differenceInHours, differenceInDays, differenceInMonths } from 'date-fns';
 
 import TopBar from '@/components/TopBar';
 import FooterMenu from '@/components/FooterMenu';
@@ -14,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Card,
@@ -68,6 +70,66 @@ interface RankingUser {
 }
 
 // Componente de Card do Post
+interface Comment {
+  id: number;
+  content: string;
+  createdAt: string;
+  userId: number;
+  postId: number;
+  isHidden: boolean;
+  user: {
+    id: number;
+    username: string;
+    name: string | null;
+    profileimageurl: string | null;
+    nivelacesso: string;
+  };
+}
+
+// Função para formatar tempo relativo de comentários
+const formatRelativeTime = (dateString: string) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  
+  const minutesDiff = differenceInMinutes(now, date);
+  if (minutesDiff < 60) {
+    return minutesDiff <= 1 ? 'agora mesmo' : `${minutesDiff} min`;
+  }
+  
+  const hoursDiff = differenceInHours(now, date);
+  if (hoursDiff < 24) {
+    return `${hoursDiff}h`;
+  }
+  
+  const daysDiff = differenceInDays(now, date);
+  if (daysDiff < 30) {
+    return `${daysDiff}d`;
+  }
+  
+  const monthsDiff = differenceInMonths(now, date);
+  return `${monthsDiff}m`;
+};
+
+// Componente para exibir comentário individual
+const CommentItem: React.FC<{ comment: any }> = ({ comment }) => {
+  return (
+    <div className="flex gap-2 mb-2">
+      <UserAvatar user={comment.user} size="xs" linkToProfile={true} />
+      <div className="flex-1">
+        <div className="bg-zinc-50 dark:bg-zinc-800 rounded-lg px-3 py-2">
+          <span className="font-medium text-xs">
+            {comment.user.name || comment.user.username}
+          </span>
+          <p className="text-xs mt-0.5">{comment.comment.content}</p>
+        </div>
+        <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5">
+          {formatRelativeTime(comment.comment.createdAt)}
+        </p>
+      </div>
+    </div>
+  );
+};
+
 const PostCard: React.FC<{ post: CommunityPost; refetch?: () => void }> = ({ post, refetch }) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -77,6 +139,31 @@ const PostCard: React.FC<{ post: CommunityPost; refetch?: () => void }> = ({ pos
   const [showCommentInput, setShowCommentInput] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [comments, setComments] = useState<any[]>([]);
+  const [isLoadingComments, setIsLoadingComments] = useState(false);
+  
+  // Buscar comentários quando mostrar a área de comentários
+  useEffect(() => {
+    if (showCommentInput && comments.length === 0) {
+      fetchComments();
+    }
+  }, [showCommentInput]);
+  
+  // Função para buscar comentários do post
+  const fetchComments = async () => {
+    setIsLoadingComments(true);
+    try {
+      const response = await fetch(`/api/community/posts/${post.id}/comments`);
+      if (response.ok) {
+        const data = await response.json();
+        setComments(data.slice(0, 3)); // Mostrar apenas os 3 comentários mais recentes
+      }
+    } catch (error) {
+      console.error('Erro ao buscar comentários:', error);
+    } finally {
+      setIsLoadingComments(false);
+    }
+  };
 
   // Função para curtir ou descurtir um post
   const handleLike = async () => {
@@ -168,8 +255,14 @@ const PostCard: React.FC<{ post: CommunityPost; refetch?: () => void }> = ({ pos
           description: "Seu comentário foi publicado com sucesso",
         });
         
+        // Atualizar a lista de comentários localmente
+        const commentData = await response.json();
+        if (commentData) {
+          // Adicionar o novo comentário no topo da lista e manter apenas os 3 mais recentes
+          setComments(prev => [commentData, ...prev].slice(0, 3));
+        }
+        
         setCommentText('');
-        setShowCommentInput(false);
         
         // Atualizar a lista de posts se necessário
         if (refetch) {
@@ -342,6 +435,32 @@ const PostCard: React.FC<{ post: CommunityPost; refetch?: () => void }> = ({ pos
       {/* Seção de comentários abaixo dos botões (estilo Instagram) */}
       {showCommentInput && (
         <div className="px-4 py-3 border-t border-zinc-100 dark:border-zinc-800">
+          {/* Lista de comentários recentes */}
+          {comments.length > 0 && (
+            <div className="mb-4">
+              {isLoadingComments ? (
+                <div className="flex justify-center py-2">
+                  <Loader2 className="h-5 w-5 animate-spin text-zinc-400" />
+                </div>
+              ) : (
+                <>
+                  {comments.map((comment, index) => (
+                    <CommentItem key={comment.comment.id + "-" + index} comment={comment} />
+                  ))}
+                  
+                  {post.commentsCount > comments.length && (
+                    <Link href={`/comunidade/post/${post.id}`}>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2 hover:underline cursor-pointer">
+                        Ver todos os {post.commentsCount} comentários
+                      </p>
+                    </Link>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+          
+          {/* Formulário para adicionar comentário */}
           {user ? (
             <div className="flex gap-2 items-start">
               <UserAvatar user={user} size="sm" />
