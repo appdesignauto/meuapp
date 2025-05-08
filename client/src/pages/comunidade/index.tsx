@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
-import { Settings, Plus, Filter, User, Trophy, Clock, Info, Award, Medal, Sparkles, Users, ImageIcon, ExternalLink, FileEdit, RefreshCw, Loader2, ZoomIn, X, MessageSquare, XCircle, FileQuestion, Globe, Share } from 'lucide-react';
+import { 
+  Settings, Plus, Filter, User, Trophy, Clock, Info, Award, Medal, 
+  Sparkles, Users, ImageIcon, ExternalLink, FileEdit, RefreshCw, 
+  Loader2, ZoomIn, X, MessageSquare, XCircle, FileQuestion, Globe, 
+  Share, MoreHorizontal, Trash2, MessageCircle
+} from 'lucide-react';
 import { differenceInMinutes, differenceInHours, differenceInDays, differenceInMonths } from 'date-fns';
 
 import TopBar from '@/components/TopBar';
@@ -13,7 +18,7 @@ import VerifiedUsername from '@/components/users/VerifiedUsername';
 import RankingList from '@/components/community/RankingList';
 import { CreatePostDialog } from '@/components/community/CreatePostDialog';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -36,6 +41,12 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 
 // Interface para post na comunidade
 interface CommunityPost {
@@ -112,15 +123,89 @@ const formatRelativeTime = (dateString: string) => {
 };
 
 // Componente para exibir comentário individual
-const CommentItem: React.FC<{ comment: any }> = ({ comment }) => {
+const CommentItem: React.FC<{ 
+  comment: any;
+  refetchComments?: () => void;
+}> = ({ comment, refetchComments }) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Verificar se o usuário atual pode excluir o comentário
+  const canDelete = user && (
+    user.id === comment.comment.userId || 
+    user.nivelacesso === 'admin' || 
+    user.nivelacesso === 'administrador' || 
+    user.nivelacesso === 'designer_adm'
+  );
+  
+  const handleDeleteComment = async () => {
+    if (!canDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      const response = await apiRequest('DELETE', `/api/community/comments/${comment.comment.id}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Erro ${response.status} ao excluir comentário`);
+      }
+      
+      toast({
+        title: "Comentário excluído",
+        description: "Seu comentário foi excluído com sucesso."
+      });
+      
+      // Atualizar a lista de comentários
+      if (refetchComments) {
+        refetchComments();
+      }
+    } catch (error) {
+      console.error("Erro ao excluir comentário:", error);
+      toast({
+        title: "Erro ao excluir comentário",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao excluir este comentário.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+  
   return (
     <div className="flex gap-2 mb-2">
       <UserAvatar user={comment.user} size="xs" linkToProfile={true} />
       <div className="flex-1">
-        <div className="bg-zinc-50 dark:bg-zinc-800 rounded-lg px-3 py-2">
-          <span className="font-medium text-xs">
-            {comment.user.name || comment.user.username}
-          </span>
+        <div className="bg-zinc-50 dark:bg-zinc-800 rounded-lg px-3 py-2 relative group">
+          <div className="flex justify-between items-start">
+            <span className="font-medium text-xs">
+              {comment.user.name || comment.user.username}
+            </span>
+            
+            {canDelete && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <MoreHorizontal className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem 
+                    onClick={handleDeleteComment}
+                    disabled={isDeleting}
+                    className="text-red-500 dark:text-red-400"
+                  >
+                    {isDeleting ? 
+                      <Loader2 className="h-3 w-3 mr-2 animate-spin" /> : 
+                      <Trash2 className="h-3 w-3 mr-2" />
+                    }
+                    {isDeleting ? "Excluindo..." : "Excluir"}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
+          
           <p className="text-xs mt-0.5">{comment.comment.content}</p>
         </div>
         <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5">
@@ -467,7 +552,11 @@ const PostCard: React.FC<{
               ) : (
                 <>
                   {comments.map((comment, index) => (
-                    <CommentItem key={comment.comment.id + "-" + index} comment={comment} />
+                    <CommentItem 
+                      key={comment.comment.id + "-" + index} 
+                      comment={comment} 
+                      refetchComments={fetchComments} 
+                    />
                   ))}
                   
                   {post.commentsCount > comments.length && (
