@@ -475,7 +475,7 @@ const CommunityPage: React.FC = () => {
           {/* Área principal de conteúdo - feed central (estilo Instagram) */}
           <div className="w-full md:w-[470px] flex-shrink-0">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid grid-cols-2 mb-6">
+              <TabsList className="grid grid-cols-2 mb-6 px-4 md:px-0">
                 <TabsTrigger value="posts">
                   <Filter className="h-4 w-4 mr-2" />
                   Posts
@@ -487,7 +487,7 @@ const CommunityPage: React.FC = () => {
               </TabsList>
               
               {/* Tab de Posts */}
-              <TabsContent value="posts" className="space-y-0">
+              <TabsContent value="posts" className="space-y-0 px-4 md:px-0">
                 {/* Botão de atualização para mostrar posts mais recentes */}
                 <div className="mb-3 flex justify-between items-center">
                   <h2 className="text-lg font-semibold">Posts Recentes</h2>
@@ -594,7 +594,7 @@ const CommunityPage: React.FC = () => {
               </TabsContent>
               
               {/* Tab de Ranking */}
-              <TabsContent value="ranking" className="space-y-4">
+              <TabsContent value="ranking" className="space-y-4 px-4 md:px-0">
                 <div className="flex justify-between items-center mb-2">
                   <div className="flex items-center gap-2">
                     <h3 className="text-base font-medium">Ranking KDGPRO</h3>
