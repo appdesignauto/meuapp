@@ -996,10 +996,23 @@ async function updateLeaderboard(userId: number) {
     const currentYear = now.getFullYear().toString();
     const currentMonth = now.toISOString().substring(0, 7); // YYYY-MM
     
-    // Calcular número da semana do ano
-    const startOfYear = new Date(now.getFullYear(), 0, 1);
-    const days = Math.floor((now.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
-    const weekNumber = Math.ceil((days + startOfYear.getDay() + 1) / 7);
+    // Método seguro para calcular número da semana do ano
+    let weekNumber;
+    try {
+      const startOfYear = new Date(now.getFullYear(), 0, 1);
+      const days = Math.floor((now.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
+      weekNumber = Math.ceil((days + startOfYear.getDay() + 1) / 7);
+      
+      // Garantir que o valor é um número válido
+      if (isNaN(weekNumber) || weekNumber < 1 || weekNumber > 53) {
+        console.warn('Cálculo da semana do ano resultou em valor inválido, usando valor padrão 1');
+        weekNumber = 1;
+      }
+    } catch (error) {
+      console.error('Erro ao calcular semana do ano:', error);
+      weekNumber = 1; // Valor padrão seguro
+    }
+    
     const currentWeek = `${currentYear}-W${weekNumber.toString().padStart(2, '0')}`;
     
     const periods = ['all_time', currentYear, currentMonth, currentWeek];
@@ -1628,10 +1641,17 @@ router.delete('/api/community/admin/comments/:id', async (req, res) => {
 // GET: Buscar posts populares
 router.get('/api/community/posts/popular', async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit as string) || 5;
+    // Validação robusta do parâmetro de limite
+    let limit = 5;
+    if (req.query.limit && typeof req.query.limit === 'string') {
+      const parsedLimit = parseInt(req.query.limit);
+      if (!isNaN(parsedLimit) && parsedLimit > 0) {
+        limit = parsedLimit;
+      }
+    }
     
     console.log('==== BUSCANDO POSTS POPULARES ====');
-    console.log('Limite:', limit);
+    console.log('Limite validado:', limit);
     
     let posts = [];
     
