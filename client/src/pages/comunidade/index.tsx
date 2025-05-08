@@ -380,9 +380,9 @@ const PostCard: React.FC<{
         </div>
       )}
       
-      {/* Estatísticas de interação - similar ao Facebook */}
-      <div className="px-4 py-2 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400 border-b border-zinc-100 dark:border-zinc-800">
-        <div className="flex items-center gap-1">
+      {/* Estatísticas de interação - estilo exato do Facebook */}
+      <div className="px-4 py-2 flex items-center text-sm text-zinc-500 dark:text-zinc-400 border-b border-zinc-100 dark:border-zinc-800">
+        <div className="flex items-center gap-1 mr-4">
           <div className="flex -space-x-1">
             <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
@@ -392,12 +392,18 @@ const PostCard: React.FC<{
           </div>
           <span>{likesCount === 1 ? '1 pessoa curtiu isso' : `${likesCount} pessoas curtiram isso`}</span>
         </div>
-        <div>
-          {post.commentsCount === 1 
-            ? '1 comentário' 
-            : post.commentsCount > 1 
-              ? `${post.commentsCount} comentários` 
-              : ''}
+        
+        <div className="flex">
+          {post.commentsCount > 0 && (
+            <span className="mr-3">
+              {post.commentsCount === 1 ? '1 comentário' : `${post.commentsCount} comentários`}
+            </span>
+          )}
+          {post.sharesCount > 0 && (
+            <span>
+              {post.sharesCount === 1 ? '1 compartilhamento' : `${post.sharesCount} compartilhamentos`}
+            </span>
+          )}
         </div>
       </div>
       

@@ -309,6 +309,33 @@ const PostDetailPage: React.FC = () => {
               </div>
             )}
             
+            {/* Estatísticas de interação - estilo exato do Facebook */}
+            <div className="py-2 flex items-center text-sm text-zinc-500 dark:text-zinc-400 border-t border-zinc-100 dark:border-zinc-800">
+              <div className="flex items-center gap-1 mr-4">
+                <div className="flex -space-x-1">
+                  <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white">
+                    <Heart className="h-3 w-3" />
+                  </div>
+                </div>
+                <span>
+                  {post.likesCount === 1 ? '1 pessoa curtiu isso' : `${post.likesCount} pessoas curtiram isso`}
+                </span>
+              </div>
+              
+              <div className="flex">
+                {post.commentsCount > 0 && (
+                  <span className="mr-3">
+                    {post.commentsCount === 1 ? '1 comentário' : `${post.commentsCount} comentários`}
+                  </span>
+                )}
+                {post.sharesCount > 0 && (
+                  <span>
+                    {post.sharesCount === 1 ? '1 compartilhamento' : `${post.sharesCount} compartilhamentos`}
+                  </span>
+                )}
+              </div>
+            </div>
+            
             <div className="flex items-center gap-4 border-t border-zinc-100 dark:border-zinc-800 pt-3">
               <Button 
                 variant="ghost" 
@@ -331,7 +358,7 @@ const PostDetailPage: React.FC = () => {
               >
                 <MessageSquare className="h-4 w-4" />
                 <span>
-                  {post.commentsCount > 0 ? post.commentsCount : ""} Comentar
+                  Comentar
                 </span>
               </Button>
               
