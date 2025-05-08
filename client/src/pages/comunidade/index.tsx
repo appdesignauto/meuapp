@@ -585,12 +585,14 @@ const CommunityPage: React.FC = () => {
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Comunidade</h1>
           
           {user && (
-            <Link href="/comunidade/criar">
-              <Button size="sm" className="gap-2">
-                <Plus className="h-4 w-4" />
-                Criar Post
-              </Button>
-            </Link>
+            <Button 
+              size="sm" 
+              className="gap-2"
+              onClick={() => setIsCreatePostOpen(true)}
+            >
+              <Plus className="h-4 w-4" />
+              Criar Post
+            </Button>
           )}
         </div>
         
@@ -641,12 +643,13 @@ const CommunityPage: React.FC = () => {
                   </div>
                   
                   {user && (
-                    <Link href="/comunidade/criar" className="w-full">
-                      <Button className="w-full gap-2">
-                        <Plus className="h-4 w-4" />
-                        Criar Post
-                      </Button>
-                    </Link>
+                    <Button 
+                      className="w-full gap-2"
+                      onClick={() => setIsCreatePostOpen(true)}
+                    >
+                      <Plus className="h-4 w-4" />
+                      Criar Post
+                    </Button>
                   )}
                 </CardContent>
               </Card>
@@ -729,32 +732,36 @@ const CommunityPage: React.FC = () => {
                     <CardContent className="p-4">
                       <div className="flex items-center gap-3">
                         <UserAvatar user={user} size="sm" />
-                        <Link href="/comunidade/criar" className="flex-1">
-                          <button className="w-full text-left p-3 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 rounded-full cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
-                            No que você está pensando, {user.name || user.username}?
-                          </button>
-                        </Link>
+                        <button 
+                          className="flex-1 text-left p-3 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 rounded-full cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                          onClick={() => setIsCreatePostOpen(true)}
+                        >
+                          No que você está pensando, {user.name || user.username}?
+                        </button>
                       </div>
                       <Separator className="my-3" />
                       <div className="flex justify-around">
-                        <Link href="/comunidade/criar" className="flex-1">
-                          <button className="w-full flex items-center justify-center gap-2 p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors">
-                            <ImageIcon className="h-5 w-5 text-green-500" />
-                            <span className="text-sm font-medium">Foto</span>
-                          </button>
-                        </Link>
-                        <Link href="/comunidade/criar" className="flex-1">
-                          <button className="w-full flex items-center justify-center gap-2 p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors">
-                            <ExternalLink className="h-5 w-5 text-blue-500" />
-                            <span className="text-sm font-medium">Link</span>
-                          </button>
-                        </Link>
-                        <Link href="/comunidade/criar" className="flex-1">
-                          <button className="w-full flex items-center justify-center gap-2 p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors">
-                            <FileEdit className="h-5 w-5 text-purple-500" />
-                            <span className="text-sm font-medium">Arte</span>
-                          </button>
-                        </Link>
+                        <button 
+                          className="flex-1 flex items-center justify-center gap-2 p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors"
+                          onClick={() => setIsCreatePostOpen(true)}
+                        >
+                          <ImageIcon className="h-5 w-5 text-green-500" />
+                          <span className="text-sm font-medium">Foto</span>
+                        </button>
+                        <button 
+                          className="flex-1 flex items-center justify-center gap-2 p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors"
+                          onClick={() => setIsCreatePostOpen(true)}
+                        >
+                          <ExternalLink className="h-5 w-5 text-blue-500" />
+                          <span className="text-sm font-medium">Link</span>
+                        </button>
+                        <button 
+                          className="flex-1 flex items-center justify-center gap-2 p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors"
+                          onClick={() => setIsCreatePostOpen(true)}
+                        >
+                          <FileEdit className="h-5 w-5 text-purple-500" />
+                          <span className="text-sm font-medium">Arte</span>
+                        </button>
                       </div>
                     </CardContent>
                   </Card>
@@ -803,12 +810,10 @@ const CommunityPage: React.FC = () => {
                       Não há posts publicados na comunidade no momento. Seja o primeiro a compartilhar uma criação!
                     </p>
                     {user && (
-                      <Link href="/comunidade/criar">
-                        <Button>
-                          <Plus className="h-4 w-4 mr-2" />
-                          Criar Post
-                        </Button>
-                      </Link>
+                      <Button onClick={() => setIsCreatePostOpen(true)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Criar Post
+                      </Button>
                     )}
                   </div>
                 )}
@@ -1124,6 +1129,12 @@ const CommunityPage: React.FC = () => {
       </div>
       
       <FooterMenu />
+      
+      {/* Dialog de criação de post */}
+      <CreatePostDialog
+        open={isCreatePostOpen}
+        onOpenChange={setIsCreatePostOpen}
+      />
     </div>
   );
 };
