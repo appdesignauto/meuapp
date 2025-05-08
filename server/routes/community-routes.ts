@@ -1106,6 +1106,8 @@ router.get('/api/community/comments/:id/replies', flexibleAuth, async (req, res)
 router.post('/api/community/comments/:id/like', flexibleAuth, async (req, res) => {
   try {
     // A autenticação já é verificada pelo middleware flexibleAuth
+    console.log('Recebida solicitação para curtir comentário:', req.params.id);
+    console.log('Usuário autenticado:', req.user?.id, req.user?.username);
     
     const commentId = parseInt(req.params.id);
     
@@ -1190,6 +1192,22 @@ router.post('/api/community/comments/:id/like', flexibleAuth, async (req, res) =
     }
   } catch (error) {
     console.error('Erro ao curtir comentário:', error);
+    // Registrar mais detalhes do erro para diagnóstico
+    console.error('Detalhes da requisição:', {
+      commentId: req.params.id,
+      userId: req.user?.id,
+      method: req.method,
+      path: req.path,
+      headers: {
+        'content-type': req.headers['content-type'],
+        'authorization': req.headers['authorization'] ? 'Presente' : 'Ausente'
+      }
+    });
+
+    if (error instanceof Error) {
+      console.error('Stack trace do erro:', error.stack);
+    }
+
     return res.status(500).json({ 
       message: 'Erro ao curtir comentário',
       error: error instanceof Error ? error.message : 'Erro desconhecido'
