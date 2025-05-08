@@ -201,7 +201,7 @@ export const CommentItem = ({
     }
   };
 
-  // Nova função para excluir um comentário
+  // Função aprimorada para excluir um comentário
   const handleDeleteComment = async () => {
     console.log("Excluindo comentário:", comment.id);
     
@@ -215,7 +215,7 @@ export const CommentItem = ({
     }
 
     // Verificar se o usuário pode excluir este comentário
-    const isAdmin = currentUser.nivelacesso === 'admin' || currentUser.nivelacesso === 'administrador';
+    const isAdmin = currentUser.nivelacesso === 'admin' || currentUser.nivelacesso === 'administrador' || currentUser.nivelacesso === 'designer_adm';
     if (currentUser.id !== comment.userId && !isAdmin) {
       toast({
         title: "Ação não permitida",
@@ -228,31 +228,68 @@ export const CommentItem = ({
     try {
       // Primeiro tentamos usar o handler passado pela prop
       if (onDelete) {
+        console.log("Usando função onDelete passada por props para comentário:", comment.id);
         onDelete(comment.id);
         return;
       }
       
-      // Se não houver handler externo, executamos nossa própria lógica
-      await apiRequest('DELETE', `/api/community/comments/${comment.id}`);
+      console.log("Excluindo comentário com ID:", comment.id);
+      console.log("Usuário atual:", currentUser.id, "Autor comentário:", comment.userId);
       
-      toast({
-        title: "Comentário excluído",
-        description: "Seu comentário foi excluído com sucesso."
-      });
+      // Escolher a rota adequada com base nos privilégios do usuário
+      let deleteUrl = `/api/community/comments/${comment.id}`;
+      // Admins podem usar a rota específica de admin se necessário
+      if (isAdmin && currentUser.id !== comment.userId) {
+        deleteUrl = `/api/community/admin/comments/${comment.id}`;
+      }
       
-      // Atualizar dados caso necessário
-      if (onRefresh) onRefresh();
+      console.log("Usando URL para exclusão:", deleteUrl);
       
-      // Se for uma resposta, atualizar a lista de respostas do comentário pai
-      if (isReply && comment.parentId) {
-        // Isso irá atualizar o post inteiro, incluindo todos os comentários
-        queryClient.invalidateQueries({ queryKey: [`/api/community/posts/${comment.postId}`] });
+      // Executar a requisição com mais detalhes de log
+      try {
+        const response = await apiRequest('DELETE', deleteUrl);
+        
+        if (!response.ok) {
+          // Se a resposta não for bem-sucedida, tentar extrair detalhes do erro
+          const errorData = await response.json();
+          throw new Error(errorData.message || `Erro ${response.status} ao excluir comentário`);
+        }
+        
+        const data = await response.json();
+        console.log("Resposta de exclusão:", data);
+        
+        toast({
+          title: "Comentário excluído",
+          description: "Seu comentário foi excluído com sucesso."
+        });
+        
+        // Atualizar dados caso necessário
+        if (onRefresh) {
+          console.log("Chamando função onRefresh após exclusão");
+          onRefresh();
+        }
+        
+        // Se for uma resposta, atualizar a lista de respostas do comentário pai
+        if (isReply && comment.parentId) {
+          console.log("Invalidando queries para atualizar comentários pai");
+          // Isso irá atualizar o post inteiro, incluindo todos os comentários
+          queryClient.invalidateQueries({ queryKey: [`/api/community/posts/${comment.postId}`] });
+          queryClient.invalidateQueries({ queryKey: [`/api/community/comments/${comment.parentId}/replies`] });
+        } else {
+          // Para comentários principais, atualizar toda a lista de comentários do post
+          console.log("Invalidando queries para atualizar lista de comentários do post");
+          queryClient.invalidateQueries({ queryKey: [`/api/community/posts/${comment.postId}/comments`] });
+          queryClient.invalidateQueries({ queryKey: [`/api/community/posts/${comment.postId}`] });
+        }
+      } catch (fetchError) {
+        console.error("Erro na requisição de exclusão:", fetchError);
+        throw fetchError;
       }
     } catch (error) {
       console.error("Erro ao excluir comentário:", error);
       toast({
         title: "Erro ao excluir comentário",
-        description: "Ocorreu um erro ao excluir este comentário.",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao excluir este comentário.",
         variant: "destructive"
       });
     }
@@ -291,18 +328,24 @@ export const CommentItem = ({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   {(() => {
+                    // Verificar se o usuário atual pode excluir esse comentário
+                    const isAdmin = currentUser.nivelacesso === 'admin' || 
+                                   currentUser.nivelacesso === 'administrador' ||
+                                   currentUser.nivelacesso === 'designer_adm';
+                                   
+                    const canDelete = currentUser.id === comment.userId || isAdmin;
+                    
                     console.log("Debug exclusão:", { 
-                      "Usuário atual ID": currentUser?.id, 
+                      "Comentário ID": comment.id,
+                      "Usuário atual ID": currentUser.id, 
                       "ID autor do comentário": comment.userId,
-                      "Nível do usuário": currentUser?.nivelacesso,
-                      "Pode excluir?": currentUser?.id === comment.userId || 
-                                      currentUser?.nivelacesso === 'admin' || 
-                                      currentUser?.nivelacesso === 'administrador'
+                      "Nível do usuário": currentUser.nivelacesso,
+                      "É admin?": isAdmin,
+                      "Pode excluir?": canDelete
                     });
                     
-                    return (currentUser.id === comment.userId || 
-                           currentUser.nivelacesso === 'admin' || 
-                           currentUser.nivelacesso === 'administrador') && (
+                    // Só mostra a opção de exclusão se o usuário puder excluir
+                    return canDelete && (
                       <DropdownMenuItem 
                         onClick={() => {
                           console.log("Botão excluir clicado para comentário:", comment.id);

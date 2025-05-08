@@ -2028,7 +2028,7 @@ router.patch('/api/community/admin/comments/:id/toggle-visibility', async (req, 
   }
 });
 
-// DELETE: Excluir um comentário
+// DELETE: Excluir um comentário (Rota para administradores)
 router.delete('/api/community/admin/comments/:id', async (req, res) => {
   try {
     // Verificar permissão - apenas admin pode excluir
@@ -2053,6 +2053,69 @@ router.delete('/api/community/admin/comments/:id', async (req, res) => {
       .delete(communityComments)
       .where(eq(communityComments.id, commentId));
     
+    return res.json({
+      message: 'Comentário excluído com sucesso'
+    });
+  } catch (error) {
+    console.error('Erro ao excluir comentário:', error);
+    return res.status(500).json({ 
+      message: 'Erro ao excluir comentário',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
+  }
+});
+
+// DELETE: Excluir um comentário (Rota para usuários regulares)
+router.delete('/api/community/comments/:id', async (req, res) => {
+  try {
+    console.log('==== TENTATIVA DE EXCLUSÃO DE COMENTÁRIO ====');
+    
+    if (!req.user) {
+      console.log('- Usuário não autenticado');
+      return res.status(401).json({ message: 'Usuário não autenticado' });
+    }
+    
+    const commentId = parseInt(req.params.id);
+    const userId = req.user.id;
+    const isAdmin = req.user.nivelacesso === 'admin' || req.user.nivelacesso === 'designer_adm';
+    
+    console.log(`- Comentário ID: ${commentId}`);
+    console.log(`- Usuário ID: ${userId}`);
+    console.log(`- É admin: ${isAdmin}`);
+    
+    // Verificar se o comentário existe
+    const [comment] = await db
+      .select()
+      .from(communityComments)
+      .where(eq(communityComments.id, commentId));
+      
+    if (!comment) {
+      console.log('- Comentário não encontrado');
+      return res.status(404).json({ message: 'Comentário não encontrado' });
+    }
+    
+    console.log(`- Comentário encontrado, pertence ao usuário: ${comment.userId}`);
+    
+    // Verificar se o usuário é o autor do comentário ou admin
+    if (comment.userId !== userId && !isAdmin) {
+      console.log('- Permissão negada: Usuário não é o autor nem admin');
+      return res.status(403).json({ 
+        message: 'Você só pode excluir seus próprios comentários',
+        details: {
+          commentUserId: comment.userId,
+          requestUserId: userId,
+          isAdmin: isAdmin
+        }
+      });
+    }
+    
+    // Excluir comentário
+    console.log('- Executando query de exclusão...');
+    await db
+      .delete(communityComments)
+      .where(eq(communityComments.id, commentId));
+    
+    console.log('- Comentário excluído com sucesso');
     return res.json({
       message: 'Comentário excluído com sucesso'
     });
