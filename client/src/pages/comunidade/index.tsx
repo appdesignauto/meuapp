@@ -1229,6 +1229,8 @@ const CommunityPage: React.FC = () => {
                         isApproved: item.post.status === 'approved',
                         userId: item.post.userId,
                         isLikedByUser: item.isLikedByUser || item.userHasLiked || false,
+                        isPinned: item.post.isPinned === true, // Forçar conversão para boolean
+                        editLink: item.post.editLink || '',
                         user: item.user
                       };
                       return <PostCard 
