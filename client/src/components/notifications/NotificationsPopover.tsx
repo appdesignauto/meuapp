@@ -1,10 +1,10 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Bell, Loader2, CheckCircle, MessageSquare, Heart, UserPlus } from "lucide-react";
 import { useLocation } from "wouter";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { formatRelativeTime } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -42,8 +42,18 @@ export function NotificationsPopover() {
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
 
+  // Interface para a resposta da contagem de notificações não lidas
+  interface UnreadCountResponse {
+    unreadCount: number;
+  }
+
+  // Interface para a resposta de notificações
+  interface NotificationsResponse {
+    notifications: Notification[];
+  }
+
   // Consulta para obter o contador de notificações não lidas
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error } = useQuery<UnreadCountResponse>({
     queryKey: ["/api/notifications/unread-count"],
     enabled: !!user, // Só carrega quando o usuário está logado
   });
@@ -52,11 +62,19 @@ export function NotificationsPopover() {
   const { 
     data: notificationsData, 
     isLoading: isLoadingNotifications, 
-    error: notificationsError 
-  } = useQuery({
+    error: notificationsError,
+    refetch: refetchNotifications
+  } = useQuery<NotificationsResponse>({
     queryKey: ["/api/notifications", { unread: activeTab === "unread" ? true : undefined }],
     enabled: !!user && open, // Só carrega quando está aberto e o usuário está logado
   });
+  
+  // Recarregar notificações quando mudar a aba
+  useEffect(() => {
+    if (open) {
+      refetchNotifications();
+    }
+  }, [activeTab, open, refetchNotifications]);
 
   // Mutação para marcar notificações como lidas
   const markAsReadMutation = useMutation({
@@ -126,7 +144,7 @@ export function NotificationsPopover() {
         <div className="h-9 w-9 flex items-center justify-center rounded-full text-neutral-600 hover:text-blue-600 hover:bg-blue-50 cursor-pointer">
           <div className="relative">
             <Bell className="h-5 w-5" />
-            {data && typeof data === 'object' && 'unreadCount' in data && data.unreadCount > 0 && (
+            {data && data.unreadCount > 0 && (
               <span className="absolute -top-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-medium text-white">
                 {data.unreadCount > 99 ? "99+" : data.unreadCount}
               </span>
