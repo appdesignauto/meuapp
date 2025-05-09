@@ -22,6 +22,17 @@ import { communityStorageService } from '../services/community-storage';
 
 const router = Router();
 
+/**
+ * HOTFIX: Garantir que a propriedade isPinned seja sempre convertida para boolean
+ * 
+ * O PostgreSQL retorna valores booleanos como 't' e 'f' em formato texto
+ * para garantir que sejam interpretados corretamente no JS, adicionamos
+ * a conversão explícita em todas as consultas SQL.
+ * 
+ * Sempre use COALESCE(campo."isPinned", false)::boolean nas consultas SQL
+ * E sempre use isPinned === true nas verificações do frontend
+ */
+
 // IMPORTANTE: Rotas específicas ANTES das rotas com parâmetros dinâmicos
 // para evitar conflitos de captura
 
@@ -58,6 +69,7 @@ router.get('/api/community/populares', async (req, res) => {
             COALESCE(cp."viewCount", 0) as "viewCount",
             cp."userId",
             cp."featuredUntil",
+            COALESCE(cp."isPinned", false)::boolean as "isPinned",
             cp."isWeeklyFeatured",
             u.id as user_id,
             u.username,
