@@ -255,6 +255,10 @@ router.get('/api/community/posts', async (req, res) => {
             userHasLiked: !!userLike,
             isLikedByUser: !!userLike, // Campo adicional para compatibilidade com frontend
             userHasSaved: !!userSave,
+            post: {
+              ...post.post,
+              isPinned: post.post.isPinned === true // Garante que é um booleano
+            },
             user: {
               ...post.user,
               isFollowing: Number(isFollowing?.count || 0) > 0

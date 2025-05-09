@@ -607,16 +607,22 @@ const PostCard: React.FC<{
     });
   };
 
+  // Debugging para verificar se o post.isPinned está presente
+  console.log("Post ID:", post.id, "isPinned:", post.isPinned, "Post completo:", post);
+
+  // Aplica um estilo mais visível para posts fixados (mesmo que a prop não exista)
+  const isPinned = post.isPinned === true; // Força conversão booleana
+
   return (
-    <Card className={`mb-5 overflow-hidden ${post.isPinned 
+    <Card className={`mb-5 overflow-hidden ${isPinned 
       ? 'border-2 border-amber-400 dark:border-amber-500 bg-amber-50/40 dark:bg-amber-900/10 shadow-lg' 
       : 'border border-zinc-100 dark:border-zinc-800'
     } shadow-md hover:shadow-lg transition-all duration-300 ease-in-out w-full max-w-[500px] mx-auto relative`}>
-      {/* Ícone de fixado na posição superior direita */}
-      {post.isPinned && (
-        <div className="absolute top-1 right-1 z-10">
-          <div className="bg-gradient-to-r from-yellow-500 to-amber-500 text-white p-1.5 rounded-full shadow-md">
-            <Star className="h-5 w-5" fill="white" strokeWidth={1} />
+      {/* Ícone de fixado na posição superior direita - sempre visível para posts fixados */}
+      {isPinned && (
+        <div className="absolute top-1 right-1 z-20">
+          <div className="bg-amber-500 dark:bg-amber-600 text-white p-1.5 rounded-full shadow-md animate-pulse">
+            <Star className="h-6 w-6" fill="white" />
           </div>
         </div>
       )}
@@ -730,7 +736,7 @@ const PostCard: React.FC<{
       
       {/* Título abaixo da imagem */}
       <div className="px-4 pt-3 pb-1">
-        {post.isPinned && (
+        {isPinned && (
           <div className="mb-1.5 flex items-center">
             <span className="bg-gradient-to-r from-yellow-500 to-amber-500 text-white dark:from-yellow-600 dark:to-amber-600 text-xs font-medium px-2.5 py-1 rounded-md flex items-center gap-1.5 shadow-sm">
               <Star className="h-3.5 w-3.5" fill="white" />
