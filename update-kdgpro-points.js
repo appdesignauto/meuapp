@@ -7,12 +7,13 @@
  * - Salvamento: 2 pontos (antes eram 10 pontos)
  * - Post em Destaque: 5 pontos extras (antes eram 50 pontos)
  * 
- * O script mantém as faixas de nível:
- * - Iniciante KDG: 0-500 pontos
- * - Colaborador KDG: 501-2000 pontos
- * - Destaque KDG: 2001-5000 pontos
- * - Elite KDG: 5001-10000 pontos
- * - Lenda KDG: 10001+ pontos
+ * O script atualiza as faixas de nível:
+ * - Membro KDG: 0-199 pontos
+ * - Voluntário KDG: 200-699 pontos
+ * - Cooperador KDG: 700-1499 pontos
+ * - Destaque KDG: 1500-2999 pontos
+ * - Referência KDG: 3000-4999 pontos
+ * - Profissional: 5000+ pontos
  * 
  * Uso: node update-kdgpro-points.js
  */
@@ -149,12 +150,13 @@ async function updateKdgproPoints() {
           const stats = result[0];
           const totalPoints = Number(stats.totalPoints) || 0;
           
-          // Determinar nível com base em pontos
-          let level = 'Iniciante KDG';
-          if (totalPoints >= 10001) level = 'Lenda KDG';
-          else if (totalPoints >= 5001) level = 'Elite KDG';
-          else if (totalPoints >= 2001) level = 'Destaque KDG';
-          else if (totalPoints >= 501) level = 'Colaborador KDG';
+          // Determinar nível com base em pontos (novas faixas)
+          let level = 'Membro KDG';
+          if (totalPoints >= 5000) level = 'Profissional';
+          else if (totalPoints >= 3000) level = 'Referência KDG';
+          else if (totalPoints >= 1500) level = 'Destaque KDG';
+          else if (totalPoints >= 700) level = 'Cooperador KDG';
+          else if (totalPoints >= 200) level = 'Voluntário KDG';
           
           // Inserir no leaderboard
           await db.insert(schema.communityLeaderboard).values({
@@ -193,6 +195,13 @@ async function updateKdgproPoints() {
     
     console.log('Atualização de pontos KDGPRO concluída com sucesso!');
     console.log('Novos valores: Post=5, Like=1, Save=2, Destaque=5');
+    console.log('Novas faixas de níveis:');
+    console.log('- Membro KDG: 0-199 pontos');
+    console.log('- Voluntário KDG: 200-699 pontos');
+    console.log('- Cooperador KDG: 700-1499 pontos');
+    console.log('- Destaque KDG: 1500-2999 pontos');
+    console.log('- Referência KDG: 3000-4999 pontos');
+    console.log('- Profissional: 5000+ pontos');
     
   } catch (error) {
     console.error('Erro durante a atualização de pontos KDGPRO:', error);

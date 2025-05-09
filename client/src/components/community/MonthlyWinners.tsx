@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { 
-  Trophy, Medal, Crown, Gift, CalendarIcon, ChevronDown, Loader2, RefreshCw 
+  Trophy, Medal, Crown, Gift, CalendarIcon, ChevronDown, Loader2, RefreshCw, User, Award, Sparkles 
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -15,6 +15,16 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import UserAvatar from '@/components/users/UserAvatar';
 import { useToast } from '@/hooks/use-toast';
+
+// Função para obter o nível e ícone com base na pontuação
+const getLevelInfo = (points: number) => {
+  if (points >= 5000) return { level: 'Profissional', icon: '🔴', color: 'text-red-600' };
+  if (points >= 3000) return { level: 'Referência KDG', icon: '🟠', color: 'text-orange-500' };
+  if (points >= 1500) return { level: 'Destaque KDG', icon: '🟣', color: 'text-purple-600' };
+  if (points >= 700) return { level: 'Cooperador KDG', icon: '🔵', color: 'text-blue-500' };
+  if (points >= 200) return { level: 'Voluntário KDG', icon: '🟢', color: 'text-green-500' };
+  return { level: 'Membro KDG', icon: '🟤', color: 'text-amber-800' };
+};
 
 // Interface para usuário no ranking
 interface RankingUser {
@@ -155,14 +165,22 @@ const MonthlyWinners: React.FC<MonthlyWinnersProps> = ({ className }) => {
           {user.user.name || user.user.username}
         </p>
         
-        <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-2">
-          {user.totalPoints} pontos
-        </p>
-        
-        <div className="bg-white dark:bg-zinc-800 py-1 px-3 rounded-full border border-amber-200 dark:border-amber-900/30">
-          <p className="text-xs font-medium text-amber-600 dark:text-amber-400">
-            {prize}
+        <div className="flex items-center gap-1.5 mb-2">
+          <span className={getLevelInfo(user.totalPoints).color}>{getLevelInfo(user.totalPoints).icon}</span>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            {user.totalPoints} pontos
           </p>
+        </div>
+        
+        <div className="flex flex-col gap-1 items-center">
+          <p className={`text-xs font-medium ${getLevelInfo(user.totalPoints).color}`}>
+            {getLevelInfo(user.totalPoints).level}
+          </p>
+          <div className="bg-white dark:bg-zinc-800 py-1 px-3 rounded-full border border-amber-200 dark:border-amber-900/30">
+            <p className="text-xs font-medium text-amber-600 dark:text-amber-400">
+              {prize}
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -259,9 +277,9 @@ const MonthlyWinners: React.FC<MonthlyWinnersProps> = ({ className }) => {
                 key={user.id} 
                 user={user} 
                 position={index}
-                prize={index === 0 ? settings?.prize1stPlace : 
-                       index === 1 ? settings?.prize2ndPlace : 
-                       settings?.prize3rdPlace}
+                prize={index === 0 ? settings?.prize1stPlace || "R$ 100,00" : 
+                       index === 1 ? settings?.prize2ndPlace || "R$ 50,00" : 
+                       settings?.prize3rdPlace || "R$ 25,00"}
               />
             ))}
           </div>
