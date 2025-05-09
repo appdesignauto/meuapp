@@ -1,137 +1,90 @@
-import React, { useState } from 'react';
-import { useAuth } from '@/hooks/use-auth';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
+import { UserPlus, UserCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { UserCheck, UserPlus } from 'lucide-react';
 
 interface FollowButtonProps {
-  designerId: number;
-  isFollowing: boolean;
+  userId: number; // ID do usuário a ser seguido
+  isFollowing: boolean; // Estado inicial de seguimento
+  variant?: 'default' | 'outline' | 'link' | 'destructive' | 'secondary' | 'ghost';
   className?: string;
-  variant?: 'default' | 'outline' | 'secondary' | 'ghost' | 'link' | 'destructive';
   size?: 'default' | 'sm' | 'lg' | 'icon';
-  onFollowChange?: (isFollowing: boolean) => void;
-  showIcon?: boolean;
-  showText?: boolean;
 }
 
-export const FollowButton: React.FC<FollowButtonProps> = ({
-  designerId,
-  isFollowing: initialIsFollowing,
-  className = '',
+export function FollowButton({ 
+  userId, 
+  isFollowing: initialIsFollowing, 
   variant = 'default',
-  size = 'default',
-  onFollowChange,
-  showIcon = true,
-  showText = true,
-}) => {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  className = '',
+  size = 'default'
+}: FollowButtonProps) {
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
-  // Mutation para seguir/deixar de seguir um designer
   const followMutation = useMutation({
     mutationFn: async (action: 'follow' | 'unfollow') => {
-      setIsProcessing(true);
-      try {
-        const response = await apiRequest(
-          'POST',
-          `/api/users/follow/${designerId}`,
-          { action }
-        );
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Erro ao processar ação de seguir');
-        }
-        
-        return response.json();
-      } catch (error) {
-        console.error('Erro na ação de seguir:', error);
-        throw error;
-      } finally {
-        setIsProcessing(false);
-      }
+      return await apiRequest('POST', `/api/users/follow/${userId}`, { action });
     },
-    onSuccess: (_, variables) => {
-      const newIsFollowing = variables === 'follow';
-      setIsFollowing(newIsFollowing);
-      
-      // Notificar o componente pai sobre a mudança
-      if (onFollowChange) {
-        onFollowChange(newIsFollowing);
-      }
-      
-      // Invalidar queries relacionadas
+    onMutate: (action) => {
+      setIsLoading(true);
+      // Otimisticamente atualizar o estado local
+      setIsFollowing(action === 'follow');
+    },
+    onSettled: () => {
+      setIsLoading(false);
+    },
+    onSuccess: () => {
+      // Invalidar consultas relacionadas para recarregar os dados
       queryClient.invalidateQueries({ queryKey: ['/api/users/following'] });
       queryClient.invalidateQueries({ queryKey: ['/api/designers/popular'] });
-      
-      // Atualizar a página de perfil do designer se estiver visualizando
-      queryClient.invalidateQueries({ queryKey: [`/api/users/${designerId}`] });
-      
-      toast({
-        title: newIsFollowing ? 'Seguindo' : 'Deixou de seguir',
-        description: newIsFollowing 
-          ? 'Você agora está seguindo este designer' 
-          : 'Você deixou de seguir este designer',
-        variant: 'default',
-      });
+      queryClient.invalidateQueries({ queryKey: ['/api/following/arts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/count'] });
     },
-    onError: (error: Error) => {
+    onError: (error) => {
+      // Reverter o estado otimista em caso de erro
+      setIsFollowing(!isFollowing);
       toast({
-        title: 'Erro',
-        description: error.message || 'Não foi possível processar sua solicitação',
-        variant: 'destructive',
+        title: "Erro",
+        description: `Não foi possível ${isFollowing ? 'deixar de seguir' : 'seguir'} o usuário. ${error.message}`,
+        variant: "destructive",
       });
     }
   });
 
-  const handleFollowClick = () => {
-    if (isProcessing) return;
+  const handleFollowToggle = async () => {
+    if (isLoading) return;
     
-    if (!user) {
-      toast({
-        title: 'Faça login',
-        description: 'Você precisa estar logado para seguir designers',
-        variant: 'default',
-      });
-      return;
+    try {
+      const action = isFollowing ? 'unfollow' : 'follow';
+      await followMutation.mutateAsync(action);
+    } catch (error) {
+      console.error('Erro ao alterar estado de seguimento:', error);
     }
-    
-    // Evitar seguir a si mesmo
-    if (user.id === designerId) {
-      toast({
-        title: 'Ação não permitida',
-        description: 'Você não pode seguir a si mesmo',
-        variant: 'default',
-      });
-      return;
-    }
-    
-    // Alternar entre seguir e deixar de seguir
-    followMutation.mutate(isFollowing ? 'unfollow' : 'follow');
   };
 
   return (
     <Button
-      onClick={handleFollowClick}
-      variant={isFollowing ? 'secondary' : variant}
+      variant={variant}
       size={size}
-      className={`${className} ${isProcessing ? 'opacity-70 cursor-not-allowed' : ''}`}
-      disabled={isProcessing || user?.id === designerId}
+      className={`${className} ${isFollowing ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
+      onClick={handleFollowToggle}
+      disabled={isLoading}
     >
-      {showIcon && (
-        isFollowing 
-          ? <UserCheck className="h-4 w-4 mr-1.5" /> 
-          : <UserPlus className="h-4 w-4 mr-1.5" />
+      {isFollowing ? (
+        <>
+          <UserCheck className="w-4 h-4 mr-2" />
+          Seguindo
+        </>
+      ) : (
+        <>
+          <UserPlus className="w-4 h-4 mr-2" />
+          Seguir
+        </>
       )}
-      {showText && (isFollowing ? 'Seguindo' : 'Seguir')}
     </Button>
   );
-};
-
-export default FollowButton;
+}

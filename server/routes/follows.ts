@@ -142,11 +142,11 @@ export function setupFollowRoutes(app: any, isAuthenticated: (req: Request, res:
       // Recuperar designers completos com dados adicionais
       const designers = await Promise.all(
         designersData.map(async (designer) => {
-          // Contagem de artes do designer
+          // Contagem de artes do designer - usando referência segura
           const [artsCount] = await db
             .select({ count: count() })
-            .from(sql`arts`)
-            .where(eq(sql`designerid`, designer.id));
+            .from(arts)
+            .where(eq(arts.designerid, designer.id));
 
           // Contagem de seguidores do designer
           const [followersCount] = await db
@@ -204,11 +204,11 @@ export function setupFollowRoutes(app: any, isAuthenticated: (req: Request, res:
       // Para cada designer, obter contagem de artes e seguidores e verificar se o usuário o segue
       const designersWithCounts = await Promise.all(
         designers.map(async (designer) => {
-          // Contagem de artes do designer
+          // Contagem de artes do designer - usando referência segura
           const [artsCount] = await db
             .select({ count: count() })
-            .from(sql`arts`)
-            .where(eq(sql`designerid`, designer.id));
+            .from(arts)
+            .where(eq(arts.designerid, designer.id));
 
           // Contagem de seguidores do designer
           const [followersCount] = await db
@@ -252,7 +252,13 @@ export function setupFollowRoutes(app: any, isAuthenticated: (req: Request, res:
   app.post("/api/users/follow/:id", isAuthenticated, async (req: CustomRequest, res: Response) => {
     try {
       const userId = req.user?.id;
+      
+      // Validação segura do parâmetro ID
       const designerId = parseInt(req.params.id);
+      if (isNaN(designerId)) {
+        return res.status(400).json({ message: "ID de designer inválido" });
+      }
+      
       const { action } = req.body as FollowRequest;
       
       if (!userId) {
