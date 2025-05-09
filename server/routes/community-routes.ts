@@ -2860,9 +2860,9 @@ router.post('/api/community/recalcular-ranking', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('Erro ao recalcular ranking KDGPRO:', error);
+    console.error('Erro ao recalcular ranking D.Auto:', error);
     return res.status(500).json({ 
-      message: 'Erro ao recalcular ranking KDGPRO',
+      message: 'Erro ao recalcular ranking D.Auto',
       error: error instanceof Error ? error.message : 'Erro desconhecido'
     });
   }
