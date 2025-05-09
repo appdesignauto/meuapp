@@ -87,7 +87,7 @@ const PodiumMedal: React.FC<{ position: number, prize: string }> = ({ position, 
   }
   
   return (
-    <div className="absolute top-0 right-0 m-2">
+    <div className="shrink-0 ml-auto">
       <div className={`flex items-center gap-1 p-1 px-2 rounded-full ${color} shadow text-xs font-medium`}>
         {icon}
         <span>{prize}</span>
@@ -128,17 +128,11 @@ const RankingItem: React.FC<{
   return (
     <div 
       className={cn(
-        "flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border-b border-zinc-100 dark:border-zinc-800 last:border-0 relative",
+        "flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border-b border-zinc-100 dark:border-zinc-800 last:border-0",
         isCurrentUser && "bg-blue-50 dark:bg-blue-900/20",
         isTopThree && "bg-zinc-50/80 dark:bg-zinc-800/30"
       )}
     >
-      {showPrize && prize && (
-        <div className="hidden sm:block">
-          <PodiumMedal position={index + 1} prize={prize} />
-        </div>
-      )}
-      
       <div className={cn(
         "flex items-center justify-center text-sm sm:text-lg font-bold w-6 h-6 sm:w-8 sm:h-8 rounded-full shrink-0",
         isTopThree 
@@ -156,27 +150,37 @@ const RankingItem: React.FC<{
         nivelacesso: user.user.nivelacesso
       }} size="sm" linkToProfile={true} />
       
-      <div className="flex-1 min-w-0 pr-2">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-          <p className="font-medium text-xs sm:text-sm truncate max-w-[120px] xs:max-w-[150px] sm:max-w-[200px]">{user.user.name || user.user.username}</p>
-          <Badge variant="outline" className={`text-[10px] sm:text-xs py-0 h-4 sm:h-5 gap-1 shrink-0 ${
-            user.level.includes('Pro') ? 'border-red-200 text-red-600 dark:border-red-800/50' :
-            user.level.includes('Referência') ? 'border-orange-200 text-orange-500 dark:border-orange-800/50' :
-            user.level.includes('Destaque') ? 'border-purple-200 text-purple-600 dark:border-purple-800/50' :
-            user.level.includes('Cooperador') ? 'border-blue-200 text-blue-500 dark:border-blue-800/50' :
-            user.level.includes('Voluntário') ? 'border-green-200 text-green-500 dark:border-green-800/50' :
-            'border-amber-200 text-amber-800 dark:border-amber-800/50'
-          }`}>
-            {getLevelIcon(user.level)}
-            <span className="hidden xs:inline">{user.level.replace(' D.Auto', '')}</span>
-          </Badge>
-        </div>
-        <p className="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400 truncate max-w-[190px] xs:max-w-full">
-          {user.totalPoints} pts • {user.postCount} posts • {user.likesReceived} <span className="hidden xs:inline">curtidas</span><span className="inline xs:hidden">❤️</span>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1">
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+              <p className="font-medium text-xs sm:text-sm truncate max-w-[120px] xs:max-w-[150px] sm:max-w-[200px]">{user.user.name || user.user.username}</p>
+              <Badge variant="outline" className={`text-[10px] sm:text-xs py-0 h-4 sm:h-5 gap-1 shrink-0 ${
+                user.level.includes('Pro') ? 'border-red-200 text-red-600 dark:border-red-800/50' :
+                user.level.includes('Referência') ? 'border-orange-200 text-orange-500 dark:border-orange-800/50' :
+                user.level.includes('Destaque') ? 'border-purple-200 text-purple-600 dark:border-purple-800/50' :
+                user.level.includes('Cooperador') ? 'border-blue-200 text-blue-500 dark:border-blue-800/50' :
+                user.level.includes('Voluntário') ? 'border-green-200 text-green-500 dark:border-green-800/50' :
+                'border-amber-200 text-amber-800 dark:border-amber-800/50'
+              }`}>
+                {getLevelIcon(user.level)}
+                <span className="hidden xs:inline">{user.level.replace(' D.Auto', '')}</span>
+              </Badge>
+            </div>
+            <p className="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400 truncate max-w-[190px] xs:max-w-full">
+              {user.totalPoints} pts • {user.postCount} posts • {user.likesReceived} <span className="hidden xs:inline">curtidas</span><span className="inline xs:hidden">❤️</span>
+              {showPrize && prize && (
+                <span className="inline sm:hidden ml-1 text-amber-600 dark:text-amber-400 font-medium"> • {prize}</span>
+              )}
+            </p>
+          </div>
+          
           {showPrize && prize && (
-            <span className="inline sm:hidden ml-1 text-amber-600 dark:text-amber-400 font-medium"> • {prize}</span>
+            <div className="hidden sm:block">
+              <PodiumMedal position={index + 1} prize={prize} />
+            </div>
           )}
-        </p>
+        </div>
       </div>
     </div>
   );
