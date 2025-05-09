@@ -2783,9 +2783,14 @@ router.post('/api/community/recalcular-ranking', async (req, res) => {
             COUNT(CASE WHEN "reason" = 'weekly_featured' THEN 1 END) as "featuredCount"
           FROM "communityPoints"
           WHERE "userId" = ${userId}
-          AND ${period === 'all_time' ? sql`TRUE` : 
-              period.length === 4 ? sql`"period" LIKE ${period + '-%'}` :
-              sql`"period" = ${period}`}
+          AND ${period === 'all_time' ? 
+                sql`TRUE` : 
+              period.startsWith('2025-W') ? 
+                // Para período semanal, vamos pegar os registros do mês atual
+                sql`"period" LIKE '2025-05%'` :
+              period.length === 4 ? 
+                sql`"period" LIKE ${period + '-%'}` :
+                sql`"period" = ${period}`}
         `);
         
         if (pointsResult.rows.length > 0) {
