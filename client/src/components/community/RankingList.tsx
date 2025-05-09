@@ -53,14 +53,14 @@ interface RankingListProps {
   className?: string;
 }
 
-// Mapeamento de ícones para níveis
-const LEVEL_ICONS: Record<string, React.ReactNode> = {
-  'Membro D.Auto': <User className="h-4 w-4 text-amber-800" />,
-  'Voluntário D.Auto': <User className="h-4 w-4 text-green-500" />,
-  'Cooperador D.Auto': <Award className="h-4 w-4 text-blue-500" />,
-  'Destaque D.Auto': <Medal className="h-4 w-4 text-purple-600" />,
-  'Referência D.Auto': <Trophy className="h-4 w-4 text-orange-500" />,
-  'Pro D.Auto': <Sparkles className="h-4 w-4 text-red-600" />
+// Função para obter o ícone baseado no nível
+const getLevelIcon = (level: string): React.ReactNode => {
+  if (level.includes('Pro')) return <Sparkles className="h-4 w-4 text-red-600" />;
+  if (level.includes('Referência')) return <Trophy className="h-4 w-4 text-orange-500" />;
+  if (level.includes('Destaque')) return <Medal className="h-4 w-4 text-purple-600" />;
+  if (level.includes('Cooperador')) return <Award className="h-4 w-4 text-blue-500" />;
+  if (level.includes('Voluntário')) return <User className="h-4 w-4 text-green-500" />;
+  return <User className="h-4 w-4 text-amber-800" />; // Membro (padrão)
 };
 
 // Componente para exibir medalha do pódio
@@ -158,14 +158,14 @@ const RankingItem: React.FC<{
         <div className="flex items-center gap-2">
           <p className="font-medium text-sm">{user.user.name || user.user.username}</p>
           <Badge variant="outline" className={`text-xs py-0 h-5 gap-1 ${
-            user.level === 'Pro D.Auto' ? 'border-red-200 text-red-600 dark:border-red-800/50' :
-            user.level === 'Referência D.Auto' ? 'border-orange-200 text-orange-500 dark:border-orange-800/50' :
-            user.level === 'Destaque D.Auto' ? 'border-purple-200 text-purple-600 dark:border-purple-800/50' :
-            user.level === 'Cooperador D.Auto' ? 'border-blue-200 text-blue-500 dark:border-blue-800/50' :
-            user.level === 'Voluntário D.Auto' ? 'border-green-200 text-green-500 dark:border-green-800/50' :
+            user.level.includes('Pro') ? 'border-red-200 text-red-600 dark:border-red-800/50' :
+            user.level.includes('Referência') ? 'border-orange-200 text-orange-500 dark:border-orange-800/50' :
+            user.level.includes('Destaque') ? 'border-purple-200 text-purple-600 dark:border-purple-800/50' :
+            user.level.includes('Cooperador') ? 'border-blue-200 text-blue-500 dark:border-blue-800/50' :
+            user.level.includes('Voluntário') ? 'border-green-200 text-green-500 dark:border-green-800/50' :
             'border-amber-200 text-amber-800 dark:border-amber-800/50'
           }`}>
-            {LEVEL_ICONS[user.level] || <User className="h-3 w-3" />}
+            {getLevelIcon(user.level)}
             <span>{user.level.replace(' D.Auto', '')}</span>
           </Badge>
         </div>
