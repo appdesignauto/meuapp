@@ -40,6 +40,9 @@ import {
   HelpCircle,
   Link as LinkIcon,
   PlayCircle,
+  Home,
+  Library,
+  MessageSquare
 } from 'lucide-react';
 import MobileMenu from './MobileMenu';
 import { useQuery } from '@tanstack/react-query';
@@ -212,11 +215,11 @@ const Header = () => {
   };
 
   const navLinks = [
-    { name: 'Início', path: '/' },
-    { name: 'Categorias', path: '/categories' },
-    { name: 'Vídeo Aulas', path: '/videoaulas' },
-    { name: 'Comunidade', path: '/comunidade' },
-    { name: 'Suporte', path: '/support' },
+    { name: 'Início', path: '/', icon: <Home className="h-5 w-5" /> },
+    { name: 'Categorias', path: '/categories', icon: <Library className="h-5 w-5" /> },
+    { name: 'Vídeo Aulas', path: '/videoaulas', icon: <PlayCircle className="h-5 w-5" /> },
+    { name: 'Comunidade', path: '/comunidade', icon: <MessageSquare className="h-5 w-5" /> },
+    { name: 'Suporte', path: '/support', icon: <HelpCircle className="h-5 w-5" /> },
   ];
 
   const toggleMobileMenu = () => {
