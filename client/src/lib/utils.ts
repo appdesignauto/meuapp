@@ -18,13 +18,12 @@ export function formatDate(dateString: string): string {
       return "Data não disponível";
     }
     
-    // Verificar se a data é futura (tolerância de 5 minutos para evitar problemas de sincronização)
+    // Verificar se a data é futura (mas usar a data original mesmo assim)
     const now = new Date();
     const fiveMinutes = 5 * 60 * 1000; // 5 minutos em milissegundos
     if (date.getTime() > now.getTime() + fiveMinutes) {
       console.error("Data futura detectada:", dateString, "Data:", date, "Agora:", now);
-      // Usar a data atual em vez da data futura
-      return formatRelativeTime(new Date());
+      // Continuar usando a data original - correção para evitar mostrar "agora" para todos os posts
     }
     
     return formatRelativeTime(date);
@@ -40,8 +39,17 @@ function formatRelativeTime(date: Date): string {
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     
-    // Evitar tempos negativos (futuro)
-    if (diffMs < 0) return "agora";
+    // Se a data for do futuro (diferença negativa), mostrar data formatada em vez de "agora"
+    if (diffMs < 0) {
+      return new Intl.DateTimeFormat('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'America/Sao_Paulo'
+      }).format(date);
+    }
     
     // Convertendo para segundos, minutos, horas, etc.
     const diffSeconds = Math.floor(diffMs / 1000);
