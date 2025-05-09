@@ -2372,7 +2372,7 @@ router.get('/api/community/admin/comments', async (req, res) => {
     }
     
     if (search) {
-      conditions.push(like(communityComments.content, `%${search}%`));
+      conditions.push(ilike(communityComments.content, `%${search}%`));
     }
     
     if (hideStatus === 'hidden') {
@@ -2684,6 +2684,173 @@ router.get('/api/community/posts/popular_DESATIVADO', async (req, res) => {
     console.error('Erro ao buscar posts populares (nova implementação):', error);
     // Em último caso, retornar array vazio para evitar quebra do frontend
     return res.json([]);
+  }
+});
+
+// POST: Recalcular ranking KDGPRO com os novos valores de pontuação
+router.post('/api/community/recalcular-ranking', async (req, res) => {
+  try {
+    // Verificar permissão - apenas admin pode usar esta função
+    if (!req.user || req.user.nivelacesso !== 'admin') {
+      return res.status(403).json({ message: 'Sem permissão para esta ação' });
+    }
+
+    // 1. Atualizar as configurações com os novos valores
+    console.log('Atualizando configurações de pontuação...');
+    await db.update(communitySettings)
+      .set({
+        pointsForPost: 5, // Antes 20
+        pointsForLike: 1, // Antes 5
+        pointsForSave: 2, // Antes 10
+        pointsForWeeklyFeatured: 5, // Antes 50
+        updatedAt: new Date()
+      })
+      .where(eq(communitySettings.id, 1));
+    
+    // 2. Atualizar pontos na tabela communityPoints
+    console.log('Atualizando registros de pontos...');
+    
+    // 2.1 Atualizar pontos para posts
+    await db.execute(sql`
+      UPDATE "communityPoints"
+      SET "points" = 5
+      WHERE "reason" = 'post'
+    `);
+    
+    // 2.2 Atualizar pontos para curtidas
+    await db.execute(sql`
+      UPDATE "communityPoints"
+      SET "points" = 1
+      WHERE "reason" = 'like'
+    `);
+    
+    // 2.3 Atualizar pontos para salvamentos
+    await db.execute(sql`
+      UPDATE "communityPoints"
+      SET "points" = 2
+      WHERE "reason" = 'save'
+    `);
+    
+    // 2.4 Atualizar pontos para posts em destaque
+    await db.execute(sql`
+      UPDATE "communityPoints"
+      SET "points" = 5
+      WHERE "reason" = 'weekly_featured'
+    `);
+    
+    // 3. Limpar tabela de leaderboard para recalcular
+    console.log('Limpando dados de leaderboard para recalcular...');
+    await db.delete(communityLeaderboard);
+    
+    // 4. Recalcular o leaderboard para todos os períodos
+    console.log('Recalculando o leaderboard...');
+    const periods = [
+      // Formato: all_time, YYYY (ano), YYYY-MM (ano-mês), YYYY-WW (ano-semana)
+      'all_time',
+      new Date().getFullYear().toString(), // Ano atual
+      `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`, // Mês atual
+    ];
+    
+    // Adicionar semana atual (formato YYYY-WW)
+    const now = new Date();
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    const days = Math.floor((now - startOfYear) / (24 * 60 * 60 * 1000));
+    const weekNumber = Math.ceil((days + startOfYear.getDay() + 1) / 7);
+    periods.push(`${now.getFullYear()}-W${String(weekNumber).padStart(2, '0')}`);
+    
+    // Recalcular para cada período
+    for (const period of periods) {
+      console.log(`Recalculando leaderboard para período: ${period}`);
+      
+      // Buscar todos os usuários com pontos no período
+      const usersResult = await db.execute(sql`
+        SELECT DISTINCT "userId" FROM "communityPoints"
+        WHERE ${period === 'all_time' ? sql`TRUE` : 
+              period.length === 4 ? sql`"period" LIKE ${period + '-%'}` :
+              sql`"period" = ${period}`}
+      `);
+      
+      for (const user of usersResult.rows) {
+        const userId = user.userId;
+        
+        // Calcular pontos totais para o usuário no período
+        const pointsResult = await db.execute(sql`
+          SELECT 
+            SUM("points") as "totalPoints",
+            COUNT(CASE WHEN "reason" = 'post' THEN 1 END) as "postCount",
+            COUNT(CASE WHEN "reason" = 'like' THEN 1 END) as "likesReceived",
+            COUNT(CASE WHEN "reason" = 'save' THEN 1 END) as "savesReceived",
+            COUNT(CASE WHEN "reason" = 'weekly_featured' THEN 1 END) as "featuredCount"
+          FROM "communityPoints"
+          WHERE "userId" = ${userId}
+          AND ${period === 'all_time' ? sql`TRUE` : 
+              period.length === 4 ? sql`"period" LIKE ${period + '-%'}` :
+              sql`"period" = ${period}`}
+        `);
+        
+        if (pointsResult.rows.length > 0) {
+          const stats = pointsResult.rows[0];
+          const totalPoints = Number(stats.totalPoints) || 0;
+          
+          // Determinar nível com base em pontos
+          let level = 'Iniciante KDG';
+          if (totalPoints >= 10001) level = 'Lenda KDG';
+          else if (totalPoints >= 5001) level = 'Elite KDG';
+          else if (totalPoints >= 2001) level = 'Destaque KDG';
+          else if (totalPoints >= 501) level = 'Colaborador KDG';
+          
+          // Inserir no leaderboard
+          await db.insert(communityLeaderboard).values({
+            userId: userId,
+            totalPoints: totalPoints,
+            postCount: Number(stats.postCount) || 0,
+            likesReceived: Number(stats.likesReceived) || 0,
+            savesReceived: Number(stats.savesReceived) || 0,
+            featuredCount: Number(stats.featuredCount) || 0,
+            period: period,
+            level: level,
+            rank: 0, // Será definido pelo próximo passo
+            lastUpdated: new Date()
+          });
+        }
+      }
+      
+      // Atualizar posições (ranks) no leaderboard
+      await db.execute(sql`
+        WITH ranked_users AS (
+          SELECT 
+            "id",
+            "userId",
+            "totalPoints",
+            ROW_NUMBER() OVER (ORDER BY "totalPoints" DESC, "lastUpdated" ASC) as row_num
+          FROM "communityLeaderboard"
+          WHERE "period" = ${period}
+        )
+        UPDATE "communityLeaderboard" cl
+        SET "rank" = ru.row_num
+        FROM ranked_users ru
+        WHERE cl."id" = ru."id"
+        AND cl."period" = ${period}
+      `);
+    }
+    
+    return res.json({
+      success: true,
+      message: 'Ranking KDGPRO recalculado com sucesso com os novos valores de pontuação!',
+      pointSettings: {
+        pointsForPost: 5,
+        pointsForLike: 1,
+        pointsForSave: 2,
+        pointsForWeeklyFeatured: 5
+      }
+    });
+    
+  } catch (error) {
+    console.error('Erro ao recalcular ranking KDGPRO:', error);
+    return res.status(500).json({ 
+      message: 'Erro ao recalcular ranking KDGPRO',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
   }
 });
 
