@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Bell, Loader2, CheckCircle, MessageSquare, Heart, UserPlus } from "lucide-react";
 import { useLocation } from "wouter";
-import { getQueryFn, apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { formatRelativeTime } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -17,7 +17,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { NotificationIndicator } from "./NotificationIndicator";
 
 interface Notification {
   id: number;
@@ -43,12 +42,19 @@ export function NotificationsPopover() {
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
 
-  // Consulta para obter as notificações
+  // Consulta para obter o contador de notificações não lidas
   const { data, isLoading, error } = useQuery({
-    queryKey: ["/api/notifications", activeTab === "unread" ? "unread=true" : ""],
-    queryFn: getQueryFn({
-      on401: "returnNull" // Caso o usuário não esteja autenticado
-    }),
+    queryKey: ["/api/notifications/unread-count"],
+    enabled: !!user, // Só carrega quando o usuário está logado
+  });
+  
+  // Consulta para obter as notificações quando o popover está aberto
+  const { 
+    data: notificationsData, 
+    isLoading: isLoadingNotifications, 
+    error: notificationsError 
+  } = useQuery({
+    queryKey: ["/api/notifications", { unread: activeTab === "unread" ? true : undefined }],
     enabled: !!user && open, // Só carrega quando está aberto e o usuário está logado
   });
 
@@ -155,18 +161,18 @@ export function NotificationsPopover() {
           
           <TabsContent value="all" className="focus:outline-none">
             <NotificationsList
-              notifications={data?.notifications || []}
-              isLoading={isLoading}
-              error={error}
+              notifications={notificationsData?.notifications || []}
+              isLoading={isLoadingNotifications}
+              error={notificationsError}
               onNotificationClick={handleNotificationClick}
             />
           </TabsContent>
           
           <TabsContent value="unread" className="focus:outline-none">
             <NotificationsList
-              notifications={data?.notifications || []}
-              isLoading={isLoading}
-              error={error}
+              notifications={notificationsData?.notifications || []}
+              isLoading={isLoadingNotifications}
+              error={notificationsError}
               onNotificationClick={handleNotificationClick}
             />
           </TabsContent>
