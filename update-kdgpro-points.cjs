@@ -50,7 +50,8 @@ async function updateKdgproPoints() {
        SET "pointsForPost" = $1, 
            "pointsForLike" = $2, 
            "pointsForSave" = $3, 
-           "pointsForWeeklyFeatured" = $4, 
+           "pointsForWeeklyFeatured" = $4,
+           "levelThresholds" = '{"Membro KDG": 0, "Voluntário KDG": 200, "Cooperador KDG": 700, "Destaque KDG": 1500, "Referência KDG": 3000, "Profissional": 5000}'::jsonb,
            "updatedAt" = $5 
        WHERE "id" = 1`,
       [POINTS_FOR_POST, POINTS_FOR_LIKE, POINTS_FOR_SAVE, POINTS_FOR_WEEKLY_FEATURED, new Date()]
