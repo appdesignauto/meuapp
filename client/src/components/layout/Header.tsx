@@ -400,7 +400,7 @@ const Header = () => {
                     <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-72 mr-2 mt-1 p-0 rounded-xl shadow-xl" align="end">
+                <DropdownMenuContent className="w-72 mr-2 mt-1 p-0 rounded-xl shadow-xl max-h-[90vh] overflow-y-auto" align="end">
                   {/* Informações do usuário com banner de status incorporado */}
                   <div className="relative">
                     {/* Banner colorido no fundo que depende do tipo de conta */}
@@ -449,9 +449,9 @@ const Header = () => {
                   {/* Menu de opções */}
                   <div className="py-2">
                     <Link href="/painel/perfil">
-                      <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-blue-50 mr-3">
-                          <User className="w-5 h-5 text-blue-600" />
+                      <DropdownMenuItem className="cursor-pointer py-3 px-4 hover:bg-gray-50">
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center bg-blue-50 mr-3">
+                          <User className="w-4.5 h-4.5 text-blue-600" />
                         </div>
                         <div className="flex flex-col">
                           <span className="font-medium">Minha conta</span>
@@ -462,9 +462,9 @@ const Header = () => {
                     
                     {user.nivelacesso === 'usuario' || !user.tipoplano ? (
                       <Link href="/planos">
-                        <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
-                          <div className="w-10 h-10 rounded-full flex items-center justify-center bg-green-50 mr-3">
-                            <CreditCard className="w-5 h-5 text-green-600" />
+                        <DropdownMenuItem className="cursor-pointer py-3 px-4 hover:bg-gray-50">
+                          <div className="w-9 h-9 rounded-full flex items-center justify-center bg-green-50 mr-3">
+                            <CreditCard className="w-4.5 h-4.5 text-green-600" />
                           </div>
                           <div className="flex flex-col flex-1">
                             <span className="font-medium">Assinatura</span>
