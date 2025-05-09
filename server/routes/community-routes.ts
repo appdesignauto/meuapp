@@ -85,6 +85,25 @@ router.get('/api/community/populares', async (req, res) => {
         // Mapear cada resultado em um formato seguro
         for (const row of result.rows) {
           try {
+            // Verificar se o usuário atual segue o autor do post
+            let isFollowing = false;
+            const userId = req.user?.id;
+            const postAuthorId = row.user_id ? Number(row.user_id) : 0;
+            
+            if (userId && postAuthorId && userId !== postAuthorId) {
+              try {
+                // Verificar relação de seguidor
+                const followResult = await db.execute(sql`
+                  SELECT 1 FROM "userFollows"
+                  WHERE "followerId" = ${userId} AND "followingId" = ${postAuthorId}
+                  LIMIT 1
+                `);
+                isFollowing = followResult.rows.length > 0;
+              } catch (followError) {
+                console.error(`Erro ao verificar relação de seguir para post ${row.id}:`, followError);
+              }
+            }
+            
             formattedResults.push({
               post: {
                 id: row.id ? Number(row.id) : 0,
@@ -102,11 +121,12 @@ router.get('/api/community/populares', async (req, res) => {
                 isWeeklyFeatured: !!row.isWeeklyFeatured
               },
               user: {
-                id: row.user_id ? Number(row.user_id) : 0,
+                id: postAuthorId,
                 username: row.username || 'usuário',
                 name: row.name || 'Usuário',
                 profileimageurl: row.profileimageurl || null,
-                nivelacesso: row.nivelacesso || 'free'
+                nivelacesso: row.nivelacesso || 'free',
+                isFollowing // Adicionar status de seguindo
               },
               likesCount: (typeof row.likes_count === 'number' || typeof row.likes_count === 'string') 
                   ? Number(row.likes_count) : 0,

@@ -43,6 +43,9 @@ export function FollowButton({
       queryClient.invalidateQueries({ queryKey: ['/api/designers/popular'] });
       queryClient.invalidateQueries({ queryKey: ['/api/following/arts'] });
       queryClient.invalidateQueries({ queryKey: ['/api/notifications/count'] });
+      // Invalidar consultas de posts da comunidade
+      queryClient.invalidateQueries({ queryKey: ['/api/community/posts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/community/populares'] });
     },
     onError: (error) => {
       // Reverter o estado otimista em caso de erro
