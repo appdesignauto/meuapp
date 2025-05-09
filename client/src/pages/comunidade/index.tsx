@@ -609,14 +609,14 @@ const PostCard: React.FC<{
 
   return (
     <Card className={`mb-5 overflow-hidden ${post.isPinned 
-      ? 'border border-amber-400 dark:border-amber-600 bg-amber-50/40 dark:bg-amber-900/10 shadow-lg transform -translate-y-1' 
+      ? 'border-2 border-amber-400 dark:border-amber-500 bg-amber-50/40 dark:bg-amber-900/10 shadow-lg' 
       : 'border border-zinc-100 dark:border-zinc-800'
-    } shadow-md hover:shadow-lg transition-all duration-300 ease-in-out w-full max-w-[500px] mx-auto`}>
-      {/* Ícone de fixado na posição superior */}
+    } shadow-md hover:shadow-lg transition-all duration-300 ease-in-out w-full max-w-[500px] mx-auto relative`}>
+      {/* Ícone de fixado na posição superior direita */}
       {post.isPinned && (
-        <div className="absolute top-0 right-0 m-2 z-10">
-          <div className="bg-gradient-to-r from-yellow-500 to-amber-500 text-white p-1.5 rounded-md shadow-md animate-pulse">
-            <Star className="h-4 w-4" fill="currentColor" />
+        <div className="absolute top-1 right-1 z-10">
+          <div className="bg-gradient-to-r from-yellow-500 to-amber-500 text-white p-1.5 rounded-full shadow-md">
+            <Star className="h-5 w-5" fill="white" strokeWidth={1} />
           </div>
         </div>
       )}
@@ -733,7 +733,7 @@ const PostCard: React.FC<{
         {post.isPinned && (
           <div className="mb-1.5 flex items-center">
             <span className="bg-gradient-to-r from-yellow-500 to-amber-500 text-white dark:from-yellow-600 dark:to-amber-600 text-xs font-medium px-2.5 py-1 rounded-md flex items-center gap-1.5 shadow-sm">
-              <Star className="h-3.5 w-3.5" fill="currentColor" />
+              <Star className="h-3.5 w-3.5" fill="white" />
               <span className="font-bold">Post Fixado</span>
             </span>
           </div>
