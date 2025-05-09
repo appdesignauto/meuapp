@@ -45,8 +45,8 @@ export function setupFollowRoutes(app: any, isAuthenticated: (req: Request, res:
       // Extrai os IDs dos designers seguidos
       const designerIds = followings.map(f => f.followingId);
       
-      // Busca as artes mais recentes desses designers
-      const query = `
+      // Busca as artes mais recentes desses designers usando parâmetros SQL seguros
+      const result = await db.execute(sql`
         SELECT 
           a.id, 
           a."createdAt", 
@@ -70,13 +70,11 @@ export function setupFollowRoutes(app: any, isAuthenticated: (req: Request, res:
           u.profileimageurl AS designer_avatar
         FROM arts a
         JOIN users u ON a.designerid = u.id
-        WHERE a.designerid IN (${designerIds.join(',')})
+        WHERE a.designerid IN (${sql.join(designerIds, sql`,`)})
           AND a."isVisible" = TRUE
         ORDER BY a."createdAt" DESC
         LIMIT ${limit}
-      `;
-      
-      const result = await db.execute(sql.raw(query));
+      `);
       
       // Mapear as colunas para o formato esperado, incluindo informações do designer
       const arts = result.rows.map(art => ({
@@ -127,7 +125,7 @@ export function setupFollowRoutes(app: any, isAuthenticated: (req: Request, res:
       
       const followingIds = followingRecords.map(record => record.designerId);
       
-      // Buscar dados completos dos designers
+      // Buscar dados completos dos designers usando parâmetros SQL seguros
       const designersData = await db
         .select({
           id: users.id,
@@ -139,7 +137,7 @@ export function setupFollowRoutes(app: any, isAuthenticated: (req: Request, res:
           role: users.role,
         })
         .from(users)
-        .where(sql`${users.id} IN (${followingIds.join(',')})`);
+        .where(sql`${users.id} IN (${sql.join(followingIds, sql`,`)})`);
       
       // Recuperar designers completos com dados adicionais
       const designers = await Promise.all(
