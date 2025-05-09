@@ -2052,7 +2052,63 @@ router.post('/api/community/admin/posts/:id/reject', async (req, res) => {
   }
 });
 
-// DELETE: Excluir um post
+// DELETE: Excluir um post (Rota para usuários regulares)
+router.delete('/api/community/posts/:id', async (req, res) => {
+  try {
+    console.log('==== TENTATIVA DE EXCLUSÃO DE POST ====');
+    
+    if (!req.user) {
+      console.log('- Usuário não autenticado');
+      return res.status(401).json({ message: 'Usuário não autenticado' });
+    }
+    
+    const postId = parseInt(req.params.id);
+    const userId = req.user.id;
+    const isAdmin = req.user.nivelacesso === 'admin' || req.user.nivelacesso === 'designer_adm';
+    
+    console.log(`- Post ID: ${postId}`);
+    console.log(`- Usuário ID: ${userId}`);
+    console.log(`- É admin: ${isAdmin}`);
+    
+    // Verificar se o post existe
+    const [post] = await db
+      .select()
+      .from(communityPosts)
+      .where(eq(communityPosts.id, postId));
+      
+    if (!post) {
+      console.log('- Post não encontrado');
+      return res.status(404).json({ message: 'Post não encontrado' });
+    }
+    
+    console.log(`- Post encontrado, pertence ao usuário: ${post.userId}`);
+    
+    // Verificar se o usuário é o autor do post ou é admin
+    if (post.userId !== userId && !isAdmin) {
+      console.log('- Usuário não tem permissão para excluir este post');
+      return res.status(403).json({ message: 'Sem permissão para excluir este post' });
+    }
+    
+    // Excluir post
+    await db
+      .delete(communityPosts)
+      .where(eq(communityPosts.id, postId));
+    
+    console.log('- Post excluído com sucesso');
+    
+    return res.json({
+      message: 'Post excluído com sucesso'
+    });
+  } catch (error) {
+    console.error('Erro ao excluir post:', error);
+    return res.status(500).json({
+      message: 'Erro ao excluir post',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
+  }
+});
+
+// DELETE: Excluir um post (Rota para administração)
 router.delete('/api/community/admin/posts/:id', async (req, res) => {
   try {
     // Verificar permissão - apenas admin pode excluir
