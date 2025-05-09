@@ -55,11 +55,12 @@ interface RankingListProps {
 
 // Mapeamento de ícones para níveis
 const LEVEL_ICONS: Record<string, React.ReactNode> = {
-  'Iniciante KDG': <User className="h-4 w-4 text-zinc-500" />,
-  'Colaborador KDG': <Award className="h-4 w-4 text-blue-500" />,
-  'Destaque KDG': <Medal className="h-4 w-4 text-yellow-500" />,
-  'Elite KDG': <Trophy className="h-4 w-4 text-amber-500" />,
-  'Lenda KDG': <Sparkles className="h-4 w-4 text-purple-500" />
+  'Membro KDG': <User className="h-4 w-4 text-amber-800" />,
+  'Voluntário KDG': <User className="h-4 w-4 text-green-500" />,
+  'Cooperador KDG': <Award className="h-4 w-4 text-blue-500" />,
+  'Destaque KDG': <Medal className="h-4 w-4 text-purple-600" />,
+  'Referência KDG': <Trophy className="h-4 w-4 text-orange-500" />,
+  'KDGPRO': <Sparkles className="h-4 w-4 text-red-600" />
 };
 
 // Componente para exibir medalha do pódio

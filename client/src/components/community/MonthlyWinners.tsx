@@ -117,11 +117,11 @@ const MonthlyWinners: React.FC<MonthlyWinnersProps> = ({ className }) => {
   // Função para obter o nível e ícone com base na pontuação
   const getLevelInfo = (points: number) => {
     if (points >= 5000) return { level: 'KDGPRO', icon: '🔴', color: 'text-red-600' };
-    if (points >= 3000) return { level: 'Referência', icon: '🟠', color: 'text-orange-500' };
-    if (points >= 1500) return { level: 'Destaque', icon: '🟣', color: 'text-purple-600' };
-    if (points >= 700) return { level: 'Cooperador', icon: '🔵', color: 'text-blue-500' };
-    if (points >= 200) return { level: 'Voluntário', icon: '🟢', color: 'text-green-500' };
-    return { level: 'Membro', icon: '🟤', color: 'text-amber-800' };
+    if (points >= 3000) return { level: 'Referência KDG', icon: '🟠', color: 'text-orange-500' };
+    if (points >= 1500) return { level: 'Destaque KDG', icon: '🟣', color: 'text-purple-600' };
+    if (points >= 700) return { level: 'Cooperador KDG', icon: '🔵', color: 'text-blue-500' };
+    if (points >= 200) return { level: 'Voluntário KDG', icon: '🟢', color: 'text-green-500' };
+    return { level: 'Membro KDG', icon: '🟤', color: 'text-amber-800' };
   };
   
   // Definir os prêmios padrão caso não venham do servidor
@@ -177,7 +177,7 @@ const MonthlyWinners: React.FC<MonthlyWinnersProps> = ({ className }) => {
         <div className="flex items-center gap-1 mb-1">
           <span>{levelInfo.icon}</span>
           <span className={cn("text-xs font-medium", levelInfo.color)}>
-            Nível {levelInfo.level}
+            {levelInfo.level}
           </span>
         </div>
         
