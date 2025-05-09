@@ -1018,7 +1018,7 @@ const CommunityPage: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('posts');
-  const [rankingPeriod, setRankingPeriod] = useState('week');
+  const [rankingPeriod, setRankingPeriod] = useState('month');
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [allPosts, setAllPosts] = useState<any[]>([]);
@@ -1652,6 +1652,13 @@ const CommunityPage: React.FC = () => {
                     >
                       Total
                     </Button>
+                  </div>
+                  
+                  {/* Título da premiação mensal */}
+                  <div className="mt-3 mb-2">
+                    <h3 className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                      Premiação mensal KDGPRO
+                    </h3>
                   </div>
                 </div>
                 
