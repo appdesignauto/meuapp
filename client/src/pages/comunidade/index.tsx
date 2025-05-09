@@ -607,15 +607,14 @@ const PostCard: React.FC<{
     });
   };
 
-  // Debugging para verificar se o post.isPinned está presente
-  console.log("Post ID:", post.id, "isPinned:", post.isPinned, "Post completo:", post);
+  // Logging reduzido para depuração
+  if (post.isPinned) {
+    console.log(`Post ${post.id} está fixado: isPinned=${post.isPinned} (tipo: ${typeof post.isPinned})`);
+  }
 
   // Aplica um estilo mais visível para posts fixados com verificação rigorosa
   // Essa conversão garante que null, undefined ou qualquer outro valor não booleano seja tratado como false
   const isPinned = post.isPinned === true; // Força conversão booleana
-  
-  // Log adicional para verificação
-  console.log(`Post ${post.id} - isPinned convertido para ${isPinned}`)
 
   return (
     <Card className={`mb-5 overflow-hidden ${isPinned 
