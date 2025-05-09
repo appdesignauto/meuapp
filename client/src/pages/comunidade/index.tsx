@@ -532,10 +532,10 @@ const PostCard: React.FC<{
   
   // Função para excluir um post
   const handleDeletePost = async (postId: number) => {
-    if (!user || (user.id !== post.userId && user.nivelacesso !== 'admin')) {
+    if (!user || user.nivelacesso !== 'admin') {
       toast({
         title: "Acesso negado",
-        description: "Você não tem permissão para excluir este post",
+        description: "Apenas administradores podem excluir posts na comunidade",
         variant: "destructive",
       });
       return;
@@ -700,7 +700,7 @@ const PostCard: React.FC<{
                 <Share className="mr-2 h-4 w-4" />
                 <span>Compartilhar</span>
               </DropdownMenuItem>
-              {(user?.id === post.userId || user?.nivelacesso === 'admin') && (
+              {user?.nivelacesso === 'admin' && (
                 <DropdownMenuItem
                   onClick={() => handleDeletePost(post.id)}
                   disabled={isDeleting}
