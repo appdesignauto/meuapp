@@ -114,6 +114,23 @@ const MonthlyWinners: React.FC<MonthlyWinnersProps> = ({ className }) => {
     return format(date, 'MMMM yyyy', { locale: ptBR });
   };
   
+  // Função para obter o nível e ícone com base na pontuação
+  const getLevelInfo = (points: number) => {
+    if (points >= 5000) return { level: 'KDGPRO', icon: '🔴', color: 'text-red-600' };
+    if (points >= 3000) return { level: 'Referência', icon: '🟠', color: 'text-orange-500' };
+    if (points >= 1500) return { level: 'Destaque', icon: '🟣', color: 'text-purple-600' };
+    if (points >= 700) return { level: 'Cooperador', icon: '🔵', color: 'text-blue-500' };
+    if (points >= 200) return { level: 'Voluntário', icon: '🟢', color: 'text-green-500' };
+    return { level: 'Membro', icon: '🟤', color: 'text-amber-800' };
+  };
+  
+  // Definir os prêmios padrão caso não venham do servidor
+  const defaultPrizes = {
+    prize1stPlace: 'R$ 200,00 em dinheiro',
+    prize2ndPlace: 'R$ 100,00 em dinheiro',
+    prize3rdPlace: 'R$ 50,00 em dinheiro'
+  };
+
   // Componente para exibir vencedor
   const WinnerCard = ({ user, position, prize }: { user: RankingUser, position: number, prize: string }) => {
     const positionIcons = [
@@ -133,6 +150,8 @@ const MonthlyWinners: React.FC<MonthlyWinnersProps> = ({ className }) => {
       'border-zinc-200 dark:border-zinc-700',
       'border-amber-200/70 dark:border-amber-900/30'
     ];
+
+    const levelInfo = getLevelInfo(user.totalPoints);
     
     return (
       <div className={cn(
@@ -154,6 +173,13 @@ const MonthlyWinners: React.FC<MonthlyWinnersProps> = ({ className }) => {
         <p className="font-medium text-center mb-1">
           {user.user.name || user.user.username}
         </p>
+
+        <div className="flex items-center gap-1 mb-1">
+          <span>{levelInfo.icon}</span>
+          <span className={cn("text-xs font-medium", levelInfo.color)}>
+            Nível {levelInfo.level}
+          </span>
+        </div>
         
         <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-2">
           {user.totalPoints} pontos
@@ -259,9 +285,9 @@ const MonthlyWinners: React.FC<MonthlyWinnersProps> = ({ className }) => {
                 key={user.id} 
                 user={user} 
                 position={index}
-                prize={index === 0 ? settings?.prize1stPlace : 
-                       index === 1 ? settings?.prize2ndPlace : 
-                       settings?.prize3rdPlace}
+                prize={index === 0 ? (settings?.prize1stPlace || defaultPrizes.prize1stPlace) : 
+                       index === 1 ? (settings?.prize2ndPlace || defaultPrizes.prize2ndPlace) : 
+                       (settings?.prize3rdPlace || defaultPrizes.prize3rdPlace)}
               />
             ))}
           </div>
