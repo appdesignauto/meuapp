@@ -1431,11 +1431,18 @@ router.get('/api/community/ranking', async (req, res) => {
   try {
     const period = req.query.period as string || 'all_time';
     const limit = parseInt(req.query.limit as string) || 10;
+    const monthYear = req.query.monthYear as string; // Formato YYYY-MM para buscar ranking de um mês específico
     
     // Validar período
     const validPeriods = ['all_time', 'year', 'month', 'week'];
     if (!validPeriods.includes(period) && !period.match(/^\d{4}(-\d{2})?(-W\d{2})?$/)) {
       return res.status(400).json({ message: 'Período inválido' });
+    }
+    
+    // Se temos um mês específico no formato 'YYYY-MM', vamos usar esse valor em vez do período padrão do mês atual
+    let periodValue = period;
+    if (period === 'month' && monthYear && monthYear.match(/^\d{4}-\d{2}$/)) {
+      periodValue = monthYear;
     }
     
     // Buscar usuários do ranking
@@ -1461,7 +1468,7 @@ router.get('/api/community/ranking', async (req, res) => {
       })
       .from(communityLeaderboard)
       .leftJoin(users, eq(communityLeaderboard.userId, users.id))
-      .where(eq(communityLeaderboard.period, period))
+      .where(eq(communityLeaderboard.period, periodValue))
       .orderBy(asc(communityLeaderboard.rank))
       .limit(limit);
     
@@ -1496,7 +1503,7 @@ router.get('/api/community/ranking', async (req, res) => {
         })
         .from(communityLeaderboard)
         .leftJoin(users, eq(communityLeaderboard.userId, users.id))
-        .where(eq(communityLeaderboard.period, period))
+        .where(eq(communityLeaderboard.period, periodValue))
         .orderBy(asc(communityLeaderboard.rank))
         .limit(limit);
         

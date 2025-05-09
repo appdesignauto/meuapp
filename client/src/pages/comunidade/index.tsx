@@ -18,6 +18,7 @@ import ErrorContainer from '@/components/ErrorContainer';
 import UserAvatar from '@/components/users/UserAvatar';
 import VerifiedUsername from '@/components/users/VerifiedUsername';
 import RankingList from '@/components/community/RankingList';
+import MonthlyWinners from '@/components/community/MonthlyWinners';
 import { CreatePostDialog } from '@/components/community/CreatePostDialog';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
