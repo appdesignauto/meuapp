@@ -34,8 +34,8 @@ export function formatDate(dateString: string): string {
   }
 }
 
-// Função auxiliar para formatar o tempo relativo a partir de uma data (formato híbrido mais descritivo)
-function formatRelativeTime(date: Date): string {
+// Função para formatar o tempo relativo a partir de uma data (formato híbrido mais descritivo)
+export function formatRelativeTime(date: Date): string {
   try {
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
