@@ -1276,7 +1276,19 @@ const CommunityPage: React.FC = () => {
                 <CardContent className="space-y-4">
                   <div className="flex flex-col gap-1">
 
-                    <div className="flex items-center gap-3 p-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer">
+                    <div 
+                      className="flex items-center gap-3 p-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+                      onClick={() => {
+                        setActiveTab('ranking');
+                        // Role para a seção de ranking
+                        setTimeout(() => {
+                          const rankingSection = document.getElementById('ranking-completo');
+                          if (rankingSection) {
+                            rankingSection.scrollIntoView({ behavior: 'smooth' });
+                          }
+                        }, 100);
+                      }}
+                    >
                       <div className="bg-amber-100 dark:bg-amber-900 w-10 h-10 rounded-full flex items-center justify-center text-amber-600 dark:text-amber-300">
                         <Trophy className="h-5 w-5" />
                       </div>
@@ -1286,7 +1298,22 @@ const CommunityPage: React.FC = () => {
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-3 p-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer">
+                    <div 
+                      className="flex items-center gap-3 p-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+                      onClick={() => {
+                        // Se não estiver na aba de posts, mude para ela primeiro
+                        if (activeTab !== 'posts') {
+                          setActiveTab('posts');
+                        }
+                        // Role para a seção de posts populares
+                        setTimeout(() => {
+                          const popularPostsSection = document.getElementById('popular-posts-section');
+                          if (popularPostsSection) {
+                            popularPostsSection.scrollIntoView({ behavior: 'smooth' });
+                          }
+                        }, 100);
+                      }}
+                    >
                       <div className="bg-green-100 dark:bg-green-900 w-10 h-10 rounded-full flex items-center justify-center text-green-600 dark:text-green-300">
                         <Sparkles className="h-5 w-5" />
                       </div>
@@ -1554,7 +1581,7 @@ const CommunityPage: React.FC = () => {
                 </div>
                 
                 {/* Ranking completo */}
-                <div className="mt-8">
+                <div id="ranking-completo" className="mt-8">
                   <h2 className="text-lg font-semibold mb-4">Ranking completo</h2>
                   <RankingList 
                     initialPeriod="month"
