@@ -1280,9 +1280,9 @@ const CommunityPage: React.FC = () => {
                     {!communityStatsLoading && communityStats && (
                       <Badge 
                         variant="outline" 
-                        className="bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs py-0 flex items-center gap-1"
+                        className="bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs py-0.5 h-5 px-2 flex items-center gap-1.5"
                       >
-                        <FileQuestion className="h-3 w-3 text-zinc-500" />
+                        <MessageSquare className="h-3 w-3 text-zinc-400" />
                         <span>{communityStats.totalPosts} posts</span>
                       </Badge>
                     )}
