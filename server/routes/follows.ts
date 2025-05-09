@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { db } from "../db";
-import { users, userFollows, arts } from "../../shared/schema";
+import { users, userFollows, arts, communityPosts } from "../../shared/schema";
 import { eq, and, sql, count, desc } from "drizzle-orm";
 import { FollowRequest } from "../../shared/interfaces/follows";
 import { storage } from "../storage";
@@ -205,6 +205,17 @@ export function setupFollowRoutes(app: any, isAuthenticated: (req: Request, res:
             .select({ count: count() })
             .from(arts)
             .where(eq(arts.designerid, designer.id));
+            
+          // Contagem de posts do designer na comunidade
+          const [postsCount] = await db
+            .select({ count: count() })
+            .from(communityPosts)
+            .where(
+              and(
+                eq(communityPosts.userId, designer.id),
+                eq(communityPosts.status, 'approved')
+              )
+            );
 
           // Contagem de seguidores do designer
           const [followersCount] = await db
@@ -232,6 +243,7 @@ export function setupFollowRoutes(app: any, isAuthenticated: (req: Request, res:
             name: designer.name || designer.username,
             role: designer.role || designer.nivelacesso,
             artsCount: Number(artsCount?.count || 0),
+            postsCount: Number(postsCount?.count || 0),
             followersCount: Number(followersCount?.count || 0),
             isFollowing: isFollowing,
           };
