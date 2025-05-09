@@ -5,12 +5,15 @@ import { apiRequest } from '@/lib/queryClient';
 import { UserPlus, UserCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-interface FollowButtonProps {
-  userId: number; // ID do usuário a ser seguido
+export interface FollowButtonProps {
+  userId?: number; // ID do usuário a ser seguido
+  designerId?: number; // ID do designer a ser seguido (alias para userId)
   isFollowing: boolean; // Estado inicial de seguimento
   variant?: 'default' | 'outline' | 'link' | 'destructive' | 'secondary' | 'ghost';
   className?: string;
   size?: 'default' | 'sm' | 'lg' | 'icon';
+  compact?: boolean; // Versão compacta do botão
+  onFollowChange?: () => void; // Callback após alteração do estado de seguimento
 }
 
 export function FollowButton({ 

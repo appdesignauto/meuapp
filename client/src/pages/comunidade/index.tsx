@@ -981,30 +981,48 @@ const CommunityPage: React.FC = () => {
     isLoading: popularPostsLoading, 
     error: popularPostsError,
     refetch: refetchPopularPosts
-  } = useQuery({
+  } = useQuery<any[]>({
     queryKey: ['/api/community/populares'], // NOVA ROTA COM NOME DIFERENTE
     refetchOnWindowFocus: true, // Recarregar ao focar na janela
     refetchInterval: 60000, // Recarrega a cada 1 minuto para manter mais atualizado
     retry: 3, // Tenta até 3 vezes em caso de falha
     retryDelay: 3000, // Espera 3 segundos entre as tentativas
-    onError: (error) => {
-      console.error("Erro ao buscar posts populares:", error);
-    },
-    onSuccess: (data) => {
-      if (!data || !Array.isArray(data)) {
-        console.warn("Resposta da API de posts populares não é um array:", data);
-      } else if (data.length === 0) {
-        console.info("Nenhum post popular encontrado");
-      } else {
-        console.info(`${data.length} posts populares carregados com sucesso`);
-      }
-    }
   });
   
   // Buscar ranking dos usuários
   const { data: ranking, isLoading: rankingLoading, error: rankingError, refetch: refetchRanking } = useQuery({
     queryKey: ['/api/community/ranking', rankingPeriod],
     refetchOnWindowFocus: false,
+  });
+  
+  // Buscar designers populares
+  interface DesignerPopular {
+    id: number;
+    username: string;
+    name: string | null;
+    profileimageurl: string | null;
+    bio: string | null;
+    nivelacesso: string;
+    role: string | null;
+    artsCount: number;
+    followersCount: number;
+    isFollowing: boolean;
+  }
+  
+  interface DesignersPopularesResponse {
+    designers: DesignerPopular[];
+  }
+  
+  const { 
+    data: popularDesignersData, 
+    isLoading: popularDesignersLoading, 
+    error: popularDesignersError,
+    refetch: refetchPopularDesigners
+  } = useQuery<DesignersPopularesResponse>({
+    queryKey: ['/api/designers/popular'],
+    refetchOnWindowFocus: false,
+    refetchInterval: 180000, // Recarrega a cada 3 minutos
+    retry: 2
   });
   
   return (
@@ -1393,74 +1411,68 @@ const CommunityPage: React.FC = () => {
                 
                 <CardContent className="p-0">
                   {/* Lista de designers populares */}
-                  <div className="flex items-center gap-3 p-3 border-b border-zinc-100 dark:border-zinc-800">
-                    <div className="w-10 h-10 relative rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden">
-                      <img 
-                        src="/images/avatars/designer1.jpg" 
-                        alt="Designer" 
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = "/images/avatars/placeholder.png";
-                        }}
-                      />
+                  {popularDesignersLoading ? (
+                    // Estado de loading
+                    <>
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="flex items-center gap-3 p-3 border-b border-zinc-100 dark:border-zinc-800 last:border-b-0">
+                          <Skeleton className="w-10 h-10 rounded-full" />
+                          <div className="flex-1">
+                            <Skeleton className="h-4 w-24 mb-1" />
+                            <Skeleton className="h-3 w-32" />
+                          </div>
+                          <Skeleton className="h-8 w-16" />
+                        </div>
+                      ))}
+                    </>
+                  ) : popularDesignersError ? (
+                    // Estado de erro
+                    <div className="p-4 text-center">
+                      <Info className="h-8 w-8 mx-auto text-red-500 mb-2" />
+                      <p className="text-sm font-medium text-red-500">Erro ao carregar designers</p>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="mt-2"
+                        onClick={() => refetchPopularDesigners()}
+                      >
+                        Tentar novamente
+                      </Button>
                     </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">Ana Oliveira</p>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                        Designer de Carros
-                      </p>
+                  ) : !popularDesignersData?.designers || popularDesignersData.designers.length === 0 ? (
+                    // Estado vazio
+                    <div className="p-4 text-center">
+                      <Users className="h-8 w-8 mx-auto text-zinc-300 dark:text-zinc-600 mb-2" />
+                      <p className="text-sm text-zinc-500 dark:text-zinc-400">Nenhum designer encontrado</p>
                     </div>
-                    <Button size="sm" variant="outline" className="text-xs h-8">
-                      Seguir
-                    </Button>
-                  </div>
-                  
-                  <div className="flex items-center gap-3 p-3 border-b border-zinc-100 dark:border-zinc-800">
-                    <div className="w-10 h-10 relative rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden">
-                      <img 
-                        src="/images/avatars/designer2.jpg" 
-                        alt="Designer" 
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = "/images/avatars/placeholder.png";
-                        }}
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">Carlos Mendes</p>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                        Especialista em Motos
-                      </p>
-                    </div>
-                    <Button size="sm" variant="outline" className="text-xs h-8">
-                      Seguir
-                    </Button>
-                  </div>
-                  
-                  <div className="flex items-center gap-3 p-3">
-                    <div className="w-10 h-10 relative rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden">
-                      <img 
-                        src="/images/avatars/designer3.jpg" 
-                        alt="Designer" 
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = "/images/avatars/placeholder.png";
-                        }}
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">Mariana Silva</p>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                        Artes para Concessionárias
-                      </p>
-                    </div>
-                    <Button size="sm" variant="outline" className="text-xs h-8">
-                      Seguir
-                    </Button>
-                  </div>
+                  ) : (
+                    // Designers populares carregados com sucesso
+                    <>
+                      {popularDesignersData.designers.slice(0, 5).map((designer) => (
+                        <div key={designer.id} className="flex items-center gap-3 p-3 border-b border-zinc-100 dark:border-zinc-800 last:border-b-0">
+                          <UserAvatar 
+                            user={designer} 
+                            size="sm" 
+                            linkToProfile={true} 
+                          />
+                          <div className="flex-1">
+                            <p className="font-medium text-sm">{designer.name || designer.username}</p>
+                            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                              {designer.followersCount} {designer.followersCount === 1 ? 'seguidor' : 'seguidores'} • {designer.artsCount} {designer.artsCount === 1 ? 'arte' : 'artes'}
+                            </p>
+                          </div>
+                          <FollowButton 
+                            designerId={designer.id}
+                            isFollowing={designer.isFollowing}
+                            size="sm" 
+                            variant="outline" 
+                            compact={true}
+                            onFollowChange={() => refetchPopularDesigners()}
+                          />
+                        </div>
+                      ))}
+                    </>
+                  )}
                 </CardContent>
               </Card>
               
