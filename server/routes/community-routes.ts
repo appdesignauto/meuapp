@@ -11,7 +11,7 @@ import {
   communitySettings,
   communityCommentLikes
 } from '../../shared/schema';
-import { eq, and, gt, gte, lte, desc, asc, sql, inArray, count } from 'drizzle-orm';
+import { eq, and, gt, gte, lte, desc, asc, sql, inArray, count as countFn } from 'drizzle-orm';
 import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
@@ -1159,7 +1159,7 @@ router.post('/api/community/comments/:id/like', async (req, res) => {
       
       // Contar curtidas totais do comentário
       const [{ count }] = await db
-        .select({ count: count() })
+        .select({ count: countFn() })
         .from(communityCommentLikes)
         .where(eq(communityCommentLikes.commentId, commentId));
       
@@ -1181,7 +1181,7 @@ router.post('/api/community/comments/:id/like', async (req, res) => {
       
       // Contar curtidas totais do comentário
       const [{ count }] = await db
-        .select({ count: count() })
+        .select({ count: countFn() })
         .from(communityCommentLikes)
         .where(eq(communityCommentLikes.commentId, commentId));
       
