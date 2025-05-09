@@ -1688,7 +1688,7 @@ const CommunityPage: React.FC = () => {
               </Card>
               
               {/* Card de posts populares */}
-              <Card className="overflow-hidden mb-4 border border-zinc-100 dark:border-zinc-800">
+              <Card id="popular-posts-section" className="overflow-hidden mb-4 border border-zinc-100 dark:border-zinc-800">
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-center">
                     <div>
