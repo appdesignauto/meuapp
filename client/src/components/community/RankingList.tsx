@@ -128,13 +128,14 @@ const RankingItem: React.FC<{
   return (
     <div 
       className={cn(
-        "flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border-b border-zinc-100 dark:border-zinc-800 last:border-0",
+        "flex items-center gap-3 p-3 border-b border-zinc-100 dark:border-zinc-800 last:border-0",
         isCurrentUser && "bg-blue-50 dark:bg-blue-900/20",
         isTopThree && "bg-zinc-50/80 dark:bg-zinc-800/30"
       )}
     >
+      {/* Círculo com posição no ranking */}
       <div className={cn(
-        "flex items-center justify-center text-sm sm:text-lg font-bold w-6 h-6 sm:w-8 sm:h-8 rounded-full shrink-0",
+        "flex items-center justify-center text-base font-bold w-7 h-7 rounded-full shrink-0",
         isTopThree 
           ? rankColors[index] 
           : "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
@@ -142,6 +143,7 @@ const RankingItem: React.FC<{
         {index + 1}
       </div>
       
+      {/* Avatar do usuário */}
       <UserAvatar user={{
         id: user.user.id,
         username: user.user.username,
@@ -150,12 +152,19 @@ const RankingItem: React.FC<{
         nivelacesso: user.user.nivelacesso
       }} size="sm" linkToProfile={true} />
       
+      {/* Conteúdo principal */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1">
+        <div className="flex items-start justify-between w-full">
+          {/* Coluna esquerda: nome e stats */}
           <div className="flex-1 min-w-0">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-              <p className="font-medium text-xs sm:text-sm truncate max-w-[120px] xs:max-w-[150px] sm:max-w-[200px]">{user.user.name || user.user.username}</p>
-              <Badge variant="outline" className={`text-[10px] sm:text-xs py-0 h-4 sm:h-5 gap-1 shrink-0 ${
+            {/* Nome do usuário */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="font-medium text-sm truncate max-w-[140px]">
+                {user.user.name || user.user.username}
+              </p>
+              
+              {/* Badge de nível */}
+              <Badge variant="outline" className={`text-xs py-0 h-5 gap-1 shrink-0 ${
                 user.level.includes('Pro') ? 'border-red-200 text-red-600 dark:border-red-800/50' :
                 user.level.includes('Referência') ? 'border-orange-200 text-orange-500 dark:border-orange-800/50' :
                 user.level.includes('Destaque') ? 'border-purple-200 text-purple-600 dark:border-purple-800/50' :
@@ -164,20 +173,25 @@ const RankingItem: React.FC<{
                 'border-amber-200 text-amber-800 dark:border-amber-800/50'
               }`}>
                 {getLevelIcon(user.level)}
-                <span className="hidden xs:inline">{user.level.replace(' D.Auto', '')}</span>
+                <span>{user.level.replace(' D.Auto', '')}</span>
               </Badge>
             </div>
-            <p className="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400 truncate max-w-[190px] xs:max-w-full">
-              {user.totalPoints} pts • {user.postCount} posts • {user.likesReceived} <span className="hidden xs:inline">curtidas</span><span className="inline xs:hidden">❤️</span>
-              {showPrize && prize && (
-                <span className="inline sm:hidden ml-1 text-amber-600 dark:text-amber-400 font-medium"> • {prize}</span>
-              )}
+            
+            {/* Estatísticas do usuário */}
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
+              {user.totalPoints} pts • {user.postCount} posts • {user.likesReceived} ❤️
             </p>
           </div>
           
+          {/* Medalha/Prêmio (se aplicável) */}
           {showPrize && prize && (
-            <div className="hidden sm:block">
-              <PodiumMedal position={index + 1} prize={prize} />
+            <div className="ml-2 shrink-0">
+              <div className="hidden sm:block">
+                <PodiumMedal position={index + 1} prize={prize} />
+              </div>
+              <div className="block sm:hidden">
+                <span className="text-xs text-amber-600 dark:text-amber-400 font-medium whitespace-nowrap">{prize}</span>
+              </div>
             </div>
           )}
         </div>
@@ -188,15 +202,19 @@ const RankingItem: React.FC<{
 
 // Esqueleto para loading
 const RankingItemSkeleton: React.FC = () => (
-  <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border-b border-zinc-100 dark:border-zinc-800 last:border-0">
-    <Skeleton className="w-6 h-6 sm:w-8 sm:h-8 rounded-full shrink-0" />
-    <Skeleton className="w-8 h-8 sm:w-10 sm:h-10 rounded-full shrink-0" />
-    <div className="flex-1">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-        <Skeleton className="h-3 sm:h-4 w-24 sm:w-32 mb-1" />
-        <Skeleton className="h-4 w-16 sm:h-5 sm:w-20 mb-1 sm:mb-0" />
+  <div className="flex items-center gap-3 p-3 border-b border-zinc-100 dark:border-zinc-800 last:border-0">
+    <Skeleton className="w-7 h-7 rounded-full shrink-0" />
+    <Skeleton className="w-10 h-10 rounded-full shrink-0" />
+    <div className="flex-1 min-w-0">
+      <div className="flex items-start justify-between w-full">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Skeleton className="h-4 w-32 mb-1" />
+            <Skeleton className="h-5 w-20 shrink-0" />
+          </div>
+          <Skeleton className="h-3 w-40" />
+        </div>
       </div>
-      <Skeleton className="h-2 sm:h-3 w-32 sm:w-40" />
     </div>
   </div>
 );
