@@ -1358,19 +1358,22 @@ const CommunityPage: React.FC = () => {
                     <h5 className="text-sm font-medium">Níveis e Pontos:</h5>
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-1 text-xs">
-                        <User className="h-3 w-3 text-zinc-500" /> <span className="font-medium">Iniciante KDG:</span> <span className="text-zinc-500">0-500 pontos</span>
+                        <User className="h-3 w-3 text-amber-800" /> <span className="font-medium">Membro KDG:</span> <span className="text-zinc-500">0-199 pontos</span>
                       </div>
                       <div className="flex items-center gap-1 text-xs">
-                        <Award className="h-3 w-3 text-blue-500" /> <span className="font-medium">Colaborador KDG:</span> <span className="text-zinc-500">501-2000 pontos</span>
+                        <User className="h-3 w-3 text-green-500" /> <span className="font-medium">Voluntário KDG:</span> <span className="text-zinc-500">200-699 pontos</span>
                       </div>
                       <div className="flex items-center gap-1 text-xs">
-                        <Medal className="h-3 w-3 text-yellow-500" /> <span className="font-medium">Destaque KDG:</span> <span className="text-zinc-500">2001-5000 pontos</span>
+                        <Award className="h-3 w-3 text-blue-500" /> <span className="font-medium">Cooperador KDG:</span> <span className="text-zinc-500">700-1.499 pontos</span>
                       </div>
                       <div className="flex items-center gap-1 text-xs">
-                        <Trophy className="h-3 w-3 text-amber-500" /> <span className="font-medium">Elite KDG:</span> <span className="text-zinc-500">5001-10000 pontos</span>
+                        <Medal className="h-3 w-3 text-purple-600" /> <span className="font-medium">Destaque KDG:</span> <span className="text-zinc-500">1.500-2.999 pontos</span>
                       </div>
                       <div className="flex items-center gap-1 text-xs">
-                        <Sparkles className="h-3 w-3 text-purple-500" /> <span className="font-medium">Lenda KDG:</span> <span className="text-zinc-500">10001+ pontos</span>
+                        <Trophy className="h-3 w-3 text-orange-500" /> <span className="font-medium">Referência KDG:</span> <span className="text-zinc-500">3.000-4.999 pontos</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-xs">
+                        <Sparkles className="h-3 w-3 text-red-600" /> <span className="font-medium">Profissional:</span> <span className="text-zinc-500">5.000+ pontos</span>
                       </div>
                     </div>
                   </div>
