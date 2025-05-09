@@ -153,6 +153,45 @@ const PostDetailPage: React.FC = () => {
   });
   
   // Mutação para adicionar um comentário
+  // Mutação para excluir o post
+  const deletePostMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest('DELETE', `/api/community/posts/${postId}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Post excluído",
+        description: "O post foi excluído com sucesso",
+      });
+      // Redirecionar para a página da comunidade
+      window.location.href = "/comunidade";
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: error.message || "Não foi possível excluir o post",
+      });
+    }
+  });
+
+  // Função para lidar com a exclusão do post
+  const handleDeletePost = () => {
+    if (!user || user.nivelacesso !== 'admin') {
+      toast({
+        title: "Acesso negado",
+        description: "Apenas administradores podem excluir posts na comunidade",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Confirmação para exclusão
+    if (window.confirm("Tem certeza que deseja excluir este post? Esta ação não pode ser desfeita.")) {
+      deletePostMutation.mutate();
+    }
+  };
+  
   const addCommentMutation = useMutation({
     mutationFn: async (content: string) => {
       await apiRequest('POST', `/api/community/posts/${postId}/comments`, { content });
@@ -286,6 +325,14 @@ const PostDetailPage: React.FC = () => {
                     <Share2 className="h-4 w-4 mr-2" />
                     Compartilhar
                   </DropdownMenuItem>
+                  
+                  {user?.nivelacesso === 'admin' && (
+                    <DropdownMenuItem onClick={handleDeletePost} className="text-red-500 hover:text-red-600 focus:text-red-600">
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Excluir post
+                    </DropdownMenuItem>
+                  )}
+                  
                   <DropdownMenuItem>
                     <Flag className="h-4 w-4 mr-2" />
                     Denunciar
