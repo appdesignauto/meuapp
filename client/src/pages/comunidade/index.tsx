@@ -638,7 +638,7 @@ const PostCard: React.FC<{
     <Card className={`mb-5 overflow-hidden ${isPinned 
       ? 'border-2 border-amber-400 dark:border-amber-500 bg-amber-50/40 dark:bg-amber-900/10 shadow-lg' 
       : 'border border-zinc-100 dark:border-zinc-800'
-    } shadow-md hover:shadow-lg transition-all duration-300 ease-in-out w-full max-w-[500px] mx-auto relative`}>
+    } shadow-md hover:shadow-lg transition-all duration-300 ease-in-out w-full max-w-none xs:max-w-[500px] mx-0 xs:mx-auto relative`}>
       {/* Removido ícone de estrela sobreposto para evitar problemas de layout */}
       
       {/* Cabeçalho do post - estilo Facebook/Instagram */}
@@ -741,7 +741,7 @@ const PostCard: React.FC<{
               <img 
                 src={post.imageUrl} 
                 alt={post.title}
-                className="hover:scale-[1.02] transition-transform duration-500 cursor-pointer max-w-full max-h-[600px] object-contain"
+                className="hover:scale-[1.02] transition-transform duration-500 cursor-pointer max-w-full max-h-[600px] w-full object-cover sm:object-contain"
               />
             </div>
           </div>
