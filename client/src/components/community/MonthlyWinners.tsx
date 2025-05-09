@@ -140,9 +140,9 @@ const MonthlyWinners: React.FC<MonthlyWinnersProps> = ({ className }) => {
   // Componente para exibir vencedor
   const WinnerCard = ({ user, position, prize }: { user: RankingUser, position: number, prize: string }) => {
     const positionIcons = [
-      <Crown key="crown" className="h-6 w-6 text-amber-500" />,
-      <Medal key="silver" className="h-6 w-6 text-zinc-400" />,
-      <Medal key="bronze" className="h-6 w-6 text-amber-700" />
+      <Crown key="crown" className="h-5 w-5 sm:h-6 sm:w-6 text-amber-500" />,
+      <Medal key="silver" className="h-5 w-5 sm:h-6 sm:w-6 text-zinc-400" />,
+      <Medal key="bronze" className="h-5 w-5 sm:h-6 sm:w-6 text-amber-700" />
     ];
     
     const bgColors = [
@@ -159,11 +159,11 @@ const MonthlyWinners: React.FC<MonthlyWinnersProps> = ({ className }) => {
     
     return (
       <div className={cn(
-        "flex flex-col items-center p-4 rounded-lg border", 
+        "flex flex-col items-center p-3 sm:p-4 rounded-lg border", 
         bgColors[position], 
         borderColors[position]
       )}>
-        <div className="mb-2">
+        <div className="mb-1 sm:mb-2">
           {positionIcons[position]}
         </div>
         
@@ -171,25 +171,25 @@ const MonthlyWinners: React.FC<MonthlyWinnersProps> = ({ className }) => {
           user={user.user} 
           size="lg" 
           linkToProfile={true}
-          className="mb-2"
+          className="mb-1 sm:mb-2"
         />
         
-        <p className="font-medium text-center mb-1">
+        <p className="font-medium text-center text-sm sm:text-base mb-0.5 sm:mb-1 line-clamp-1 w-full">
           {user.user.name || user.user.username}
         </p>
         
-        <div className="flex items-center justify-center mb-2">
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+        <div className="flex items-center justify-center mb-1 sm:mb-2">
+          <p className="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400">
             {user.totalPoints} pontos
           </p>
         </div>
         
         <div className="flex flex-col gap-1 items-center">
-          <p className={`text-xs font-medium ${getLevelInfo(user.totalPoints).color}`}>
-            {getLevelInfo(user.totalPoints).level}
+          <p className={`text-[10px] sm:text-xs font-medium ${getLevelInfo(user.totalPoints).color}`}>
+            {getLevelInfo(user.totalPoints).level.replace(' D.Auto', '')}
           </p>
-          <div className="bg-white dark:bg-zinc-800 py-1 px-3 rounded-full border border-amber-200 dark:border-amber-900/30">
-            <p className="text-xs font-medium text-amber-600 dark:text-amber-400">
+          <div className="bg-white dark:bg-zinc-800 py-0.5 sm:py-1 px-2 sm:px-3 rounded-full border border-amber-200 dark:border-amber-900/30">
+            <p className="text-[10px] sm:text-xs font-medium text-amber-600 dark:text-amber-400">
               {prize}
             </p>
           </div>
@@ -200,39 +200,39 @@ const MonthlyWinners: React.FC<MonthlyWinnersProps> = ({ className }) => {
   
   // Componente Skeleton para carregamento
   const WinnerCardSkeleton = () => (
-    <div className="flex flex-col items-center p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50">
-      <Skeleton className="h-6 w-6 rounded-full mb-2" />
-      <Skeleton className="h-16 w-16 rounded-full mb-2" />
-      <Skeleton className="h-4 w-24 mb-1" />
-      <Skeleton className="h-3 w-16 mb-2" />
-      <Skeleton className="h-6 w-16 rounded-full" />
+    <div className="flex flex-col items-center p-3 sm:p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50">
+      <Skeleton className="h-5 w-5 sm:h-6 sm:w-6 rounded-full mb-1 sm:mb-2" />
+      <Skeleton className="h-12 w-12 sm:h-16 sm:w-16 rounded-full mb-1 sm:mb-2" />
+      <Skeleton className="h-3 sm:h-4 w-20 sm:w-24 mb-0.5 sm:mb-1" />
+      <Skeleton className="h-2 sm:h-3 w-14 sm:w-16 mb-1 sm:mb-2" />
+      <Skeleton className="h-4 sm:h-6 w-14 sm:w-16 rounded-full" />
     </div>
   );
   
   return (
     <Card className={cn("overflow-hidden", className)}>
       <CardHeader className="pb-2">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col xs:flex-row xs:justify-between xs:items-center gap-2 xs:gap-0">
           <div>
-            <CardTitle className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-amber-500" /> 
-              Vencedores Mensais
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Trophy className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500" /> 
+              <span className="whitespace-nowrap">Vencedores Mensais</span>
             </CardTitle>
-            <div className="flex items-center gap-1.5">
-              <CardDescription>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <CardDescription className="text-xs sm:text-sm">
                 Top 3 criadores de {formatSelectedMonth()}
               </CardDescription>
               {isCurrentMonth() && (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Badge variant="outline" className="text-xs py-0 px-1.5 ml-1 border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
+                      <Badge variant="outline" className="text-[10px] sm:text-xs py-0 px-1.5 ml-1 border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
                         <span className="text-blue-600 dark:text-blue-400 flex items-center gap-0.5">
-                          <Info className="h-3 w-3" /> Parcial
+                          <Info className="h-2.5 w-2.5 sm:h-3 sm:w-3" /> Parcial
                         </span>
                       </Badge>
                     </TooltipTrigger>
-                    <TooltipContent className="max-w-[280px]">
+                    <TooltipContent className="max-w-[280px] text-xs sm:text-sm">
                       <p>Resultados parciais para o mês atual. Classificação e prêmios finais serão definidos ao término do mês.</p>
                     </TooltipContent>
                   </Tooltip>
@@ -245,14 +245,14 @@ const MonthlyWinners: React.FC<MonthlyWinnersProps> = ({ className }) => {
             value={selectedMonth}
             onValueChange={setSelectedMonth}
           >
-            <SelectTrigger className="w-36">
+            <SelectTrigger className="w-full xs:w-32 sm:w-36 h-8 text-xs sm:text-sm">
               <SelectValue placeholder="Selecione o mês" />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                <SelectLabel>Meses</SelectLabel>
+                <SelectLabel className="text-xs sm:text-sm">Meses</SelectLabel>
                 {monthOptions.map(option => (
-                  <SelectItem key={option.value} value={option.value}>
+                  <SelectItem key={option.value} value={option.value} className="text-xs sm:text-sm">
                     {option.label}
                   </SelectItem>
                 ))}
@@ -262,9 +262,9 @@ const MonthlyWinners: React.FC<MonthlyWinnersProps> = ({ className }) => {
         </div>
       </CardHeader>
       
-      <CardContent className="p-4">
+      <CardContent className="p-3 sm:p-4">
         {isLoading || isRefetching ? (
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 xs:grid-cols-3 gap-3 sm:gap-4">
             <WinnerCardSkeleton />
             <WinnerCardSkeleton />
             <WinnerCardSkeleton />
@@ -301,7 +301,7 @@ const MonthlyWinners: React.FC<MonthlyWinnersProps> = ({ className }) => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 xs:grid-cols-3 gap-3 sm:gap-4">
             {topUsers.map((user, index) => (
               <WinnerCard 
                 key={user.id} 
