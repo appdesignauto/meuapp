@@ -156,10 +156,10 @@ const RankingItem: React.FC<{
         nivelacesso: user.user.nivelacesso
       }} size="sm" linkToProfile={true} />
       
-      <div className="flex-1 pr-2 sm:pr-10">
+      <div className="flex-1 min-w-0 pr-2 sm:pr-10">
         <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-          <p className="font-medium text-xs sm:text-sm line-clamp-1">{user.user.name || user.user.username}</p>
-          <Badge variant="outline" className={`text-[10px] sm:text-xs py-0 h-4 sm:h-5 gap-1 ${
+          <p className="font-medium text-xs sm:text-sm truncate w-full sm:w-auto max-w-[150px] sm:max-w-none">{user.user.name || user.user.username}</p>
+          <Badge variant="outline" className={`text-[10px] sm:text-xs py-0 h-4 sm:h-5 gap-1 shrink-0 ${
             user.level.includes('Pro') ? 'border-red-200 text-red-600 dark:border-red-800/50' :
             user.level.includes('Referência') ? 'border-orange-200 text-orange-500 dark:border-orange-800/50' :
             user.level.includes('Destaque') ? 'border-purple-200 text-purple-600 dark:border-purple-800/50' :
@@ -171,7 +171,7 @@ const RankingItem: React.FC<{
             <span className="hidden xs:inline">{user.level.replace(' D.Auto', '')}</span>
           </Badge>
         </div>
-        <p className="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400 line-clamp-1">
+        <p className="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400 truncate">
           {user.totalPoints} pts • {user.postCount} posts • {user.likesReceived} <span className="hidden xs:inline">curtidas</span><span className="inline xs:hidden">❤️</span>
           {showPrize && prize && (
             <span className="inline sm:hidden ml-1 text-amber-600 dark:text-amber-400 font-medium"> • {prize}</span>
