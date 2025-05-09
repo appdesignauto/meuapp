@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Link } from 'wouter';
 import { 
@@ -967,13 +967,85 @@ const CommunityPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('posts');
   const [rankingPeriod, setRankingPeriod] = useState('week');
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [allPosts, setAllPosts] = useState<any[]>([]);
+  const [hasMorePosts, setHasMorePosts] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const loaderRef = useRef<HTMLDivElement>(null);
   
-  // Buscar posts da comunidade
-  const { data: posts, isLoading: postsLoading, error: postsError, refetch: refetchPosts } = useQuery({
-    queryKey: ['/api/community/posts'],
+  // Buscar posts da comunidade com paginação
+  const { 
+    data: posts, 
+    isLoading: postsLoading, 
+    error: postsError, 
+    refetch: refetchPosts,
+    isFetching
+  } = useQuery({
+    queryKey: ['/api/community/posts', { page, limit: 10 }],
     refetchOnWindowFocus: true,
     refetchInterval: 30000, // Recarrega a cada 30 segundos
   });
+  
+  // Efeito para adicionar novos posts ao array de posts existentes
+  useEffect(() => {
+    if (posts && Array.isArray(posts)) {
+      if (page === 1) {
+        setAllPosts(posts);
+      } else if (posts.length > 0) {
+        // Verificar se já temos algum dos posts novos (para evitar duplicatas)
+        const newPosts = posts.filter(
+          newPost => !allPosts.some(existingPost => existingPost.post.id === newPost.post.id)
+        );
+        setAllPosts(prev => [...prev, ...newPosts]);
+      }
+      
+      // Verificar se existem mais posts para carregar
+      setHasMorePosts(posts.length === 10);
+      setIsLoadingMore(false);
+    }
+  }, [posts, page]);
+  
+  // Configurar o observador da interseção para detectar quando o usuário atinge o final da lista
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        const [entry] = entries;
+        if (entry.isIntersecting && hasMorePosts && !isFetching && !isLoadingMore) {
+          setIsLoadingMore(true);
+          setPage(prev => prev + 1);
+        }
+      },
+      { threshold: 0.5 }
+    );
+    
+    const currentLoaderRef = loaderRef.current;
+    if (currentLoaderRef) {
+      observer.observe(currentLoaderRef);
+    }
+    
+    return () => {
+      if (currentLoaderRef) {
+        observer.unobserve(currentLoaderRef);
+      }
+    };
+  }, [hasMorePosts, isFetching, isLoadingMore]);
+  
+  // Função para recarregar todos os posts (reset)
+  const handleRefreshPosts = () => {
+    setPage(1);
+    setAllPosts([]);
+    setHasMorePosts(true);
+    refetchPosts();
+    
+    // Adiciona classe de animação ao ícone
+    const refreshIcon = document.getElementById('refresh-posts-icon');
+    if (refreshIcon) {
+      refreshIcon.classList.add('animate-spin');
+      setTimeout(() => {
+        refreshIcon.classList.remove('animate-spin');
+      }, 1000);
+    }
+  };
   
   // Buscar posts populares
   const { 
