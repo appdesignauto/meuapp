@@ -15,7 +15,7 @@
  * - Referência D.Auto: 3000-4999 pontos
  * - Pro D.Auto: 5000+ pontos
  * 
- * Uso: node update-kdgpro-points.cjs
+ * Uso: node update-dauto-points.cjs
  */
 
 require('dotenv').config();

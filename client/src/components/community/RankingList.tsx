@@ -166,7 +166,7 @@ const RankingItem: React.FC<{
             'border-amber-200 text-amber-800 dark:border-amber-800/50'
           }`}>
             {LEVEL_ICONS[user.level] || <User className="h-3 w-3" />}
-            <span>{user.level}</span>
+            <span>{user.level.replace(' D.Auto', '')}</span>
           </Badge>
         </div>
         <p className="text-xs text-zinc-500 dark:text-zinc-400">
