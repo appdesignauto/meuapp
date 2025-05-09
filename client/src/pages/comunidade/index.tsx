@@ -518,7 +518,7 @@ const PostCard: React.FC<{
           {user && user.id !== post.user.id && (
             <FollowButton 
               userId={post.user.id} 
-              isFollowing={false} 
+              isFollowing={post.user?.isFollowing || false} 
               size="sm"
               variant="outline" 
               className="text-xs px-2 h-8"
