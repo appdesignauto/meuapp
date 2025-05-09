@@ -327,7 +327,7 @@ export const registerFollowAndNotificationRoutes = (router: Router) => {
   });
 
   // Rota para marcar notificações como lidas
-  router.post("/notifications/mark-read", auth, async (req: Request, res: Response) => {
+  router.post("/notifications/mark-read", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
       const schema = z.object({
@@ -370,7 +370,7 @@ export const registerFollowAndNotificationRoutes = (router: Router) => {
       
       // Retornar o número de notificações não lidas atualizado
       const [{ unreadCount }] = await db
-        .select({ unreadCount: count2(notifications.id) })
+        .select({ unreadCount: count(notifications.id) })
         .from(notifications)
         .where(and(
           eq(notifications.userId, userId),
@@ -389,13 +389,13 @@ export const registerFollowAndNotificationRoutes = (router: Router) => {
   });
 
   // Rota para obter o contador de notificações não lidas
-  router.get("/notifications/unread-count", auth, async (req: Request, res: Response) => {
+  router.get("/notifications/unread-count", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
       
       // Contar o total de notificações não lidas
       const [{ unreadCount }] = await db
-        .select({ unreadCount: count2(notifications.id) })
+        .select({ unreadCount: count(notifications.id) })
         .from(notifications)
         .where(and(
           eq(notifications.userId, userId),
