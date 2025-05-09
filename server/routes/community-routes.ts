@@ -716,12 +716,12 @@ router.put('/api/community/posts/:id/pin', async (req, res) => {
       return res.status(400).json({ message: 'Apenas posts aprovados podem ser fixados' });
     }
     
-    // Fixar o post
+    // Fixar o post sem alterar a data de publicação
     const [updatedPost] = await db
       .update(communityPosts)
       .set({ 
-        isPinned: true,
-        updatedAt: new Date() 
+        isPinned: true
+        // Removemos updatedAt para manter a data original
       })
       .where(eq(communityPosts.id, postId))
       .returning();
@@ -759,12 +759,12 @@ router.put('/api/community/posts/:id/unpin', async (req, res) => {
       return res.status(404).json({ message: 'Post não encontrado' });
     }
     
-    // Desafixar o post
+    // Desafixar o post sem alterar a data de publicação
     const [updatedPost] = await db
       .update(communityPosts)
       .set({ 
-        isPinned: false,
-        updatedAt: new Date() 
+        isPinned: false
+        // Removemos updatedAt para manter a data original
       })
       .where(eq(communityPosts.id, postId))
       .returning();
