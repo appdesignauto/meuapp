@@ -51,7 +51,7 @@ const MobileMenu = ({ isOpen, onClose, navLinks, userRole }: MobileMenuProps) =>
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden" onClick={onClose}>
       <div 
-        className="absolute right-0 top-0 h-full w-4/5 max-w-sm bg-white shadow-xl py-4 px-5 overflow-y-auto"
+        className="absolute left-0 right-0 top-0 max-h-[90vh] w-full bg-white shadow-xl py-4 px-5 overflow-y-auto rounded-b-2xl mobile-menu-dropdown custom-scrollbar"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-6 pb-4 border-b border-blue-100">
