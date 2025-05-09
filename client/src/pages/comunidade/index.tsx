@@ -953,7 +953,7 @@ const RankingUserCard: React.FC<{ user: RankingUser }> = ({ user }) => {
   return (
     <div className="flex items-center gap-3 p-3 border-b border-zinc-100 dark:border-zinc-800 last:border-0">
       <div className={cn(
-        "flex items-center justify-center text-lg font-bold w-7 h-7 rounded-full",
+        "flex items-center justify-center text-lg font-bold w-7 h-7 rounded-full shrink-0",
         user.rank <= 3 
           ? user.rank === 1 
             ? "bg-amber-100 text-amber-800 border-amber-300" 
@@ -965,10 +965,10 @@ const RankingUserCard: React.FC<{ user: RankingUser }> = ({ user }) => {
         {user.rank}
       </div>
       <UserAvatar user={user.user} size="sm" linkToProfile={true} />
-      <div className="flex-1">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">{user.user.name || user.user.username}</span>
-          <Badge variant="outline" className={`text-xs py-0 h-5 gap-1 ${
+      <div className="flex-1 min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1">
+          <p className="text-sm font-medium truncate max-w-[120px] sm:max-w-[180px]">{user.user.name || user.user.username}</p>
+          <Badge variant="outline" className={`text-xs py-0 h-5 gap-1 shrink-0 ${
             user.level.includes('Pro') ? 'border-red-200 text-red-600 dark:border-red-800/50' :
             user.level.includes('Referência') ? 'border-orange-200 text-orange-500 dark:border-orange-800/50' :
             user.level.includes('Destaque') ? 'border-purple-200 text-purple-600 dark:border-purple-800/50' :
@@ -977,11 +977,11 @@ const RankingUserCard: React.FC<{ user: RankingUser }> = ({ user }) => {
             'border-amber-200 text-amber-800 dark:border-amber-800/50'
           }`}>
             {getLevelIcon(user.level)}
-            <span>{user.level.replace(' D.Auto', '')}</span>
+            <span className="truncate">{user.level.replace(' D.Auto', '')}</span>
           </Badge>
         </div>
-        <p className="text-xs text-zinc-500 dark:text-zinc-400">
-          {user.totalPoints} pontos • {user.postCount} posts • {user.likesReceived} curtidas
+        <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
+          {user.totalPoints} pts • {user.postCount} posts • {user.likesReceived} ❤️
         </p>
       </div>
     </div>
