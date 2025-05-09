@@ -55,12 +55,12 @@ interface RankingListProps {
 
 // Mapeamento de ícones para níveis
 const LEVEL_ICONS: Record<string, React.ReactNode> = {
-  'Membro KDG': <User className="h-4 w-4 text-amber-800" />,
-  'Voluntário KDG': <User className="h-4 w-4 text-green-500" />,
-  'Cooperador KDG': <Award className="h-4 w-4 text-blue-500" />,
-  'Destaque KDG': <Medal className="h-4 w-4 text-purple-600" />,
-  'Referência KDG': <Trophy className="h-4 w-4 text-orange-500" />,
-  'Profissional': <Sparkles className="h-4 w-4 text-red-600" />
+  'Membro D.Auto': <User className="h-4 w-4 text-amber-800" />,
+  'Voluntário D.Auto': <User className="h-4 w-4 text-green-500" />,
+  'Cooperador D.Auto': <Award className="h-4 w-4 text-blue-500" />,
+  'Destaque D.Auto': <Medal className="h-4 w-4 text-purple-600" />,
+  'Referência D.Auto': <Trophy className="h-4 w-4 text-orange-500" />,
+  'Pro D.Auto': <Sparkles className="h-4 w-4 text-red-600" />
 };
 
 // Componente para exibir medalha do pódio
@@ -158,11 +158,11 @@ const RankingItem: React.FC<{
         <div className="flex items-center gap-2">
           <p className="font-medium text-sm">{user.user.name || user.user.username}</p>
           <Badge variant="outline" className={`text-xs py-0 h-5 gap-1 ${
-            user.level === 'Profissional' ? 'border-red-200 text-red-600 dark:border-red-800/50' :
-            user.level === 'Referência KDG' ? 'border-orange-200 text-orange-500 dark:border-orange-800/50' :
-            user.level === 'Destaque KDG' ? 'border-purple-200 text-purple-600 dark:border-purple-800/50' :
-            user.level === 'Cooperador KDG' ? 'border-blue-200 text-blue-500 dark:border-blue-800/50' :
-            user.level === 'Voluntário KDG' ? 'border-green-200 text-green-500 dark:border-green-800/50' :
+            user.level === 'Pro D.Auto' ? 'border-red-200 text-red-600 dark:border-red-800/50' :
+            user.level === 'Referência D.Auto' ? 'border-orange-200 text-orange-500 dark:border-orange-800/50' :
+            user.level === 'Destaque D.Auto' ? 'border-purple-200 text-purple-600 dark:border-purple-800/50' :
+            user.level === 'Cooperador D.Auto' ? 'border-blue-200 text-blue-500 dark:border-blue-800/50' :
+            user.level === 'Voluntário D.Auto' ? 'border-green-200 text-green-500 dark:border-green-800/50' :
             'border-amber-200 text-amber-800 dark:border-amber-800/50'
           }`}>
             {LEVEL_ICONS[user.level] || <User className="h-3 w-3" />}
@@ -191,7 +191,7 @@ const RankingItemSkeleton: React.FC = () => (
 
 // Componente principal do ranking
 const RankingList: React.FC<RankingListProps> = ({
-  title = "Ranking KDGPRO",
+  title = "Ranking D.Auto",
   description = "Os melhores criadores da nossa comunidade",
   limit = 10,
   showPeriodSelector = true,
@@ -355,7 +355,7 @@ const RankingList: React.FC<RankingListProps> = ({
           <div className="w-full">
             <h4 className="text-sm font-medium mb-2 flex items-center gap-1.5">
               <Trophy className="h-4 w-4 text-amber-500" /> 
-              Premiação mensal KDGPRO:
+              Premiação mensal D.Auto:
             </h4>
             <div className="grid grid-cols-3 gap-2 text-center">
               <div className="bg-white dark:bg-zinc-800 rounded-lg p-2 shadow-sm border border-amber-200 dark:border-amber-900/30">
