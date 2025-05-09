@@ -158,12 +158,12 @@ const RankingItem: React.FC<{
           {/* Coluna esquerda: nome e stats */}
           <div className="flex-1 min-w-0">
             {/* Nome do usuário */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <p className="font-medium text-sm truncate max-w-[140px]">
-                {user.user.name || user.user.username}
-              </p>
-              
-              {/* Badge de nível */}
+            <p className="font-medium text-sm truncate max-w-[180px]">
+              {user.user.name || user.user.username}
+            </p>
+            
+            {/* Badge de nível - agora abaixo do nome do usuário */}
+            <div className="flex items-center gap-2 mt-0.5 mb-0.5">
               <Badge variant="outline" className={`text-xs py-0 h-5 gap-1 shrink-0 ${
                 user.level.includes('Pro') ? 'border-red-200 text-red-600 dark:border-red-800/50' :
                 user.level.includes('Referência') ? 'border-orange-200 text-orange-500 dark:border-orange-800/50' :
@@ -208,10 +208,8 @@ const RankingItemSkeleton: React.FC = () => (
     <div className="flex-1 min-w-0">
       <div className="flex items-start justify-between w-full">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <Skeleton className="h-4 w-32 mb-1" />
-            <Skeleton className="h-5 w-20 shrink-0" />
-          </div>
+          <Skeleton className="h-4 w-32 mb-1" />
+          <Skeleton className="h-5 w-20 mb-1 mt-0.5" />
           <Skeleton className="h-3 w-40" />
         </div>
       </div>
