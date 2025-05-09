@@ -982,8 +982,8 @@ const CommunityPage: React.FC = () => {
     isFetching
   } = useQuery({
     queryKey: ['/api/community/posts', { page, limit: 10 }],
-    refetchOnWindowFocus: true,
-    refetchInterval: 30000, // Recarrega a cada 30 segundos
+    refetchOnWindowFocus: false,
+    refetchInterval: 0, // Desativamos o recarregamento automático para controlar manualmente
   });
   
   // Efeito para adicionar novos posts ao array de posts existentes
@@ -1262,17 +1262,7 @@ const CommunityPage: React.FC = () => {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => {
-                      refetchPosts();
-                      // Adiciona classe de animação ao ícone
-                      const refreshIcon = document.getElementById('refresh-posts-icon');
-                      if (refreshIcon) {
-                        refreshIcon.classList.add('animate-spin');
-                        setTimeout(() => {
-                          refreshIcon.classList.remove('animate-spin');
-                        }, 1000);
-                      }
-                    }}
+                    onClick={handleRefreshPosts}
                     className="gap-1"
                   >
                     <RefreshCw id="refresh-posts-icon" className="h-3.5 w-3.5" />
@@ -1333,9 +1323,9 @@ const CommunityPage: React.FC = () => {
                     description="Não foi possível carregar os posts da comunidade."
                     onAction={() => refetchPosts()}
                   />
-                ) : posts && Array.isArray(posts) && posts.length > 0 ? (
+                ) : allPosts.length > 0 ? (
                   <div className="space-y-4">
-                    {posts.map((item) => {
+                    {allPosts.map((item) => {
                       // Mapear a estrutura da API para o formato esperado pelo PostCard
                       const formattedPost: CommunityPost = {
                         id: item.post.id,
@@ -1357,10 +1347,25 @@ const CommunityPage: React.FC = () => {
                         key={item.post.id} 
                         post={formattedPost} 
                         user={user}
-                        refetch={refetchPosts} 
+                        refetch={handleRefreshPosts} 
                         refetchPopularPosts={refetchPopularPosts} 
                       />;
                     })}
+                    
+                    {/* Elemento observador para carregar mais quando o usuário rolar até aqui */}
+                    {hasMorePosts && (
+                      <div 
+                        ref={loaderRef} 
+                        className="py-4 flex justify-center"
+                      >
+                        {isLoadingMore && (
+                          <div className="flex items-center gap-2">
+                            <Loader2 className="h-5 w-5 animate-spin text-zinc-400" />
+                            <p className="text-sm text-zinc-500">Carregando mais posts...</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="text-center py-10">
