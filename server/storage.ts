@@ -2675,11 +2675,22 @@ export class DatabaseStorage implements IStorage {
   
   async isFollowing(followerId: number, followingId: number): Promise<boolean> {
     try {
+      // Validar os parâmetros de entrada
+      if (!followerId || !followingId || isNaN(Number(followerId)) || isNaN(Number(followingId))) {
+        console.error("Parâmetros inválidos para isFollowing:", { followerId, followingId });
+        return false;
+      }
+      
+      // Garantir que os IDs sejam números
+      const validFollowerId = Number(followerId);
+      const validFollowingId = Number(followingId);
+      
+      // Consulta com parâmetros validados
       const results = await db.select()
         .from(userFollows)
         .where(and(
-          eq(userFollows.followerId, followerId),
-          eq(userFollows.followingId, followingId)
+          eq(userFollows.followerId, validFollowerId),
+          eq(userFollows.followingId, validFollowingId)
         ));
       
       return results.length > 0;
