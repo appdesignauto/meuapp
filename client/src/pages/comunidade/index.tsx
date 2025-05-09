@@ -608,7 +608,7 @@ const PostCard: React.FC<{
   };
 
   return (
-    <Card className={`mb-4 overflow-hidden ${post.isPinned ? 'border-l-4 border-l-primary border border-zinc-100 dark:border-zinc-800 bg-primary/5' : 'border border-zinc-100 dark:border-zinc-800'} shadow-sm hover:shadow-md transition-shadow w-full max-w-[500px] mx-auto`}>
+    <Card className={`mb-4 overflow-hidden ${post.isPinned ? 'border-l-[6px] border-l-blue-500 border border-zinc-100 dark:border-zinc-800 bg-blue-50 dark:bg-blue-900/10' : 'border border-zinc-100 dark:border-zinc-800'} shadow-sm hover:shadow-md transition-shadow w-full max-w-[500px] mx-auto`}>
       {/* Cabeçalho do post - estilo Facebook/Instagram */}
       <div className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
