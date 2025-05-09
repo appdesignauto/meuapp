@@ -1097,6 +1097,21 @@ const CommunityPage: React.FC = () => {
                         <p className="text-xs text-zinc-500 dark:text-zinc-400">Posts mais populares</p>
                       </div>
                     </div>
+                    
+                    <a 
+                      href="https://chat.whatsapp.com/GJoCJTnJNCBGQT3NvsmZ4R" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+                    >
+                      <div className="bg-emerald-100 dark:bg-emerald-900 w-10 h-10 rounded-full flex items-center justify-center text-emerald-600 dark:text-emerald-300">
+                        <MessageCircle className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm">Comunidade WhatsApp</p>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400">Participe do nosso grupo</p>
+                      </div>
+                    </a>
                   </div>
                   
                   {user && (
