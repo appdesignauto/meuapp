@@ -1138,11 +1138,8 @@ const CommunityPage: React.FC = () => {
   }, [hasMorePosts, isFetching, isLoadingMore]);
   
   // Função para recarregar todos os posts (reset)
-  const handleRefreshPosts = () => {
+  const handleRefreshPosts = async () => {
     setPage(1);
-    setAllPosts([]);
-    setHasMorePosts(true);
-    refetchPosts();
     
     // Adiciona classe de animação ao ícone
     const refreshIcon = document.getElementById('refresh-posts-icon');
@@ -1151,6 +1148,32 @@ const CommunityPage: React.FC = () => {
       setTimeout(() => {
         refreshIcon.classList.remove('animate-spin');
       }, 1000);
+    }
+    
+    try {
+      // Aguardar a conclusão da refetch antes de continuar
+      const result = await refetchPosts();
+      
+      if (result.data && Array.isArray(result.data)) {
+        // Atualizar os posts diretamente para evitar estado vazio temporário
+        setAllPosts(result.data);
+      } else {
+        // Se result.data não existir ou não for um array, mantenha os posts existentes
+        const postsData = await fetch('/api/community/posts?page=1&limit=10');
+        if (postsData.ok) {
+          const freshPosts = await postsData.json();
+          if (freshPosts && Array.isArray(freshPosts)) {
+            setAllPosts(freshPosts);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao recarregar posts:", error);
+      toast({
+        title: "Erro ao recarregar posts",
+        description: "Não foi possível atualizar os posts. Tente novamente.",
+        variant: "destructive"
+      });
     }
   };
   
@@ -1532,7 +1555,6 @@ const CommunityPage: React.FC = () => {
                       return <PostCard 
                         key={item.post.id} 
                         post={formattedPost} 
-                        user={user}
                         refetch={handleRefreshPosts} 
                         refetchPopularPosts={refetchPopularPosts} 
                       />;
@@ -1669,7 +1691,7 @@ const CommunityPage: React.FC = () => {
                           <div className="flex-1">
                             <p className="font-medium text-sm">{designer.name || designer.username}</p>
                             <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                              {designer.followersCount} {designer.followersCount === 1 ? 'seguidor' : 'seguidores'} • {designer.postsCount} {designer.postsCount === 1 ? 'post' : 'posts'}
+                              {designer.followersCount} {designer.followersCount === 1 ? 'seguidor' : 'seguidores'} • {designer.artsCount} {designer.artsCount === 1 ? 'arte' : 'artes'}
                             </p>
                           </div>
                           <FollowButton 
