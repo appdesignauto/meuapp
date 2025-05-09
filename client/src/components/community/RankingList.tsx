@@ -188,7 +188,7 @@ const RankingList: React.FC<RankingListProps> = ({
   limit = 10,
   showPeriodSelector = true,
   showPrizes = true,
-  initialPeriod = 'week',
+  initialPeriod = 'month',
   className
 }) => {
   const [period, setPeriod] = useState<'week' | 'month' | 'year' | 'all_time'>(initialPeriod);

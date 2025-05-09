@@ -1019,6 +1019,11 @@ const CommunityPage: React.FC = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('posts');
   const [rankingPeriod, setRankingPeriod] = useState('month');
+  const [monthSelector, setMonthSelector] = useState(() => {
+    // Pegar o mês e ano atuais para o seletor padrão
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [allPosts, setAllPosts] = useState<any[]>([]);
