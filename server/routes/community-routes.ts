@@ -12,7 +12,7 @@ import {
   communityCommentLikes,
   userFollows
 } from '../../shared/schema';
-import { eq, and, gt, gte, lte, desc, asc, sql, inArray, count as countFn } from 'drizzle-orm';
+import { eq, and, gt, gte, lte, desc, asc, sql, inArray, count as countFn, or, ilike, SQL } from 'drizzle-orm';
 import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
@@ -1439,8 +1439,10 @@ router.get('/api/community/ranking', async (req, res) => {
     }
     
     // Buscar usuários do ranking
-    const ranking = await db
+    const users_ranking = await db
       .select({
+        id: communityLeaderboard.id,
+        userId: communityLeaderboard.userId,
         rank: communityLeaderboard.rank,
         totalPoints: communityLeaderboard.totalPoints,
         postCount: communityLeaderboard.postCount,
@@ -1448,6 +1450,7 @@ router.get('/api/community/ranking', async (req, res) => {
         savesReceived: communityLeaderboard.savesReceived,
         featuredCount: communityLeaderboard.featuredCount,
         level: communityLeaderboard.level,
+        period: communityLeaderboard.period,
         user: {
           id: users.id,
           username: users.username,
@@ -1462,7 +1465,74 @@ router.get('/api/community/ranking', async (req, res) => {
       .orderBy(asc(communityLeaderboard.rank))
       .limit(limit);
     
-    return res.json(ranking);
+    // Buscar configurações do sistema
+    const [settings] = await db.select().from(communitySettings);
+    
+    // Verificar se tem dados para o período atual
+    if (users_ranking.length === 0 && (period === 'month' || period === 'week')) {
+      // Iniciar o cálculo do ranking para o período atual
+      await updateLeaderboardForPeriod(period);
+      
+      // Buscar novamente após atualização
+      const refreshed_ranking = await db
+        .select({
+          id: communityLeaderboard.id,
+          userId: communityLeaderboard.userId,
+          rank: communityLeaderboard.rank,
+          totalPoints: communityLeaderboard.totalPoints,
+          postCount: communityLeaderboard.postCount,
+          likesReceived: communityLeaderboard.likesReceived,
+          savesReceived: communityLeaderboard.savesReceived,
+          featuredCount: communityLeaderboard.featuredCount,
+          level: communityLeaderboard.level,
+          period: communityLeaderboard.period,
+          user: {
+            id: users.id,
+            username: users.username,
+            name: users.name,
+            profileimageurl: users.profileimageurl,
+            nivelacesso: users.nivelacesso
+          }
+        })
+        .from(communityLeaderboard)
+        .leftJoin(users, eq(communityLeaderboard.userId, users.id))
+        .where(eq(communityLeaderboard.period, period))
+        .orderBy(asc(communityLeaderboard.rank))
+        .limit(limit);
+        
+      return res.json({
+        users: refreshed_ranking,
+        settings: settings || {
+          prize1stPlace: "R$ 100",
+          prize2ndPlace: "R$ 50",
+          prize3rdPlace: "R$ 25",
+          levelThresholds: {
+            "Iniciante KDG": 0,
+            "Colaborador KDG": 501,
+            "Destaque KDG": 2001,
+            "Elite KDG": 5001,
+            "Lenda KDG": 10001
+          }
+        }
+      });
+    }
+    
+    // Retornar dados do ranking e configurações
+    return res.json({
+      users: users_ranking,
+      settings: settings || {
+        prize1stPlace: "R$ 100",
+        prize2ndPlace: "R$ 50",
+        prize3rdPlace: "R$ 25",
+        levelThresholds: {
+          "Iniciante KDG": 0,
+          "Colaborador KDG": 501,
+          "Destaque KDG": 2001,
+          "Elite KDG": 5001,
+          "Lenda KDG": 10001
+        }
+      }
+    });
   } catch (error) {
     console.error('Erro ao buscar ranking:', error);
     return res.status(500).json({ 
@@ -1811,6 +1881,101 @@ async function updateRanks(period: string) {
     }
   } catch (error) {
     console.error(`Erro ao atualizar ranks para o período ${period}:`, error);
+  }
+}
+
+// Função para calcular e atualizar o leaderboard para um período específico
+async function updateLeaderboardForPeriod(period: string) {
+  try {
+    // Primeiro identificar o período inicial e final para filtrar os dados
+    let startDateStr: string, endDateStr: string, formattedPeriod: string;
+    const now = new Date();
+    
+    switch(period) {
+      case 'month':
+        // Primeiro dia do mês atual
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        // Último dia do mês atual
+        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        
+        startDateStr = firstDay.toISOString().split('T')[0];
+        endDateStr = lastDay.toISOString().split('T')[0];
+        formattedPeriod = now.toISOString().substring(0, 7); // YYYY-MM
+        break;
+        
+      case 'week':
+        // Calcular primeira e última data da semana atual
+        const dayOfWeek = now.getDay(); // 0 = domingo, 1 = segunda, etc.
+        const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // ajusta quando o dia é domingo
+        
+        // Clone do objeto Date para não modificar o original
+        const firstDayOfWeek = new Date(now);
+        firstDayOfWeek.setDate(diff);
+        firstDayOfWeek.setHours(0, 0, 0, 0);
+        
+        const lastDayOfWeek = new Date(firstDayOfWeek);
+        lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
+        lastDayOfWeek.setHours(23, 59, 59, 999);
+        
+        startDateStr = firstDayOfWeek.toISOString().split('T')[0];
+        endDateStr = lastDayOfWeek.toISOString().split('T')[0];
+        
+        // Calcular número da semana
+        const startOfYear = new Date(now.getFullYear(), 0, 1);
+        const days = Math.floor((firstDayOfWeek.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
+        const weekNumber = Math.ceil((days + startOfYear.getDay() + 1) / 7);
+        formattedPeriod = `${now.getFullYear()}-W${weekNumber.toString().padStart(2, '0')}`;
+        break;
+        
+      default:
+        throw new Error('Período inválido para atualização do leaderboard');
+    }
+    
+    console.log(`Atualizando leaderboard para período ${formattedPeriod} (${startDateStr} a ${endDateStr})`);
+    
+    // Buscar todos os usuários que interagiram no período usando SQL direta
+    const activeUsersSql = sql`
+      WITH active_users AS (
+        -- Usuários que fizeram posts
+        SELECT DISTINCT "userId" AS user_id
+        FROM "communityPosts"
+        WHERE status = 'approved'
+          AND "createdAt" >= ${startDateStr}
+          AND "createdAt" <= ${endDateStr}
+        
+        UNION
+        
+        -- Usuários que receberam likes ou saves
+        SELECT DISTINCT p."userId" AS user_id
+        FROM "communityPosts" p
+        LEFT JOIN "communityLikes" l ON p.id = l."postId"
+        LEFT JOIN "communitySaves" s ON p.id = s."postId"
+        WHERE 
+          (l."createdAt" >= ${startDateStr} AND l."createdAt" <= ${endDateStr})
+          OR (s."createdAt" >= ${startDateStr} AND s."createdAt" <= ${endDateStr})
+      )
+      SELECT user_id FROM active_users
+    `;
+    
+    const activeUsersResult = await db.execute(activeUsersSql);
+    const userIds = activeUsersResult.rows.map(row => Number(row.user_id));
+    
+    console.log(`Encontrados ${userIds.length} usuários ativos no período ${formattedPeriod}`);
+    
+    // Para cada usuário ativo, atualizar seu ranking
+    for (const userId of userIds) {
+      if (userId) { // Verifica se o ID é válido (não null, undefined ou 0)
+        await updateLeaderboard(userId);
+      }
+    }
+    
+    // Atualizar ranks
+    await updateRanks(formattedPeriod);
+    
+    return formattedPeriod;
+  } catch (error) {
+    console.error(`Erro ao atualizar leaderboard para o período ${period}:`, error);
+    throw error;
   }
 }
 
