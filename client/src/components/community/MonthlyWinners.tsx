@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { 
-  Trophy, Medal, Crown, Gift, CalendarIcon, ChevronDown, Loader2, RefreshCw, User, Award, Sparkles 
+  Trophy, Medal, Crown, Gift, CalendarIcon, ChevronDown, Loader2, RefreshCw, 
+  User, Award, Sparkles, AlertCircle, Info
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, isThisMonth, isThisYear } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Badge } from '@/components/ui/badge';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -124,6 +127,16 @@ const MonthlyWinners: React.FC<MonthlyWinnersProps> = ({ className }) => {
     return format(date, 'MMMM yyyy', { locale: ptBR });
   };
   
+  // Verificar se é o mês atual
+  const isCurrentMonth = () => {
+    if (!selectedMonth) return false;
+    
+    const [year, month] = selectedMonth.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+    
+    return isThisMonth(date) && isThisYear(date);
+  };
+  
   // Componente para exibir vencedor
   const WinnerCard = ({ user, position, prize }: { user: RankingUser, position: number, prize: string }) => {
     const positionIcons = [
@@ -205,8 +218,26 @@ const MonthlyWinners: React.FC<MonthlyWinnersProps> = ({ className }) => {
               <Trophy className="h-5 w-5 text-amber-500" /> 
               Vencedores Mensais
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="flex items-center gap-1.5">
               Top 3 criadores de {formatSelectedMonth()}
+              {isCurrentMonth() && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="inline-flex">
+                        <Badge variant="outline" className="text-xs py-0 px-1.5 ml-1 border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
+                          <span className="text-blue-600 dark:text-blue-400 flex items-center gap-0.5">
+                            <Info className="h-3 w-3" /> Parcial
+                          </span>
+                        </Badge>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-[280px]">
+                      <p>Resultados parciais para o mês atual. Classificação e prêmios finais serão definidos ao término do mês.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
             </CardDescription>
           </div>
           
