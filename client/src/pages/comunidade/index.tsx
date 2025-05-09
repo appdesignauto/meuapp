@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { cn } from '@/lib/utils';
 import { Link } from 'wouter';
 import { 
   Settings, Plus, Filter, User, Trophy, Clock, Info, Award, Medal, 
@@ -918,18 +919,62 @@ const PostCard: React.FC<{
   );
 };
 
+// Interface para usuário no ranking
+interface RankingUser {
+  id: number;
+  userId: number;
+  totalPoints: number;
+  rank: number;
+  level: string;
+  postCount: number;
+  likesReceived: number;
+  savesReceived: number;
+  featuredCount: number;
+  user: {
+    id: number;
+    username: string;
+    name: string | null;
+    profileimageurl: string | null;
+    nivelacesso: string;
+  };
+}
+
 // Componente de Card do Usuário no Ranking
 const RankingUserCard: React.FC<{ user: RankingUser }> = ({ user }) => {
+  // Mapeamento de ícones para níveis
+  const LEVEL_ICONS: Record<string, React.ReactNode> = {
+    'Iniciante KDG': <User className="h-3 w-3 text-zinc-500" />,
+    'Colaborador KDG': <Award className="h-3 w-3 text-blue-500" />,
+    'Destaque KDG': <Medal className="h-3 w-3 text-yellow-500" />,
+    'Elite KDG': <Trophy className="h-3 w-3 text-amber-500" />,
+    'Lenda KDG': <Sparkles className="h-3 w-3 text-purple-500" />
+  };
+
   return (
     <div className="flex items-center gap-3 p-3 border-b border-zinc-100 dark:border-zinc-800 last:border-0">
-      <div className="text-lg font-bold w-6 text-zinc-400">
+      <div className={cn(
+        "flex items-center justify-center text-lg font-bold w-7 h-7 rounded-full",
+        user.rank <= 3 
+          ? user.rank === 1 
+            ? "bg-amber-100 text-amber-800 border-amber-300" 
+            : user.rank === 2
+              ? "bg-gray-100 text-gray-800 border-gray-300"
+              : "bg-orange-100 text-orange-800 border-orange-300"
+          : "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+      )}>
         {user.rank}
       </div>
-      <UserAvatar user={user} size="sm" linkToProfile={true} />
+      <UserAvatar user={user.user} size="sm" linkToProfile={true} />
       <div className="flex-1">
-        <VerifiedUsername user={user} className="text-sm" />
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">{user.user.name || user.user.username}</span>
+          <Badge variant="outline" className="text-xs py-0 h-5 gap-1">
+            {LEVEL_ICONS[user.level] || <User className="h-3 w-3" />}
+            <span>{user.level}</span>
+          </Badge>
+        </div>
         <p className="text-xs text-zinc-500 dark:text-zinc-400">
-          {user.points} pontos
+          {user.totalPoints} pontos • {user.postCount} posts • {user.likesReceived} curtidas
         </p>
       </div>
     </div>
@@ -1062,10 +1107,21 @@ const CommunityPage: React.FC = () => {
   });
   
   // Buscar ranking dos usuários
-  const { data: ranking, isLoading: rankingLoading, error: rankingError, refetch: refetchRanking } = useQuery({
-    queryKey: ['/api/community/ranking', rankingPeriod],
+  const { data: rankingData, isLoading: rankingLoading, error: rankingError, refetch: refetchRanking } = useQuery({
+    queryKey: ['/api/community/ranking'],
+    queryFn: async () => {
+      console.log(`Buscando ranking para período: ${rankingPeriod}`);
+      const response = await fetch(`/api/community/ranking?period=${rankingPeriod}`);
+      if (!response.ok) {
+        throw new Error('Falha ao carregar o ranking');
+      }
+      return response.json();
+    },
     refetchOnWindowFocus: false,
   });
+  
+  // Extrair os dados do ranking formatados
+  const ranking = rankingData?.users || [];
   
   // Interface para estatísticas da comunidade
   interface CommunityStats {
@@ -1464,8 +1520,8 @@ const CommunityPage: React.FC = () => {
                     </Button>
                     <Button 
                       size="sm" 
-                      variant={rankingPeriod === 'all' ? 'default' : 'outline'} 
-                      onClick={() => setRankingPeriod('all')}
+                      variant={rankingPeriod === 'all_time' ? 'default' : 'outline'} 
+                      onClick={() => setRankingPeriod('all_time')}
                       className="text-xs h-8"
                     >
                       Total
@@ -1526,7 +1582,7 @@ const CommunityPage: React.FC = () => {
                       {rankingPeriod === 'week' && 'Ranking semanal atualizado toda segunda-feira'}
                       {rankingPeriod === 'month' && 'Ranking mensal atualizado no dia 1 de cada mês'}
                       {rankingPeriod === 'year' && 'Ranking anual atualizado em janeiro'}
-                      {rankingPeriod === 'all' && 'Ranking geral atualizado diariamente'}
+                      {rankingPeriod === 'all_time' && 'Ranking geral atualizado diariamente'}
                     </p>
                     <p className="text-xs text-zinc-400 dark:text-zinc-500">
                       Próxima premiação: {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
