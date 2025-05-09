@@ -889,10 +889,10 @@ export const insertCommunityLeaderboardSchema = createInsertSchema(communityLead
 // Community Settings (Configurações do sistema de comunidade e gamificação)
 export const communitySettings = pgTable("communitySettings", {
   id: serial("id").primaryKey(),
-  pointsForPost: integer("pointsForPost").default(20).notNull(),
-  pointsForLike: integer("pointsForLike").default(5).notNull(),
-  pointsForSave: integer("pointsForSave").default(10).notNull(),
-  pointsForWeeklyFeatured: integer("pointsForWeeklyFeatured").default(50).notNull(),
+  pointsForPost: integer("pointsForPost").default(5).notNull(),
+  pointsForLike: integer("pointsForLike").default(1).notNull(),
+  pointsForSave: integer("pointsForSave").default(2).notNull(),
+  pointsForWeeklyFeatured: integer("pointsForWeeklyFeatured").default(5).notNull(),
   prize1stPlace: text("prize1stPlace").default("R$ 0").notNull(),
   prize2ndPlace: text("prize2ndPlace").default("R$ 0").notNull(),
   prize3rdPlace: text("prize3rdPlace").default("R$ 0").notNull(),
