@@ -218,19 +218,19 @@ const MonthlyWinners: React.FC<MonthlyWinnersProps> = ({ className }) => {
               <Trophy className="h-5 w-5 text-amber-500" /> 
               Vencedores Mensais
             </CardTitle>
-            <CardDescription className="flex items-center gap-1.5">
-              Top 3 criadores de {formatSelectedMonth()}
+            <div className="flex items-center gap-1.5">
+              <CardDescription>
+                Top 3 criadores de {formatSelectedMonth()}
+              </CardDescription>
               {isCurrentMonth() && (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="inline-flex">
-                        <Badge variant="outline" className="text-xs py-0 px-1.5 ml-1 border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
-                          <span className="text-blue-600 dark:text-blue-400 flex items-center gap-0.5">
-                            <Info className="h-3 w-3" /> Parcial
-                          </span>
-                        </Badge>
-                      </div>
+                      <Badge variant="outline" className="text-xs py-0 px-1.5 ml-1 border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
+                        <span className="text-blue-600 dark:text-blue-400 flex items-center gap-0.5">
+                          <Info className="h-3 w-3" /> Parcial
+                        </span>
+                      </Badge>
                     </TooltipTrigger>
                     <TooltipContent className="max-w-[280px]">
                       <p>Resultados parciais para o mês atual. Classificação e prêmios finais serão definidos ao término do mês.</p>
@@ -238,7 +238,7 @@ const MonthlyWinners: React.FC<MonthlyWinnersProps> = ({ className }) => {
                   </Tooltip>
                 </TooltipProvider>
               )}
-            </CardDescription>
+            </div>
           </div>
           
           <Select
