@@ -210,7 +210,7 @@ router.get('/api/community/posts', async (req, res) => {
         : eq(communityPosts.status, postStatus)
     )
     .groupBy(communityPosts.id, users.id)
-    .orderBy(desc(communityPosts.createdAt))
+    .orderBy(desc(communityPosts.isPinned), desc(communityPosts.createdAt))
     .limit(limit)
     .offset(offset);
 
@@ -639,6 +639,97 @@ router.put('/api/community/posts/:id/status', async (req, res) => {
     console.error('Erro ao atualizar status do post:', error);
     return res.status(500).json({ 
       message: 'Erro ao atualizar status do post',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
+  }
+});
+
+// Fixar post no topo da comunidade
+router.put('/api/community/posts/:id/pin', async (req, res) => {
+  try {
+    // Apenas administradores podem fixar posts
+    if (!req.user || req.user.nivelacesso !== 'admin') {
+      return res.status(403).json({ message: 'Apenas administradores podem fixar posts' });
+    }
+    
+    const postId = parseInt(req.params.id);
+    
+    // Buscar post atual
+    const [post] = await db
+      .select()
+      .from(communityPosts)
+      .where(eq(communityPosts.id, postId));
+      
+    if (!post) {
+      return res.status(404).json({ message: 'Post não encontrado' });
+    }
+    
+    // Verificar se o post está aprovado
+    if (post.status !== 'approved') {
+      return res.status(400).json({ message: 'Apenas posts aprovados podem ser fixados' });
+    }
+    
+    // Fixar o post
+    const [updatedPost] = await db
+      .update(communityPosts)
+      .set({ 
+        isPinned: true,
+        updatedAt: new Date() 
+      })
+      .where(eq(communityPosts.id, postId))
+      .returning();
+    
+    return res.json({
+      message: 'Post fixado com sucesso',
+      post: updatedPost
+    });
+  } catch (error) {
+    console.error('Erro ao fixar post:', error);
+    return res.status(500).json({ 
+      message: 'Erro ao fixar post',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
+  }
+});
+
+// Desafixar post do topo da comunidade
+router.put('/api/community/posts/:id/unpin', async (req, res) => {
+  try {
+    // Apenas administradores podem desafixar posts
+    if (!req.user || req.user.nivelacesso !== 'admin') {
+      return res.status(403).json({ message: 'Apenas administradores podem desafixar posts' });
+    }
+    
+    const postId = parseInt(req.params.id);
+    
+    // Buscar post atual
+    const [post] = await db
+      .select()
+      .from(communityPosts)
+      .where(eq(communityPosts.id, postId));
+      
+    if (!post) {
+      return res.status(404).json({ message: 'Post não encontrado' });
+    }
+    
+    // Desafixar o post
+    const [updatedPost] = await db
+      .update(communityPosts)
+      .set({ 
+        isPinned: false,
+        updatedAt: new Date() 
+      })
+      .where(eq(communityPosts.id, postId))
+      .returning();
+    
+    return res.json({
+      message: 'Post desafixado com sucesso',
+      post: updatedPost
+    });
+  } catch (error) {
+    console.error('Erro ao desafixar post:', error);
+    return res.status(500).json({ 
+      message: 'Erro ao desafixar post',
       error: error instanceof Error ? error.message : 'Erro desconhecido'
     });
   }
