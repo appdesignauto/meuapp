@@ -33,13 +33,18 @@ function formatRelativeTime(date: Date): string {
   try {
     const now = new Date();
     
-    // Para qualquer data que pareça estar no futuro, forçar para ser "agora"
-    // Isso evita problemas de sincronização de relógio/timezone
-    if (date.getTime() > now.getTime()) {
-      return "agora";
-    }
+    // Ajustar para o fuso horário de Brasília (-3 horas)
+    const brasiliaOffset = -3 * 60 * 60 * 1000; // -3 horas em milissegundos
+    const localOffset = now.getTimezoneOffset() * 60 * 1000; // Offset local em ms
+    const adjustedNow = new Date(now.getTime() + localOffset - brasiliaOffset);
     
-    const diffMs = now.getTime() - date.getTime();
+    const diffMs = adjustedNow.getTime() - date.getTime();
+    
+    // Se a diferença for muito pequena ou negativa (pode ser erros de sincronização)
+    // Mostrar "há 1 minuto" em vez de "agora" para evitar problemas com posts que sempre aparecem como "agora"
+    if (diffMs < 60000) { // menos de 1 minuto
+      return "há 1 minuto";
+    }
     
     // Convertendo para segundos, minutos, horas, etc.
     const diffSeconds = Math.floor(diffMs / 1000);
@@ -47,10 +52,8 @@ function formatRelativeTime(date: Date): string {
     const diffHours = Math.floor(diffMinutes / 60);
     const diffDays = Math.floor(diffHours / 24);
     
-    // Formatação híbrida mais descritiva
-    if (diffSeconds < 60) {
-      return diffSeconds <= 5 ? "agora" : `há ${diffSeconds} segundos`;
-    } else if (diffMinutes < 60) {
+    // Formatação híbrida mais descritiva - sempre usando o formato "há X ..."
+    if (diffMinutes < 60) {
       return `há ${diffMinutes} ${diffMinutes === 1 ? 'minuto' : 'minutos'}`;
     } else if (diffHours < 24) {
       return `há ${diffHours} ${diffHours === 1 ? 'hora' : 'horas'}`;
