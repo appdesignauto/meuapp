@@ -1324,15 +1324,15 @@ const CommunityPage: React.FC = () => {
                 </CardContent>
               </Card>
               
-              {/* Card de informações do sistema KDGPRO */}
+              {/* Card de informações do sistema D.Auto */}
               <Card className="overflow-hidden border border-zinc-100 dark:border-zinc-800">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Sobre o Sistema KDGPRO</CardTitle>
+                  <CardTitle className="text-lg">Sobre o Sistema D.Auto</CardTitle>
                 </CardHeader>
                 
                 <CardContent className="space-y-3 text-sm">
                   <p className="text-zinc-600 dark:text-zinc-300">
-                    O ranking KDGPRO premia os criadores mais ativos da comunidade com base em pontos ganhos por
+                    O sistema D.Auto premia os criadores mais ativos da comunidade com base em pontos ganhos por
                     contribuições, curtidas e destaques recebidos.
                   </p>
                   
@@ -1358,22 +1358,22 @@ const CommunityPage: React.FC = () => {
                     <h5 className="text-sm font-medium">Níveis e Pontos:</h5>
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-1 text-xs">
-                        <User className="h-3 w-3 text-amber-800" /> <span className="font-medium">Membro KDG:</span> <span className="text-zinc-500">0-199 pontos</span>
+                        <User className="h-3 w-3 text-amber-800" /> <span className="font-medium">Membro D.Auto:</span> <span className="text-zinc-500">0-199 pontos</span>
                       </div>
                       <div className="flex items-center gap-1 text-xs">
-                        <User className="h-3 w-3 text-green-500" /> <span className="font-medium">Voluntário KDG:</span> <span className="text-zinc-500">200-699 pontos</span>
+                        <User className="h-3 w-3 text-green-500" /> <span className="font-medium">Voluntário D.Auto:</span> <span className="text-zinc-500">200-699 pontos</span>
                       </div>
                       <div className="flex items-center gap-1 text-xs">
-                        <Award className="h-3 w-3 text-blue-500" /> <span className="font-medium">Cooperador KDG:</span> <span className="text-zinc-500">700-1.499 pontos</span>
+                        <Award className="h-3 w-3 text-blue-500" /> <span className="font-medium">Cooperador D.Auto:</span> <span className="text-zinc-500">700-1.499 pontos</span>
                       </div>
                       <div className="flex items-center gap-1 text-xs">
-                        <Medal className="h-3 w-3 text-purple-600" /> <span className="font-medium">Destaque KDG:</span> <span className="text-zinc-500">1.500-2.999 pontos</span>
+                        <Medal className="h-3 w-3 text-purple-600" /> <span className="font-medium">Destaque D.Auto:</span> <span className="text-zinc-500">1.500-2.999 pontos</span>
                       </div>
                       <div className="flex items-center gap-1 text-xs">
-                        <Trophy className="h-3 w-3 text-orange-500" /> <span className="font-medium">Referência KDG:</span> <span className="text-zinc-500">3.000-4.999 pontos</span>
+                        <Trophy className="h-3 w-3 text-orange-500" /> <span className="font-medium">Referência D.Auto:</span> <span className="text-zinc-500">3.000-4.999 pontos</span>
                       </div>
                       <div className="flex items-center gap-1 text-xs">
-                        <Sparkles className="h-3 w-3 text-red-600" /> <span className="font-medium">Profissional:</span> <span className="text-zinc-500">5.000+ pontos</span>
+                        <Sparkles className="h-3 w-3 text-red-600" /> <span className="font-medium">Pro D.Auto:</span> <span className="text-zinc-500">5.000+ pontos</span>
                       </div>
                     </div>
                   </div>
@@ -1548,7 +1548,7 @@ const CommunityPage: React.FC = () => {
               <TabsContent value="ranking" className="space-y-4 px-4 md:px-0">
                 {/* Seção de Vencedores Mensais */}
                 <div className="mb-6">
-                  <h2 className="text-lg font-semibold mb-4">Premiação mensal KDGPRO</h2>
+                  <h2 className="text-lg font-semibold mb-4">Premiação mensal D.Auto</h2>
                   <MonthlyWinners />
                 </div>
                 
