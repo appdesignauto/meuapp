@@ -122,14 +122,17 @@ async function updateKdgproPoints() {
       }
       
       const usersResult = await client.query(
-        `SELECT DISTINCT "userId" FROM "communityPoints" WHERE ${whereClause}`,
+        `SELECT DISTINCT "userId" as "userid" FROM "communityPoints" WHERE ${whereClause}`,
         whereParams
       );
       
       console.log(`Encontrados ${usersResult.rows.length} usuários para o período ${period}`);
       
+      // Processar cada usuário encontrado no período
       for (const user of usersResult.rows) {
-        const userId = user.userid; // Nota: PostgreSQL retorna nomes de colunas em minúsculas
+        
+        // O PostgreSQL retorna nomes de colunas em minúsculas
+        const userId = user.userid;
         
         // Buscar pontos para o usuário no período
         let periodWhereClause = '';
@@ -147,11 +150,11 @@ async function updateKdgproPoints() {
         
         const result = await client.query(
           `SELECT 
-            SUM("points") as "totalPoints",
-            COUNT(CASE WHEN "reason" = 'post' THEN 1 END) as "postCount",
-            COUNT(CASE WHEN "reason" = 'like' THEN 1 END) as "likesReceived",
-            COUNT(CASE WHEN "reason" = 'save' THEN 1 END) as "savesReceived",
-            COUNT(CASE WHEN "reason" = 'weekly_featured' THEN 1 END) as "featuredCount"
+            SUM("points") as "totalpoints",
+            COUNT(CASE WHEN "reason" = 'post' THEN 1 END) as "postcount",
+            COUNT(CASE WHEN "reason" = 'like' THEN 1 END) as "likesreceived",
+            COUNT(CASE WHEN "reason" = 'save' THEN 1 END) as "savesreceived",
+            COUNT(CASE WHEN "reason" = 'weekly_featured' THEN 1 END) as "featuredcount"
           FROM "communityPoints"
           WHERE ${periodWhereClause}`,
           periodParams
