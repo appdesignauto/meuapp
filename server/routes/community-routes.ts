@@ -217,12 +217,27 @@ router.get('/api/community/posts', async (req, res) => {
                 eq(communitySaves.userId, userId)
               )
             );
+            
+          // Verificar se o usuário atual segue o autor do post
+          const [isFollowing] = await db
+            .select({ count: count() })
+            .from(userFollows)
+            .where(
+              and(
+                eq(userFollows.followerId, userId),
+                eq(userFollows.followingId, post.user.id)
+              )
+            );
 
           return {
             ...post,
             userHasLiked: !!userLike,
             isLikedByUser: !!userLike, // Campo adicional para compatibilidade com frontend
             userHasSaved: !!userSave,
+            user: {
+              ...post.user,
+              isFollowing: Number(isFollowing?.count || 0) > 0
+            }
           };
         })
       );
