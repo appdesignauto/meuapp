@@ -608,7 +608,19 @@ const PostCard: React.FC<{
   };
 
   return (
-    <Card className={`mb-4 overflow-hidden ${post.isPinned ? 'border-l-[6px] border-l-blue-500 border border-zinc-100 dark:border-zinc-800 bg-blue-50 dark:bg-blue-900/10' : 'border border-zinc-100 dark:border-zinc-800'} shadow-sm hover:shadow-md transition-shadow w-full max-w-[500px] mx-auto`}>
+    <Card className={`mb-5 overflow-hidden ${post.isPinned 
+      ? 'border-l-[8px] border-l-blue-600 border border-blue-300 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 shadow-lg ring-1 ring-blue-200 dark:ring-blue-800 transform -translate-y-1' 
+      : 'border border-zinc-100 dark:border-zinc-800'
+    } shadow-md hover:shadow-lg transition-all duration-300 ease-in-out w-full max-w-[500px] mx-auto`}>
+      {/* Ícone de fixado na posição superior */}
+      {post.isPinned && (
+        <div className="absolute top-0 right-0 m-2 z-10">
+          <div className="bg-gradient-to-r from-blue-600 to-blue-500 text-white p-1.5 rounded-md shadow-md animate-pulse">
+            <Pin className="h-4 w-4" fill="currentColor" />
+          </div>
+        </div>
+      )}
+      
       {/* Cabeçalho do post - estilo Facebook/Instagram */}
       <div className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -720,9 +732,9 @@ const PostCard: React.FC<{
       <div className="px-4 pt-3 pb-1">
         {post.isPinned && (
           <div className="mb-1.5 flex items-center">
-            <span className="bg-primary/10 text-primary text-xs font-medium px-2 py-0.5 rounded flex items-center gap-1">
-              <Pin className="h-3 w-3" fill="currentColor" />
-              Post Fixado
+            <span className="bg-gradient-to-r from-blue-600 to-blue-400 text-white dark:from-blue-600 dark:to-blue-500 text-xs font-medium px-2.5 py-1 rounded-md flex items-center gap-1.5 shadow-sm">
+              <Pin className="h-3.5 w-3.5" fill="currentColor" />
+              <span className="font-bold">Post Fixado</span>
             </span>
           </div>
         )}
