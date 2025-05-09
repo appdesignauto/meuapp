@@ -1797,14 +1797,15 @@ async function updateLeaderboard(userId: number) {
       // Determinar nível com base nos pontos
       const [settings] = await db.select().from(communitySettings);
       const levelThresholds = settings?.levelThresholds || {
-        "Iniciante KDG": 0,
-        "Colaborador KDG": 501,
-        "Destaque KDG": 2001,
-        "Elite KDG": 5001,
-        "Lenda KDG": 10001
+        "Membro D.Auto": 0,
+        "Voluntário D.Auto": 200,
+        "Cooperador D.Auto": 700,
+        "Destaque D.Auto": 1500,
+        "Referência D.Auto": 3000,
+        "Pro D.Auto": 5000
       };
       
-      let level = "Iniciante KDG";
+      let level = "Membro D.Auto";
       for (const [levelName, threshold] of Object.entries(levelThresholds)) {
         if (totalPoints >= threshold) {
           level = levelName;
@@ -2805,11 +2806,12 @@ router.post('/api/community/recalcular-ranking', async (req, res) => {
           const totalPoints = Number(stats.totalPoints) || 0;
           
           // Determinar nível com base em pontos
-          let level = 'Iniciante KDG';
-          if (totalPoints >= 10001) level = 'Lenda KDG';
-          else if (totalPoints >= 5001) level = 'Elite KDG';
-          else if (totalPoints >= 2001) level = 'Destaque KDG';
-          else if (totalPoints >= 501) level = 'Colaborador KDG';
+          let level = 'Membro D.Auto';
+          if (totalPoints >= 5000) level = 'Pro D.Auto';
+          else if (totalPoints >= 3000) level = 'Referência D.Auto';
+          else if (totalPoints >= 1500) level = 'Destaque D.Auto';
+          else if (totalPoints >= 700) level = 'Cooperador D.Auto';
+          else if (totalPoints >= 200) level = 'Voluntário D.Auto';
           
           // Inserir no leaderboard
           await db.insert(communityLeaderboard).values({
@@ -2848,7 +2850,7 @@ router.post('/api/community/recalcular-ranking', async (req, res) => {
     
     return res.json({
       success: true,
-      message: 'Ranking KDGPRO recalculado com sucesso com os novos valores de pontuação!',
+      message: 'Ranking D.Auto recalculado com sucesso com os novos valores de pontuação!',
       pointSettings: {
         pointsForPost: 5,
         pointsForLike: 1,

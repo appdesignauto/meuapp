@@ -949,13 +949,14 @@ interface RankingUser {
 
 // Componente de Card do Usuário no Ranking
 const RankingUserCard: React.FC<{ user: RankingUser }> = ({ user }) => {
-  // Mapeamento de ícones para níveis
-  const LEVEL_ICONS: Record<string, React.ReactNode> = {
-    'Iniciante KDG': <User className="h-3 w-3 text-zinc-500" />,
-    'Colaborador KDG': <Award className="h-3 w-3 text-blue-500" />,
-    'Destaque KDG': <Medal className="h-3 w-3 text-yellow-500" />,
-    'Elite KDG': <Trophy className="h-3 w-3 text-amber-500" />,
-    'Lenda KDG': <Sparkles className="h-3 w-3 text-purple-500" />
+  // Função para obter o ícone baseado no nível
+  const getLevelIcon = (level: string): React.ReactNode => {
+    if (level.includes('Pro')) return <Sparkles className="h-3 w-3 text-red-600" />;
+    if (level.includes('Referência')) return <Trophy className="h-3 w-3 text-orange-500" />;
+    if (level.includes('Destaque')) return <Medal className="h-3 w-3 text-purple-600" />;
+    if (level.includes('Cooperador')) return <Award className="h-3 w-3 text-blue-500" />;
+    if (level.includes('Voluntário')) return <User className="h-3 w-3 text-green-500" />;
+    return <User className="h-3 w-3 text-amber-800" />; // Membro (padrão)
   };
 
   return (
@@ -976,9 +977,16 @@ const RankingUserCard: React.FC<{ user: RankingUser }> = ({ user }) => {
       <div className="flex-1">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">{user.user.name || user.user.username}</span>
-          <Badge variant="outline" className="text-xs py-0 h-5 gap-1">
-            {LEVEL_ICONS[user.level] || <User className="h-3 w-3" />}
-            <span>{user.level}</span>
+          <Badge variant="outline" className={`text-xs py-0 h-5 gap-1 ${
+            user.level.includes('Pro') ? 'border-red-200 text-red-600 dark:border-red-800/50' :
+            user.level.includes('Referência') ? 'border-orange-200 text-orange-500 dark:border-orange-800/50' :
+            user.level.includes('Destaque') ? 'border-purple-200 text-purple-600 dark:border-purple-800/50' :
+            user.level.includes('Cooperador') ? 'border-blue-200 text-blue-500 dark:border-blue-800/50' :
+            user.level.includes('Voluntário') ? 'border-green-200 text-green-500 dark:border-green-800/50' :
+            'border-amber-200 text-amber-800 dark:border-amber-800/50'
+          }`}>
+            {getLevelIcon(user.level)}
+            <span>{user.level.replace(' D.Auto', '')}</span>
           </Badge>
         </div>
         <p className="text-xs text-zinc-500 dark:text-zinc-400">
