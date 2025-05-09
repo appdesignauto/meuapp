@@ -617,7 +617,7 @@ router.post('/api/community/posts', upload.single('image'), async (req, res) => 
     // Se o post for aprovado automaticamente, adicionar pontos
     if (status === 'approved') {
       // Adicionar pontos ao usuário
-      const pointsForPost = settings?.pointsForPost || 20;
+      const pointsForPost = settings?.pointsForPost || 5;
       const currentMonth = new Date().toISOString().substring(0, 7); // Formato YYYY-MM
       
       await db
@@ -691,7 +691,7 @@ router.put('/api/community/posts/:id/status', async (req, res) => {
     if (currentPost.status === 'pending' && status === 'approved') {
       // Buscar configurações para determinar pontos
       const [settings] = await db.select().from(communitySettings);
-      const pointsForPost = settings?.pointsForPost || 20;
+      const pointsForPost = settings?.pointsForPost || 5;
       const currentMonth = new Date().toISOString().substring(0, 7); // Formato YYYY-MM
       
       // Adicionar pontos
@@ -869,7 +869,7 @@ router.post('/api/community/posts/:id/like', async (req, res) => {
     if (post.userId !== userId) { // Não adicionar pontos se for o próprio usuário
       // Buscar configurações para determinar pontos
       const [settings] = await db.select().from(communitySettings);
-      const pointsForLike = settings?.pointsForLike || 5;
+      const pointsForLike = settings?.pointsForLike || 1;
       const currentMonth = new Date().toISOString().substring(0, 7); // Formato YYYY-MM
       
       // Adicionar pontos
@@ -993,7 +993,7 @@ router.post('/api/community/posts/:id/save', async (req, res) => {
     if (post.userId !== userId) { // Não adicionar pontos se for o próprio usuário
       // Buscar configurações para determinar pontos
       const [settings] = await db.select().from(communitySettings);
-      const pointsForSave = settings?.pointsForSave || 10;
+      const pointsForSave = settings?.pointsForSave || 2;
       const currentMonth = new Date().toISOString().substring(0, 7); // Formato YYYY-MM
       
       // Adicionar pontos
@@ -2174,7 +2174,7 @@ router.post('/api/community/admin/posts/:id/approve', async (req, res) => {
     if (post.status === 'pending') {
       // Buscar configurações
       const [settings] = await db.select().from(communitySettings);
-      const pointsForPost = settings?.pointsForPost || 20;
+      const pointsForPost = settings?.pointsForPost || 5;
       const currentMonth = new Date().toISOString().substring(0, 7); // Formato YYYY-MM
       
       // Adicionar pontos
