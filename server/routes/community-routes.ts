@@ -36,6 +36,38 @@ const router = Router();
 // IMPORTANTE: Rotas específicas ANTES das rotas com parâmetros dinâmicos
 // para evitar conflitos de captura
 
+// GET: Buscar contagem total de posts na comunidade
+router.get('/api/community/stats', async (req, res) => {
+  try {
+    // Buscar o total de posts aprovados
+    const result = await db.execute(sql`
+      SELECT COUNT(*) as total_posts
+      FROM "communityPosts"
+      WHERE status = 'approved'
+    `);
+    
+    const totalPosts = parseInt(result.rows[0]?.total_posts || '0');
+    
+    // Buscar o total de usuários que já fizeram posts
+    const usersResult = await db.execute(sql`
+      SELECT COUNT(DISTINCT "userId") as total_creators
+      FROM "communityPosts"
+      WHERE status = 'approved'
+    `);
+    
+    const totalCreators = parseInt(usersResult.rows[0]?.total_creators || '0');
+    
+    // Retornar estatísticas
+    return res.json({
+      totalPosts,
+      totalCreators
+    });
+  } catch (error) {
+    console.error('Erro ao buscar estatísticas da comunidade:', error);
+    return res.status(500).json({ message: 'Erro ao buscar estatísticas da comunidade' });
+  }
+});
+
 // GET: Buscar posts populares - ESTA ROTA DEVE ESTAR NO INÍCIO DO ARQUIVO
 router.get('/api/community/populares', async (req, res) => {
   try {

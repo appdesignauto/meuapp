@@ -1067,6 +1067,23 @@ const CommunityPage: React.FC = () => {
     refetchOnWindowFocus: false,
   });
   
+  // Interface para estatísticas da comunidade
+  interface CommunityStats {
+    totalPosts: number;
+    totalCreators: number;
+  }
+  
+  // Buscar estatísticas da comunidade
+  const { 
+    data: communityStats, 
+    isLoading: communityStatsLoading,
+    refetch: refetchCommunityStats 
+  } = useQuery<CommunityStats>({
+    queryKey: ['/api/community/stats'],
+    refetchOnWindowFocus: false,
+    refetchInterval: 300000, // Atualiza a cada 5 minutos
+  });
+
   // Buscar designers populares
   interface DesignerPopular {
     id: number;
@@ -1258,7 +1275,18 @@ const CommunityPage: React.FC = () => {
               <TabsContent value="posts" className="space-y-0 px-4 md:px-0">
                 {/* Botão de atualização para mostrar posts mais recentes */}
                 <div className="mb-3 flex justify-between items-center">
-                  <h2 className="text-lg font-semibold">Posts Recentes</h2>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-semibold">Posts Recentes</h2>
+                    {communityStats && (
+                      <Badge 
+                        variant="outline" 
+                        className="bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs py-0 flex items-center gap-1"
+                      >
+                        <FileQuestion className="h-3 w-3 text-zinc-500" />
+                        <span>{communityStats.totalPosts} posts</span>
+                      </Badge>
+                    )}
+                  </div>
                   <Button 
                     variant="outline" 
                     size="sm" 
