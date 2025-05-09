@@ -302,6 +302,8 @@ const PostCard: React.FC<{
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [comments, setComments] = useState<any[]>([]);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
+  const [showAllComments, setShowAllComments] = useState(false);
+  const [allCommentsData, setAllCommentsData] = useState<any[]>([]);
   
   // Buscar comentários quando mostrar a área de comentários
   useEffect(() => {
@@ -317,13 +319,20 @@ const PostCard: React.FC<{
       const response = await fetch(`/api/community/posts/${post.id}/comments`);
       if (response.ok) {
         const data = await response.json();
-        setComments(data.slice(0, 3)); // Mostrar apenas os 3 comentários mais recentes
+        setAllCommentsData(data); // Armazenar todos os comentários
+        setComments(data.slice(0, 3)); // Mostrar apenas os 3 comentários mais recentes inicialmente
       }
     } catch (error) {
       console.error('Erro ao buscar comentários:', error);
     } finally {
       setIsLoadingComments(false);
     }
+  };
+  
+  // Função para mostrar todos os comentários
+  const handleShowAllComments = () => {
+    setShowAllComments(true);
+    setComments(allCommentsData); // Mostrar todos os comentários
   };
 
   // Função para curtir ou descurtir um post
@@ -424,8 +433,16 @@ const PostCard: React.FC<{
         // Atualizar a lista de comentários localmente
         const commentData = await response.json();
         if (commentData) {
-          // Adicionar o novo comentário no topo da lista e manter apenas os 3 mais recentes
-          setComments(prev => [commentData, ...prev].slice(0, 3));
+          // Atualizar tanto os dados completos quanto os visíveis
+          setAllCommentsData(prev => [commentData, ...prev]);
+          
+          if (showAllComments) {
+            // Se todos os comentários estão sendo mostrados, adicionar o novo no topo
+            setComments(prev => [commentData, ...prev]);
+          } else {
+            // Caso contrário, manter apenas os 3 mais recentes
+            setComments(prev => [commentData, ...prev].slice(0, 3));
+          }
         }
         
         setCommentText('');
@@ -630,14 +647,15 @@ const PostCard: React.FC<{
                     />
                   ))}
                   
-                  {post.commentsCount > comments.length && (
-                    <Link href={`/comunidade/post/${post.id}`}>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2 hover:underline cursor-pointer">
-                        Ver {post.commentsCount === 1 
-                          ? 'o comentário' 
-                          : `todos os ${post.commentsCount} comentários`}
-                      </p>
-                    </Link>
+                  {post.commentsCount > comments.length && !showAllComments && (
+                    <button 
+                      onClick={handleShowAllComments}
+                      className="text-xs text-zinc-500 dark:text-zinc-400 mt-2 hover:underline cursor-pointer"
+                    >
+                      Ver {post.commentsCount === 1 
+                        ? 'o comentário' 
+                        : `todos os ${post.commentsCount} comentários`}
+                    </button>
                   )}
                 </>
               )}
