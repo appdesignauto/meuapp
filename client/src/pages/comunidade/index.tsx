@@ -7,7 +7,7 @@ import {
   Sparkles, Users, ImageIcon, ExternalLink, FileEdit, RefreshCw, 
   Loader2, ZoomIn, X, MessageSquare, XCircle, FileQuestion, Globe, 
   Share, MoreHorizontal, Trash2, MessageCircle, Heart, ThumbsUp, Pin, Star,
-  PlusCircle, Bookmark, Check
+  PlusCircle, Bookmark, Check, CheckCircle2
 } from 'lucide-react';
 import { differenceInMinutes, differenceInHours, differenceInDays, differenceInMonths } from 'date-fns';
 
@@ -637,20 +637,27 @@ const PostCard: React.FC<{
   return (
     <Card className={`mb-5 overflow-hidden ${isPinned 
       ? 'border-2 border-amber-400 dark:border-amber-500 bg-amber-50/40 dark:bg-amber-900/10 shadow-lg' 
-      : 'border-0 sm:border sm:border-zinc-100 sm:dark:border-zinc-800'
-    } shadow-none sm:shadow-md hover:shadow-lg transition-all duration-300 ease-in-out w-full max-w-none xs:max-w-[500px] mx-0 xs:mx-auto relative`}>
+      : 'border-0 border-b border-b-zinc-200 dark:border-b-zinc-800 sm:border-b-0 sm:border sm:border-zinc-100 sm:dark:border-zinc-800'
+    } shadow-none sm:shadow-md hover:shadow-lg transition-all duration-300 ease-in-out w-full sm:max-w-[470px] md:max-w-full mx-0 sm:mx-auto relative`}>
       {/* Removido ícone de estrela sobreposto para evitar problemas de layout */}
       
-      {/* Cabeçalho do post - estilo Facebook/Instagram */}
-      <div className="p-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      {/* Cabeçalho do post - estilo exato do Instagram */}
+      <div className="p-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
           <UserAvatar user={post.user} size="sm" linkToProfile={true} />
           <div>
-            <VerifiedUsername user={post.user} className="text-sm" />
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">{formatDate(post.createdAt)}</p>
+            <div className="flex items-center gap-1">
+              <span className="text-sm font-semibold">{post.user.name || post.user.username}</span>
+              {post.user.nivelacesso === 'admin' && (
+                <span className="text-blue-500">
+                  <CheckCircle2 className="h-3.5 w-3.5 fill-blue-500 text-white" />
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">há {formatRelativeTime(post.createdAt)}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           {user && user.id !== post.user.id && (
             <FollowButton 
               userId={post.user.id} 
@@ -733,21 +740,21 @@ const PostCard: React.FC<{
         </div>
       </div>
       
-      {/* Imagem do post - estilo adaptado para mostrar imagem completa com aspecto variável */}
+      {/* Imagem do post - estilo exato do Instagram */}
       <Link href={`/comunidade/post/${post.id}`}>
         <div className="relative w-full overflow-hidden bg-black">
-          <div className="w-full max-h-[600px] min-h-[280px]">
+          <div className="w-full max-h-[600px]">
             <img 
               src={post.imageUrl} 
               alt={post.title}
-              className="hover:scale-[1.02] transition-transform duration-500 cursor-pointer w-full h-full object-cover sm:object-contain"
+              className="hover:scale-[1.02] transition-transform duration-500 cursor-pointer w-full h-full object-cover"
             />
           </div>
         </div>
       </Link>
       
-      {/* Título abaixo da imagem */}
-      <div className="px-4 pt-3 pb-1">
+      {/* Título e conteúdo abaixo da imagem (estilo Instagram) */}
+      <div className="px-3 pt-2 pb-1">
         {isPinned && (
           <div className="mb-1.5 flex items-center">
             <span className="bg-gradient-to-r from-yellow-500 to-amber-500 text-white dark:from-yellow-600 dark:to-amber-600 text-xs font-medium px-2.5 py-1 rounded-md flex items-center gap-1.5 shadow-sm">
@@ -756,17 +763,20 @@ const PostCard: React.FC<{
             </span>
           </div>
         )}
-        <Link href={`/comunidade/post/${post.id}`}>
-          <h3 className="text-base font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer flex items-center gap-1">
-            {post.title}
-          </h3>
-        </Link>
+        
+        <div className="flex gap-1">
+          <Link href={`/comunidade/post/${post.id}`}>
+            <h3 className="text-sm font-bold hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer">
+              {post.title}
+            </h3>
+          </Link>
+        </div>
       </div>
       
-      {/* Conteúdo/descrição abaixo do título */}
+      {/* Conteúdo/descrição abaixo do título (estilo Instagram) */}
       {post.content && (
-        <div className="px-4 pt-1 pb-2">
-          <p className="text-sm text-zinc-600 dark:text-zinc-300">
+        <div className="px-3 pt-0 pb-2">
+          <p className="text-sm text-zinc-800 dark:text-zinc-200">
             {post.content}
           </p>
         </div>
