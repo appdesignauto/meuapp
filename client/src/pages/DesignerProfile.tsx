@@ -14,7 +14,6 @@ import useScrollTop from "@/hooks/useScrollTop";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { FollowButton } from "@/components/community/FollowButton";
 
 type Designer = {
   id: number;
@@ -115,7 +114,68 @@ export default function DesignerProfile() {
     },
   });
   
-  // Removemos as mutações de seguir/deixar de seguir e utilizamos o componente FollowButton
+  // Mutação para seguir designer
+  const followMutation = useMutation({
+    mutationFn: async (designerId: number) => {
+      const res = await apiRequest("POST", `/api/follow/${designerId}`);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/designers", username] });
+      toast({
+        title: "Designer seguido com sucesso",
+        description: "Você agora está seguindo este designer",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao seguir designer",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Mutação para deixar de seguir
+  const unfollowMutation = useMutation({
+    mutationFn: async (designerId: number) => {
+      const res = await apiRequest("DELETE", `/api/unfollow/${designerId}`);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/designers", username] });
+      toast({
+        title: "Deixou de seguir com sucesso",
+        description: "Você não está mais seguindo este designer",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao deixar de seguir",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  const handleFollowToggle = () => {
+    if (!user) {
+      toast({
+        title: "Login necessário",
+        description: "Faça login para seguir designers",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!data) return;
+    
+    if (data.isFollowing) {
+      unfollowMutation.mutate(data.id);
+    } else {
+      followMutation.mutate(data.id);
+    }
+  };
   
   const handlePageChange = (page: number) => {
     setArtsPage(page);
@@ -409,19 +469,30 @@ export default function DesignerProfile() {
             {/* Botões de ação */}
             <div className="flex gap-2 mt-4">
               {user && user.id !== data.id && (
-                <div className="flex items-center">
-                  <FollowButton 
-                    userId={data.id} 
-                    isFollowing={data.isFollowing}
-                    className="rounded-full"
-                    size="sm"
-                  />
-                  {data.followers > 0 && (
-                    <span className="ml-2 bg-blue-100 text-blue-700 text-xs px-1.5 py-0.5 rounded-full">
-                      {data.followers}
-                    </span>
+                <Button
+                  onClick={handleFollowToggle}
+                  variant={data.isFollowing ? "outline" : "default"}
+                  className={`px-5 py-1 h-9 text-sm rounded-full ${data.isFollowing ? 'border-blue-200 text-blue-600 hover:bg-blue-50' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+                  disabled={followMutation.isPending || unfollowMutation.isPending}
+                >
+                  {followMutation.isPending || unfollowMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  ) : (
+                    data.isFollowing ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M20 6 9 17l-5-5"></path></svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    )
                   )}
-                </div>
+                  <span className="flex items-center">
+                    {data.isFollowing ? "Seguindo" : "Seguir"}
+                    {data.followers > 0 && (
+                      <span className="ml-1.5 bg-blue-100 text-blue-700 text-xs px-1.5 py-0.5 rounded-full">
+                        {data.followers}
+                      </span>
+                    )}
+                  </span>
+                </Button>
               )}
               
               <Button variant="outline" size="sm" className="rounded-full h-8 px-2 border-gray-200 text-gray-600 hover:text-gray-800">
