@@ -949,15 +949,6 @@ interface RankingUser {
 
 // Componente de Card do Usuário no Ranking
 const RankingUserCard: React.FC<{ user: RankingUser }> = ({ user }) => {
-  // Função para obter o ícone baseado no nível
-  const getLevelIcon = (level: string): React.ReactNode => {
-    if (level.includes('Pro')) return <Sparkles className="h-3 w-3 text-red-600" />;
-    if (level.includes('Referência')) return <Trophy className="h-3 w-3 text-orange-500" />;
-    if (level.includes('Destaque')) return <Medal className="h-3 w-3 text-purple-600" />;
-    if (level.includes('Cooperador')) return <Award className="h-3 w-3 text-blue-500" />;
-    if (level.includes('Voluntário')) return <User className="h-3 w-3 text-green-500" />;
-    return <User className="h-3 w-3 text-amber-800" />; // Membro (padrão)
-  };
 
   return (
     <div className="flex items-center gap-3 p-3 border-b border-zinc-100 dark:border-zinc-800 last:border-0">
@@ -1020,6 +1011,16 @@ const PostCardSkeleton: React.FC = () => {
       </CardFooter>
     </Card>
   );
+};
+
+// Função global para obter o ícone baseado no nível
+const getLevelIcon = (level: string): React.ReactNode => {
+  if (level.includes('Pro')) return <Sparkles className="h-3 w-3 text-red-600" />;
+  if (level.includes('Referência')) return <Trophy className="h-3 w-3 text-orange-500" />;
+  if (level.includes('Destaque')) return <Medal className="h-3 w-3 text-purple-600" />;
+  if (level.includes('Cooperador')) return <Award className="h-3 w-3 text-blue-500" />;
+  if (level.includes('Voluntário')) return <User className="h-3 w-3 text-green-500" />;
+  return <User className="h-3 w-3 text-amber-800" />; // Membro (padrão)
 };
 
 // Página principal da comunidade
