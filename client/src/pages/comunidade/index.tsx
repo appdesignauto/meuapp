@@ -1277,7 +1277,7 @@ const CommunityPage: React.FC = () => {
                 <div className="mb-3 flex justify-between items-center">
                   <div className="flex items-center gap-2">
                     <h2 className="text-lg font-semibold">Posts Recentes</h2>
-                    {communityStats && (
+                    {!communityStatsLoading && communityStats && (
                       <Badge 
                         variant="outline" 
                         className="bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs py-0 flex items-center gap-1"
