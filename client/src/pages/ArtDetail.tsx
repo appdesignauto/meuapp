@@ -203,7 +203,7 @@ export default function ArtDetail() {
         return { groupId: null };
       }
     },
-    enabled: !!id && !!user && (user.nivelacesso === 'admin' || user.nivelacesso === 'designer_adm' || user.nivelacesso === 'designer'),
+    enabled: !!id && !!user,
   });
 
   // Buscar artes do mesmo grupo (para exibir outros formatos)
@@ -230,7 +230,7 @@ export default function ArtDetail() {
         return { arts: [] };
       }
     },
-    enabled: !!groupInfo?.groupId && !!user && (user.nivelacesso === 'admin' || user.nivelacesso === 'designer_adm' || user.nivelacesso === 'designer'),
+    enabled: !!groupInfo?.groupId && !!user,
   });
   
   // Verificar se a arte está favoritada
