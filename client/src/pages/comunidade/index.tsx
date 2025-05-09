@@ -1043,6 +1043,7 @@ const CommunityPage: React.FC = () => {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
+  const [showDAutoInfo, setShowDAutoInfo] = useState(false);
   const [page, setPage] = useState(1);
   const [allPosts, setAllPosts] = useState<any[]>([]);
   const [hasMorePosts, setHasMorePosts] = useState(true);
@@ -1277,7 +1278,34 @@ const CommunityPage: React.FC = () => {
       
       <div className="container max-w-6xl px-0 md:px-4 py-4 md:py-6 mx-auto">
         <div className="md:hidden flex justify-between items-center mb-4 px-4">
-          <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Comunidade</h1>
+          <div className="flex items-center gap-1.5">
+            <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Comunidade</h1>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 p-0">
+                    <Info className="h-4 w-4 text-blue-500" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-[300px] p-4" side="bottom">
+                  <div className="space-y-2">
+                    <h4 className="font-semibold">Sobre o Sistema D.Auto</h4>
+                    <p className="text-xs">O sistema D.Auto premia designers ativos com pontos baseados em interação e contribuição à comunidade.</p>
+                    <div className="space-y-1.5 text-xs">
+                      <p>• Arte aprovada: <span className="font-medium text-green-500">5 pontos</span></p>
+                      <p>• Cada curtida: <span className="font-medium text-blue-500">1 ponto</span></p>
+                      <p>• Cada salvamento: <span className="font-medium text-amber-500">2 pontos</span></p>
+                      <p>• Post em destaque: <span className="font-medium text-yellow-500">5 pontos extras</span></p>
+                    </div>
+                    <div className="pt-1">
+                      <p className="text-xs font-semibold">Níveis de conquista:</p>
+                      <p className="text-xs">Membro → Voluntário → Cooperador → Destaque → Referência → Pro</p>
+                    </div>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
           
           {user && (
             <Button 
@@ -1298,34 +1326,7 @@ const CommunityPage: React.FC = () => {
             <div className="sticky top-20">
               <Card className="overflow-hidden mb-4 border border-zinc-100 dark:border-zinc-800">
                 <CardHeader className="pb-2">
-                  <div className="flex items-center gap-1.5">
-                    <CardTitle className="text-xl">Comunidade DesignAuto</CardTitle>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 p-0 -mt-0.5">
-                            <Info className="h-4 w-4 text-blue-500" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-[300px] p-4" side="bottom">
-                          <div className="space-y-2">
-                            <h4 className="font-semibold">Sobre o Sistema D.Auto</h4>
-                            <p className="text-xs">O sistema D.Auto premia designers ativos com pontos baseados em interação e contribuição à comunidade.</p>
-                            <div className="space-y-1.5 text-xs">
-                              <p>• Arte aprovada: <span className="font-medium text-green-500">5 pontos</span></p>
-                              <p>• Cada curtida: <span className="font-medium text-blue-500">1 ponto</span></p>
-                              <p>• Cada salvamento: <span className="font-medium text-amber-500">2 pontos</span></p>
-                              <p>• Post em destaque: <span className="font-medium text-yellow-500">5 pontos extras</span></p>
-                            </div>
-                            <div className="pt-1">
-                              <p className="text-xs font-semibold">Níveis de conquista:</p>
-                              <p className="text-xs">Membro → Voluntário → Cooperador → Destaque → Referência → Pro</p>
-                            </div>
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
+                  <CardTitle className="text-xl">Comunidade DesignAuto</CardTitle>
                   <CardDescription>Compartilhe suas criações e inspirações</CardDescription>
                 </CardHeader>
                 
