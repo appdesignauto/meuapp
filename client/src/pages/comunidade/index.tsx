@@ -17,7 +17,6 @@ import LoadingScreen from '@/components/LoadingScreen';
 import ErrorContainer from '@/components/ErrorContainer';
 import UserAvatar from '@/components/users/UserAvatar';
 import VerifiedUsername from '@/components/users/VerifiedUsername';
-import RankingList from '@/components/community/RankingList';
 import { CreatePostDialog } from '@/components/community/CreatePostDialog';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
@@ -1723,8 +1722,7 @@ const CommunityPage: React.FC = () => {
                   </div>
                 )}
                 
-                {/* Component precisa ser ajustado para aceitar o prop period */}
-                <RankingList />
+                {/* Removido RankingList duplicado */}
               </TabsContent>
             </Tabs>
           </div>
