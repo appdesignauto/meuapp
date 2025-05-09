@@ -7,7 +7,7 @@ import {
   Sparkles, Users, ImageIcon, ExternalLink, FileEdit, RefreshCw, 
   Loader2, ZoomIn, X, MessageSquare, XCircle, FileQuestion, Globe, 
   Share, MoreHorizontal, Trash2, MessageCircle, Heart, ThumbsUp, Pin, Star,
-  PlusCircle, Bookmark, Check, CheckCircle2
+  PlusCircle, Bookmark, Check, CheckCircle2, ThumbsUp as ThumbsUpIcon
 } from 'lucide-react';
 import { differenceInMinutes, differenceInHours, differenceInDays, differenceInMonths } from 'date-fns';
 
@@ -44,6 +44,14 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   Tooltip,
   TooltipContent,
@@ -1280,31 +1288,127 @@ const CommunityPage: React.FC = () => {
         <div className="md:hidden flex justify-between items-center mb-4 px-4">
           <div className="flex items-center gap-1.5">
             <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Comunidade</h1>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 p-0">
-                    <Info className="h-4 w-4 text-blue-500" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent className="max-w-[300px] p-4" side="bottom">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-7 w-7 p-0">
+                  <Info className="h-4 w-4 text-blue-500" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-xl">
+                <DialogHeader>
+                  <DialogTitle className="text-xl">Sobre o Sistema D.Auto</DialogTitle>
+                  <DialogDescription>
+                    Sistema de pontuação e recompensas para designers ativos
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 mt-2">
+                  <p className="text-sm text-zinc-600 dark:text-zinc-300">
+                    O sistema D.Auto premia os criadores mais ativos da comunidade com base em pontos ganhos por
+                    contribuições, curtidas e destaques recebidos.
+                  </p>
+                  
                   <div className="space-y-2">
-                    <h4 className="font-semibold">Sobre o Sistema D.Auto</h4>
-                    <p className="text-xs">O sistema D.Auto premia designers ativos com pontos baseados em interação e contribuição à comunidade.</p>
-                    <div className="space-y-1.5 text-xs">
-                      <p>• Arte aprovada: <span className="font-medium text-green-500">5 pontos</span></p>
-                      <p>• Cada curtida: <span className="font-medium text-blue-500">1 ponto</span></p>
-                      <p>• Cada salvamento: <span className="font-medium text-amber-500">2 pontos</span></p>
-                      <p>• Post em destaque: <span className="font-medium text-yellow-500">5 pontos extras</span></p>
-                    </div>
-                    <div className="pt-1">
-                      <p className="text-xs font-semibold">Níveis de conquista:</p>
-                      <p className="text-xs">Membro → Voluntário → Cooperador → Destaque → Referência → Pro</p>
+                    <h5 className="text-sm font-medium">Como Ganhar Pontos:</h5>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-1 text-sm">
+                        <PlusCircle className="h-4 w-4 text-green-500" /> 
+                        <span className="font-medium">Arte Aprovada:</span> 
+                        <span className="text-zinc-500">5 pontos</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-sm">
+                        <ThumbsUp className="h-4 w-4 text-blue-500" /> 
+                        <span className="font-medium">Curtida Recebida:</span> 
+                        <span className="text-zinc-500">1 ponto</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-sm">
+                        <Bookmark className="h-4 w-4 text-amber-500" /> 
+                        <span className="font-medium">Salvamento:</span> 
+                        <span className="text-zinc-500">2 pontos</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-sm">
+                        <Star className="h-4 w-4 text-yellow-500" /> 
+                        <span className="font-medium">Post em Destaque:</span> 
+                        <span className="text-zinc-500">5 pontos extras</span>
+                      </div>
                     </div>
                   </div>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+                  
+                  <div className="space-y-2">
+                    <h5 className="text-sm font-medium">Níveis e Pontos:</h5>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-1 text-sm">
+                        <User className="h-4 w-4 text-amber-800" /> 
+                        <span className="font-medium">Membro D.Auto:</span> 
+                        <span className="text-zinc-500">0-199 pontos</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-sm">
+                        <User className="h-4 w-4 text-green-500" /> 
+                        <span className="font-medium">Voluntário D.Auto:</span> 
+                        <span className="text-zinc-500">200-699 pontos</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-sm">
+                        <Award className="h-4 w-4 text-blue-500" /> 
+                        <span className="font-medium">Cooperador D.Auto:</span> 
+                        <span className="text-zinc-500">700-1.499 pontos</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-sm">
+                        <Medal className="h-4 w-4 text-purple-600" /> 
+                        <span className="font-medium">Destaque D.Auto:</span> 
+                        <span className="text-zinc-500">1.500-2.999 pontos</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-sm">
+                        <Trophy className="h-4 w-4 text-orange-500" /> 
+                        <span className="font-medium">Referência D.Auto:</span> 
+                        <span className="text-zinc-500">3.000-4.999 pontos</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-sm">
+                        <Sparkles className="h-4 w-4 text-red-600" /> 
+                        <span className="font-medium">Pro D.Auto:</span> 
+                        <span className="text-zinc-500">5.000+ pontos</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2 mt-4">
+                    <h5 className="text-sm font-medium">Premiação Mensal:</h5>
+                    <p className="text-sm text-zinc-600 dark:text-zinc-300">
+                      Todo mês, os 3 primeiros colocados do ranking recebem prêmios em dinheiro:
+                    </p>
+                    <div className="flex items-start gap-4 mt-2">
+                      <div className="text-center">
+                        <div className="bg-amber-100 dark:bg-amber-900/30 w-14 h-14 mx-auto rounded-full flex items-center justify-center">
+                          <Trophy className="h-7 w-7 text-amber-600 dark:text-amber-500" />
+                        </div>
+                        <div className="mt-1">
+                          <p className="font-semibold text-amber-600 dark:text-amber-500">1º Lugar</p>
+                          <p className="text-sm">R$ 300,00</p>
+                        </div>
+                      </div>
+                      
+                      <div className="text-center">
+                        <div className="bg-gray-100 dark:bg-gray-800 w-14 h-14 mx-auto rounded-full flex items-center justify-center">
+                          <Trophy className="h-7 w-7 text-gray-600 dark:text-gray-400" />
+                        </div>
+                        <div className="mt-1">
+                          <p className="font-semibold text-gray-600 dark:text-gray-400">2º Lugar</p>
+                          <p className="text-sm">R$ 200,00</p>
+                        </div>
+                      </div>
+                      
+                      <div className="text-center">
+                        <div className="bg-amber-50 dark:bg-amber-900/20 w-14 h-14 mx-auto rounded-full flex items-center justify-center">
+                          <Trophy className="h-7 w-7 text-amber-800 dark:text-amber-700" />
+                        </div>
+                        <div className="mt-1">
+                          <p className="font-semibold text-amber-800 dark:text-amber-700">3º Lugar</p>
+                          <p className="text-sm">R$ 100,00</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
           
           {user && (
