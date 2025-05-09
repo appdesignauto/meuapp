@@ -9,7 +9,8 @@ import {
   communityPoints,
   communityLeaderboard,
   communitySettings,
-  communityCommentLikes
+  communityCommentLikes,
+  userFollows
 } from '../../shared/schema';
 import { eq, and, gt, gte, lte, desc, asc, sql, inArray, count as countFn } from 'drizzle-orm';
 import multer from 'multer';
@@ -219,15 +220,15 @@ router.get('/api/community/posts', async (req, res) => {
             );
             
           // Verificar se o usuário atual segue o autor do post
-          const [isFollowing] = await db
-            .select({ count: count() })
+          const [isFollowing] = post.user && post.user.id ? await db
+            .select({ count: countFn() })
             .from(userFollows)
             .where(
               and(
                 eq(userFollows.followerId, userId),
                 eq(userFollows.followingId, post.user.id)
               )
-            );
+            ) : [{ count: 0 }];
 
           return {
             ...post,
@@ -384,11 +385,31 @@ router.get('/api/community/posts/:id', async (req, res) => {
           console.error(`Erro ao verificar save do usuário para post ${postId}:`, error);
         }
         
+        // Verificar se o usuário segue o autor do post
+        let isFollowing = false;
+        try {
+          // Verificar se o usuário atual segue o autor do post
+          if (post.user.id !== userId) { // Não seguimos a nós mesmos
+            const followResult = await db.execute(sql`
+              SELECT 1 FROM "userFollows"
+              WHERE "followerId" = ${userId} AND "followingId" = ${post.user.id}
+              LIMIT 1
+            `);
+            isFollowing = followResult.rows.length > 0;
+          }
+        } catch (error) {
+          console.error(`Erro ao verificar relação de seguir para post ${postId}:`, error);
+        }
+        
         return res.json({
           ...post,
           userHasLiked,
           isLikedByUser: userHasLiked, // Para compatibilidade com frontend
           userHasSaved,
+          user: {
+            ...post.user,
+            isFollowing
+          }
         });
       }
       
