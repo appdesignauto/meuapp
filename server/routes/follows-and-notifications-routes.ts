@@ -12,7 +12,7 @@ import {
   insertNotificationSchema,
 } from "@shared/schema";
 import { z } from "zod";
-import { isAuthenticated } from "../auth";
+import { isAuthenticated } from "../middlewares/auth";
 
 // Função para verificar se um userId é válido
 async function isValidUserId(userId: number): Promise<boolean> {
@@ -37,7 +37,7 @@ async function isFollowing(followerId: number, followedId: number): Promise<bool
 
 export const registerFollowAndNotificationRoutes = (router: Router) => {
   // Rota para seguir um usuário
-  router.post("/follows", auth, async (req: Request, res: Response) => {
+  router.post("/follows", isAuthenticated, async (req: Request, res: Response) => {
     try {
       // Validar corpo da requisição
       const parsed = insertUserFollowSchema.safeParse(req.body);
@@ -113,7 +113,7 @@ export const registerFollowAndNotificationRoutes = (router: Router) => {
   });
 
   // Rota para deixar de seguir um usuário
-  router.delete("/follows/:followedId", auth, async (req: Request, res: Response) => {
+  router.delete("/follows/:followedId", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const followerId = req.user!.id;
       const followedId = parseInt(req.params.followedId);
@@ -142,7 +142,7 @@ export const registerFollowAndNotificationRoutes = (router: Router) => {
   });
 
   // Rota para verificar se o usuário segue outro usuário
-  router.get("/follows/check/:followedId", auth, async (req: Request, res: Response) => {
+  router.get("/follows/check/:followedId", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const followerId = req.user!.id;
       const followedId = parseInt(req.params.followedId);
@@ -161,7 +161,7 @@ export const registerFollowAndNotificationRoutes = (router: Router) => {
   });
 
   // Rota para listar os usuários que o usuário segue
-  router.get("/follows/following", auth, async (req: Request, res: Response) => {
+  router.get("/follows/following", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const followerId = req.user!.id;
       const page = parseInt(req.query.page as string) || 1;
@@ -210,7 +210,7 @@ export const registerFollowAndNotificationRoutes = (router: Router) => {
   });
 
   // Rota para listar os seguidores do usuário
-  router.get("/follows/followers", auth, async (req: Request, res: Response) => {
+  router.get("/follows/followers", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const followedId = req.user!.id;
       const page = parseInt(req.query.page as string) || 1;
@@ -239,7 +239,7 @@ export const registerFollowAndNotificationRoutes = (router: Router) => {
       
       // Contar o total de seguidores para paginação
       const [{ total }] = await db
-        .select({ total: count2(userFollows.id) })
+        .select({ total: count(userFollows.id) })
         .from(userFollows)
         .where(eq(userFollows.followedId, followedId));
 
@@ -259,7 +259,7 @@ export const registerFollowAndNotificationRoutes = (router: Router) => {
   });
 
   // Rota para listar as notificações do usuário
-  router.get("/notifications", auth, async (req: Request, res: Response) => {
+  router.get("/notifications", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
       const page = parseInt(req.query.page as string) || 1;
@@ -297,13 +297,13 @@ export const registerFollowAndNotificationRoutes = (router: Router) => {
       
       // Contar o total de notificações para paginação
       const [{ total }] = await db
-        .select({ total: count2(notifications.id) })
+        .select({ total: count(notifications.id) })
         .from(notifications)
         .where(whereClause);
 
       // Contar o total de notificações não lidas
       const [{ unreadCount }] = await db
-        .select({ unreadCount: count2(notifications.id) })
+        .select({ unreadCount: count(notifications.id) })
         .from(notifications)
         .where(and(
           eq(notifications.userId, userId),
