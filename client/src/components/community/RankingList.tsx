@@ -157,7 +157,14 @@ const RankingItem: React.FC<{
       <div className="flex-1 pr-10">
         <div className="flex items-center gap-2">
           <p className="font-medium text-sm">{user.user.name || user.user.username}</p>
-          <Badge variant="outline" className="text-xs py-0 h-5 gap-1">
+          <Badge variant="outline" className={`text-xs py-0 h-5 gap-1 ${
+            user.level === 'Profissional' ? 'border-red-200 text-red-600 dark:border-red-800/50' :
+            user.level === 'Referência KDG' ? 'border-orange-200 text-orange-500 dark:border-orange-800/50' :
+            user.level === 'Destaque KDG' ? 'border-purple-200 text-purple-600 dark:border-purple-800/50' :
+            user.level === 'Cooperador KDG' ? 'border-blue-200 text-blue-500 dark:border-blue-800/50' :
+            user.level === 'Voluntário KDG' ? 'border-green-200 text-green-500 dark:border-green-800/50' :
+            'border-amber-200 text-amber-800 dark:border-amber-800/50'
+          }`}>
             {LEVEL_ICONS[user.level] || <User className="h-3 w-3" />}
             <span>{user.level}</span>
           </Badge>

@@ -18,19 +18,38 @@
  * Uso: node update-kdgpro-points.js
  */
 
-import 'dotenv/config';
-import { Pool } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import { eq, sql } from 'drizzle-orm';
-import * as schema from './shared/schema.js';
-import { fileURLToPath } from 'url';
-import path from 'path';
-import ws from 'ws';
+require('dotenv').config();
+const { Pool } = require('@neondatabase/serverless');
+const { neonConfig } = require('@neondatabase/serverless');
+const { drizzle } = require('drizzle-orm/neon-serverless');
+const { eq, sql } = require('drizzle-orm');
+const path = require('path');
+const ws = require('ws');
 
 // Configuração do Neon com WebSocket
-if (typeof neonConfig !== 'undefined') {
-  neonConfig.webSocketConstructor = ws;
-}
+neonConfig.webSocketConstructor = ws;
+
+// Carregar schema manualmente definindo as tabelas necessárias
+const schema = {
+  communitySettings: {
+    id: { name: 'id' }
+  },
+  communityLeaderboard: {
+    id: { name: 'id' },
+    userId: { name: 'userId' },
+    period: { name: 'period' },
+    totalPoints: { name: 'totalPoints' },
+    postCount: { name: 'postCount' },
+    likesReceived: { name: 'likesReceived' },
+    savesReceived: { name: 'savesReceived' },
+    featuredCount: { name: 'featuredCount' },
+    level: { name: 'level' },
+    rank: { name: 'rank' },
+    lastUpdated: { name: 'lastUpdated' }
+  }
+};
+
+// Configuração do Neon com WebSocket já foi feita acima
 
 // Garantir que o DATABASE_URL seja definido
 if (!process.env.DATABASE_URL) {
