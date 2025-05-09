@@ -1543,10 +1543,20 @@ const CommunityPage: React.FC = () => {
               
               {/* Tab de Ranking */}
               <TabsContent value="ranking" className="space-y-4 px-4 md:px-0">
-                {/* Aqui será exibido o componente RankingList, que já contém todos os elementos necessários */}
+                {/* Seção de Vencedores Mensais */}
+                <div className="mb-6">
+                  <h2 className="text-lg font-semibold mb-4">Premiação mensal KDGPRO</h2>
+                  <MonthlyWinners />
+                </div>
                 
-                {/* Component precisa ser ajustado para aceitar o prop period */}
-                <RankingList />
+                {/* Ranking completo */}
+                <div className="mt-8">
+                  <h2 className="text-lg font-semibold mb-4">Ranking completo</h2>
+                  <RankingList 
+                    initialPeriod="month"
+                    showPeriodSelector
+                  />
+                </div>
               </TabsContent>
             </Tabs>
           </div>
