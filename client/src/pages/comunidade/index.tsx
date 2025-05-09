@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { Link } from 'wouter';
 import { 
   Settings, Plus, Filter, User, Trophy, Clock, Info, Award, Medal, 
   Sparkles, Users, ImageIcon, ExternalLink, FileEdit, RefreshCw, 
   Loader2, ZoomIn, X, MessageSquare, XCircle, FileQuestion, Globe, 
-  Share, MoreHorizontal, Trash2, MessageCircle, Heart, ThumbsUp
+  Share, MoreHorizontal, Trash2, MessageCircle, Heart, ThumbsUp, Pin
 } from 'lucide-react';
 import { differenceInMinutes, differenceInHours, differenceInDays, differenceInMonths } from 'date-fns';
 
@@ -46,7 +46,9 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger
+  DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 
 // Interface para post na comunidade
@@ -62,6 +64,8 @@ interface CommunityPost {
   isApproved: boolean;
   userId: number;
   isLikedByUser?: boolean;
+  isPinned?: boolean;
+  editLink?: string;
   user: {
     id: number;
     username: string;
@@ -305,6 +309,8 @@ const PostCard: React.FC<{
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [showAllComments, setShowAllComments] = useState(false);
   const [allCommentsData, setAllCommentsData] = useState<any[]>([]);
+  const [isPinning, setIsPinning] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // Buscar comentários quando mostrar a área de comentários
   useEffect(() => {
@@ -466,6 +472,104 @@ const PostCard: React.FC<{
     }
   };
   
+  // Função para fixar ou desafixar um post
+  const handlePinPost = async (postId: number) => {
+    if (!user || user.nivelacesso !== 'admin') {
+      toast({
+        title: "Acesso negado",
+        description: "Apenas administradores podem fixar posts",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsPinning(true);
+    try {
+      const isPinned = post.isPinned || false;
+      const action = isPinned ? 'unpin' : 'pin';
+      
+      const response = await apiRequest('PUT', `/api/community/posts/${postId}/${action}`);
+      
+      if (!response.ok) {
+        throw new Error(`Não foi possível ${isPinned ? 'desafixar' : 'fixar'} o post`);
+      }
+      
+      // Atualizar a lista de posts
+      if (refetch) {
+        refetch();
+      }
+      
+      // Atualizar posts populares se necessário
+      if (refetchPopularPosts) {
+        refetchPopularPosts();
+      }
+      
+      toast({
+        title: isPinned ? "Post desafixado" : "Post fixado",
+        description: isPinned 
+          ? "O post não será mais exibido no topo da comunidade" 
+          : "O post será exibido no topo da comunidade",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao processar sua ação",
+        variant: "destructive",
+      });
+    } finally {
+      setIsPinning(false);
+    }
+  };
+  
+  // Função para excluir um post
+  const handleDeletePost = async (postId: number) => {
+    if (!user || (user.id !== post.userId && user.nivelacesso !== 'admin')) {
+      toast({
+        title: "Acesso negado",
+        description: "Você não tem permissão para excluir este post",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Confirmação para exclusão
+    if (!window.confirm("Tem certeza que deseja excluir este post? Esta ação não pode ser desfeita.")) {
+      return;
+    }
+    
+    setIsDeleting(true);
+    try {
+      const response = await apiRequest('DELETE', `/api/community/posts/${postId}`);
+      
+      if (!response.ok) {
+        throw new Error("Não foi possível excluir o post");
+      }
+      
+      // Atualizar a lista de posts
+      if (refetch) {
+        refetch();
+      }
+      
+      // Atualizar posts populares se necessário
+      if (refetchPopularPosts) {
+        refetchPopularPosts();
+      }
+      
+      toast({
+        title: "Post excluído",
+        description: "O post foi excluído com sucesso",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao excluir o post",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+  
   // Função para compartilhar um post
   const handleShare = () => {
     if (!navigator.share) {
@@ -524,11 +628,54 @@ const PostCard: React.FC<{
               className="text-xs px-2 h-8"
             />
           )}
-          <button className="text-zinc-400 hover:text-zinc-500 dark:text-zinc-500 dark:hover:text-zinc-400 h-8 w-8 flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
-            </svg>
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="text-zinc-400 hover:text-zinc-500 dark:text-zinc-500 dark:hover:text-zinc-400 h-8 w-8 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
+                </svg>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>Opções do Post</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {user?.nivelacesso === 'admin' && (
+                <>
+                  <DropdownMenuItem 
+                    onClick={() => handlePinPost(post.id)}
+                    className="cursor-pointer"
+                  >
+                    <Pin className="mr-2 h-4 w-4" />
+                    <span>{post.isPinned ? "Desafixar post" : "Fixar post no topo"}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )}
+              <DropdownMenuItem 
+                onClick={() => window.open(post.editLink, '_blank')}
+                className="cursor-pointer"
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                <span>Abrir link externo</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={handleShare}
+                className="cursor-pointer"
+              >
+                <Share className="mr-2 h-4 w-4" />
+                <span>Compartilhar</span>
+              </DropdownMenuItem>
+              {(user?.id === post.userId || user?.nivelacesso === 'admin') && (
+                <DropdownMenuItem
+                  onClick={() => handleDeletePost(post.id)}
+                  className="cursor-pointer text-red-500 hover:text-red-600 focus:text-red-600"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  <span>Excluir post</span>
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
       

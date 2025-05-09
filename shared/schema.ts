@@ -278,6 +278,7 @@ export const communityPosts = pgTable("communityPosts", {
   viewCount: integer("viewCount").default(0).notNull(), // Renomeado de views para viewCount para consistência
   featuredUntil: timestamp("featuredUntil"),
   isWeeklyFeatured: boolean("isWeeklyFeatured").default(false).notNull(),
+  isPinned: boolean("isPinned").default(false).notNull(), // Indica se o post está fixado no topo
 });
 
 export const insertCommunityPostSchema = createInsertSchema(communityPosts).omit({
@@ -287,6 +288,7 @@ export const insertCommunityPostSchema = createInsertSchema(communityPosts).omit
   viewCount: true,
   featuredUntil: true,
   isWeeklyFeatured: true,
+  isPinned: true,
 });
 
 export type Testimonial = typeof testimonials.$inferSelect;
