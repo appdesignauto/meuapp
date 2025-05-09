@@ -190,7 +190,7 @@ const MonthlyWinners: React.FC<MonthlyWinnersProps> = ({ className }) => {
           </p>
           <div className="bg-white dark:bg-zinc-800 py-0.5 sm:py-1 px-2 sm:px-3 rounded-full border border-amber-200 dark:border-amber-900/30">
             <p className="text-[10px] sm:text-xs font-medium text-amber-600 dark:text-amber-400">
-              {prize}
+              {position === 0 ? "1º Lugar" : position === 1 ? "2º Lugar" : "3º Lugar"}
             </p>
           </div>
         </div>
