@@ -2083,10 +2083,10 @@ router.delete('/api/community/posts/:id', async (req, res) => {
     
     console.log(`- Post encontrado, pertence ao usuário: ${post.userId}`);
     
-    // Verificar se o usuário é o autor do post ou é admin
-    if (post.userId !== userId && !isAdmin) {
-      console.log('- Usuário não tem permissão para excluir este post');
-      return res.status(403).json({ message: 'Sem permissão para excluir este post' });
+    // Verificar se o usuário é admin (somente admins podem excluir posts)
+    if (!isAdmin) {
+      console.log('- Usuário não tem permissão para excluir este post - apenas administradores podem excluir posts');
+      return res.status(403).json({ message: 'Apenas administradores podem excluir posts na comunidade' });
     }
     
     // Excluir post
