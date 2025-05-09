@@ -51,6 +51,18 @@ import {
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 
+// Interface para usuário
+interface User {
+  id: number;
+  username: string;
+  name: string | null;
+  profileimageurl: string | null;
+  nivelacesso: string;
+  email?: string;
+  role?: string;
+  isFollowing?: boolean;
+}
+
 // Interface para post na comunidade
 interface CommunityPost {
   id: number;
@@ -66,13 +78,7 @@ interface CommunityPost {
   isLikedByUser?: boolean;
   isPinned?: boolean;
   editLink?: string;
-  user: {
-    id: number;
-    username: string;
-    name: string | null;
-    profileimageurl: string | null;
-    nivelacesso: string;
-  };
+  user: User;
 }
 
 // Interface para ranking na comunidade
@@ -296,8 +302,11 @@ const PostCard: React.FC<{
   post: CommunityPost; 
   refetch?: () => void;
   refetchPopularPosts?: () => void; // Adicionado para atualizar posts populares
-}> = ({ post, refetch, refetchPopularPosts }) => {
-  const { user } = useAuth();
+  user?: User | null; // Permite passar usuário explicitamente 
+}> = ({ post, refetch, refetchPopularPosts, user: propUser }) => {
+  const { user: authUser } = useAuth();
+  // Usar o usuário passado via props ou o usuário da autenticação
+  const user = propUser || authUser;
   const { toast } = useToast();
   const [isLiked, setIsLiked] = useState(post.isLikedByUser || false);
   const [likesCount, setLikesCount] = useState(post.likesCount);
