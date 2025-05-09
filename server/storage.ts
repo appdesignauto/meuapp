@@ -2674,14 +2674,19 @@ export class DatabaseStorage implements IStorage {
   }
   
   async isFollowing(followerId: number, followingId: number): Promise<boolean> {
-    const [follow] = await db.select()
-      .from(userFollows)
-      .where(and(
-        eq(userFollows.followerId, followerId),
-        eq(userFollows.followingId, followingId)
-      ));
-    
-    return !!follow;
+    try {
+      const results = await db.select()
+        .from(userFollows)
+        .where(and(
+          eq(userFollows.followerId, followerId),
+          eq(userFollows.followingId, followingId)
+        ));
+      
+      return results.length > 0;
+    } catch (error) {
+      console.error("Erro ao verificar se usuário segue outro:", error);
+      return false;
+    }
   }
   
   async getFollowers(userId: number): Promise<User[]> {

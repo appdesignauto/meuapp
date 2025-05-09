@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { SHOW_SEARCHBAR_EVENT, HIDE_SEARCHBAR_EVENT } from '@/components/home/Hero';
-import { NotificationsPopover } from '@/components/notifications/NotificationsPopover';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -320,13 +319,6 @@ const Header = () => {
                   />
                 </div>
               </form>
-            )}
-            
-            {/* Ícone de notificações - Visível apenas quando o usuário está logado */}
-            {user && !isVideoaulasPage && (
-              <div className="hidden md:flex">
-                <NotificationsPopover />
-              </div>
             )}
             
             {/* Link para busca geral (só com ícone de lupa) - Visível apenas em telas médias e maiores, e não na página de videoaulas */}

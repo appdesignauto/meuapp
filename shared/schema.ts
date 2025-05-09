@@ -391,12 +391,12 @@ export type InsertUserPermission = z.infer<typeof insertUserPermissionSchema>;
 // User Follow (relação seguidor-seguido)
 export const userFollows = pgTable("userFollows", {
   id: serial("id").primaryKey(),
-  followerId: integer("followerId").notNull().references(() => users.id, { onDelete: "cascade" }),
-  followedId: integer("followedId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  followerId: integer("followerId").notNull().references(() => users.id),
+  followingId: integer("followingId").notNull().references(() => users.id),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
 }, (table) => {
   return {
-    followerFollowedUnique: primaryKey({ columns: [table.followerId, table.followedId] }),
+    userFollowsUnique: primaryKey({ columns: [table.followerId, table.followingId] }),
   };
 });
 
@@ -1010,64 +1010,5 @@ export type InsertCommunityLeaderboard = z.infer<typeof insertCommunityLeaderboa
 
 export type CommunitySettings = typeof communitySettings.$inferSelect;
 export type InsertCommunitySettings = z.infer<typeof insertCommunitySettingsSchema>;
-
-// Tipos de notificações
-// 'new_follower': alguém começou a seguir o usuário
-// 'post_like': alguém curtiu um post do usuário
-// 'post_comment': alguém comentou em um post do usuário
-// 'comment_like': alguém curtiu um comentário do usuário
-// 'new_post': um usuário que você segue publicou um novo post
-
-// Tabela para notificações
-export const notifications = pgTable("notifications", {
-  id: serial("id").primaryKey(),
-  userId: integer("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
-  type: text("type").notNull(), // Tipo de notificação
-  content: text("content").notNull(), // Texto da notificação
-  sourceUserId: integer("sourceUserId").references(() => users.id, { onDelete: "cascade" }), // Usuário que gerou a notificação
-  relatedPostId: integer("relatedPostId").references(() => communityPosts.id, { onDelete: "cascade" }),
-  relatedCommentId: integer("relatedCommentId").references(() => communityComments.id, { onDelete: "cascade" }),
-  read: boolean("read").notNull().default(false),
-  createdAt: timestamp("createdAt").notNull().defaultNow(),
-});
-
-// Schema de inserção para notificações
-export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true });
-
-// Relações para seguir usuários
-export const userFollowsRelations = relations(userFollows, ({ one }) => ({
-  follower: one(users, {
-    fields: [userFollows.followerId],
-    references: [users.id],
-  }),
-  followed: one(users, {
-    fields: [userFollows.followedId],
-    references: [users.id],
-  }),
-}));
-
-// Relações para notificações
-export const notificationsRelations = relations(notifications, ({ one }) => ({
-  user: one(users, {
-    fields: [notifications.userId],
-    references: [users.id],
-  }),
-  sourceUser: one(users, {
-    fields: [notifications.sourceUserId],
-    references: [users.id],
-  }),
-  relatedPost: one(communityPosts, {
-    fields: [notifications.relatedPostId],
-    references: [communityPosts.id],
-  }),
-  relatedComment: one(communityComments, {
-    fields: [notifications.relatedCommentId],
-    references: [communityComments.id],
-  }),
-}));
-
-// Tipo para notificações
-export type Notification = typeof notifications.$inferSelect;
-export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 
 
