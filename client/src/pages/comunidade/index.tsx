@@ -742,7 +742,7 @@ const PostCard: React.FC<{
       
       {/* Imagem do post - estilo exato do Instagram */}
       <Link href={`/comunidade/post/${post.id}`}>
-        <div className="relative w-full overflow-hidden bg-black">
+        <div className="relative w-full overflow-hidden bg-black mx-[-16px] sm:mx-0">
           <div className="w-full max-h-[600px]">
             <img 
               src={post.imageUrl} 
