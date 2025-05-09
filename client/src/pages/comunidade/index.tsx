@@ -6,7 +6,8 @@ import {
   Settings, Plus, Filter, User, Trophy, Clock, Info, Award, Medal, 
   Sparkles, Users, ImageIcon, ExternalLink, FileEdit, RefreshCw, 
   Loader2, ZoomIn, X, MessageSquare, XCircle, FileQuestion, Globe, 
-  Share, MoreHorizontal, Trash2, MessageCircle, Heart, ThumbsUp, Pin, Star
+  Share, MoreHorizontal, Trash2, MessageCircle, Heart, ThumbsUp, Pin, Star,
+  PlusCircle, Bookmark
 } from 'lucide-react';
 import { differenceInMinutes, differenceInHours, differenceInDays, differenceInMonths } from 'date-fns';
 
@@ -1282,6 +1283,24 @@ const CommunityPage: React.FC = () => {
                     O ranking KDGPRO premia os criadores mais ativos da comunidade com base em pontos ganhos por
                     contribuições, curtidas e destaques recebidos.
                   </p>
+                  
+                  <div className="space-y-2">
+                    <h5 className="text-sm font-medium">Como Ganhar Pontos:</h5>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-1 text-xs">
+                        <PlusCircle className="h-3 w-3 text-green-500" /> <span className="font-medium">Arte Aprovada:</span> <span className="text-zinc-500">5 pontos</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-xs">
+                        <ThumbsUp className="h-3 w-3 text-blue-500" /> <span className="font-medium">Curtida Recebida:</span> <span className="text-zinc-500">1 ponto</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-xs">
+                        <Bookmark className="h-3 w-3 text-amber-500" /> <span className="font-medium">Salvamento:</span> <span className="text-zinc-500">2 pontos</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-xs">
+                        <Star className="h-3 w-3 text-yellow-500" /> <span className="font-medium">Post em Destaque:</span> <span className="text-zinc-500">5 pontos extras</span>
+                      </div>
+                    </div>
+                  </div>
                   
                   <div className="space-y-2">
                     <h5 className="text-sm font-medium">Níveis e Pontos:</h5>
