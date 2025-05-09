@@ -1541,7 +1541,7 @@ const CommunityPage: React.FC = () => {
                     onAction={() => refetchPosts()}
                   />
                 ) : allPosts.length > 0 ? (
-                  <div className="space-y-4">
+                  <div className="space-y-4 mx-[-16px] sm:mx-0">
                     {allPosts.map((item) => {
                       // Mapear a estrutura da API para o formato esperado pelo PostCard
                       const formattedPost: CommunityPost = {
