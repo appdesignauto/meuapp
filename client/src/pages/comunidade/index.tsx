@@ -1175,10 +1175,20 @@ const CommunityPage: React.FC = () => {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => refetchPosts()}
+                    onClick={() => {
+                      refetchPosts();
+                      // Adiciona classe de animação ao ícone
+                      const refreshIcon = document.getElementById('refresh-posts-icon');
+                      if (refreshIcon) {
+                        refreshIcon.classList.add('animate-spin');
+                        setTimeout(() => {
+                          refreshIcon.classList.remove('animate-spin');
+                        }, 1000);
+                      }
+                    }}
                     className="gap-1"
                   >
-                    <RefreshCw className="h-3.5 w-3.5" />
+                    <RefreshCw id="refresh-posts-icon" className="h-3.5 w-3.5" />
                     Atualizar
                   </Button>
                 </div>
@@ -1361,8 +1371,19 @@ const CommunityPage: React.FC = () => {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={() => refetchRanking()}
+                        onClick={() => {
+                          refetchRanking();
+                          // Adiciona classe de animação ao ícone
+                          const refreshIcon = document.getElementById('refresh-ranking-icon');
+                          if (refreshIcon) {
+                            refreshIcon.classList.add('animate-spin');
+                            setTimeout(() => {
+                              refreshIcon.classList.remove('animate-spin');
+                            }, 1000);
+                          }
+                        }}
                       >
+                        <RefreshCw id="refresh-ranking-icon" className="h-3.5 w-3.5 mr-1.5" />
                         Tentar novamente
                       </Button>
                     </CardContent>
@@ -1434,8 +1455,19 @@ const CommunityPage: React.FC = () => {
                         variant="outline" 
                         size="sm"
                         className="mt-2"
-                        onClick={() => refetchPopularDesigners()}
+                        onClick={() => {
+                          refetchPopularDesigners();
+                          // Adiciona classe de animação ao ícone
+                          const refreshIcon = document.getElementById('refresh-designers-icon');
+                          if (refreshIcon) {
+                            refreshIcon.classList.add('animate-spin');
+                            setTimeout(() => {
+                              refreshIcon.classList.remove('animate-spin');
+                            }, 1000);
+                          }
+                        }}
                       >
+                        <RefreshCw id="refresh-designers-icon" className="h-3.5 w-3.5 mr-1.5" />
                         Tentar novamente
                       </Button>
                     </div>
@@ -1495,10 +1527,20 @@ const CommunityPage: React.FC = () => {
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        onClick={() => refetchPopularPosts()}
+                        onClick={() => {
+                          refetchPopularPosts();
+                          // Adiciona classe de animação ao ícone
+                          const refreshIcon = document.getElementById('refresh-popular-posts-header-icon');
+                          if (refreshIcon) {
+                            refreshIcon.classList.add('animate-spin');
+                            setTimeout(() => {
+                              refreshIcon.classList.remove('animate-spin');
+                            }, 1000);
+                          }
+                        }}
                         title="Tentar novamente"
                       >
-                        <RefreshCw className="h-4 w-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
+                        <RefreshCw id="refresh-popular-posts-header-icon" className="h-4 w-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
                       </Button>
                     )}
                   </div>
@@ -1528,10 +1570,20 @@ const CommunityPage: React.FC = () => {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={() => refetchPopularPosts()}
+                        onClick={() => {
+                          refetchPopularPosts();
+                          // Adiciona classe de animação ao ícone
+                          const refreshIcon = document.getElementById('refresh-popular-posts-icon');
+                          if (refreshIcon) {
+                            refreshIcon.classList.add('animate-spin');
+                            setTimeout(() => {
+                              refreshIcon.classList.remove('animate-spin');
+                            }, 1000);
+                          }
+                        }}
                         className="mt-2"
                       >
-                        <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                        <RefreshCw id="refresh-popular-posts-icon" className="h-3.5 w-3.5 mr-1.5" />
                         Atualizar
                       </Button>
                     </div>
