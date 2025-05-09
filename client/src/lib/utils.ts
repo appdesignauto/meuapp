@@ -18,9 +18,8 @@ export function formatDate(dateString: string): string {
       return "Data não disponível";
     }
     
-    // Para qualquer post, usar o formato relativo de tempo
-    // A lógica dentro da função formatRelativeTime vai garantir o padrão correto
-    // "agora", "há X minutos", "há X horas", etc.
+    // Para posts recém-criados ou edições recentes, formatamos dinamicamente o tempo
+    // relativo para mostrar "agora", "há X minutos", etc., como no Instagram
     return formatRelativeTime(date);
   } catch (error) {
     console.error("Erro ao formatar data:", error, "Data:", dateString);
@@ -33,17 +32,11 @@ function formatRelativeTime(date: Date): string {
   try {
     const now = new Date();
     
-    // Ajustar para o fuso horário de Brasília (-3 horas)
-    const brasiliaOffset = -3 * 60 * 60 * 1000; // -3 horas em milissegundos
-    const localOffset = now.getTimezoneOffset() * 60 * 1000; // Offset local em ms
-    const adjustedNow = new Date(now.getTime() + localOffset - brasiliaOffset);
+    const diffMs = now.getTime() - date.getTime();
     
-    const diffMs = adjustedNow.getTime() - date.getTime();
-    
-    // Se a diferença for muito pequena ou negativa (pode ser erros de sincronização)
-    // Mostrar "há 1 minuto" em vez de "agora" para evitar problemas com posts que sempre aparecem como "agora"
-    if (diffMs < 60000) { // menos de 1 minuto
-      return "há 1 minuto";
+    // Caso haja algum problema com o clock do servidor (data futura), tratar como "agora"
+    if (diffMs < 0) {
+      return "agora";
     }
     
     // Convertendo para segundos, minutos, horas, etc.
@@ -52,8 +45,10 @@ function formatRelativeTime(date: Date): string {
     const diffHours = Math.floor(diffMinutes / 60);
     const diffDays = Math.floor(diffHours / 24);
     
-    // Formatação híbrida mais descritiva - sempre usando o formato "há X ..."
-    if (diffMinutes < 60) {
+    // Formatação exatamente como Instagram
+    if (diffSeconds < 60) {
+      return "agora"; // Posts com menos de 1 minuto mostram "agora"
+    } else if (diffMinutes < 60) {
       return `há ${diffMinutes} ${diffMinutes === 1 ? 'minuto' : 'minutos'}`;
     } else if (diffHours < 24) {
       return `há ${diffHours} ${diffHours === 1 ? 'hora' : 'horas'}`;
