@@ -1600,18 +1600,18 @@ router.get('/api/community/admin/stats', async (req, res) => {
 
     // Contar total de posts
     const totalPostsResult = await db
-      .select({ count: count() })
+      .select({ count: countFn() })
       .from(communityPosts);
 
     // Contar posts pendentes
     const pendingPostsResult = await db
-      .select({ count: count() })
+      .select({ count: countFn() })
       .from(communityPosts)
       .where(eq(communityPosts.status, 'pending'));
 
     // Contar posts aprovados
     const approvedPostsResult = await db
-      .select({ count: count() })
+      .select({ count: countFn() })
       .from(communityPosts)
       .where(eq(communityPosts.status, 'approved'));
 
@@ -1671,7 +1671,7 @@ router.get('/api/community/admin/posts', async (req, res) => {
 
     // Contar total de posts com os filtros aplicados
     const countResult = await db
-      .select({ count: count() })
+      .select({ count: countFn() })
       .from(communityPosts)
       .where(conditions);
     
