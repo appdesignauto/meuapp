@@ -18,12 +18,12 @@ import { useToast } from '@/hooks/use-toast';
 
 // Função para obter o nível e ícone com base na pontuação
 const getLevelInfo = (points: number) => {
-  if (points >= 5000) return { level: 'Profissional', icon: '🔴', color: 'text-red-600' };
-  if (points >= 3000) return { level: 'Referência KDG', icon: '🟠', color: 'text-orange-500' };
-  if (points >= 1500) return { level: 'Destaque KDG', icon: '🟣', color: 'text-purple-600' };
-  if (points >= 700) return { level: 'Cooperador KDG', icon: '🔵', color: 'text-blue-500' };
-  if (points >= 200) return { level: 'Voluntário KDG', icon: '🟢', color: 'text-green-500' };
-  return { level: 'Membro KDG', icon: '🟤', color: 'text-amber-800' };
+  if (points >= 5000) return { level: 'Pro D.Auto', icon: '🔴', color: 'text-red-600' };
+  if (points >= 3000) return { level: 'Referência D.Auto', icon: '🟠', color: 'text-orange-500' };
+  if (points >= 1500) return { level: 'Destaque D.Auto', icon: '🟣', color: 'text-purple-600' };
+  if (points >= 700) return { level: 'Cooperador D.Auto', icon: '🔵', color: 'text-blue-500' };
+  if (points >= 200) return { level: 'Voluntário D.Auto', icon: '🟢', color: 'text-green-500' };
+  return { level: 'Membro D.Auto', icon: '🟤', color: 'text-amber-800' };
 };
 
 // Interface para usuário no ranking

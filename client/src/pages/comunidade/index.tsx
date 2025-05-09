@@ -1035,7 +1035,7 @@ const CommunityPage: React.FC = () => {
   // Verificar se usuário é administrador
   const isAdmin = user && (user.nivelacesso === 'admin' || user.nivelacesso === 'designer_adm');
   
-  // Função para recalcular o ranking KDGPRO
+  // Função para recalcular o ranking D.Auto
   const [isRecalculatingRanking, setIsRecalculatingRanking] = useState(false);
   
   const handleRecalculateRanking = async () => {
@@ -1054,7 +1054,7 @@ const CommunityPage: React.FC = () => {
       
       toast({
         title: "Ranking recalculado",
-        description: data.message || "Ranking KDGPRO recalculado com sucesso!",
+        description: data.message || "Ranking D.Auto recalculado com sucesso!",
       });
       
       // Recarregar os dados do ranking
@@ -1063,7 +1063,7 @@ const CommunityPage: React.FC = () => {
       console.error("Erro ao recalcular ranking:", error);
       toast({
         title: "Erro ao recalcular ranking",
-        description: error instanceof Error ? error.message : "Ocorreu um erro ao recalcular o ranking KDGPRO.",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao recalcular o ranking D.Auto.",
         variant: "destructive"
       });
     } finally {
@@ -1281,7 +1281,7 @@ const CommunityPage: React.FC = () => {
                         <Trophy className="h-5 w-5" />
                       </div>
                       <div>
-                        <p className="font-medium text-sm">Ranking KDGPRO</p>
+                        <p className="font-medium text-sm">Ranking D.Auto</p>
                         <p className="text-xs text-zinc-500 dark:text-zinc-400">Criadores em destaque</p>
                       </div>
                     </div>
