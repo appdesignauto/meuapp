@@ -643,21 +643,33 @@ const PostCard: React.FC<{
                 <>
                   <DropdownMenuItem 
                     onClick={() => handlePinPost(post.id)}
+                    disabled={isPinning}
                     className="cursor-pointer"
                   >
-                    <Pin className="mr-2 h-4 w-4" />
-                    <span>{post.isPinned ? "Desafixar post" : "Fixar post no topo"}</span>
+                    {isPinning ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <span>{post.isPinned ? "Desafixando..." : "Fixando..."}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Pin className="mr-2 h-4 w-4" />
+                        <span>{post.isPinned ? "Desafixar post" : "Fixar post no topo"}</span>
+                      </>
+                    )}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                 </>
               )}
-              <DropdownMenuItem 
-                onClick={() => window.open(post.editLink, '_blank')}
-                className="cursor-pointer"
-              >
-                <ExternalLink className="mr-2 h-4 w-4" />
-                <span>Abrir link externo</span>
-              </DropdownMenuItem>
+              {post.editLink && (
+                <DropdownMenuItem 
+                  onClick={() => window.open(post.editLink, '_blank')}
+                  className="cursor-pointer"
+                >
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  <span>Abrir link externo</span>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem
                 onClick={handleShare}
                 className="cursor-pointer"
@@ -668,10 +680,20 @@ const PostCard: React.FC<{
               {(user?.id === post.userId || user?.nivelacesso === 'admin') && (
                 <DropdownMenuItem
                   onClick={() => handleDeletePost(post.id)}
+                  disabled={isDeleting}
                   className="cursor-pointer text-red-500 hover:text-red-600 focus:text-red-600"
                 >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  <span>Excluir post</span>
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <span>Excluindo...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      <span>Excluir post</span>
+                    </>
+                  )}
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
