@@ -185,34 +185,65 @@ router.get('/api/community/posts', async (req, res) => {
     const isAdmin = req.user?.nivelacesso === 'admin' || req.user?.nivelacesso === 'designer_adm';
     const postStatus = isAdmin && status !== 'all' ? status : 'approved';
     
-    // Consulta para posts com contagem de likes e salvamentos
-    const posts = await db.select({
-      post: communityPosts,
-      user: {
-        id: users.id,
-        username: users.username,
-        name: users.name,
-        profileimageurl: users.profileimageurl,
-        nivelacesso: users.nivelacesso
-      },
-      likesCount: sql<number>`COUNT(DISTINCT ${communityLikes.id})`,
-      savesCount: sql<number>`COUNT(DISTINCT ${communitySaves.id})`,
-      commentsCount: sql<number>`COUNT(DISTINCT ${communityComments.id})`
-    })
-    .from(communityPosts)
-    .leftJoin(users, eq(communityPosts.userId, users.id))
-    .leftJoin(communityLikes, eq(communityPosts.id, communityLikes.postId))
-    .leftJoin(communitySaves, eq(communityPosts.id, communitySaves.postId))
-    .leftJoin(communityComments, eq(communityPosts.id, communityComments.postId))
-    .where(
-      isAdmin && status === 'all' 
-        ? sql`1=1` 
-        : eq(communityPosts.status, postStatus)
-    )
-    .groupBy(communityPosts.id, users.id)
-    .orderBy(desc(communityPosts.isPinned), desc(communityPosts.createdAt))
-    .limit(limit)
-    .offset(offset);
+    // Vamos usar a consulta SQL direta para garantir os tipos corretos
+    const rawPostsQuery = await db.execute(sql`
+      SELECT 
+        p.*,
+        u.id as user_id,
+        u.username,
+        u.name,
+        u.profileimageurl,
+        u.nivelacesso,
+        CAST(COALESCE(p."isPinned", false) AS BOOLEAN) as is_pinned, 
+        COUNT(DISTINCT l.id) as likes_count,
+        COUNT(DISTINCT s.id) as saves_count,
+        COUNT(DISTINCT c.id) as comments_count
+      FROM "communityPosts" p
+      LEFT JOIN users u ON p."userId" = u.id
+      LEFT JOIN "communityLikes" l ON p.id = l."postId"
+      LEFT JOIN "communitySaves" s ON p.id = s."postId"
+      LEFT JOIN "communityComments" c ON p.id = c."postId"
+      WHERE ${isAdmin && status === 'all' ? sql`1=1` : sql`p.status = ${postStatus}`}
+      GROUP BY p.id, u.id
+      ORDER BY p."isPinned" DESC, p."createdAt" DESC
+      LIMIT ${limit}
+      OFFSET ${offset}
+    `);
+    
+    // Preparar array de resultados formatados
+    const posts = [];
+    
+    if (rawPostsQuery && rawPostsQuery.rows) {
+      for (const row of rawPostsQuery.rows) {
+        posts.push({
+          post: {
+            id: Number(row.id),
+            userId: Number(row.userId),
+            title: row.title || '',
+            content: row.content || '',
+            imageUrl: row.imageUrl || '',
+            status: row.status || 'approved',
+            createdAt: row.createdAt,
+            updatedAt: row.updatedAt,
+            viewCount: Number(row.viewCount || 0),
+            isPinned: row.is_pinned === true, // Garantir formato booleano
+            editLink: row.editLink || '',
+            featuredUntil: row.featuredUntil,
+            isWeeklyFeatured: !!row.isWeeklyFeatured
+          },
+          user: {
+            id: Number(row.user_id),
+            username: row.username || '',
+            name: row.name || '',
+            profileimageurl: row.profileimageurl || null,
+            nivelacesso: row.nivelacesso || 'free'
+          },
+          likesCount: Number(row.likes_count || 0),
+          savesCount: Number(row.saves_count || 0),
+          commentsCount: Number(row.comments_count || 0)
+        });
+      }
+    }
 
     // Adicionar informações para o usuário logado sobre cada post
     if (req.user?.id) {
