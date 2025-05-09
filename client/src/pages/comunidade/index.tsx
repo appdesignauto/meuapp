@@ -1232,6 +1232,7 @@ const CommunityPage: React.FC = () => {
                       return <PostCard 
                         key={item.post.id} 
                         post={formattedPost} 
+                        user={user}
                         refetch={refetchPosts} 
                         refetchPopularPosts={refetchPopularPosts} 
                       />;
