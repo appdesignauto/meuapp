@@ -267,42 +267,46 @@ const RankingList: React.FC<RankingListProps> = ({
       </CardHeader>
       
       {showPeriodSelector && (
-        <div className="flex items-center gap-1 sm:gap-2 mb-2 px-3 sm:px-6 overflow-x-auto pb-2 -mx-1 px-1">
+        <div className="grid grid-cols-4 gap-1 sm:gap-2 mb-2 px-3 sm:px-6">
           <Button 
             variant={period === 'week' ? 'default' : 'outline'} 
             size="sm"
             onClick={() => setPeriod('week')}
             disabled={isRefetching}
-            className="whitespace-nowrap text-xs sm:text-sm"
+            className="whitespace-nowrap text-xs sm:text-sm h-8 px-1 sm:px-3"
           >
-            <Clock className="h-3 w-3 mr-1" /> <span className="sm:inline">Semanal</span><span className="inline sm:hidden">Sem</span>
+            <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
+            <span className="truncate">Semanal</span>
           </Button>
           <Button 
             variant={period === 'month' ? 'default' : 'outline'} 
             size="sm"
             onClick={() => setPeriod('month')}
             disabled={isRefetching}
-            className="whitespace-nowrap text-xs sm:text-sm"
+            className="whitespace-nowrap text-xs sm:text-sm h-8 px-1 sm:px-3"
           >
-            <Clock className="h-3 w-3 mr-1" /> <span className="sm:inline">Mensal</span><span className="inline sm:hidden">Mês</span>
+            <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
+            <span className="truncate">Mensal</span>
           </Button>
           <Button 
             variant={period === 'year' ? 'default' : 'outline'} 
             size="sm"
             onClick={() => setPeriod('year')}
             disabled={isRefetching}
-            className="whitespace-nowrap text-xs sm:text-sm"
+            className="whitespace-nowrap text-xs sm:text-sm h-8 px-1 sm:px-3"
           >
-            <Clock className="h-3 w-3 mr-1" /> <span className="sm:inline">Anual</span><span className="inline sm:hidden">Ano</span>
+            <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
+            <span className="truncate">Anual</span>
           </Button>
           <Button 
             variant={period === 'all_time' ? 'default' : 'outline'} 
             size="sm"
             onClick={() => setPeriod('all_time')}
             disabled={isRefetching}
-            className="whitespace-nowrap text-xs sm:text-sm"
+            className="whitespace-nowrap text-xs sm:text-sm h-8 px-1 sm:px-3"
           >
-            <Trophy className="h-3 w-3 mr-1" /> <span className="sm:inline">Geral</span><span className="inline sm:hidden">Todos</span>
+            <Trophy className="h-3 w-3 mr-1 flex-shrink-0" />
+            <span className="truncate">Geral</span>
           </Button>
         </div>
       )}
