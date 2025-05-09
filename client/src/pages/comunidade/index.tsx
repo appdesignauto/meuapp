@@ -637,8 +637,8 @@ const PostCard: React.FC<{
   return (
     <Card className={`mb-5 overflow-hidden ${isPinned 
       ? 'border-2 border-amber-400 dark:border-amber-500 bg-amber-50/40 dark:bg-amber-900/10 shadow-lg' 
-      : 'border border-zinc-100 dark:border-zinc-800'
-    } shadow-md hover:shadow-lg transition-all duration-300 ease-in-out w-full max-w-none xs:max-w-[500px] mx-0 xs:mx-auto relative`}>
+      : 'border-0 sm:border sm:border-zinc-100 sm:dark:border-zinc-800'
+    } shadow-none sm:shadow-md hover:shadow-lg transition-all duration-300 ease-in-out w-full max-w-none xs:max-w-[500px] mx-0 xs:mx-auto relative`}>
       {/* Removido ícone de estrela sobreposto para evitar problemas de layout */}
       
       {/* Cabeçalho do post - estilo Facebook/Instagram */}
@@ -736,14 +736,12 @@ const PostCard: React.FC<{
       {/* Imagem do post - estilo adaptado para mostrar imagem completa com aspecto variável */}
       <Link href={`/comunidade/post/${post.id}`}>
         <div className="relative w-full overflow-hidden bg-black">
-          <div className="relative w-full">
-            <div className="w-full max-h-[600px] min-h-[200px] flex items-center justify-center">
-              <img 
-                src={post.imageUrl} 
-                alt={post.title}
-                className="hover:scale-[1.02] transition-transform duration-500 cursor-pointer max-w-full max-h-[600px] w-full object-cover sm:object-contain"
-              />
-            </div>
+          <div className="w-full max-h-[600px] min-h-[280px]">
+            <img 
+              src={post.imageUrl} 
+              alt={post.title}
+              className="hover:scale-[1.02] transition-transform duration-500 cursor-pointer w-full h-full object-cover sm:object-contain"
+            />
           </div>
         </div>
       </Link>
@@ -775,8 +773,8 @@ const PostCard: React.FC<{
       )}
       
       {/* Estatísticas de interação - estilo exato do Facebook */}
-      <div className="px-4 py-2 flex items-center text-sm text-zinc-500 dark:text-zinc-400 border-b border-zinc-100 dark:border-zinc-800">
-        <div className="flex items-center gap-1 mr-4">
+      <div className="px-4 py-2 flex items-center justify-between text-sm text-zinc-500 dark:text-zinc-400 border-b border-zinc-100 dark:border-zinc-800">
+        <div className="flex items-center gap-1">
           <div className="flex -space-x-1">
             <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
@@ -784,17 +782,17 @@ const PostCard: React.FC<{
               </svg>
             </div>
           </div>
-          <span>{likesCount === 1 ? '1 pessoa curtiu isso' : `${likesCount} pessoas curtiram isso`}</span>
+          <span className="truncate">{likesCount === 1 ? '1 curtida' : `${likesCount} curtidas`}</span>
         </div>
         
         <div className="flex">
           {post.commentsCount > 0 && (
-            <span className="mr-3">
+            <span className="truncate">
               {post.commentsCount === 1 ? '1 comentário' : `${post.commentsCount} comentários`}
             </span>
           )}
           {post.sharesCount > 0 && (
-            <span>
+            <span className="ml-3 truncate">
               {post.sharesCount === 1 ? '1 compartilhamento' : `${post.sharesCount} compartilhamentos`}
             </span>
           )}
@@ -1267,8 +1265,8 @@ const CommunityPage: React.FC = () => {
         )}
       </TopBar>
       
-      <div className="container max-w-6xl px-0 md:px-4 py-6 mx-auto">
-        <div className="md:hidden flex justify-between items-center mb-6 px-4">
+      <div className="container max-w-6xl px-0 md:px-4 py-4 md:py-6 mx-auto">
+        <div className="md:hidden flex justify-between items-center mb-4 px-4">
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Comunidade</h1>
           
           {user && (
