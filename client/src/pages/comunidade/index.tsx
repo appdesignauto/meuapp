@@ -41,6 +41,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { FollowButton } from '@/components/community/FollowButton';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -513,11 +514,22 @@ const PostCard: React.FC<{
             <p className="text-xs text-zinc-500 dark:text-zinc-400">{formatDate(post.createdAt)}</p>
           </div>
         </div>
-        <button className="text-zinc-400 hover:text-zinc-500 dark:text-zinc-500 dark:hover:text-zinc-400">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
-          </svg>
-        </button>
+        <div className="flex items-center gap-2">
+          {user && user.id !== post.user.id && (
+            <FollowButton 
+              userId={post.user.id} 
+              isFollowing={post.user.isFollowing || false} 
+              size="sm"
+              variant="outline" 
+              className="text-xs px-2 h-8"
+            />
+          )}
+          <button className="text-zinc-400 hover:text-zinc-500 dark:text-zinc-500 dark:hover:text-zinc-400 h-8 w-8 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
+            </svg>
+          </button>
+        </div>
       </div>
       
       {/* Imagem do post - estilo adaptado para mostrar imagem completa com aspecto variável */}
