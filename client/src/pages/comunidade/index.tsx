@@ -1371,7 +1371,7 @@ const CommunityPage: React.FC = () => {
                               </p>
                               <div className="flex items-center gap-1 mt-1">
                                 <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                                  por <span className="font-medium">{item.user?.username || 'usuário'}</span>
+                                  por <span className="font-medium">{item.user?.name || 'Design Auto'}</span>
                                 </p>
                               </div>
                             </div>
