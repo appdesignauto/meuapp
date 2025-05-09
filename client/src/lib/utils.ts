@@ -18,15 +18,21 @@ export function formatDate(dateString: string): string {
       return "Data não disponível";
     }
     
-    // Verificar se a data é futura (mas usar a data original mesmo assim)
+    // Ajustar para o fuso horário de Brasília (UTC-3)
+    // Isso é importante para garantir a exibição correta de datas
+    const brazilOffset = -3 * 60 * 60 * 1000; // 3 horas em milissegundos
+    const localOffset = date.getTimezoneOffset() * 60000; // Offset local em milissegundos
+    const brazilDate = new Date(date.getTime() + localOffset + brazilOffset);
+    
+    // Verificar se a data ajustada é futura
     const now = new Date();
     const fiveMinutes = 5 * 60 * 1000; // 5 minutos em milissegundos
-    if (date.getTime() > now.getTime() + fiveMinutes) {
-      console.error("Data futura detectada:", dateString, "Data:", date, "Agora:", now);
-      // Continuar usando a data original - correção para evitar mostrar "agora" para todos os posts
+    if (brazilDate.getTime() > now.getTime() + fiveMinutes) {
+      console.error("Data futura detectada:", dateString, "Data ajustada:", brazilDate, "Agora:", now);
+      // Continuar usando a data ajustada para o fuso horário brasileiro
     }
     
-    return formatRelativeTime(date);
+    return formatRelativeTime(brazilDate);
   } catch (error) {
     console.error("Erro ao formatar data:", error, "Data:", dateString);
     return "Data não disponível";
@@ -39,16 +45,23 @@ function formatRelativeTime(date: Date): string {
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     
-    // Se a data for do futuro (diferença negativa), mostrar data formatada em vez de "agora"
+    // Se a data for do futuro (diferença negativa), tratar adequadamente
     if (diffMs < 0) {
-      return new Intl.DateTimeFormat('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZone: 'America/Sao_Paulo'
-      }).format(date);
+      // Se a diferença for pequena (até 5 minutos no futuro), considerar como "agora"
+      const fiveMinutes = 5 * 60 * 1000; // 5 minutos em milissegundos
+      if (Math.abs(diffMs) <= fiveMinutes) {
+        return "agora";
+      } else {
+        // Para datas claramente no futuro, mostrar a data formatada
+        return new Intl.DateTimeFormat('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: 'America/Sao_Paulo'
+        }).format(date);
+      }
     }
     
     // Convertendo para segundos, minutos, horas, etc.
