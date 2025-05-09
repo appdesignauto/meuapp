@@ -697,7 +697,10 @@ const PostCard: React.FC<{
       {/* Título abaixo da imagem */}
       <div className="px-4 pt-3 pb-1">
         <Link href={`/comunidade/post/${post.id}`}>
-          <h3 className="text-base font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer">
+          <h3 className="text-base font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer flex items-center gap-1">
+            {post.isPinned && (
+              <Pin className="h-4 w-4 text-primary flex-shrink-0" fill="currentColor" />
+            )}
             {post.title}
           </h3>
         </Link>
