@@ -68,9 +68,11 @@ export function FollowButton({
 
   return (
     <Button
-      variant={variant}
+      variant={isFollowing ? 'secondary' : variant}
       size={size}
-      className={`${className} ${isFollowing ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
+      className={`${className} ${isFollowing 
+        ? 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-700' 
+        : ''}`}
       onClick={handleFollowToggle}
       disabled={isLoading}
     >
