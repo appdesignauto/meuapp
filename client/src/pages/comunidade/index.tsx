@@ -1607,27 +1607,34 @@ const CommunityPage: React.FC = () => {
                     </Button>
                     
                     {isAdmin && (
-                      <Tooltip content="Recalcular ranking com os novos valores de pontuação">
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          onClick={handleRecalculateRanking}
-                          disabled={isRecalculatingRanking}
-                          className="text-xs h-8 ml-2"
-                        >
-                          {isRecalculatingRanking ? (
-                            <>
-                              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                              Recalculando...
-                            </>
-                          ) : (
-                            <>
-                              <RefreshCw className="h-3 w-3 mr-1" />
-                              Recalcular
-                            </>
-                          )}
-                        </Button>
-                      </Tooltip>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              onClick={handleRecalculateRanking}
+                              disabled={isRecalculatingRanking}
+                              className="text-xs h-8 ml-2"
+                            >
+                              {isRecalculatingRanking ? (
+                                <>
+                                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                  Recalculando...
+                                </>
+                              ) : (
+                                <>
+                                  <RefreshCw className="h-3 w-3 mr-1" />
+                                  Recalcular
+                                </>
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Recalcular ranking com os novos valores de pontuação</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     )}
                     <Button 
                       size="sm" 
