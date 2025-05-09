@@ -475,9 +475,9 @@ const Header = () => {
                       </Link>
                     ) : (
                       <Link href="/painel/assinatura">
-                        <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
-                          <div className="w-10 h-10 rounded-full flex items-center justify-center bg-blue-50 mr-3">
-                            <CreditCard className="w-5 h-5 text-blue-600" />
+                        <DropdownMenuItem className="cursor-pointer py-3 px-4 hover:bg-gray-50">
+                          <div className="w-9 h-9 rounded-full flex items-center justify-center bg-blue-50 mr-3">
+                            <CreditCard className="w-4.5 h-4.5 text-blue-600" />
                           </div>
                           <div className="flex flex-col">
                             <span className="font-medium">Assinatura</span>
@@ -488,9 +488,9 @@ const Header = () => {
                     )}
                     
                     <Link href="/painel/downloads">
-                      <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-purple-50 mr-3">
-                          <Download className="w-5 h-5 text-purple-600" />
+                      <DropdownMenuItem className="cursor-pointer py-3 px-4 hover:bg-gray-50">
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center bg-purple-50 mr-3">
+                          <Download className="w-4.5 h-4.5 text-purple-600" />
                         </div>
                         <div className="flex flex-col flex-1">
                           <span className="font-medium">Downloads</span>
@@ -505,9 +505,9 @@ const Header = () => {
                     </Link>
                     
                     <Link href="/painel/favoritas">
-                      <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-red-50 mr-3">
-                          <Heart className="w-5 h-5 text-red-600" />
+                      <DropdownMenuItem className="cursor-pointer py-3 px-4 hover:bg-gray-50">
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center bg-red-50 mr-3">
+                          <Heart className="w-4.5 h-4.5 text-red-600" />
                         </div>
                         <div className="flex flex-col">
                           <span className="font-medium">Curtidas</span>
@@ -517,9 +517,9 @@ const Header = () => {
                     </Link>
                     
                     <Link href="/painel/salvos">
-                      <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-yellow-50 mr-3">
-                          <Bookmark className="w-5 h-5 text-yellow-600" />
+                      <DropdownMenuItem className="cursor-pointer py-3 px-4 hover:bg-gray-50">
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center bg-yellow-50 mr-3">
+                          <Bookmark className="w-4.5 h-4.5 text-yellow-600" />
                         </div>
                         <div className="flex flex-col">
                           <span className="font-medium">Salvos</span>
@@ -529,9 +529,9 @@ const Header = () => {
                     </Link>
                     
                     <Link href="/painel/seguindo">
-                      <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-indigo-50 mr-3">
-                          <Users className="w-5 h-5 text-indigo-600" />
+                      <DropdownMenuItem className="cursor-pointer py-3 px-4 hover:bg-gray-50">
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center bg-indigo-50 mr-3">
+                          <Users className="w-4.5 h-4.5 text-indigo-600" />
                         </div>
                         <div className="flex flex-col">
                           <span className="font-medium">Seguindo</span>
@@ -544,9 +544,9 @@ const Header = () => {
                   {/* Seção de Suporte */}
                   <div className="border-t pt-2 pb-2">
                     <Link href="https://wa.me/5527999999999" target="_blank" rel="noopener noreferrer">
-                      <DropdownMenuItem className="cursor-pointer py-4 px-4 hover:bg-gray-50">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-green-50 mr-3">
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="#25D366" xmlns="http://www.w3.org/2000/svg">
+                      <DropdownMenuItem className="cursor-pointer py-3 px-4 hover:bg-gray-50">
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center bg-green-50 mr-3">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="#25D366" xmlns="http://www.w3.org/2000/svg">
                             <path d="M17.6 6.32c-1.44-1.52-3.4-2.32-5.55-2.32-4.48 0-8.13 3.75-8.13 8.35 0 1.62.46 3.2 1.33 4.55L4.17 20.8l4.05-1.06c1.28.7 2.7 1.07 4.06 1.07 4.48 0 8.12-3.76 8.12-8.35s-2.14-6.14-2.8-6.14z" />
                           </svg>
                         </div>
@@ -561,11 +561,11 @@ const Header = () => {
                   {/* Logout */}
                   <div className="border-t pt-2 pb-2">
                     <DropdownMenuItem 
-                      className="cursor-pointer py-4 px-4 hover:bg-red-50"
+                      className="cursor-pointer py-3 px-4 hover:bg-red-50"
                       onClick={() => logoutMutation.mutate()}
                     >
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-red-50 mr-3">
-                        <LogOut className="w-5 h-5 text-red-600" />
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center bg-red-50 mr-3">
+                        <LogOut className="w-4.5 h-4.5 text-red-600" />
                       </div>
                       <div className="flex flex-col">
                         <span className="font-medium text-red-600">Sair da conta</span>
