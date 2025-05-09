@@ -175,15 +175,11 @@ export function setupFollowRoutes(app: any, isAuthenticated: (req: Request, res:
     }
   });
 
-  // Rota para buscar designers populares
-  app.get("/api/designers/popular", isAuthenticated, async (req: CustomRequest, res: Response) => {
+  // Rota para buscar designers populares - público com funcionalidades extras para usuários logados
+  app.get("/api/designers/popular", async (req: CustomRequest, res: Response) => {
     try {
-      const userId = req.user?.id;
+      const userId = req.user?.id; // Pode ser undefined se o usuário não estiver logado
       
-      if (!userId) {
-        return res.status(401).json({ message: "Usuário não autenticado" });
-      }
-
       // Buscar designers (usuários com nivelacesso = 'designer' ou 'designer_adm')
       const designers = await db
         .select({
@@ -201,7 +197,7 @@ export function setupFollowRoutes(app: any, isAuthenticated: (req: Request, res:
         )
         .limit(12);
 
-      // Para cada designer, obter contagem de artes e seguidores e verificar se o usuário o segue
+      // Para cada designer, obter contagem de artes e seguidores
       const designersWithCounts = await Promise.all(
         designers.map(async (designer) => {
           // Contagem de artes do designer - usando referência segura
@@ -216,16 +212,20 @@ export function setupFollowRoutes(app: any, isAuthenticated: (req: Request, res:
             .from(userFollows)
             .where(eq(userFollows.followingId, designer.id));
 
-          // Verificar se o usuário segue este designer
-          const [isFollowing] = await db
-            .select({ count: count() })
-            .from(userFollows)
-            .where(
-              and(
-                eq(userFollows.followerId, userId),
-                eq(userFollows.followingId, designer.id)
-              )
-            );
+          // Verificar se o usuário logado segue este designer (se estiver logado)
+          let isFollowing = false;
+          if (userId) {
+            const [followingResult] = await db
+              .select({ count: count() })
+              .from(userFollows)
+              .where(
+                and(
+                  eq(userFollows.followerId, userId),
+                  eq(userFollows.followingId, designer.id)
+                )
+              );
+            isFollowing = Number(followingResult?.count || 0) > 0;
+          }
 
           return {
             ...designer,
@@ -233,7 +233,7 @@ export function setupFollowRoutes(app: any, isAuthenticated: (req: Request, res:
             role: designer.role || designer.nivelacesso,
             artsCount: Number(artsCount?.count || 0),
             followersCount: Number(followersCount?.count || 0),
-            isFollowing: Number(isFollowing?.count || 0) > 0,
+            isFollowing: isFollowing,
           };
         })
       );
@@ -241,6 +241,7 @@ export function setupFollowRoutes(app: any, isAuthenticated: (req: Request, res:
       // Ordenar por contagem de seguidores (mais populares primeiro)
       designersWithCounts.sort((a, b) => b.followersCount - a.followersCount);
 
+      console.log(`Retornando ${designersWithCounts.length} designers populares. Usuário logado: ${userId ? 'Sim' : 'Não'}`);
       return res.status(200).json({ designers: designersWithCounts });
     } catch (error) {
       console.error("Erro ao buscar designers populares:", error);

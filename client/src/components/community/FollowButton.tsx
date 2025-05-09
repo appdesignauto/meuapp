@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { UserPlus, UserCheck } from 'lucide-react';
+import { UserPlus, UserCheck, LogIn } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useLocation } from 'wouter';
 
 export interface FollowButtonProps {
   userId?: number; // ID do usuário a ser seguido
@@ -30,6 +31,28 @@ export function FollowButton({
   const [isLoading, setIsLoading] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
+  
+  // Verificar se o usuário está logado
+  const { data: user } = useQuery<any>({
+    queryKey: ['/api/user'],
+    queryFn: async () => {
+      try {
+        const res = await apiRequest('GET', '/api/user');
+        if (res.status === 401) return null;
+        return await res.json();
+      } catch (error) {
+        console.error("Erro ao verificar usuário:", error);
+        return null;
+      }
+    },
+    retry: false,
+    staleTime: 1000 * 60 * 5, // 5 minutos
+    refetchOnWindowFocus: false,
+  });
+  
+  // Verificar se o usuário está logado
+  const isLoggedIn = !!user;
   
   // Usar designerId se fornecido, caso contrário usar userId
   const targetId = designerId || userId;
@@ -80,6 +103,19 @@ export function FollowButton({
   const handleFollowToggle = async () => {
     if (isLoading) return;
     
+    // Se o usuário não estiver logado, redirecionar para login
+    if (!isLoggedIn) {
+      toast({
+        title: "Login necessário",
+        description: "Faça login para seguir designers",
+        variant: "default",
+      });
+      // Salvar a URL atual para retornar após o login
+      localStorage.setItem('returnUrl', window.location.pathname);
+      setLocation('/login');
+      return;
+    }
+    
     try {
       const action = isFollowing ? 'unfollow' : 'follow';
       await followMutation.mutateAsync(action);
@@ -98,7 +134,16 @@ export function FollowButton({
       onClick={handleFollowToggle}
       disabled={isLoading}
     >
-      {isFollowing ? (
+      {!isLoggedIn ? (
+        compact ? (
+          <LogIn className="w-4 h-4" />
+        ) : (
+          <>
+            <LogIn className="w-4 h-4 mr-2" />
+            Seguir
+          </>
+        )
+      ) : isFollowing ? (
         compact ? (
           <UserCheck className="w-4 h-4" />
         ) : (
