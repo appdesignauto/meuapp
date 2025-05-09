@@ -1405,7 +1405,7 @@ const CommunityPage: React.FC = () => {
               {/* Card de usuários populares */}
               <Card className="overflow-hidden mb-4 border border-zinc-100 dark:border-zinc-800">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Designers em Destaque</CardTitle>
+                  <CardTitle className="text-lg">Membros em Destaque</CardTitle>
                   <CardDescription>Criadores populares para seguir</CardDescription>
                 </CardHeader>
                 
