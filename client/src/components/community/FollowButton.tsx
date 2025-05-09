@@ -18,19 +18,30 @@ export interface FollowButtonProps {
 
 export function FollowButton({ 
   userId, 
+  designerId,
   isFollowing: initialIsFollowing, 
   variant = 'default',
   className = '',
-  size = 'default'
+  size = 'default',
+  compact = false,
+  onFollowChange
 }: FollowButtonProps) {
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
   const [isLoading, setIsLoading] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  
+  // Usar designerId se fornecido, caso contrário usar userId
+  const targetId = designerId || userId;
+  
+  if (!targetId) {
+    console.error("FollowButton requer userId ou designerId");
+    return null;
+  }
 
   const followMutation = useMutation({
     mutationFn: async (action: 'follow' | 'unfollow') => {
-      return await apiRequest('POST', `/api/users/follow/${userId}`, { action });
+      return await apiRequest('POST', `/api/users/follow/${targetId}`, { action });
     },
     onMutate: (action) => {
       setIsLoading(true);
@@ -49,6 +60,11 @@ export function FollowButton({
       // Invalidar consultas de posts da comunidade
       queryClient.invalidateQueries({ queryKey: ['/api/community/posts'] });
       queryClient.invalidateQueries({ queryKey: ['/api/community/populares'] });
+      
+      // Executar callback se fornecido
+      if (onFollowChange) {
+        onFollowChange();
+      }
     },
     onError: (error) => {
       // Reverter o estado otimista em caso de erro
@@ -83,15 +99,23 @@ export function FollowButton({
       disabled={isLoading}
     >
       {isFollowing ? (
-        <>
-          <UserCheck className="w-4 h-4 mr-2" />
-          Seguindo
-        </>
+        compact ? (
+          <UserCheck className="w-4 h-4" />
+        ) : (
+          <>
+            <UserCheck className="w-4 h-4 mr-2" />
+            Seguindo
+          </>
+        )
       ) : (
-        <>
-          <UserPlus className="w-4 h-4 mr-2" />
-          Seguir
-        </>
+        compact ? (
+          <UserPlus className="w-4 h-4" />
+        ) : (
+          <>
+            <UserPlus className="w-4 h-4 mr-2" />
+            Seguir
+          </>
+        )
       )}
     </Button>
   );

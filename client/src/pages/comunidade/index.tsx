@@ -1451,7 +1451,14 @@ const CommunityPage: React.FC = () => {
                       {popularDesignersData.designers.slice(0, 5).map((designer) => (
                         <div key={designer.id} className="flex items-center gap-3 p-3 border-b border-zinc-100 dark:border-zinc-800 last:border-b-0">
                           <UserAvatar 
-                            user={designer} 
+                            user={{
+                              id: designer.id,
+                              username: designer.username,
+                              name: designer.name,
+                              profileimageurl: designer.profileimageurl,
+                              nivelacesso: designer.nivelacesso,
+                              role: designer.role || undefined
+                            }} 
                             size="sm" 
                             linkToProfile={true} 
                           />
