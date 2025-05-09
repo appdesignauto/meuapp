@@ -1652,7 +1652,7 @@ router.put('/api/community/settings', async (req, res) => {
           pointsForPost: pointsForPost || 20,
           pointsForLike: pointsForLike || 5,
           pointsForSave: pointsForSave || 10,
-          pointsForWeeklyFeatured: pointsForWeeklyFeatured || 50,
+          pointsForWeeklyFeatured: pointsForWeeklyFeatured || 5,
           prize1stPlace: prize1stPlace || 'R$ 0',
           prize2ndPlace: prize2ndPlace || 'R$ 0',
           prize3rdPlace: prize3rdPlace || 'R$ 0',
