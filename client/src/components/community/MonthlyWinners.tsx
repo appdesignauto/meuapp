@@ -307,9 +307,9 @@ const MonthlyWinners: React.FC<MonthlyWinnersProps> = ({ className }) => {
                 key={user.id} 
                 user={user} 
                 position={index}
-                prize={index === 0 ? settings?.prize1stPlace || "R$ 100,00" : 
-                       index === 1 ? settings?.prize2ndPlace || "R$ 50,00" : 
-                       settings?.prize3rdPlace || "R$ 25,00"}
+                prize={index === 0 ? settings?.prize1stPlace || "R$ 300" : 
+                       index === 1 ? settings?.prize2ndPlace || "R$ 200" : 
+                       settings?.prize3rdPlace || "R$ 100"}
               />
             ))}
           </div>
