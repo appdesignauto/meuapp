@@ -621,11 +621,11 @@ const PostCard: React.FC<{
       ? 'border-2 border-amber-400 dark:border-amber-500 bg-amber-50/40 dark:bg-amber-900/10 shadow-lg' 
       : 'border border-zinc-100 dark:border-zinc-800'
     } shadow-md hover:shadow-lg transition-all duration-300 ease-in-out w-full max-w-[500px] mx-auto relative`}>
-      {/* Ícone de fixado na posição superior direita - sempre visível para posts fixados */}
+      {/* Ícone de fixado na posição superior esquerda - para evitar sobreposição com o menu */}
       {isPinned && (
-        <div className="absolute top-1 right-1 z-20">
-          <div className="bg-amber-500 dark:bg-amber-600 text-white p-1.5 rounded-full shadow-md animate-pulse">
-            <Star className="h-6 w-6" fill="white" />
+        <div className="absolute top-1 left-1 z-20">
+          <div className="bg-amber-500 dark:bg-amber-600 text-white p-1.5 rounded-full shadow-md">
+            <Star className="h-5 w-5" fill="white" />
           </div>
         </div>
       )}
