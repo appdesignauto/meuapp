@@ -2695,7 +2695,7 @@ router.get('/api/community/posts/popular_DESATIVADO', async (req, res) => {
   }
 });
 
-// POST: Recalcular ranking KDGPRO com os novos valores de pontuação
+// POST: Recalcular ranking D.Auto com os novos valores de pontuação
 router.post('/api/community/recalcular-ranking', async (req, res) => {
   try {
     // Verificar permissão - apenas admin pode usar esta função
