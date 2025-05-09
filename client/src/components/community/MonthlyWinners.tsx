@@ -16,14 +16,14 @@ import { cn } from '@/lib/utils';
 import UserAvatar from '@/components/users/UserAvatar';
 import { useToast } from '@/hooks/use-toast';
 
-// Função para obter o nível e ícone com base na pontuação
+// Função para obter o nível e cor com base na pontuação
 const getLevelInfo = (points: number) => {
-  if (points >= 5000) return { level: 'Pro D.Auto', icon: '🔴', color: 'text-red-600' };
-  if (points >= 3000) return { level: 'Referência D.Auto', icon: '🟠', color: 'text-orange-500' };
-  if (points >= 1500) return { level: 'Destaque D.Auto', icon: '🟣', color: 'text-purple-600' };
-  if (points >= 700) return { level: 'Cooperador D.Auto', icon: '🔵', color: 'text-blue-500' };
-  if (points >= 200) return { level: 'Voluntário D.Auto', icon: '🟢', color: 'text-green-500' };
-  return { level: 'Membro D.Auto', icon: '🟤', color: 'text-amber-800' };
+  if (points >= 5000) return { level: 'Pro D.Auto', color: 'text-red-600' };
+  if (points >= 3000) return { level: 'Referência D.Auto', color: 'text-orange-500' };
+  if (points >= 1500) return { level: 'Destaque D.Auto', color: 'text-purple-600' };
+  if (points >= 700) return { level: 'Cooperador D.Auto', color: 'text-blue-500' };
+  if (points >= 200) return { level: 'Voluntário D.Auto', color: 'text-green-500' };
+  return { level: 'Membro D.Auto', color: 'text-amber-800' };
 };
 
 // Interface para usuário no ranking
@@ -165,8 +165,7 @@ const MonthlyWinners: React.FC<MonthlyWinnersProps> = ({ className }) => {
           {user.user.name || user.user.username}
         </p>
         
-        <div className="flex items-center gap-1.5 mb-2">
-          <span className={getLevelInfo(user.totalPoints).color}>{getLevelInfo(user.totalPoints).icon}</span>
+        <div className="flex items-center justify-center mb-2">
           <p className="text-xs text-zinc-500 dark:text-zinc-400">
             {user.totalPoints} pontos
           </p>
