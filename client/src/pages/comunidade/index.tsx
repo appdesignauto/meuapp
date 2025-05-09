@@ -608,7 +608,7 @@ const PostCard: React.FC<{
   };
 
   return (
-    <Card className="mb-4 overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow w-full max-w-[500px] mx-auto">
+    <Card className={`mb-4 overflow-hidden ${post.isPinned ? 'border-l-4 border-l-primary border border-zinc-100 dark:border-zinc-800 bg-primary/5' : 'border border-zinc-100 dark:border-zinc-800'} shadow-sm hover:shadow-md transition-shadow w-full max-w-[500px] mx-auto`}>
       {/* Cabeçalho do post - estilo Facebook/Instagram */}
       <div className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -696,11 +696,16 @@ const PostCard: React.FC<{
       
       {/* Título abaixo da imagem */}
       <div className="px-4 pt-3 pb-1">
+        {post.isPinned && (
+          <div className="mb-1.5 flex items-center">
+            <span className="bg-primary/10 text-primary text-xs font-medium px-2 py-0.5 rounded flex items-center gap-1">
+              <Pin className="h-3 w-3" fill="currentColor" />
+              Post Fixado
+            </span>
+          </div>
+        )}
         <Link href={`/comunidade/post/${post.id}`}>
           <h3 className="text-base font-semibold hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer flex items-center gap-1">
-            {post.isPinned && (
-              <Pin className="h-4 w-4 text-primary flex-shrink-0" fill="currentColor" />
-            )}
             {post.title}
           </h3>
         </Link>
