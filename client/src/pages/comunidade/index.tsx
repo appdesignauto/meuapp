@@ -7,7 +7,7 @@ import {
   Sparkles, Users, ImageIcon, ExternalLink, FileEdit, RefreshCw, 
   Loader2, ZoomIn, X, MessageSquare, XCircle, FileQuestion, Globe, 
   Share, MoreHorizontal, Trash2, MessageCircle, Heart, ThumbsUp, Pin, Star,
-  PlusCircle, Bookmark
+  PlusCircle, Bookmark, Check
 } from 'lucide-react';
 import { differenceInMinutes, differenceInHours, differenceInDays, differenceInMonths } from 'date-fns';
 
@@ -43,6 +43,12 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { FollowButton } from '@/components/community/FollowButton';
 import {
   DropdownMenu,
@@ -1010,6 +1016,7 @@ const PostCardSkeleton: React.FC = () => {
 // Página principal da comunidade
 const CommunityPage: React.FC = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('posts');
   const [rankingPeriod, setRankingPeriod] = useState('week');
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
@@ -1018,6 +1025,45 @@ const CommunityPage: React.FC = () => {
   const [hasMorePosts, setHasMorePosts] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const loaderRef = useRef<HTMLDivElement>(null);
+  
+  // Verificar se usuário é administrador
+  const isAdmin = user && (user.nivelacesso === 'admin' || user.nivelacesso === 'designer_adm');
+  
+  // Função para recalcular o ranking KDGPRO
+  const [isRecalculatingRanking, setIsRecalculatingRanking] = useState(false);
+  
+  const handleRecalculateRanking = async () => {
+    if (!isAdmin) return;
+    
+    setIsRecalculatingRanking(true);
+    try {
+      const response = await apiRequest('POST', '/api/community/recalcular-ranking');
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Erro ${response.status} ao recalcular ranking`);
+      }
+      
+      const data = await response.json();
+      
+      toast({
+        title: "Ranking recalculado",
+        description: data.message || "Ranking KDGPRO recalculado com sucesso!",
+      });
+      
+      // Recarregar os dados do ranking
+      refetchRanking();
+    } catch (error) {
+      console.error("Erro ao recalcular ranking:", error);
+      toast({
+        title: "Erro ao recalcular ranking",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao recalcular o ranking KDGPRO.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsRecalculatingRanking(false);
+    }
+  };
   
   // Buscar posts da comunidade com paginação
   const { 
@@ -1507,6 +1553,36 @@ const CommunityPage: React.FC = () => {
                             O ranking KDGPRO premia os criadores mais ativos da comunidade com base em pontos ganhos por
                             contribuições, curtidas e destaques recebidos.
                           </p>
+                          <div className="mt-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                            <h5 className="text-xs font-medium mb-1">Como Ganhar Pontos:</h5>
+                            <ul className="text-xs text-zinc-500 dark:text-zinc-400 space-y-1">
+                              <li className="flex items-center gap-1">
+                                <Check className="h-3 w-3 text-green-500" />
+                                Post Aprovado: 5 pontos
+                              </li>
+                              <li className="flex items-center gap-1">
+                                <Check className="h-3 w-3 text-green-500" />
+                                Curtida Recebida: 1 ponto
+                              </li>
+                              <li className="flex items-center gap-1">
+                                <Check className="h-3 w-3 text-green-500" />
+                                Salvamento: 2 pontos
+                              </li>
+                              <li className="flex items-center gap-1">
+                                <Check className="h-3 w-3 text-green-500" />
+                                Destaque Semanal: +5 pontos extras
+                              </li>
+                            </ul>
+                            
+                            <h5 className="text-xs font-medium mt-2 mb-1">Níveis de Ranking:</h5>
+                            <ul className="text-xs text-zinc-500 dark:text-zinc-400 space-y-1">
+                              <li>Iniciante KDG: 0-500 pontos</li>
+                              <li>Colaborador KDG: 501-2.000 pontos</li>
+                              <li>Destaque KDG: 2.001-5.000 pontos</li>
+                              <li>Elite KDG: 5.001-10.000 pontos</li>
+                              <li>Lenda KDG: +10.001 pontos</li>
+                            </ul>
+                          </div>
                         </div>
                       </HoverCardContent>
                     </HoverCard>
@@ -1529,6 +1605,30 @@ const CommunityPage: React.FC = () => {
                     >
                       Mensal
                     </Button>
+                    
+                    {isAdmin && (
+                      <Tooltip content="Recalcular ranking com os novos valores de pontuação">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={handleRecalculateRanking}
+                          disabled={isRecalculatingRanking}
+                          className="text-xs h-8 ml-2"
+                        >
+                          {isRecalculatingRanking ? (
+                            <>
+                              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                              Recalculando...
+                            </>
+                          ) : (
+                            <>
+                              <RefreshCw className="h-3 w-3 mr-1" />
+                              Recalcular
+                            </>
+                          )}
+                        </Button>
+                      </Tooltip>
+                    )}
                     <Button 
                       size="sm" 
                       variant={rankingPeriod === 'year' ? 'default' : 'outline'} 
