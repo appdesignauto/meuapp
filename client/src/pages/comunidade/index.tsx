@@ -1969,10 +1969,13 @@ const CommunityPage: React.FC = () => {
                         const isFollowing = item.user?.isFollowing || false;
                         
                         return (
-                          <Link 
+                          <div 
                             key={postId} 
-                            href={`/comunidade/post/${postId}`}
-                            className="flex items-start gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-800 p-2 rounded-md transition-colors"
+                            onClick={() => {
+                              setSelectedPostId(postId);
+                              setIsPostViewOpen(true);
+                            }}
+                            className="flex items-start gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-800 p-2 rounded-md transition-colors cursor-pointer"
                           >
                             <div className="w-16 h-16 rounded-md overflow-hidden shrink-0 bg-zinc-100 dark:bg-zinc-800">
                               {imageUrl ? (
@@ -2004,7 +2007,7 @@ const CommunityPage: React.FC = () => {
                                 </p>
                               </div>
                             </div>
-                          </Link>
+                          </div>
                         );
                       })}
                     </>
