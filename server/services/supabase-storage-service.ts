@@ -12,10 +12,11 @@ export class SupabaseStorageService implements StorageService {
   private logs: string[] = [];
   
   constructor() {
-    // Usando a mesma key para consistência em todo o projeto
+    // Usando a chave SERVICE_ROLE para maior permissão de acesso aos buckets
+    // Para poder fazer upload sem problemas de RLS (Row Level Security)
     this.supabase = createClient(
       process.env.SUPABASE_URL || '',
-      process.env.SUPABASE_ANON_KEY || '',
+      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || '',
       {
         auth: {
           autoRefreshToken: false,
@@ -24,6 +25,7 @@ export class SupabaseStorageService implements StorageService {
       }
     );
     this.clearLogs();
+    console.log("SupabaseStorageService inicializado com SERVICE_ROLE_KEY para bypass de RLS");
   }
   
   clearLogs() {
