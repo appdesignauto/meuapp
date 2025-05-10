@@ -1,61 +1,45 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Helmet } from 'react-helmet-async';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
+import { PlusCircle, Pencil, Trash, Tag, Tool } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { AdminLayout } from '@/components/layout/AdminLayout';
+import { GerenciarCategorias } from './GerenciarCategorias';
+import { GerenciarFerramentas } from './GerenciarFerramentas';
 
-import AdminLayout from '@/components/layout/AdminLayout';
-import { useAuth } from '@/hooks/use-auth';
-import GerenciarCategorias from './GerenciarCategorias';
-import GerenciarFerramentas from './GerenciarFerramentas';
+const FerramentasAdminPage: React.FC = () => {
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState('ferramentas');
 
-const AdminFerramentasPage: React.FC = () => {
-  const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('categorias');
-
-  // Somente administradores podem acessar esta página
-  if (!user || user.nivelacesso !== 'admin') {
-    return (
-      <AdminLayout>
-        <div className="flex items-center justify-center h-full">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">Acesso Restrito</h1>
-            <p className="text-gray-600">
-              Você não tem permissão para acessar esta página. Apenas administradores têm acesso ao gerenciamento
-              de ferramentas.
+  return (
+    <AdminLayout title="Gerenciamento de Ferramentas">
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+          <div>
+            <p className="text-gray-600 dark:text-gray-400">
+              Gerencie ferramentas úteis e categorias para seus usuários.
             </p>
           </div>
         </div>
-      </AdminLayout>
-    );
-  }
 
-  return (
-    <AdminLayout>
-      <Helmet>
-        <title>Gerenciar Ferramentas | Admin | Design Auto</title>
-      </Helmet>
-
-      <div className="container mx-auto px-4 py-6">
-        <h1 className="text-3xl font-bold mb-2">Gerenciar Ferramentas Úteis</h1>
-        <p className="text-gray-600 mb-6">
-          Gerencie as categorias e ferramentas disponíveis para os usuários.
-        </p>
-
-        <Tabs defaultValue="categorias" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-6">
-            <TabsTrigger value="categorias">Categorias</TabsTrigger>
-            <TabsTrigger value="ferramentas">Ferramentas</TabsTrigger>
+        <Tabs defaultValue="ferramentas" onValueChange={setActiveTab} value={activeTab}>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="ferramentas" className="flex items-center">
+              <Tool className="h-4 w-4 mr-2" />
+              Ferramentas
+            </TabsTrigger>
+            <TabsTrigger value="categorias" className="flex items-center">
+              <Tag className="h-4 w-4 mr-2" />
+              Categorias
+            </TabsTrigger>
           </TabsList>
           
-          <Separator className="mb-6" />
-
-          <TabsContent value="categorias" className="space-y-6">
-            <GerenciarCategorias />
+          <TabsContent value="ferramentas" className="space-y-6 pt-4">
+            <GerenciarFerramentas />
           </TabsContent>
           
-          <TabsContent value="ferramentas" className="space-y-6">
-            <GerenciarFerramentas />
+          <TabsContent value="categorias" className="space-y-6 pt-4">
+            <GerenciarCategorias />
           </TabsContent>
         </Tabs>
       </div>
@@ -63,4 +47,4 @@ const AdminFerramentasPage: React.FC = () => {
   );
 };
 
-export default AdminFerramentasPage;
+export default FerramentasAdminPage;
