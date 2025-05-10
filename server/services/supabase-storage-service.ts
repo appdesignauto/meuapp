@@ -3,55 +3,19 @@ import fs from 'fs';
 import path from 'path';
 import { StorageService } from './storage-service';
 
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
+  console.error('SUPABASE_URL e SUPABASE_ANON_KEY são necessários para o serviço de armazenamento Supabase');
+}
+
 export class SupabaseStorageService implements StorageService {
-  supabase;
-  logs: string[] = [];
-  
-  // Adiciona método para testes
-  async getBucketsList() {
-    try {
-      const { data, error } = await this.supabase.storage.listBuckets();
-      
-      if (error) {
-        return { 
-          success: false, 
-          error: error.message 
-        };
-      }
-      
-      return {
-        success: true,
-        buckets: data || []
-      };
-    } catch (error) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : String(error) 
-      };
-    }
-  }
+  private supabase;
+  private logs: string[] = [];
   
   constructor() {
-    if (!process.env.SUPABASE_URL) {
-      console.error('SUPABASE_URL é necessário para o serviço de armazenamento Supabase');
-    }
-    
-    // Verificar ambas as chaves de API
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    const anonKey = process.env.SUPABASE_ANON_KEY;
-    
-    // Preferir a chave de serviço se disponível (permite ignorar RLS), caso contrário usar a anon key
-    const useServiceRole = !!serviceRoleKey;
-    const supabaseKey = serviceRoleKey || anonKey || '';
-    
-    if (!supabaseKey) {
-      console.error('SUPABASE_SERVICE_ROLE_KEY ou SUPABASE_ANON_KEY são necessários para o serviço de armazenamento Supabase');
-    }
-    
     // Usando a mesma key para consistência em todo o projeto
     this.supabase = createClient(
       process.env.SUPABASE_URL || '',
-      supabaseKey,
+      process.env.SUPABASE_ANON_KEY || '',
       {
         auth: {
           autoRefreshToken: false,
@@ -59,11 +23,7 @@ export class SupabaseStorageService implements StorageService {
         }
       }
     );
-    
     this.clearLogs();
-    console.log(`=== INICIALIZANDO SUPABASE STORAGE COM ${useServiceRole ? 'SERVICE_ROLE_KEY' : 'ANON_KEY'} ===`);
-    console.log('Verificando acesso de leitura ao bucket principal...');
-    this.log(`Serviço de armazenamento Supabase inicializado com ${useServiceRole ? 'SERVICE_ROLE_KEY' : 'ANON_KEY'}`);
   }
   
   clearLogs() {
@@ -151,11 +111,7 @@ export class SupabaseStorageService implements StorageService {
   }
   
   // Método usado pelo upload direto para testes
-  async testUploadDirectNoSharp(file: Express.Multer.File | {
-    buffer: Buffer;
-    originalname: string;
-    mimetype: string;
-  }): Promise<{
+  async testUploadDirectNoSharp(file: Express.Multer.File): Promise<{
     success: boolean;
     imageUrl?: string;
     error?: string;

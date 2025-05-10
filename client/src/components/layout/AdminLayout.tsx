@@ -84,11 +84,6 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
       icon: <Wrench className="h-5 w-5" />,
     },
     {
-      title: 'Diagnóstico Storage',
-      href: '/admin/test-storage',
-      icon: <Database className="h-5 w-5" />,
-    },
-    {
       title: 'Uploads',
       href: '/admin/uploads',
       icon: <Upload className="h-5 w-5" />,

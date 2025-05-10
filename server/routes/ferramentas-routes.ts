@@ -308,15 +308,12 @@ router.delete("/api/admin/ferramentas/categorias/:id", isAdmin, async (req: Requ
 router.post("/api/admin/ferramentas", isAdmin, async (req: Request, res: Response) => {
   try {
     // Ajustando os nomes dos campos para corresponder ao frontend
-    // com suporte para diferentes formatos
     const nome = req.body.nome;
     const descricao = req.body.descricao;
-    const imageUrl = req.body.imagemUrl || req.body.imageUrl; // Aceita ambos os formatos
-    const websiteUrl = req.body.url || req.body.websiteUrl; // Aceita ambos os formatos
-    const isExterno = req.body.externo === 'true' || req.body.externo === true || 
-                      req.body.isExterno === 'true' || req.body.isExterno === true;
-    const isNovo = req.body.novo === 'true' || req.body.novo === true || 
-                   req.body.isNovo === 'true' || req.body.isNovo === true;
+    const imageUrl = req.body.imagemUrl; // Campo vindo do frontend
+    const websiteUrl = req.body.url; // Campo vindo do frontend
+    const isExterno = req.body.externo === 'true'; 
+    const isNovo = req.body.novo === 'true';
     const categoriaId = parseInt(req.body.categoriaId);
     const ordem = req.body.ordem ? parseInt(req.body.ordem) : 0;
     
@@ -371,15 +368,12 @@ router.put("/api/admin/ferramentas/:id", isAdmin, async (req: Request, res: Resp
   try {
     const id = parseInt(req.params.id);
     // Ajustando os nomes dos campos para corresponder ao frontend
-    // com suporte para diferentes formatos
     const nome = req.body.nome;
     const descricao = req.body.descricao;
-    const imageUrl = req.body.imagemUrl || req.body.imageUrl; // Aceita ambos os formatos
-    const websiteUrl = req.body.url || req.body.websiteUrl; // Aceita ambos os formatos
-    const isExterno = req.body.externo === 'true' || req.body.externo === true || 
-                      req.body.isExterno === 'true' || req.body.isExterno === true;
-    const isNovo = req.body.novo === 'true' || req.body.novo === true || 
-                   req.body.isNovo === 'true' || req.body.isNovo === true;
+    const imageUrl = req.body.imagemUrl; // Campo vindo do frontend
+    const websiteUrl = req.body.url; // Campo vindo do frontend
+    const isExterno = req.body.externo === 'true'; 
+    const isNovo = req.body.novo === 'true';
     const categoriaId = parseInt(req.body.categoriaId);
     const ordem = req.body.ordem ? parseInt(req.body.ordem) : 0;
     const ativo = true; // Por padrão, ferramentas atualizadas estão ativas
