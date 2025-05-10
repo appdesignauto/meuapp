@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { Loader2, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import AdminLayout from '@/components/layouts/AdminLayout';
+import { AdminLayout } from '@/components/layout/AdminLayout';
 
 export default function TestStoragePage() {
   const [loading, setLoading] = useState(false);
