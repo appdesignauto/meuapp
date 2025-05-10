@@ -2066,6 +2066,8 @@ const CommunityPage: React.FC = () => {
                         const comments = item.commentsCount || 0;
                         const postUserId = item.user?.id;
                         const isFollowing = item.user?.isFollowing || false;
+                        // Pré-calcular a data formatada para evitar problemas de atualização
+                        const formattedDate = `há ${formatRelativeTime(item.post?.createdAt)}`;
                         
                         return (
                           <div 
@@ -2102,7 +2104,7 @@ const CommunityPage: React.FC = () => {
                               </p>
                               <div className="flex items-center gap-1 mt-1">
                                 <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                                  por <span className="font-medium">{item.user?.name || 'Design Auto'}</span>
+                                  por <span className="font-medium">{item.user?.name || 'Design Auto'}</span> • {formattedDate}
                                 </p>
                               </div>
                             </div>
