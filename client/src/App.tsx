@@ -236,6 +236,18 @@ function AppRoutes() {
         roles={['admin']} 
       />
       <ProtectedRoute 
+        path="/admin/ferramentas" 
+        component={() => {
+          const FerramentasAdminPage = lazy(() => import("@/pages/admin/ferramentas"));
+          return (
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+              <FerramentasAdminPage />
+            </Suspense>
+          );
+        }}
+        roles={['admin']} 
+      />
+      <ProtectedRoute 
         path="/admin/:page" 
         component={UpdatedDashboard}
         roles={['admin', 'designer_adm']} 
