@@ -1,9 +1,25 @@
 import express, { Request, Response } from "express";
 import { eq, asc, desc, and, sql } from "drizzle-orm";
 import slugify from "slugify";
+import multer from 'multer';
+import path from 'path';
 import { ferramentas, ferramentasCategorias } from "@shared/schema";
 import { db } from "../db";
 import { isAdmin, isAuthenticated } from "../middleware";
+
+// Configurar storage para o multer
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(process.cwd(), 'uploads', 'temp'));
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+// Configuração do multer para processamento de FormData
+const upload = multer({ storage });
 
 const router = express.Router();
 
@@ -305,7 +321,7 @@ router.delete("/api/admin/ferramentas/categorias/:id", isAdmin, async (req: Requ
 });
 
 // Criar ferramenta (admin)
-router.post("/api/admin/ferramentas", isAdmin, async (req: Request, res: Response) => {
+router.post("/api/admin/ferramentas", isAdmin, upload.none(), async (req: Request, res: Response) => {
   try {
     // Ajustando os nomes dos campos para corresponder ao frontend
     const nome = req.body.nome;
@@ -359,22 +375,44 @@ router.post("/api/admin/ferramentas", isAdmin, async (req: Request, res: Respons
     res.status(201).json(novaFerramenta);
   } catch (error) {
     console.error("Erro ao criar ferramenta:", error);
-    res.status(500).json({ message: "Erro ao criar ferramenta" });
+    
+    // Mensagem de erro mais detalhada para ajudar no diagnóstico
+    const errorMessage = error instanceof Error 
+      ? `Erro ao criar ferramenta: ${error.message}` 
+      : "Erro desconhecido ao criar ferramenta";
+    
+    res.status(500).json({ 
+      message: errorMessage,
+      details: req.body // Incluir detalhes do que foi recebido para diagnóstico
+    });
   }
 });
 
 // Atualizar ferramenta (admin)
-router.put("/api/admin/ferramentas/:id", isAdmin, async (req: Request, res: Response) => {
+router.put("/api/admin/ferramentas/:id", isAdmin, upload.none(), async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id);
+    
+    // Log do corpo da requisição para depuração
+    console.log('Corpo da requisição (req.body):', req.body);
+    
     // Ajustando os nomes dos campos para corresponder ao frontend
+    // Para aplicações que enviam formulários como FormData
     const nome = req.body.nome;
     const descricao = req.body.descricao;
     const imageUrl = req.body.imagemUrl; // Campo vindo do frontend
     const websiteUrl = req.body.url; // Campo vindo do frontend
     const isExterno = req.body.externo === 'true'; 
     const isNovo = req.body.novo === 'true';
-    const categoriaId = parseInt(req.body.categoriaId);
+    let categoriaId: number;
+    
+    try {
+      categoriaId = parseInt(req.body.categoriaId);
+    } catch (e) {
+      console.error('Erro ao converter categoriaId:', e);
+      categoriaId = 0; // Valor padrão para depuração
+    }
+    
     const ordem = req.body.ordem ? parseInt(req.body.ordem) : 0;
     const ativo = true; // Por padrão, ferramentas atualizadas estão ativas
     
@@ -424,7 +462,16 @@ router.put("/api/admin/ferramentas/:id", isAdmin, async (req: Request, res: Resp
     res.json(ferramentaAtualizada);
   } catch (error) {
     console.error("Erro ao atualizar ferramenta:", error);
-    res.status(500).json({ message: "Erro ao atualizar ferramenta" });
+    
+    // Mensagem de erro mais detalhada para ajudar no diagnóstico
+    const errorMessage = error instanceof Error 
+      ? `Erro ao atualizar ferramenta: ${error.message}` 
+      : "Erro desconhecido ao atualizar ferramenta";
+    
+    res.status(500).json({ 
+      message: errorMessage,
+      details: req.body // Incluir detalhes do que foi recebido para diagnóstico
+    });
   }
 });
 
