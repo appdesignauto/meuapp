@@ -326,11 +326,27 @@ router.delete("/api/admin/ferramentas/categorias/:id", isAdmin, async (req: Requ
 // Criar ferramenta (admin)
 router.post("/api/admin/ferramentas", isAdmin, async (req: Request, res: Response) => {
   try {
-    const { nome, descricao, imageUrl, websiteUrl, isExterno, isNovo, categoriaId, ordem } = req.body;
+    // Ajustando os nomes dos campos para corresponder ao frontend
+    const nome = req.body.nome;
+    const descricao = req.body.descricao;
+    const imageUrl = req.body.imagemUrl; // Campo vindo do frontend
+    const websiteUrl = req.body.url; // Campo vindo do frontend
+    const isExterno = req.body.externo === 'true'; 
+    const isNovo = req.body.novo === 'true';
+    const categoriaId = parseInt(req.body.categoriaId);
+    const destaque = req.body.destaque === 'true';
+    const ordem = req.body.ordem ? parseInt(req.body.ordem) : 0;
+    
+    console.log('Criando ferramenta:', { nome, imageUrl, websiteUrl, categoriaId });
     
     // Validar dados
     if (!nome || !websiteUrl || !categoriaId) {
       return res.status(400).json({ message: "Nome, URL e categoria são obrigatórios" });
+    }
+    
+    // Verificar se existe imagem
+    if (!imageUrl) {
+      return res.status(400).json({ message: "Imagem é obrigatória para novas ferramentas" });
     }
     
     // Verificar se a categoria existe
@@ -370,7 +386,19 @@ router.post("/api/admin/ferramentas", isAdmin, async (req: Request, res: Respons
 router.put("/api/admin/ferramentas/:id", isAdmin, async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id);
-    const { nome, descricao, imageUrl, websiteUrl, isExterno, isNovo, categoriaId, ordem, ativo } = req.body;
+    // Ajustando os nomes dos campos para corresponder ao frontend
+    const nome = req.body.nome;
+    const descricao = req.body.descricao;
+    const imageUrl = req.body.imagemUrl; // Campo vindo do frontend
+    const websiteUrl = req.body.url; // Campo vindo do frontend
+    const isExterno = req.body.externo === 'true'; 
+    const isNovo = req.body.novo === 'true';
+    const categoriaId = parseInt(req.body.categoriaId);
+    const destaque = req.body.destaque === 'true';
+    const ordem = req.body.ordem ? parseInt(req.body.ordem) : 0;
+    const ativo = true; // Por padrão, ferramentas atualizadas estão ativas
+    
+    console.log('Atualizando ferramenta:', { id, nome, imageUrl, websiteUrl, categoriaId });
     
     // Validar dados
     if (!nome || !websiteUrl || !categoriaId) {

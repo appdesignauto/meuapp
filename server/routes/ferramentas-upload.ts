@@ -52,13 +52,13 @@ router.post('/api/admin/ferramentas/upload-imagem', isAdmin, upload.single('imag
     
     const localFilePath = req.file.path;
     const fileId = uuidv4();
-    const outputFilename = `ferramentas/${fileId}.webp`;
+    const outputFilename = `ferramentas/tools/${fileId}.webp`;
     const outputPath = path.join(process.cwd(), 'uploads', 'temp', `${fileId}.webp`);
     
-    // Processar a imagem com sharp
+    // Processar a imagem com sharp - ajustando para melhor proporção 16:9
     await sharp(localFilePath)
-      .resize({ width: 500, height: 300, fit: 'cover' })
-      .webp({ quality: 80 })
+      .resize({ width: 640, height: 360, fit: 'cover' })
+      .webp({ quality: 85 })
       .toFile(outputPath);
     
     // Fazer upload para o Supabase Storage

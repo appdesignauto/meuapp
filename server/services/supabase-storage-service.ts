@@ -136,7 +136,7 @@ export class SupabaseStorageService implements StorageService {
       const bucketName = 'designautoimages';
       const fileExtension = path.extname(file.originalname);
       const uniqueFilename = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}${fileExtension}`;
-      const filePath = `ferramentas/${uniqueFilename}`;
+      const filePath = `ferramentas/tools/${uniqueFilename}`;
       
       this.log(`Iniciando upload direto para bucket: ${bucketName}, arquivo: ${filePath}`);
       

@@ -128,15 +128,50 @@ const GerenciarFerramentas: React.FC = () => {
   // Mutação para criar/atualizar ferramenta
   const updateFerramentaMutation = useMutation({
     mutationFn: async (data: FormData) => {
+      // Primeiro fazer upload da imagem se houver uma nova
+      if (data.has('imagem')) {
+        try {
+          const uploadResponse = await fetch('/api/admin/ferramentas/upload-imagem', {
+            method: 'POST',
+            body: data,
+          });
+          
+          if (!uploadResponse.ok) {
+            const errorData = await uploadResponse.text();
+            console.error('Erro no upload:', errorData);
+            throw new Error('Falha ao fazer upload da imagem');
+          }
+          
+          const uploadResult = await uploadResponse.json();
+          
+          if (uploadResult.success && uploadResult.imageUrl) {
+            // Remover o arquivo de imagem do FormData após upload bem-sucedido
+            data.delete('imagem');
+            
+            // Adicionar a URL da imagem ao FormData
+            data.append('imagemUrl', uploadResult.imageUrl);
+          }
+        } catch (error) {
+          console.error('Erro ao processar upload:', error);
+          throw new Error('Falha ao processar imagem');
+        }
+      }
+      
+      // Agora enviar os dados da ferramenta
       const url = formData.id 
-        ? `/api/ferramentas/${formData.id}` 
-        : '/api/ferramentas';
+        ? `/api/admin/ferramentas/${formData.id}` 
+        : '/api/admin/ferramentas';
       const method = formData.id ? 'PUT' : 'POST';
       
       const response = await fetch(url, {
         method,
         body: data,
       });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
       
       return await response.json();
     },
@@ -274,6 +309,13 @@ const GerenciarFerramentas: React.FC = () => {
     
     // Criar FormData para envio de arquivos
     const formDataToSend = new FormData();
+    
+    // Primeiro adicionar a imagem, se houver, para upload separado
+    if (selectedFile) {
+      formDataToSend.append('imagem', selectedFile);
+    }
+    
+    // Adicionar outros campos após o upload da imagem ser feito na mutação
     formDataToSend.append('nome', formData.nome || '');
     formDataToSend.append('descricao', formData.descricao || '');
     formDataToSend.append('url', formData.url || '');
@@ -281,8 +323,9 @@ const GerenciarFerramentas: React.FC = () => {
     formDataToSend.append('destaque', formData.destaque ? 'true' : 'false');
     formDataToSend.append('novo', formData.novo ? 'true' : 'false');
     
-    if (selectedFile) {
-      formDataToSend.append('imagem', selectedFile);
+    // Se estiver editando e não tiver nova imagem, manter a URL existente
+    if (formData.id && !selectedFile && formData.imagemUrl) {
+      formDataToSend.append('imagemUrl', formData.imagemUrl);
     }
     
     setIsUploading(true);
