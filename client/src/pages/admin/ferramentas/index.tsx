@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Pencil, Trash, Tag, Tool } from 'lucide-react';
+import { PlusCircle, Pencil, Trash, Tag, Wrench } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { GerenciarCategorias } from './GerenciarCategorias';
@@ -25,7 +25,7 @@ const FerramentasAdminPage: React.FC = () => {
         <Tabs defaultValue="ferramentas" onValueChange={setActiveTab} value={activeTab}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="ferramentas" className="flex items-center">
-              <Tool className="h-4 w-4 mr-2" />
+              <Wrench className="h-4 w-4 mr-2" />
               Ferramentas
             </TabsTrigger>
             <TabsTrigger value="categorias" className="flex items-center">
