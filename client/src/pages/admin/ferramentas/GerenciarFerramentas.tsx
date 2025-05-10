@@ -173,9 +173,13 @@ const GerenciarFerramentas: React.FC = () => {
         : '/api/admin/ferramentas';
       const method = formData.id ? 'PUT' : 'POST';
       
+      console.log(`Enviando requisição ${method} para ${url}`);
+      
       const response = await fetch(url, {
         method,
         body: data,
+        // Não incluímos o Content-Type porque o navegador configura automaticamente
+        // o boundary correto para multipart/form-data
       });
       
       if (!response.ok) {
@@ -363,10 +367,11 @@ const GerenciarFerramentas: React.FC = () => {
     console.log('URL da ferramenta:', formData.url || formData.websiteUrl);
     
     // Log para debug
-    console.log('FormData preparado para envio', {
-      nome: formData.nome,
-      url: formData.url,
-      categoriaId: formData.categoriaId
+    console.log('FormData preparado para envio:');
+    // Obter todos os pares chave/valor do FormData em um array
+    const formDataEntries = Array.from(formDataToSend.entries());
+    formDataEntries.forEach(([key, value]) => {
+      console.log(`${key}: ${value}`);
     });
     
     setIsUploading(true);
