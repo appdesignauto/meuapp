@@ -49,6 +49,7 @@ interface CommunityPost {
   commentsCount?: number;
   isPinned?: boolean;
   editLink?: string;
+  formattedDate?: string; // Campo para armazenar a data já formatada
 }
 
 interface PostViewDialogProps {
