@@ -277,7 +277,7 @@ const GerenciarCategorias: React.FC = () => {
 
       {/* Dialog para criar/editar categoria */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{formData.id ? 'Editar' : 'Nova'} Categoria</DialogTitle>
             <DialogDescription>

@@ -495,7 +495,7 @@ const GerenciarFerramentas: React.FC = () => {
         setIsDialogOpen(open);
         if (!open) resetForm();
       }}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{formData.id ? 'Editar' : 'Nova'} Ferramenta</DialogTitle>
             <DialogDescription>
