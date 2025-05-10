@@ -113,7 +113,18 @@ const GerenciarFerramentas: React.FC = () => {
       const fullUrl = params.toString() ? `${url}?${params.toString()}` : url;
       const response = await fetch(fullUrl);
       const data = await response.json();
-      return Array.isArray(data) ? data : [];
+      
+      // Normalizar dados das ferramentas para garantir nomes de campos consistentes
+      if (Array.isArray(data)) {
+        return data.map(ferramenta => ({
+          ...ferramenta,
+          // Mapear campos do backend para frontend
+          imagemUrl: ferramenta.imagemUrl || ferramenta.imageUrl,
+          url: ferramenta.url || ferramenta.websiteUrl,
+        }));
+      }
+      
+      return [];
     },
     staleTime: 1000 * 60, // 1 minuto
   });
@@ -239,8 +250,18 @@ const GerenciarFerramentas: React.FC = () => {
   });
 
   const handleEditFerramenta = (ferramenta: Ferramenta) => {
-    setFormData(ferramenta);
-    setImagePreview(ferramenta.imagemUrl);
+    // Normalizar campos para garantir compatibilidade de nomes
+    const ferramentaNormalizada = {
+      ...ferramenta,
+      // Garantir que todos os nomes de campo estejam corretos
+      imagemUrl: ferramenta.imagemUrl || ferramenta.imageUrl,
+      url: ferramenta.url || ferramenta.websiteUrl
+    };
+    
+    console.log('Editando ferramenta:', ferramentaNormalizada);
+    
+    setFormData(ferramentaNormalizada);
+    setImagePreview(ferramentaNormalizada.imagemUrl || '');
     setIsDialogOpen(true);
   };
 
@@ -316,22 +337,30 @@ const GerenciarFerramentas: React.FC = () => {
       formDataToSend.append('imagem', selectedFile);
     }
     
-    // Campos obrigatórios - garantir que são preenchidos corretamente
+    // Campos obrigatórios - garantir que são preenchidos corretamente e mapeados para os nomes esperados pelo backend
     formDataToSend.append('nome', formData.nome || ''); 
     formDataToSend.append('descricao', formData.descricao || '');
-    formDataToSend.append('url', formData.url || '');
+    
+    // O backend espera 'url' do frontend, que é mapeado para 'websiteUrl' no banco
+    formDataToSend.append('url', formData.url || formData.websiteUrl || '');
+    
     formDataToSend.append('categoriaId', formData.categoriaId?.toString() || '');
     formDataToSend.append('novo', formData.novo ? 'true' : 'false');
     
     // Se estiver editando e não tiver nova imagem, manter a URL existente
     if (formData.id && !selectedFile) {
-      // Usar o campo correto conforme o backend espera
-      if (formData.imagemUrl) {
-        formDataToSend.append('imagemUrl', formData.imagemUrl);
-      } else if (formData.imageUrl) {
-        formDataToSend.append('imagemUrl', formData.imageUrl);
+      // O backend espera 'imagemUrl' do frontend, que é mapeado para 'imageUrl' no banco
+      const imagemUrl = formData.imagemUrl || formData.imageUrl;
+      
+      if (imagemUrl) {
+        formDataToSend.append('imagemUrl', imagemUrl);
+        console.log(`Mantendo a URL da imagem existente: ${imagemUrl}`);
       }
     }
+    
+    // Para depuração
+    console.log('ID da ferramenta:', formData.id || 'nova ferramenta');
+    console.log('URL da ferramenta:', formData.url || formData.websiteUrl);
     
     // Log para debug
     console.log('FormData preparado para envio', {
