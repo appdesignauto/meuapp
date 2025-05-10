@@ -1848,7 +1848,8 @@ const CommunityPage: React.FC = () => {
                         formattedDate: formattedDate // Armazenar a data já formatada
                       };
                       return <PostCard 
-                        key={item.post.id} 
+                        key={item.post.id}
+                        id={`post-item-${item.post.id}`}
                         post={formattedPost} 
                         refetch={handleRefreshPosts} 
                         refetchPopularPosts={refetchPopularPosts}
