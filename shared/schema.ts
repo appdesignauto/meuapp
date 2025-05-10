@@ -390,6 +390,76 @@ export const insertUserPermissionSchema = createInsertSchema(userPermissions).om
 export type UserPermission = typeof userPermissions.$inferSelect;
 export type InsertUserPermission = z.infer<typeof insertUserPermissionSchema>;
 
+// Categorias de Ferramentas Úteis
+export const ferramentasCategorias = pgTable("ferramentasCategorias", {
+  id: serial("id").primaryKey(),
+  nome: text("nome").notNull(),
+  slug: text("slug").notNull().unique(),
+  descricao: text("descricao"),
+  icone: text("icone"), // nome do ícone do Lucide React
+  ordem: integer("ordem").default(0),
+  criadoEm: timestamp("criadoEm").notNull().defaultNow(),
+  atualizadoEm: timestamp("atualizadoEm").notNull().defaultNow(),
+  ativo: boolean("ativo").default(true),
+});
+
+export const insertFerramentaCategoriaSchema = createInsertSchema(ferramentasCategorias, {
+  nome: z.string().min(2, "Nome precisa ter pelo menos 2 caracteres"),
+  slug: z.string().min(2, "Slug precisa ter pelo menos 2 caracteres"),
+  descricao: z.string().optional(),
+  icone: z.string().optional(),
+  ordem: z.number().int().optional(),
+  ativo: z.boolean().optional(),
+}).omit({
+  id: true,
+  criadoEm: true,
+  atualizadoEm: true,
+});
+
+// Ferramentas Úteis
+export const ferramentas = pgTable("ferramentas", {
+  id: serial("id").primaryKey(),
+  nome: text("nome").notNull(),
+  descricao: text("descricao"),
+  imageUrl: text("imageUrl"),
+  websiteUrl: text("websiteUrl").notNull(),
+  isExterno: boolean("isExterno").default(true),
+  isNovo: boolean("isNovo").default(false),
+  categoriaId: integer("categoriaId").notNull().references(() => ferramentasCategorias.id),
+  ordem: integer("ordem").default(0),
+  criadoEm: timestamp("criadoEm").notNull().defaultNow(),
+  atualizadoEm: timestamp("atualizadoEm").notNull().defaultNow(),
+  ativo: boolean("ativo").default(true),
+});
+
+export const insertFerramentaSchema = createInsertSchema(ferramentas, {
+  nome: z.string().min(2, "Nome precisa ter pelo menos 2 caracteres"),
+  descricao: z.string().optional(),
+  imageUrl: z.string().optional(),
+  websiteUrl: z.string().url("URL inválida"),
+  isExterno: z.boolean().optional(),
+  isNovo: z.boolean().optional(),
+  categoriaId: z.number().int().positive(),
+  ordem: z.number().int().optional(),
+  ativo: z.boolean().optional(),
+}).omit({
+  id: true,
+  criadoEm: true,
+  atualizadoEm: true,
+});
+
+// Relações
+export const ferramentasCategoriasRelations = relations(ferramentasCategorias, ({ many }) => ({
+  ferramentas: many(ferramentas),
+}));
+
+export const ferramentasRelations = relations(ferramentas, ({ one }) => ({
+  categoria: one(ferramentasCategorias, {
+    fields: [ferramentas.categoriaId],
+    references: [ferramentasCategorias.id],
+  }),
+}));
+
 // User Follow (relação seguidor-seguido)
 export const userFollows = pgTable("userFollows", {
   id: serial("id").primaryKey(),
@@ -1012,5 +1082,12 @@ export type InsertCommunityLeaderboard = z.infer<typeof insertCommunityLeaderboa
 
 export type CommunitySettings = typeof communitySettings.$inferSelect;
 export type InsertCommunitySettings = z.infer<typeof insertCommunitySettingsSchema>;
+
+// Tipos para Ferramentas Úteis
+export type FerramentaCategoria = typeof ferramentasCategorias.$inferSelect;
+export type InsertFerramentaCategoria = z.infer<typeof insertFerramentaCategoriaSchema>;
+
+export type Ferramenta = typeof ferramentas.$inferSelect;
+export type InsertFerramenta = z.infer<typeof insertFerramentaSchema>;
 
 
