@@ -94,7 +94,7 @@ const GerenciarFerramentas: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // Consulta para buscar ferramentas com filtros
-  const { data: ferramentas, isLoading, isError } = useQuery({
+  const { data: ferramentas = [], isLoading, isError } = useQuery({
     queryKey: ['/api/ferramentas', searchTerm, selectedCategoria],
     queryFn: async () => {
       let url = '/api/ferramentas';
@@ -110,13 +110,14 @@ const GerenciarFerramentas: React.FC = () => {
       
       const fullUrl = params.toString() ? `${url}?${params.toString()}` : url;
       const response = await fetch(fullUrl);
-      return await response.json();
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
     },
     staleTime: 1000 * 60, // 1 minuto
   });
 
   // Consulta para buscar categorias
-  const { data: categorias, isLoading: isCategoriaLoading } = useQuery({
+  const { data: categorias = [], isLoading: isCategoriaLoading } = useQuery({
     queryKey: ['/api/ferramentas/categorias'],
     staleTime: 1000 * 60, // 1 minuto
   });
