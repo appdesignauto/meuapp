@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import FerramentaCard from '@/components/ferramentas/FerramentaCard';
 import CategoriasCarousel from '@/components/ferramentas/CategoriasCarousel';
+import FerramentasCategoria from '@/components/ferramentas/FerramentasCategoria';
 import { useLocation } from 'wouter';
 import useDebounce from '@/hooks/use-debounce';
 
@@ -92,14 +93,18 @@ const FerramentasPage: React.FC = () => {
   });
 
   // Função para mudar a categoria selecionada
-  const handleCategoriaChange = (slug: string) => {
+  const handleCategoriaChange = (slug: string | null) => {
     if (categoriaSelecionada === slug) {
       // Se clicar na mesma categoria, remove o filtro
       setCategoriaSelecionada(null);
       setLocation('/ferramentas');
     } else {
       setCategoriaSelecionada(slug);
-      setLocation(`/ferramentas/categoria/${slug}`);
+      if (slug) {
+        setLocation(`/ferramentas/categoria/${slug}`);
+      } else {
+        setLocation('/ferramentas');
+      }
     }
   };
 
@@ -121,10 +126,7 @@ const FerramentasPage: React.FC = () => {
         if (!acc[categoria.slug]) {
           acc[categoria.slug] = [];
         }
-        acc[categoria.slug].push({
-          ...ferramenta,
-          categoria
-        });
+        acc[categoria.slug].push(ferramenta);
       }
       return acc;
     }, {} as Record<string, Ferramenta[]>);
@@ -180,11 +182,7 @@ const FerramentasPage: React.FC = () => {
           {listaFerramentas.map((ferramenta) => (
             <FerramentaCard 
               key={ferramenta.id} 
-              {...ferramenta} 
-              categoria={
-                categorias?.find(c => c.id === ferramenta.categoriaId) || 
-                { id: ferramenta.categoriaId, nome: "Categoria", slug: "categoria" }
-              }
+              {...ferramenta}
             />
           ))}
         </div>
@@ -226,7 +224,7 @@ const FerramentasPage: React.FC = () => {
           if (ferramentasCategoria.length === 0) return null;
           
           return (
-            <CategoriasCarousel
+            <FerramentasCategoria
               key={categoria.id}
               categoria={categoria}
               ferramentas={ferramentasCategoria}
@@ -295,30 +293,15 @@ const FerramentasPage: React.FC = () => {
         )}
       </div>
 
-      {/* Lista de categorias para desktop */}
-      {categorias && categorias.length > 0 && !debouncedSearchTerm && (
-        <div className="hidden md:flex flex-wrap gap-2 mb-8">
-          <Button
-            variant={categoriaSelecionada === null ? "default" : "outline"}
-            size="sm"
-            onClick={() => {
-              setCategoriaSelecionada(null);
-              setLocation('/ferramentas');
-            }}
-          >
-            Todas
-          </Button>
-          
-          {categorias.map((categoria) => (
-            <Button
-              key={categoria.id}
-              variant={categoriaSelecionada === categoria.slug ? "default" : "outline"}
-              size="sm"
-              onClick={() => handleCategoriaChange(categoria.slug)}
-            >
-              {categoria.nome}
-            </Button>
-          ))}
+      {/* Lista de categorias horizontal (filters) */}
+      {categorias && categorias.length > 0 && (
+        <div className="mb-8">
+          <CategoriasCarousel 
+            categorias={categorias}
+            categoriaSelecionada={categoriaSelecionada}
+            onCategoriaChange={handleCategoriaChange}
+            className="w-full"
+          />
         </div>
       )}
 
@@ -397,11 +380,7 @@ const FerramentasPage: React.FC = () => {
               ferramentas?.map((ferramenta) => (
                 <FerramentaCard 
                   key={ferramenta.id} 
-                  {...ferramenta} 
-                  categoria={
-                    categorias?.find(c => c.id === ferramenta.categoriaId) || 
-                    { id: ferramenta.categoriaId, nome: "Categoria", slug: "categoria" }
-                  }
+                  {...ferramenta}
                 />
               ))
             )}
