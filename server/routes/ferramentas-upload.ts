@@ -52,7 +52,7 @@ router.post('/api/admin/ferramentas/upload-imagem', isAdmin, upload.single('imag
     
     const localFilePath = req.file.path;
     const fileId = uuidv4();
-    const outputFilename = `ferramentas/tools/${fileId}.webp`;
+    const outputFilename = `ferramentas/${fileId}.webp`;
     const outputPath = path.join(process.cwd(), 'uploads', 'temp', `${fileId}.webp`);
     
     // Processar a imagem com sharp - ajustando para melhor proporção 16:9
@@ -63,7 +63,7 @@ router.post('/api/admin/ferramentas/upload-imagem', isAdmin, upload.single('imag
     
     // Fazer upload para o Supabase Storage
     const result = await storageService.uploadFile({
-      bucketName: 'designautoimages',
+      bucketName: 'designauto-images',
       filePath: outputFilename,
       localFilePath: outputPath,
       contentType: 'image/webp',
@@ -78,7 +78,7 @@ router.post('/api/admin/ferramentas/upload-imagem', isAdmin, upload.single('imag
         console.log('Upload no Supabase falhou. Usando sistema de arquivos local como fallback.', result.error);
         
         // Criar diretório para armazenamento permanente se não existir
-        const uploadDir = path.join(process.cwd(), 'uploads', 'designautoimages', 'ferramentas', 'tools');
+        const uploadDir = path.join(process.cwd(), 'uploads', 'designauto-images', 'ferramentas');
         if (!fs.existsSync(uploadDir)) {
           fs.mkdirSync(uploadDir, { recursive: true });
         }
@@ -88,7 +88,7 @@ router.post('/api/admin/ferramentas/upload-imagem', isAdmin, upload.single('imag
         fs.copyFileSync(outputPath, permanentPath);
         
         // Gerar URL relativa para o arquivo
-        const imageUrl = `/uploads/designautoimages/ferramentas/tools/${fileId}.webp`;
+        const imageUrl = `/uploads/designauto-images/ferramentas/${fileId}.webp`;
         
         // Definir resultado de fallback
         result.success = true;
@@ -148,8 +148,12 @@ router.post('/api/admin/ferramentas/upload-imagem-direto', isAdmin, upload.singl
       mimetype: req.file.mimetype
     };
     
-    // Upload direto para o Supabase sem processamento
-    const result = await storageService.testUploadDirectNoSharp(file as Express.Multer.File);
+    // Upload direto para o Supabase sem processamento - especificando o bucket correto
+    const result = await storageService.testUploadDirectNoSharp(
+      file as Express.Multer.File, 
+      'designauto-images', 
+      'ferramentas'
+    );
     
     // Caso o upload falhe no Supabase, usamos o sistema de arquivos local
     if (!result.success) {
@@ -157,7 +161,7 @@ router.post('/api/admin/ferramentas/upload-imagem-direto', isAdmin, upload.singl
         console.log('Upload direto no Supabase falhou. Usando sistema de arquivos local como fallback.', result.error);
         
         // Criar diretório para armazenamento permanente se não existir
-        const uploadDir = path.join(process.cwd(), 'uploads', 'designautoimages', 'ferramentas', 'tools');
+        const uploadDir = path.join(process.cwd(), 'uploads', 'designauto-images', 'ferramentas');
         if (!fs.existsSync(uploadDir)) {
           fs.mkdirSync(uploadDir, { recursive: true });
         }
@@ -172,7 +176,7 @@ router.post('/api/admin/ferramentas/upload-imagem-direto', isAdmin, upload.singl
         fs.copyFileSync(req.file.path, permanentPath);
         
         // Gerar URL relativa para o arquivo
-        const imageUrl = `/uploads/designautoimages/ferramentas/tools/${outputFilename}`;
+        const imageUrl = `/uploads/designauto-images/ferramentas/${outputFilename}`;
         
         // Definir resultado de fallback
         result.success = true;
