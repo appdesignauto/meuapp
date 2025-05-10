@@ -1262,24 +1262,39 @@ const CommunityPage: React.FC = () => {
                 if (data && data.post) {
                   console.log('Post encontrado via API:', data.post);
                   
-                  // Verificar se o post já está carregado no feed
+                  // Tentar carregar mais posts e rolar até encontrar o post
+                  // Verificamos primeiro se já temos o post carregado
                   const postExists = allPosts.some(item => item.post.id === postId);
                   
                   if (postExists) {
                     // Se o post estiver no feed atual, rolar até ele
                     scrollToPost(postId);
                   } else {
-                    // Se o post não estiver no feed atual, abrir em modal
-                    setSelectedPostId(postId);
-                    setIsPostViewOpen(true);
+                    // Se o post não estiver no feed, tentar carregar mais posts
+                    // e então rolar para ele quando estiver disponível
+                    setIsLoadingMore(true);
+                    setPage(prev => prev + 1);
+                    
+                    // Adicionar o ID do post para que seja destacado quando carregar
+                    setTimeout(() => scrollToPost(postId), 1500);
                   }
                 }
               })
               .catch(error => {
                 console.error('Erro ao buscar post específico:', error);
-                // Em caso de erro, abrir modal com o ID fornecido
-                setSelectedPostId(postId);
-                setIsPostViewOpen(true);
+                // Em vez de abrir modal, tentar carregar novamente a página
+                // e tentar carregar mais posts para encontrar o post
+                toast({
+                  title: "Buscando post...",
+                  description: "Carregando mais posts para encontrar a publicação",
+                  variant: "default"
+                });
+                // Tentar carregar mais posts
+                setIsLoadingMore(true);
+                setPage(prev => prev + 1);
+                
+                // Adicionar o ID do post para que seja destacado quando carregar
+                setTimeout(() => scrollToPost(postId), 1500);
               });
           }
         }
