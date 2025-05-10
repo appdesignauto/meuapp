@@ -328,25 +328,49 @@ export class SupabaseStorageService {
       const targetBucket = bucketFolder || BUCKET_NAME;
       this.log(`Bucket alvo: ${targetBucket}`);
 
-      // Otimização da imagem principal
-      const optimizedBuffer = await this.optimizeImage(file.buffer, {
-        ...options,
-        width: options.width || 1200, // Limita o tamanho máximo
-        quality: options.quality || 80,
-      });
-      this.log(`Imagem otimizada: ${optimizedBuffer.length} bytes`);
+      // Verificar se o buffer existe antes de otimizar
+      if (!file.buffer) {
+        throw new Error("Buffer de imagem não fornecido ou inválido");
+      }
+      
+      // Otimização da imagem principal com tratamento de erros
+      let optimizedBuffer: Buffer;
+      try {
+        optimizedBuffer = await this.optimizeImage(file.buffer, {
+          ...options,
+          width: options.width || 1200, // Limita o tamanho máximo
+          quality: options.quality || 80,
+        });
+        
+        if (!optimizedBuffer) {
+          throw new Error("Falha na otimização da imagem");
+        }
+        
+        this.log(`Imagem otimizada: ${optimizedBuffer.length} bytes`);
+      } catch (optimizeError) {
+        this.log(`ERRO ao otimizar imagem: ${optimizeError}. Usando buffer original como fallback.`);
+        optimizedBuffer = file.buffer;
+      }
 
       // Determinar se devemos criar versão thumbnail
       // Se a largura já for pequena, não precisamos de thumbnail
-      let thumbnailBuffer = null;
-      if (options.width === undefined || options.width > 400) {
-        thumbnailBuffer = await this.optimizeImage(file.buffer, {
-          width: 400,
-          quality: 75,
-        });
-        this.log(`Thumbnail criado: ${thumbnailBuffer?.length} bytes`);
-      } else {
-        this.log(`Thumbnail não criado (imagem já é pequena)`);
+      let thumbnailBuffer: Buffer | null = null;
+      try {
+        if (options.width === undefined || options.width > 400) {
+          thumbnailBuffer = await this.optimizeImage(file.buffer, {
+            width: 400,
+            quality: 75,
+          });
+          
+          if (thumbnailBuffer) {
+            this.log(`Thumbnail criado: ${thumbnailBuffer.length} bytes`);
+          }
+        } else {
+          this.log(`Thumbnail não criado (imagem já é pequena)`);
+        }
+      } catch (thumbError) {
+        this.log(`ERRO ao criar thumbnail: ${thumbError}. Continuando sem thumbnail.`);
+        thumbnailBuffer = null;
       }
 
       // Gera nomes de arquivos únicos
@@ -475,9 +499,33 @@ export class SupabaseStorageService {
         const filepath = path.join(designautoImagesDir, filename);
         const thumbFilepath = path.join(designautoImagesDir, thumbFilename);
 
+        // Otimizar novamente a imagem em caso de fallback
+        let localOptimizedBuffer: Buffer;
+        let localThumbnailBuffer: Buffer | null = null;
+        
+        try {
+          localOptimizedBuffer = await this.optimizeImage(file.buffer, {
+            ...options,
+            width: options.width || 1200,
+            quality: options.quality || 80,
+          });
+          
+          if (options.width === undefined || options.width > 400) {
+            localThumbnailBuffer = await this.optimizeImage(file.buffer, {
+              width: 400,
+              quality: 75,
+            });
+          }
+        } catch (optimizeError) {
+          console.error("Erro ao otimizar imagem para fallback:", optimizeError);
+          localOptimizedBuffer = file.buffer;
+        }
+
         // Salvar a imagem principal e o thumbnail localmente
-        fs.writeFileSync(filepath, optimizedBuffer);
-        fs.writeFileSync(thumbFilepath, thumbnailBuffer);
+        fs.writeFileSync(filepath, localOptimizedBuffer);
+        if (localThumbnailBuffer) {
+          fs.writeFileSync(thumbFilepath, localThumbnailBuffer);
+        }
 
         // URL relativa para o frontend
         const relativeUrl = `/uploads/designautoimages/${filename}`;
@@ -507,24 +555,32 @@ export class SupabaseStorageService {
    */
   async uploadDirectWithoutOptimization(
     file: Express.Multer.File
-  ): Promise<{ imageUrl: string; thumbnailUrl: string; storageType?: string }> {
+  ): Promise<{ imageUrl: string; thumbnailUrl: string; storageType?: string; logs?: string[] }> {
     if (!file) {
       throw new Error("Nenhum arquivo foi fornecido");
     }
 
+    // Limpar logs para este upload
+    this.clearLogs();
+    this.log(`Iniciando upload direto sem otimização`);
+    
     // Certifica-se de que o bucket existe
     await this.initBucket();
-
+    
     try {
-      console.log("Tentando upload direto para Supabase Storage sem otimização...");
-      console.log(`Nome original: ${file.originalname}`);
-      console.log(`Tipo MIME: ${file.mimetype}`);
-      console.log(`Tamanho: ${file.size} bytes`);
+      // Garantir que o bucket exista antes do upload
+      await this.createBucketIfNotExists(BUCKET_NAME);
+      
+      this.log("Tentando upload direto para Supabase Storage sem otimização...");
+      this.log(`Nome original: ${file.originalname}`);
+      this.log(`Tipo MIME: ${file.mimetype}`);
+      this.log(`Tamanho: ${file.size} bytes`);
 
       // Gera nome de arquivo único
       const extension = path.extname(file.originalname) || '.jpg';
       const uuid = randomUUID();
       const filePath = `original/${uuid}${extension}`;
+      this.log(`Caminho no bucket: ${filePath}`);
 
       // Upload do arquivo original sem processamento
       const { error, data } = await supabase.storage
@@ -535,43 +591,49 @@ export class SupabaseStorageService {
         });
 
       if (error) {
+        this.log(`ERRO no upload direto: ${error.message}`);
         throw new Error(`Erro no upload direto: ${error.message}`);
       }
 
-      console.log("Upload direto para Supabase concluído com sucesso!");
+      this.log("Upload direto para Supabase concluído com sucesso!");
 
       // Obtém URL pública para acesso
       const { data: urlData } = supabase.storage
         .from(BUCKET_NAME)
         .getPublicUrl(filePath);
 
+      this.log(`URL pública gerada: ${urlData.publicUrl}`);
+      
       return {
         imageUrl: urlData.publicUrl,
         thumbnailUrl: urlData.publicUrl, // Mesmo arquivo para thumbnail
-        storageType: "supabase_direct"
+        storageType: "supabase_direct",
+        logs: [...this.logs]
       };
     } catch (error) {
+      this.log(`ERRO no upload direto para Supabase: ${error}`);
       console.error("Erro no upload direto para Supabase:", error);
       
-      // Como não temos acesso ao método privado, usamos o fallback normal
-      console.log("Tentando fallback local após erro no upload direto...");
-      // Criamos um fallback local direto aqui mesmo
+      // Implementa fallback local
+      this.log("Tentando fallback local após erro no upload direto...");
       try {
         // Certifica-se de que o diretório public/uploads/original existe
-        const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'original');
+        const publicDir = path.join(process.cwd(), 'public');
+        const uploadsDir = path.join(publicDir, 'uploads');
+        const originalDir = path.join(uploadsDir, 'original');
         
-        try {
-          if (!fs.existsSync('public')) {
-            fs.mkdirSync('public');
-          }
-          if (!fs.existsSync(path.join('public', 'uploads'))) {
-            fs.mkdirSync(path.join('public', 'uploads'));
-          }
-          if (!fs.existsSync(uploadsDir)) {
-            fs.mkdirSync(uploadsDir);
-          }
-        } catch (err) {
-          console.error("Erro ao criar diretórios para upload direto:", err);
+        // Criar diretórios se não existirem
+        if (!fs.existsSync(publicDir)) {
+          fs.mkdirSync(publicDir);
+          this.log(`Diretório criado: ${publicDir}`);
+        }
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir);
+          this.log(`Diretório criado: ${uploadsDir}`);
+        }
+        if (!fs.existsSync(originalDir)) {
+          fs.mkdirSync(originalDir);
+          this.log(`Diretório criado: ${originalDir}`);
         }
         
         // Gera um nome único para o arquivo
@@ -580,25 +642,33 @@ export class SupabaseStorageService {
         const fileName = `${uniqueId}${extension}`;
         
         // Caminho completo do arquivo
-        const filePath = path.join(uploadsDir, fileName);
+        const filePath = path.join(originalDir, fileName);
+        this.log(`Caminho do arquivo para fallback: ${filePath}`);
         
         // Salva o arquivo original
         fs.writeFileSync(filePath, file.buffer);
+        this.log(`Arquivo salvo com sucesso no sistema local`);
         
-        console.log("Upload direto local bem-sucedido!");
+        // URL relativa para o frontend
+        const relativeUrl = `/uploads/original/${fileName}`;
+        this.log(`URL relativa gerada: ${relativeUrl}`);
         
-        // Retorna a URL relativa
         return {
-          imageUrl: `/uploads/original/${fileName}`,
-          thumbnailUrl: `/uploads/original/${fileName}`, // Mesmo arquivo para thumbnail
-          storageType: "local_direct"
+          imageUrl: relativeUrl,
+          thumbnailUrl: relativeUrl, // Mesmo arquivo para thumbnail
+          storageType: "local_direct",
+          logs: [...this.logs]
         };
-      } catch (fallbackError) {
+      } catch (fallbackError: any) {
+        this.log(`ERRO no fallback local: ${fallbackError.message}`);
         console.error("Erro no fallback local direto:", fallbackError);
+        
+        // Último recurso - retorna um placeholder
         return {
-          imageUrl: "https://placehold.co/800x600?text=Imagem+Indisponível",
-          thumbnailUrl: "https://placehold.co/400x300?text=Thumbnail+Indisponível",
-          storageType: "error"
+          imageUrl: "/images/placeholder.webp",
+          thumbnailUrl: "/images/placeholder-thumb.webp",
+          storageType: "error",
+          logs: [...this.logs]
         };
       }
     }
