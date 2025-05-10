@@ -301,11 +301,11 @@ const Header = () => {
                 );
               })}
               
-            {/* Dropdown Outros Recursos */}
+            {/* Dropdown Recursos */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="text-neutral-600 hover:text-blue-600 font-medium text-[13px] px-3 py-2 rounded-md transition-all duration-200 hover:bg-blue-50 flex items-center">
-                  Outros Recursos
+                  Recursos
                   <ChevronDown className="ml-1 h-3.5 w-3.5" />
                 </button>
               </DropdownMenuTrigger>

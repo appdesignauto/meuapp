@@ -110,9 +110,9 @@ const MobileMenu = ({ isOpen, onClose, navLinks, userRole }: MobileMenuProps) =>
               );
             })}
             
-            {/* Seção Outros Recursos */}
+            {/* Seção Recursos */}
             <div className="mt-4">
-              <h3 className="text-xs font-medium text-neutral-500 mb-1 ml-1 mt-2">OUTROS RECURSOS</h3>
+              <h3 className="text-xs font-medium text-neutral-500 mb-1 ml-1 mt-2">RECURSOS</h3>
               
               <Link
                 href="/videoaulas"
