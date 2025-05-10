@@ -97,6 +97,7 @@ interface CommunityPost {
   isPinned?: boolean;
   editLink?: string;
   user: User;
+  formattedDate?: string; // Campo para armazenar a data já formatada
 }
 
 // Interface para ranking na comunidade
@@ -1733,6 +1734,9 @@ const CommunityPage: React.FC = () => {
                   <div className="space-y-4 mx-[-16px] sm:mx-0">
                     {allPosts.map((item) => {
                       // Mapear a estrutura da API para o formato esperado pelo PostCard
+                      // Calcular a data formatada aqui, apenas uma vez
+                      const formattedDate = formatRelativeTime(new Date(item.post.createdAt));
+                      
                       const formattedPost: CommunityPost = {
                         id: item.post.id,
                         title: item.post.title,
@@ -1747,7 +1751,8 @@ const CommunityPage: React.FC = () => {
                         isLikedByUser: item.isLikedByUser || item.userHasLiked || false,
                         isPinned: item.post.isPinned === true, // Forçar conversão para boolean
                         editLink: item.post.editLink || '',
-                        user: item.user
+                        user: item.user,
+                        formattedDate: formattedDate // Armazenar a data já formatada
                       };
                       return <PostCard 
                         key={item.post.id} 
