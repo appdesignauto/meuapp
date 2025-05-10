@@ -420,20 +420,55 @@ export class SupabaseStorageService {
       // Upload do thumbnail para o Supabase (se houver)
       if (thumbnailBuffer && thumbnailPath) {
         this.log(`Iniciando upload do thumbnail para bucket: ${bucketToUse}`);
-        const { error: thumbError } = await supabase.storage
-          .from(bucketToUse)
-          .upload(thumbnailPath, thumbnailBuffer, {
-            contentType: 'image/webp',
-            upsert: false
-          });
-
-        if (thumbError) {
-          this.log(`ERRO no upload do thumbnail: ${thumbError.message}`);
-          // Se falhar o upload do thumbnail, tenta remover a imagem principal para evitar inconsistência
-          await supabase.storage.from(bucketToUse).remove([imagePath]);
-          throw new Error(`Erro no upload do thumbnail: ${thumbError.message}`);
+        
+        // Implementação com retry específico para thumbnails
+        let thumbnailUploaded = false;
+        let thumbnailError = null;
+        let attempts = 0;
+        const maxAttempts = 3;
+        
+        while (!thumbnailUploaded && attempts < maxAttempts) {
+          attempts++;
+          
+          try {
+            const { error: thumbError } = await supabase.storage
+              .from(bucketToUse)
+              .upload(thumbnailPath, thumbnailBuffer, {
+                contentType: 'image/webp',
+                upsert: true // Alterado para true para substituir se existir
+              });
+              
+            if (thumbError) {
+              this.log(`Tentativa ${attempts}/${maxAttempts}: Erro no upload do thumbnail: ${thumbError.message}`);
+              thumbnailError = thumbError;
+              
+              // Espera um breve intervalo entre tentativas (500ms, 1s, 1.5s)
+              if (attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 500 * attempts));
+              }
+            } else {
+              this.log(`✓ Upload do thumbnail concluído com sucesso na tentativa ${attempts}.`);
+              thumbnailUploaded = true;
+            }
+          } catch (uploadError: any) {
+            this.log(`Tentativa ${attempts}/${maxAttempts}: Exceção no upload do thumbnail: ${uploadError?.message || String(uploadError)}`);
+            thumbnailError = uploadError;
+            
+            // Espera um breve intervalo entre tentativas
+            if (attempts < maxAttempts) {
+              await new Promise(resolve => setTimeout(resolve, 500 * attempts));
+            }
+          }
         }
-        this.log(`Upload do thumbnail concluído com sucesso.`);
+        
+        // Se após todas as tentativas ainda falhou
+        if (!thumbnailUploaded) {
+          this.log(`⚠️ Todas as ${maxAttempts} tentativas de upload do thumbnail falharam.`);
+          
+          // Não removemos a imagem principal - melhor ter apenas a imagem principal do que nenhuma
+          this.log(`AVISO: Upload do thumbnail falhou, mas a imagem principal foi mantida.`);
+          this.log(`Último erro de thumbnail: ${thumbnailError?.message || String(thumbnailError)}`);
+        }
       } else {
         this.log(`Nenhum thumbnail para upload.`);
       }
