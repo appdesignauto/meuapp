@@ -405,6 +405,9 @@ router.get('/api/community/posts/:id', async (req, res) => {
       const rawPost = postResult.rows[0];
       console.log(`Post ${postId} encontrado:`, rawPost ? 'Sim' : 'Não');
       
+      // Formatar a data para evitar o problema de "agora" após atualizações
+      const formattedDate = formatarDataCompleta(rawPost.createdAt);
+
       // Estruturar dados no formato esperado pelo frontend
       const post = {
         post: {
@@ -420,6 +423,7 @@ router.get('/api/community/posts/:id', async (req, res) => {
           userId: typeof rawPost.userId === 'number' ? rawPost.userId : 0,
           featuredUntil: rawPost.featuredUntil,
           isWeeklyFeatured: !!rawPost.isWeeklyFeatured,
+          formattedDate: formattedDate, // Adicionar campo com data pré-formatada
         },
         user: {
           id: typeof rawPost.userId === 'number' ? rawPost.userId : 0,

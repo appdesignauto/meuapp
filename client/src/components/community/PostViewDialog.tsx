@@ -365,7 +365,7 @@ export function PostViewDialog({ postId, open, onOpenChange }: PostViewDialogPro
               <div className="flex items-center gap-1">
                 <VerifiedUsername user={post.user} />
               </div>
-              <p className="text-xs text-muted-foreground">{formatDate(post.createdAt)}</p>
+              <p className="text-xs text-muted-foreground">{post.formattedDate || formatDate(post.createdAt)}</p>
             </div>
           </div>
           
@@ -595,7 +595,7 @@ export function PostViewDialog({ postId, open, onOpenChange }: PostViewDialogPro
                 <div>
                   <h4 className="text-sm font-medium">Publicado em</h4>
                   <p className="text-sm text-muted-foreground">
-                    {formatDate(post.createdAt)}
+                    {post.formattedDate || formatDate(post.createdAt)}
                   </p>
                 </div>
                 
