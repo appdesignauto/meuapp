@@ -54,28 +54,8 @@ export class SupabaseStorageService implements StorageService {
       
       this.log(`Iniciando upload para bucket: ${bucketName}, arquivo: ${filePath}`);
       
-      // Verificar se o bucket existe
-      const { data: buckets } = await this.supabase.storage.listBuckets();
-      const bucketExists = buckets?.some(b => b.name === bucketName);
-      
-      if (!bucketExists) {
-        this.log(`O bucket ${bucketName} não existe. Tentando criar...`);
-        const { error: createError } = await this.supabase.storage.createBucket(bucketName, {
-          public: true
-        });
-        
-        if (createError) {
-          this.log(`Erro ao criar bucket: ${createError.message}`);
-          return {
-            success: false,
-            error: `Erro ao criar bucket: ${createError.message}`,
-            storageType: 'supabase',
-            logs: this.logs
-          };
-        }
-        
-        this.log(`Bucket ${bucketName} criado com sucesso`);
-      }
+      // Assumimos que o bucket já existe (não tentaremos criá-lo)
+      this.log(`Utilizando bucket existente: ${bucketName}`);
       
       // Ler o arquivo
       const fileContent = fs.readFileSync(localFilePath);

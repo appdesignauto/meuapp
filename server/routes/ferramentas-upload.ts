@@ -72,10 +72,41 @@ router.post('/api/admin/ferramentas/upload-imagem', isAdmin, upload.single('imag
       }
     });
     
+    // Caso o upload falhe no Supabase, usamos o sistema de arquivos local
+    if (!result.success) {
+      try {
+        console.log('Upload no Supabase falhou. Usando sistema de arquivos local como fallback.', result.error);
+        
+        // Criar diretório para armazenamento permanente se não existir
+        const uploadDir = path.join(process.cwd(), 'uploads', 'designautoimages', 'ferramentas', 'tools');
+        if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        
+        // Copiar o arquivo para o armazenamento permanente
+        const permanentPath = path.join(uploadDir, `${fileId}.webp`);
+        fs.copyFileSync(outputPath, permanentPath);
+        
+        // Gerar URL relativa para o arquivo
+        const imageUrl = `/uploads/designautoimages/ferramentas/tools/${fileId}.webp`;
+        
+        // Definir resultado de fallback
+        result.success = true;
+        result.imageUrl = imageUrl;
+        result.storageType = 'local';
+      } catch (fallbackError) {
+        console.error('Erro no fallback de armazenamento local:', fallbackError);
+        // Manteremos o erro original do Supabase se o fallback também falhar
+      }
+    }
+    
     // Limpar arquivos temporários
     try {
       fs.unlinkSync(localFilePath);
-      fs.unlinkSync(outputPath);
+      // Não excluir outputPath se estivermos usando armazenamento local e o arquivo for o mesmo
+      if (result.storageType !== 'local' || result.success) {
+        fs.unlinkSync(outputPath);
+      }
     } catch (cleanupError) {
       console.error('Erro ao limpar arquivos temporários:', cleanupError);
     }
@@ -120,9 +151,44 @@ router.post('/api/admin/ferramentas/upload-imagem-direto', isAdmin, upload.singl
     // Upload direto para o Supabase sem processamento
     const result = await storageService.testUploadDirectNoSharp(file as Express.Multer.File);
     
-    // Limpar arquivo temporário
+    // Caso o upload falhe no Supabase, usamos o sistema de arquivos local
+    if (!result.success) {
+      try {
+        console.log('Upload direto no Supabase falhou. Usando sistema de arquivos local como fallback.', result.error);
+        
+        // Criar diretório para armazenamento permanente se não existir
+        const uploadDir = path.join(process.cwd(), 'uploads', 'designautoimages', 'ferramentas', 'tools');
+        if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        
+        // Gerar nome único para o arquivo
+        const fileId = uuidv4();
+        const fileExt = path.extname(req.file.originalname) || '.jpg';
+        const outputFilename = `${fileId}${fileExt}`;
+        
+        // Copiar o arquivo para o armazenamento permanente
+        const permanentPath = path.join(uploadDir, outputFilename);
+        fs.copyFileSync(req.file.path, permanentPath);
+        
+        // Gerar URL relativa para o arquivo
+        const imageUrl = `/uploads/designautoimages/ferramentas/tools/${outputFilename}`;
+        
+        // Definir resultado de fallback
+        result.success = true;
+        result.imageUrl = imageUrl;
+        result.storageType = 'local';
+      } catch (fallbackError) {
+        console.error('Erro no fallback de armazenamento local:', fallbackError);
+        // Manteremos o erro original do Supabase se o fallback também falhar
+      }
+    }
+    
+    // Limpar arquivo temporário se não estamos usando ele como arquivo final
     try {
-      fs.unlinkSync(req.file.path);
+      if (result.storageType !== 'local' || result.success) {
+        fs.unlinkSync(req.file.path);
+      }
     } catch (cleanupError) {
       console.error('Erro ao limpar arquivo temporário:', cleanupError);
     }

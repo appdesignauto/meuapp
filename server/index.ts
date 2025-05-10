@@ -19,6 +19,9 @@ app.use(express.urlencoded({ extended: false }));
 // Configuração para servir arquivos estáticos da pasta public
 app.use(express.static(path.join(process.cwd(), 'public')));
 
+// Configuração para servir arquivos de upload local (fallback quando Supabase falha)
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
 // Redirecionar HTTP para HTTPS em produção
 if (process.env.NODE_ENV === 'production') {
   app.use((req, res, next) => {
