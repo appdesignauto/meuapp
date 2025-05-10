@@ -1213,11 +1213,15 @@ const CommunityPage: React.FC = () => {
         // Se não encontrar o post no feed atual, primeiro tentar carregar mais posts
         if (hasMorePosts && !isFetching && !isLoadingMore) {
           console.log('Post não encontrado, carregando mais posts...');
-          // Tenta carregar mais posts e depois verifica novamente
-          loadMorePosts().then(() => {
+          // Tenta carregar mais posts incrementando a página
+          setIsLoadingMore(true);
+          setPage(prev => prev + 1);
+          
+          // Esperar o efeito ser acionado e os novos posts carregados
+          setTimeout(() => {
             // Tentar novamente após carregar mais posts
-            setTimeout(() => scrollToPost(postId), 1000);
-          });
+            scrollToPost(postId);
+          }, 1500);
         } else {
           // Se não puder carregar mais posts, abrir em modal
           console.log('Post não encontrado no feed, abrindo modal para:', postId);
@@ -1423,6 +1427,7 @@ const CommunityPage: React.FC = () => {
     artsCount: number;
     followersCount: number;
     isFollowing: boolean;
+    postsCount?: number; // Adicionado para compatibilidade com o componente
   }
   
   interface DesignersPopularesResponse {
