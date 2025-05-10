@@ -81,7 +81,7 @@ const GerenciarFerramentas: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategoria, setSelectedCategoria] = useState<number | null>(null);
+  const [selectedCategoria, setSelectedCategoria] = useState<number | string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
@@ -108,7 +108,7 @@ const GerenciarFerramentas: React.FC = () => {
         params.append('search', searchTerm);
       }
       
-      if (selectedCategoria) {
+      if (selectedCategoria && selectedCategoria !== 'all') {
         params.append('categoria', selectedCategoria.toString());
       }
       
@@ -382,14 +382,14 @@ const GerenciarFerramentas: React.FC = () => {
               </p>
               <div className="mt-2">
                 <a 
-                  href={ferramenta.url} 
+                  href={ferramenta.url || '#'} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-xs text-primary flex items-center hover:underline"
                 >
                   <ExternalLink className="h-3 w-3 mr-1" />
-                  {ferramenta.url.replace(/^https?:\/\//, '').substring(0, 30)}
-                  {ferramenta.url.length > 30 && '...'}
+                  {ferramenta.url ? ferramenta.url.replace(/^https?:\/\//, '').substring(0, 30) : 'Sem URL'}
+                  {ferramenta.url && ferramenta.url.length > 30 && '...'}
                 </a>
               </div>
             </CardContent>
@@ -470,14 +470,14 @@ const GerenciarFerramentas: React.FC = () => {
           />
         </div>
         <Select
-          value={selectedCategoria?.toString() || ''}
-          onValueChange={(value) => setSelectedCategoria(value ? parseInt(value) : null)}
+          value={selectedCategoria?.toString() || 'all'}
+          onValueChange={(value) => setSelectedCategoria(value === 'all' ? null : parseInt(value))}
         >
           <SelectTrigger>
             <SelectValue placeholder="Filtrar por categoria" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todas as categorias</SelectItem>
+            <SelectItem value="all">Todas as categorias</SelectItem>
             {categorias?.map((categoria: Categoria) => (
               <SelectItem key={categoria.id} value={categoria.id.toString()}>
                 {categoria.nome}
