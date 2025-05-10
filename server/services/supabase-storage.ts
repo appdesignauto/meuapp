@@ -6,13 +6,22 @@ import * as fs from "fs";
 
 // Configuração do cliente Supabase
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_ANON_KEY;
+// Preferencialmente usar SERVICE_ROLE_KEY para bypass do RLS
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
   console.warn("Credenciais do Supabase não configuradas corretamente.");
 }
 
-const supabase = createClient(supabaseUrl!, supabaseKey!);
+// Criar cliente Supabase com SERVICE_ROLE_KEY para ter acesso total (bypass RLS)
+const supabase = createClient(supabaseUrl!, supabaseKey!, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
+  }
+});
+
+console.log("Serviço Supabase Storage inicializado com SERVICE_ROLE_KEY (se disponível)");
 
 // Nome dos buckets para armazenamento de imagens
 const BUCKET_NAME = 'designauto-images'; // Bucket para artes e imagens do sistema
