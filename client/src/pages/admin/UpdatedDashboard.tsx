@@ -108,6 +108,8 @@ import FileTypesList from '@/components/admin/FileTypesList';
 import PopupManagement from '@/components/admin/PopupManagement';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from "@/lib/queryClient";
+import GerenciarFerramentas from './ferramentas/GerenciarFerramentas';
+import GerenciarCategorias from './ferramentas/GerenciarCategorias';
 
 const AdminDashboard = () => {
   const { user, logoutMutation } = useAuth();
@@ -991,10 +993,15 @@ const AdminDashboard = () => {
             </button>
 
             {/* Ferramentas */}
-            <Link href="/admin/ferramentas" className="flex items-center w-full px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100">
+            <button
+              onClick={() => setActiveTab('ferramentas')}
+              className={`flex items-center w-full px-4 py-2.5 rounded-lg ${
+                activeTab === 'ferramentas' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
               <Wrench className="w-5 h-5 mr-3" />
               <span>Ferramentas</span>
-            </Link>
+            </button>
             
             {/* Usuários e Comunidade */}
             <Collapsible 
