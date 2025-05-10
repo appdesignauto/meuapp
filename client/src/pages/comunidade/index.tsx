@@ -1175,22 +1175,42 @@ const CommunityPage: React.FC = () => {
   const handleRefreshPosts = async () => {
     setPage(1);
     
-    // Adiciona classe de animação ao ícone
+    // Adiciona classe de animação ao ícone e efeito de pulsação no botão
     const refreshIcon = document.getElementById('refresh-posts-icon');
+    const refreshButton = refreshIcon?.closest('button');
+    
     if (refreshIcon) {
       refreshIcon.classList.add('animate-spin');
-      setTimeout(() => {
-        refreshIcon.classList.remove('animate-spin');
-      }, 1000);
+      
+      if (refreshButton) {
+        refreshButton.classList.add('bg-blue-50', 'dark:bg-blue-900/20', 'text-blue-600', 'dark:text-blue-400', 'border-blue-200', 'dark:border-blue-800');
+      }
+      
+      // Mostrar toast de "atualizando"
+      toast({
+        title: "Atualizando posts...",
+        description: "Buscando as postagens mais recentes",
+        variant: "default",
+      });
     }
     
     try {
       // Aguardar a conclusão da refetch antes de continuar
       const result = await refetchPosts();
       
+      // Também atualizar posts populares
+      refetchPopularPosts();
+      
       if (result.data && Array.isArray(result.data)) {
         // Atualizar os posts diretamente para evitar estado vazio temporário
         setAllPosts(result.data);
+        
+        // Mostrar toast de sucesso
+        toast({
+          title: "Posts atualizados!",
+          description: "Feed atualizado com sucesso",
+          variant: "success",
+        });
       } else {
         // Se result.data não existir ou não for um array, mantenha os posts existentes
         const postsData = await fetch('/api/community/posts?page=1&limit=10');
@@ -1208,6 +1228,24 @@ const CommunityPage: React.FC = () => {
         description: "Não foi possível atualizar os posts. Tente novamente.",
         variant: "destructive"
       });
+    } finally {
+      // Remover animação e estilos após conclusão (sucesso ou erro)
+      setTimeout(() => {
+        if (refreshIcon) {
+          refreshIcon.classList.remove('animate-spin');
+        }
+        
+        if (refreshButton) {
+          refreshButton.classList.remove('bg-blue-50', 'dark:bg-blue-900/20', 'text-blue-600', 
+            'dark:text-blue-400', 'border-blue-200', 'dark:border-blue-800');
+          
+          // Adicionar e remover classe de pulsar rapidamente para dar feedback visual
+          refreshButton.classList.add('scale-105');
+          setTimeout(() => {
+            refreshButton?.classList.remove('scale-105');
+          }, 200);
+        }
+      }, 1000);
     }
   };
   
@@ -1878,26 +1916,58 @@ const CommunityPage: React.FC = () => {
                       <CardTitle className="text-lg">Posts Populares</CardTitle>
                       <CardDescription>Conteúdo mais engajado</CardDescription>
                     </div>
-                    {popularPostsError && (
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => {
-                          refetchPopularPosts();
-                          // Adiciona classe de animação ao ícone
-                          const refreshIcon = document.getElementById('refresh-popular-posts-header-icon');
-                          if (refreshIcon) {
-                            refreshIcon.classList.add('animate-spin');
-                            setTimeout(() => {
-                              refreshIcon.classList.remove('animate-spin');
-                            }, 1000);
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-6 w-6 p-0"
+                      onClick={async () => {
+                        // Adiciona classe de animação ao ícone
+                        const refreshIcon = document.getElementById('refresh-popular-posts-header-icon');
+                        const refreshButton = refreshIcon?.closest('button');
+                        
+                        if (refreshIcon) {
+                          refreshIcon.classList.add('animate-spin');
+                          if (refreshButton) {
+                            refreshButton.classList.add('bg-blue-50', 'dark:bg-blue-900/20', 'text-blue-500');
                           }
-                        }}
-                        title="Tentar novamente"
-                      >
-                        <RefreshCw id="refresh-popular-posts-header-icon" className="h-4 w-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
-                      </Button>
-                    )}
+                          
+                          // Mostrar toast pequeno
+                          toast({
+                            title: "Atualizando posts populares",
+                            variant: "default",
+                          });
+                        }
+                        
+                        // Aguardar a conclusão do refetch
+                        await refetchPopularPosts();
+                        
+                        // Remover animação após conclusão
+                        setTimeout(() => {
+                          if (refreshIcon) {
+                            refreshIcon.classList.remove('animate-spin');
+                          }
+                          
+                          if (refreshButton) {
+                            refreshButton.classList.remove('bg-blue-50', 'dark:bg-blue-900/20', 'text-blue-500');
+                            
+                            // Adicionar e remover classe de pulsar rapidamente
+                            refreshButton.classList.add('scale-110');
+                            setTimeout(() => {
+                              refreshButton?.classList.remove('scale-110');
+                            }, 200);
+                          }
+                          
+                          // Mostrar toast de sucesso
+                          toast({
+                            title: "Posts populares atualizados!",
+                            variant: "success",
+                          });
+                        }, 1000);
+                      }}
+                      title="Atualizar posts populares"
+                    >
+                      <RefreshCw id="refresh-popular-posts-header-icon" className="h-4 w-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-transform" />
+                    </Button>
                   </div>
                 </CardHeader>
                 
