@@ -666,7 +666,7 @@ const PostCard: React.FC<{
                 </span>
               )}
             </div>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">há {formatRelativeTime(post.createdAt)}</p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">{post.formattedDate}</p>
           </div>
         </div>
         <div className="flex items-center gap-1">
@@ -1735,7 +1735,7 @@ const CommunityPage: React.FC = () => {
                     {allPosts.map((item) => {
                       // Mapear a estrutura da API para o formato esperado pelo PostCard
                       // Calcular a data formatada aqui, apenas uma vez
-                      const formattedDate = formatRelativeTime(new Date(item.post.createdAt));
+                      const formattedDate = `há ${formatRelativeTime(item.post.createdAt)}`;
                       
                       const formattedPost: CommunityPost = {
                         id: item.post.id,
