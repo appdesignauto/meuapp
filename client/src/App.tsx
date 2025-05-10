@@ -10,6 +10,7 @@ import { ProtectedRoute } from "@/lib/protected-route";
 import { ScrollToTop } from "@/hooks/useScrollTop";
 import { ThemeProvider } from "@/components/theme-provider";
 import { PopupContainer } from "@/components/Popup";
+import { HelmetProvider } from "react-helmet-async";
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -249,20 +250,22 @@ function AppRoutes() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="light">
-        <AuthProvider>
-          <SupabaseAuthProvider>
-            <Router>
-              <ScrollToTop />
-              <AppLayout>
-                <AppRoutes />
-              </AppLayout>
-            </Router>
-            <Toaster />
-            <PopupContainer />
-          </SupabaseAuthProvider>
-        </AuthProvider>
-      </ThemeProvider>
+      <HelmetProvider>
+        <ThemeProvider defaultTheme="light">
+          <AuthProvider>
+            <SupabaseAuthProvider>
+              <Router>
+                <ScrollToTop />
+                <AppLayout>
+                  <AppRoutes />
+                </AppLayout>
+              </Router>
+              <Toaster />
+              <PopupContainer />
+            </SupabaseAuthProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </HelmetProvider>
     </QueryClientProvider>
   );
 }
