@@ -42,7 +42,11 @@ import {
   PlayCircle,
   Home,
   Library,
-  MessageSquare
+  MessageSquare,
+  PackageOpen,
+  LifeBuoy,
+  Wrench,
+  MoreHorizontal
 } from 'lucide-react';
 import MobileMenu from './MobileMenu';
 import { useQuery } from '@tanstack/react-query';
@@ -219,7 +223,6 @@ const Header = () => {
     { name: 'Categorias', path: '/categories', icon: <Library className="h-5 w-5" /> },
     { name: 'Vídeo Aulas', path: '/videoaulas', icon: <PlayCircle className="h-5 w-5" /> },
     { name: 'Comunidade', path: '/comunidade', icon: <MessageSquare className="h-5 w-5" /> },
-    { name: 'Suporte', path: '/support', icon: <HelpCircle className="h-5 w-5" /> },
   ];
 
   const toggleMobileMenu = () => {
@@ -298,6 +301,32 @@ const Header = () => {
                   </Link>
                 );
               })}
+              
+            {/* Dropdown Outros Recursos */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="text-neutral-600 hover:text-blue-600 font-medium text-[13px] px-3 py-2 rounded-md transition-all duration-200 hover:bg-blue-50 flex items-center">
+                  Outros Recursos
+                  <ChevronDown className="ml-1 h-3.5 w-3.5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 mt-1 p-2">
+                <DropdownMenuGroup>
+                  <DropdownMenuItem asChild>
+                    <Link href="/ferramentas" className="flex items-center cursor-pointer">
+                      <Wrench className="mr-2 h-4 w-4 text-blue-500" />
+                      <span>Ferramentas</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/support" className="flex items-center cursor-pointer">
+                      <LifeBuoy className="mr-2 h-4 w-4 text-blue-500" />
+                      <span>Suporte</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </nav>
 
           {/* User Actions */}
