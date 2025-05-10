@@ -1249,6 +1249,9 @@ const CommunityPage: React.FC = () => {
           const postId = parseInt(postIdMatch[1], 10);
           console.log('postId extraído:', postId);
           
+          // Limpar o parâmetro da URL para evitar loops contínuos
+          window.history.replaceState({}, document.title, window.location.pathname);
+          
           if (!isNaN(postId)) {
             // Tentar primeiro carregar o post específico
             fetch(`/api/community/posts/${postId}`)
@@ -1302,7 +1305,7 @@ const CommunityPage: React.FC = () => {
     } catch (error) {
       console.error('Erro ao processar parâmetros da URL:', error);
     }
-  }, [allPosts]);
+  }, []);
   
   // Função para recarregar todos os posts (reset)
   const handleRefreshPosts = async () => {
