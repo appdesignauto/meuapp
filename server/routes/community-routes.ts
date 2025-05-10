@@ -53,15 +53,34 @@ function formatarDataCompleta(dateString: string | Date): string {
       return "Data não disponível";
     }
     
-    // Formato brasileiro
-    return new Intl.DateTimeFormat('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZone: 'America/Sao_Paulo'
-    }).format(date);
+    // Calcular a diferença em milissegundos
+    const agora = new Date();
+    const diff = agora.getTime() - date.getTime();
+    
+    // Converter para segundos, minutos, horas, dias
+    const segundos = Math.floor(diff / 1000);
+    const minutos = Math.floor(segundos / 60);
+    const horas = Math.floor(minutos / 60);
+    const dias = Math.floor(horas / 24);
+    
+    // Formatação relativa
+    if (segundos < 60) {
+      return "Agora mesmo";
+    } else if (minutos < 60) {
+      return minutos === 1 ? "Há 1 minuto" : `Há ${minutos} minutos`;
+    } else if (horas < 24) {
+      return horas === 1 ? "Há 1 hora" : `Há ${horas} horas`;
+    } else if (dias < 7) {
+      return dias === 1 ? "Há 1 dia" : `Há ${dias} dias`;
+    } else {
+      // Para datas mais antigas, usar formato brasileiro
+      return new Intl.DateTimeFormat('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        timeZone: 'America/Sao_Paulo'
+      }).format(date);
+    }
   } catch (error) {
     console.error("Erro ao formatar data:", error, "Data:", dateString);
     return "Data não disponível";
