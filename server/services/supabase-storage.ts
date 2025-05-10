@@ -685,10 +685,39 @@ export class SupabaseStorageService {
         await this.initBucket();
       }
       
+      // Verificar se o bucket existe
+      const bucketExists = await this.createBucketIfNotExists(bucketName);
+      
+      if (!bucketExists) {
+        console.error(`Não foi possível acessar ou criar o bucket: ${bucketName}`);
+        return { 
+          data: null, 
+          error: { message: `Não foi possível acessar ou criar o bucket: ${bucketName}` } 
+        };
+      }
+      
       // Verificar se tem acesso listando os arquivos
-      return await supabase.storage
+      const result = await supabase.storage
         .from(bucketName)
         .list();
+        
+      if (result.error) {
+        console.error(`Erro ao listar arquivos do bucket ${bucketName}:`, result.error);
+        
+        // Tentar novamente com diretório raiz ('')
+        const retryResult = await supabase.storage
+          .from(bucketName)
+          .list('');
+          
+        if (retryResult.error) {
+          console.error(`Falha também na segunda tentativa para bucket ${bucketName}:`, retryResult.error);
+          return { data: null, error: retryResult.error };
+        }
+        
+        return retryResult;
+      }
+      
+      return result;
     } catch (error) {
       console.error(`Erro ao acessar bucket ${bucketName}:`, error);
       return { data: null, error };
@@ -1483,31 +1512,63 @@ export class SupabaseStorageService {
     this.log(`Verificando se o bucket '${bucketName}' existe...`);
     
     try {
-      // Primeiro verifica se o bucket já existe tentando listar arquivos
+      // Primeiro verifica se o bucket já existe usando getBucket
+      try {
+        const { data: bucketsData, error: bucketsError } = await supabase.storage.getBucket(bucketName);
+        
+        if (!bucketsError && bucketsData) {
+          this.log(`✓ Bucket '${bucketName}' já existe e foi confirmado via getBucket.`);
+          return true;
+        } else {
+          this.log(`Bucket '${bucketName}' não encontrado via getBucket: ${bucketsError?.message || "Nenhum erro específico"}`);
+        }
+      } catch (getBucketError: any) {
+        this.log(`Erro ao verificar existência do bucket '${bucketName}' via getBucket: ${getBucketError?.message || String(getBucketError)}`);
+      }
+      
+      // Segunda verificação: tenta listar arquivos do bucket
       try {
         const { data, error } = await supabase.storage.from(bucketName).list();
         
         if (!error && Array.isArray(data)) {
-          this.log(`✓ Bucket '${bucketName}' já existe e está acessível.`);
+          this.log(`✓ Bucket '${bucketName}' já existe e está acessível via list.`);
           return true;
+        } else {
+          this.log(`Tentativa de listar arquivos do bucket '${bucketName}' falhou: ${error?.message || "Erro desconhecido"}`);
         }
-      } catch (listError) {
-        this.log(`Não foi possível listar arquivos do bucket '${bucketName}', pode não existir.`);
+      } catch (listError: any) {
+        this.log(`Não foi possível listar arquivos do bucket '${bucketName}': ${listError?.message || String(listError)}`);
       }
       
-      // Se não conseguiu listar, tenta criar o bucket
+      // Se não conseguiu confirmar existência, tenta criar o bucket
       this.log(`Tentando criar o bucket '${bucketName}'...`);
       const { error } = await supabase.storage.createBucket(bucketName, {
-        public: true
+        public: true,
+        fileSizeLimit: 52428800 // 50MB em bytes
       });
       
       if (error) {
-        if (error.message.includes('violates row-level security policy')) {
+        if (error.message.includes('already exists')) {
+          this.log(`✓ Bucket '${bucketName}' já existe (confirmado pela mensagem de erro).`);
+          return true;
+        } else if (error.message.includes('violates row-level security policy')) {
           this.log(`Aviso: O bucket '${bucketName}' provavelmente já existe mas você não tem permissão para criá-lo.`);
           this.log(`Tentando usar mesmo assim, pois as permissões de upload podem ser diferentes.`);
           return true;
         } else {
-          this.log(`Erro ao criar o bucket '${bucketName}': ${error.message}`);
+          this.log(`❌ Erro ao criar o bucket '${bucketName}': ${error.message}`);
+          
+          // Último recurso: tentar acessar o bucket novamente
+          try {
+            const { data } = await supabase.storage.from(bucketName).list('', { limit: 1 });
+            if (data) {
+              this.log(`✓ Bucket '${bucketName}' existe apesar do erro anterior.`);
+              return true;
+            }
+          } catch (finalError) {
+            this.log(`❌ Falha final ao acessar '${bucketName}': ${finalError}`);
+          }
+          
           return false;
         }
       }
@@ -1515,7 +1576,7 @@ export class SupabaseStorageService {
       this.log(`✅ Bucket '${bucketName}' criado com sucesso!`);
       return true;
     } catch (error: any) {
-      this.log(`Erro ao verificar/criar bucket '${bucketName}': ${error.message}`);
+      this.log(`❌ Erro grave ao verificar/criar bucket '${bucketName}': ${error?.message || String(error)}`);
       return false;
     }
   }
