@@ -1,4 +1,4 @@
-import { Request, Response, Router } from 'express';
+import { Request, Response, Router, Express } from 'express';
 import { db } from '../db';
 
 const router = Router();
@@ -9,7 +9,7 @@ const router = Router();
  * Este endpoint é usado para paginação eficiente quando precisamos
  * saltar diretamente para uma página específica que contém o post.
  */
-export function registerPostPositionRoute(app) {
+export function registerPostPositionRoute(app: Express): void {
   // Endpoint para obter a posição de um post (para paginação eficiente)
   app.get('/api/community/posts/position/:id', async (req: Request, res: Response) => {
     try {
@@ -25,7 +25,7 @@ export function registerPostPositionRoute(app) {
       const result = await db.execute(
         `SELECT COUNT(*) as position FROM "communityPosts" 
          WHERE status = 'approved' AND id > $1`,
-        [postId]
+        [postId.toString()]
       );
       
       const position = parseInt(result.rows?.[0]?.position || "0", 10);

@@ -48,6 +48,7 @@ import testCreateGroupRouter from './routes/test-create-group'; // Rota de teste
 import videoaulasRouter from './routes/videoaulas-routes'; // Rotas para as videoaulas
 import courseRouter from './routes/course-routes'; // Rotas para gerenciamento de módulos e aulas
 import coursesRouter from './routes/courses-routes'; // Rotas para gerenciamento de cursos
+import { registerPostPositionRoute } from './routes/post-position-route'; // Rota para calcular posição do post
 import popupRouter from './routes/popup-routes'; // Rotas para gerenciamento de popups promocionais
 import coursesAdapterRouter from './routes/courses-adapter'; // Adaptador para compatibilidade com rotas antigas
 import videoCommentsRouter from './routes/video-comments-routes'; // Rotas para comentários de videoaulas
@@ -4737,6 +4738,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Rotas para o sistema de comunidade
   app.use(communityRouter);
+  
+  // Registrar rota para calcular posição do post na paginação
+  registerPostPositionRoute(app);
 
   const httpServer = createServer(app);
   
