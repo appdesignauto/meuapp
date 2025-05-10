@@ -750,17 +750,21 @@ const PostCard: React.FC<{
       </div>
       
       {/* Imagem do post - estilo exato do Instagram */}
-      <Link href={`/comunidade/post/${post.id}`}>
-        <div className="relative w-full overflow-hidden bg-black">
-          <div className="w-full max-h-[600px]">
-            <img 
-              src={post.imageUrl} 
-              alt={post.title}
-              className="hover:scale-[1.02] transition-transform duration-500 cursor-pointer w-full h-full object-cover"
-            />
-          </div>
+      <div 
+        className="relative w-full overflow-hidden bg-black cursor-pointer"
+        onClick={() => {
+          setSelectedPostId(post.id);
+          setIsPostViewOpen(true);
+        }}
+      >
+        <div className="w-full max-h-[600px]">
+          <img 
+            src={post.imageUrl} 
+            alt={post.title}
+            className="hover:scale-[1.02] transition-transform duration-500 cursor-pointer w-full h-full object-cover"
+          />
         </div>
-      </Link>
+      </div>
       
       {/* Título e conteúdo abaixo da imagem (estilo Instagram) */}
       <div className="px-3 pt-2 pb-1">
@@ -774,11 +778,15 @@ const PostCard: React.FC<{
         )}
         
         <div className="flex gap-1">
-          <Link href={`/comunidade/post/${post.id}`}>
-            <h3 className="text-sm font-bold hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer">
-              {post.title}
-            </h3>
-          </Link>
+          <h3 
+            className="text-sm font-bold hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+            onClick={() => {
+              setSelectedPostId(post.id);
+              setIsPostViewOpen(true);
+            }}
+          >
+            {post.title}
+          </h3>
         </div>
       </div>
       
@@ -1053,6 +1061,8 @@ const CommunityPage: React.FC = () => {
   });
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
   const [showDAutoInfo, setShowDAutoInfo] = useState(false);
+  const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
+  const [isPostViewOpen, setIsPostViewOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [allPosts, setAllPosts] = useState<any[]>([]);
   const [hasMorePosts, setHasMorePosts] = useState(true);
@@ -2041,6 +2051,13 @@ const CommunityPage: React.FC = () => {
       <CreatePostDialog
         open={isCreatePostOpen}
         onOpenChange={setIsCreatePostOpen}
+      />
+      
+      {/* Dialog de visualização de post */}
+      <PostViewDialog
+        postId={selectedPostId}
+        open={isPostViewOpen}
+        onOpenChange={setIsPostViewOpen}
       />
     </div>
   );
