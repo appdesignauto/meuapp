@@ -321,7 +321,9 @@ const PostCard: React.FC<{
   refetch?: () => void;
   refetchPopularPosts?: () => void; // Adicionado para atualizar posts populares
   user?: User | null; // Permite passar usuário explicitamente 
-}> = ({ post, refetch, refetchPopularPosts, user: propUser }) => {
+  setSelectedPostId?: (id: number | null) => void;
+  setIsPostViewOpen?: (open: boolean) => void;
+}> = ({ post, refetch, refetchPopularPosts, user: propUser, setSelectedPostId, setIsPostViewOpen }) => {
   const { user: authUser } = useAuth();
   // Usar o usuário passado via props ou o usuário da autenticação
   const user = propUser || authUser;
@@ -753,8 +755,10 @@ const PostCard: React.FC<{
       <div 
         className="relative w-full overflow-hidden bg-black cursor-pointer"
         onClick={() => {
-          setSelectedPostId(post.id);
-          setIsPostViewOpen(true);
+          if (setSelectedPostId && setIsPostViewOpen) {
+            setSelectedPostId(post.id);
+            setIsPostViewOpen(true);
+          }
         }}
       >
         <div className="w-full max-h-[600px]">
@@ -781,8 +785,10 @@ const PostCard: React.FC<{
           <h3 
             className="text-sm font-bold hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
             onClick={() => {
-              setSelectedPostId(post.id);
-              setIsPostViewOpen(true);
+              if (setSelectedPostId && setIsPostViewOpen) {
+                setSelectedPostId(post.id);
+                setIsPostViewOpen(true);
+              }
             }}
           >
             {post.title}
@@ -1709,7 +1715,9 @@ const CommunityPage: React.FC = () => {
                         key={item.post.id} 
                         post={formattedPost} 
                         refetch={handleRefreshPosts} 
-                        refetchPopularPosts={refetchPopularPosts} 
+                        refetchPopularPosts={refetchPopularPosts}
+                        setSelectedPostId={setSelectedPostId}
+                        setIsPostViewOpen={setIsPostViewOpen}
                       />;
                     })}
                     
