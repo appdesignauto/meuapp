@@ -393,8 +393,21 @@ router.put("/api/admin/ferramentas/:id", isAdmin, upload.none(), async (req: Req
   try {
     const id = parseInt(req.params.id);
     
-    // Log do corpo da requisição para depuração
+    // Log detalhado do corpo da requisição para depuração
     console.log('Corpo da requisição (req.body):', req.body);
+    console.log('Headers da requisição:', req.headers);
+    
+    // Verificando se o req.body não está vazio
+    if (!req.body || Object.keys(req.body).length === 0) {
+      return res.status(400).json({ 
+        message: "Dados da requisição vazios ou mal formatados",
+        details: { 
+          contentType: req.headers['content-type'],
+          bodyKeys: Object.keys(req.body),
+          bodyLength: JSON.stringify(req.body).length
+        }
+      });
+    }
     
     // Ajustando os nomes dos campos para corresponder ao frontend
     // Para aplicações que enviam formulários como FormData
@@ -408,9 +421,18 @@ router.put("/api/admin/ferramentas/:id", isAdmin, upload.none(), async (req: Req
     
     try {
       categoriaId = parseInt(req.body.categoriaId);
+      if (isNaN(categoriaId)) {
+        return res.status(400).json({ 
+          message: "categoriaId inválido", 
+          details: { raw: req.body.categoriaId }
+        });
+      }
     } catch (e) {
       console.error('Erro ao converter categoriaId:', e);
-      categoriaId = 0; // Valor padrão para depuração
+      return res.status(400).json({ 
+        message: "Erro ao converter categoriaId", 
+        details: { error: e, raw: req.body.categoriaId } 
+      });
     }
     
     const ordem = req.body.ordem ? parseInt(req.body.ordem) : 0;
@@ -418,9 +440,26 @@ router.put("/api/admin/ferramentas/:id", isAdmin, upload.none(), async (req: Req
     
     console.log('Atualizando ferramenta:', { id, nome, imageUrl, websiteUrl, categoriaId });
     
-    // Validar dados
-    if (!nome || !websiteUrl || !categoriaId) {
-      return res.status(400).json({ message: "Nome, URL e categoria são obrigatórios" });
+    // Validar dados essenciais
+    if (!nome) {
+      return res.status(400).json({ 
+        message: "Nome é obrigatório",
+        details: { providedValue: nome }
+      });
+    }
+    
+    if (!websiteUrl) {
+      return res.status(400).json({ 
+        message: "URL é obrigatória",
+        details: { providedValue: websiteUrl }
+      });
+    }
+    
+    if (!categoriaId) {
+      return res.status(400).json({ 
+        message: "Categoria é obrigatória",
+        details: { providedValue: categoriaId }
+      });
     }
     
     // Verificar se a ferramenta existe
@@ -429,7 +468,10 @@ router.put("/api/admin/ferramentas/:id", isAdmin, upload.none(), async (req: Req
     });
     
     if (!ferramentaExistente) {
-      return res.status(404).json({ message: "Ferramenta não encontrada" });
+      return res.status(404).json({ 
+        message: "Ferramenta não encontrada",
+        details: { id }
+      });
     }
     
     // Verificar se a categoria existe
@@ -438,24 +480,31 @@ router.put("/api/admin/ferramentas/:id", isAdmin, upload.none(), async (req: Req
     });
     
     if (!categoriaExistente) {
-      return res.status(400).json({ message: "Categoria não encontrada" });
+      return res.status(400).json({ 
+        message: "Categoria não encontrada",
+        details: { categoriaId }
+      });
     }
+    
+    // Preparar os dados para atualização com valores existentes como fallback
+    const dadosAtualizacao = {
+      nome,
+      descricao: descricao || ferramentaExistente.descricao,
+      imageUrl: imageUrl || ferramentaExistente.imageUrl,
+      websiteUrl,
+      isExterno: isExterno !== undefined ? isExterno : ferramentaExistente.isExterno,
+      isNovo: isNovo !== undefined ? isNovo : ferramentaExistente.isNovo,
+      categoriaId,
+      ordem: ordem !== undefined ? ordem : ferramentaExistente.ordem,
+      ativo: ativo !== undefined ? ativo : ferramentaExistente.ativo,
+      atualizadoEm: new Date()
+    };
+    
+    console.log('Dados para atualização:', dadosAtualizacao);
     
     // Atualizar a ferramenta
     const [ferramentaAtualizada] = await db.update(ferramentas)
-      .set({
-        nome,
-        descricao,
-        imageUrl: imageUrl || ferramentaExistente.imageUrl, // Manter URL existente se não foi fornecida uma nova
-        websiteUrl,
-        isExterno: isExterno !== undefined ? isExterno : ferramentaExistente.isExterno,
-        isNovo: isNovo !== undefined ? isNovo : ferramentaExistente.isNovo,
-
-        categoriaId,
-        ordem: ordem !== undefined ? ordem : ferramentaExistente.ordem,
-        ativo: ativo !== undefined ? ativo : ferramentaExistente.ativo,
-        atualizadoEm: new Date()
-      })
+      .set(dadosAtualizacao)
       .where(eq(ferramentas.id, id))
       .returning();
     

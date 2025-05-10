@@ -346,10 +346,17 @@ const GerenciarFerramentas: React.FC = () => {
     formDataToSend.append('descricao', formData.descricao || '');
     
     // O backend espera 'url' do frontend, que é mapeado para 'websiteUrl' no banco
-    formDataToSend.append('url', formData.url || formData.websiteUrl || '');
+    // Garantir que temos a URL independente do campo onde ela esteja armazenada
+    const urlValue = formData.url || formData.websiteUrl || '';
+    formDataToSend.append('url', urlValue);
     
-    formDataToSend.append('categoriaId', formData.categoriaId?.toString() || '');
+    // Garantir que o categoriaId é um número válido e convertido para string
+    const catId = formData.categoriaId?.toString() || '';
+    formDataToSend.append('categoriaId', catId);
+    
+    // Campos opcionais
     formDataToSend.append('novo', formData.novo ? 'true' : 'false');
+    formDataToSend.append('externo', 'true'); // Por padrão, ferramentas são externas
     
     // Se estiver editando e não tiver nova imagem, manter a URL existente
     if (formData.id && !selectedFile) {
@@ -363,16 +370,31 @@ const GerenciarFerramentas: React.FC = () => {
     }
     
     // Para depuração
-    console.log('ID da ferramenta:', formData.id || 'nova ferramenta');
+    const idFerramenta = formData.id || 'nova ferramenta';
+    console.log('ID da ferramenta:', idFerramenta);
     console.log('URL da ferramenta:', formData.url || formData.websiteUrl);
+    
+    // Se for atualização, garantir que o ID está incluído no FormData
+    if (formData.id) {
+      formDataToSend.append('id', formData.id.toString());
+    }
     
     // Log para debug
     console.log('FormData preparado para envio:');
-    // Obter todos os pares chave/valor do FormData em um array
-    const formDataEntries = Array.from(formDataToSend.entries());
-    formDataEntries.forEach(([key, value]) => {
-      console.log(`${key}: ${value}`);
-    });
+    try {
+      // Obter todos os pares chave/valor do FormData em um array
+      const formDataEntries = Array.from(formDataToSend.entries());
+      formDataEntries.forEach(([key, value]) => {
+        // Se for um File, mostrar nome e tamanho, senão mostrar valor
+        if (value instanceof File) {
+          console.log(`${key}: ${value.name} (${value.size} bytes)`);
+        } else {
+          console.log(`${key}: ${value}`);
+        }
+      });
+    } catch (e) {
+      console.error('Erro ao listar entradas do FormData:', e);
+    }
     
     setIsUploading(true);
     updateFerramentaMutation.mutate(formDataToSend);
