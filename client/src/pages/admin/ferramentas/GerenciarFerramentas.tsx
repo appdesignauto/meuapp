@@ -502,7 +502,7 @@ const GerenciarFerramentas: React.FC = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas as categorias</SelectItem>
-            {categorias?.map((categoria: Categoria) => (
+            {Array.isArray(categorias) && categorias.map((categoria: Categoria) => (
               <SelectItem key={categoria.id} value={categoria.id.toString()}>
                 {categoria.nome}
               </SelectItem>
@@ -576,7 +576,7 @@ const GerenciarFerramentas: React.FC = () => {
                     <SelectValue placeholder="Selecione uma categoria" />
                   </SelectTrigger>
                   <SelectContent>
-                    {categorias?.map((categoria: Categoria) => (
+                    {Array.isArray(categorias) && categorias.map((categoria: Categoria) => (
                       <SelectItem key={categoria.id} value={categoria.id.toString()}>
                         {categoria.nome}
                       </SelectItem>

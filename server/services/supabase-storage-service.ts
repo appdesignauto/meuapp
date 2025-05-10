@@ -12,13 +12,10 @@ export class SupabaseStorageService implements StorageService {
   private logs: string[] = [];
   
   constructor() {
-    // Importante: usamos a service role key em vez da anon key para evitar problemas de RLS
-    // A service role key tem acesso completo, ignorando políticas de RLS
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || '';
-    
+    // Usando a mesma key para consistência em todo o projeto
     this.supabase = createClient(
       process.env.SUPABASE_URL || '',
-      serviceRoleKey,
+      process.env.SUPABASE_ANON_KEY || '',
       {
         auth: {
           autoRefreshToken: false,
