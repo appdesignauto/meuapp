@@ -221,7 +221,6 @@ const Header = () => {
   const navLinks = [
     { name: 'Início', path: '/', icon: <Home className="h-5 w-5" /> },
     { name: 'Categorias', path: '/categories', icon: <Library className="h-5 w-5" /> },
-    { name: 'Vídeo Aulas', path: '/videoaulas', icon: <PlayCircle className="h-5 w-5" /> },
     { name: 'Comunidade', path: '/comunidade', icon: <MessageSquare className="h-5 w-5" /> },
   ];
 
@@ -312,6 +311,12 @@ const Header = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 mt-1 p-2">
                 <DropdownMenuGroup>
+                  <DropdownMenuItem asChild>
+                    <Link href="/videoaulas" className="flex items-center cursor-pointer">
+                      <PlayCircle className="mr-2 h-4 w-4 text-blue-500" />
+                      <span>Vídeo Aulas</span>
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/ferramentas" className="flex items-center cursor-pointer">
                       <Wrench className="mr-2 h-4 w-4 text-blue-500" />

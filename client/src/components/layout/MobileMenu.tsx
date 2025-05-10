@@ -115,6 +115,15 @@ const MobileMenu = ({ isOpen, onClose, navLinks, userRole }: MobileMenuProps) =>
               <h3 className="text-xs font-medium text-neutral-500 mb-1 ml-1 mt-2">OUTROS RECURSOS</h3>
               
               <Link
+                href="/videoaulas"
+                className="flex items-center rounded-lg text-neutral-700 hover:bg-gray-50 hover:text-blue-600 py-3 px-4 transition-colors"
+                onClick={onClose}
+              >
+                <PlayCircle className="mr-3 flex-shrink-0 h-5 w-5 text-gray-500" />
+                <span>Vídeo Aulas</span>
+              </Link>
+              
+              <Link
                 href="/ferramentas"
                 className="flex items-center rounded-lg text-neutral-700 hover:bg-gray-50 hover:text-blue-600 py-3 px-4 transition-colors"
                 onClick={onClose}
