@@ -1735,7 +1735,8 @@ const CommunityPage: React.FC = () => {
                     {allPosts.map((item) => {
                       // Mapear a estrutura da API para o formato esperado pelo PostCard
                       // Calcular a data formatada aqui, apenas uma vez
-                      const formattedDate = `há ${formatRelativeTime(item.post.createdAt)}`;
+                      // Usar a data pré-formatada se disponível, caso contrário, calcular
+                      const formattedDate = item.post.formattedDate || `há ${formatRelativeTime(item.post.createdAt)}`;
                       
                       const formattedPost: CommunityPost = {
                         id: item.post.id,
@@ -2067,7 +2068,8 @@ const CommunityPage: React.FC = () => {
                         const postUserId = item.user?.id;
                         const isFollowing = item.user?.isFollowing || false;
                         // Pré-calcular a data formatada para evitar problemas de atualização
-                        const formattedDate = `há ${formatRelativeTime(item.post?.createdAt)}`;
+                        // Usar a data pré-formatada se disponível, caso contrário, calcular
+                        const formattedDate = item.post?.formattedDate || `há ${formatRelativeTime(item.post?.createdAt)}`;
                         
                         return (
                           <div 
