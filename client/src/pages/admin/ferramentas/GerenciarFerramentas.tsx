@@ -56,8 +56,10 @@ interface Ferramenta {
   id: number;
   nome: string;
   descricao: string;
-  url: string;
-  imagemUrl: string;
+  url: string;      // Campo usado no frontend
+  websiteUrl?: string; // Campo usado no backend
+  imageUrl?: string;   // Campo usado no backend
+  imagemUrl?: string;  // Campo usado no frontend
   categoriaId: number;
   novo: boolean;
   criadoEm: string;
@@ -283,6 +285,9 @@ const GerenciarFerramentas: React.FC = () => {
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Verificação de dados no console para depuração
+    console.log('Dados do formulário sendo enviados:', formData);
+
     // Validar campos obrigatórios
     if (!formData.nome || !formData.url || !formData.categoriaId) {
       toast({
@@ -311,18 +316,29 @@ const GerenciarFerramentas: React.FC = () => {
       formDataToSend.append('imagem', selectedFile);
     }
     
-    // Adicionar outros campos após o upload da imagem ser feito na mutação
-    formDataToSend.append('nome', formData.nome || '');
+    // Campos obrigatórios - garantir que são preenchidos corretamente
+    formDataToSend.append('nome', formData.nome || ''); 
     formDataToSend.append('descricao', formData.descricao || '');
     formDataToSend.append('url', formData.url || '');
     formDataToSend.append('categoriaId', formData.categoriaId?.toString() || '');
-
     formDataToSend.append('novo', formData.novo ? 'true' : 'false');
     
     // Se estiver editando e não tiver nova imagem, manter a URL existente
-    if (formData.id && !selectedFile && formData.imagemUrl) {
-      formDataToSend.append('imagemUrl', formData.imagemUrl);
+    if (formData.id && !selectedFile) {
+      // Usar o campo correto conforme o backend espera
+      if (formData.imagemUrl) {
+        formDataToSend.append('imagemUrl', formData.imagemUrl);
+      } else if (formData.imageUrl) {
+        formDataToSend.append('imagemUrl', formData.imageUrl);
+      }
     }
+    
+    // Log para debug
+    console.log('FormData preparado para envio', {
+      nome: formData.nome,
+      url: formData.url,
+      categoriaId: formData.categoriaId
+    });
     
     setIsUploading(true);
     updateFerramentaMutation.mutate(formDataToSend);
