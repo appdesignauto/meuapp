@@ -8,7 +8,6 @@ import CategoriasCarousel from '@/components/ferramentas/CategoriasCarousel';
 import { Input } from '@/components/ui/input';
 import { Ferramenta, FerramentaCategoria } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
-import Layout from '@/components/layout/Layout';
 
 const FerramentasPage: React.FC = () => {
   // Estado local
@@ -77,7 +76,7 @@ const FerramentasPage: React.FC = () => {
   };
 
   return (
-    <Layout>
+    <>
       <Helmet>
         <title>Ferramentas Úteis | Design Auto</title>
         <meta name="description" content="Ferramentas úteis para designers automotivos - Design Auto" />
@@ -138,14 +137,14 @@ const FerramentasPage: React.FC = () => {
                 descricao={ferramenta.descricao}
                 imageUrl={ferramenta.imageUrl}
                 websiteUrl={ferramenta.websiteUrl}
-                isExterno={ferramenta.isExterno}
-                isNovo={ferramenta.isNovo}
+                isExterno={ferramenta.isExterno || false}
+                isNovo={ferramenta.isNovo || false}
               />
             ))}
           </div>
         )}
       </div>
-    </Layout>
+    </>
   );
 };
 

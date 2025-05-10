@@ -34,6 +34,7 @@ import AvatarTestPage from "@/pages/AvatarTestPage";
 import SupabaseAuthTestPage from "@/pages/SupabaseAuthTestPage";
 import VideoaulasPage from "@/pages/videoaulas";
 import ComunidadePage from "@/pages/comunidade";
+import FerramentasPage from "@/pages/ferramentas";
 
 // Páginas do Painel do Usuário
 import { ProtectedPainelRoute } from "@/components/painel/ProtectedPainelRoute";
@@ -142,6 +143,7 @@ function AppRoutes() {
       <Route path="/designers/:username" component={DesignerProfile} />
       <Route path="/planos" component={PlanosPage} />
       <Route path="/videoaulas" component={VideoaulasPage} />
+      <Route path="/ferramentas" component={FerramentasPage} />
       <Route path="/videoaulas/:id">
         {() => {
           const VideoLessonPage = lazy(() => import("@/pages/videoaulas/[id]"));
