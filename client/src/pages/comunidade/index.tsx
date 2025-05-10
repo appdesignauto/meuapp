@@ -1896,7 +1896,7 @@ const CommunityPage: React.FC = () => {
                           <div className="flex-1">
                             <p className="font-medium text-sm">{designer.name || designer.username}</p>
                             <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                              {designer.followersCount} {designer.followersCount === 1 ? 'seguidor' : 'seguidores'} • {designer.artsCount} {designer.artsCount === 1 ? 'arte' : 'artes'}
+                              {designer.followersCount} {designer.followersCount === 1 ? 'seguidor' : 'seguidores'} • {designer.postsCount} {designer.postsCount === 1 ? 'post' : 'posts'}
                             </p>
                           </div>
                           <FollowButton 
