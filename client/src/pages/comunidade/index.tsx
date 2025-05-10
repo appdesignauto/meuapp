@@ -1119,6 +1119,9 @@ const CommunityPage: React.FC = () => {
     }
   };
   
+  // Tamanho da página para paginação
+  const pageSize = 10;
+  
   // Buscar posts da comunidade com paginação
   const { 
     data: posts, 
@@ -1127,7 +1130,7 @@ const CommunityPage: React.FC = () => {
     refetch: refetchPosts,
     isFetching
   } = useQuery({
-    queryKey: ['/api/community/posts', { page, limit: 10 }],
+    queryKey: ['/api/community/posts', { page, limit: pageSize }],
     refetchOnWindowFocus: false,
     refetchInterval: 0, // Desativamos o recarregamento automático para controlar manualmente
   });
