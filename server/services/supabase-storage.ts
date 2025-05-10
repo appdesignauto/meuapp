@@ -363,56 +363,18 @@ export class SupabaseStorageService {
         this.log(`- Thumbnail: ${thumbnailPath}`);
       }
 
-      // Lista de buckets conhecidos que sabemos que existem no Supabase
-      const KNOWN_BUCKETS = [
-        BUCKET_NAME,       // Bucket principal
-        AVATARS_BUCKET,    // Bucket de avatares
-        'vendas',          // Bucket de vendas
-        'mecanica',        // Bucket de mecânica
-        'design-auto'      // Bucket de design
-      ];
+      // Usar sempre apenas o bucket padrão designauto-images que está funcionando corretamente
+      let bucketToUse = BUCKET_NAME; // Sempre usa o bucket padrão/principal
       
-      // Verifica o bucket a ser usado
-      let bucketToUse = BUCKET_NAME; // Sempre começa com o bucket padrão/principal
-      
-      // Se temos um bucketFolder e não é igual ao BUCKET_NAME, verifica se podemos usar
+      // Se temos um bucketFolder e não é igual ao BUCKET_NAME
       if (bucketFolder && bucketFolder !== BUCKET_NAME) {
-        this.log(`Bucket solicitado: ${bucketFolder}, verificando disponibilidade...`);
+        // Ajusta os caminhos para usar o bucket padrão com pastas (simulando o bucket solicitado)
+        this.log(`ℹ️ Usando bucket padrão '${BUCKET_NAME}' com pasta '${bucketFolder}'`);
         
-        // Se o bucket está na lista de buckets conhecidos, vamos permitir tentativa
-        const isKnownBucket = KNOWN_BUCKETS.includes(bucketFolder);
+        imagePath = `${bucketFolder}/${filename}`;
         
-        if (isKnownBucket) {
-          this.log(`Bucket '${bucketFolder}' está na lista de buckets conhecidos, verifica existência...`);
-          
-          // Mesmo para buckets conhecidos, verificamos acesso só para ter certeza
-          const bucketExists = await this.checkBucketExists(bucketFolder);
-          
-          if (bucketExists) {
-            bucketToUse = bucketFolder;
-            this.log(`✓ Usando bucket solicitado: ${bucketToUse}`);
-          } else {
-            // Bucket conhecido mas não acessível, usando bucket padrão
-            this.log(`⚠️ Bucket conhecido '${bucketFolder}' não está acessível, usando bucket padrão.`);
-            
-            // Ajusta os caminhos para usar o bucket padrão com pastas (simulando o bucket solicitado)
-            imagePath = `${bucketFolder}/${filename}`;
-            
-            if (thumbnailPath) {
-              thumbnailPath = `${bucketFolder}/thumbnails/${filename}`;
-            }
-          }
-        } else {
-          // Bucket não é conhecido, evitar tentativas e usar bucket padrão diretamente
-          this.log(`⚠️ Bucket '${bucketFolder}' não está na lista de buckets conhecidos.`);
-          this.log(`ℹ️ Usando bucket padrão '${BUCKET_NAME}' com pasta '${bucketFolder}'`);
-          
-          // Ajusta os caminhos para usar o bucket padrão com pastas (simulando o bucket solicitado)
-          imagePath = `${bucketFolder}/${filename}`;
-          
-          if (thumbnailPath) {
-            thumbnailPath = `${bucketFolder}/thumbnails/${filename}`;
-          }
+        if (thumbnailPath) {
+          thumbnailPath = `${bucketFolder}/thumbnails/${filename}`;
         }
         
         this.log(`Caminhos finais:`);
