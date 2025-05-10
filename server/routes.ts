@@ -24,6 +24,8 @@ import { SubscriptionService } from "./services/subscription-service";
 import { HotmartService } from "./services/hotmart-service";
 import uploadMemory from "./middlewares/upload";
 import sharp from "sharp";
+// Importação da rota de teste de storage
+import storageTestRoutes from "./routes/storage-test-routes";
 
 // Versão promisificada do scrypt
 const scryptAsync = promisify(scrypt);
