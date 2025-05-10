@@ -1,92 +1,60 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction } from 'express';
 
 // Middleware para verificar se o usuário está autenticado
 export const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
-  if (!req.isAuthenticated || !req.isAuthenticated()) {
-    return res.status(401).json({ message: "Não autorizado" });
+  if (req.isAuthenticated()) {
+    return next();
   }
-  next();
+  return res.status(401).json({ message: "Não autenticado" });
 };
 
 // Middleware para verificar se o usuário é admin
 export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
-  if (!req.isAuthenticated || !req.isAuthenticated()) {
-    return res.status(401).json({ message: "Não autorizado" });
+  if (req.isAuthenticated() && (req.user?.role === 'admin' || req.user?.nivelacesso === 'admin')) {
+    return next();
   }
-  
-  // @ts-ignore - Ignora erro de tipagem temporário para fazer o servidor funcionar
-  const user = req.user;
-  if (!user || (user.nivelacesso !== 'admin' && user.role !== 'admin')) {
-    return res.status(403).json({ message: "Acesso negado" });
-  }
-  
-  next();
+  return res.status(403).json({ message: "Acesso negado" });
 };
 
 // Middleware para verificar se o usuário é designer ou admin
 export const isDesigner = (req: Request, res: Response, next: NextFunction) => {
-  if (!req.isAuthenticated || !req.isAuthenticated()) {
-    return res.status(401).json({ message: "Não autorizado" });
-  }
-  
-  // @ts-ignore - Ignora erro de tipagem temporário para fazer o servidor funcionar
-  const user = req.user;
-  if (!user || !(
-    user.nivelacesso === 'designer' || 
-    user.nivelacesso === 'designer_adm' || 
-    user.nivelacesso === 'admin' ||
-    user.role === 'designer' ||
-    user.role === 'admin'
+  if (req.isAuthenticated() && (
+    req.user?.role === 'designer' || 
+    req.user?.role === 'designer_adm' || 
+    req.user?.role === 'admin' ||
+    req.user?.nivelacesso === 'admin'
   )) {
-    return res.status(403).json({ message: "Acesso negado" });
+    return next();
   }
-  
-  next();
+  return res.status(403).json({ message: "Acesso negado" });
 };
 
 // Middleware para verificar se o usuário é premium ou admin
 export const isPremium = (req: Request, res: Response, next: NextFunction) => {
-  if (!req.isAuthenticated || !req.isAuthenticated()) {
-    return res.status(401).json({ message: "Não autorizado" });
-  }
-  
-  // @ts-ignore - Ignora erro de tipagem temporário para fazer o servidor funcionar
-  const user = req.user;
-  if (!user || !(
-    user.nivelacesso === 'premium' || 
-    user.nivelacesso === 'designer' ||
-    user.nivelacesso === 'designer_adm' ||
-    user.nivelacesso === 'admin' ||
-    user.role === 'admin'
+  if (req.isAuthenticated() && (
+    req.user?.nivelacesso === 'premium' || 
+    req.user?.nivelacesso === 'admin' ||
+    req.user?.role === 'admin'
   )) {
-    return res.status(403).json({ message: "Acesso negado. Este recurso é exclusivo para usuários premium." });
+    return next();
   }
-  
-  next();
+  return res.status(403).json({ message: "Acesso negado" });
 };
 
-// Middleware flexível para verificar se o usuário tem uma role específica
+// Middleware para verificar se o usuário tem um dos papéis especificados
 export const hasRole = (roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    if (!req.isAuthenticated || !req.isAuthenticated()) {
-      return res.status(401).json({ message: "Não autorizado" });
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Não autenticado" });
     }
     
-    // @ts-ignore - Ignora erro de tipagem temporário para fazer o servidor funcionar
-    const user = req.user;
-    if (!user) {
-      return res.status(403).json({ message: "Acesso negado" });
+    const userRole = req.user?.role || '';
+    const userNivelAcesso = req.user?.nivelacesso || '';
+    
+    if (roles.includes(userRole) || roles.includes(userNivelAcesso)) {
+      return next();
     }
     
-    const userRoles = [user.nivelacesso];
-    if (user.role) userRoles.push(user.role);
-    
-    const hasAccess = roles.some(role => userRoles.includes(role));
-    
-    if (!hasAccess) {
-      return res.status(403).json({ message: "Acesso negado" });
-    }
-    
-    next();
+    return res.status(403).json({ message: "Acesso negado" });
   };
 };

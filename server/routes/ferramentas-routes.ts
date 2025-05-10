@@ -63,33 +63,61 @@ router.get("/api/ferramentas", async (req: Request, res: Response) => {
     const categoria = req.query.categoria as string | undefined;
     const busca = req.query.busca as string | undefined;
     
-    let consulta = db.select().from(ferramentas)
-      .where(eq(ferramentas.ativo, true))
-      .orderBy(asc(ferramentas.ordem), asc(ferramentas.nome));
+    // Buscar todas as ferramentas ativas
+    let ferramentasQuery = db.select().from(ferramentas).where(eq(ferramentas.ativo, true));
     
+    // Filtrar por categoria, se especificado
     if (categoria) {
-      // Buscar o ID da categoria pelo slug
       const categoriaEncontrada = await db.query.ferramentasCategorias.findFirst({
         where: eq(ferramentasCategorias.slug, categoria)
       });
       
       if (categoriaEncontrada) {
-        consulta = consulta.where(eq(ferramentas.categoriaId, categoriaEncontrada.id));
+        ferramentasQuery = db.select().from(ferramentas).where(
+          and(
+            eq(ferramentas.ativo, true),
+            eq(ferramentas.categoriaId, categoriaEncontrada.id)
+          )
+        );
       }
     }
     
-    if (busca) {
-      // Busca simples pelo nome ou descrição
+    // Aplicar filtro de busca, se especificado
+    if (busca && busca.trim() !== '') {
       const termoBusca = `%${busca.toLowerCase()}%`;
-      consulta = consulta.where(
-        sql`LOWER(${ferramentas.nome}) LIKE ${termoBusca} OR 
-            LOWER(${ferramentas.descricao}) LIKE ${termoBusca}`
+      
+      ferramentasQuery = db.select().from(ferramentas).where(
+        and(
+          eq(ferramentas.ativo, true),
+          sql`LOWER(${ferramentas.nome}) LIKE ${termoBusca} OR LOWER(${ferramentas.descricao}) LIKE ${termoBusca}`
+        )
       );
+      
+      // Se categoria também foi especificada, aplicar os dois filtros
+      if (categoria) {
+        const categoriaEncontrada = await db.query.ferramentasCategorias.findFirst({
+          where: eq(ferramentasCategorias.slug, categoria)
+        });
+        
+        if (categoriaEncontrada) {
+          ferramentasQuery = db.select().from(ferramentas).where(
+            and(
+              eq(ferramentas.ativo, true),
+              eq(ferramentas.categoriaId, categoriaEncontrada.id),
+              sql`LOWER(${ferramentas.nome}) LIKE ${termoBusca} OR LOWER(${ferramentas.descricao}) LIKE ${termoBusca}`
+            )
+          );
+        }
+      }
     }
     
-    const todasFerramentas = await consulta;
+    // Ordenar resultados
+    ferramentasQuery = ferramentasQuery.orderBy(asc(ferramentas.ordem), asc(ferramentas.nome));
     
-    // Obter as categorias para cada ferramenta
+    // Executar a consulta
+    const todasFerramentas = await ferramentasQuery;
+    
+    // Obter categorias para cada ferramenta
     const ferramentasComCategorias = await Promise.all(
       todasFerramentas.map(async (ferramenta) => {
         const categoria = await db.query.ferramentasCategorias.findFirst({
@@ -106,6 +134,24 @@ router.get("/api/ferramentas", async (req: Request, res: Response) => {
     res.json(ferramentasComCategorias);
   } catch (error) {
     console.error("Erro ao buscar ferramentas:", error);
+    res.status(500).json({ message: "Erro ao buscar ferramentas" });
+  }
+});
+
+// Obter todas as ferramentas para o painel administrativo
+router.get("/api/ferramentas/all", isAdmin, async (req: Request, res: Response) => {
+  try {
+    // Buscar todas as ferramentas, incluindo as inativas
+    const todasFerramentas = await db.query.ferramentas.findMany({
+      orderBy: [asc(ferramentas.ordem), asc(ferramentas.nome)],
+      with: {
+        categoria: true
+      }
+    });
+    
+    res.json(todasFerramentas);
+  } catch (error) {
+    console.error("Erro ao buscar todas as ferramentas:", error);
     res.status(500).json({ message: "Erro ao buscar ferramentas" });
   }
 });

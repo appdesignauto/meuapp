@@ -59,6 +59,7 @@ import courseThumbnailUploadRouter from './routes/course-thumbnail-upload'; // R
 import bannerUploadRouter from './routes/banner-upload'; // Rota para upload de banners de
 import moduleUploadRouter from './routes/module-upload'; // Rota para upload de thumbnails de módulos cursos
 import communityRouter from './routes/community-routes'; // Rotas para o sistema de comunidade
+import ferramentasUploadRouter from './routes/ferramentas-upload'; // Rotas para upload de imagens de ferramentas
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Rota simples de verificação de saúde
@@ -4737,11 +4738,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Rotas para gerenciamento de popups promocionais
   app.use('/api/popups', popupRouter);
   
+  // Rotas para gerenciamento de ferramentas úteis
+  app.use(ferramentasRouter);
+  
+  // Rotas para upload de imagens de ferramentas
+  app.use(ferramentasUploadRouter);
+  
   // Rotas para o sistema de comunidade
   app.use(communityRouter);
   
-  // Registrar rotas de ferramentas úteis
-  app.use(ferramentasRouter);
+
   
   // Registrar rota para calcular posição do post na paginação
   registerPostPositionRoute(app);
