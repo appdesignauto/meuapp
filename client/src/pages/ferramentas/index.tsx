@@ -16,7 +16,7 @@ import {
 import FerramentaCard from '@/components/ferramentas/FerramentaCard';
 import CategoriasCarousel from '@/components/ferramentas/CategoriasCarousel';
 import { useLocation } from 'wouter';
-import { useDebounce } from '@/hooks/use-debounce';
+import useDebounce from '@/hooks/use-debounce';
 
 type Ferramenta = {
   id: number;

@@ -17,8 +17,6 @@ export type FerramentaCardProps = {
   className?: string;
 };
 
-export { FerramentaCardProps };
-
 const FerramentaCard: React.FC<FerramentaCardProps> = ({
   nome,
   descricao,
@@ -92,3 +90,5 @@ const FerramentaCard: React.FC<FerramentaCardProps> = ({
     </motion.div>
   );
 };
+
+export default FerramentaCard;
