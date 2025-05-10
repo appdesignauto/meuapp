@@ -16,7 +16,12 @@ import {
   Users,
   BookOpen,
   MessageSquare,
-  HelpCircle
+  HelpCircle,
+  Wrench,
+  LifeBuoy,
+  PackageOpen,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/use-auth';
@@ -104,6 +109,29 @@ const MobileMenu = ({ isOpen, onClose, navLinks, userRole }: MobileMenuProps) =>
                 </Link>
               );
             })}
+            
+            {/* Seção Outros Recursos */}
+            <div className="mt-4">
+              <h3 className="text-xs font-medium text-neutral-500 mb-1 ml-1 mt-2">OUTROS RECURSOS</h3>
+              
+              <Link
+                href="/ferramentas"
+                className="flex items-center rounded-lg text-neutral-700 hover:bg-gray-50 hover:text-blue-600 py-3 px-4 transition-colors"
+                onClick={onClose}
+              >
+                <Wrench className="mr-3 flex-shrink-0 h-5 w-5 text-gray-500" />
+                <span>Ferramentas</span>
+              </Link>
+              
+              <Link
+                href="/support"
+                className="flex items-center rounded-lg text-neutral-700 hover:bg-gray-50 hover:text-blue-600 py-3 px-4 transition-colors"
+                onClick={onClose}
+              >
+                <LifeBuoy className="mr-3 flex-shrink-0 h-5 w-5 text-gray-500" />
+                <span>Suporte</span>
+              </Link>
+            </div>
           
           {/* Botões de Login e Cadastro (exibidos apenas se não houver usuário) */}
           {!user && (
