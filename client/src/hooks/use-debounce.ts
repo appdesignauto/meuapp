@@ -1,23 +1,22 @@
 import { useState, useEffect } from 'react';
 
 /**
- * Hook personalizado para aplicar um debounce em um valor.
- * Útil para evitar atualizações frequentes em situações como pesquisa em tempo real.
+ * Hook personalizado para aplicar debounce em um valor
  * 
- * @param value O valor a ser "debounced"
- * @param delay O tempo de atraso em milissegundos
- * @returns O valor após o período de debounce
+ * @param value Valor a ser aplicado o debounce
+ * @param delay Tempo de espera em milissegundos (padrão: 500ms)
+ * @returns Valor após o debounce
  */
-function useDebounce<T>(value: T, delay: number): T {
+export function useDebounce<T>(value: T, delay: number = 500): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
   useEffect(() => {
-    // Configura um timer para atualizar o valor após o delay
+    // Configurar o temporizador para atualizar o valor com atraso
     const timer = setTimeout(() => {
       setDebouncedValue(value);
     }, delay);
 
-    // Limpa o timer se o valor ou delay mudarem antes do timeout
+    // Limpar o temporizador se o valor mudar antes do tempo de debounce
     return () => {
       clearTimeout(timer);
     };

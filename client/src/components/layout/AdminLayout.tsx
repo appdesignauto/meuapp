@@ -1,34 +1,30 @@
-import React, { ReactNode, useState } from 'react';
+import React, { ReactNode } from 'react';
 import { Link, useLocation } from 'wouter';
-import { 
-  ChevronLeft, 
-  Menu, 
-  X, 
-  Home, 
-  Settings, 
-  Users, 
-  BookOpen, 
-  Image, 
-  LayoutDashboard, 
-  MessageSquare, 
-  FileBarChart,
+import {
+  ChevronLeft,
+  Gauge,
+  Users,
+  BookOpen,
+  MessageSquare,
+  Award,
+  FileText,
+  Settings,
+  Image,
   Wrench,
-  Star,
-  Bell
+  Upload,
+  Menu,
+  X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/use-auth';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useAuth } from '@/hooks/use-auth';
 
 type AdminLayoutProps = {
   children: ReactNode;
@@ -48,219 +44,182 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   title,
   backLink
 }) => {
+  const { user } = useAuth();
   const [location] = useLocation();
-  const { user, logoutMutation } = useAuth();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
-
-  const handleLogout = () => {
-    logoutMutation.mutate();
-  };
 
   const navItems: NavItem[] = [
-    { 
-      title: 'Dashboard', 
-      href: '/admin', 
-      icon: <LayoutDashboard className="h-5 w-5" /> 
+    {
+      title: 'Dashboard',
+      href: '/admin',
+      icon: <Gauge className="h-5 w-5" />,
     },
-    { 
-      title: 'Usuários', 
-      href: '/admin/usuarios', 
-      icon: <Users className="h-5 w-5" /> 
+    {
+      title: 'Usuários',
+      href: '/admin/users',
+      icon: <Users className="h-5 w-5" />,
     },
-    { 
-      title: 'Artes', 
-      href: '/admin/artes', 
-      icon: <Image className="h-5 w-5" /> 
+    {
+      title: 'Artes',
+      href: '/admin/arts',
+      icon: <Image className="h-5 w-5" />,
     },
-    { 
-      title: 'Cursos', 
-      href: '/admin/cursos', 
-      icon: <BookOpen className="h-5 w-5" /> 
+    {
+      title: 'Cursos',
+      href: '/admin/courses',
+      icon: <BookOpen className="h-5 w-5" />,
     },
-    { 
-      title: 'Comunidade', 
-      href: '/admin/community', 
-      icon: <MessageSquare className="h-5 w-5" /> 
+    {
+      title: 'Comunidade',
+      href: '/admin/community',
+      icon: <MessageSquare className="h-5 w-5" />,
     },
-    { 
-      title: 'Ferramentas', 
-      href: '/admin/ferramentas', 
-      icon: <Wrench className="h-5 w-5" /> 
+    {
+      title: 'Ranking',
+      href: '/admin/ranking',
+      icon: <Award className="h-5 w-5" />,
     },
-    { 
-      title: 'Depoimentos', 
-      href: '/admin/depoimentos', 
-      icon: <Star className="h-5 w-5" /> 
+    {
+      title: 'Ferramentas',
+      href: '/admin/ferramentas',
+      icon: <Wrench className="h-5 w-5" />,
     },
-    { 
-      title: 'Notificações', 
-      href: '/admin/notificacoes', 
-      icon: <Bell className="h-5 w-5" /> 
+    {
+      title: 'Uploads',
+      href: '/admin/uploads',
+      icon: <Upload className="h-5 w-5" />,
     },
-    { 
-      title: 'Relatórios', 
-      href: '/admin/relatorios', 
-      icon: <FileBarChart className="h-5 w-5" /> 
+    {
+      title: 'Páginas',
+      href: '/admin/pages',
+      icon: <FileText className="h-5 w-5" />,
     },
-    { 
-      title: 'Configurações', 
-      href: '/admin/configuracoes', 
-      icon: <Settings className="h-5 w-5" /> 
+    {
+      title: 'Configurações',
+      href: '/admin/settings',
+      icon: <Settings className="h-5 w-5" />,
     },
   ];
 
-  if (!user) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Acesso Restrito</h2>
-          <p className="mb-6">Você precisa estar logado como administrador para acessar esta página.</p>
-          <Link href="/auth">
-            <Button>Fazer Login</Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  if (user.nivelacesso !== 'admin') {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Acesso Negado</h2>
-          <p className="mb-6">Você não tem permissão para acessar o painel administrativo.</p>
-          <Link href="/">
-            <Button>Voltar para o Início</Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  const NavLinks = () => (
+    <nav className="space-y-1 mt-4">
+      {navItems.map((item) => (
+        <Link key={item.href} href={item.href}>
+          <a
+            className={cn(
+              'flex items-center px-4 py-2.5 text-sm font-medium rounded-lg',
+              location === item.href || location.startsWith(`${item.href}/`)
+                ? 'bg-primary text-primary-foreground'
+                : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
+            )}
+          >
+            {item.icon}
+            <span className="ml-3">{item.title}</span>
+            {item.badge && (
+              <span className="ml-auto px-2 py-0.5 text-xs rounded-full bg-primary/20 text-primary dark:bg-primary/30">
+                {item.badge}
+              </span>
+            )}
+          </a>
+        </Link>
+      ))}
+    </nav>
+  );
 
   return (
-    <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
-      {/* Sidebar para desktop */}
-      <aside
-        className={cn(
-          "fixed inset-y-0 left-0 z-50 flex h-full w-64 flex-col border-r bg-white dark:bg-gray-950 dark:border-gray-800 shadow-sm transition-transform lg:translate-x-0 lg:static",
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        )}
-      >
-        <div className="flex h-14 items-center border-b px-4 dark:border-gray-800">
-          <Link href="/" className="flex items-center gap-2 font-bold text-xl">
-            <span className="text-primary">DesignAuto</span>
-            <span className="text-xs bg-primary text-white px-1.5 py-0.5 rounded">Admin</span>
-          </Link>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="ml-auto lg:hidden"
-            onClick={toggleSidebar}
-          >
-            <X className="h-5 w-5" />
-            <span className="sr-only">Fechar menu</span>
-          </Button>
-        </div>
-        <nav className="flex-1 overflow-y-auto p-2">
-          <ul className="grid gap-1">
-            {navItems.map((item, index) => (
-              <li key={index}>
-                <Link href={item.href}>
-                  <a 
-                    className={cn(
-                      "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50",
-                      location === item.href && "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-50"
-                    )}
-                  >
-                    {item.icon}
-                    <span>{item.title}</span>
-                    {item.badge && (
-                      <span className="ml-auto flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs text-white">
-                        {item.badge}
-                      </span>
-                    )}
-                  </a>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-        <div className="mt-auto border-t p-4 dark:border-gray-800">
-          <div className="flex items-center gap-3">
-            <Avatar>
-              <AvatarImage src={user.profileimageurl || undefined} alt={user.name || user.username} />
-              <AvatarFallback>{(user.name || user.username || '?').charAt(0).toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <div className="grid">
-              <span className="text-sm font-medium">{user.name || user.username}</span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">Administrador</span>
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="ml-auto">
-                  <ChevronLeft className="h-4 w-4 rotate-90" />
-                  <span className="sr-only">Menu de usuário</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
-                <DropdownMenuItem>
-                  <Link href="/perfil">Perfil</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
-                  Sair
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </aside>
-
-      {/* Conteúdo principal */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <header className="h-14 flex items-center border-b bg-white dark:bg-gray-950 dark:border-gray-800 px-4 lg:px-6">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="mr-2 lg:hidden"
-            onClick={toggleSidebar}
-          >
-            <Menu className="h-5 w-5" />
-            <span className="sr-only">Abrir menu</span>
-          </Button>
-          
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Mobile top navigation */}
+      <div className="lg:hidden flex items-center justify-between p-4 border-b bg-white dark:bg-gray-800">
+        <div className="flex items-center">
           {backLink && (
-            <Link href={backLink}>
-              <a className="inline-flex items-center mr-3 text-sm text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50">
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Voltar
-              </a>
-            </Link>
+            <Button variant="ghost" size="icon" asChild className="mr-2">
+              <Link href={backLink}>
+                <ChevronLeft className="h-5 w-5" />
+              </Link>
+            </Button>
           )}
-          
-          <h1 className="text-lg font-semibold">{title}</h1>
-          
-          <div className="ml-auto flex items-center gap-2">
-            <Link href="/">
-              <Button variant="ghost" size="sm" className="gap-1">
-                <Home className="h-4 w-4" />
-                <span className="sr-only sm:not-sr-only sm:inline-block">Início</span>
-              </Button>
-            </Link>
-          </div>
-        </header>
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-white">{title}</h1>
+        </div>
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Abrir menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-72 p-0">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Painel Admin</h2>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <X className="h-5 w-5" />
+                  <span className="sr-only">Fechar menu</span>
+                </Button>
+              </SheetTrigger>
+            </div>
+            <div className="p-4">
+              <NavLinks />
+            </div>
+          </SheetContent>
+        </Sheet>
+      </div>
 
-        {/* Conteúdo */}
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6 bg-gray-100 dark:bg-gray-900">
-          {children}
+      <div className="flex">
+        {/* Desktop sidebar */}
+        <aside className="hidden lg:flex flex-col w-64 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 h-screen sticky top-0">
+          <div className="p-4 border-b">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Painel Admin</h2>
+          </div>
+          <div className="p-4">
+            <NavLinks />
+          </div>
+          <div className="p-4 mt-auto border-t">
+            <div className="flex items-center">
+              <Avatar className="h-8 w-8">
+                {user?.profileimageurl ? (
+                  <AvatarImage src={user.profileimageurl} alt={user?.name || ''} />
+                ) : (
+                  <AvatarFallback>{user?.name?.charAt(0) || user?.username?.charAt(0) || 'U'}</AvatarFallback>
+                )}
+              </Avatar>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-900 dark:text-white">{user?.name || user?.username}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Administrador</p>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* Main content */}
+        <main className="flex-1">
+          {/* Desktop top header */}
+          <div className="hidden lg:flex items-center justify-between p-4 border-b bg-white dark:bg-gray-800">
+            <div className="flex items-center">
+              {backLink && (
+                <Button variant="ghost" size="icon" asChild className="mr-2">
+                  <Link href={backLink}>
+                    <ChevronLeft className="h-5 w-5" />
+                  </Link>
+                </Button>
+              )}
+              <h1 className="text-xl font-semibold text-gray-900 dark:text-white">{title}</h1>
+            </div>
+            <div className="flex items-center">
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/">
+                  Ver site
+                </Link>
+              </Button>
+            </div>
+          </div>
+
+          {/* Page content */}
+          <div className="p-6">
+            {children}
+          </div>
         </main>
       </div>
     </div>
   );
 };
+
+export default AdminLayout;

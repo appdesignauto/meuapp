@@ -94,3 +94,30 @@ export function getInitials(name: string): string {
     .toUpperCase()
     .substring(0, 2); // Limitar a 2 caracteres
 }
+
+/**
+ * Formata uma data para exibição em português do Brasil
+ * @param dateString - String de data (ISO ou formato DB)
+ * @param includeTime - Se deve incluir a hora na formatação
+ * @returns String formatada da data
+ */
+export function formatTimestamp(dateString: string, includeTime: boolean = false): string {
+  if (!dateString) return '';
+  
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '';
+  
+  const options: Intl.DateTimeFormatOptions = {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    timeZone: 'America/Sao_Paulo'
+  };
+  
+  if (includeTime) {
+    options.hour = '2-digit';
+    options.minute = '2-digit';
+  }
+  
+  return new Intl.DateTimeFormat('pt-BR', options).format(date);
+}
