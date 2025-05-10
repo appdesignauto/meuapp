@@ -61,7 +61,6 @@ interface Ferramenta {
   url: string;
   imagemUrl: string;
   categoriaId: number;
-  destaque: boolean;
   novo: boolean;
   criadoEm: string;
   atualizadoEm: string;
@@ -250,7 +249,7 @@ const GerenciarFerramentas: React.FC = () => {
     setIsAlertDialogOpen(true);
   };
 
-  const handleToggleStatus = (id: number, field: 'destaque' | 'novo', currentValue: boolean) => {
+  const handleToggleStatus = (id: number, field: 'novo', currentValue: boolean) => {
     toggleFeatureStatusMutation.mutate({ 
       id, 
       field, 
@@ -275,7 +274,6 @@ const GerenciarFerramentas: React.FC = () => {
       descricao: '',
       url: '',
       categoriaId: 0,
-      destaque: false,
       novo: false
     });
     setImagePreview(null);
@@ -320,7 +318,7 @@ const GerenciarFerramentas: React.FC = () => {
     formDataToSend.append('descricao', formData.descricao || '');
     formDataToSend.append('url', formData.url || '');
     formDataToSend.append('categoriaId', formData.categoriaId?.toString() || '');
-    formDataToSend.append('destaque', formData.destaque ? 'true' : 'false');
+
     formDataToSend.append('novo', formData.novo ? 'true' : 'false');
     
     // Se estiver editando e não tiver nova imagem, manter a URL existente
@@ -401,11 +399,7 @@ const GerenciarFerramentas: React.FC = () => {
                   (e.target as HTMLImageElement).src = '/images/placeholder.jpg';
                 }}
               />
-              {ferramenta.destaque && (
-                <div className="absolute top-2 left-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded">
-                  Destaque
-                </div>
-              )}
+
               {ferramenta.novo && (
                 <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
                   Novo
