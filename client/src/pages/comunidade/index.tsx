@@ -1253,7 +1253,7 @@ const CommunityPage: React.FC = () => {
           window.history.replaceState({}, document.title, window.location.pathname);
           
           if (!isNaN(postId)) {
-            // Tentar primeiro carregar o post específico
+            // Buscar apenas o post específico diretamente pela API
             fetch(`/api/community/posts/${postId}`)
               .then(res => {
                 if (res.ok) {
@@ -1265,39 +1265,64 @@ const CommunityPage: React.FC = () => {
                 if (data && data.post) {
                   console.log('Post encontrado via API:', data.post);
                   
-                  // Tentar carregar mais posts e rolar até encontrar o post
-                  // Verificamos primeiro se já temos o post carregado
+                  // Verificar se o post já está carregado na lista atual
                   const postExists = allPosts.some(item => item.post.id === postId);
                   
                   if (postExists) {
                     // Se o post estiver no feed atual, rolar até ele
                     scrollToPost(postId);
                   } else {
-                    // Se o post não estiver no feed, tentar carregar mais posts
-                    // e então rolar para ele quando estiver disponível
-                    setIsLoadingMore(true);
-                    setPage(prev => prev + 1);
-                    
-                    // Adicionar o ID do post para que seja destacado quando carregar
-                    setTimeout(() => scrollToPost(postId), 1500);
+                    // Abordagem mais eficiente: Carregar a página que contém o post
+                    // Para isso, vamos calcular em qual página o post deve estar
+                    // Consulta para saber quantos posts existem antes deste post
+                    fetch(`/api/community/posts/position/${postId}`)
+                      .then(res => res.json())
+                      .then(positionData => {
+                        if (positionData && positionData.position) {
+                          // Calcular a página baseado na posição do post
+                          const targetPage = Math.floor(positionData.position / pageSize) + 1;
+                          console.log(`Post encontrado na posição ${positionData.position}, página ${targetPage}`);
+                          
+                          if (targetPage !== page) {
+                            // Resetar os posts atuais
+                            setAllPosts([]);
+                            // Definir a nova página
+                            setPage(targetPage);
+                            
+                            // Exibir informações ao usuário
+                            toast({
+                              title: "Carregando post...",
+                              description: `Buscando a página ${targetPage} que contém a publicação`,
+                              variant: "default"
+                            });
+                            
+                            // Destacar o post quando estiver disponível
+                            // Usamos um timeout maior para garantir que a página seja carregada
+                            setTimeout(() => scrollToPost(postId), 2000);
+                          } else {
+                            // Se estiver na mesma página, apenas rolar para o post
+                            scrollToPost(postId);
+                          }
+                        } else {
+                          // Fallback para o método antigo se não conseguir determinar a posição
+                          fallbackMethodForFindingPost(postId);
+                        }
+                      })
+                      .catch(error => {
+                        console.error("Erro ao buscar posição do post:", error);
+                        // Fallback para o método antigo
+                        fallbackMethodForFindingPost(postId);
+                      });
                   }
                 }
               })
               .catch(error => {
                 console.error('Erro ao buscar post específico:', error);
-                // Em vez de abrir modal, tentar carregar novamente a página
-                // e tentar carregar mais posts para encontrar o post
                 toast({
-                  title: "Buscando post...",
-                  description: "Carregando mais posts para encontrar a publicação",
-                  variant: "default"
+                  title: "Post não encontrado",
+                  description: "Não foi possível encontrar a publicação solicitada",
+                  variant: "destructive"
                 });
-                // Tentar carregar mais posts
-                setIsLoadingMore(true);
-                setPage(prev => prev + 1);
-                
-                // Adicionar o ID do post para que seja destacado quando carregar
-                setTimeout(() => scrollToPost(postId), 1500);
               });
           }
         }
@@ -1306,6 +1331,41 @@ const CommunityPage: React.FC = () => {
       console.error('Erro ao processar parâmetros da URL:', error);
     }
   }, []);
+  
+  // Método alternativo caso o método primário falhe
+  const fallbackMethodForFindingPost = (postId: number) => {
+    // Verificar se o post já existe na lista atual
+    const postExists = allPosts.some(item => item.post.id === postId);
+    
+    if (postExists) {
+      // Se já existir, apenas rolar para ele
+      scrollToPost(postId);
+    } else {
+      toast({
+        title: "Buscando post...",
+        description: "Carregando mais posts para encontrar a publicação",
+        variant: "default"
+      });
+      
+      // Tentar carregar mais posts (abordagem incremental)
+      setIsLoadingMore(true);
+      setPage(prev => prev + 1);
+      
+      // Adicionar o ID do post para que seja destacado quando carregar
+      setTimeout(() => {
+        // Verificar novamente após o carregamento
+        const postFound = allPosts.some(item => item.post.id === postId);
+        if (postFound) {
+          scrollToPost(postId);
+        } else {
+          // Se ainda não encontrou, tentar mais uma vez
+          setIsLoadingMore(true);
+          setPage(prev => prev + 1);
+          setTimeout(() => scrollToPost(postId), 1500);
+        }
+      }, 1500);
+    }
+  };
   
   // Função para recarregar todos os posts (reset)
   const handleRefreshPosts = async () => {
