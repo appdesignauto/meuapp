@@ -324,7 +324,8 @@ const PostCard: React.FC<{
   user?: User | null; // Permite passar usuário explicitamente 
   setSelectedPostId?: (id: number | null) => void;
   setIsPostViewOpen?: (open: boolean) => void;
-}> = ({ post, refetch, refetchPopularPosts, user: propUser, setSelectedPostId, setIsPostViewOpen }) => {
+  id?: string; // ID para o elemento DOM, usado para rolagem e destacamento
+}> = ({ post, refetch, refetchPopularPosts, user: propUser, setSelectedPostId, setIsPostViewOpen, id }) => {
   const { user: authUser } = useAuth();
   // Usar o usuário passado via props ou o usuário da autenticação
   const user = propUser || authUser;
@@ -647,10 +648,12 @@ const PostCard: React.FC<{
   const isPinned = post.isPinned === true; // Força conversão booleana
 
   return (
-    <Card className={`mb-5 overflow-hidden ${isPinned 
-      ? 'border-2 border-amber-400 dark:border-amber-500 bg-amber-50/40 dark:bg-amber-900/10 shadow-lg' 
-      : 'border-0 border-b border-b-zinc-200 dark:border-b-zinc-800 sm:border-b-0 sm:border sm:border-zinc-100 sm:dark:border-zinc-800'
-    } shadow-none sm:shadow-md hover:shadow-lg transition-all duration-300 ease-in-out w-full sm:max-w-[470px] md:max-w-full mx-0 sm:mx-auto relative`}>
+    <Card 
+      id={id}
+      className={`mb-5 overflow-hidden ${isPinned 
+        ? 'border-2 border-amber-400 dark:border-amber-500 bg-amber-50/40 dark:bg-amber-900/10 shadow-lg' 
+        : 'border-0 border-b border-b-zinc-200 dark:border-b-zinc-800 sm:border-b-0 sm:border sm:border-zinc-100 sm:dark:border-zinc-800'
+      } shadow-none sm:shadow-md hover:shadow-lg transition-all duration-300 ease-in-out w-full sm:max-w-[470px] md:max-w-full mx-0 sm:mx-auto relative`}>
       {/* Removido ícone de estrela sobreposto para evitar problemas de layout */}
       
       {/* Cabeçalho do post - estilo exato do Instagram */}
@@ -1173,9 +1176,39 @@ const CommunityPage: React.FC = () => {
     };
   }, [hasMorePosts, isFetching, isLoadingMore]);
   
-  // Verificar se há um parâmetro postId na URL e abrir o modal automaticamente
+  // Função para encontrar o elemento de post com ID específico e rolar até ele
+  const scrollToPost = (postId: number) => {
+    // Primeiro tenta encontrar o post no feed principal
+    setTimeout(() => {
+      const postElement = document.getElementById(`post-item-${postId}`);
+      
+      if (postElement) {
+        // Adicionar classe de destaque para evidenciar o post
+        postElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'dark:ring-offset-zinc-900');
+        
+        // Rolar suavemente até o post
+        postElement.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'center'
+        });
+        
+        // Remover destaque após alguns segundos
+        setTimeout(() => {
+          postElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2', 'dark:ring-offset-zinc-900');
+        }, 5000);
+        
+        console.log('Post encontrado e rolagem realizada');
+      } else {
+        // Se não encontrar o post no feed atual, abrir em modal
+        console.log('Post não encontrado no feed, abrindo modal');
+        setSelectedPostId(postId);
+        setIsPostViewOpen(true);
+      }
+    }, 1000); // Pequeno atraso para garantir que o conteúdo já foi renderizado
+  };
+
+  // Verificar se há um parâmetro postId na URL e processar adequadamente
   useEffect(() => {
-    // Usando uma abordagem mais direta para obter os parâmetros
     try {
       // Obter a string de consulta da URL atual
       const currentUrl = window.location.href;
@@ -1192,19 +1225,44 @@ const CommunityPage: React.FC = () => {
           console.log('postId extraído:', postId);
           
           if (!isNaN(postId)) {
-            console.log('Definindo selectedPostId e abrindo modal para:', postId);
-            setSelectedPostId(postId);
-            setIsPostViewOpen(true);
-            
-            // Opcional: limpar o parâmetro da URL após processar
-            // window.history.replaceState({}, document.title, '/comunidade');
+            // Tentar primeiro carregar o post específico
+            fetch(`/api/community/posts/${postId}`)
+              .then(res => {
+                if (res.ok) {
+                  return res.json();
+                }
+                throw new Error('Post não encontrado');
+              })
+              .then(data => {
+                if (data && data.post) {
+                  console.log('Post encontrado via API:', data.post);
+                  
+                  // Verificar se o post já está carregado no feed
+                  const postExists = allPosts.some(item => item.post.id === postId);
+                  
+                  if (postExists) {
+                    // Se o post estiver no feed atual, rolar até ele
+                    scrollToPost(postId);
+                  } else {
+                    // Se o post não estiver no feed atual, abrir em modal
+                    setSelectedPostId(postId);
+                    setIsPostViewOpen(true);
+                  }
+                }
+              })
+              .catch(error => {
+                console.error('Erro ao buscar post específico:', error);
+                // Em caso de erro, abrir modal com o ID fornecido
+                setSelectedPostId(postId);
+                setIsPostViewOpen(true);
+              });
           }
         }
       }
     } catch (error) {
       console.error('Erro ao processar parâmetros da URL:', error);
     }
-  }, []);
+  }, [allPosts]);
   
   // Função para recarregar todos os posts (reset)
   const handleRefreshPosts = async () => {
