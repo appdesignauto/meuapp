@@ -113,7 +113,11 @@ export class SupabaseStorageService implements StorageService {
   }
   
   // Método usado pelo upload direto para testes
-  async testUploadDirectNoSharp(file: Express.Multer.File): Promise<{
+  async testUploadDirectNoSharp(
+    file: Express.Multer.File, 
+    bucketName: string = 'designauto-images',
+    folderPath: string = 'ferramentas'
+  ): Promise<{
     success: boolean;
     imageUrl?: string;
     error?: string;
@@ -122,10 +126,9 @@ export class SupabaseStorageService implements StorageService {
     logs: string[];
   }> {
     try {
-      const bucketName = 'designautoimages';
       const fileExtension = path.extname(file.originalname);
       const uniqueFilename = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}${fileExtension}`;
-      const filePath = `ferramentas/tools/${uniqueFilename}`;
+      const filePath = `${folderPath}/${uniqueFilename}`;
       
       this.log(`Iniciando upload direto para bucket: ${bucketName}, arquivo: ${filePath}`);
       
