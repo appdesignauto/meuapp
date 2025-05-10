@@ -4,8 +4,32 @@ import path from 'path';
 import { StorageService } from './storage-service';
 
 export class SupabaseStorageService implements StorageService {
-  private supabase;
-  private logs: string[] = [];
+  supabase;
+  logs: string[] = [];
+  
+  // Adiciona método para testes
+  async getBucketsList() {
+    try {
+      const { data, error } = await this.supabase.storage.listBuckets();
+      
+      if (error) {
+        return { 
+          success: false, 
+          error: error.message 
+        };
+      }
+      
+      return {
+        success: true,
+        buckets: data || []
+      };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : String(error) 
+      };
+    }
+  }
   
   constructor() {
     if (!process.env.SUPABASE_URL) {

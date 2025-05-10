@@ -24,10 +24,23 @@ router.get('/api/admin/test-storage-service', isAdmin, async (req: Request, res:
       message: `Configuração do Supabase: Service Role (${serviceRoleConfigured ? 'Configurada' : 'Não configurada'}), Anon Key (${anonKeyConfigured ? 'Configurada' : 'Não configurada'}), URL (${supabaseUrlConfigured ? 'Configurada' : 'Não configurada'})`
     };
 
-    // Realizar um teste de listagem de buckets
+    // Testar a conexão tentando fazer um simples upload
     let bucketsResult;
     try {
-      bucketsResult = await storageService.getBucketsList();
+      // Tentar listar arquivos de um bucket em vez de buckets, já que a API não está exposta
+      const { data, error } = await storageService['supabase'].storage.from('designautoimages').list();
+      
+      if (error) {
+        bucketsResult = { 
+          success: false, 
+          error: error.message
+        };
+      } else {
+        bucketsResult = {
+          success: true,
+          files: (data || []).map(file => file.name)
+        };
+      }
     } catch (error) {
       bucketsResult = { 
         success: false, 

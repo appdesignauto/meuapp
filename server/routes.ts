@@ -60,6 +60,7 @@ import bannerUploadRouter from './routes/banner-upload'; // Rota para upload de 
 import moduleUploadRouter from './routes/module-upload'; // Rota para upload de thumbnails de módulos cursos
 import communityRouter from './routes/community-routes'; // Rotas para o sistema de comunidade
 import ferramentasUploadRouter from './routes/ferramentas-upload'; // Rotas para upload de imagens de ferramentas
+import storageTestRoutes from './routes/storage-test-routes'; // Rota para testar o serviço de storage
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Rota simples de verificação de saúde
@@ -4751,6 +4752,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Registrar rota para calcular posição do post na paginação
   registerPostPositionRoute(app);
+  
+  // Registrar rota de teste para o serviço de storage
+  app.use(storageTestRoutes);
 
   const httpServer = createServer(app);
   
