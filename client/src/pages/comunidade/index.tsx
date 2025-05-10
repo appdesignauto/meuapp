@@ -1179,11 +1179,19 @@ const CommunityPage: React.FC = () => {
     const searchParams = new URLSearchParams(location.search);
     const postIdParam = searchParams.get('postId');
     
+    console.log('URL atual:', location);
+    console.log('Parâmetros da URL:', location.search);
+    console.log('postId detectado na URL:', postIdParam);
+    
     // Se houver um postId válido, abrir o modal com o post selecionado
     if (postIdParam) {
       const postId = parseInt(postIdParam, 10);
+      console.log('postId convertido para número:', postId, 'isNaN?', isNaN(postId));
+      
       if (!isNaN(postId)) {
+        console.log('Definindo selectedPostId:', postId);
         setSelectedPostId(postId);
+        console.log('Abrindo modal de visualização do post');
         setIsPostViewOpen(true);
       }
     }
