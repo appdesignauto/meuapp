@@ -8,8 +8,6 @@ import {
   ImagePlus, 
   X, 
   ExternalLink,
-  Star,
-  StarOff,
   Tags
 } from 'lucide-react';
 import { 
@@ -90,7 +88,6 @@ const GerenciarFerramentas: React.FC = () => {
     descricao: '',
     url: '',
     categoriaId: 0,
-    destaque: false,
     novo: false
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -432,18 +429,7 @@ const GerenciarFerramentas: React.FC = () => {
             </CardContent>
             <CardFooter className="p-4 pt-0 flex justify-between items-center">
               <div className="flex space-x-2">
-                <Button 
-                  variant="outline" 
-                  size="icon"
-                  onClick={() => handleToggleStatus(ferramenta.id, 'destaque', !!ferramenta.destaque)}
-                  title={ferramenta.destaque ? "Remover destaque" : "Definir como destaque"}
-                >
-                  {ferramenta.destaque ? (
-                    <StarOff className="h-4 w-4" />
-                  ) : (
-                    <Star className="h-4 w-4" />
-                  )}
-                </Button>
+
                 <Button 
                   variant="outline" 
                   size="icon"
@@ -637,17 +623,7 @@ const GerenciarFerramentas: React.FC = () => {
               </div>
               
               <div className="flex flex-col gap-4 sm:flex-row sm:gap-6">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="destaque"
-                    className="h-4 w-4 rounded border-gray-300"
-                    checked={!!formData.destaque}
-                    onChange={(e) => setFormData({ ...formData, destaque: e.target.checked })}
-                  />
-                  <Label htmlFor="destaque" className="text-sm">Destacar esta ferramenta</Label>
-                </div>
-                
+
                 <div className="flex items-center space-x-2">
                   <input
                     type="checkbox"
