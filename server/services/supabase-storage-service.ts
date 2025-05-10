@@ -151,7 +151,11 @@ export class SupabaseStorageService implements StorageService {
   }
   
   // Método usado pelo upload direto para testes
-  async testUploadDirectNoSharp(file: Express.Multer.File): Promise<{
+  async testUploadDirectNoSharp(file: Express.Multer.File | {
+    buffer: Buffer;
+    originalname: string;
+    mimetype: string;
+  }): Promise<{
     success: boolean;
     imageUrl?: string;
     error?: string;
