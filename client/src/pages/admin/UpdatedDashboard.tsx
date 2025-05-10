@@ -1177,6 +1177,29 @@ const AdminDashboard = () => {
               </CollapsibleContent>
             </Collapsible>
             
+            {/* Ferramentas */}
+            <Collapsible 
+              className="bg-gray-50 rounded-lg py-1 mb-1"
+              defaultOpen={['ferramentas'].includes(activeTab)}
+            >
+              <CollapsibleTrigger className="flex items-center w-full px-4 py-2 text-gray-700 font-medium">
+                <Wrench className="w-5 h-5 mr-3" />
+                <span>Ferramentas</span>
+                <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pl-4 space-y-1 pt-1 pb-2">
+                <button
+                  onClick={() => setActiveTab('ferramentas')}
+                  className={`flex items-center w-full px-4 py-2 rounded-md ${
+                    activeTab === 'ferramentas' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <Wrench className="w-4 h-4 mr-3" />
+                  <span>Gerenciar Ferramentas</span>
+                </button>
+              </CollapsibleContent>
+            </Collapsible>
+            
             {/* Configurações */}
             <Collapsible 
               className="bg-gray-50 rounded-lg py-1 mb-1"
@@ -3841,6 +3864,35 @@ const AdminDashboard = () => {
             
             <TabsContent value="settings">
               <SiteSettings />
+            </TabsContent>
+            
+            {/* Gerenciamento de Ferramentas */}
+            <TabsContent value="ferramentas" className="mt-0">
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <div className="flex flex-col space-y-6">
+                  <div>
+                    <h2 className="text-2xl font-bold tracking-tight mb-2">Ferramentas</h2>
+                    <p className="text-muted-foreground">
+                      Gerencie as ferramentas e categorias disponíveis no site.
+                    </p>
+                  </div>
+                  
+                  <Tabs defaultValue="ferramentas" className="w-full">
+                    <TabsList className="grid w-full md:w-auto grid-cols-2 mb-6">
+                      <TabsTrigger value="ferramentas">Ferramentas</TabsTrigger>
+                      <TabsTrigger value="categorias">Categorias</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="ferramentas" className="space-y-4">
+                      <GerenciarFerramentas />
+                    </TabsContent>
+                    
+                    <TabsContent value="categorias" className="space-y-4">
+                      <GerenciarCategorias />
+                    </TabsContent>
+                  </Tabs>
+                </div>
+              </div>
             </TabsContent>
           </Tabs>
         </main>
