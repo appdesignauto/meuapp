@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { 
   Settings, Plus, Filter, User, Trophy, Clock, Info, Award, Medal, 
   Sparkles, Users, ImageIcon, ExternalLink, FileEdit, RefreshCw, 
