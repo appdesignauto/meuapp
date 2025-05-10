@@ -1995,16 +1995,40 @@ const CommunityPage: React.FC = () => {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={() => {
-                          refetchPopularPosts();
+                        onClick={async () => {
                           // Adiciona classe de animação ao ícone
                           const refreshIcon = document.getElementById('refresh-popular-posts-icon');
+                          const refreshButton = refreshIcon?.closest('button');
+                          
                           if (refreshIcon) {
                             refreshIcon.classList.add('animate-spin');
-                            setTimeout(() => {
-                              refreshIcon.classList.remove('animate-spin');
-                            }, 1000);
+                            
+                            if (refreshButton) {
+                              refreshButton.classList.add('bg-blue-50', 'dark:bg-blue-900/20', 'text-blue-600', 
+                              'dark:text-blue-400', 'border-blue-200', 'dark:border-blue-800');
+                            }
                           }
+                          
+                          // Aguardar a conclusão do refetch
+                          await refetchPopularPosts();
+                          
+                          // Remover animação após conclusão
+                          setTimeout(() => {
+                            if (refreshIcon) {
+                              refreshIcon.classList.remove('animate-spin');
+                            }
+                            
+                            if (refreshButton) {
+                              refreshButton.classList.remove('bg-blue-50', 'dark:bg-blue-900/20', 'text-blue-600', 
+                                'dark:text-blue-400', 'border-blue-200', 'dark:border-blue-800');
+                              
+                              // Adicionar e remover classe de pulsar rapidamente
+                              refreshButton.classList.add('scale-105');
+                              setTimeout(() => {
+                                refreshButton?.classList.remove('scale-105');
+                              }, 200);
+                            }
+                          }, 1000);
                         }}
                         className="mt-2"
                       >
