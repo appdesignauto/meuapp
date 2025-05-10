@@ -1175,27 +1175,36 @@ const CommunityPage: React.FC = () => {
   
   // Verificar se há um parâmetro postId na URL e abrir o modal automaticamente
   useEffect(() => {
-    // Extrair os parâmetros da URL
-    const searchParams = new URLSearchParams(location.search);
-    const postIdParam = searchParams.get('postId');
-    
-    console.log('URL atual:', location);
-    console.log('Parâmetros da URL:', location.search);
-    console.log('postId detectado na URL:', postIdParam);
-    
-    // Se houver um postId válido, abrir o modal com o post selecionado
-    if (postIdParam) {
-      const postId = parseInt(postIdParam, 10);
-      console.log('postId convertido para número:', postId, 'isNaN?', isNaN(postId));
+    // Usando uma abordagem mais direta para obter os parâmetros
+    try {
+      // Obter a string de consulta da URL atual
+      const currentUrl = window.location.href;
+      console.log('URL completa:', currentUrl);
       
-      if (!isNaN(postId)) {
-        console.log('Definindo selectedPostId:', postId);
-        setSelectedPostId(postId);
-        console.log('Abrindo modal de visualização do post');
-        setIsPostViewOpen(true);
+      // Verificar se há um parâmetro postId na URL
+      if (currentUrl.includes('postId=')) {
+        // Extrair o valor do parâmetro postId
+        const postIdMatch = currentUrl.match(/postId=(\d+)/);
+        console.log('Match de postId:', postIdMatch);
+        
+        if (postIdMatch && postIdMatch[1]) {
+          const postId = parseInt(postIdMatch[1], 10);
+          console.log('postId extraído:', postId);
+          
+          if (!isNaN(postId)) {
+            console.log('Definindo selectedPostId e abrindo modal para:', postId);
+            setSelectedPostId(postId);
+            setIsPostViewOpen(true);
+            
+            // Opcional: limpar o parâmetro da URL após processar
+            // window.history.replaceState({}, document.title, '/comunidade');
+          }
+        }
       }
+    } catch (error) {
+      console.error('Erro ao processar parâmetros da URL:', error);
     }
-  }, [location]);
+  }, []);
   
   // Função para recarregar todos os posts (reset)
   const handleRefreshPosts = async () => {
