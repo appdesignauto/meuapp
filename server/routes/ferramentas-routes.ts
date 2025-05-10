@@ -61,61 +61,42 @@ router.get("/api/ferramentas/categorias/:slug", async (req: Request, res: Respon
 router.get("/api/ferramentas", async (req: Request, res: Response) => {
   try {
     const categoria = req.query.categoria as string | undefined;
+    const searchTerm = req.query.search as string | undefined;
     const busca = req.query.busca as string | undefined;
     
-    // Buscar todas as ferramentas ativas
-    let ferramentasQuery = db.select().from(ferramentas).where(eq(ferramentas.ativo, true));
+    // Condição base: ferramentas ativas
+    let conditions = [eq(ferramentas.ativo, true)];
     
-    // Filtrar por categoria, se especificado
+    // Adicionar condição de categoria se especificada
     if (categoria) {
       const categoriaEncontrada = await db.query.ferramentasCategorias.findFirst({
         where: eq(ferramentasCategorias.slug, categoria)
       });
       
       if (categoriaEncontrada) {
-        ferramentasQuery = db.select().from(ferramentas).where(
-          and(
-            eq(ferramentas.ativo, true),
-            eq(ferramentas.categoriaId, categoriaEncontrada.id)
-          )
-        );
+        conditions.push(eq(ferramentas.categoriaId, categoriaEncontrada.id));
       }
     }
     
-    // Aplicar filtro de busca, se especificado
-    if (busca && busca.trim() !== '') {
-      const termoBusca = `%${busca.toLowerCase()}%`;
-      
-      ferramentasQuery = db.select().from(ferramentas).where(
-        and(
-          eq(ferramentas.ativo, true),
-          sql`LOWER(${ferramentas.nome}) LIKE ${termoBusca} OR LOWER(${ferramentas.descricao}) LIKE ${termoBusca}`
-        )
+    // Adicionar condição de busca se especificada
+    if (searchTerm || busca) {
+      const termoBusca = `%${(searchTerm || busca || "").toLowerCase()}%`;
+      conditions.push(
+        sql`LOWER(${ferramentas.nome}) LIKE ${termoBusca} OR LOWER(${ferramentas.descricao}) LIKE ${termoBusca}`
       );
-      
-      // Se categoria também foi especificada, aplicar os dois filtros
-      if (categoria) {
-        const categoriaEncontrada = await db.query.ferramentasCategorias.findFirst({
-          where: eq(ferramentasCategorias.slug, categoria)
-        });
-        
-        if (categoriaEncontrada) {
-          ferramentasQuery = db.select().from(ferramentas).where(
-            and(
-              eq(ferramentas.ativo, true),
-              eq(ferramentas.categoriaId, categoriaEncontrada.id),
-              sql`LOWER(${ferramentas.nome}) LIKE ${termoBusca} OR LOWER(${ferramentas.descricao}) LIKE ${termoBusca}`
-            )
-          );
-        }
-      }
     }
     
-    // Ordenar resultados
-    ferramentasQuery = ferramentasQuery.orderBy(asc(ferramentas.ordem), asc(ferramentas.nome));
+    // Executar consulta com condições combinadas
+    const query = db.select().from(ferramentas);
     
-    // Executar a consulta
-    const todasFerramentas = await ferramentasQuery;
+    // Adicionar condição where
+    query.where(conditions.length > 1 ? and(...conditions) : conditions[0]);
+    
+    // Adicionar ordenação
+    query.orderBy(asc(ferramentas.ordem));
+    
+    // Executar consulta
+    const todasFerramentas = await query;
     
     // Obter categorias para cada ferramenta
     const ferramentasComCategorias = await Promise.all(
