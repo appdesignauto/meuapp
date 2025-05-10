@@ -33,6 +33,41 @@ const router = Router();
  * E sempre use isPinned === true nas verificações do frontend
  */
 
+/**
+ * Função formatarDataCompleta
+ * 
+ * Formata uma data no formato completo para exibição no frontend
+ * Esta função é usada para pré-calcular datas no backend evitando
+ * que o frontend mostre "agora" para posts antigos que foram atualizados
+ */
+function formatarDataCompleta(dateString: string | Date): string {
+  if (!dateString) return "Data não disponível";
+  
+  try {
+    // Criar data a partir da string ou objeto Date
+    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+    
+    // Verificar se a data é válida
+    if (isNaN(date.getTime())) {
+      console.error("Data inválida:", dateString);
+      return "Data não disponível";
+    }
+    
+    // Formato brasileiro
+    return new Intl.DateTimeFormat('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'America/Sao_Paulo'
+    }).format(date);
+  } catch (error) {
+    console.error("Erro ao formatar data:", error, "Data:", dateString);
+    return "Data não disponível";
+  }
+}
+
 // IMPORTANTE: Rotas específicas ANTES das rotas com parâmetros dinâmicos
 // para evitar conflitos de captura
 
@@ -259,6 +294,9 @@ router.get('/api/community/posts', async (req, res) => {
     
     if (rawPostsQuery && rawPostsQuery.rows) {
       for (const row of rawPostsQuery.rows) {
+        // Pré-formatar a data para evitar mudanças ao visualizar
+        const formattedDate = formatarDataCompleta(row.createdAt);
+        
         posts.push({
           post: {
             id: Number(row.id),
@@ -273,7 +311,8 @@ router.get('/api/community/posts', async (req, res) => {
             isPinned: row.is_pinned === true, // Garantir formato booleano
             editLink: row.editLink || '',
             featuredUntil: row.featuredUntil,
-            isWeeklyFeatured: !!row.isWeeklyFeatured
+            isWeeklyFeatured: !!row.isWeeklyFeatured,
+            formattedDate: formattedDate // Adicionar a data pré-formatada
           },
           user: {
             id: Number(row.user_id),
