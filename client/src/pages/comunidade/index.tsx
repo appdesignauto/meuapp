@@ -1059,6 +1059,7 @@ const getLevelIcon = (level: string): React.ReactNode => {
 const CommunityPage: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [location] = useLocation();
   const [activeTab, setActiveTab] = useState('posts');
   const [rankingPeriod, setRankingPeriod] = useState('month');
   const [monthSelector, setMonthSelector] = useState(() => {
@@ -1171,6 +1172,22 @@ const CommunityPage: React.FC = () => {
       }
     };
   }, [hasMorePosts, isFetching, isLoadingMore]);
+  
+  // Verificar se há um parâmetro postId na URL e abrir o modal automaticamente
+  useEffect(() => {
+    // Extrair os parâmetros da URL
+    const searchParams = new URLSearchParams(location.search);
+    const postIdParam = searchParams.get('postId');
+    
+    // Se houver um postId válido, abrir o modal com o post selecionado
+    if (postIdParam) {
+      const postId = parseInt(postIdParam, 10);
+      if (!isNaN(postId)) {
+        setSelectedPostId(postId);
+        setIsPostViewOpen(true);
+      }
+    }
+  }, [location]);
   
   // Função para recarregar todos os posts (reset)
   const handleRefreshPosts = async () => {
