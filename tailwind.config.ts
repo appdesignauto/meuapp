@@ -151,6 +151,16 @@ export default {
             boxShadow: "0 0 15px rgba(79, 70, 229, 0.5)",
           },
         },
+        "pulse-subtle": {
+          "0%, 100%": {
+            opacity: "1",
+            transform: "scale(1)",
+          },
+          "50%": {
+            opacity: "0.95",
+            transform: "scale(1.02)",
+          },
+        },
         "popupEntrance": {
           "0%": {
             transform: "scale(0.95)",
@@ -175,6 +185,7 @@ export default {
         "slide-in-bounce": "slide-in-bounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
         "zoom-in-bounce": "zoom-in-bounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
         "pulse-glow": "pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        "pulse-subtle": "pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         "popupEntrance": "popupEntrance 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)",
       },
     },

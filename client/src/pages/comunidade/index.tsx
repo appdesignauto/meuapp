@@ -1178,13 +1178,19 @@ const CommunityPage: React.FC = () => {
   
   // Função para encontrar o elemento de post com ID específico e rolar até ele
   const scrollToPost = (postId: number) => {
-    // Primeiro tenta encontrar o post no feed principal
+    // Certificar-se de que a aba de "Posts" esteja selecionada
+    setActiveTab("posts");
+    
+    // Tentar encontrar o post no feed principal
     setTimeout(() => {
       const postElement = document.getElementById(`post-item-${postId}`);
       
       if (postElement) {
         // Adicionar classe de destaque para evidenciar o post
-        postElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'dark:ring-offset-zinc-900');
+        postElement.classList.add('ring-4', 'ring-blue-500', 'ring-opacity-70', 'ring-offset-4', 'dark:ring-offset-zinc-900', 'z-10', 'relative');
+        
+        // Animação de pulsação suave para destacar ainda mais o post
+        postElement.classList.add('animate-pulse-subtle');
         
         // Rolar suavemente até o post
         postElement.scrollIntoView({ 
@@ -1192,19 +1198,34 @@ const CommunityPage: React.FC = () => {
           block: 'center'
         });
         
+        // Remover animação de pulsação primeiro, para fazer uma transição suave
+        setTimeout(() => {
+          postElement.classList.remove('animate-pulse-subtle');
+        }, 3000);
+        
         // Remover destaque após alguns segundos
         setTimeout(() => {
-          postElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2', 'dark:ring-offset-zinc-900');
+          postElement.classList.remove('ring-4', 'ring-blue-500', 'ring-opacity-70', 'ring-offset-4', 'dark:ring-offset-zinc-900', 'z-10', 'relative');
         }, 5000);
         
-        console.log('Post encontrado e rolagem realizada');
+        console.log('Post encontrado e rolagem realizada para:', postId);
       } else {
-        // Se não encontrar o post no feed atual, abrir em modal
-        console.log('Post não encontrado no feed, abrindo modal');
-        setSelectedPostId(postId);
-        setIsPostViewOpen(true);
+        // Se não encontrar o post no feed atual, primeiro tentar carregar mais posts
+        if (hasMorePosts && !isFetching && !isLoadingMore) {
+          console.log('Post não encontrado, carregando mais posts...');
+          // Tenta carregar mais posts e depois verifica novamente
+          loadMorePosts().then(() => {
+            // Tentar novamente após carregar mais posts
+            setTimeout(() => scrollToPost(postId), 1000);
+          });
+        } else {
+          // Se não puder carregar mais posts, abrir em modal
+          console.log('Post não encontrado no feed, abrindo modal para:', postId);
+          setSelectedPostId(postId);
+          setIsPostViewOpen(true);
+        }
       }
-    }, 1000); // Pequeno atraso para garantir que o conteúdo já foi renderizado
+    }, 500); // Pequeno atraso para garantir que o conteúdo já foi renderizado
   };
 
   // Verificar se há um parâmetro postId na URL e processar adequadamente
