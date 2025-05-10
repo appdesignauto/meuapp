@@ -346,12 +346,12 @@ export class SupabaseStorageService {
       
       // Formato do caminho depende da pasta/bucket fornecida
       const filename = `${timestamp}_${uuid}.webp`;
-      const imagePath = bucketFolder 
+      let imagePath = bucketFolder 
         ? `${bucketFolder}/${filename}` 
         : this.generateFilename(file.originalname, false, '', designerId);
         
       // Só criamos path para thumbnail se tiver thumbnail
-      const thumbnailPath = thumbnailBuffer 
+      let thumbnailPath = thumbnailBuffer 
         ? bucketFolder 
           ? `${bucketFolder}/thumbnails/${filename}` 
           : this.generateFilename(file.originalname, true, '', designerId)
