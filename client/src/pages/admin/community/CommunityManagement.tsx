@@ -601,7 +601,7 @@ const CommunityManagement: React.FC = () => {
                         {post.content}
                       </p>
                       
-                      <Link href={`/comunidade/post/${post.id}`} target="_blank">
+                      <Link href={`/comunidade?postId=${post.id}`} target="_blank">
                         <Button variant="outline" size="sm">
                           <Eye className="h-4 w-4 mr-1" />
                           Ver post
@@ -707,7 +707,7 @@ const CommunityManagement: React.FC = () => {
                           <span>{post.commentsCount} comentários</span>
                         </div>
                         
-                        <Link href={`/comunidade/post/${post.id}`} target="_blank">
+                        <Link href={`/comunidade?postId=${post.id}`} target="_blank">
                           <Button variant="outline" size="sm">
                             <Eye className="h-4 w-4 mr-1" />
                             Ver post
@@ -839,7 +839,7 @@ const CommunityManagement: React.FC = () => {
                           {comment.isHidden ? "Oculto" : "Visível"}
                         </Badge>
                         
-                        <Link href={`/comunidade/post/${post.id}`} target="_blank">
+                        <Link href={`/comunidade?postId=${post.id}`} target="_blank">
                           <Button variant="outline" size="sm">
                             <Eye className="h-4 w-4 mr-1" />
                             Ver post: {post.title}
