@@ -367,6 +367,7 @@ router.post("/api/admin/ferramentas", isAdmin, async (req: Request, res: Respons
         websiteUrl,
         isExterno: isExterno !== undefined ? isExterno : true,
         isNovo: isNovo !== undefined ? isNovo : false,
+        destaque: destaque !== undefined ? destaque : false,
         categoriaId,
         ordem: ordem || 0,
         ativo: true,
@@ -394,7 +395,6 @@ router.put("/api/admin/ferramentas/:id", isAdmin, async (req: Request, res: Resp
     const isExterno = req.body.externo === 'true'; 
     const isNovo = req.body.novo === 'true';
     const categoriaId = parseInt(req.body.categoriaId);
-    const destaque = req.body.destaque === 'true';
     const ordem = req.body.ordem ? parseInt(req.body.ordem) : 0;
     const ativo = true; // Por padrão, ferramentas atualizadas estão ativas
     
@@ -428,10 +428,11 @@ router.put("/api/admin/ferramentas/:id", isAdmin, async (req: Request, res: Resp
       .set({
         nome,
         descricao,
-        imageUrl,
+        imageUrl: imageUrl || ferramentaExistente.imageUrl, // Manter URL existente se não foi fornecida uma nova
         websiteUrl,
         isExterno: isExterno !== undefined ? isExterno : ferramentaExistente.isExterno,
         isNovo: isNovo !== undefined ? isNovo : ferramentaExistente.isNovo,
+        destaque: destaque !== undefined ? destaque : ferramentaExistente.destaque,
         categoriaId,
         ordem: ordem !== undefined ? ordem : ferramentaExistente.ordem,
         ativo: ativo !== undefined ? ativo : ferramentaExistente.ativo,
