@@ -182,6 +182,8 @@ router.get('/api/community/populares', async (req, res) => {
                 console.error(`Erro ao verificar relação de seguir para post ${row.id}:`, followError);
               }
             }
+            // Pré-formatar a data para evitar mudanças ao visualizar
+            const formattedDate = formatarDataCompleta(row.createdAt || new Date());
             
             formattedResults.push({
               post: {
@@ -196,6 +198,7 @@ router.get('/api/community/populares', async (req, res) => {
                 viewCount: (typeof row.viewCount === 'number' || typeof row.viewCount === 'string') 
                     ? Number(row.viewCount) : 0,
                 userId: row.userId ? Number(row.userId) : 0,
+                formattedDate: formattedDate, // Adicionar data pré-formatada
                 featuredUntil: row.featuredUntil,
                 isWeeklyFeatured: !!row.isWeeklyFeatured
               },
@@ -2687,6 +2690,8 @@ router.get('/api/community/posts/popular_DESATIVADO', async (req, res) => {
       if (result && result.rows && Array.isArray(result.rows)) {
         // Mapear cada resultado em um formato seguro
         for (const row of result.rows) {
+            // Pré-formatar a data para evitar mudanças ao visualizar
+            const formattedDate = formatarDataCompleta(row.createdAt || new Date());
           try {
             formattedResults.push({
               post: {
@@ -2701,6 +2706,7 @@ router.get('/api/community/posts/popular_DESATIVADO', async (req, res) => {
                 viewCount: (typeof row.viewCount === 'number' || typeof row.viewCount === 'string') 
                     ? Number(row.viewCount) : 0,
                 userId: row.userId ? Number(row.userId) : 0,
+                formattedDate: formattedDate, // Adicionar data pré-formatada
                 featuredUntil: row.featuredUntil,
                 isWeeklyFeatured: !!row.isWeeklyFeatured
               },
