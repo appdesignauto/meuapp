@@ -1,39 +1,37 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { PlusCircle, Edit, Trash2, Search, Loader2, ArrowUpDown } from 'lucide-react';
 import { 
-  Edit, 
-  Trash2, 
-  Plus, 
-  Loader2, 
-  Save, 
-  X, 
-  ArrowUp, 
-  ArrowDown,
-  FileSymlink 
-} from 'lucide-react';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger 
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Checkbox } from '@/components/ui/checkbox';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Switch } from '@/components/ui/switch';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-  DialogClose,
-} from '@/components/ui/dialog';
-import {
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
+import { FerramentaCategoria } from '@shared/schema';
+import { 
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -41,25 +39,16 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
+  AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 
-import { FerramentaCategoria } from '@shared/schema';
-import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
-
-// Schema para validação de formulário de categoria
-const categoriaSchemaSemId = z.object({
-  nome: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
-  descricao: z.string().optional().nullable(),
-  icone: z.string().optional().nullable(),
-  ordem: z.number().min(0, 'Ordem deve ser maior que zero'),
-  ativo: z.boolean().default(true),
-});
-
-const categoriaSchema = categoriaSchemaSemId.extend({
-  id: z.number().optional(),
+// Schema para validação do formulário
+const categoriaSchema = z.object({
+  nome: z.string().min(2, "Nome precisa ter pelo menos 2 caracteres"),
+  descricao: z.string().optional(),
+  icone: z.string().optional(),
+  ordem: z.number().int().min(0, "Ordem deve ser um número positivo"),
+  ativo: z.boolean().default(true)
 });
 
 type CategoriaFormValues = z.infer<typeof categoriaSchema>;
@@ -67,234 +56,422 @@ type CategoriaFormValues = z.infer<typeof categoriaSchema>;
 const GerenciarCategorias: React.FC = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [categoriaEmEdicao, setCategoriaEmEdicao] = useState<FerramentaCategoria | null>(null);
-  const [categoriaParaExcluir, setCategoriaParaExcluir] = useState<FerramentaCategoria | null>(null);
-  const [dialogoNovaAberto, setDialogoNovaAberto] = useState(false);
 
-  // Formulário para criar/editar categoria
-  const form = useForm<CategoriaFormValues>({
+  // Estado para busca de categorias
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Estado para ordenação
+  const [sortField, setSortField] = useState<'nome' | 'ordem'>('ordem');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  // Estados para controle de modais
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [categoriaToEdit, setCategoriaToEdit] = useState<FerramentaCategoria | null>(null);
+  const [categoriaToDelete, setCategoriaToDelete] = useState<FerramentaCategoria | null>(null);
+
+  // Buscar categorias
+  const { data: categorias, isLoading, error } = useQuery({
+    queryKey: ['/api/ferramentas/categorias'],
+    queryFn: async () => {
+      const response = await fetch('/api/ferramentas/categorias');
+      if (!response.ok) {
+        throw new Error('Erro ao buscar categorias');
+      }
+      return response.json() as Promise<FerramentaCategoria[]>;
+    }
+  });
+
+  // Filtrar categorias pelo termo de busca
+  const categoriasFiltradas = categorias?.filter(categoria => 
+    categoria.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (categoria.descricao && categoria.descricao.toLowerCase().includes(searchTerm.toLowerCase()))
+  ) || [];
+
+  // Ordenar categorias
+  const categoriasOrdenadas = [...categoriasFiltradas].sort((a, b) => {
+    const fieldA = sortField === 'nome' ? a.nome.toLowerCase() : a.ordem || 0;
+    const fieldB = sortField === 'nome' ? b.nome.toLowerCase() : b.ordem || 0;
+    
+    if (sortField === 'nome') {
+      return sortDirection === 'asc' 
+        ? String(fieldA).localeCompare(String(fieldB))
+        : String(fieldB).localeCompare(String(fieldA));
+    } else {
+      return sortDirection === 'asc' 
+        ? Number(fieldA) - Number(fieldB)
+        : Number(fieldB) - Number(fieldA);
+    }
+  });
+
+  // Toggle ordenação
+  const handleToggleSort = (field: 'nome' | 'ordem') => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  // Form para adicionar categoria
+  const addForm = useForm<CategoriaFormValues>({
     resolver: zodResolver(categoriaSchema),
     defaultValues: {
       nome: '',
       descricao: '',
       icone: '',
       ordem: 0,
-      ativo: true,
+      ativo: true
     }
   });
 
-  // Buscar todas as categorias
-  const { data: categorias = [], isLoading } = useQuery<FerramentaCategoria[]>({
-    queryKey: ['/api/ferramentas/categorias'],
-  });
-
-  // Criar nova categoria
-  const criarCategoriaMutation = useMutation({
-    mutationFn: async (dados: CategoriaFormValues) => {
-      const res = await apiRequest('POST', '/api/admin/ferramentas/categorias', dados);
-      return await res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/ferramentas/categorias'] });
-      toast({
-        title: 'Categoria criada',
-        description: 'A categoria foi criada com sucesso!',
-      });
-      setDialogoNovaAberto(false);
-      form.reset();
-    },
-    onError: (error: Error) => {
-      toast({
-        title: 'Erro ao criar categoria',
-        description: error.message,
-        variant: 'destructive',
-      });
-    },
-  });
-
-  // Atualizar categoria
-  const atualizarCategoriaMutation = useMutation({
-    mutationFn: async (dados: CategoriaFormValues) => {
-      const { id, ...restoDados } = dados;
-      const res = await apiRequest('PUT', `/api/admin/ferramentas/categorias/${id}`, restoDados);
-      return await res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/ferramentas/categorias'] });
-      toast({
-        title: 'Categoria atualizada',
-        description: 'A categoria foi atualizada com sucesso!',
-      });
-      setCategoriaEmEdicao(null);
-      form.reset();
-    },
-    onError: (error: Error) => {
-      toast({
-        title: 'Erro ao atualizar categoria',
-        description: error.message,
-        variant: 'destructive',
-      });
-    },
-  });
-
-  // Excluir categoria
-  const excluirCategoriaMutation = useMutation({
-    mutationFn: async (id: number) => {
-      await apiRequest('DELETE', `/api/admin/ferramentas/categorias/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/ferramentas/categorias'] });
-      toast({
-        title: 'Categoria excluída',
-        description: 'A categoria foi excluída com sucesso!',
-      });
-      setCategoriaParaExcluir(null);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: 'Erro ao excluir categoria',
-        description: error.message,
-        variant: 'destructive',
-      });
-    },
-  });
-
-  // Handlers
-  const handleEditarCategoria = (categoria: FerramentaCategoria) => {
-    form.reset({
-      id: categoria.id,
-      nome: categoria.nome,
-      descricao: categoria.descricao || '',
-      icone: categoria.icone || '',
-      ordem: categoria.ordem,
-      ativo: categoria.ativo,
-    });
-    setCategoriaEmEdicao(categoria);
-  };
-
-  const handleCriarCategoria = () => {
-    form.reset({
+  // Form para editar categoria
+  const editForm = useForm<CategoriaFormValues>({
+    resolver: zodResolver(categoriaSchema),
+    defaultValues: {
       nome: '',
       descricao: '',
       icone: '',
-      ordem: Math.max(0, ...categorias.map(c => c.ordem)) + 1,
-      ativo: true,
-    });
-    setDialogoNovaAberto(true);
+      ordem: 0,
+      ativo: true
+    }
+  });
+
+  // Mutation para adicionar categoria
+  const addCategoriaMutation = useMutation({
+    mutationFn: async (data: CategoriaFormValues) => {
+      const res = await apiRequest('POST', '/api/admin/ferramentas/categorias', data);
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || 'Erro ao criar categoria');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Categoria criada",
+        description: "A categoria foi criada com sucesso",
+      });
+      addForm.reset();
+      setIsAddDialogOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['/api/ferramentas/categorias'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Mutation para editar categoria
+  const editCategoriaMutation = useMutation({
+    mutationFn: async (data: CategoriaFormValues & { id: number }) => {
+      const { id, ...formData } = data;
+      const res = await apiRequest('PUT', `/api/admin/ferramentas/categorias/${id}`, formData);
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || 'Erro ao atualizar categoria');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Categoria atualizada",
+        description: "A categoria foi atualizada com sucesso",
+      });
+      editForm.reset();
+      setIsEditDialogOpen(false);
+      setCategoriaToEdit(null);
+      queryClient.invalidateQueries({ queryKey: ['/api/ferramentas/categorias'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Mutation para excluir categoria
+  const deleteCategoriaMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest('DELETE', `/api/admin/ferramentas/categorias/${id}`);
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Erro ao excluir categoria');
+      }
+      return true;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Categoria excluída",
+        description: "A categoria foi excluída com sucesso",
+      });
+      setIsDeleteDialogOpen(false);
+      setCategoriaToDelete(null);
+      queryClient.invalidateQueries({ queryKey: ['/api/ferramentas/categorias'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Handlers
+  const handleAddSubmit = (data: CategoriaFormValues) => {
+    addCategoriaMutation.mutate(data);
   };
 
-  const onSubmitNova = (dados: CategoriaFormValues) => {
-    criarCategoriaMutation.mutate(dados);
-  };
-
-  const onSubmitEditar = (dados: CategoriaFormValues) => {
-    atualizarCategoriaMutation.mutate(dados);
-  };
-
-  const handleExcluirCategoria = (categoria: FerramentaCategoria) => {
-    setCategoriaParaExcluir(categoria);
-  };
-
-  const confirmarExclusao = () => {
-    if (categoriaParaExcluir) {
-      excluirCategoriaMutation.mutate(categoriaParaExcluir.id);
+  const handleEditSubmit = (data: CategoriaFormValues) => {
+    if (categoriaToEdit) {
+      editCategoriaMutation.mutate({ ...data, id: categoriaToEdit.id });
     }
   };
 
+  const handleEdit = (categoria: FerramentaCategoria) => {
+    setCategoriaToEdit(categoria);
+    editForm.reset({
+      nome: categoria.nome,
+      descricao: categoria.descricao || '',
+      icone: categoria.icone || '',
+      ordem: categoria.ordem || 0,
+      ativo: categoria.ativo
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDelete = (categoria: FerramentaCategoria) => {
+    setCategoriaToDelete(categoria);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (categoriaToDelete) {
+      deleteCategoriaMutation.mutate(categoriaToDelete.id);
+    }
+  };
+
+  if (error) {
+    return (
+      <div className="p-4 text-red-500">
+        Erro ao carregar categorias: {error instanceof Error ? error.message : 'Erro desconhecido'}
+      </div>
+    );
+  }
+
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Categorias</h2>
-        <Button onClick={handleCriarCategoria}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nova Categoria
-        </Button>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="relative w-full sm:w-auto">
+          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder="Buscar categorias..."
+            className="pl-8 w-full"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Nova Categoria
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Adicionar Nova Categoria</DialogTitle>
+            </DialogHeader>
+            
+            <Form {...addForm}>
+              <form onSubmit={addForm.handleSubmit(handleAddSubmit)} className="space-y-4">
+                <FormField
+                  control={addForm.control}
+                  name="nome"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Nome da categoria" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={addForm.control}
+                  name="descricao"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Descrição</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Descrição da categoria" 
+                          className="resize-none" 
+                          {...field} 
+                          value={field.value || ''}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={addForm.control}
+                  name="icone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Ícone</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Nome do ícone (Lucide React)" 
+                          {...field} 
+                          value={field.value || ''}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={addForm.control}
+                  name="ordem"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Ordem</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          min="0"
+                          {...field}
+                          onChange={(e) => field.onChange(parseInt(e.target.value))}
+                          value={field.value?.toString() || '0'}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={addForm.control}
+                  name="ativo"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                      <div className="space-y-0.5">
+                        <FormLabel>Ativo</FormLabel>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit" disabled={addCategoriaMutation.isPending}>
+                    {addCategoriaMutation.isPending && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Adicionar
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center my-12">
+        <div className="flex justify-center items-center py-8">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      ) : categorias.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center p-12">
-            <p className="text-gray-500 mb-4">Nenhuma categoria cadastrada</p>
-            <Button onClick={handleCriarCategoria}>
-              <Plus className="mr-2 h-4 w-4" />
-              Criar Primeira Categoria
-            </Button>
-          </CardContent>
-        </Card>
+      ) : categoriasOrdenadas.length === 0 ? (
+        <div className="text-center py-8">
+          <p className="text-gray-500">
+            {searchTerm ? 'Nenhuma categoria encontrada com esse termo.' : 'Nenhuma categoria cadastrada.'}
+          </p>
+        </div>
       ) : (
-        <div className="bg-white rounded-md shadow">
+        <div className="border rounded-md">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Slug</TableHead>
-                <TableHead>Ordem</TableHead>
+                <TableHead className="w-12">ID</TableHead>
+                <TableHead className="cursor-pointer" onClick={() => handleToggleSort('nome')}>
+                  <div className="flex items-center">
+                    Nome
+                    {sortField === 'nome' && (
+                      <ArrowUpDown className={`ml-1 h-4 w-4 ${sortDirection === 'desc' ? 'transform rotate-180' : ''}`} />
+                    )}
+                  </div>
+                </TableHead>
+                <TableHead>Descrição</TableHead>
+                <TableHead>Ícone</TableHead>
+                <TableHead className="cursor-pointer" onClick={() => handleToggleSort('ordem')}>
+                  <div className="flex items-center">
+                    Ordem
+                    {sortField === 'ordem' && (
+                      <ArrowUpDown className={`ml-1 h-4 w-4 ${sortDirection === 'desc' ? 'transform rotate-180' : ''}`} />
+                    )}
+                  </div>
+                </TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {categorias.map((categoria) => (
+              {categoriasOrdenadas.map((categoria) => (
                 <TableRow key={categoria.id}>
+                  <TableCell>{categoria.id}</TableCell>
                   <TableCell className="font-medium">{categoria.nome}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="font-mono text-xs">
-                      {categoria.slug}
-                    </Badge>
-                  </TableCell>
+                  <TableCell className="max-w-xs truncate">{categoria.descricao || '-'}</TableCell>
+                  <TableCell>{categoria.icone || '-'}</TableCell>
                   <TableCell>{categoria.ordem}</TableCell>
                   <TableCell>
-                    {categoria.ativo ? (
-                      <Badge variant="default">Ativo</Badge>
-                    ) : (
-                      <Badge variant="secondary">Inativo</Badge>
-                    )}
+                    <div className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                      categoria.ativo ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {categoria.ativo ? 'Ativo' : 'Inativo'}
+                    </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEditarCategoria(categoria)}
-                      title="Editar"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleExcluirCategoria(categoria)}
-                          title="Excluir"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Excluir categoria</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Tem certeza que deseja excluir a categoria "{categoriaParaExcluir?.nome}"?
-                            Esta ação não pode ser desfeita.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={confirmarExclusao}>
-                            {excluirCategoriaMutation.isPending ? (
-                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                            ) : (
-                              <Trash2 className="h-4 w-4 mr-2" />
-                            )}
-                            Excluir
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                    <div className="flex justify-end space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEdit(categoria)}
+                      >
+                        <Edit className="h-4 w-4" />
+                        <span className="sr-only">Editar</span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(categoria)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Excluir</span>
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -303,20 +480,21 @@ const GerenciarCategorias: React.FC = () => {
         </div>
       )}
 
-      {/* Dialog para criar nova categoria */}
-      <Dialog open={dialogoNovaAberto} onOpenChange={setDialogoNovaAberto}>
-        <DialogContent className="sm:max-w-md">
+      {/* Modal de Edição */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>Nova Categoria</DialogTitle>
+            <DialogTitle>Editar Categoria</DialogTitle>
           </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmitNova)} className="space-y-4">
+          
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(handleEditSubmit)} className="space-y-4">
               <FormField
-                control={form.control}
+                control={editForm.control}
                 name="nome"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nome*</FormLabel>
+                    <FormLabel>Nome</FormLabel>
                     <FormControl>
                       <Input placeholder="Nome da categoria" {...field} />
                     </FormControl>
@@ -324,32 +502,17 @@ const GerenciarCategorias: React.FC = () => {
                   </FormItem>
                 )}
               />
+              
               <FormField
-                control={form.control}
+                control={editForm.control}
                 name="descricao"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Descrição</FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder="Descrição da categoria (opcional)"
-                        {...field}
-                        value={field.value || ''}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="icone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Ícone</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="URL do ícone (opcional)" 
+                      <Textarea 
+                        placeholder="Descrição da categoria" 
+                        className="resize-none" 
                         {...field} 
                         value={field.value || ''}
                       />
@@ -358,27 +521,47 @@ const GerenciarCategorias: React.FC = () => {
                   </FormItem>
                 )}
               />
+              
               <FormField
-                control={form.control}
-                name="ordem"
+                control={editForm.control}
+                name="icone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Ordem</FormLabel>
+                    <FormLabel>Ícone</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        min="0"
-                        {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value))}
-                        value={field.value || 0}
+                      <Input 
+                        placeholder="Nome do ícone (Lucide React)" 
+                        {...field} 
+                        value={field.value || ''}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+              
               <FormField
-                control={form.control}
+                control={editForm.control}
+                name="ordem"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ordem</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        min="0"
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value))}
+                        value={field.value?.toString() || '0'}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={editForm.control}
                 name="ativo"
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
@@ -394,17 +577,16 @@ const GerenciarCategorias: React.FC = () => {
                   </FormItem>
                 )}
               />
+              
               <DialogFooter>
-                <DialogClose asChild>
-                  <Button type="button" variant="outline">
-                    Cancelar
-                  </Button>
-                </DialogClose>
-                <Button type="submit" disabled={criarCategoriaMutation.isPending}>
-                  {criarCategoriaMutation.isPending && (
+                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={editCategoriaMutation.isPending}>
+                  {editCategoriaMutation.isPending && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  Criar Categoria
+                  Salvar
                 </Button>
               </DialogFooter>
             </form>
@@ -412,114 +594,31 @@ const GerenciarCategorias: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog para editar categoria */}
-      <Dialog open={categoriaEmEdicao !== null} onOpenChange={(open) => !open && setCategoriaEmEdicao(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Editar Categoria</DialogTitle>
-          </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmitEditar)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="nome"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nome*</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nome da categoria" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="descricao"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Descrição</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Descrição da categoria (opcional)"
-                        {...field}
-                        value={field.value || ''}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="icone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Ícone</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="URL do ícone (opcional)" 
-                        {...field} 
-                        value={field.value || ''}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="ordem"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Ordem</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min="0"
-                        {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value))}
-                        value={field.value || 0}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="ativo"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                    <div className="space-y-0.5">
-                      <FormLabel>Ativo</FormLabel>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button type="button" variant="outline">
-                    Cancelar
-                  </Button>
-                </DialogClose>
-                <Button type="submit" disabled={atualizarCategoriaMutation.isPending}>
-                  {atualizarCategoriaMutation.isPending && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Salvar Alterações
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+      {/* Confirmação de exclusão */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Categoria</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir a categoria &quot;{categoriaToDelete?.nome}&quot;?
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={deleteCategoriaMutation.isPending}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {deleteCategoriaMutation.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
