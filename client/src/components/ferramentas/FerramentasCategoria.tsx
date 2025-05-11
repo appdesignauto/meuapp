@@ -93,7 +93,10 @@ const FerramentasCategoria: React.FC<FerramentasCategoriaProps> = ({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onCategoriaClick(categoria.slug)}
+            onClick={() => {
+              console.log('Ver todos em categoria:', categoria.slug);
+              onCategoriaClick(categoria.slug);
+            }}
             className="flex items-center gap-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
           >
             Ver todos

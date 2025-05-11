@@ -73,7 +73,9 @@ const CategoriasCarousel: React.FC<CategoriasCarouselProps> = ({
   };
 
   const handleCategoriaClick = (slug: string) => {
-    onCategoriaChange(categoriaSelecionada === slug ? null : slug);
+    console.log('Clicado em categoria:', slug);
+    console.log('Categoria atual:', categoriaSelecionada);
+    onCategoriaChange(slug);
   };
 
   if (!categorias || categorias.length === 0) {
@@ -101,7 +103,10 @@ const CategoriasCarousel: React.FC<CategoriasCarouselProps> = ({
         <Button
           variant={categoriaSelecionada === null ? "default" : "outline"}
           className="rounded-full whitespace-nowrap h-9 px-4"
-          onClick={() => onCategoriaChange(null)}
+          onClick={() => {
+            console.log('Clicado em Todas');
+            onCategoriaChange(null);
+          }}
         >
           Todas
         </Button>
