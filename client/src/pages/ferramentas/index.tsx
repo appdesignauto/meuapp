@@ -78,33 +78,46 @@ const FerramentasPage: React.FC = () => {
       
       if (params.categoria) {
         url.searchParams.append('categoria', params.categoria);
+        console.log('Filtrando por categoria:', params.categoria);
       }
       
       if (params.busca) {
         url.searchParams.append('busca', params.busca);
       }
       
+      console.log('Fetching URL:', url.toString());
       const response = await fetch(url.toString());
       if (!response.ok) {
         throw new Error('Erro ao buscar ferramentas');
       }
       return response.json();
     },
+    // Força recarregar ao mudar a categoria ou termo de busca
+    refetchOnWindowFocus: false,
   });
 
   // Função para mudar a categoria selecionada
   const handleCategoriaChange = (slug: string | null) => {
+    console.log('Categoria selecionada:', slug);
+    
     if (categoriaSelecionada === slug) {
       // Se clicar na mesma categoria, remove o filtro
+      console.log('Removendo filtro de categoria');
       setCategoriaSelecionada(null);
       setLocation('/ferramentas');
     } else {
+      console.log('Mudando para categoria:', slug);
       setCategoriaSelecionada(slug);
       if (slug) {
         setLocation(`/ferramentas/categoria/${slug}`);
       } else {
         setLocation('/ferramentas');
       }
+    }
+    
+    // Resetar busca ao mudar categoria
+    if (searchTerm) {
+      setSearchTerm('');
     }
   };
 
