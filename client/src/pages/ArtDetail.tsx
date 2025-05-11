@@ -40,6 +40,8 @@ import { apiRequest, queryClient } from '@/lib/queryClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, formatDistance } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import SEO from '@/components/seo';
+import { formatSeoTitle, generateMetaDescription, generateArtSchemaMarkup, generateCanonicalUrl } from '@/lib/utils/seo';
 
 // Interfaces para tipagem de dados
 interface RecentArt {
@@ -597,8 +599,36 @@ export default function ArtDetail() {
     }).format(date);
   };
 
+  // Preparar dados para SEO
+  const artCategory = categoryData?.name || '';
+  const seoTitle = formatSeoTitle(art.title, artCategory);
+  const seoDescription = generateMetaDescription(art.title, artCategory, art.format, art.fileType);
+  
+  // URL canônica baseada na categoria e no slug da arte
+  const categorySlug = categoryData?.slug || '';
+  const artSlug = art.slug || '';
+  const canonicalUrl = artSlug ? generateCanonicalUrl(categorySlug, artSlug) : window.location.href;
+  
+  // Gerar markup de dados estruturados JSON-LD
+  const schemaMarkup = generateArtSchemaMarkup({
+    ...art,
+    category: categoryData,
+    description: seoDescription,
+    createdAt: art.createdAt,
+    designer: designerData
+  }, canonicalUrl);
+
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Componente SEO para melhorar indexação e compartilhamento */}
+      <SEO
+        title={seoTitle}
+        description={seoDescription}
+        canonical={canonicalUrl}
+        image={art.imageUrl}
+        type="article"
+        schemaMarkup={schemaMarkup}
+      />
       <div className="flex items-center mb-6">
         <motion.div
           whileHover={{ scale: 1.05 }}
