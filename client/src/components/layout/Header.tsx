@@ -364,7 +364,7 @@ const Header = () => {
                 variant="ghost" 
                 size="icon"
                 className="hidden md:flex h-9 w-9 items-center justify-center rounded-full text-neutral-600 hover:text-blue-600 hover:bg-blue-50"
-                onClick={() => setLocation('/arts')}
+                onClick={() => setLocation('/artes')}
               >
                 <Search className="h-4 w-4" />
               </Button>

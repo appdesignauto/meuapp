@@ -81,7 +81,7 @@ const MobileMenu = ({ isOpen, onClose, navLinks, userRole }: MobileMenuProps) =>
                 (link.path === '/videoaulas' && isVideoaulasPage);
               
               // Ocultar link de Categorias quando na página de videoaulas
-              if (isVideoaulasPage && link.path === '/categories') {
+              if (isVideoaulasPage && link.path === '/categorias') {
                 return null;
               }
               

@@ -136,10 +136,10 @@ function AppRoutes() {
         }}
       </Route>
       <Route path="/collections" component={Collections} />
-      <Route path="/categories" component={Categories} />
-      <Route path="/categories/:slug" component={CategoryPage} />
-      <Route path="/arts" component={ArtsPage} />
-      <Route path="/arts/:id" component={ArtDetail} />
+      <Route path="/categorias" component={Categories} />
+      <Route path="/categorias/:slug" component={CategoryPage} />
+      <Route path="/artes" component={ArtsPage} />
+      <Route path="/artes/:id" component={ArtDetail} />
       <Route path="/designers" component={Designers} />
       <Route path="/designers/:username" component={DesignerProfile} />
       <Route path="/planos" component={PlanosPage} />
