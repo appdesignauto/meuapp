@@ -1256,16 +1256,8 @@ export class DatabaseStorage implements IStorage {
   // SEO methods
   async getAllArtsForSitemap(): Promise<Art[]> {
     try {
-      const result = await db.select({
-        id: arts.id,
-        title: arts.title,
-        slug: arts.slug,
-        imageUrl: arts.imageUrl,
-        categoryId: arts.categoryId,
-        createdAt: arts.createdAt,
-        updatedAt: arts.updatedAt,
-        isVisible: arts.isVisible
-      })
+      // Selecionamos todos os campos necessários para o sitemap
+      const result = await db.select()
       .from(arts)
       .where(eq(arts.isVisible, true))
       .orderBy(desc(arts.createdAt));
