@@ -161,7 +161,7 @@ export default function SimpleFormMultiDialog({
       console.log(`Verificando grupo para arte ${artId} usando endpoint check-group`);
       
       // Tentar buscar informações do grupo para esta arte, mesmo se o groupId não estiver no objeto
-      apiRequest('GET', `/api/admin/arts/${artId}/check-group`)
+      apiRequest('GET', `/api/admin/artes/${artId}/check-group`)
         .then(res => {
           console.log(`Resposta da verificação de grupo recebida, status: ${res.status}`);
           return res.json();
@@ -174,7 +174,7 @@ export default function SimpleFormMultiDialog({
             // Agora temos o groupId confirmado, buscar todas as artes do grupo
             console.log(`Buscando artes do grupo: ${groupId}`);
             
-            return apiRequest('GET', `/api/admin/arts/group/${groupId}`)
+            return apiRequest('GET', `/api/admin/artes/group/${groupId}`)
               .then(res => {
                 console.log(`Resposta recebida, status: ${res.status}`);
                 return res.json();
