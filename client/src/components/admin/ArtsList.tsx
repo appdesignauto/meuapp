@@ -64,7 +64,7 @@ const ArtsList = () => {
   // Delete art mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest('DELETE', `/api/admin/arts/${id}`);
+      await apiRequest('DELETE', `/api/admin/artes/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
@@ -86,7 +86,7 @@ const ArtsList = () => {
   // Toggle premium status mutation
   const togglePremiumMutation = useMutation({
     mutationFn: async ({ id, isPremium }: { id: number; isPremium: boolean }) => {
-      await apiRequest('PUT', `/api/admin/arts/${id}`, { isPremium });
+      await apiRequest('PUT', `/api/admin/artes/${id}`, { isPremium });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
@@ -108,7 +108,7 @@ const ArtsList = () => {
   // Toggle visibility status mutation
   const toggleVisibilityMutation = useMutation({
     mutationFn: async ({ id, isVisible }: { id: number; isVisible: boolean }) => {
-      await apiRequest('PUT', `/api/admin/arts/${id}/visibility`, { isVisible });
+      await apiRequest('PUT', `/api/admin/artes/${id}/visibility`, { isVisible });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
