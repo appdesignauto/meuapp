@@ -60,6 +60,11 @@ import { db } from "./db";
 import { eq, like, desc, and, or, isNull, sql } from "drizzle-orm";
 
 export interface IStorage {
+  // Métodos SEO
+  getAllArtsForSitemap(): Promise<Art[]>;
+  getArtBySlug(slug: string): Promise<Art | undefined>;
+  getArtsByCategorySlug(categorySlug: string, page?: number, limit?: number): Promise<{ arts: Art[]; totalCount: number }>;
+  
   // User methods
   getUser(id: number): Promise<User | undefined>;
   getUserById(id: number): Promise<User | undefined>;
@@ -1247,6 +1252,81 @@ export class MemStorage implements IStorage {
 
 export class DatabaseStorage implements IStorage {
   private users = schema.users;
+  
+  // SEO methods
+  async getAllArtsForSitemap(): Promise<Art[]> {
+    try {
+      const result = await db.select({
+        id: arts.id,
+        title: arts.title,
+        slug: arts.slug,
+        imageUrl: arts.imageUrl,
+        categoryId: arts.categoryId,
+        createdAt: arts.createdAt,
+        updatedAt: arts.updatedAt,
+        isVisible: arts.isVisible
+      })
+      .from(arts)
+      .where(eq(arts.isVisible, true))
+      .orderBy(desc(arts.createdAt));
+
+      return result;
+    } catch (error) {
+      console.error("Erro ao buscar artes para sitemap:", error);
+      return [];
+    }
+  }
+
+  async getArtBySlug(slug: string): Promise<Art | undefined> {
+    try {
+      const [result] = await db.select().from(arts).where(eq(arts.slug, slug));
+      return result;
+    } catch (error) {
+      console.error("Erro ao buscar arte por slug:", error);
+      return undefined;
+    }
+  }
+
+  async getArtsByCategorySlug(categorySlug: string, page: number = 1, limit: number = 12): Promise<{ arts: Art[]; totalCount: number }> {
+    try {
+      // Primeiro, encontrar a categoria pelo slug
+      const [category] = await db.select().from(categories).where(eq(categories.slug, categorySlug));
+      
+      if (!category) {
+        return { arts: [], totalCount: 0 };
+      }
+      
+      // Calcular o offset com base na página
+      const offset = (page - 1) * limit;
+      
+      // Buscar artes desta categoria
+      const result = await db.select().from(arts)
+        .where(and(
+          eq(arts.categoryId, category.id),
+          eq(arts.isVisible, true)
+        ))
+        .orderBy(desc(arts.createdAt))
+        .limit(limit)
+        .offset(offset);
+      
+      // Contar o total de artes nesta categoria para paginação
+      const [{ count: totalCount }] = await db
+        .select({ count: count() })
+        .from(arts)
+        .where(and(
+          eq(arts.categoryId, category.id),
+          eq(arts.isVisible, true)
+        ));
+      
+      return { 
+        arts: result,
+        totalCount: Number(totalCount) 
+      };
+    } catch (error) {
+      console.error("Erro ao buscar artes por categoria:", error);
+      return { arts: [], totalCount: 0 };
+    }
+  }
   
   // Email verification methods
   async updateUserEmailConfirmation(userId: number, confirmed: boolean): Promise<boolean> {

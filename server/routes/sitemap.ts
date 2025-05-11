@@ -2,7 +2,7 @@ import express from 'express';
 import { storage } from '../storage';
 import slugify from 'slugify';
 import { db } from '../db';
-import { categorias } from '@shared/schema';
+import { categories } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 
 const router = express.Router();
@@ -55,10 +55,10 @@ router.get('/sitemap.xml', async (req, res) => {
     });
     
     // Buscar todas as categorias
-    const categories = await db.select().from(categorias);
+    const categoriesList = await db.select().from(categories);
     
     // Adicionar páginas de categorias
-    categories.forEach(category => {
+    categoriesList.forEach(category => {
       const categorySlug = category.slug || createSlug(category.name);
       
       xml += `  <url>\n`;
