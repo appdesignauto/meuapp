@@ -63,14 +63,14 @@ const SuportePage = () => {
             </p>
           </div>
           
-          <Tabs defaultValue="canais" className="mb-12">
-            <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 mb-8 gap-1 relative z-20">
-              <TabsTrigger value="canais">Canais de Atendimento</TabsTrigger>
-              <TabsTrigger value="faq">Perguntas Frequentes</TabsTrigger>
-              <TabsTrigger value="contato">Formulário de Contato</TabsTrigger>
+          <Tabs defaultValue="canais" className="mb-6 sm:mb-12">
+            <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 gap-1 mb-4 sm:mb-6 relative z-20">
+              <TabsTrigger value="canais" className="text-sm py-2 px-3 h-auto">Canais de Atendimento</TabsTrigger>
+              <TabsTrigger value="faq" className="text-sm py-2 px-3 h-auto">Perguntas Frequentes</TabsTrigger>
+              <TabsTrigger value="contato" className="text-sm py-2 px-3 h-auto">Formulário de Contato</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="canais" className="mt-10 pt-2">
+            <TabsContent value="canais" className="mt-2 sm:mt-4">
               <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 <Card className="border-blue-100 hover:shadow-md transition-shadow">
                   <CardHeader className="pb-2 sm:pb-3 space-y-2">
@@ -153,16 +153,16 @@ const SuportePage = () => {
               </div>
             </TabsContent>
             
-            <TabsContent value="faq" className="mt-10 pt-2">
-              <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Perguntas Frequentes</CardTitle>
-                    <CardDescription>
+            <TabsContent value="faq" className="mt-2 sm:mt-4">
+              <div className="space-y-4 sm:space-y-6">
+                <Card className="p-3 sm:p-6">
+                  <CardHeader className="px-0 pt-0 pb-2 sm:pb-4">
+                    <CardTitle className="text-lg sm:text-xl">Perguntas Frequentes</CardTitle>
+                    <CardDescription className="text-xs sm:text-sm">
                       Respostas para as dúvidas mais comuns dos nossos usuários
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4 sm:space-y-6">
+                  <CardContent className="px-0 pt-0 space-y-4 sm:space-y-6">
                     <div className="space-y-2">
                       <div className="flex items-start gap-2 sm:gap-3">
                         <CircleHelp className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 flex-shrink-0 mt-0.5" />
@@ -222,15 +222,15 @@ const SuportePage = () => {
               </div>
             </TabsContent>
             
-            <TabsContent value="contato" className="mt-10 pt-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Formulário de Contato</CardTitle>
-                  <CardDescription>
+            <TabsContent value="contato" className="mt-2 sm:mt-4">
+              <Card className="p-3 sm:p-6">
+                <CardHeader className="px-0 pt-0 pb-2 sm:pb-4">
+                  <CardTitle className="text-lg sm:text-xl">Formulário de Contato</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
                     Preencha o formulário abaixo e entraremos em contato o mais breve possível
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-0 pt-0">
                   <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <div className="space-y-1 sm:space-y-2">
