@@ -119,7 +119,7 @@ const FerramentasCategoria: React.FC<FerramentasCategoriaProps> = ({
         <div className="relative px-5">
           <div 
             ref={scrollContainerRef}
-            className="flex space-x-5 overflow-x-auto pb-3 scrollbar-hide"
+            className="flex space-x-5 overflow-x-auto pb-3 hide-scrollbar"
             onScroll={updateArrowVisibility}
           >
             {ferramentas.map((ferramenta) => (
