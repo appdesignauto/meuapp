@@ -146,6 +146,23 @@ function AppRoutes() {
       <Route path="/videoaulas" component={VideoaulasPage} />
       <Route path="/ferramentas" component={FerramentasPage} />
       <Route path="/ferramentas/categoria/:slug" component={FerramentasPage} />
+      <Route path="/suporte">
+        {() => {
+          const SuportePage = lazy(() => import("@/pages/suporte"));
+          return (
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+              <SuportePage />
+            </Suspense>
+          );
+        }}
+      </Route>
+      {/* Rota de redirecionamento para manter compatibilidade */}
+      <Route path="/support">
+        {() => {
+          window.location.href = "/suporte";
+          return null;
+        }}
+      </Route>
       <Route path="/videoaulas/:id">
         {() => {
           const VideoLessonPage = lazy(() => import("@/pages/videoaulas/[id]"));

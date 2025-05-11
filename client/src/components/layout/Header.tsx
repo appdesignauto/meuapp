@@ -324,7 +324,7 @@ const Header = () => {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/support" className="flex items-center cursor-pointer">
+                    <Link href="/suporte" className="flex items-center cursor-pointer">
                       <LifeBuoy className="mr-2 h-4 w-4 text-blue-500" />
                       <span>Suporte</span>
                     </Link>

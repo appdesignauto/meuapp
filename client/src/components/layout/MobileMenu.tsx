@@ -133,7 +133,7 @@ const MobileMenu = ({ isOpen, onClose, navLinks, userRole }: MobileMenuProps) =>
               </Link>
               
               <Link
-                href="/support"
+                href="/suporte"
                 className="flex items-center rounded-lg text-neutral-700 hover:bg-gray-50 hover:text-blue-600 py-3 px-4 transition-colors"
                 onClick={onClose}
               >
