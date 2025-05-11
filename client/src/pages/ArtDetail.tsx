@@ -648,7 +648,7 @@ export default function ArtDetail() {
         modifiedAt={art.updatedAt}
       />
       
-      {/* Breadcrumbs para navegação e SEO */}
+      {/* Breadcrumbs invisíveis apenas para SEO */}
       <Breadcrumbs
         items={[
           { 
@@ -665,7 +665,7 @@ export default function ArtDetail() {
             isCurrentPage: true
           }
         ]}
-        className="mb-4"
+        className="hidden" // Torna os breadcrumbs invisíveis mas mantém o Schema.org para SEO
       />
       
       <div className="flex items-center mb-6">

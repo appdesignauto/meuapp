@@ -67,44 +67,49 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
     return schema;
   };
 
+  // Verifica se os breadcrumbs devem ficar visíveis
+  const isVisible = !className?.includes('hidden');
+
   return (
     <>
-      {/* Dados estruturados JSON-LD para SEO */}
+      {/* Dados estruturados JSON-LD para SEO - sempre incluídos mesmo se os breadcrumbs estiverem ocultos */}
       <Helmet>
         <script type="application/ld+json">
           {JSON.stringify(generateBreadcrumbSchema())}
         </script>
       </Helmet>
 
-      {/* Componente visível de breadcrumbs */}
-      <nav aria-label="Breadcrumb" className={`flex items-center text-sm py-2 ${className}`}>
-        <ol className="flex items-center flex-wrap">
-          {breadcrumbItems.map((item, idx) => (
-            <li key={idx} className="flex items-center">
-              {idx > 0 && (
-                <ChevronRight className="mx-2 h-4 w-4 text-gray-400" />
-              )}
-              
-              {idx === 0 && (
-                <Home className="mr-1 h-4 w-4" />
-              )}
-              
-              {item.isCurrentPage ? (
-                <span className="font-medium text-primary" aria-current="page">
-                  {item.label}
-                </span>
-              ) : (
-                <Link 
-                  href={item.url}
-                  className="text-gray-600 hover:text-primary hover:underline transition-colors"
-                >
-                  {item.label}
-                </Link>
-              )}
-            </li>
-          ))}
-        </ol>
-      </nav>
+      {/* Componente visível de breadcrumbs - renderizado apenas se não tiver a classe 'hidden' */}
+      {isVisible && (
+        <nav aria-label="Breadcrumb" className={`flex items-center text-sm py-2 ${className}`}>
+          <ol className="flex items-center flex-wrap">
+            {breadcrumbItems.map((item, idx) => (
+              <li key={idx} className="flex items-center">
+                {idx > 0 && (
+                  <ChevronRight className="mx-2 h-4 w-4 text-gray-400" />
+                )}
+                
+                {idx === 0 && (
+                  <Home className="mr-1 h-4 w-4" />
+                )}
+                
+                {item.isCurrentPage ? (
+                  <span className="font-medium text-primary" aria-current="page">
+                    {item.label}
+                  </span>
+                ) : (
+                  <Link 
+                    href={item.url}
+                    className="text-gray-600 hover:text-primary hover:underline transition-colors"
+                  >
+                    {item.label}
+                  </Link>
+                )}
+              </li>
+            ))}
+          </ol>
+        </nav>
+      )}
     </>
   );
 };
