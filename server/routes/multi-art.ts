@@ -12,7 +12,7 @@ import { eq, and, sql } from 'drizzle-orm';
 const router = Router();
 
 // Rota para criação de artes em múltiplos formatos
-router.post('/api/admin/arts/multi', isAuthenticated, async (req: Request, res: Response) => {
+router.post('/api/admin/artes/multi', isAuthenticated, async (req: Request, res: Response) => {
   try {
     // Verificar se o usuário é admin ou designer_adm
     const userRole = req.user?.nivelacesso;
@@ -122,7 +122,7 @@ router.post('/api/admin/arts/multi', isAuthenticated, async (req: Request, res: 
 });
 
 // Rota para buscar artes por ID de grupo (para todos os usuários)
-router.get('/api/arts/group/:groupId', async (req: Request, res: Response) => {
+router.get('/api/artes/group/:groupId', async (req: Request, res: Response) => {
   try {
     const { groupId } = req.params;
     
@@ -170,7 +170,7 @@ router.get('/api/arts/group/:groupId', async (req: Request, res: Response) => {
 });
 
 // Rota para verificar o groupId de uma arte específica
-router.get('/api/admin/arts/:id/check-group', isAuthenticated, async (req: Request, res: Response) => {
+router.get('/api/admin/artes/:id/check-group', isAuthenticated, async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id);
     console.log(`Verificando groupId para arte ${id}`);
@@ -203,7 +203,7 @@ router.get('/api/admin/arts/:id/check-group', isAuthenticated, async (req: Reque
 });
 
 // Rota administrativa para buscar artes por ID de grupo (somente admin)
-router.get('/api/admin/arts/group/:groupId', isAuthenticated, async (req: Request, res: Response) => {
+router.get('/api/admin/artes/group/:groupId', isAuthenticated, async (req: Request, res: Response) => {
   try {
     // Verificar se o usuário é admin ou designer autorizado
     const userRole = req.user?.nivelacesso;
@@ -246,7 +246,7 @@ router.get('/api/admin/arts/group/:groupId', isAuthenticated, async (req: Reques
 });
 
 // Nova rota para atualizar um grupo de artes (PUT)
-router.put('/api/admin/arts/group/:groupId', isAuthenticated, async (req: Request, res: Response) => {
+router.put('/api/admin/artes/group/:groupId', isAuthenticated, async (req: Request, res: Response) => {
   try {
     // Verificar se o usuário é admin ou designer autorizado
     const userRole = req.user?.nivelacesso;
