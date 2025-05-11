@@ -301,7 +301,7 @@ const Categories = () => {
               const imagePaths = getCategoryImagePaths(category);
               
               return (
-                <Link key={category.id} href={`/categories/${category.slug}`}>
+                <Link key={category.id} href={`/categorias/${category.slug}`}>
                   <div className="group relative bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-500 cursor-pointer h-full transform hover:-translate-y-1">
                     {/* Componente de categoria colorido */}
                     {(() => {

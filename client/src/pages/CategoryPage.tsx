@@ -131,10 +131,10 @@ export default function CategoryPage() {
     isLoading: categoryLoading,
     error: categoryError
   } = useQuery({
-    queryKey: ['/api/categories/slug', slug],
+    queryKey: ['/api/categorias/slug', slug],
     queryFn: async () => {
       console.log("Buscando categoria com slug:", slug);
-      const res = await fetch(`/api/categories/slug/${slug}`);
+      const res = await fetch(`/api/categorias/slug/${slug}`);
       if (!res.ok) {
         console.error("Erro ao carregar categoria:", res.status, res.statusText);
         

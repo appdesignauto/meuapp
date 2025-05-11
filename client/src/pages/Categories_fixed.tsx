@@ -296,7 +296,7 @@ const Categories = () => {
               const colorScheme = getCategoryColorScheme(category.slug);
               
               return (
-                <Link key={category.id} href={`/categories/${category.slug}`}>
+                <Link key={category.id} href={`/categorias/${category.slug}`}>
                   <div className="group relative bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-500 cursor-pointer h-full transform hover:-translate-y-1">
                     {/* Faixa de cor superior */}
                     <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${colorScheme.gradient} transform origin-left transition-all duration-500 group-hover:h-2`}></div>
