@@ -1,0 +1,43 @@
+/*
+Objetivo: Aplicar SEO técnico e estratégico para que cada arte seja indexada pelo Google, semelhante a plataformas como Freepik e Pinterest, sem quebrar funcionalidades atuais do projeto.
+
+Instruções:
+
+1. Para cada arte do banco de dados:
+   - Crie uma rota dinâmica acessível via URL do tipo: /artes/[slug]
+   - Exemplo: /artes/convite-batismo-azul-simples
+
+2. Renderize uma página HTML estática para cada arte contendo:
+   - <title> com o nome da arte + descrição complementar
+   - <meta name="description"> com um resumo curto e clicável
+   - <h1> com o nome da arte
+   - Parágrafo <p> com uma descrição rica, com palavras-chave relacionadas à categoria, cores, uso e público
+
+3. Adicione dados estruturados JSON-LD no <head>:
+   - Use schema.org/CreativeWork ou schema.org/Product
+   - Incluir nome, descrição, imagem, data e link da arte
+
+4. Inclua link canônico e URLs amigáveis com slug
+   - Utilize função de slugify para transformar nomes das artes em slugs
+   - Exemplo: "Convite Batismo Azul" → "convite-batismo-azul"
+
+5. Atualize o sitemap.xml automaticamente com as URLs das artes
+   - Toda nova arte criada deve ser adicionada ao sitemap
+   - O sitemap deve ser acessível em /sitemap.xml
+
+6. Verifique se o robots.txt está configurado corretamente:
+   - Allow: /artes/
+   - Disallow páginas administrativas ou privadas
+
+7. Otimize imagens com WebP e inclua atributo alt com descrição da arte
+   - Exemplo: <img src="arte.webp" alt="Convite de Batismo Azul Simples">
+
+8. Adicione links internos entre artes semelhantes e para as categorias
+   - Exemplo: "Veja também artes de batismo" → links para outras artes da mesma categoria
+
+9. Mantenha o layout responsivo e performance leve
+   - Use lazy loading para imagens (<img loading="lazy">)
+   - Certifique que o CLS, LCP e FID estejam dentro do ideal no Lighthouse
+
+Importante: não remover ou alterar funcionalidades interativas como favoritos, botões de download ou autenticação. Apenas adicionar SEO sem impacto funcional.
+*/
