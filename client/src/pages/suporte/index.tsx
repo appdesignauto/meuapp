@@ -64,13 +64,13 @@ const SuportePage = () => {
           </div>
           
           <Tabs defaultValue="canais" className="mb-12">
-            <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 mb-8 gap-1">
+            <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 mb-8 gap-1 relative z-20">
               <TabsTrigger value="canais">Canais de Atendimento</TabsTrigger>
               <TabsTrigger value="faq">Perguntas Frequentes</TabsTrigger>
               <TabsTrigger value="contato">Formulário de Contato</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="canais">
+            <TabsContent value="canais" className="mt-10 pt-2">
               <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 <Card className="border-blue-100 hover:shadow-md transition-shadow">
                   <CardHeader className="pb-2 sm:pb-3 space-y-2">
@@ -153,7 +153,7 @@ const SuportePage = () => {
               </div>
             </TabsContent>
             
-            <TabsContent value="faq">
+            <TabsContent value="faq" className="mt-10 pt-2">
               <div className="space-y-6">
                 <Card>
                   <CardHeader>
@@ -222,7 +222,7 @@ const SuportePage = () => {
               </div>
             </TabsContent>
             
-            <TabsContent value="contato">
+            <TabsContent value="contato" className="mt-10 pt-2">
               <Card>
                 <CardHeader>
                   <CardTitle>Formulário de Contato</CardTitle>
