@@ -11,6 +11,7 @@ import { ScrollToTop } from "@/hooks/useScrollTop";
 import { ThemeProvider } from "@/components/theme-provider";
 import { PopupContainer } from "@/components/Popup";
 import { HelmetProvider } from "react-helmet-async";
+import DynamicFavicon from "@/components/global/DynamicFavicon";
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -286,6 +287,7 @@ function App() {
             <SupabaseAuthProvider>
               <Router>
                 <ScrollToTop />
+                <DynamicFavicon />
                 <AppLayout>
                   <AppRoutes />
                 </AppLayout>
