@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /painel-admin/
+Disallow: /api/
+Disallow: /admin/
+Disallow: /minha-conta/
+
+# Permitir acesso ao sitemap
+Sitemap: https://designauto.app/sitemap.xml
+
+# Definir taxa de crawling para evitar sobrecarga do servidor
+Crawl-delay: 1

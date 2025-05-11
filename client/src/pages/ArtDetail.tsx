@@ -611,6 +611,17 @@ export default function ArtDetail() {
   const artSlug = art.slug || '';
   const canonicalUrl = artSlug ? generateCanonicalUrl(categorySlug, artSlug) : window.location.href;
   
+  // Extrair palavras-chave relevantes do título
+  const keywords = [
+    'designauto',
+    'design automotivo',
+    artCategory.toLowerCase(),
+    ...(art.title.split(' ')
+      .filter(word => word.length > 3)
+      .map(word => word.toLowerCase())
+      .slice(0, 8))
+  ];
+  
   // Gerar markup de dados estruturados JSON-LD
   const schemaMarkup = generateArtSchemaMarkup({
     ...art,
@@ -630,6 +641,10 @@ export default function ArtDetail() {
         image={art.imageUrl}
         type="article"
         schemaMarkup={schemaMarkup}
+        language="pt-BR"
+        keywords={keywords}
+        publishedAt={art.createdAt}
+        modifiedAt={art.updatedAt}
       />
       <div className="flex items-center mb-6">
         <motion.div
