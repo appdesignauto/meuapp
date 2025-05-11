@@ -640,6 +640,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Registrar as rotas relacionadas ao logo
   app.use('/api/upload-logo', logoUploadRouter);
   
+  // Registrar a rota para upload de favicon
+  app.use('/api/site-settings/favicon', faviconUploadRouter);
+  
   // Adicionar rota para remover o logo
   removeLogoRouter(app);
   
