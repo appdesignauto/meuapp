@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import ArtCard from '@/components/ui/ArtCard';
 import { useAuth } from '@/hooks/use-auth';
 import { queryClient } from '@/lib/queryClient';
+import { createSeoUrl } from '@/lib/utils/slug';
 import MinimalCategoryFilters from './MinimalCategoryFilters';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -237,7 +238,7 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
                   >
                     <ArtCard 
                       art={art} 
-                      onClick={() => setLocation(`/artes/${art.id}`)}
+                      onClick={() => setLocation(`/artes/${createSeoUrl(art.id, art.title)}`)}
                     />
                   </motion.div>
                 ))}

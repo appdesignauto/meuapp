@@ -111,12 +111,15 @@ function ArtCard({
     </div>
   );
 
+  // Gera URL amigável para SEO com formato "id-slug"
+  const seoUrl = createSeoUrl(art.id, art.title);
+
   return onClick ? (
     <div onClick={onClick} className="cursor-pointer">
       {renderCard()}
     </div>
   ) : (
-    <Link href={`/artes/${art.id}`}>
+    <Link href={`/artes/${seoUrl}`}>
       {renderCard()}
     </Link>
   );
