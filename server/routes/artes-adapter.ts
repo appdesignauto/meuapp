@@ -3,6 +3,7 @@ import { storage } from '../storage';
 import { Request, Response } from 'express';
 import { sql } from 'drizzle-orm';
 import { db } from '../db';
+import { supabaseStorageService } from '../services/supabase-storage';
 
 /**
  * Arquivo que implementa rotas em português como adaptadores para as rotas em inglês
