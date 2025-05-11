@@ -57,6 +57,32 @@ const CategoriasCarousel: React.FC<CategoriasCarouselProps> = ({
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+  
+  // Efeito para scrollar para a categoria selecionada quando mudar
+  useEffect(() => {
+    if (categoriaSelecionada && scrollContainerRef.current) {
+      const container = scrollContainerRef.current;
+      const selectedButton = container.querySelector(`[data-slug="${categoriaSelecionada}"]`) as HTMLElement;
+      
+      if (selectedButton) {
+        console.log('Botão da categoria encontrado:', categoriaSelecionada);
+        
+        // Esperar um momento antes de scrollar para garantir que tudo foi renderizado
+        setTimeout(() => {
+          const containerRect = container.getBoundingClientRect();
+          const buttonRect = selectedButton.getBoundingClientRect();
+          
+          // Verificar se o botão está visível
+          if (buttonRect.left < containerRect.left || buttonRect.right > containerRect.right) {
+            // Centralizar o botão
+            console.log('Scrollando para categoria:', categoriaSelecionada);
+            const scrollLeft = selectedButton.offsetLeft - container.clientWidth / 2 + selectedButton.offsetWidth / 2;
+            container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+          }
+        }, 300);
+      }
+    }
+  }, [categoriaSelecionada]);
 
   const scroll = (direction: 'left' | 'right') => {
     if (!scrollContainerRef.current) return;
@@ -114,6 +140,8 @@ const CategoriasCarousel: React.FC<CategoriasCarouselProps> = ({
         {categorias.map((categoria) => (
           <Button
             key={categoria.id}
+            data-slug={categoria.slug}
+            data-category={categoria.id}
             variant={categoriaSelecionada === categoria.slug ? "default" : "outline"}
             className="rounded-full whitespace-nowrap h-9 px-4"
             onClick={() => handleCategoriaClick(categoria.slug)}

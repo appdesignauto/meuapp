@@ -56,10 +56,14 @@ const FerramentasPage: React.FC = () => {
 
   // Extrair a categoria da URL se presente
   useEffect(() => {
-    const match = location.match(/\/ferramentas\/categoria\/(.+)/);
+    console.log('URL mudou para:', location);
+    const match = location.match(/\/ferramentas\/categoria\/([^\/]+)/);
     if (match) {
-      setCategoriaSelecionada(match[1]);
+      const slug = match[1];
+      console.log('Categoria encontrada na URL:', slug);
+      setCategoriaSelecionada(slug);
     } else if (location === '/ferramentas') {
+      console.log('Removendo filtro de categoria (URL base)');
       setCategoriaSelecionada(null);
     }
   }, [location]);
@@ -104,10 +108,13 @@ const FerramentasPage: React.FC = () => {
       // Se clicar na mesma categoria, remove o filtro
       console.log('Removendo filtro de categoria');
       setCategoriaSelecionada(null);
+      
+      // Atualizar URL para a página base
       setLocation('/ferramentas');
     } else {
       console.log('Mudando para categoria:', slug);
-      setCategoriaSelecionada(slug);
+      
+      // Atualizar URL para a categoria específica ou a base
       if (slug) {
         setLocation(`/ferramentas/categoria/${slug}`);
       } else {

@@ -145,6 +145,7 @@ function AppRoutes() {
       <Route path="/planos" component={PlanosPage} />
       <Route path="/videoaulas" component={VideoaulasPage} />
       <Route path="/ferramentas" component={FerramentasPage} />
+      <Route path="/ferramentas/categoria/:slug" component={FerramentasPage} />
       <Route path="/videoaulas/:id">
         {() => {
           const VideoLessonPage = lazy(() => import("@/pages/videoaulas/[id]"));
