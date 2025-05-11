@@ -103,7 +103,7 @@ export const insertCollectionSchema = createInsertSchema(collections).omit({
 });
 
 // Art schema
-export const arts = pgTable("arts", {
+export const arts = pgTable("artes", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   imageUrl: text("imageUrl").notNull(),
