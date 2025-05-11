@@ -43,7 +43,7 @@ import { format, formatDistance } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import SEO from '@/components/seo';
 import { formatSeoTitle, generateMetaDescription, generateArtSchemaMarkup, generateCanonicalUrl } from '@/lib/utils/seo';
-import { extractIdFromSeoUrl } from '@/lib/utils/slug';
+import { extractIdFromSeoUrl, createSeoUrl } from '@/lib/utils/slug';
 
 // Interfaces para tipagem de dados
 interface RecentArt {
@@ -165,9 +165,13 @@ export default function ArtDetail() {
   // Garantir rolagem para o topo ao navegar para esta página
   useScrollTop();
   
-  // Extrair o ID numérico da URL com formato ID-slug
+  // Extrair o ID numérico da URL com formato ID-slug ou apenas ID
   const { id: seoUrl } = useParams<{ id: string }>();
   const id = seoUrl ? extractIdFromSeoUrl(seoUrl) : null;
+  
+  // Verificar se a URL atual é a versão amigável para SEO
+  // Se não for, redirecionar para a versão com slug quando tivermos os dados da arte
+  const [needsRedirect, setNeedsRedirect] = useState(!seoUrl?.includes('-'));
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -276,6 +280,16 @@ export default function ArtDetail() {
       setLiked(favoriteStatus.isFavorited);
     }
   }, [favoriteStatus]);
+  
+  // Redirecionar para URL com slug se a arte for carregada e estivermos em uma URL sem slug
+  useEffect(() => {
+    if (art && needsRedirect) {
+      const seoUrl = createSeoUrl(art.id, art.title);
+      console.log(`Redirecionando para URL amigável: /artes/${seoUrl}`);
+      setLocation(`/artes/${seoUrl}`, { replace: true }); // replace: true para não adicionar entradas ao histórico
+      setNeedsRedirect(false);
+    }
+  }, [art, needsRedirect, setLocation]);
   
   // Verifica e aplica a propriedade isPremiumLocked para a arte atual
   const artWithPremiumStatus = React.useMemo(() => {
