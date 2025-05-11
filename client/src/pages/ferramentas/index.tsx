@@ -344,7 +344,7 @@ const FerramentasPage: React.FC = () => {
       )}
 
       {/* Conteúdo principal */}
-      <Tabs defaultValue="carousel" className="w-full">
+      <Tabs defaultValue="grid" className="w-full">
         <TabsList className="mb-6 hidden md:flex">
           <TabsTrigger value="carousel" className="flex items-center">
             <LayoutGrid className="h-4 w-4 mr-2" />
