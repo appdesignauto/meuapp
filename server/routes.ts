@@ -1270,10 +1270,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(result);
     } catch (error) {
       console.error("Erro detalhado ao buscar artes:", error);
-      res.status(500).json({ 
-        message: "Erro ao buscar artes", 
-        error: error instanceof Error ? error.message : String(error) 
-      });
+      res.status(500).json({ message: "Erro ao buscar artes" });
+    }
+  });
+      
+  // Rota de artes em português (compatibilidade com frontend)
+  app.get("/api/artes", async (req, res) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 8;
+      
+      // Parse filters
+      const filters: any = {};
+      
+      if (req.query.categoryId) {
+        filters.categoryId = parseInt(req.query.categoryId as string);
+      }
+      
+      if (req.query.formatId) {
+        filters.formatId = parseInt(req.query.formatId as string);
+      }
+      
+      if (req.query.fileTypeId) {
+        filters.fileTypeId = parseInt(req.query.fileTypeId as string);
+      }
+      
+      if (req.query.search) {
+        filters.search = req.query.search as string;
+      }
+      
+      // Check if premium filter is applied
+      if (req.query.isPremium) {
+        filters.isPremium = req.query.isPremium === 'true';
+      }
+      
+      // Check if sortBy parameter is present
+      if (req.query.sortBy) {
+        filters.sortBy = req.query.sortBy as string;
+      }
+      
+      // Apenas usuários admin, designer_adm e designer podem ver artes ocultas
+      const isAdmin = req.user?.nivelacesso === 'admin' || req.user?.nivelacesso === 'designer_adm' || req.user?.nivelacesso === 'designer';
+      
+      // Verificamos se há um filtro específico de visibilidade sendo aplicado
+      if (req.query.isVisible !== undefined) {
+        // Se for 'all', não aplicamos filtro - admin verá todas as artes
+        if (req.query.isVisible === 'all') {
+          // Não aplicamos filtro
+          console.log("Filtro 'all' selecionado: mostrando todas as artes");
+        } else {
+          // Se o filtro for true ou false, aplicamos essa condição específica
+          filters.isVisible = req.query.isVisible === 'true';
+          console.log(`Filtro de visibilidade aplicado: ${filters.isVisible ? 'visíveis' : 'ocultas'}`);
+        }
+      } else if (!isAdmin) {
+        // Se o usuário não for admin, vai ver apenas artes visíveis
+        filters.isVisible = true;
+        console.log("Usuário não é admin: mostrando apenas artes visíveis");
+      } else {
+        // Para admin sem filtro específico, vê todas as artes
+        console.log("Admin sem filtro: mostrando todas as artes");
+      }
+      
+      console.log(`Usuário ${isAdmin ? 'é admin' : 'NÃO é admin'}, filtro de visibilidade: ${filters.isVisible !== undefined ? filters.isVisible : 'não aplicado'}`)
+      
+      const result = await storage.getArts(page, limit, filters);
+      res.json(result);
+    } catch (error) {
+      console.error("Erro detalhado ao buscar artes:", error);
+      res.status(500).json({ message: "Erro ao buscar artes" });
     }
   });
   
