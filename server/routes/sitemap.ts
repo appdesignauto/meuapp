@@ -72,12 +72,23 @@ router.get('/sitemap.xml', async (req, res) => {
     // Buscar todas as artes
     const arts = await storage.getAllArtsForSitemap();
     
+    // Buscar todas as categorias e criar um mapa para uso rápido
+    const categoriesMap = new Map();
+    const allCategories = await db.select().from(categories);
+    allCategories.forEach(category => {
+      categoriesMap.set(category.id, category);
+    });
+    
     // Adicionar artes com a nova estrutura de URL /artes/categoria-slug/arte-slug
-    arts.forEach(art => {
-      if (!art.isVisible) return; // Pular artes não visíveis
+    for (const art of arts) {
+      if (!art.isVisible) continue; // Pular artes não visíveis
       
-      const artSlug = createSlug(art.title);
-      const categorySlug = art.category?.slug || createSlug(art.category?.name || 'sem-categoria');
+      // Usar o slug já existente ou criar um novo
+      const artSlug = art.slug || createSlug(art.title);
+      
+      // Buscar categoria do mapa
+      const category = categoriesMap.get(art.categoryId);
+      const categorySlug = category?.slug || createSlug(category?.name || 'sem-categoria');
       
       xml += `  <url>\n`;
       xml += `    <loc>${baseUrl}/artes/${categorySlug}/${artSlug}</loc>\n`;
@@ -93,7 +104,7 @@ router.get('/sitemap.xml', async (req, res) => {
       xml += `    <changefreq>monthly</changefreq>\n`;
       xml += `    <priority>0.5</priority>\n`;
       xml += `  </url>\n`;
-    });
+    }
     
     // Finalizar o XML
     xml += '</urlset>';

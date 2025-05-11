@@ -61,6 +61,7 @@ import bannerUploadRouter from './routes/banner-upload'; // Rota para upload de 
 import moduleUploadRouter from './routes/module-upload'; // Rota para upload de thumbnails de módulos cursos
 import communityRouter from './routes/community-routes'; // Rotas para o sistema de comunidade
 import ferramentasUploadRouter from './routes/ferramentas-upload'; // Rotas para upload de imagens de ferramentas
+import sitemapRouter from './routes/sitemap'; // Rotas para sitemap.xml e robots.txt
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Rota simples de verificação de saúde
