@@ -2318,6 +2318,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Registrar rotas de upload de imagem
   app.use(imageUploadRoutes);
   
+  // Registrar rota de proxy de imagens do Supabase
+  app.use(imageProxyRouter);
+  
   // Rota para upload de imagens (usada no formulário multi-formato) 
   app.use("/api/upload-image", isAuthenticated, uploadMemory.single("image"), async (req, res) => {
     try {

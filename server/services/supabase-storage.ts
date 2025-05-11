@@ -40,12 +40,77 @@ export class SupabaseStorageService {
   private emergencyUploadAttempts: { [userId: string]: number } = {};
   private logs: string[] = [];
   
+  // Constantes para conversão de URLs
+  private readonly SUPABASE_DOMAIN = 'dcodfuzoxmddmpvowhap.supabase.co';
+  private readonly SUPABASE_URL_PATTERN = /https:\/\/dcodfuzoxmddmpvowhap\.supabase\.co\/storage\/v1\/object\/public\//;
+  private readonly LOCAL_IMAGE_PATH = '/imgs/';
+  
   // Adicionar logs ao array e console
   private log(message: string) {
     const timestamp = new Date().toISOString();
     const logMessage = `${timestamp} - ${message}`;
     this.logs.push(logMessage);
     console.log(`[Supabase] ${message}`);
+  }
+  
+  /**
+   * Converte uma URL do Supabase Storage para o formato de domínio próprio
+   * 
+   * @param supabaseUrl URL original do Supabase Storage
+   * @returns URL com domínio próprio
+   */
+  public convertToProxyUrl(supabaseUrl: string): string {
+    if (!supabaseUrl) return supabaseUrl;
+    
+    // Se a URL já estiver no formato de proxy, retorná-la como está
+    if (supabaseUrl.startsWith('/imgs/')) {
+      return supabaseUrl;
+    }
+    
+    // Se a URL for do Supabase, convertê-la para o formato de proxy
+    if (supabaseUrl.includes(this.SUPABASE_DOMAIN)) {
+      // Extrair o caminho relativo da URL do Supabase
+      const relativePath = supabaseUrl.replace(this.SUPABASE_URL_PATTERN, '');
+      // Construir a nova URL com o caminho do proxy
+      return `${this.LOCAL_IMAGE_PATH}${relativePath}`;
+    }
+    
+    // Se for qualquer outra URL externa ou absoluta, não modificá-la
+    return supabaseUrl;
+  }
+  
+  /**
+   * Processa um objeto ou array de objetos, convertendo todas as propriedades
+   * de URL de imagem do Supabase para o formato de domínio próprio
+   * 
+   * @param data Objeto ou array de objetos com URLs de imagem
+   * @param imageFields Nomes das propriedades que contêm URLs de imagem
+   * @returns Dados com URLs convertidas
+   */
+  public convertImageUrls<T extends Record<string, any>>(
+    data: T | T[], 
+    imageFields: string[] = ['imageUrl', 'thumbnailUrl', 'featuredImage', 'coverUrl', 'avatarUrl', 'profileimageurl']
+  ): T | T[] {
+    // Função para processar um único objeto
+    const processObject = (obj: T): T => {
+      const result = { ...obj };
+      
+      // Converter cada campo de imagem encontrado
+      for (const field of imageFields) {
+        if (result[field] && typeof result[field] === 'string') {
+          result[field] = this.convertToProxyUrl(result[field]);
+        }
+      }
+      
+      return result;
+    };
+    
+    // Processar um único objeto ou um array de objetos
+    if (Array.isArray(data)) {
+      return data.map(processObject);
+    } else {
+      return processObject(data);
+    }
   }
 
   // Obter todos os logs armazenados
