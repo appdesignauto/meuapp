@@ -15,7 +15,7 @@ router.get('/api/test/create-group', async (req: Request, res: Response) => {
     
     // Obter a lista de artes existentes
     const result = await db.execute(sql`
-      SELECT * FROM arts 
+      SELECT * FROM artes 
       LIMIT 6
     `);
     
@@ -40,7 +40,7 @@ router.get('/api/test/create-group', async (req: Request, res: Response) => {
       
       // Atualizar a arte no banco de dados
       const updateResult = await db.execute(sql`
-        UPDATE arts 
+        UPDATE artes 
         SET "groupId" = ${groupId}, format = ${formato}
         WHERE id = ${art.id}
         RETURNING *

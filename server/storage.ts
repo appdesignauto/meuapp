@@ -1838,7 +1838,7 @@ export class DatabaseStorage implements IStorage {
           "fileType", 
           "editUrl", 
           aspectratio
-        FROM arts
+        FROM artes
       `;
       
       // Construir consulta usando a funcionalidade correta do Drizzle
@@ -1901,7 +1901,7 @@ export class DatabaseStorage implements IStorage {
       const result = await db.execute(query);
       
       // Consulta para obter o total de registros
-      let countQuery = sql`SELECT COUNT(*) as count FROM arts`;
+      let countQuery = sql`SELECT COUNT(*) as count FROM artes`;
       
       if (filters) {
         let hasWhere = false;
@@ -1988,7 +1988,7 @@ export class DatabaseStorage implements IStorage {
           c.id as "category_id",
           c.name as "category_name",
           c.slug as "category_slug"
-        FROM arts a
+        FROM artes a
         LEFT JOIN categories c ON a."categoryId" = c.id
         WHERE a.id = ${id}
       `);
@@ -2053,7 +2053,7 @@ export class DatabaseStorage implements IStorage {
           c.id as "category_id",
           c.name as "category_name",
           c.slug as "category_slug"
-        FROM arts a
+        FROM artes a
         LEFT JOIN categories c ON a."categoryId" = c.id
         WHERE a.id = ${artId}
       `);
@@ -2094,7 +2094,7 @@ export class DatabaseStorage implements IStorage {
             c.id as "category_id",
             c.name as "category_name",
             c.slug as "category_slug"
-          FROM arts a
+          FROM artes a
           LEFT JOIN categories c ON a."categoryId" = c.id
           WHERE a."groupId" = ${artRow.groupId} AND a.id != ${artId} AND a."isVisible" = true
         `);
@@ -2159,7 +2159,7 @@ export class DatabaseStorage implements IStorage {
           c.id as "category_id",
           c.name as "category_name",
           c.slug as "category_slug"
-        FROM arts a
+        FROM artes a
         LEFT JOIN categories c ON a."categoryId" = c.id
         WHERE a.id != ${artId} AND a."isVisible" = true
         ORDER BY a."createdAt" DESC
@@ -2410,7 +2410,7 @@ export class DatabaseStorage implements IStorage {
         
         // Usar SQL bruto para ter certeza que o nome da coluna está correto
         const result = await db.execute(sql`
-          UPDATE arts 
+          UPDATE artes 
           SET "isVisible" = ${art.isVisible}, "updatedAt" = NOW()
           WHERE id = ${id}
           RETURNING *
@@ -2533,7 +2533,7 @@ export class DatabaseStorage implements IStorage {
       // Usar SQL bruto com nomes corretos de colunas
       const now = new Date();
       const result = await db.execute(sql`
-        UPDATE arts 
+        UPDATE artes 
         SET viewcount = ${viewCount}, "updatedAt" = ${now}
         WHERE id = ${artId}
       `);
@@ -2560,7 +2560,7 @@ export class DatabaseStorage implements IStorage {
       // Buscar contagem de artes
       const artsResult = await db.execute(sql`
         SELECT COUNT(*) as value 
-        FROM arts
+        FROM artes
         WHERE designerid = ${userId}
       `);
       
@@ -2613,7 +2613,7 @@ export class DatabaseStorage implements IStorage {
           "fileType", 
           "editUrl", 
           aspectratio
-        FROM arts 
+        FROM artes 
         WHERE designerid = ${designerId}
         ORDER BY "createdAt" DESC
         LIMIT ${limit}
@@ -2804,7 +2804,7 @@ export class DatabaseStorage implements IStorage {
           u.username AS designer_username,
           u.name AS designer_name,
           u.profileimageurl AS designer_avatar
-        FROM arts a
+        FROM artes a
         JOIN users u ON a.designerid = u.id
         WHERE a.designerid IN (${sql.join(designerIds, sql`,`)})
           AND a."isVisible" = TRUE

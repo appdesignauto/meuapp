@@ -263,7 +263,7 @@ router.put('/api/admin/artes/group/:groupId', isAuthenticated, async (req: Reque
     
     // Buscar todas as artes existentes do grupo usando SQL direto para evitar problemas com o nome da coluna
     const result = await db.execute(sql`
-      SELECT * FROM arts 
+      SELECT * FROM artes 
       WHERE "groupId" = ${groupId}
     `);
     

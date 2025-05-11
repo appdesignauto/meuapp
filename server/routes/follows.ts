@@ -68,7 +68,7 @@ export function setupFollowRoutes(app: any, isAuthenticated: (req: Request, res:
           u.username AS designer_username,
           u.name AS designer_name,
           u.profileimageurl AS designer_avatar
-        FROM arts a
+        FROM artes a
         JOIN users u ON a.designerid = u.id
         WHERE a.designerid IN (${sql.join(designerIds, sql`,`)})
           AND a."isVisible" = TRUE

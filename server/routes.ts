@@ -1243,7 +1243,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           "imageUrl",
           format,
           "isPremium"
-        FROM arts 
+        FROM artes 
         WHERE ${!isAdmin ? sql`"isVisible" = TRUE` : sql`1=1`}
         ORDER BY "createdAt" DESC 
         LIMIT 6
@@ -1486,7 +1486,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           "imageUrl",
           format,
           "isPremium"
-        FROM arts 
+        FROM artes 
         ORDER BY "createdAt" DESC 
         LIMIT 6
       `);
@@ -2295,7 +2295,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Atualizar todas as artes sem designerid usando SQL direto
       await db.execute(`
-        UPDATE arts 
+        UPDATE artes 
         SET designerid = ${admin.id} 
         WHERE designerid IS NULL
       `);
@@ -2383,7 +2383,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const downloadsQuery = `
               SELECT COUNT(*) as count
               FROM downloads d
-              JOIN arts a ON d."artId" = a.id
+              JOIN artes a ON d."artId" = a.id
               WHERE a.designerid = ${user.id}
             `;
             
@@ -2394,7 +2394,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const viewsQuery = `
               SELECT COUNT(*) as count
               FROM views v
-              JOIN arts a ON v."artId" = a.id
+              JOIN artes a ON v."artId" = a.id
               WHERE a.designerid = ${user.id}
             `;
             
@@ -3052,7 +3052,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             title, 
             "imageUrl" as imageurl, 
             "isPremium" as ispremium
-          FROM arts 
+          FROM artes 
           WHERE designerid = ${designer.id}
           ORDER BY "createdAt" DESC
           LIMIT 4
@@ -3157,7 +3157,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               "createdAt",
               viewcount,
               "downloadCount"
-            FROM arts
+            FROM artes
             WHERE designerid = ${designer.id}
               AND "isVisible" = true
             ORDER BY "createdAt" DESC
@@ -3172,7 +3172,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               "createdAt",
               viewcount,
               "downloadCount"
-            FROM arts
+            FROM artes
             WHERE designerid = ${designer.id}
             ORDER BY "createdAt" DESC
             `
@@ -3250,7 +3250,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Usando o formato sql`` que funciona para esta biblioteca específica
       const artsResult = await db.execute(
         sql`
-          SELECT * FROM arts
+          SELECT * FROM artes
           WHERE designerid = ${designerId}
           ORDER BY "createdAt" DESC
           LIMIT ${limit} OFFSET ${offset}
@@ -3263,7 +3263,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const countResult = await db.execute(
         sql`
           SELECT COUNT(*) as value
-          FROM arts
+          FROM artes
           WHERE designerid = ${designerId}
         `
       );
