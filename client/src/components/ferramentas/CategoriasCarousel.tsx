@@ -114,21 +114,26 @@ const CategoriasCarousel: React.FC<CategoriasCarouselProps> = ({
         <Button
           variant="outline"
           size="icon"
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-gray-900 shadow-md rounded-full"
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-gray-950 shadow-md rounded-full h-9 w-9 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
           onClick={() => scroll('left')}
         >
-          <ChevronLeft className="h-5 w-5" />
+          <ChevronLeft className="h-4 w-4 text-gray-600 dark:text-gray-400" />
           <span className="sr-only">Rolar para a esquerda</span>
         </Button>
       )}
       
       <div
         ref={scrollContainerRef}
-        className="flex space-x-2 overflow-x-auto scrollbar-hide pb-3 pl-2 pr-16 pt-2"
+        className="flex space-x-3 overflow-x-auto scrollbar-hide pb-3 pl-2 pr-16 pt-1"
       >
         <Button
           variant={categoriaSelecionada === null ? "default" : "outline"}
-          className="rounded-full whitespace-nowrap h-9 px-4"
+          className={cn(
+            "rounded-full whitespace-nowrap h-9 px-4 font-medium transition-all",
+            categoriaSelecionada === null 
+              ? "bg-primary text-white shadow-md" 
+              : "border-gray-200 dark:border-gray-700 bg-white/90 dark:bg-gray-900/90 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
+          )}
           onClick={() => {
             console.log('Clicado em Todas');
             onCategoriaChange(null);
@@ -143,7 +148,12 @@ const CategoriasCarousel: React.FC<CategoriasCarouselProps> = ({
             data-slug={categoria.slug}
             data-category={categoria.id}
             variant={categoriaSelecionada === categoria.slug ? "default" : "outline"}
-            className="rounded-full whitespace-nowrap h-9 px-4"
+            className={cn(
+              "rounded-full whitespace-nowrap h-9 px-4 font-medium transition-all",
+              categoriaSelecionada === categoria.slug
+                ? "bg-primary text-white shadow-md" 
+                : "border-gray-200 dark:border-gray-700 bg-white/90 dark:bg-gray-900/90 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
+            )}
             onClick={() => handleCategoriaClick(categoria.slug)}
           >
             {categoria.nome}
@@ -152,15 +162,18 @@ const CategoriasCarousel: React.FC<CategoriasCarouselProps> = ({
       </div>
       
       {showRightArrow && (
-        <Button
-          variant="outline"
-          size="icon"
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-gray-900 shadow-md rounded-full"
-          onClick={() => scroll('right')}
-        >
-          <ChevronRight className="h-5 w-5" />
-          <span className="sr-only">Rolar para a direita</span>
-        </Button>
+        <div className="absolute right-0 top-0 bottom-0 h-full flex items-center justify-center">
+          <div className="w-16 h-full bg-gradient-to-r from-transparent to-white/90 dark:to-gray-900/90"></div>
+          <Button
+            variant="outline"
+            size="icon"
+            className="absolute right-2 z-20 bg-white dark:bg-gray-950 shadow-md rounded-full h-9 w-9 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
+            onClick={() => scroll('right')}
+          >
+            <ChevronRight className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+            <span className="sr-only">Rolar para a direita</span>
+          </Button>
+        </div>
       )}
     </div>
   );
