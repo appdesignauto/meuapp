@@ -76,13 +76,13 @@ const SuportePage = () => {
           
           {/* Navegação por abas (simplificada) */}
           <div className="mb-8">
-            {/* Botões de navegação */}
-            <div className="grid grid-cols-1 gap-2 mb-6">
+            {/* Botões de navegação - Responsivos: Vertical no mobile, Horizontal no desktop */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 mb-6">
               <button 
                 onClick={() => handleTabChange('canais')}
-                className={`w-full py-3 rounded-md text-sm transition-colors ${
+                className={`w-full py-3 sm:py-4 rounded-md text-sm sm:text-base font-medium transition-colors ${
                   activeTab === 'canais' 
-                    ? 'bg-primary text-white font-medium' 
+                    ? 'bg-primary text-white shadow-sm' 
                     : 'bg-gray-100 hover:bg-gray-200'
                 }`}
               >
@@ -91,9 +91,9 @@ const SuportePage = () => {
               
               <button 
                 onClick={() => handleTabChange('faq')}
-                className={`w-full py-3 rounded-md text-sm transition-colors ${
+                className={`w-full py-3 sm:py-4 rounded-md text-sm sm:text-base font-medium transition-colors ${
                   activeTab === 'faq' 
-                    ? 'bg-primary text-white font-medium' 
+                    ? 'bg-primary text-white shadow-sm' 
                     : 'bg-gray-100 hover:bg-gray-200'
                 }`}
               >
@@ -102,9 +102,9 @@ const SuportePage = () => {
               
               <button 
                 onClick={() => handleTabChange('contato')}
-                className={`w-full py-3 rounded-md text-sm transition-colors ${
+                className={`w-full py-3 sm:py-4 rounded-md text-sm sm:text-base font-medium transition-colors ${
                   activeTab === 'contato' 
-                    ? 'bg-primary text-white font-medium' 
+                    ? 'bg-primary text-white shadow-sm' 
                     : 'bg-gray-100 hover:bg-gray-200'
                 }`}
               >
