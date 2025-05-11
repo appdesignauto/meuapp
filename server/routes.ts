@@ -5142,6 +5142,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Registrar rota para calcular posição do post na paginação
   registerPostPositionRoute(app);
 
+  // Registrar rotas para sitemap.xml e robots.txt (acessíveis na raiz do site)
+  app.use(sitemapRouter);
+
   const httpServer = createServer(app);
   
   // Inicializar o serviço da Hotmart se as credenciais estiverem disponíveis
