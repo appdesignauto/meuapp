@@ -1443,6 +1443,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Erro ao buscar artes recentes" });
     }
   });
+  
+  // Versão em português - Artes recentes (compatibilidade com frontend)
+  app.get("/api/artes/recent", async (req, res) => {
+    try {
+      // Verificar se o usuário é admin para determinar visibilidade
+      const isAdmin = req.user?.nivelacesso === 'admin' || req.user?.nivelacesso === 'designer_adm' || req.user?.nivelacesso === 'designer';
+      
+      // Buscar as 6 artes mais recentes diretamente da tabela artes (apenas visíveis para usuários normais)
+      const artsResult = await db.execute(sql`
+        SELECT 
+          id, 
+          "createdAt", 
+          "updatedAt", 
+          title, 
+          "imageUrl",
+          format,
+          "isPremium"
+        FROM arts 
+        WHERE ${!isAdmin ? sql`"isVisible" = TRUE` : sql`1=1`}
+        ORDER BY "createdAt" DESC 
+        LIMIT 6
+      `);
+      
+      const arts = artsResult.rows.map(art => ({
+        id: art.id,
+        title: art.title,
+        imageUrl: art.imageUrl,
+        format: art.format,
+        isPremium: art.isPremium,
+        createdAt: art.createdAt,
+        updatedAt: art.updatedAt
+      }));
+      
+      res.json({ arts });
+    } catch (error) {
+      console.error("Erro ao buscar artes recentes:", error);
+      res.status(500).json({ message: "Erro ao buscar artes recentes" });
+    }
+  });
 
   app.get("/api/arts/:id/related", async (req, res) => {
     try {
@@ -1454,6 +1493,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const relatedArts = await storage.getRelatedArts(id, limit);
       
       console.log(`[GET /api/arts/${id}/related] Encontradas ${relatedArts.length} artes relacionadas`);
+      
+      // Se não houver artes relacionadas, retorna array vazio em vez de 404
+      // para que o frontend possa lidar com isso de maneira apropriada
+      res.json(relatedArts);
+    } catch (error) {
+      console.error("Erro ao buscar artes relacionadas:", error);
+      res.status(500).json({ message: "Erro ao buscar artes relacionadas" });
+    }
+  });
+  
+  // Versão em português - Artes relacionadas por ID (compatibilidade com frontend)
+  app.get("/api/artes/:id/related", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const limit = parseInt(req.query.limit as string) || 12; // Usar 12 como padrão
+      
+      console.log(`[GET /api/artes/${id}/related] Buscando ${limit} artes relacionadas para arte ID ${id}`);
+      
+      const relatedArts = await storage.getRelatedArts(id, limit);
+      
+      console.log(`[GET /api/artes/${id}/related] Encontradas ${relatedArts.length} artes relacionadas`);
       
       // Se não houver artes relacionadas, retorna array vazio em vez de 404
       // para que o frontend possa lidar com isso de maneira apropriada
