@@ -35,7 +35,7 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
 
   // Build the URL with query parameters
   const getArtsUrl = (page: number) => {
-    const url = new URL('/api/arts', window.location.origin);
+    const url = new URL('/api/artes', window.location.origin);
     url.searchParams.append('page', page.toString());
     url.searchParams.append('limit', initialLimit.toString());
     
@@ -55,7 +55,7 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
   
   // Build query key based on filters including visibility
   const queryKey = [
-    '/api/arts',
+    '/api/artes',
     { 
       page: currentPage, 
       limit: initialLimit, 
@@ -127,7 +127,7 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
 
   // Force re-fetch when filters or user authentication/role change
   useEffect(() => {
-    queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/artes'] });
   }, [categoryId, formatId, fileTypeId, user?.nivelacesso]);
 
   const loadMore = useCallback(() => {
@@ -174,7 +174,7 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
             <div className="flex w-full sm:w-auto items-center justify-between">
               <h2 className="text-xs sm:text-sm font-medium text-neutral-800 whitespace-nowrap">Artes em Destaque</h2>
               <Link 
-                href="/arts" 
+                href="/artes" 
                 className="text-blue-600 hover:text-blue-500 font-medium text-[10px] sm:text-xs flex items-center px-2 py-1 transition-all sm:hidden"
               >
                 Ver todos
@@ -196,7 +196,7 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
             )}
           </div>
           <Link 
-            href="/arts" 
+            href="/artes" 
             className="text-blue-600 hover:text-blue-500 font-medium text-xs flex items-center px-2 py-1 transition-all hidden sm:flex"
           >
             Ver todos
