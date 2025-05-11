@@ -35,7 +35,7 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
 
   // Build the URL with query parameters
   const getArtsUrl = (page: number) => {
-    const url = new URL('/api/artes', window.location.origin);
+    const url = new URL('/api/arts', window.location.origin);
     url.searchParams.append('page', page.toString());
     url.searchParams.append('limit', initialLimit.toString());
     

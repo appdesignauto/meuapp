@@ -231,7 +231,7 @@ export default function AddArtFormMulti() {
         })),
       };
 
-      const response = await apiRequest('POST', '/api/admin/arts/multi', formattedData);
+      const response = await apiRequest('POST', '/api/admin/artes/multi', formattedData);
       return await response.json();
     },
     onSuccess: () => {

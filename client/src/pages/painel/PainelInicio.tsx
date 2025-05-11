@@ -151,7 +151,7 @@ export default function PainelInicio() {
     if (favoritesData && Array.isArray(favoritesData.favorites)) {
       setStats(prev => ({
         ...prev,
-        recentFavorites: favoritesData.favorites.slice(0, 3) || [],
+        recentFavorites: favoritesData?.favorites?.slice(0, 3) || [],
       }));
     }
     
@@ -159,7 +159,7 @@ export default function PainelInicio() {
     if (downloadsData && Array.isArray(downloadsData.downloads)) {
       setStats(prev => ({
         ...prev,
-        recentDownloads: downloadsData.downloads.slice(0, 3) || [],
+        recentDownloads: downloadsData?.downloads?.slice(0, 3) || [],
       }));
     }
   }, [userStats, recentArtsData, favoritesData, downloadsData]);
