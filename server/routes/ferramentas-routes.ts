@@ -330,6 +330,7 @@ router.post("/api/admin/ferramentas", isAdmin, upload.none(), async (req: Reques
     const websiteUrl = req.body.url; // Campo vindo do frontend
     const isExterno = req.body.externo === 'true'; 
     const isNovo = req.body.novo === 'true';
+    const isPopular = req.body.popular === 'true';
     const categoriaId = parseInt(req.body.categoriaId);
     const ordem = req.body.ordem ? parseInt(req.body.ordem) : 0;
     

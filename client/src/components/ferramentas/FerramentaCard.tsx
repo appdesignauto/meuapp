@@ -25,6 +25,7 @@ const FerramentaCard: React.FC<FerramentaCardProps> = ({
   websiteUrl,
   isExterno,
   isNovo,
+  isPopular,
   className
 }) => {
   const handleClick = () => {
@@ -48,6 +49,11 @@ const FerramentaCard: React.FC<FerramentaCardProps> = ({
           {isNovo && (
             <Badge className="absolute top-3 right-3 z-10 bg-blue-500 text-white font-medium px-2 py-1">
               Novo
+            </Badge>
+          )}
+          {isPopular && (
+            <Badge className="absolute top-3 left-3 z-10 bg-amber-500 text-white font-medium px-2 py-1">
+              Popular
             </Badge>
           )}
           <div className="aspect-video overflow-hidden bg-gray-50 dark:bg-gray-800">
