@@ -16,7 +16,7 @@ import {
 import FerramentaCard from '@/components/ferramentas/FerramentaCard';
 import CategoriasCarousel from '@/components/ferramentas/CategoriasCarousel';
 import FerramentasCategoria from '@/components/ferramentas/FerramentasCategoria';
-import { useLocation } from 'wouter';
+import { useLocation, useRoute } from 'wouter';
 import useDebounce from '@/hooks/use-debounce';
 
 type Ferramenta = {
@@ -50,23 +50,26 @@ type Categoria = {
 
 const FerramentasPage: React.FC = () => {
   const [location, setLocation] = useLocation();
+  const [match, params] = useRoute<{ slug: string }>('/ferramentas/categoria/:slug');
   const [searchTerm, setSearchTerm] = useState('');
   const [categoriaSelecionada, setCategoriaSelecionada] = useState<string | null>(null);
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  
+  // Verificar se estamos em uma rota de categoria específica 
+  console.log('Route match:', match, 'params:', params);
 
-  // Extrair a categoria da URL se presente
+  // Usar o valor de params.slug quando o route match for válido
   useEffect(() => {
-    console.log('URL mudou para:', location);
-    const match = location.match(/\/ferramentas\/categoria\/([^\/]+)/);
-    if (match) {
-      const slug = match[1];
-      console.log('Categoria encontrada na URL:', slug);
-      setCategoriaSelecionada(slug);
-    } else if (location === '/ferramentas') {
-      console.log('Removendo filtro de categoria (URL base)');
+    if (match && params && params.slug) {
+      console.log('Categoria detectada via useRoute:', params.slug);
+      if (categoriaSelecionada !== params.slug) {
+        setCategoriaSelecionada(params.slug);
+      }
+    } else if (!match && location === '/ferramentas' && categoriaSelecionada !== null) {
+      console.log('Rota base detectada, removendo filtro de categoria');
       setCategoriaSelecionada(null);
     }
-  }, [location]);
+  }, [match, params, location, categoriaSelecionada]);
 
   // Buscar categorias
   const { data: categorias, isLoading: isLoadingCategorias } = useQuery<Categoria[]>({
@@ -102,24 +105,15 @@ const FerramentasPage: React.FC = () => {
 
   // Função para mudar a categoria selecionada
   const handleCategoriaChange = (slug: string | null) => {
-    console.log('Categoria selecionada:', slug);
+    console.log('Categoria selecionada no clique:', slug);
     
-    if (categoriaSelecionada === slug) {
-      // Se clicar na mesma categoria, remove o filtro
-      console.log('Removendo filtro de categoria');
-      setCategoriaSelecionada(null);
-      
-      // Atualizar URL para a página base
-      setLocation('/ferramentas');
+    // Lógica simplificada - sempre mudamos para a categoria ou para "todas"
+    if (slug) {
+      console.log('Navegando para categoria:', slug);
+      setLocation(`/ferramentas/categoria/${slug}`);
     } else {
-      console.log('Mudando para categoria:', slug);
-      
-      // Atualizar URL para a categoria específica ou a base
-      if (slug) {
-        setLocation(`/ferramentas/categoria/${slug}`);
-      } else {
-        setLocation('/ferramentas');
-      }
+      console.log('Navegando para todas as categorias');
+      setLocation('/ferramentas');
     }
     
     // Resetar busca ao mudar categoria
