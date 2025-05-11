@@ -750,7 +750,7 @@ export default function ArtDetail() {
                   </motion.div>
                 )}
                 
-                {art.viewCount && art.viewCount > 10 && (
+                {art.viewCount && art.viewCount > 10 ? (
                   <motion.div
                     initial={{ x: 20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
@@ -761,9 +761,9 @@ export default function ArtDetail() {
                       Popular
                     </Badge>
                   </motion.div>
-                )}
+                ) : null}
                 
-                {new Date(art.createdAt).getTime() > new Date().getTime() - 7 * 24 * 60 * 60 * 1000 && (
+                {new Date(art.createdAt).getTime() > new Date().getTime() - 7 * 24 * 60 * 60 * 1000 ? (
                   <motion.div
                     initial={{ x: 20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
@@ -774,7 +774,7 @@ export default function ArtDetail() {
                       Novidade
                     </Badge>
                   </motion.div>
-                )}
+                ) : null}
               </div>
               
               {/* Overlay de informações no hover */}
@@ -810,7 +810,7 @@ export default function ArtDetail() {
                   </motion.div>
                 )}
                 
-                {art.viewCount && art.viewCount > 10 && (
+                {art.viewCount && art.viewCount > 10 ? (
                   <motion.div
                     initial={{ y: 10, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
@@ -821,9 +821,9 @@ export default function ArtDetail() {
                       Popular
                     </Badge>
                   </motion.div>
-                )}
+                ) : null}
                 
-                {new Date(art.createdAt).getTime() > new Date().getTime() - 7 * 24 * 60 * 60 * 1000 && (
+                {new Date(art.createdAt).getTime() > new Date().getTime() - 7 * 24 * 60 * 60 * 1000 ? (
                   <motion.div
                     initial={{ y: 10, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
@@ -834,7 +834,7 @@ export default function ArtDetail() {
                       Novidade
                     </Badge>
                   </motion.div>
-                )}
+                ) : null}
               </div>
             </div>
           </motion.div>
