@@ -728,6 +728,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Versão em português da API de categorias (compatibilidade com frontend)
+  app.get("/api/categorias", async (req, res) => {
+    try {
+      const categories = await storage.getCategories();
+      
+      // Para cada categoria, realizar uma busca precisa das artes com contagem
+      const enhancedCategories = await Promise.all(categories.map(async (category) => {
+        // Buscar todas as artes dessa categoria com limites altos para garantir precisão
+        const { arts, totalCount } = await storage.getArts(1, 1000, { categoryId: category.id });
+        
+        // Se não há artes, retornamos com contagem zero e data atual
+        if (arts.length === 0) {
+          return {
+            ...category,
+            artCount: 0,
+            lastUpdate: new Date(),
+            formats: []
+          };
+        }
+        
+        // Ordenar por data de atualização e pegar a mais recente
+        const sortedArts = [...arts].sort((a, b) => 
+          new Date(b.atualizadoem).getTime() - new Date(a.atualizadoem).getTime()
+        );
+        
+        // Data da última atualização é a data da arte mais recente
+        const lastUpdate = sortedArts[0].atualizadoem;
+        
+        // Coletar formatos únicos de artes nesta categoria
+        const uniqueFormats = Array.from(new Set(arts.map(art => art.format)));
+        
+        // Retornar categoria com informações extras completas
+        return {
+          ...category,
+          artCount: totalCount,
+          lastUpdate,
+          formats: uniqueFormats
+        };
+      }));
+      
+      res.json(enhancedCategories);
+    } catch (error) {
+      console.error("Erro ao buscar categorias com estatísticas:", error);
+      res.status(500).json({ message: "Erro ao buscar categorias" });
+    }
+  });
+  
   // Get Category by Slug
   app.get("/api/categorias/slug/:slug", async (req, res) => {
     try {
@@ -849,6 +896,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/categories/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const category = await storage.getCategoryById(id);
+      
+      if (!category) {
+        return res.status(404).json({ message: "Categoria não encontrada" });
+      }
+      
+      res.json(category);
+    } catch (error) {
+      res.status(500).json({ message: "Erro ao buscar categoria" });
+    }
+  });
+  
+  // Versão em português - Busca de categoria por ID (compatibilidade com frontend)
+  app.get("/api/categorias/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const category = await storage.getCategoryById(id);
