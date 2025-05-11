@@ -91,18 +91,6 @@ const FerramentasCategoria: React.FC<FerramentasCategoriaProps> = ({
             )}
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                console.log('Ver todos em categoria:', categoria.slug);
-                onCategoriaClick(categoria.slug);
-              }}
-              className="flex items-center gap-1 text-primary hover:text-primary/80 hover:bg-primary/10"
-            >
-              Ver todos
-              <ChevronRight className="h-4 w-4" />
-            </Button>
             {showLeftArrow && (
               <Button
                 variant="outline"
