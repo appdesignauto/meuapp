@@ -365,4 +365,82 @@ router.get('/api/tiposArquivo', async (req: Request, res: Response) => {
   }
 });
 
+// Rotas para favoritos em português
+
+// Rota para obter todos os favoritos do usuário - "/api/favoritos"
+router.get('/api/favoritos', async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 8;
+    
+    // Verificar se o usuário está autenticado
+    if (!req.isAuthenticated || !req.isAuthenticated()) {
+      return res.status(401).json({ message: "Não autenticado" });
+    }
+    
+    // Obter o ID do usuário da sessão
+    const userId = (req.user as any)?.id;
+    if (!userId) {
+      return res.status(400).json({ message: "Usuário não identificado" });
+    }
+    
+    // Obter favoritos com paginação
+    const favorites = await storage.getUserFavorites(userId, page, limit);
+    res.json(favorites);
+  } catch (error) {
+    console.error("Erro ao buscar favoritos:", error);
+    res.status(500).json({ message: "Erro ao buscar favoritos" });
+  }
+});
+
+// Rota para verificar se uma arte está favoritada - "/api/favoritos/check/:id"
+router.get('/api/favoritos/check/:id', async (req: Request, res: Response) => {
+  try {
+    const artId = parseInt(req.params.id);
+    
+    // Verificar se o usuário está autenticado
+    if (!req.isAuthenticated || !req.isAuthenticated()) {
+      return res.json({ isFavorite: false });
+    }
+    
+    // Obter o ID do usuário da sessão
+    const userId = (req.user as any)?.id;
+    if (!userId) {
+      return res.json({ isFavorite: false });
+    }
+    
+    // Verificar se a arte está favoritada
+    const isFavorite = await storage.checkFavorite(userId, artId);
+    res.json({ isFavorite });
+  } catch (error) {
+    console.error("Erro ao verificar favorito:", error);
+    res.status(500).json({ message: "Erro ao verificar favorito" });
+  }
+});
+
+// Rota para alternar favorito - "/api/favoritos/toggle/:id"
+router.post('/api/favoritos/toggle/:id', async (req: Request, res: Response) => {
+  try {
+    const artId = parseInt(req.params.id);
+    
+    // Verificar se o usuário está autenticado
+    if (!req.isAuthenticated || !req.isAuthenticated()) {
+      return res.status(401).json({ message: "Não autenticado" });
+    }
+    
+    // Obter o ID do usuário da sessão
+    const userId = (req.user as any)?.id;
+    if (!userId) {
+      return res.status(400).json({ message: "Usuário não identificado" });
+    }
+    
+    // Alternar o estado do favorito
+    const result = await storage.toggleFavorite(userId, artId);
+    res.json(result);
+  } catch (error) {
+    console.error("Erro ao alternar favorito:", error);
+    res.status(500).json({ message: "Erro ao alternar favorito" });
+  }
+});
+
 export default router;
