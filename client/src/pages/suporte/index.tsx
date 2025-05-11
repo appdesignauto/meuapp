@@ -3,7 +3,6 @@ import { Helmet } from 'react-helmet-async';
 import { LifeBuoy, Mail, MessageCircle, HeartHandshake, Users, CheckCircle2, CircleHelp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +16,7 @@ const SuportePage = () => {
     mensagem: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState("canais");
   const { toast } = useToast();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -63,14 +63,32 @@ const SuportePage = () => {
             </p>
           </div>
           
-          <Tabs defaultValue="canais" className="mb-6 sm:mb-12">
-            <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 gap-1 mb-4 sm:mb-6 relative z-20">
-              <TabsTrigger value="canais" className="text-sm py-2 px-3 h-auto">Canais de Atendimento</TabsTrigger>
-              <TabsTrigger value="faq" className="text-sm py-2 px-3 h-auto">Perguntas Frequentes</TabsTrigger>
-              <TabsTrigger value="contato" className="text-sm py-2 px-3 h-auto">Formulário de Contato</TabsTrigger>
-            </TabsList>
+          {/* Navegação por abas simplificada */}
+          <div className="mb-6 sm:mb-12">
+            {/* Seção de abas (implementação manual) */}
+            <div className="flex flex-col space-y-2 mb-6">
+              <button 
+                onClick={() => setActiveTab("canais")}
+                className={`w-full py-2 px-3 text-sm rounded-md transition-colors ${activeTab === "canais" ? "bg-primary text-white" : "bg-gray-100"}`}
+              >
+                Canais de Atendimento
+              </button>
+              <button 
+                onClick={() => setActiveTab("faq")}
+                className={`w-full py-2 px-3 text-sm rounded-md transition-colors ${activeTab === "faq" ? "bg-primary text-white" : "bg-gray-100"}`}
+              >
+                Perguntas Frequentes
+              </button>
+              <button 
+                onClick={() => setActiveTab("contato")}
+                className={`w-full py-2 px-3 text-sm rounded-md transition-colors ${activeTab === "contato" ? "bg-primary text-white" : "bg-gray-100"}`}
+              >
+                Formulário de Contato
+              </button>
+            </div>
             
-            <TabsContent value="canais" className="mt-2 sm:mt-4">
+            {/* Conteúdo da aba Canais de Atendimento */}
+            {activeTab === "canais" && (
               <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 <Card className="border-blue-100 hover:shadow-md transition-shadow">
                   <CardHeader className="pb-2 sm:pb-3 space-y-2">
@@ -151,9 +169,10 @@ const SuportePage = () => {
                   </CardFooter>
                 </Card>
               </div>
-            </TabsContent>
+            )}
             
-            <TabsContent value="faq" className="mt-2 sm:mt-4">
+            {/* Conteúdo da aba Perguntas Frequentes */}
+            {activeTab === "faq" && (
               <div className="space-y-4 sm:space-y-6">
                 <Card className="p-3 sm:p-6">
                   <CardHeader className="px-0 pt-0 pb-2 sm:pb-4">
@@ -220,9 +239,10 @@ const SuportePage = () => {
                   </CardContent>
                 </Card>
               </div>
-            </TabsContent>
+            )}
             
-            <TabsContent value="contato" className="mt-2 sm:mt-4">
+            {/* Conteúdo da aba Formulário de Contato */}
+            {activeTab === "contato" && (
               <Card className="p-3 sm:p-6">
                 <CardHeader className="px-0 pt-0 pb-2 sm:pb-4">
                   <CardTitle className="text-lg sm:text-xl">Formulário de Contato</CardTitle>
@@ -315,16 +335,19 @@ const SuportePage = () => {
                   </form>
                 </CardContent>
               </Card>
-            </TabsContent>
-          </Tabs>
+            )}
+          </div>
           
-          {/* Seção de compromissos */}
-          <div className="mt-10 sm:mt-16 mb-8 sm:mb-10">
-            <h2 className="text-xl sm:text-2xl font-bold text-center mb-6 sm:mb-8">Nosso Compromisso com Você</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+          {/* Seção de destaque de recursos */}
+          <div className="mt-12 sm:mt-16">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-center mb-6 sm:mb-8">
+              Nosso Compromisso com o Suporte
+            </h2>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
               <div className="flex flex-col items-center text-center p-3 sm:p-4">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-50 rounded-full flex items-center justify-center mb-3 sm:mb-4">
-                  <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500" />
+                  <LifeBuoy className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500" />
                 </div>
                 <h3 className="font-semibold text-sm sm:text-base mb-1 sm:mb-2">Resposta Rápida</h3>
                 <p className="text-xs sm:text-sm text-muted-foreground">
