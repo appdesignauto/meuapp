@@ -600,22 +600,24 @@ export default function ArtDetail() {
   };
 
   // Preparar dados para SEO
-  const artCategory = categoryData?.name || '';
+  const artCategory = art.category?.name || '';
   const seoTitle = formatSeoTitle(art.title, artCategory);
-  const seoDescription = generateMetaDescription(art.title, artCategory, art.format, art.fileType);
+  const seoDescription = generateMetaDescription(art.title, artCategory, 
+    typeof art.format === 'string' ? art.format : '',
+    typeof art.fileType === 'string' ? art.fileType : '');
   
   // URL canônica baseada na categoria e no slug da arte
-  const categorySlug = categoryData?.slug || '';
+  const categorySlug = art.category?.slug || '';
   const artSlug = art.slug || '';
   const canonicalUrl = artSlug ? generateCanonicalUrl(categorySlug, artSlug) : window.location.href;
   
   // Gerar markup de dados estruturados JSON-LD
   const schemaMarkup = generateArtSchemaMarkup({
     ...art,
-    category: categoryData,
+    category: art.category,
     description: seoDescription,
     createdAt: art.createdAt,
-    designer: designerData
+    designer: art.designer
   }, canonicalUrl);
 
   return (
