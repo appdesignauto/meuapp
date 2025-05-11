@@ -153,11 +153,20 @@ router.get('/api/artes/:id', async (req: Request, res: Response) => {
           designerObj.recentArts = [];
 
           try {
-            // Utilizar métodos existentes no storage
-            const arts = await storage.getArtsByDesignerId(designer.id, 1, 4);
-            if (arts && arts.arts) {
-              designerObj.totalArts = arts.totalCount || 0;
-              designerObj.recentArts = arts.arts.slice(0, 4);
+            // Utilizar métodos existentes no storage de maneira compatível
+            const arts = await storage.getArtsByDesignerId(designer.id);
+            
+            // Verificar se a resposta é um array ou um objeto com propriedade arts
+            if (arts) {
+              if (Array.isArray(arts)) {
+                // Se for array, usamos diretamente
+                designerObj.totalArts = arts.length;
+                designerObj.recentArts = arts.slice(0, 4);
+              } else if (arts.arts && Array.isArray(arts.arts)) {
+                // Se for objeto com propriedade arts
+                designerObj.totalArts = arts.totalCount || arts.arts.length;
+                designerObj.recentArts = arts.arts.slice(0, 4);
+              }
             }
           } catch (artsError) {
             console.error(`Erro ao buscar artes do designer: ${artsError}`);
@@ -219,7 +228,8 @@ router.get('/api/artes/:id', async (req: Request, res: Response) => {
     // Retornar a arte com todas as informações adicionais
     res.json({
       ...art,
-      isPremiumLocked
+      isPremiumLocked,
+      atualizadoem: art.updatedAt // Garantir a compatibilidade com o frontend
     });
   } catch (error) {
     console.error("Erro ao buscar arte por ID:", error);
@@ -309,11 +319,11 @@ router.get('/api/categorias', async (req: Request, res: Response) => {
       
       // Ordenar por data de atualização e pegar a mais recente
       const sortedArts = [...arts].sort((a, b) => 
-        new Date(b.atualizadoem).getTime() - new Date(a.atualizadoem).getTime()
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
       );
       
       // Data da última atualização é a data da arte mais recente
-      const lastUpdate = sortedArts[0].atualizadoem;
+      const lastUpdate = sortedArts[0].updatedAt;
       
       // Coletar formatos únicos de artes nesta categoria
       const uniqueFormats = Array.from(new Set(arts.map(art => art.format)));
