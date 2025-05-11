@@ -729,6 +729,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Get Category by Slug
+  app.get("/api/categorias/slug/:slug", async (req, res) => {
+    try {
+      const slug = req.params.slug;
+      const category = await storage.getCategoryBySlug(slug);
+      
+      if (!category) {
+        return res.status(404).json({ message: "Categoria não encontrada" });
+      }
+      
+      // Buscar todas as artes desta categoria para determinar a data de atualização
+      // Não usar filtro sortBy para garantir que todas as artes serão retornadas
+      const { arts } = await storage.getArts(1, 1000, { categoryId: category.id });
+      
+      // Data de criação - usar uma data histórica fixa se não for possível determinar
+      // Neste caso, usamos a data de lançamento do sistema no início de 2025
+      const createdDate = new Date("2025-01-01");
+      
+      // Data de atualização - usar a data da arte mais recente ou a data atual se não houver artes
+      let updatedDate = new Date();
+      
+      if (arts && arts.length > 0) {
+        // Ordenar as artes por data de atualização de forma decrescente
+        // (mais recente primeiro) independente do que foi retornado do banco
+        const sortedArts = [...arts].sort((a, b) => {
+          const dateA = a.updatedAt ? new Date(a.updatedAt) : new Date(0);
+          const dateB = b.updatedAt ? new Date(b.updatedAt) : new Date(0);
+          return dateB.getTime() - dateA.getTime();
+        });
+        
+        // Pegar a data de atualização da arte mais recente (primeiro elemento após ordenação)
+        if (sortedArts[0].updatedAt) {
+          updatedDate = new Date(sortedArts[0].updatedAt);
+        }
+      }
+      
+      // Adicionar campos calculados
+      const enrichedCategory = {
+        ...category,
+        createdAt: createdDate,
+        updatedAt: updatedDate
+      };
+      
+      res.json(enrichedCategory);
+    } catch (error: any) {
+      console.error("Erro ao buscar categoria por slug:", error);
+      res.status(500).json({ message: error.message || "Erro ao buscar categoria" });
+    }
+  });
+  
+  // Manter o endpoint antigo para compatibilidade
   app.get("/api/categories/slug/:slug", async (req, res) => {
     try {
       const slug = req.params.slug;
