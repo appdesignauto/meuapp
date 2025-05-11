@@ -169,7 +169,7 @@ export default function ArtDetail() {
 
   // Fetch art details
   const { data: art, isLoading, error } = useQuery({
-    queryKey: ['/api/arts', id],
+    queryKey: ['/api/artes', id],
     queryFn: async () => {
       const res = await fetch(`/api/artes/${id}`);
       if (!res.ok) {
@@ -436,7 +436,7 @@ export default function ArtDetail() {
     },
     onSuccess: () => {
       // Invalidar a query para atualizar os detalhes da arte com o novo contador
-      queryClient.invalidateQueries({ queryKey: ['/api/arts', id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/artes', id] });
       toast({
         title: "Compartilhamento registrado",
         description: "Obrigado por compartilhar esta arte!",

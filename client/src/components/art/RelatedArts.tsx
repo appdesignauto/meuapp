@@ -25,7 +25,7 @@ export default function RelatedArts({
   const [, setLocation] = useLocation();
   
   const { data: relatedArts, isLoading, error } = useQuery({
-    queryKey: ['/api/arts', artId, 'related'],
+    queryKey: ['/api/artes', artId, 'related'],
     queryFn: async () => {
       const res = await fetch(`/api/artes/${artId}/related?limit=${limit}`);
       if (!res.ok) {
