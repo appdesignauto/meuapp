@@ -69,7 +69,7 @@ router.post('/api/admin/artes/multi', isAuthenticated, async (req: Request, res:
           // Tentar atualizar o groupId usando SQL direto para evitar problemas com o nome da coluna
           // Importante: no PostgreSQL, a sintaxe correta tem um WHERE separado por espaço
           const result = await db.execute(sql`
-            UPDATE arts 
+            UPDATE artes 
             SET "groupId" = ${artGroupId}
             WHERE id = ${newArt.id}
           `);
@@ -136,12 +136,12 @@ router.get('/api/artes/group/:groupId', async (req: Request, res: Response) => {
     
     if (isUserAdmin) {
       querySQL = sql`
-        SELECT * FROM arts 
+        SELECT * FROM artes 
         WHERE "groupId" = ${groupId}
       `;
     } else {
       querySQL = sql`
-        SELECT * FROM arts 
+        SELECT * FROM artes 
         WHERE "groupId" = ${groupId} AND "isVisible" = true
       `;
     }
@@ -177,7 +177,7 @@ router.get('/api/admin/artes/:id/check-group', isAuthenticated, async (req: Requ
     
     // Usar SQL direto para evitar problemas com o método entries()
     const result = await db.execute(sql`
-      SELECT "groupId" FROM arts WHERE id = ${id}
+      SELECT "groupId" FROM artes WHERE id = ${id}
     `);
     
     if (!result || !result.rows || result.rows.length === 0) {
@@ -217,7 +217,7 @@ router.get('/api/admin/artes/group/:groupId', isAuthenticated, async (req: Reque
     
     // Buscar todas as artes do grupo usando SQL direto para evitar problemas
     const result = await db.execute(sql`
-      SELECT * FROM arts 
+      SELECT * FROM artes 
       WHERE "groupId" = ${groupId}
     `);
     
@@ -353,7 +353,7 @@ router.put('/api/admin/artes/group/:groupId', isAuthenticated, async (req: Reque
             // Tentar atualizar o groupId usando SQL direto para evitar problemas com o nome da coluna
             // Importante: no PostgreSQL, a sintaxe correta tem um WHERE separado por espaço
             const result = await db.execute(sql`
-              UPDATE arts 
+              UPDATE artes 
               SET "groupId" = ${groupId}
               WHERE id = ${newArt.id}
             `);
