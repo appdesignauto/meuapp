@@ -171,7 +171,7 @@ export default function ArtDetail() {
   const { data: art, isLoading, error } = useQuery({
     queryKey: ['/api/arts', id],
     queryFn: async () => {
-      const res = await fetch(`/api/arts/${id}`);
+      const res = await fetch(`/api/artes/${id}`);
       if (!res.ok) {
         throw new Error('Erro ao carregar detalhes da arte');
       }
@@ -208,7 +208,7 @@ export default function ArtDetail() {
 
   // Buscar artes do mesmo grupo (para exibir outros formatos)
   const { data: groupArts } = useQuery({
-    queryKey: ['/api/arts/group', groupInfo?.groupId],
+    queryKey: ['/api/artes/group', groupInfo?.groupId],
     queryFn: async () => {
       if (!groupInfo?.groupId) {
         console.log('Arte não possui groupId confirmado, retornando array vazio');
@@ -217,7 +217,7 @@ export default function ArtDetail() {
       console.log(`Buscando artes do grupo: ${groupInfo.groupId}`);
       try {
         // Usar a rota pública para buscar artes do grupo
-        const res = await fetch(`/api/arts/group/${groupInfo.groupId}`);
+        const res = await fetch(`/api/artes/group/${groupInfo.groupId}`);
         if (!res.ok) {
           console.error(`Erro ao buscar artes do grupo: ${res.status} ${res.statusText}`);
           return { arts: [] };
@@ -1103,7 +1103,7 @@ export default function ArtDetail() {
                           `}
                           onClick={() => {
                             if (!isCurrentFormat) {
-                              setLocation(`/arts/${formatArt.id}`);
+                              setLocation(`/artes/${formatArt.id}`);
                             }
                           }}
                         >
