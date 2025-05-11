@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { Copy, Crown, Layers, User } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { createSeoUrl } from "@/lib/utils/slug";
 
 interface Art {
   id: number;
