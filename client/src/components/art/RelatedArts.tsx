@@ -25,9 +25,9 @@ export default function RelatedArts({
   const [, setLocation] = useLocation();
   
   const { data: relatedArts, isLoading, error } = useQuery({
-    queryKey: ['/api/artes', artId, 'related'],
+    queryKey: ['/api/arts', artId, 'related'],
     queryFn: async () => {
-      const res = await fetch(`/api/artes/${artId}/related?limit=${limit}`);
+      const res = await fetch(`/api/arts/${artId}/related?limit=${limit}`);
       if (!res.ok) {
         throw new Error('Erro ao carregar artes relacionadas');
       }
