@@ -12,7 +12,7 @@ import { eq, and, sql } from 'drizzle-orm';
 const router = Router();
 
 // Rota para criação de artes em múltiplos formatos
-router.post('/api/admin/artes/multi', isAuthenticated, async (req: Request, res: Response) => {
+router.post('/api/admin/arts/multi', isAuthenticated, async (req: Request, res: Response) => {
   try {
     // Verificar se o usuário é admin ou designer_adm
     const userRole = req.user?.nivelacesso;
@@ -69,7 +69,7 @@ router.post('/api/admin/artes/multi', isAuthenticated, async (req: Request, res:
           // Tentar atualizar o groupId usando SQL direto para evitar problemas com o nome da coluna
           // Importante: no PostgreSQL, a sintaxe correta tem um WHERE separado por espaço
           const result = await db.execute(sql`
-            UPDATE artes 
+            UPDATE arts 
             SET "groupId" = ${artGroupId}
             WHERE id = ${newArt.id}
           `);
@@ -122,7 +122,7 @@ router.post('/api/admin/artes/multi', isAuthenticated, async (req: Request, res:
 });
 
 // Rota para buscar artes por ID de grupo (para todos os usuários)
-router.get('/api/artes/group/:groupId', async (req: Request, res: Response) => {
+router.get('/api/arts/group/:groupId', async (req: Request, res: Response) => {
   try {
     const { groupId } = req.params;
     
@@ -136,12 +136,12 @@ router.get('/api/artes/group/:groupId', async (req: Request, res: Response) => {
     
     if (isUserAdmin) {
       querySQL = sql`
-        SELECT * FROM artes 
+        SELECT * FROM arts 
         WHERE "groupId" = ${groupId}
       `;
     } else {
       querySQL = sql`
-        SELECT * FROM artes 
+        SELECT * FROM arts 
         WHERE "groupId" = ${groupId} AND "isVisible" = true
       `;
     }
@@ -170,14 +170,14 @@ router.get('/api/artes/group/:groupId', async (req: Request, res: Response) => {
 });
 
 // Rota para verificar o groupId de uma arte específica
-router.get('/api/admin/artes/:id/check-group', isAuthenticated, async (req: Request, res: Response) => {
+router.get('/api/admin/arts/:id/check-group', isAuthenticated, async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id);
     console.log(`Verificando groupId para arte ${id}`);
     
     // Usar SQL direto para evitar problemas com o método entries()
     const result = await db.execute(sql`
-      SELECT "groupId" FROM artes WHERE id = ${id}
+      SELECT "groupId" FROM arts WHERE id = ${id}
     `);
     
     if (!result || !result.rows || result.rows.length === 0) {
@@ -203,7 +203,7 @@ router.get('/api/admin/artes/:id/check-group', isAuthenticated, async (req: Requ
 });
 
 // Rota administrativa para buscar artes por ID de grupo (somente admin)
-router.get('/api/admin/artes/group/:groupId', isAuthenticated, async (req: Request, res: Response) => {
+router.get('/api/admin/arts/group/:groupId', isAuthenticated, async (req: Request, res: Response) => {
   try {
     // Verificar se o usuário é admin ou designer autorizado
     const userRole = req.user?.nivelacesso;
@@ -217,7 +217,7 @@ router.get('/api/admin/artes/group/:groupId', isAuthenticated, async (req: Reque
     
     // Buscar todas as artes do grupo usando SQL direto para evitar problemas
     const result = await db.execute(sql`
-      SELECT * FROM artes 
+      SELECT * FROM arts 
       WHERE "groupId" = ${groupId}
     `);
     
@@ -246,7 +246,7 @@ router.get('/api/admin/artes/group/:groupId', isAuthenticated, async (req: Reque
 });
 
 // Nova rota para atualizar um grupo de artes (PUT)
-router.put('/api/admin/artes/group/:groupId', isAuthenticated, async (req: Request, res: Response) => {
+router.put('/api/admin/arts/group/:groupId', isAuthenticated, async (req: Request, res: Response) => {
   try {
     // Verificar se o usuário é admin ou designer autorizado
     const userRole = req.user?.nivelacesso;
@@ -263,7 +263,7 @@ router.put('/api/admin/artes/group/:groupId', isAuthenticated, async (req: Reque
     
     // Buscar todas as artes existentes do grupo usando SQL direto para evitar problemas com o nome da coluna
     const result = await db.execute(sql`
-      SELECT * FROM artes 
+      SELECT * FROM arts 
       WHERE "groupId" = ${groupId}
     `);
     
@@ -353,7 +353,7 @@ router.put('/api/admin/artes/group/:groupId', isAuthenticated, async (req: Reque
             // Tentar atualizar o groupId usando SQL direto para evitar problemas com o nome da coluna
             // Importante: no PostgreSQL, a sintaxe correta tem um WHERE separado por espaço
             const result = await db.execute(sql`
-              UPDATE artes 
+              UPDATE arts 
               SET "groupId" = ${groupId}
               WHERE id = ${newArt.id}
             `);

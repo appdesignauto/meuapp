@@ -111,7 +111,7 @@ export default function PainelArtes() {
 
   // Consulta para listar todas as artes
   const { data: artsData, isLoading: artsLoading } = useQuery({
-    queryKey: ["/api/artes"],
+    queryKey: ["/api/arts"],
   });
 
   // Consulta para obter categorias para filtros

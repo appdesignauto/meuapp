@@ -202,9 +202,9 @@ const ArtForm = ({ isOpen, onClose, editingArt }: ArtFormProps) => {
       };
       
       if (editingArt) {
-        return apiRequest('PUT', `/api/admin/artes/${editingArt.id}`, transformedData);
+        return apiRequest('PUT', `/api/admin/arts/${editingArt.id}`, transformedData);
       } else {
-        return apiRequest('POST', '/api/admin/artes', transformedData);
+        return apiRequest('POST', '/api/admin/arts', transformedData);
       }
     },
     onSuccess: () => {
