@@ -223,6 +223,153 @@ const SiteSettings = () => {
               </CardContent>
             </Card>
 
+            {/* Seção de gerenciamento do favicon */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Favicon do Site</CardTitle>
+                <CardDescription>
+                  Personalize o ícone que aparece na aba do navegador.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="mb-4">
+                  <div className="border rounded-lg p-6 flex items-center justify-center bg-gray-50">
+                    {settings?.faviconUrl ? (
+                      <div className="flex flex-col items-center justify-center">
+                        <div className="border border-gray-200 rounded-lg p-2 bg-white mb-3">
+                          <img 
+                            src={`${settings.faviconUrl}?v=${Date.now()}&r=${Math.random()}`}
+                            alt="Favicon Atual" 
+                            key={`favicon-preview-${Date.now()}_${Math.random()}`}
+                            className="h-10 w-10 object-contain" 
+                            referrerPolicy="no-referrer"
+                            crossOrigin="anonymous"
+                            onError={(e) => {
+                              console.error('Erro ao carregar favicon:', e);
+                              const target = e.target as HTMLImageElement;
+                              target.src = `/favicon.ico?v=${Date.now()}`;
+                              target.onerror = null;
+                            }}
+                          />
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          Visualização da aba do navegador:
+                        </div>
+                        <div className="mt-2 border rounded bg-gray-200 p-2 flex items-center w-44">
+                          <img 
+                            src={`${settings.faviconUrl}?v=${Date.now()}&r=${Math.random()}`}
+                            alt="Tab Favicon" 
+                            className="h-4 w-4 mr-2" 
+                          />
+                          <span className="text-xs truncate">DesignAuto</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-gray-400 text-center">
+                        <Upload className="mx-auto h-12 w-12 mb-2" />
+                        <p>Nenhum favicon personalizado</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <form 
+                  action="/api/site-settings/favicon"
+                  method="POST" 
+                  encType="multipart/form-data"
+                  className="space-y-4"
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    const form = e.target as HTMLFormElement;
+                    const formData = new FormData(form);
+                    
+                    if (!formData.get('favicon') || !(formData.get('favicon') as File).size) {
+                      toast({
+                        title: 'Nenhum arquivo selecionado',
+                        description: 'Por favor, selecione um arquivo de imagem para o favicon.',
+                        variant: 'destructive',
+                      });
+                      return;
+                    }
+                    
+                    try {
+                      setUpdating(true);
+                      
+                      toast({
+                        title: 'Enviando favicon...',
+                        description: 'Aguarde enquanto o favicon é processado.',
+                        variant: 'default',
+                      });
+                      
+                      const response = await fetch('/api/site-settings/favicon', {
+                        method: 'POST',
+                        body: formData,
+                      });
+                      
+                      if (!response.ok) {
+                        throw new Error('Falha ao fazer upload do favicon');
+                      }
+                      
+                      const data = await response.json();
+                      
+                      toast({
+                        title: 'Favicon atualizado com sucesso',
+                        description: 'O novo favicon foi configurado para o site.',
+                        variant: 'default',
+                      });
+                      
+                      // Recarregar as configurações
+                      loadSettings();
+                      
+                      // Limpar o campo de arquivo
+                      form.reset();
+                      
+                    } catch (error: any) {
+                      console.error('Erro ao enviar favicon:', error);
+                      toast({
+                        title: 'Erro ao enviar favicon',
+                        description: error.message || 'Ocorreu um erro ao processar o arquivo.',
+                        variant: 'destructive',
+                      });
+                    } finally {
+                      setUpdating(false);
+                    }
+                  }}
+                >
+                  <div className="space-y-2">
+                    <Label htmlFor="favicon">Selecione um novo favicon</Label>
+                    <Input
+                      id="favicon"
+                      name="favicon"
+                      type="file"
+                      accept=".ico,.png,.jpg,.jpeg,.svg"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Formatos recomendados: .ico, .png (quadrado). Tamanho ideal: 32x32 ou 64x64 pixels.
+                    </p>
+                  </div>
+                  
+                  <Button 
+                    type="submit" 
+                    disabled={updating}
+                    className="w-full"
+                  >
+                    {updating ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Enviando...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Enviar Novo Favicon
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
             {/* Card para outras configurações de aparência */}
             <Card>
               <CardHeader>

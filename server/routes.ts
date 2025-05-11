@@ -30,6 +30,7 @@ const scryptAsync = promisify(scrypt);
 
 // Importar nossas rotas personalizadas
 import logoUploadRouter from './routes/logo-upload';
+import faviconUploadRouter from './routes/favicon-upload'; // Nova rota para upload de favicon
 import removeLogoRouter from './routes/remove-logo';
 import supabaseRegisterTestRouter from './routes/supabase-register-test';
 import avatarUploadRouter from './routes/avatar-upload';
