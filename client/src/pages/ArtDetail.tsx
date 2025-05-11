@@ -43,6 +43,7 @@ import { format, formatDistance } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import SEO from '@/components/seo';
 import { formatSeoTitle, generateMetaDescription, generateArtSchemaMarkup, generateCanonicalUrl } from '@/lib/utils/seo';
+import { extractIdFromSeoUrl } from '@/lib/utils/slug';
 
 // Interfaces para tipagem de dados
 interface RecentArt {
@@ -164,7 +165,9 @@ export default function ArtDetail() {
   // Garantir rolagem para o topo ao navegar para esta página
   useScrollTop();
   
-  const { id } = useParams<{ id: string }>();
+  // Extrair o ID numérico da URL com formato ID-slug
+  const { id: seoUrl } = useParams<{ id: string }>();
+  const id = seoUrl ? extractIdFromSeoUrl(seoUrl) : null;
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { user } = useAuth();
