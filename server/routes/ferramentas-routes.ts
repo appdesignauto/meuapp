@@ -364,7 +364,7 @@ router.post("/api/admin/ferramentas", isAdmin, upload.none(), async (req: Reques
         websiteUrl,
         isExterno: isExterno !== undefined ? isExterno : true,
         isNovo: isNovo !== undefined ? isNovo : false,
-
+        isPopular: isPopular !== undefined ? isPopular : false,
         categoriaId,
         ordem: ordem || 0,
         ativo: true,
@@ -418,6 +418,7 @@ router.put("/api/admin/ferramentas/:id", isAdmin, upload.none(), async (req: Req
     const websiteUrl = req.body.url; // Campo vindo do frontend
     const isExterno = req.body.externo === 'true'; 
     const isNovo = req.body.novo === 'true';
+    const isPopular = req.body.popular === 'true';
     let categoriaId: number;
     
     try {
@@ -495,6 +496,7 @@ router.put("/api/admin/ferramentas/:id", isAdmin, upload.none(), async (req: Req
       websiteUrl,
       isExterno: isExterno !== undefined ? isExterno : ferramentaExistente.isExterno,
       isNovo: isNovo !== undefined ? isNovo : ferramentaExistente.isNovo,
+      isPopular: isPopular !== undefined ? isPopular : ferramentaExistente.isPopular,
       categoriaId,
       ordem: ordem !== undefined ? ordem : ferramentaExistente.ordem,
       ativo: ativo !== undefined ? ativo : ferramentaExistente.ativo,
