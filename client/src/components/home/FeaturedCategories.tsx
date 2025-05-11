@@ -35,7 +35,7 @@ const FeaturedCategories = ({ selectedCategory, onCategorySelect }: FeaturedCate
       const category = categories?.find(c => c.id === categoryId);
       if (category) {
         // Redirecionar para a página da categoria específica
-        setLocation(`/categories/${category.slug}`);
+        setLocation(`/categorias/${category.slug}`);
       }
     } else if (onCategorySelect) {
       // Se não for uma categoria específica, usar o onCategorySelect apenas como fallback

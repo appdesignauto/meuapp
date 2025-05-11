@@ -169,9 +169,9 @@ export default function ArtDetail() {
 
   // Fetch art details
   const { data: art, isLoading, error } = useQuery({
-    queryKey: ['/api/artes', id],
+    queryKey: ['/api/arts', id],
     queryFn: async () => {
-      const res = await fetch(`/api/artes/${id}`);
+      const res = await fetch(`/api/arts/${id}`);
       if (!res.ok) {
         throw new Error('Erro ao carregar detalhes da arte');
       }
