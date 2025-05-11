@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -294,50 +295,76 @@ const FerramentasPage: React.FC = () => {
               />
             </div>
             
-            {/* Filtro de categorias para mobile/tablet */}
-            {categorias && categorias.length > 0 && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="md:hidden h-12 border-gray-200 dark:border-gray-800 bg-white/90 dark:bg-gray-900/90">
-                    <Filter className="h-4 w-4 mr-2" />
-                    Categorias
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-60 backdrop-blur-sm bg-white/95 dark:bg-gray-900/95">
-                  <DropdownMenuItem 
-                    className="cursor-pointer focus:text-primary focus:bg-primary/10"
-                    onClick={() => {
-                      setCategoriaSelecionada(null);
-                      setLocation('/ferramentas');
-                    }}
-                  >
-                    Todas as categorias
-                  </DropdownMenuItem>
-                  {categorias.map((categoria) => (
-                    <DropdownMenuItem 
-                      key={categoria.id}
-                      className="cursor-pointer focus:text-primary focus:bg-primary/10"
-                      onClick={() => handleCategoriaChange(categoria.slug)}
-                    >
-                      {categoria.nome}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+            {/* Botão para limpar filtros no mobile, visível apenas quando há filtros aplicados */}
+            {(debouncedSearchTerm || categoriaSelecionada) && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="md:hidden h-12 border-gray-200 dark:border-gray-800 bg-white/90 dark:bg-gray-900/90"
+                onClick={() => {
+                  setSearchTerm('');
+                  setCategoriaSelecionada(null);
+                  setLocation('/ferramentas');
+                }}
+              >
+                <Filter className="h-4 w-4 mr-2" />
+                Limpar Filtros
+              </Button>
             )}
           </div>
         </div>
       </div>
 
-      {/* Lista de categorias horizontal (filters) */}
+      {/* Lista de categorias horizontal desktop e grid no mobile */}
       {categorias && categorias.length > 0 && (
         <div className="mb-8">
-          <CategoriasCarousel 
-            categorias={categorias}
-            categoriaSelecionada={categoriaSelecionada}
-            onCategoriaChange={handleCategoriaChange}
-            className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm py-3 px-4 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm"
-          />
+          {/* Versão desktop com scroll */}
+          <div className="hidden md:block">
+            <CategoriasCarousel 
+              categorias={categorias}
+              categoriaSelecionada={categoriaSelecionada}
+              onCategoriaChange={handleCategoriaChange}
+              className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm py-3 px-4 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm"
+            />
+          </div>
+          
+          {/* Versão mobile com grid sem scroll */}
+          <div className="md:hidden">
+            <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm py-3 px-4 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  variant={categoriaSelecionada === null ? "default" : "outline"}
+                  className={cn(
+                    "rounded-full h-9 px-4 font-medium transition-all",
+                    categoriaSelecionada === null 
+                      ? "bg-primary text-white shadow-md" 
+                      : "border-gray-200 dark:border-gray-700 bg-white/90 dark:bg-gray-900/90 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
+                  )}
+                  onClick={() => {
+                    handleCategoriaChange(null);
+                  }}
+                >
+                  Todas
+                </Button>
+                
+                {categorias.map((categoria) => (
+                  <Button
+                    key={categoria.id}
+                    variant={categoriaSelecionada === categoria.slug ? "default" : "outline"}
+                    className={cn(
+                      "rounded-full h-9 px-2 font-medium transition-all text-sm",
+                      categoriaSelecionada === categoria.slug
+                        ? "bg-primary text-white shadow-md" 
+                        : "border-gray-200 dark:border-gray-700 bg-white/90 dark:bg-gray-900/90 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
+                    )}
+                    onClick={() => handleCategoriaChange(categoria.slug)}
+                  >
+                    {categoria.nome}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

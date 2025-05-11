@@ -84,7 +84,7 @@ const FerramentaCard: React.FC<FerramentaCardProps> = ({
             variant="default"
             size="sm"
           >
-            {isExterno ? 'Visitar Site' : 'Acessar'}
+            Acessar Ferramenta
             {isExterno && <ExternalLink className="ml-2 h-4 w-4" />}
           </Button>
         </CardFooter>
