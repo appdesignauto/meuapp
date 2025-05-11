@@ -926,6 +926,152 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Versão em português - Arte por ID (compatibilidade com frontend)
+  app.get("/api/artes/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const art = await storage.getArtById(id);
+      
+      if (!art) {
+        return res.status(404).json({ message: "Arte não encontrada" });
+      }
+      
+      // Verificar se o usuário é admin para permitir acesso a artes ocultas
+      const isAdmin = req.user?.nivelacesso === 'admin' || req.user?.nivelacesso === 'designer_adm' || req.user?.nivelacesso === 'designer';
+      
+      // Se a arte estiver oculta e o usuário não for admin, retornar 404
+      if (art.isVisible === false && !isAdmin) {
+        return res.status(404).json({ message: "Arte não encontrada" });
+      }
+      
+      // Verificar se é conteúdo premium e adicionar flag em vez de bloquear acesso
+      let isPremiumLocked = false;
+      if (art.isPremium) {
+        const user = req.user as any;
+        if (!user || user.role !== 'premium') {
+          isPremiumLocked = true;
+          // Não bloqueamos mais com 403, apenas marcamos como conteúdo restrito
+        }
+      }
+      
+      // Buscar a categoria da arte pelo ID
+      let category = null;
+      if (art.categoryId) {
+        try {
+          console.log(`[DEBUG] Buscando categoria ID: ${art.categoryId} para arte ID: ${art.id}`);
+          category = await storage.getCategoryById(art.categoryId);
+          console.log(`[DEBUG] Categoria encontrada:`, category);
+          
+          // Se a categoria for encontrada, anexá-la ao objeto arte
+          if (category) {
+            art.category = category;
+            console.log(`[DEBUG] Arte atualizada com categoria:`, art.category);
+          }
+        } catch (categoryError) {
+          console.error("Erro ao buscar categoria da arte:", categoryError);
+          // Se falhar ao buscar a categoria, ainda retornamos a arte
+        }
+      }
+      
+      // Buscar contagens de interações
+      let favoriteCount = 0;
+      let shareCount = 0;
+      
+      try {
+        const counts = await storage.getArtInteractionCounts(id);
+        favoriteCount = counts.favoriteCount;
+        shareCount = counts.shareCount;
+        
+        // Tentar incrementar o contador de visualizações
+        if (art.viewcount !== undefined) {
+          art.viewcount += 1;
+          await storage.updateArtViewCount(id, art.viewcount);
+        }
+      } catch (viewError) {
+        console.error("Erro ao registrar visualização:", viewError);
+        // Não interrompe o fluxo principal se o contador falhar
+      }
+      
+      // Buscar informações do designer se existir
+      if (art.designerid) {
+        try {
+          const designer = await storage.getUserById(art.designerid);
+          if (designer) {
+            // Remover a senha e outras informações sensíveis
+            const { password, ...safeDesigner } = designer;
+            
+            // Buscar estatísticas do designer
+            const stats = await storage.getDesignerStats(art.designerid);
+            
+            // Buscar status de seguidor para o usuário atual (se autenticado)
+            let isFollowing = false;
+            if (req.isAuthenticated()) {
+              isFollowing = await storage.isUserFollowing(req.user.id, art.designerid);
+            }
+            
+            // Buscar artes recentes do designer para exibir junto com o perfil
+            let recentArts = [];
+            try {
+              const designerArts = await storage.getArtsByDesignerId(art.designerid, 5);
+              recentArts = designerArts
+                .filter(recentArt => recentArt.id !== art.id)
+                .slice(0, 4)
+                .map(recentArt => ({
+                  id: recentArt.id,
+                  title: recentArt.title,
+                  imageUrl: recentArt.imageUrl
+                }));
+            } catch (artsError) {
+              console.error("Erro ao buscar artes recentes do designer:", artsError);
+            }
+            
+            art.designer = {
+              ...safeDesigner,
+              isFollowing,
+              followers: stats?.followers || 0,
+              totalArts: stats?.totalArts || 0,
+              recentArts
+            };
+          }
+        } catch (designerError) {
+          console.error("Erro ao buscar informações do designer:", designerError);
+          // Se falhar ao buscar o designer, ainda retornamos a arte
+        }
+      } 
+      // Se não existir designer, usar administrador como designer temporário para demonstração
+      else {
+        // Usar administrador (id 1) como designer temporário (apenas para fins de demonstração)
+        try {
+          const admin = await storage.getUserById(1);
+          if (admin) {
+            // Remover a senha e outras informações sensíveis
+            const { password, ...safeAdmin } = admin;
+            art.designer = {
+              ...safeAdmin,
+              isFollowing: false,
+              followers: 0,
+              totalArts: 0,
+              recentArts: []
+            };
+          }
+        } catch (adminError) {
+          console.error("Erro ao buscar administrador como designer temporário:", adminError);
+        }
+      }
+      
+      // Adicionar flag de premium locked e contagens ao objeto retornado
+      res.json({
+        ...art,
+        isPremiumLocked,
+        favoriteCount,
+        shareCount
+      });
+    } catch (error) {
+      console.error("Erro ao buscar arte:", error);
+      res.status(500).json({ message: "Erro ao buscar arte" });
+    }
+  });
+  
   // Formats API
   app.get("/api/formats", async (req, res) => {
     try {
