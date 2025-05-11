@@ -75,6 +75,12 @@ router.get('/api/artes', async (req: Request, res: Response) => {
     console.log(`Usuário ${isAdmin ? 'é admin' : 'NÃO é admin'}, filtro de visibilidade: ${filters.isVisible !== undefined ? filters.isVisible : 'não aplicado'}`);
     
     const result = await storage.getArts(page, limit, filters);
+    
+    // Converter URLs de imagem para o formato de proxy
+    if (result.arts && result.arts.length > 0) {
+      result.arts = supabaseStorageService.convertImageUrls(result.arts, ['imageUrl', 'thumbnailUrl']);
+    }
+    
     res.json(result);
   } catch (error) {
     console.error("Erro detalhado ao buscar artes:", error);
@@ -226,11 +232,22 @@ router.get('/api/artes/:id', async (req: Request, res: Response) => {
       console.error(`Erro ao registrar visualização: ${viewError}`);
     }
     
+    // Converter URLs de imagem para o formato de proxy
+    const artWithConvertedUrls = supabaseStorageService.convertImageUrls(art, ['imageUrl', 'thumbnailUrl']);
+    
+    // Se houver designer com imagens, converter também
+    if (artWithConvertedUrls.designer && artWithConvertedUrls.designer.recentArts) {
+      artWithConvertedUrls.designer.recentArts = supabaseStorageService.convertImageUrls(
+        artWithConvertedUrls.designer.recentArts, 
+        ['imageUrl', 'thumbnailUrl']
+      );
+    }
+    
     // Retornar a arte com todas as informações adicionais
     res.json({
-      ...art,
+      ...artWithConvertedUrls,
       isPremiumLocked,
-      atualizadoem: art.updatedAt // Garantir a compatibilidade com o frontend
+      atualizadoem: artWithConvertedUrls.updatedAt // Garantir a compatibilidade com o frontend
     });
   } catch (error) {
     console.error("Erro ao buscar arte por ID:", error);
@@ -260,7 +277,7 @@ router.get('/api/artes/recent', async (req: Request, res: Response) => {
       LIMIT 6
     `);
     
-    const arts = artsResult.rows.map(art => ({
+    let arts = artsResult.rows.map(art => ({
       id: art.id,
       title: art.title,
       imageUrl: art.imageUrl,
@@ -269,6 +286,9 @@ router.get('/api/artes/recent', async (req: Request, res: Response) => {
       createdAt: art.createdAt,
       updatedAt: art.updatedAt
     }));
+    
+    // Converter URLs de imagem para o formato de proxy
+    arts = supabaseStorageService.convertImageUrls(arts, ['imageUrl', 'thumbnailUrl']);
     
     res.json({ arts });
   } catch (error) {
@@ -285,9 +305,14 @@ router.get('/api/artes/:id/related', async (req: Request, res: Response) => {
     
     console.log(`[GET /api/artes/${id}/related] Buscando ${limit} artes relacionadas para arte ID ${id}`);
     
-    const relatedArts = await storage.getRelatedArts(id, limit);
+    let relatedArts = await storage.getRelatedArts(id, limit);
     
     console.log(`[GET /api/artes/${id}/related] Encontradas ${relatedArts.length} artes relacionadas`);
+    
+    // Converter URLs de imagem para o formato de proxy
+    if (relatedArts.length > 0) {
+      relatedArts = supabaseStorageService.convertImageUrls(relatedArts, ['imageUrl', 'thumbnailUrl']);
+    }
     
     // Se não houver artes relacionadas, retorna array vazio em vez de 404
     // para que o frontend possa lidar com isso de maneira apropriada
@@ -387,6 +412,18 @@ router.get('/api/favoritos', async (req: Request, res: Response) => {
     
     // Obter favoritos com paginação
     const favorites = await storage.getUserFavorites(userId, page, limit);
+    
+    // Converter URLs de imagem para o formato de proxy 
+    if (favorites.favorites && favorites.favorites.length > 0) {
+      // Verificar se cada favorito tem a propriedade art e converter suas URLs
+      favorites.favorites = favorites.favorites.map(favorite => {
+        if (favorite.art) {
+          favorite.art = supabaseStorageService.convertImageUrls(favorite.art, ['imageUrl', 'thumbnailUrl']);
+        }
+        return favorite;
+      });
+    }
+    
     res.json(favorites);
   } catch (error) {
     console.error("Erro ao buscar favoritos:", error);
