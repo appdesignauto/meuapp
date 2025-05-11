@@ -750,7 +750,7 @@ export default function CategoryPage() {
                 >
                   <ArtCard 
                     art={art} 
-                    onClick={() => setLocation(`/arts/${art.id}`)}
+                    onClick={() => setLocation(`/artes/${art.id}`)}
                   />
                 </div>
               ))}

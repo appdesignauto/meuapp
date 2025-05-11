@@ -115,7 +115,7 @@ function ArtCard({
       {renderCard()}
     </div>
   ) : (
-    <Link href={`/arts/${art.id}`}>
+    <Link href={`/artes/${art.id}`}>
       {renderCard()}
     </Link>
   );

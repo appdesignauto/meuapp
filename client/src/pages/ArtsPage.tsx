@@ -505,7 +505,7 @@ export default function ArtsPage() {
                 >
                   <ArtCard 
                     art={art} 
-                    onClick={() => setLocation(`/arts/${art.id}`)}
+                    onClick={() => setLocation(`/artes/${art.id}`)}
                   />
                 </div>
               ))}

@@ -170,7 +170,7 @@ function DesignerCard({ designer }: { designer: Designer }) {
         <CardContent className="p-0">
           <div className="grid grid-cols-2 gap-1">
             {displayArts.map((art) => (
-              <Link key={art.id} href={`/arts/${art.id}`}>
+              <Link key={art.id} href={`/artes/${art.id}`}>
                 <div className="relative block aspect-square overflow-hidden hover:opacity-90 transition-opacity">
                   <img 
                     src={art.imageUrl} 

@@ -78,7 +78,7 @@ export default function RecentDesigns() {
   };
   
   const handleClickDesign = (id: number) => {
-    setLocation(`/arts/${id}`);
+    setLocation(`/artes/${id}`);
   };
   
   // Cálculo de tempo relativo (Editado há X dias/horas)

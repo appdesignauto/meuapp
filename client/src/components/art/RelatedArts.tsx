@@ -27,7 +27,7 @@ export default function RelatedArts({
   const { data: relatedArts, isLoading, error } = useQuery({
     queryKey: ['/api/arts', artId, 'related'],
     queryFn: async () => {
-      const res = await fetch(`/api/arts/${artId}/related?limit=${limit}`);
+      const res = await fetch(`/api/artes/${artId}/related?limit=${limit}`);
       if (!res.ok) {
         throw new Error('Erro ao carregar artes relacionadas');
       }
@@ -67,7 +67,7 @@ export default function RelatedArts({
         <ArtCard 
           key={`art-${art.id}`}
           art={art}
-          onClick={() => setLocation(`/arts/${art.id}`)}
+          onClick={() => setLocation(`/artes/${art.id}`)}
           showEditAction={false}
           showDesigner={false}
           isSameGroup={currentGroupId !== null && art.groupId === currentGroupId}
