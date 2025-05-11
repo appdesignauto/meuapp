@@ -14,6 +14,7 @@ export type FerramentaCardProps = {
   websiteUrl: string;
   isExterno: boolean;
   isNovo: boolean;
+  isPopular?: boolean;
   className?: string;
 };
 
