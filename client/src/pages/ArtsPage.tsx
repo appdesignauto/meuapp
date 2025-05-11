@@ -66,7 +66,7 @@ export default function ArtsPage() {
 
   // Gerar URL da API
   const getApiUrl = () => {
-    const url = new URL('/api/arts', window.location.origin);
+    const url = new URL('/api/artes', window.location.origin);
     url.searchParams.append('page', page.toString());
     url.searchParams.append('limit', limit.toString());
     
@@ -80,7 +80,7 @@ export default function ArtsPage() {
 
   // Chave de consulta para React Query
   const queryKey = [
-    '/api/arts',
+    '/api/artes',
     { page, limit, ...filters, search }
   ];
 

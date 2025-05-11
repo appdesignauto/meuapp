@@ -53,7 +53,7 @@ const ArtsList = () => {
     arts: Art[];
     totalCount: number;
   }>({
-    queryKey: ['/api/arts', { page, limit, ...filter }],
+    queryKey: ['/api/artes', { page, limit, ...filter }],
   });
 
   // Fetch categories for filter dropdown

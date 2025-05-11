@@ -195,7 +195,7 @@ export default function CategoryPage() {
 
   // Build filters for API query
   const getApiUrl = () => {
-    const url = new URL('/api/arts', window.location.origin);
+    const url = new URL('/api/artes', window.location.origin);
     url.searchParams.append('page', page.toString());
     url.searchParams.append('limit', limit.toString());
     
@@ -230,7 +230,7 @@ export default function CategoryPage() {
 
   // Query key based on filters
   const queryKey = [
-    '/api/arts',
+    '/api/artes',
     { 
       page, 
       limit, 
