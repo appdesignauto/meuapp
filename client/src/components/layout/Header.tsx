@@ -203,7 +203,7 @@ const Header = () => {
   const handleHeaderSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      setLocation(`/arts?search=${encodeURIComponent(searchQuery)}`);
+      setLocation(`/artes?search=${encodeURIComponent(searchQuery)}`);
     }
   };
   
@@ -220,7 +220,7 @@ const Header = () => {
 
   const navLinks = [
     { name: 'Início', path: '/', icon: <Home className="h-5 w-5" /> },
-    { name: 'Categorias', path: '/categories', icon: <Library className="h-5 w-5" /> },
+    { name: 'Categorias', path: '/categorias', icon: <Library className="h-5 w-5" /> },
     { name: 'Comunidade', path: '/comunidade', icon: <MessageSquare className="h-5 w-5" /> },
   ];
 
@@ -280,7 +280,7 @@ const Header = () => {
             {/* Links principais - ocultar Categorias quando na seção Video Aulas */}
             {navLinks.map((link) => {
                 // Ocultar link de Categorias quando na página de videoaulas
-                if (isVideoaulasPage && link.path === '/categories') {
+                if (isVideoaulasPage && link.path === '/categorias') {
                   return null;
                 }
                 
