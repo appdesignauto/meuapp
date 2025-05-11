@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import useScrollTop from '@/hooks/useScrollTop';
+import Breadcrumbs from '@/components/breadcrumbs';
 import { 
   ArrowLeft, 
   ArrowRight,
@@ -646,6 +647,27 @@ export default function ArtDetail() {
         publishedAt={art.createdAt}
         modifiedAt={art.updatedAt}
       />
+      
+      {/* Breadcrumbs para navegação e SEO */}
+      <Breadcrumbs
+        items={[
+          { 
+            label: 'Artes', 
+            url: '/artes' 
+          },
+          {
+            label: art.category?.name || 'Categoria',
+            url: art.category?.slug ? `/categorias/${art.category.slug}` : '/categorias'
+          },
+          {
+            label: art.title,
+            url: `/arte/${id}`,
+            isCurrentPage: true
+          }
+        ]}
+        className="mb-4"
+      />
+      
       <div className="flex items-center mb-6">
         <motion.div
           whileHover={{ scale: 1.05 }}

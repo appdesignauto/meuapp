@@ -36,6 +36,20 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
 
   // Gerar dados estruturados JSON-LD para os breadcrumbs
   const generateBreadcrumbSchema = () => {
+    // Função segura para URLs que funciona tanto no cliente quanto no servidor
+    const getFullUrl = (path: string) => {
+      // Se o path já for uma URL completa, retorne-a
+      if (path.startsWith('http')) return path;
+      
+      // Use o origin do window se disponível, ou um fallback seguro
+      const origin = typeof window !== 'undefined' 
+        ? window.location.origin 
+        : 'https://designauto.com.br';
+      
+      // Combine origin com path para formar URL completa
+      return `${origin}${path.startsWith('/') ? path : `/${path}`}`;
+    };
+    
     // Estrutura base do schema
     const schema = {
       '@context': 'https://schema.org',
@@ -44,9 +58,7 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
         '@type': 'ListItem',
         'position': index + 1,
         'item': {
-          '@id': typeof window !== 'undefined' ? 
-            new URL(item.url, window.location.origin).toString() : 
-            item.url,
+          '@id': getFullUrl(item.url),
           'name': item.label
         }
       }))
