@@ -409,7 +409,7 @@ export default function CategoryPage() {
                 <Button 
                   variant="link" 
                   className="p-0 text-sm text-gray-500 h-auto"
-                  onClick={() => setLocation('/categories')}
+                  onClick={() => setLocation('/categorias')}
                 >
                   Categorias
                 </Button>

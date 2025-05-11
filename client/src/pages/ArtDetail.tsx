@@ -329,7 +329,7 @@ export default function ArtDetail() {
       setLocation(referrer);
     } else {
       // Padrão: ir para a página de artes em vez da home
-      setLocation('/arts');
+      setLocation('/artes');
     }
   };
 

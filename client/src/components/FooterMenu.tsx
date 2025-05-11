@@ -16,8 +16,8 @@ const FooterMenu: React.FC = () => {
     {
       icon: Grid3X3,
       label: 'Categorias',
-      href: '/categories',
-      active: location === '/categories' || location.startsWith('/categories/')
+      href: '/categorias',
+      active: location === '/categorias' || location.startsWith('/categorias/')
     },
     {
       icon: Play,

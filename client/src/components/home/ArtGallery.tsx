@@ -136,7 +136,7 @@ const ArtGallery = ({ categoryId, formatId, fileTypeId, onCategorySelect }: ArtG
     // Se já clicou duas vezes (loadCounter = 2)
     if (loadCounter >= 2) {
       // Na terceira vez, redireciona para a página de artes com filtros
-      setLocation('/arts');
+      setLocation('/artes');
       return;
     }
 
