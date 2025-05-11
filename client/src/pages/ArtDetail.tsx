@@ -182,7 +182,7 @@ export default function ArtDetail() {
   
   // Verificar o ID do grupo usando a rota de admin
   const { data: groupInfo } = useQuery({
-    queryKey: ['/api/admin/arts/check-group', id],
+    queryKey: ['/api/admin/artes/check-group', id],
     queryFn: async () => {
       if (!id) {
         console.log('ID da arte não disponível, não é possível verificar groupId');
@@ -190,7 +190,7 @@ export default function ArtDetail() {
       }
       console.log(`Verificando groupId da arte ${id}`);
       try {
-        const res = await fetch(`/api/admin/arts/${id}/check-group`);
+        const res = await fetch(`/api/admin/artes/${id}/check-group`);
         if (!res.ok) {
           console.error(`Erro ao verificar groupId: ${res.status} ${res.statusText}`);
           return { groupId: null };
