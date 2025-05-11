@@ -52,6 +52,7 @@ import { registerPostPositionRoute } from './routes/post-position-route'; // Rot
 import ferramentasRouter from './routes/ferramentas-routes'; // Rotas para gerenciamento de ferramentas úteis do post
 import popupRouter from './routes/popup-routes'; // Rotas para gerenciamento de popups promocionais
 import coursesAdapterRouter from './routes/courses-adapter'; // Adaptador para compatibilidade com rotas antigas
+import artesAdapterRouter from './routes/artes-adapter'; // Adaptador para rotas em português da API de artes
 import videoCommentsRouter from './routes/video-comments-routes'; // Rotas para comentários de videoaulas
 import courseRatingsRouter from './routes/course-ratings-routes'; // Rotas para avaliações de cursos
 import lessonThumbnailUploadRouter from './routes/lesson-thumbnail-upload'; // Rota para upload de thumbnails de aulas
@@ -4876,6 +4877,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Adaptador para manter compatibilidade com rotas antigas
   app.use('/api/courses', coursesAdapterRouter);
+  // Registrar router de adaptador para rotas em português da API de artes
+  app.use(artesAdapterRouter);
   
   // Rota de diagnóstico para testes (sem middleware)
   app.get('/api/course-debug', (req, res) => {
