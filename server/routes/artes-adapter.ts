@@ -1,0 +1,334 @@
+import express from 'express';
+import { storage } from '../storage';
+import { Request, Response } from 'express';
+import { sql } from 'drizzle-orm';
+import { db } from '../db';
+
+/**
+ * Arquivo que implementa rotas em português como adaptadores para as rotas em inglês
+ * Isso permite compatibilidade com o frontend que já está usando os endpoints em português
+ * enquanto mantém as APIs originais em inglês funcionando para retrocompatibilidade
+ */
+
+const router = express.Router();
+
+// Listar artes com paginação e filtros - "/api/artes"
+router.get('/api/artes', async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 8;
+    
+    // Parse filters
+    const filters: any = {};
+    
+    if (req.query.categoryId) {
+      filters.categoryId = parseInt(req.query.categoryId as string);
+    }
+    
+    if (req.query.formatId) {
+      filters.formatId = parseInt(req.query.formatId as string);
+    }
+    
+    if (req.query.fileTypeId) {
+      filters.fileTypeId = parseInt(req.query.fileTypeId as string);
+    }
+    
+    if (req.query.search) {
+      filters.search = req.query.search as string;
+    }
+    
+    // Verifica se filtro premium está aplicado
+    if (req.query.isPremium) {
+      filters.isPremium = req.query.isPremium === 'true';
+    }
+    
+    // Verifica se parâmetro de ordenação está presente
+    if (req.query.sortBy) {
+      filters.sortBy = req.query.sortBy as string;
+      console.log(`Ordenação aplicada: ${filters.sortBy}`);
+    }
+    
+    // Verificar se o usuário é admin para determinar visibilidade
+    const isAdmin = req.user?.nivelacesso === 'admin' || req.user?.nivelacesso === 'designer_adm' || req.user?.nivelacesso === 'designer';
+    
+    // Verificar se um filtro de visibilidade está sendo aplicado
+    if (req.query.isVisible !== undefined) {
+      // Se for 'all', não aplicamos filtro - admin verá todas as artes
+      if (req.query.isVisible === 'all') {
+        // Não aplicamos filtro
+        console.log("Filtro 'all' selecionado: mostrando todas as artes");
+      } else {
+        // Se o filtro for true ou false, aplicamos essa condição específica
+        filters.isVisible = req.query.isVisible === 'true';
+        console.log(`Filtro de visibilidade aplicado: ${filters.isVisible ? 'visíveis' : 'ocultas'}`);
+      }
+    } else if (!isAdmin) {
+      // Se o usuário não for admin, vai ver apenas artes visíveis
+      filters.isVisible = true;
+      console.log("Usuário não é admin: mostrando apenas artes visíveis");
+    } else {
+      // Para admin sem filtro específico, vê todas as artes
+      console.log("Admin sem filtro: mostrando todas as artes");
+    }
+    
+    console.log(`Usuário ${isAdmin ? 'é admin' : 'NÃO é admin'}, filtro de visibilidade: ${filters.isVisible !== undefined ? filters.isVisible : 'não aplicado'}`);
+    
+    const result = await storage.getArts(page, limit, filters);
+    res.json(result);
+  } catch (error) {
+    console.error("Erro detalhado ao buscar artes:", error);
+    res.status(500).json({ message: "Erro ao buscar artes" });
+  }
+});
+
+// Obter arte por ID - "/api/artes/:id"
+router.get('/api/artes/:id', async (req: Request, res: Response) => {
+  try {
+    const id = parseInt(req.params.id);
+    const art = await storage.getArtById(id);
+    
+    if (!art) {
+      return res.status(404).json({ message: "Arte não encontrada" });
+    }
+    
+    // Verificar se o usuário é admin para permitir acesso a artes ocultas
+    const isAdmin = req.user?.nivelacesso === 'admin' || req.user?.nivelacesso === 'designer_adm' || req.user?.nivelacesso === 'designer';
+    
+    // Se a arte estiver oculta e o usuário não for admin, retornar 404
+    if (art.isVisible === false && !isAdmin) {
+      return res.status(404).json({ message: "Arte não encontrada" });
+    }
+    
+    // Verificar se é conteúdo premium e adicionar flag em vez de bloquear acesso
+    let isPremiumLocked = false;
+    if (art.isPremium) {
+      const user = req.user as any;
+      const isPremiumUser = user && 
+                            (user.nivelacesso === 'premium' || 
+                             user.nivelacesso === 'designer' || 
+                             user.nivelacesso === 'designer_adm' || 
+                             user.nivelacesso === 'admin' ||
+                             user.acessovitalicio ||
+                             (user.role && 
+                              ['premium', 'designer', 'designer_adm', 'admin'].includes(user.role)));
+      
+      if (!isPremiumUser) {
+        isPremiumLocked = true;
+      }
+    }
+    
+    // Buscar a categoria da arte
+    try {
+      if (art.categoryId) {
+        console.log(`[DEBUG] Buscando categoria ID: ${art.categoryId} para arte ID: ${id}`);
+        const category = await storage.getCategoryById(art.categoryId);
+        if (category) {
+          console.log(`[DEBUG] Categoria encontrada: ${JSON.stringify(category)}`);
+          art.category = category;
+          console.log(`[DEBUG] Arte atualizada com categoria: ${JSON.stringify(category)}`);
+        }
+      }
+    } catch (catError) {
+      console.error(`Erro ao buscar categoria para arte ${id}:`, catError);
+    }
+    
+    // Buscar o designer da arte
+    try {
+      if (art.designerId) {
+        const designer = await storage.getUser(art.designerId);
+        if (designer) {
+          // Adicionar campos adicionais para o designer
+          const designerObj = { ...designer, isFollowing: false };
+          
+          // Verificar se o usuário logado segue este designer
+          if (req.user?.id) {
+            const isFollowing = await storage.checkIfUserFollows(req.user.id, designer.id);
+            designerObj.isFollowing = isFollowing;
+          }
+          
+          // Obter total de artes deste designer
+          const totalArts = await storage.countArtsByDesignerId(designer.id);
+          designerObj.totalArts = totalArts;
+          
+          // Obter artes recentes deste designer (máximo 4)
+          const recentArts = await storage.getRecentArtsByDesignerId(designer.id, 4);
+          designerObj.recentArts = recentArts;
+          
+          art.designer = designerObj;
+        }
+      }
+    } catch (designerError) {
+      console.error(`Erro ao buscar designer para arte ${id}:`, designerError);
+    }
+    
+    // Adicionar contagens de interações diretamente na resposta
+    try {
+      const interactionCounts = await storage.getArtInteractionCounts(id);
+      Object.assign(art, interactionCounts);
+    } catch (countError) {
+      console.error(`Erro ao registrar visualização: ${countError}`);
+    }
+    
+    // Registrar visualização (assíncrono, não bloqueia resposta)
+    try {
+      // Registrar visualização apenas se o usuário estiver autenticado
+      if (req.user?.id) {
+        // Verificar se o usuário já visualizou a arte antes
+        const existingView = await storage.getViewByUserAndArt(req.user.id, id);
+        
+        if (existingView) {
+          // Atualizar data da visualização existente
+          await storage.updateView(existingView.id);
+        } else {
+          // Criar uma nova visualização
+          await storage.createView({
+            userId: req.user.id,
+            artId: id,
+            created_at: new Date()
+          });
+        }
+      }
+    } catch (viewError) {
+      console.error(`Erro ao registrar visualização: ${viewError}`);
+    }
+    
+    // Retornar a arte com todas as informações adicionais
+    res.json({
+      ...art,
+      isPremiumLocked
+    });
+  } catch (error) {
+    console.error("Erro ao buscar arte por ID:", error);
+    res.status(500).json({ message: "Erro ao buscar arte" });
+  }
+});
+
+// Obter artes recentes - "/api/artes/recent"
+router.get('/api/artes/recent', async (req: Request, res: Response) => {
+  try {
+    // Verificar se o usuário é admin para determinar visibilidade
+    const isAdmin = req.user?.nivelacesso === 'admin' || req.user?.nivelacesso === 'designer_adm' || req.user?.nivelacesso === 'designer';
+    
+    // Buscar as 6 artes mais recentes diretamente da tabela artes (apenas visíveis para usuários normais)
+    const artsResult = await db.execute(sql`
+      SELECT 
+        id, 
+        "createdAt", 
+        "updatedAt", 
+        title, 
+        "imageUrl",
+        format,
+        "isPremium"
+      FROM arts 
+      WHERE ${!isAdmin ? sql`"isVisible" = TRUE` : sql`1=1`}
+      ORDER BY "createdAt" DESC 
+      LIMIT 6
+    `);
+    
+    const arts = artsResult.rows.map(art => ({
+      id: art.id,
+      title: art.title,
+      imageUrl: art.imageUrl,
+      format: art.format,
+      isPremium: art.isPremium,
+      createdAt: art.createdAt,
+      updatedAt: art.updatedAt
+    }));
+    
+    res.json({ arts });
+  } catch (error) {
+    console.error("Erro ao buscar artes recentes:", error);
+    res.status(500).json({ message: "Erro ao buscar artes recentes" });
+  }
+});
+
+// Obter artes relacionadas - "/api/artes/:id/related"
+router.get('/api/artes/:id/related', async (req: Request, res: Response) => {
+  try {
+    const id = parseInt(req.params.id);
+    const limit = parseInt(req.query.limit as string) || 12; // Usar 12 como padrão
+    
+    console.log(`[GET /api/artes/${id}/related] Buscando ${limit} artes relacionadas para arte ID ${id}`);
+    
+    const relatedArts = await storage.getRelatedArts(id, limit);
+    
+    console.log(`[GET /api/artes/${id}/related] Encontradas ${relatedArts.length} artes relacionadas`);
+    
+    // Se não houver artes relacionadas, retorna array vazio em vez de 404
+    // para que o frontend possa lidar com isso de maneira apropriada
+    res.json(relatedArts);
+  } catch (error) {
+    console.error("Erro ao buscar artes relacionadas:", error);
+    res.status(500).json({ message: "Erro ao buscar artes relacionadas" });
+  }
+});
+
+// Obter categorias - "/api/categorias"
+router.get('/api/categorias', async (req: Request, res: Response) => {
+  try {
+    const categories = await storage.getCategories();
+    
+    // Para cada categoria, realizar uma busca precisa das artes com contagem
+    const enhancedCategories = await Promise.all(categories.map(async (category) => {
+      // Buscar todas as artes dessa categoria com limites altos para garantir precisão
+      const { arts, totalCount } = await storage.getArts(1, 1000, { categoryId: category.id });
+      
+      // Se não há artes, retornamos com contagem zero e data atual
+      if (arts.length === 0) {
+        return {
+          ...category,
+          artCount: 0,
+          lastUpdate: new Date(),
+          formats: []
+        };
+      }
+      
+      // Ordenar por data de atualização e pegar a mais recente
+      const sortedArts = [...arts].sort((a, b) => 
+        new Date(b.atualizadoem).getTime() - new Date(a.atualizadoem).getTime()
+      );
+      
+      // Data da última atualização é a data da arte mais recente
+      const lastUpdate = sortedArts[0].atualizadoem;
+      
+      // Coletar formatos únicos de artes nesta categoria
+      const uniqueFormats = Array.from(new Set(arts.map(art => art.format)));
+      
+      return {
+        ...category,
+        artCount: totalCount,
+        lastUpdate,
+        formats: uniqueFormats
+      };
+    }));
+    
+    res.json(enhancedCategories);
+  } catch (error) {
+    console.error("Erro ao buscar categorias:", error);
+    res.status(500).json({ message: "Erro ao buscar categorias" });
+  }
+});
+
+// Obter formatos - "/api/formatos"
+router.get('/api/formatos', async (req: Request, res: Response) => {
+  try {
+    const formats = await storage.getFormats();
+    res.json(formats);
+  } catch (error) {
+    console.error("Erro ao buscar formatos:", error);
+    res.status(500).json({ message: "Erro ao buscar formatos" });
+  }
+});
+
+// Obter tipos de arquivo - "/api/tiposArquivo"
+router.get('/api/tiposArquivo', async (req: Request, res: Response) => {
+  try {
+    const fileTypes = await storage.getFileTypes();
+    res.json(fileTypes);
+  } catch (error) {
+    console.error("Erro ao buscar tipos de arquivo:", error);
+    res.status(500).json({ message: "Erro ao buscar tipos de arquivo" });
+  }
+});
+
+export default router;
