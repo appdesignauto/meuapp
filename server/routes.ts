@@ -926,6 +926,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Versão em português - Artes recentes (compatibilidade com frontend)
+  app.get("/api/artes/recent", async (req, res) => {
+    try {
+      // Verificar se o usuário é admin para determinar visibilidade
+      const isAdmin = req.user?.nivelacesso === 'admin' || req.user?.nivelacesso === 'designer_adm' || req.user?.nivelacesso === 'designer';
+      
+      // Buscar as 6 artes mais recentes diretamente da tabela artes (apenas visíveis para usuários normais)
+      const artsResult = await db.execute(sql`
+        SELECT 
+          id, 
+          "createdAt", 
+          "updatedAt", 
+          title, 
+          "imageUrl",
+          format,
+          "isPremium"
+        FROM arts 
+        WHERE ${!isAdmin ? sql`"isVisible" = TRUE` : sql`1=1`}
+        ORDER BY "createdAt" DESC 
+        LIMIT 6
+      `);
+      
+      const arts = artsResult.rows.map(art => ({
+        id: art.id,
+        title: art.title,
+        imageUrl: art.imageUrl,
+        format: art.format,
+        isPremium: art.isPremium,
+        createdAt: art.createdAt,
+        updatedAt: art.updatedAt
+      }));
+      
+      res.json({ arts });
+    } catch (error) {
+      console.error("Erro ao buscar artes recentes:", error);
+      res.status(500).json({ message: "Erro ao buscar artes recentes" });
+    }
+  });
+
   // Versão em português - Arte por ID (compatibilidade com frontend)
   app.get("/api/artes/:id", async (req, res) => {
     try {
