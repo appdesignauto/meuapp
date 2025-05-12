@@ -653,7 +653,7 @@ const ReportsManagement = () => {
                 <Label className="font-semibold">Tipo de Denúncia</Label>
                 <p>
                   {currentReport?.type?.name || 
-                   reportTypes.find((type: ReportType) => type.id === currentReport?.typeId)?.name || 
+                   reportTypes.find((type: ReportType) => type.id === currentReport?.reportTypeId)?.name || 
                    'Desconhecido'}
                 </p>
               </div>
