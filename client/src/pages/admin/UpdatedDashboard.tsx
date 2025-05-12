@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
 import AnalyticsSettings from '@/components/admin/AnalyticsSettings';
 import ReportsManagement from '@/components/admin/ReportsManagement';
+import PWAConfigPage from '@/components/admin/PWAConfigPage';
 import {
   LayoutGrid,
   Image,
@@ -48,6 +49,7 @@ import {
   FileVideo,
   MoreHorizontal,
   Edit,
+  Smartphone,
   Eye, 
   RefreshCw,
   ListOrdered,
