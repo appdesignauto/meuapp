@@ -3107,15 +3107,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createReport(report: InsertReport): Promise<Report> {
+    console.log('Storage - criando denúncia com dados:', report);
     const [result] = await db
       .insert(reports)
       .values({
         ...report,
+        status: 'pendente', // Sempre definir o status como pendente por padrão
+        isResolved: false,  // Sempre definir como não resolvido por padrão
         createdAt: new Date(),
         updatedAt: new Date()
       })
       .returning();
     
+    console.log('Storage - denúncia criada:', result);
     return result;
   }
 

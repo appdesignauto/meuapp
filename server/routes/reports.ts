@@ -156,13 +156,18 @@ router.post('/', upload.single('evidence'), async (req, res) => {
     
     console.log('Dados validados:', validatedData);
     
-    // Criar a denúncia
-    const report = await storage.createReport({
+    // Criar a denúncia com os campos permitidos pelo schema do banco
+    const reportData = {
       ...validatedData,
       userId,
       evidence,
-      status: 'pending' // Garantir que a denúncia começa como pendente
-    });
+      reportTypeId: parseInt(req.body.typeId) // Garantir que temos reportTypeId definido
+    };
+    
+    console.log('Dados finais para criação da denúncia:', reportData);
+    
+    // Criar a denúncia
+    const report = await storage.createReport(reportData);
     
     return res.status(201).json({
       message: 'Denúncia enviada com sucesso',
