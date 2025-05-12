@@ -967,7 +967,7 @@ const AdminDashboard = () => {
       <div 
         className={`
           fixed lg:relative z-40 h-full bg-white border-r
-          ${sidebarOpen ? 'w-64 translate-x-0 shadow-lg' : 'w-20 -translate-x-full lg:translate-x-0 lg:min-w-[5rem]'} 
+          ${sidebarOpen ? 'w-64 translate-x-0 shadow-lg' : 'w-0 -translate-x-full lg:translate-x-0 lg:w-[5rem]'} 
           transition-all duration-300 ease-in-out overflow-hidden
         `}
       >
@@ -1004,8 +1004,8 @@ const AdminDashboard = () => {
               } ${!sidebarOpen ? 'lg:justify-center lg:px-0' : ''}`}
               title="Visão Geral"
             >
-              <LayoutDashboard className={`w-6 h-6 ${sidebarOpen ? 'mr-3' : ''}`} />
-              {sidebarOpen && <span>Visão Geral</span>}
+              <LayoutDashboard className="w-6 h-6 mx-auto" />
+              {sidebarOpen && <span className="ml-3">Visão Geral</span>}
             </button>
 
 
@@ -1019,10 +1019,10 @@ const AdminDashboard = () => {
                 className={`flex items-center w-full px-4 py-3 text-gray-700 font-medium ${!sidebarOpen ? 'lg:justify-center lg:px-0' : ''}`}
                 title="Usuários"
               >
-                <Users className={`w-6 h-6 ${sidebarOpen ? 'mr-3' : ''}`} />
+                <Users className="w-6 h-6 mx-auto" />
                 {sidebarOpen && (
                   <>
-                    <span>Usuários</span>
+                    <span className="ml-3">Usuários</span>
                     <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
                   </>
                 )}
@@ -1035,7 +1035,7 @@ const AdminDashboard = () => {
                   } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
                   title="Gerenciar Usuários"
                 >
-                  <Users className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+                  <Users className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
                   {sidebarOpen && <span>Gerenciar Usuários</span>}
                 </button>
                 <button
@@ -1045,7 +1045,7 @@ const AdminDashboard = () => {
                   } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
                   title="Comunidade"
                 >
-                  <MessageSquare className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+                  <MessageSquare className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
                   {sidebarOpen && <span>Comunidade</span>}
                 </button>
               </CollapsibleContent>
@@ -1056,10 +1056,17 @@ const AdminDashboard = () => {
               className="bg-gray-50 rounded-lg py-1 mb-1"
               defaultOpen={['arts', 'categories', 'formats', 'fileTypes'].includes(activeTab)}
             >
-              <CollapsibleTrigger className="flex items-center w-full px-4 py-2 text-gray-700 font-medium">
-                <Layers className="w-5 h-5 mr-3" />
-                <span>Conteúdo</span>
-                <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+              <CollapsibleTrigger 
+                className={`flex items-center w-full px-4 py-3 text-gray-700 font-medium ${!sidebarOpen ? 'lg:justify-center lg:px-0' : ''}`}
+                title="Conteúdo"
+              >
+                <Layers className="w-6 h-6 mx-auto" />
+                {sidebarOpen && (
+                  <>
+                    <span className="ml-3">Conteúdo</span>
+                    <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+                  </>
+                )}
               </CollapsibleTrigger>
               <CollapsibleContent className="pl-4 space-y-1 pt-1 pb-2">
                 <button
