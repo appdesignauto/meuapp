@@ -105,14 +105,8 @@ const Header = () => {
   // Contador para forçar recarregamento das configurações
   const [settingsRefreshCounter, setSettingsRefreshCounter] = useState(0);
   
-  // Aumentar o contador a cada 5 segundos para forçar recarregamento
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setSettingsRefreshCounter(prev => prev + 1);
-    }, 5000);
-    
-    return () => clearInterval(interval);
-  }, []);
+  // Não usamos mais o setInterval para polling constante
+  // Agora usando um tempo de staleTime adequado e atualizações apenas quando necessário
   
   // Forçar recarregamento imediato das configurações ao subir um novo logo
   useEffect(() => {
@@ -151,7 +145,8 @@ const Header = () => {
     },
     refetchOnWindowFocus: true,
     refetchOnMount: true,
-    staleTime: 0 // Sempre buscar dados frescos
+    staleTime: 1000 * 60 * 10, // 10 minutos - só busca dados novos após este período
+    cacheTime: 1000 * 60 * 20  // 20 minutos de cache
   });
   
   // Adicionar um listener global para a API de atualização de logo
