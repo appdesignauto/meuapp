@@ -3131,6 +3131,146 @@ export class DatabaseStorage implements IStorage {
     
     return result;
   }
+
+  // Report methods
+  async getReportTypes(): Promise<ReportType[]> {
+    try {
+      const result = await db.select().from(reportTypes).where(eq(reportTypes.isActive, true));
+      return result;
+    } catch (error) {
+      console.error('Erro ao buscar tipos de denúncias:', error);
+      return [];
+    }
+  }
+
+  async getReports(options: { page: number; limit: number; status?: string | null }): Promise<Report[]> {
+    try {
+      const { page, limit, status } = options;
+      const offset = (page - 1) * limit;
+      
+      let query = db.select({
+        report: reports,
+        user: users,
+        reportType: reportTypes,
+        admin: {
+          id: users.id,
+          username: users.username,
+          name: users.name,
+          profileimageurl: users.profileimageurl
+        }
+      })
+      .from(reports)
+      .leftJoin(users, eq(reports.userId, users.id))
+      .leftJoin(reportTypes, eq(reports.reportTypeId, reportTypes.id))
+      .leftJoin(users, eq(reports.respondedBy, users.id), "admin");
+
+      // Aplicar filtro por status se fornecido
+      if (status) {
+        query = query.where(eq(reports.status, status));
+      }
+      
+      const result = await query
+        .limit(limit)
+        .offset(offset)
+        .orderBy(desc(reports.createdAt));
+      
+      // Transformar o resultado para o formato esperado
+      return result.map(item => ({
+        ...item.report,
+        user: item.user || null,
+        reportType: item.reportType || null,
+        admin: item.admin || null
+      }));
+    } catch (error) {
+      console.error('Erro ao buscar denúncias:', error);
+      return [];
+    }
+  }
+
+  async getReportsCount(status?: string | null): Promise<number> {
+    try {
+      let query = db.select({ count: sql`count(*)` }).from(reports);
+      
+      // Aplicar filtro por status se fornecido
+      if (status) {
+        query = query.where(eq(reports.status, status));
+      }
+      
+      const result = await query;
+      return Number(result[0].count) || 0;
+    } catch (error) {
+      console.error('Erro ao contar denúncias:', error);
+      return 0;
+    }
+  }
+
+  async getReportById(id: number): Promise<Report | undefined> {
+    try {
+      const result = await db.select({
+        report: reports,
+        user: users,
+        reportType: reportTypes,
+        admin: {
+          id: users.id,
+          username: users.username,
+          name: users.name,
+          profileimageurl: users.profileimageurl
+        }
+      })
+      .from(reports)
+      .leftJoin(users, eq(reports.userId, users.id))
+      .leftJoin(reportTypes, eq(reports.reportTypeId, reportTypes.id))
+      .leftJoin(users, eq(reports.respondedBy, users.id), "admin")
+      .where(eq(reports.id, id));
+      
+      if (!result.length) return undefined;
+      
+      // Transformar o resultado para o formato esperado
+      return {
+        ...result[0].report,
+        user: result[0].user || null,
+        reportType: result[0].reportType || null,
+        admin: result[0].admin || null
+      };
+    } catch (error) {
+      console.error(`Erro ao buscar denúncia #${id}:`, error);
+      return undefined;
+    }
+  }
+
+  async createReport(report: InsertReport): Promise<Report> {
+    try {
+      const [result] = await db.insert(reports)
+        .values({
+          ...report,
+          status: 'pendente',
+          isResolved: false
+        })
+        .returning();
+      
+      return result;
+    } catch (error) {
+      console.error('Erro ao criar denúncia:', error);
+      throw new Error('Não foi possível criar a denúncia. Por favor, tente novamente.');
+    }
+  }
+
+  async updateReport(id: number, updates: Partial<Report>): Promise<Report | undefined> {
+    try {
+      const [result] = await db.update(reports)
+        .set({
+          ...updates,
+          updatedAt: new Date()
+        })
+        .where(eq(reports.id, id))
+        .returning();
+      
+      return result;
+    } catch (error) {
+      console.error(`Erro ao atualizar denúncia #${id}:`, error);
+      return undefined;
+    }
+  }
 }
 
 // Inicialização do armazenamento
