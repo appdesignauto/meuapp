@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import {
   Dialog,
   DialogContent,
@@ -34,7 +35,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { AlertCircle, Bug, BookCopy, AlertTriangle, HelpCircle, PanelRight, User } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 // Definir os tipos de problema pré-definidos
 const problemTypes = [
@@ -128,8 +128,13 @@ const ReportForm = () => {
         formData.append('title', data.title);
         formData.append('description', data.description);
         
-        if (data.url) {
-          formData.append('url', data.url);
+        // Adiciona campos de contato quando usuário não está logado
+        if (!isLoggedIn && data.email) {
+          formData.append('email', data.email);
+        }
+        
+        if (!isLoggedIn && data.whatsapp) {
+          formData.append('whatsapp', data.whatsapp);
         }
 
         formData.append('evidence', evidenceFile);
@@ -155,17 +160,27 @@ const ReportForm = () => {
       }
 
       // Se não há arquivo, podemos usar JSON (mais simples e direto)
+      const jsonData: Record<string, any> = {
+        reportTypeId: data.reportTypeId,
+        title: data.title,
+        description: data.description
+      };
+      
+      // Adiciona campos de contato quando usuário não está logado
+      if (!isLoggedIn && data.email) {
+        jsonData.email = data.email;
+      }
+      
+      if (!isLoggedIn && data.whatsapp) {
+        jsonData.whatsapp = data.whatsapp;
+      }
+      
       const jsonResponse = await fetch('/api/reports-v2', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          reportTypeId: data.reportTypeId,
-          title: data.title,
-          description: data.description,
-          url: data.url || null
-        })
+        body: JSON.stringify(jsonData)
       });
 
       if (!jsonResponse.ok) {
@@ -299,25 +314,60 @@ const ReportForm = () => {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="url"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>URL relacionada (opcional)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="https://exemplo.com/pagina-com-problema" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Link onde o problema foi encontrado, se aplicável
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {!isLoggedIn && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>E-mail para contato</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="seu@email.com" 
+                            type="email"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          E-mail para que possamos entrar em contato sobre o problema
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="whatsapp"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>WhatsApp (opcional)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="(00) 00000-0000" 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          WhatsApp para facilitar o contato
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
+
+              {isLoggedIn && (
+                <Alert className="bg-blue-50 border-blue-200">
+                  <User className="h-4 w-4 text-blue-600" />
+                  <AlertTitle className="text-blue-700">Usuário identificado</AlertTitle>
+                  <AlertDescription className="text-blue-600">
+                    Você está logado como <strong>{user?.username}</strong>. Seu problema será associado à sua conta.
+                  </AlertDescription>
+                </Alert>
+              )}
 
               <div>
                 <FormLabel htmlFor="evidence">Evidência (opcional)</FormLabel>
