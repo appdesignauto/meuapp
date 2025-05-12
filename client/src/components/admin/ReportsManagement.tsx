@@ -289,6 +289,8 @@ const ReportsManagement = () => {
   const handleUpdateStatus = (status: string) => {
     if (!currentReport) return;
     
+    console.log(`Atualizando status da denúncia para: ${status}`);
+    
     updateReportMutation.mutate({
       id: currentReport.id,
       status,
@@ -558,10 +560,10 @@ const ReportsManagement = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos os status</SelectItem>
-              <SelectItem value="pending">Pendentes</SelectItem>
-              <SelectItem value="reviewing">Em análise</SelectItem>
-              <SelectItem value="resolved">Resolvidos</SelectItem>
-              <SelectItem value="rejected">Rejeitados</SelectItem>
+              <SelectItem value="pendente">Pendentes</SelectItem>
+              <SelectItem value="em-analise">Em análise</SelectItem>
+              <SelectItem value="resolvido">Resolvidos</SelectItem>
+              <SelectItem value="rejeitado">Rejeitados</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -570,44 +572,44 @@ const ReportsManagement = () => {
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)}>
         <TabsList className="mb-4 border-b w-full justify-start rounded-none gap-4 bg-transparent p-0">
           <TabsTrigger 
-            value="pending" 
+            value="pendente" 
             className={`rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-primary data-[state=active]:bg-transparent`}
           >
             Pendentes
           </TabsTrigger>
           <TabsTrigger 
-            value="reviewing" 
+            value="em-analise" 
             className={`rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-primary data-[state=active]:bg-transparent`}
           >
             Em análise
           </TabsTrigger>
           <TabsTrigger 
-            value="resolved" 
+            value="resolvido" 
             className={`rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-primary data-[state=active]:bg-transparent`}
           >
             Resolvidas
           </TabsTrigger>
           <TabsTrigger 
-            value="rejected" 
+            value="rejeitado" 
             className={`rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-primary data-[state=active]:bg-transparent`}
           >
             Rejeitadas
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="pending" className="mt-0">
+        <TabsContent value="pendente" className="mt-0">
           {renderContent()}
         </TabsContent>
         
-        <TabsContent value="reviewing" className="mt-0">
+        <TabsContent value="em-analise" className="mt-0">
           {renderContent()}
         </TabsContent>
         
-        <TabsContent value="resolved" className="mt-0">
+        <TabsContent value="resolvido" className="mt-0">
           {renderContent()}
         </TabsContent>
         
-        <TabsContent value="rejected" className="mt-0">
+        <TabsContent value="rejeitado" className="mt-0">
           {renderContent()}
         </TabsContent>
       </Tabs>
