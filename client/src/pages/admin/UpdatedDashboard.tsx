@@ -967,7 +967,7 @@ const AdminDashboard = () => {
       <div 
         className={`
           fixed lg:relative z-40 h-full bg-white border-r
-          ${sidebarOpen ? 'w-64 translate-x-0 shadow-lg' : 'w-20 -translate-x-full lg:translate-x-0'} 
+          ${sidebarOpen ? 'w-64 translate-x-0 shadow-lg' : 'w-20 -translate-x-full lg:translate-x-0 lg:min-w-[5rem]'} 
           transition-all duration-300 ease-in-out overflow-hidden
         `}
       >
@@ -999,12 +999,12 @@ const AdminDashboard = () => {
             {/* Dashboard principal */}
             <button
               onClick={() => setActiveTab('stats')}
-              className={`flex items-center w-full px-4 py-2.5 rounded-lg ${
+              className={`flex items-center w-full px-4 py-3 rounded-lg ${
                 activeTab === 'stats' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-              } ${!sidebarOpen && 'lg:justify-center lg:px-2'}`}
+              } ${!sidebarOpen ? 'lg:justify-center lg:px-0' : ''}`}
               title="Visão Geral"
             >
-              <LayoutDashboard className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+              <LayoutDashboard className={`w-6 h-6 ${sidebarOpen ? 'mr-3' : ''}`} />
               {sidebarOpen && <span>Visão Geral</span>}
             </button>
 
@@ -1016,10 +1016,10 @@ const AdminDashboard = () => {
               open={sidebarOpen ? undefined : false}
             >
               <CollapsibleTrigger 
-                className={`flex items-center w-full px-4 py-2 text-gray-700 font-medium ${!sidebarOpen && 'lg:justify-center lg:px-2'}`}
+                className={`flex items-center w-full px-4 py-3 text-gray-700 font-medium ${!sidebarOpen ? 'lg:justify-center lg:px-0' : ''}`}
                 title="Usuários"
               >
-                <Users className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+                <Users className={`w-6 h-6 ${sidebarOpen ? 'mr-3' : ''}`} />
                 {sidebarOpen && (
                   <>
                     <span>Usuários</span>
@@ -1030,22 +1030,22 @@ const AdminDashboard = () => {
               <CollapsibleContent className={`${sidebarOpen ? 'pl-4' : 'lg:pl-0'} space-y-1 pt-1 pb-2`}>
                 <button
                   onClick={() => setActiveTab('users')}
-                  className={`flex items-center w-full py-2 rounded-md ${
+                  className={`flex items-center w-full py-2.5 rounded-md ${
                     activeTab === 'users' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
+                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
                   title="Gerenciar Usuários"
                 >
-                  <Users className={`w-4 h-4 ${sidebarOpen ? 'mr-3' : ''}`} />
+                  <Users className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                   {sidebarOpen && <span>Gerenciar Usuários</span>}
                 </button>
                 <button
                   onClick={() => setActiveTab('community')}
-                  className={`flex items-center w-full py-2 rounded-md ${
+                  className={`flex items-center w-full py-2.5 rounded-md ${
                     activeTab === 'community' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
+                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
                   title="Comunidade"
                 >
-                  <MessageSquare className={`w-4 h-4 ${sidebarOpen ? 'mr-3' : ''}`} />
+                  <MessageSquare className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                   {sidebarOpen && <span>Comunidade</span>}
                 </button>
               </CollapsibleContent>
