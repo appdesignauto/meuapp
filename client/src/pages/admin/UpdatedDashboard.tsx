@@ -1164,13 +1164,15 @@ const AdminDashboard = () => {
                   <BellRing className="w-4 h-4 mr-3" />
                   <span>Gerenciar Popups</span>
                 </button>
-                <Link
-                  href="/admin/analytics"
-                  className="flex items-center w-full px-4 py-2 rounded-md text-gray-600 hover:bg-gray-100"
+                <button
+                  onClick={() => setActiveTab('analytics')}
+                  className={`flex items-center w-full px-4 py-2 rounded-md ${
+                    activeTab === 'analytics' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+                  }`}
                 >
                   <BarChart3 className="w-4 h-4 mr-3" />
                   <span>Analytics</span>
-                </Link>
+                </button>
               </CollapsibleContent>
             </Collapsible>
             
@@ -3864,6 +3866,22 @@ const AdminDashboard = () => {
             </TabsContent>
             
             {/* Gerenciamento de Ferramentas */}
+            <TabsContent value="analytics" className="mt-0">
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <div className="flex flex-col space-y-6">
+                  <div>
+                    <h2 className="text-2xl font-bold tracking-tight mb-2">Analytics e Rastreamento</h2>
+                    <p className="text-muted-foreground">
+                      Configure os serviços de analytics e rastreamento para monitorar o desempenho do site.
+                    </p>
+                  </div>
+                  <div className="grid gap-6">
+                    <AnalyticsSettings />
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+            
             <TabsContent value="ferramentas" className="mt-0">
               <div className="bg-white p-6 rounded-lg shadow-sm">
                 <div className="flex flex-col space-y-6">
