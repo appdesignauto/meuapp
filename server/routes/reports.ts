@@ -87,7 +87,7 @@ router.post('/', isAuthenticated, upload.none(), async (req, res) => {
  * GET /api/reports
  * Admin
  */
-router.get('/', adminAuth, async (req, res) => {
+router.get('/', isAdmin, async (req, res) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
@@ -116,7 +116,7 @@ router.get('/', adminAuth, async (req, res) => {
  * GET /api/reports/:id
  * Admin
  */
-router.get('/:id', adminAuth, async (req, res) => {
+router.get('/:id', isAdmin, async (req, res) => {
   try {
     const reportId = parseInt(req.params.id);
     if (isNaN(reportId)) {
@@ -140,7 +140,7 @@ router.get('/:id', adminAuth, async (req, res) => {
  * PUT /api/reports/:id
  * Admin
  */
-router.put('/:id', adminAuth, async (req, res) => {
+router.put('/:id', isAdmin, async (req, res) => {
   try {
     const reportId = parseInt(req.params.id);
     if (isNaN(reportId)) {
@@ -159,7 +159,7 @@ router.put('/:id', adminAuth, async (req, res) => {
     // Atualizar a denúncia
     const report = await storage.updateReport(reportId, {
       ...validatedData,
-      adminId: req.user?.id, // Usando adminId em vez de respondedBy para corresponder à definição do schema
+      respondedByUserId: req.user?.id, // ID do administrador que respondeu
       respondedAt: new Date()
     });
     
