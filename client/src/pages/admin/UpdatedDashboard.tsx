@@ -1182,11 +1182,11 @@ const AdminDashboard = () => {
               </CollapsibleContent>
             </Collapsible>
             
-            {/* Denúncias */}
+            {/* Reports */}
             <Collapsible className="w-full">
               <CollapsibleTrigger className="flex items-center w-full px-4 py-2 text-gray-700 font-medium">
                 <FlagIcon className="w-5 h-5 mr-3" />
-                <span>Denúncias</span>
+                <span>Reports</span>
                 <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
               </CollapsibleTrigger>
               <CollapsibleContent className="pl-4 space-y-1 pt-1 pb-2">
@@ -1197,7 +1197,7 @@ const AdminDashboard = () => {
                   }`}
                 >
                   <FlagIcon className="w-4 h-4 mr-3" />
-                  <span>Gerenciar Denúncias</span>
+                  <span>Gerenciar Reports</span>
                 </button>
               </CollapsibleContent>
             </Collapsible>
