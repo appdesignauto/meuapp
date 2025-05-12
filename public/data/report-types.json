@@ -1,0 +1,22 @@
+[
+  {
+    "id": 1,
+    "name": "Plágio",
+    "description": "Conteúdo copiado sem autorização ou crédito"
+  },
+  {
+    "id": 2,
+    "name": "Conteúdo inadequado",
+    "description": "Material ofensivo ou inadequado"
+  },
+  {
+    "id": 3,
+    "name": "Direitos autorais",
+    "description": "Violação de direitos autorais ou propriedade intelectual"
+  },
+  {
+    "id": 4,
+    "name": "Outro",
+    "description": "Outro tipo de denúncia não listado"
+  }
+]
