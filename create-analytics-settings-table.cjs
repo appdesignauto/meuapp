@@ -1,120 +1,165 @@
 /**
  * Script para criar a tabela de configurações de analytics
+ * 
+ * Este script cria a tabela analyticsSettings no banco de dados e insere
+ * um registro inicial com configurações padrão
  */
+
+// Usar require para compatibilidade com CommonJS
 const { Pool, neonConfig } = require('@neondatabase/serverless');
-const dotenv = require('dotenv');
+const { drizzle } = require('drizzle-orm/neon-serverless');
 const ws = require('ws');
+const { sql } = require('drizzle-orm');
+require('dotenv').config();
 
-// Configurar WebSocket para Neon
+// Configuração para WebSockets com Neon
 neonConfig.webSocketConstructor = ws;
-
-// Carregar variáveis de ambiente do arquivo .env
-dotenv.config();
-
-const pool = new Pool({ 
-  connectionString: process.env.DATABASE_URL 
-});
 
 async function createAnalyticsSettingsTable() {
   try {
-    // Primeiro, verifica se a tabela já existe
-    const checkTableQuery = "SELECT to_regclass('public.\"analyticsSettings\"')";
-    const checkResult = await pool.query(checkTableQuery);
+    console.log('Configurando conexão com o banco de dados...');
     
-    if (checkResult.rows[0].to_regclass) {
-      console.log('A tabela de configurações de analytics já existe.');
-      return;
+    if (!process.env.DATABASE_URL) {
+      throw new Error('DATABASE_URL não está definida');
     }
     
-    // Cria a tabela se ela não existir
-    const query = `
-      CREATE TABLE "analyticsSettings" (
-        id SERIAL PRIMARY KEY,
-        
-        -- Meta Pixel (Facebook Pixel)
-        "metaPixelId" TEXT,
-        "metaAdsEnabled" BOOLEAN DEFAULT false,
-        "metaAdsAccessToken" TEXT,
-        
-        -- Google Analytics 4
-        "ga4MeasurementId" TEXT,
-        "ga4ApiSecret" TEXT,
-        
-        -- Google Tag Manager
-        "gtmContainerId" TEXT,
-        
-        -- Microsoft Clarity
-        "clarityProjectId" TEXT,
-        
-        -- Hotjar
-        "hotjarSiteId" TEXT,
-        
-        -- LinkedIn Insight Tag
-        "linkedinPartnerId" TEXT,
-        
-        -- TikTok Pixel
-        "tiktokPixelId" TEXT,
-        
-        -- Amplitude ou Mixpanel
-        "amplitudeApiKey" TEXT,
-        "mixpanelToken" TEXT,
-        
-        -- Status de ativação para cada serviço
-        "metaPixelEnabled" BOOLEAN DEFAULT false,
-        "ga4Enabled" BOOLEAN DEFAULT false,
-        "gtmEnabled" BOOLEAN DEFAULT false,
-        "clarityEnabled" BOOLEAN DEFAULT false,
-        "hotjarEnabled" BOOLEAN DEFAULT false,
-        "linkedinEnabled" BOOLEAN DEFAULT false,
-        "tiktokEnabled" BOOLEAN DEFAULT false,
-        "amplitudeEnabled" BOOLEAN DEFAULT false,
-        "mixpanelEnabled" BOOLEAN DEFAULT false,
-        
-        -- Configurações de eventos
-        "trackPageviews" BOOLEAN DEFAULT true,
-        "trackClicks" BOOLEAN DEFAULT false,
-        "trackFormSubmissions" BOOLEAN DEFAULT false,
-        "trackArtsViewed" BOOLEAN DEFAULT true,
-        "trackArtsDownloaded" BOOLEAN DEFAULT true,
-        
-        -- Metadados
-        "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        "updatedBy" TEXT
-      );
-    `;
+    // Criar pool de conexão
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const db = drizzle(pool);
+
+    console.log('Verificando se a tabela analyticsSettings existe...');
     
-    await pool.query(query);
-    console.log('Tabela de configurações de analytics criada com sucesso!');
+    try {
+      // Verificar se a tabela existe
+      const tableExists = await db.execute(sql`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables 
+          WHERE table_schema = 'public' 
+          AND table_name = 'analyticsSettings'
+        );
+      `);
+      
+      const exists = tableExists[0]?.exists === true;
+      
+      if (exists) {
+        console.log('A tabela analyticsSettings já existe.');
+        
+        // Verificar se já existe algum registro
+        const count = await db.execute(sql`
+          SELECT COUNT(*) FROM "analyticsSettings";
+        `);
+        
+        const recordCount = parseInt(count[0]?.count || '0');
+        
+        if (recordCount > 0) {
+          console.log(`A tabela já contém ${recordCount} registros.`);
+          
+          // Listar os registros existentes
+          const settings = await db.execute(sql`SELECT * FROM "analyticsSettings";`);
+          console.log('Registros existentes:', settings);
+          
+          return;
+        }
+      } else {
+        console.log('A tabela analyticsSettings não existe. Criando...');
+        
+        // Criar a tabela
+        await db.execute(sql`
+          CREATE TABLE IF NOT EXISTS "analyticsSettings" (
+            "id" SERIAL PRIMARY KEY,
+            "metaPixelId" TEXT,
+            "metaPixelEnabled" BOOLEAN DEFAULT FALSE,
+            "metaAdsEnabled" BOOLEAN DEFAULT FALSE,
+            "metaAdsAccessToken" TEXT,
+            
+            "ga4MeasurementId" TEXT,
+            "ga4ApiSecret" TEXT,
+            "ga4Enabled" BOOLEAN DEFAULT FALSE,
+            
+            "gtmContainerId" TEXT,
+            "gtmEnabled" BOOLEAN DEFAULT FALSE,
+            
+            "clarityProjectId" TEXT,
+            "clarityEnabled" BOOLEAN DEFAULT FALSE,
+            
+            "hotjarSiteId" TEXT,
+            "hotjarEnabled" BOOLEAN DEFAULT FALSE,
+            
+            "linkedinPartnerId" TEXT,
+            "linkedinEnabled" BOOLEAN DEFAULT FALSE,
+            
+            "tiktokPixelId" TEXT,
+            "tiktokEnabled" BOOLEAN DEFAULT FALSE,
+            
+            "amplitudeApiKey" TEXT,
+            "amplitudeEnabled" BOOLEAN DEFAULT FALSE,
+            
+            "mixpanelToken" TEXT,
+            "mixpanelEnabled" BOOLEAN DEFAULT FALSE,
+            
+            "trackPageviews" BOOLEAN DEFAULT TRUE,
+            "trackClicks" BOOLEAN DEFAULT FALSE,
+            "trackFormSubmissions" BOOLEAN DEFAULT FALSE,
+            "trackArtsViewed" BOOLEAN DEFAULT TRUE,
+            "trackArtsDownloaded" BOOLEAN DEFAULT TRUE,
+            
+            "customScriptHead" TEXT,
+            "customScriptBody" TEXT,
+            "customScriptEnabled" BOOLEAN DEFAULT FALSE,
+            
+            "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+            "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+            "updatedBy" INTEGER
+          );
+        `);
+        
+        console.log('Tabela analyticsSettings criada com sucesso!');
+      }
+    } catch (error) {
+      console.log('Erro ao verificar tabela:', error);
+      throw error;
+    }
     
-    // Insere um registro inicial vazio
-    const insertQuery = `
+    console.log('Inserindo configuração padrão...');
+    
+    // Inserir configuração padrão
+    const result = await db.execute(sql`
       INSERT INTO "analyticsSettings" (
-        "metaPixelEnabled", "ga4Enabled", "gtmEnabled", "clarityEnabled", 
-        "hotjarEnabled", "linkedinEnabled", "tiktokEnabled", "amplitudeEnabled", "mixpanelEnabled",
-        "trackPageviews", "trackClicks", "trackFormSubmissions", "trackArtsViewed", "trackArtsDownloaded"
+        "metaPixelId", "metaPixelEnabled", "metaAdsEnabled", "metaAdsAccessToken",
+        "ga4MeasurementId", "ga4ApiSecret", "ga4Enabled",
+        "gtmContainerId", "gtmEnabled",
+        "clarityProjectId", "clarityEnabled",
+        "hotjarSiteId", "hotjarEnabled",
+        "linkedinPartnerId", "linkedinEnabled",
+        "tiktokPixelId", "tiktokEnabled",
+        "amplitudeApiKey", "amplitudeEnabled",
+        "mixpanelToken", "mixpanelEnabled",
+        "trackPageviews", "trackClicks", "trackFormSubmissions", "trackArtsViewed", "trackArtsDownloaded",
+        "customScriptHead", "customScriptBody", "customScriptEnabled",
+        "createdAt", "updatedAt"
       ) VALUES (
-        false, false, false, false, 
-        false, false, false, false, false,
-        true, false, false, true, true
-      );
-    `;
+        '', FALSE, FALSE, '',
+        '', '', FALSE,
+        '', FALSE,
+        '', FALSE,
+        '', FALSE,
+        '', FALSE,
+        '', FALSE,
+        '', FALSE,
+        '', FALSE,
+        TRUE, FALSE, FALSE, TRUE, TRUE,
+        '', '', FALSE,
+        NOW(), NOW()
+      ) RETURNING *;
+    `);
     
-    await pool.query(insertQuery);
-    console.log('Configurações iniciais de analytics inseridas com sucesso!');
+    console.log('Configuração padrão inserida com sucesso:', result[0]);
     
   } catch (error) {
-    console.error('Erro ao criar tabela de configurações de analytics:', error);
+    console.error('Erro ao criar a tabela de configurações de analytics:', error);
   } finally {
-    await pool.end();
+    process.exit(0);
   }
 }
 
-// Executa a criação da tabela
-createAnalyticsSettingsTable()
-  .then(() => {
-    console.log('Script concluído com sucesso!');
-  })
-  .catch(err => {
-    console.error('Erro ao executar script:', err);
-    process.exit(1);
-  });
+createAnalyticsSettingsTable();

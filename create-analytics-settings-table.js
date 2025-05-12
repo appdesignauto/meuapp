@@ -5,32 +5,52 @@
  * um registro inicial com configurações padrão
  */
 
-import { db } from './server/db.js';
-import { analyticsSettings } from './shared/schema.js';
+// Usar import para módulos ES
+import { Pool, neonConfig } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-serverless';
+import * as schema from './shared/schema.js';
+import ws from 'ws';
 
 async function createAnalyticsSettingsTable() {
   try {
+    console.log('Configurando conexão com o banco de dados...');
+    
+    // Configuração para WebSockets com Neon
+    neonConfig.webSocketConstructor = ws;
+    
+    if (!process.env.DATABASE_URL) {
+      throw new Error('DATABASE_URL não está definida');
+    }
+    
+    // Criar pool de conexão
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const db = drizzle({ client: pool, schema });
+
     console.log('Verificando se a tabela de configurações de analytics existe...');
     
-    const existingSettings = await db.select({ count: db.fn.count() }).from(analyticsSettings);
-    const settingsCount = parseInt(existingSettings[0].count);
-    
-    if (settingsCount > 0) {
-      console.log(`A tabela já existe e contém ${settingsCount} registros.`);
+    try {
+      const existingSettings = await db.select({ count: db.fn.count() }).from(schema.analyticsSettings);
+      const settingsCount = parseInt(existingSettings[0].count);
       
-      // Listar os registros existentes
-      const settings = await db.select().from(analyticsSettings);
-      console.log('Registros existentes:');
-      console.log(settings);
-      
-      return;
+      if (settingsCount > 0) {
+        console.log(`A tabela já existe e contém ${settingsCount} registros.`);
+        
+        // Listar os registros existentes
+        const settings = await db.select().from(schema.analyticsSettings);
+        console.log('Registros existentes:');
+        console.log(settings);
+        
+        return;
+      }
+    } catch (error) {
+      console.log('A tabela ainda não existe ou ocorreu um erro ao verificar:', error.message);
+      console.log('Vamos tentar criar a tabela e inserir os dados...');
     }
     
     console.log('Iniciando a criação das configurações de analytics...');
     
     // Inserir configuração padrão
-    const result = await db.insert(analyticsSettings).values({
+    const result = await db.insert(schema.analyticsSettings).values({
       metaPixelId: '',
       metaAdsEnabled: false, 
       metaAdsAccessToken: '',
