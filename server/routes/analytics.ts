@@ -2,14 +2,15 @@
  * Rotas para gerenciamento das configurações de analytics
  */
 
-const express = require('express');
+import express from 'express';
+import { db } from '../db';
+import { analyticsSettings } from "../../shared/schema";
+import { eq } from 'drizzle-orm';
+
 const router = express.Router();
-const { db } = require('../db');
-const { analyticsSettings } = require('../../shared/schema');
-const { eq } = require('drizzle-orm');
 
 // Middleware para verificar se o usuário é admin
-const isAdmin = (req, res, next) => {
+const isAdmin = (req: express.Request, res: express.Response, next: express.NextFunction) => {
   if (!req.isAuthenticated() || req.user.nivelAcesso !== 'admin') {
     return res.status(403).json({ success: false, message: 'Acesso negado. Permissão de administrador necessária.' });
   }
@@ -276,4 +277,4 @@ router.put('/admin/custom-scripts', isAdmin, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

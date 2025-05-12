@@ -1,8 +1,12 @@
 /**
  * Script para criar a tabela de configurações de analytics
  */
-const { Pool } = require('@neondatabase/serverless');
+const { Pool, neonConfig } = require('@neondatabase/serverless');
 const dotenv = require('dotenv');
+const ws = require('ws');
+
+// Configurar WebSocket para Neon
+neonConfig.webSocketConstructor = ws;
 
 // Carregar variáveis de ambiente do arquivo .env
 dotenv.config();
@@ -106,4 +110,11 @@ async function createAnalyticsSettingsTable() {
 }
 
 // Executa a criação da tabela
-createAnalyticsSettingsTable();
+createAnalyticsSettingsTable()
+  .then(() => {
+    console.log('Script concluído com sucesso!');
+  })
+  .catch(err => {
+    console.error('Erro ao executar script:', err);
+    process.exit(1);
+  });
