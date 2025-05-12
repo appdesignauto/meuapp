@@ -14,6 +14,7 @@ import {
   DialogTrigger,
   DialogFooter,
   DialogClose,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import {
   Form,
@@ -22,6 +23,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import {
   Select,
@@ -30,19 +32,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Bug, BookCopy, AlertTriangle, HelpCircle, PanelRight } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-// Definir o schema para o formulário
-const reportFormSchema = z.object({
-  typeId: z.string({
-    required_error: 'Selecione um tipo de denúncia',
+// Definir os tipos de problema pré-definidos
+const problemTypes = [
+  { id: 1, name: 'Plágio', description: 'Arte copiada sem autorização ou crédito', icon: <BookCopy className="h-4 w-4" /> },
+  { id: 2, name: 'Arte com erro', description: 'Problemas técnicos com arte (links quebrados, imagem corrompida)', icon: <Bug className="h-4 w-4" /> },
+  { id: 3, name: 'Conteúdo inadequado', description: 'Material ofensivo, inapropriado ou que viola diretrizes', icon: <AlertTriangle className="h-4 w-4" /> },
+  { id: 4, name: 'Outro', description: 'Qualquer outro problema não listado acima', icon: <HelpCircle className="h-4 w-4" /> },
+];
+
+// Schema do formulário para reportar problemas
+const problemReportSchema = z.object({
+  reportTypeId: z.number({
+    required_error: 'Selecione um tipo de problema',
   }),
   title: z.string()
     .min(5, { message: 'O título deve ter no mínimo 5 caracteres' })
     .max(100, { message: 'O título deve ter no máximo 100 caracteres' }),
   description: z.string()
-    .min(20, { message: 'A descrição deve ter no mínimo 20 caracteres' })
+    .min(10, { message: 'A descrição deve ter no mínimo 10 caracteres' })
     .max(1000, { message: 'A descrição deve ter no máximo 1000 caracteres' }),
   url: z.string()
     .url({ message: 'Por favor, insira um URL válido' })
@@ -50,168 +60,111 @@ const reportFormSchema = z.object({
     .or(z.literal('')),
 });
 
-type ReportFormValues = z.infer<typeof reportFormSchema>;
-
-type ReportType = {
-  id: number;
-  name: string;
-  description: string;
-};
+type ProblemReportValues = z.infer<typeof problemReportSchema>;
 
 const ReportForm = () => {
-  const [reportTypes, setReportTypes] = useState<ReportType[]>([]);
   const [loading, setLoading] = useState(false);
-  const [loadingTypes, setLoadingTypes] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [success, setSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const form = useForm<ReportFormValues>({
-    resolver: zodResolver(reportFormSchema),
+  const form = useForm<ProblemReportValues>({
+    resolver: zodResolver(problemReportSchema),
     defaultValues: {
-      typeId: '',
+      reportTypeId: undefined,
       title: '',
       description: '',
       url: '',
     },
   });
 
+  // Limpa o formulário quando o diálogo é fechado
   useEffect(() => {
-    // Carregar os tipos de denúncia a partir do arquivo estático
-    const loadReportTypes = async () => {
-      try {
-        setLoadingTypes(true);
-        setError(null);
-        
-        // Primeiro tentamos carregar do endpoint da API
-        try {
-          const response = await fetch('/api/reports/types');
-          if (response.ok) {
-            const data = await response.json();
-            if (Array.isArray(data) && data.length > 0) {
-              setReportTypes(data);
-              setLoadingTypes(false);
-              return;
-            }
-          }
-        } catch (apiError) {
-          console.error('Erro ao carregar tipos de denúncia da API:', apiError);
-        }
-        
-        // Se a API falhar, carregamos do arquivo estático
-        const staticResponse = await fetch('/data/report-types.json');
-        if (staticResponse.ok) {
-          const staticData = await staticResponse.json();
-          setReportTypes(staticData);
-        } else {
-          throw new Error('Não foi possível carregar os tipos de denúncia');
-        }
-      } catch (err) {
-        console.error('Erro ao carregar tipos de denúncia:', err);
-        setError('Não foi possível carregar os tipos de denúncia');
-      } finally {
-        setLoadingTypes(false);
+    if (!isOpen) {
+      setError(null);
+      setSuccess(false);
+      form.reset();
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
       }
-    };
-
-    if (isOpen) {
-      loadReportTypes();
     }
-  }, [isOpen]);
+  }, [isOpen, form]);
 
-  const onSubmit = async (data: ReportFormValues) => {
+  const onSubmit = async (data: ProblemReportValues) => {
     try {
       setLoading(true);
       setError(null);
 
-      // Adicionar o arquivo se selecionado
+      // Verificar se há um arquivo selecionado
       let evidenceFile = null;
       if (fileInputRef.current?.files && fileInputRef.current.files.length > 0) {
         evidenceFile = fileInputRef.current.files[0];
       }
 
-      // Tenta primeiro enviar para a API v2 (JSON)
-      if (!evidenceFile) {
-        try {
-          // Se não tem arquivo, podemos usar JSON diretamente (mais simples)
-          const jsonData = {
-            reportTypeId: parseInt(data.typeId), // API espera um número
-            title: data.title,
-            description: data.description,
-            url: data.url || null
-          };
-
-          const jsonResponse = await fetch('/api/reports-v2', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(jsonData)
-          });
-
-          if (jsonResponse.ok) {
-            // Se a API v2 funcionar, retornamos e não tentamos a v1
-            const responseData = await jsonResponse.json();
-            console.log('Denúncia enviada com sucesso (API v2):', responseData);
-
-            toast({
-              title: 'Denúncia enviada',
-              description: 'Sua denúncia foi enviada com sucesso. Agradecemos sua contribuição.',
-            });
-
-            // Limpar formulário e fechar modal
-            form.reset();
-            setIsOpen(false);
-            return;
-          }
-        } catch (e) {
-          console.error('Erro ao enviar para API v2, tentando v1:', e);
-        }
-      }
-
-      // Fallback para a API v1 (multipart/form-data)
-      const formData = new FormData();
-      formData.append('typeId', data.typeId);
-      formData.append('title', data.title);
-      formData.append('description', data.description);
-      
-      if (data.url) {
-        formData.append('url', data.url);
-      }
-
-      // Adicionar o arquivo se selecionado
+      // Se há um arquivo, precisamos usar FormData
       if (evidenceFile) {
+        const formData = new FormData();
+        formData.append('reportTypeId', data.reportTypeId.toString());
+        formData.append('title', data.title);
+        formData.append('description', data.description);
+        
+        if (data.url) {
+          formData.append('url', data.url);
+        }
+
         formData.append('evidence', evidenceFile);
+
+        const response = await fetch('/api/reports-v2/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Erro ao enviar relatório de problema');
+        }
+
+        // Sucesso
+        setSuccess(true);
+        
+        setTimeout(() => {
+          setIsOpen(false);
+        }, 2000);
+
+        return;
       }
 
-      // Enviar a denúncia para a API v1
-      const response = await fetch('/api/reports', {
+      // Se não há arquivo, podemos usar JSON (mais simples e direto)
+      const jsonResponse = await fetch('/api/reports-v2', {
         method: 'POST',
-        body: formData,
-        // Não definir o cabeçalho Content-Type para que o navegador defina corretamente com boundary para FormData
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          reportTypeId: data.reportTypeId,
+          title: data.title,
+          description: data.description,
+          url: data.url || null
+        })
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erro ao enviar denúncia');
+      if (!jsonResponse.ok) {
+        const errorData = await jsonResponse.json();
+        console.error('Erro detalhado:', errorData);
+        throw new Error(errorData.message || 'Erro ao enviar relatório de problema');
       }
 
-      // Sucesso
-      toast({
-        title: 'Denúncia enviada',
-        description: 'Sua denúncia foi enviada com sucesso. Agradecemos sua contribuição.',
-      });
-
-      // Limpar formulário e fechar modal
-      form.reset();
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-      setIsOpen(false);
+      setSuccess(true);
+        
+      setTimeout(() => {
+        setIsOpen(false);
+      }, 2000);
+      
     } catch (err: any) {
-      console.error('Erro ao enviar denúncia:', err);
-      setError(err.message || 'Erro ao enviar denúncia. Tente novamente mais tarde.');
+      console.error('Erro ao enviar relatório:', err);
+      setError(err.message || 'Erro ao enviar relatório. Tente novamente mais tarde.');
     } finally {
       setLoading(false);
     }
@@ -224,129 +177,155 @@ const ReportForm = () => {
           variant="link" 
           className="text-neutral-500 hover:text-primary text-sm font-normal"
         >
-          Denunciar conteúdo
+          Reportar problema
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
-          <DialogTitle>Denunciar conteúdo</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <PanelRight className="h-5 w-5" />
+            Reportar problema
+          </DialogTitle>
+          <DialogDescription>
+            Ajude-nos a melhorar a plataforma relatando qualquer problema que encontrar.
+          </DialogDescription>
         </DialogHeader>
 
         {error && (
-          <Alert variant="destructive">
+          <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Erro</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="typeId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tipo de denúncia</FormLabel>
-                  <Select
-                    disabled={loadingTypes}
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={loadingTypes ? "Carregando..." : "Selecione um tipo"} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {reportTypes.map((type) => (
-                        <SelectItem key={type.id} value={String(type.id)}>
-                          {type.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Título</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="Título resumido da denúncia" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Descrição</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Descreva detalhadamente o problema" 
-                      rows={4}
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="url"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>URL (opcional)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="https://exemplo.com/pagina-com-problema" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div>
-              <FormLabel htmlFor="evidence">Evidência (opcional)</FormLabel>
-              <Input
-                id="evidence"
-                type="file"
-                ref={fileInputRef}
-                accept="image/png, image/jpeg, image/webp, application/pdf"
-                className="mt-1"
+        {success ? (
+          <Alert variant="success" className="mb-4 bg-green-50 border-green-700 text-green-800">
+            <AlertCircle className="h-4 w-4 text-green-700" />
+            <AlertTitle className="text-green-800">Enviado com sucesso!</AlertTitle>
+            <AlertDescription className="text-green-700">
+              Seu relatório foi recebido e será analisado pela nossa equipe. Agradecemos sua contribuição.
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="reportTypeId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo de problema</FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange(parseInt(value))}
+                      defaultValue={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um tipo" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {problemTypes.map((type) => (
+                          <SelectItem key={type.id} value={type.id.toString()} className="flex items-center gap-2">
+                            <div className="flex items-center gap-2">
+                              {type.icon}
+                              <span>{type.name}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      {form.watch('reportTypeId') && 
+                        problemTypes.find(t => t.id === form.watch('reportTypeId'))?.description
+                      }
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Aceita PNG, JPEG, WEBP ou PDF (máx. 5MB)
-              </p>
-            </div>
 
-            <DialogFooter className="pt-4">
-              <DialogClose asChild>
-                <Button type="button" variant="outline">Cancelar</Button>
-              </DialogClose>
-              <Button type="submit" disabled={loading}>
-                {loading ? 'Enviando...' : 'Enviar denúncia'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Título do problema</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Resumo breve do problema encontrado" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Descrição detalhada</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Descreva detalhadamente o problema, quando ocorre e como reproduzi-lo" 
+                        rows={4}
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="url"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>URL relacionada (opcional)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="https://exemplo.com/pagina-com-problema" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Link onde o problema foi encontrado, se aplicável
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div>
+                <FormLabel htmlFor="evidence">Evidência (opcional)</FormLabel>
+                <Input
+                  id="evidence"
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/png, image/jpeg, image/webp, application/pdf"
+                  className="mt-1"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Aceita PNG, JPEG, WEBP ou PDF (máx. 5MB)
+                </p>
+              </div>
+
+              <DialogFooter className="pt-4">
+                <DialogClose asChild>
+                  <Button type="button" variant="outline">Cancelar</Button>
+                </DialogClose>
+                <Button type="submit" disabled={loading}>
+                  {loading ? 'Enviando...' : 'Enviar relatório'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        )}
       </DialogContent>
     </Dialog>
   );
