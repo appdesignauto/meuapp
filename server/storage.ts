@@ -3044,17 +3044,22 @@ export class DatabaseStorage implements IStorage {
 
   async getReportById(id: number): Promise<Report | undefined> {
     try {
-      console.log(`[DEBUG] getReportById(${id}) - Iniciando busca simplificada...`);
+      console.log(`[DEBUG] getReportById(${id}) - Iniciando busca com SQL bruto...`);
       
-      // Consulta simples apenas pela ID, sem joins complexos
-      const [report] = await db.select()
-        .from(reports)
-        .where(eq(reports.id, id));
+      // Consulta SQL direta, sem ORM
+      const result = await db.execute(sql.raw(`SELECT * FROM reports WHERE id = ${id}`));
       
-      console.log(`[DEBUG] getReportById(${id}) - Resultado:`, 
-        report ? JSON.stringify(report) : 'Denúncia NÃO encontrada');
+      console.log(`[DEBUG] getReportById(${id}) - Resultado da consulta SQL:`, result.rows);
       
-      return report;
+      if (!result.rows || result.rows.length === 0) {
+        console.log(`[DEBUG] getReportById(${id}) - Denúncia não encontrada`);
+        return undefined;
+      }
+      
+      const report = result.rows[0];
+      console.log(`[DEBUG] getReportById(${id}) - Denúncia encontrada:`, report);
+      
+      return report as Report;
     } catch (error) {
       console.error(`[ERROR] getReportById(${id}) - Erro ao buscar denúncia:`, error);
       return undefined;
@@ -3141,39 +3146,66 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log(`[DEBUG] updateReport(${id}) - Iniciando atualização da denúncia...`, data);
       
-      // Verificar se a denúncia existe antes de tentar atualizar
-      const reportExists = await this.getReportById(id);
-      if (!reportExists) {
+      // Verificar se a denúncia existe antes de tentar atualizar com SQL bruto
+      const result = await db.execute(sql.raw(`SELECT * FROM reports WHERE id = ${id}`));
+      
+      console.log(`[DEBUG] updateReport(${id}) - Resultado da verificação direta:`, result.rows);
+      
+      if (!result.rows || result.rows.length === 0) {
         console.log(`[DEBUG] updateReport(${id}) - Denúncia não encontrada para atualização`);
         return undefined;
       }
       
       // Preparar os dados para atualização
-      // Clonamos o objeto para não modificar o original
-      const updateData = { ...data, updatedAt: new Date() };
+      // Vamos construir a consulta SQL manualmente para ter mais controle
       
-      // Tratar o caso especial do campo resolvedAt
-      if ('resolvedAt' in updateData) {
-        console.log(`[DEBUG] updateReport(${id}) - Campo resolvedAt detectado, tratando nome do campo para banco de dados`);
-        // O nome da coluna no banco é "resolvedat" (tudo minúsculo)
-        const resolvedAtValue = updateData.resolvedAt;
-        // @ts-ignore - Estamos manipulando o campo diretamente para o nome usado no banco
-        updateData.resolvedat = resolvedAtValue;
-        // Remover o campo camelCase para não confundir o Drizzle
-        delete updateData.resolvedAt;
+      let updateFields = [];
+      
+      // Adicionar campos a serem atualizados
+      if (data.status) updateFields.push(`status = '${data.status}'`);
+      if (data.adminResponse) updateFields.push(`"adminResponse" = '${data.adminResponse}'`);
+      if (data.respondedBy) updateFields.push(`"respondedBy" = ${data.respondedBy}`);
+      if (data.respondedAt) updateFields.push(`"respondedAt" = '${data.respondedAt.toISOString()}'`);
+      if (data.isResolved !== undefined) updateFields.push(`"isResolved" = ${data.isResolved}`);
+      
+      // Tratar o caso especial do campo resolvedAt que no banco é resolvedat
+      if ('resolvedAt' in data && data.resolvedAt) {
+        updateFields.push(`resolvedat = '${data.resolvedAt.toISOString()}'`);
       }
       
-      console.log(`[DEBUG] updateReport(${id}) - Dados preparados para o banco:`, updateData);
+      // Sempre atualizar o updatedAt
+      updateFields.push(`"updatedAt" = '${new Date().toISOString()}'`);
       
-      // Realizar a atualização
-      const [result] = await db
-        .update(reports)
-        .set(updateData)
-        .where(eq(reports.id, id))
-        .returning();
+      console.log(`[DEBUG] updateReport(${id}) - Campos a atualizar:`, updateFields);
       
-      console.log(`[DEBUG] updateReport(${id}) - Denúncia atualizada com sucesso:`, result);
-      return result;
+      // Se não houver campos para atualizar, retornar a denúncia como está
+      if (updateFields.length === 0) {
+        console.log(`[DEBUG] updateReport(${id}) - Nenhum campo para atualizar, retornando denúncia original`);
+        return result.rows[0] as Report;
+      }
+      
+      // Construir a consulta SQL
+      const updateSQL = `
+        UPDATE reports 
+        SET ${updateFields.join(', ')} 
+        WHERE id = ${id} 
+        RETURNING *
+      `;
+      
+      console.log(`[DEBUG] updateReport(${id}) - SQL de atualização:`, updateSQL);
+      
+      // Executar a atualização
+      const updateResult = await db.execute(sql.raw(updateSQL));
+      
+      console.log(`[DEBUG] updateReport(${id}) - Resultado da atualização:`, updateResult.rows);
+      
+      // Retornar a denúncia atualizada
+      if (updateResult.rows && updateResult.rows.length > 0) {
+        return updateResult.rows[0] as Report;
+      } else {
+        console.error(`[ERROR] updateReport(${id}) - Atualização não retornou dados`);
+        return undefined;
+      }
     } catch (error) {
       console.error(`[ERROR] updateReport(${id}) - Erro ao atualizar denúncia:`, error);
       throw new Error('Erro ao atualizar denúncia');

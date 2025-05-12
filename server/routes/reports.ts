@@ -4,9 +4,11 @@
 import express from 'express';
 import { storage } from '../storage';
 import { isAuthenticated, isAdmin } from '../middlewares/auth';
-import { insertReportSchema } from '../../shared/schema';
+import { insertReportSchema, reports } from '../../shared/schema';
 import multer from 'multer';
 import { z } from 'zod';
+import { db } from '../db';
+import { sql, eq } from 'drizzle-orm';
 
 const router = express.Router();
 
@@ -258,8 +260,20 @@ router.put('/:id', async (req, res) => {
     console.log('PUT /api/reports/:id - Dados validados:', validatedData);
     
     // Verificar se a denúncia existe
+    console.log(`PUT /api/reports/${reportId} - Verificando existência da denúncia no banco...`);
+    
+    // Vamos fazer um teste direto no banco para diagnóstico
+    console.log(`PUT /api/reports/${reportId} - Verificação direta no banco de dados`);
+    const testSQL = `SELECT * FROM reports WHERE id = ${reportId}`;
+    const testResult = await db.execute(sql.raw(testSQL));
+    console.log(`PUT /api/reports/${reportId} - Resultado da consulta direta:`, testResult.rows);
+    
+    // Continuamos com a função normal
     const existingReport = await storage.getReportById(reportId);
+    console.log(`PUT /api/reports/${reportId} - Resultado do getReportById:`, existingReport);
+    
     if (!existingReport) {
+      console.log(`PUT /api/reports/${reportId} - Denúncia não encontrada após ambas as verificações`);
       return res.status(404).json({ message: 'Denúncia não encontrada' });
     }
     
@@ -275,12 +289,16 @@ router.put('/:id', async (req, res) => {
     // Se a denúncia está sendo marcada como resolvida, registramos a data de resolução
     if (updateData.isResolved === true || updateData.status === 'resolvido') {
       updateData.isResolved = true;
-      // Importante: no banco de dados o campo é "resolvedat", mas no schema está como "resolvedAt"
-      // A versão em camelCase é usada no código, enquanto a versão em lowercase é usada no banco
-      if (!('resolvedAt' in updateData)) {
-        updateData.resolvedAt = new Date();
-        console.log('PUT /api/reports/:id - Denúncia marcada como resolvida em:', updateData.resolvedAt);
-      }
+      updateData.status = 'resolvido';
+      
+      // Adicionamos o campo resolvedat (com "d" minúsculo como está no banco)
+      // e não o resolvedAt com "D" maiúsculo que está causando conflito
+      const resolvedDate = new Date();
+      console.log('PUT /api/reports/:id - Denúncia marcada como resolvida em:', resolvedDate);
+      
+      // Adicionamos manualmente o campo com a nomenclatura exata do banco de dados
+      // @ts-ignore - Ignoramos o TypeScript pois o campo não está definido formalmente com este nome
+      updateData.resolvedat = resolvedDate;
     }
     
     console.log('PUT /api/reports/:id - Dados para atualização:', updateData);
