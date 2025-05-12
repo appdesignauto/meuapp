@@ -29,6 +29,8 @@ import {
   Layers,
   PanelRight,
   PanelLeft,
+  PanelLeftClose,
+  PanelRightOpen,
   Video,
   Trash2,
   FileImage,
