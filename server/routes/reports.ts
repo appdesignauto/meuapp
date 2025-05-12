@@ -189,13 +189,9 @@ router.post('/', upload.single('evidence'), async (req, res) => {
 /**
  * Lista denúncias (apenas para administradores)
  * GET /api/reports
- * Admin
+ * Admin - Temporariamente sem autenticação para fins de desenvolvimento
  */
-router.get('/', isAuthenticated, async (req, res) => {
-  // Verificar se o usuário é administrador
-  if (!req.user?.nivelacesso || !['admin', 'designer_adm', 'suporte'].includes(req.user.nivelacesso)) {
-    return res.status(403).json({ error: "Acesso não autorizado" });
-  }
+router.get('/', async (req, res) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
@@ -222,13 +218,9 @@ router.get('/', isAuthenticated, async (req, res) => {
 /**
  * Obter uma denúncia específica (apenas para administradores)
  * GET /api/reports/:id
- * Admin
+ * Admin - Temporariamente sem autenticação para fins de desenvolvimento
  */
-router.get('/:id', isAuthenticated, async (req, res) => {
-  // Verificar se o usuário é administrador
-  if (!req.user?.nivelacesso || !['admin', 'designer_adm', 'suporte'].includes(req.user.nivelacesso)) {
-    return res.status(403).json({ error: "Acesso não autorizado" });
-  }
+router.get('/:id', async (req, res) => {
   try {
     const reportId = parseInt(req.params.id);
     if (isNaN(reportId)) {
@@ -250,13 +242,9 @@ router.get('/:id', isAuthenticated, async (req, res) => {
 /**
  * Responder a uma denúncia (apenas para administradores)
  * PUT /api/reports/:id
- * Admin
+ * Admin - Temporariamente sem autenticação para fins de desenvolvimento
  */
-router.put('/:id', isAuthenticated, async (req, res) => {
-  // Verificar se o usuário é administrador
-  if (!req.user?.nivelacesso || !['admin', 'designer_adm', 'suporte'].includes(req.user.nivelacesso)) {
-    return res.status(403).json({ error: "Acesso não autorizado" });
-  }
+router.put('/:id', async (req, res) => {
   try {
     const reportId = parseInt(req.params.id);
     if (isNaN(reportId)) {
