@@ -3976,6 +3976,10 @@ const AdminDashboard = () => {
               <SiteSettings />
             </TabsContent>
             
+            <TabsContent value="pwa">
+              <PWAConfigPage />
+            </TabsContent>
+            
             {/* Gerenciamento de Ferramentas */}
             <TabsContent value="analytics" className="mt-0">
               <div className="bg-white p-6 rounded-lg shadow-sm">
