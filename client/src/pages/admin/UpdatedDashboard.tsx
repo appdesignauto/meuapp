@@ -29,8 +29,6 @@ import {
   Layers,
   PanelRight,
   PanelLeft,
-  ChevronLeft,
-  ChevronRight,
   Video,
   Trash2,
   FileImage,
@@ -955,7 +953,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100 overflow-hidden">
+    <div className="flex h-screen bg-gray-100 relative">
       {/* Overlay - aparece em telas pequenas quando a sidebar está aberta */}
       {sidebarOpen && (
         <div 
@@ -968,9 +966,9 @@ const AdminDashboard = () => {
       {/* Sidebar - com possibilidade de ser recolhida em todos os tamanhos de tela */}
       <div 
         className={`
-          fixed lg:relative top-0 left-0 z-40 h-full bg-white shadow-lg border-r
-          ${sidebarOpen ? 'w-64' : 'w-16'} 
-          transition-all duration-300 ease-in-out
+          fixed lg:relative z-40 h-full bg-white border-r
+          ${sidebarOpen ? 'w-64 translate-x-0 shadow-lg' : 'w-20 -translate-x-full lg:translate-x-0'} 
+          transition-all duration-300 ease-in-out overflow-hidden
         `}
       >
         <div className="p-4 border-b flex justify-between items-center">
@@ -1001,13 +999,13 @@ const AdminDashboard = () => {
             {/* Dashboard principal */}
             <button
               onClick={() => setActiveTab('stats')}
-              className={`flex items-center w-full py-2.5 rounded-lg ${
+              className={`flex items-center w-full px-4 py-2.5 rounded-lg ${
                 activeTab === 'stats' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-              } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
+              } ${!sidebarOpen && 'lg:justify-center lg:px-2'}`}
               title="Visão Geral"
             >
-              <LayoutDashboard className="w-5 h-5" />
-              {sidebarOpen && <span className="ml-3">Visão Geral</span>}
+              <LayoutDashboard className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+              {sidebarOpen && <span>Visão Geral</span>}
             </button>
 
 
@@ -1018,35 +1016,37 @@ const AdminDashboard = () => {
               open={sidebarOpen ? undefined : false}
             >
               <CollapsibleTrigger 
-                className={`flex items-center w-full py-2 text-gray-700 font-medium ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
+                className={`flex items-center w-full px-4 py-2 text-gray-700 font-medium ${!sidebarOpen && 'lg:justify-center lg:px-2'}`}
                 title="Usuários"
               >
-                <Users className="w-5 h-5" />
+                <Users className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
                 {sidebarOpen && (
                   <>
-                    <span className="ml-3">Usuários</span>
+                    <span>Usuários</span>
                     <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
                   </>
                 )}
               </CollapsibleTrigger>
-              <CollapsibleContent className={`${sidebarOpen ? 'pl-4' : 'pl-0'} space-y-1 pt-1 pb-2`}>
+              <CollapsibleContent className={`${sidebarOpen ? 'pl-4' : 'lg:pl-0'} space-y-1 pt-1 pb-2`}>
                 <button
                   onClick={() => setActiveTab('users')}
-                  className={`flex items-center w-full rounded-md ${
+                  className={`flex items-center w-full py-2 rounded-md ${
                     activeTab === 'users' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
                   } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
+                  title="Gerenciar Usuários"
                 >
-                  <Users className="w-4 h-4" />
-                  {sidebarOpen && <span className="ml-3">Gerenciar Usuários</span>}
+                  <Users className={`w-4 h-4 ${sidebarOpen ? 'mr-3' : ''}`} />
+                  {sidebarOpen && <span>Gerenciar Usuários</span>}
                 </button>
                 <button
                   onClick={() => setActiveTab('community')}
-                  className={`flex items-center w-full rounded-md ${
+                  className={`flex items-center w-full py-2 rounded-md ${
                     activeTab === 'community' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
                   } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
+                  title="Comunidade"
                 >
-                  <MessageSquare className="w-4 h-4" />
-                  {sidebarOpen && <span className="ml-3">Comunidade</span>}
+                  <MessageSquare className={`w-4 h-4 ${sidebarOpen ? 'mr-3' : ''}`} />
+                  {sidebarOpen && <span>Comunidade</span>}
                 </button>
               </CollapsibleContent>
             </Collapsible>
@@ -1056,17 +1056,10 @@ const AdminDashboard = () => {
               className="bg-gray-50 rounded-lg py-1 mb-1"
               defaultOpen={['arts', 'categories', 'formats', 'fileTypes'].includes(activeTab)}
             >
-              <CollapsibleTrigger 
-                className={`flex items-center w-full py-2 text-gray-700 font-medium ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
-                title="Conteúdo"
-              >
-                <Layers className="w-5 h-5" />
-                {sidebarOpen && (
-                  <>
-                    <span className="ml-3">Conteúdo</span>
-                    <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
-                  </>
-                )}
+              <CollapsibleTrigger className="flex items-center w-full px-4 py-2 text-gray-700 font-medium">
+                <Layers className="w-5 h-5 mr-3" />
+                <span>Conteúdo</span>
+                <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
               </CollapsibleTrigger>
               <CollapsibleContent className="pl-4 space-y-1 pt-1 pb-2">
                 <button
@@ -1321,22 +1314,18 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Main Content - se expande quando a sidebar está recolhida */}
-      <div className={`flex-1 overflow-auto transition-all duration-300 ${!sidebarOpen ? 'lg:ml-16' : 'lg:ml-64'} w-full`}>
-        <header className="bg-white shadow-sm sticky top-0 z-10">
+      {/* Main Content */}
+      <div className="flex-1 overflow-auto">
+        <header className="bg-white shadow-sm">
           <div className="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between">
             <div className="flex items-center mb-3 sm:mb-0">
-              {/* Botão de alternância do menu */}
+              {/* Botão de alternância do menu (visível apenas em telas menores) */}
               <button 
-                className="mr-3 text-gray-600 hover:text-blue-600"
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                aria-label={sidebarOpen ? "Recolher menu lateral" : "Abrir menu lateral"}
+                className="sm:hidden mr-3 text-gray-600 hover:text-blue-600"
+                onClick={() => setSidebarOpen(true)}
+                aria-label="Abrir menu lateral"
               >
-                {sidebarOpen ? (
-                  <ChevronLeft className="w-5 h-5" />
-                ) : (
-                  <ChevronRight className="w-5 h-5" />
-                )}
+                <PanelRight className="w-5 h-5" />
               </button>
               
               <h1 className="text-xl font-semibold">
@@ -1467,7 +1456,7 @@ const AdminDashboard = () => {
           </div>
         </header>
         
-        <div className="p-6">
+        <main className="p-6">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsContent value="comments">
               <div className="mb-6">
@@ -3973,7 +3962,7 @@ const AdminDashboard = () => {
               </div>
             </TabsContent>
           </Tabs>
-        </div>
+        </main>
       </div>
       
       {/* Diálogo de criação de arte multi-formato */}
