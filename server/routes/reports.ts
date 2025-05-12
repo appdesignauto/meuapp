@@ -259,56 +259,73 @@ router.put('/:id', async (req, res) => {
     const validatedData = adminResponseSchema.parse(req.body);
     console.log('PUT /api/reports/:id - Dados validados:', validatedData);
     
-    // Verificar se a denúncia existe
-    console.log(`PUT /api/reports/${reportId} - Verificando existência da denúncia no banco...`);
+    // SOLUÇÃO DEFINITIVA: Vamos fazer tudo com SQL bruto puro sem depender do ORM
+    // ou das funções do storage para evitar o problema com os nomes de campos
     
-    // Vamos fazer um teste direto no banco para diagnóstico
-    console.log(`PUT /api/reports/${reportId} - Verificação direta no banco de dados`);
-    const testSQL = `SELECT * FROM reports WHERE id = ${reportId}`;
-    const testResult = await db.execute(sql.raw(testSQL));
-    console.log(`PUT /api/reports/${reportId} - Resultado da consulta direta:`, testResult.rows);
+    // 1. Primeiro verificamos se a denúncia existe diretamente no banco
+    const checkSql = `SELECT * FROM reports WHERE id = ${reportId};`;
+    console.log(`PUT /api/reports/${reportId} - Verificando denúncia com SQL:`, checkSql);
     
-    // Continuamos com a função normal
-    const existingReport = await storage.getReportById(reportId);
-    console.log(`PUT /api/reports/${reportId} - Resultado do getReportById:`, existingReport);
+    const checkResult = await db.execute(sql.raw(checkSql));
+    console.log(`PUT /api/reports/${reportId} - Resultado da verificação:`, checkResult.rows);
     
-    if (!existingReport) {
-      console.log(`PUT /api/reports/${reportId} - Denúncia não encontrada após ambas as verificações`);
+    if (!checkResult.rows || checkResult.rows.length === 0) {
       return res.status(404).json({ message: 'Denúncia não encontrada' });
     }
     
-    console.log('PUT /api/reports/:id - Denúncia encontrada:', existingReport);
+    // 2. Preparar os campos a serem atualizados
+    const adminId = req.user?.id || 1; // Fallback para ID 1 em desenvolvimento
+    const isResolved = validatedData.isResolved === true || validatedData.status === 'resolvido';
+    const status = validatedData.status || (isResolved ? 'resolvido' : undefined);
     
-    // Atualizar a denúncia - adiciona fallback para o ID de admin em desenvolvimento
-    const updateData = {
-      ...validatedData,
-      respondedBy: req.user?.id || 1, // ID do administrador que respondeu (fallback para ID 1 durante desenvolvimento)
-      respondedAt: new Date()
-    };
+    // 3. Construir a query SQL de atualização manualmente
+    let updateSql = `
+      UPDATE reports 
+      SET 
+        "updatedAt" = NOW()
+    `;
     
-    // Se a denúncia está sendo marcada como resolvida, registramos a data de resolução
-    if (updateData.isResolved === true || updateData.status === 'resolvido') {
-      updateData.isResolved = true;
-      updateData.status = 'resolvido';
-      
-      // Adicionamos o campo resolvedat (com "d" minúsculo como está no banco)
-      // e não o resolvedAt com "D" maiúsculo que está causando conflito
-      const resolvedDate = new Date();
-      console.log('PUT /api/reports/:id - Denúncia marcada como resolvida em:', resolvedDate);
-      
-      // Adicionamos manualmente o campo com a nomenclatura exata do banco de dados
-      // @ts-ignore - Ignoramos o TypeScript pois o campo não está definido formalmente com este nome
-      updateData.resolvedat = resolvedDate;
+    // Adicionar status se fornecido
+    if (status) {
+      updateSql += `, status = '${status}'`;
     }
     
-    console.log('PUT /api/reports/:id - Dados para atualização:', updateData);
+    // Adicionar resposta do admin
+    if (validatedData.adminResponse) {
+      // Escapar aspas simples para evitar SQL injection
+      const escapedResponse = validatedData.adminResponse.replace(/'/g, "''");
+      updateSql += `, "adminResponse" = '${escapedResponse}'`;
+    }
     
-    const updatedReport = await storage.updateReport(reportId, updateData);
-    console.log('PUT /api/reports/:id - Denúncia atualizada:', updatedReport);
+    // Adicionar dados do administrador que respondeu
+    updateSql += `, "respondedBy" = ${adminId}`;
+    updateSql += `, "respondedAt" = NOW()`;
     
+    // Marcar como resolvido se necessário
+    updateSql += `, "isResolved" = ${isResolved}`;
+    
+    // Se estiver marcando como resolvido, definir a data de resolução
+    if (isResolved) {
+      updateSql += `, resolvedat = NOW()`;
+    }
+    
+    // Completar a query SQL com a condição WHERE e RETURNING
+    updateSql += ` WHERE id = ${reportId} RETURNING *;`;
+    
+    console.log(`PUT /api/reports/${reportId} - SQL de atualização final:`, updateSql);
+    
+    // 4. Executar a atualização
+    const updateResult = await db.execute(sql.raw(updateSql));
+    console.log(`PUT /api/reports/${reportId} - Resultado da atualização:`, updateResult.rows);
+    
+    if (!updateResult.rows || updateResult.rows.length === 0) {
+      return res.status(500).json({ message: 'Erro ao atualizar denúncia: nenhum registro atualizado' });
+    }
+    
+    // 5. Retornar sucesso com os dados atualizados
     return res.status(200).json({
       message: 'Denúncia atualizada com sucesso',
-      report: updatedReport
+      report: updateResult.rows[0]
     });
     
   } catch (error) {
