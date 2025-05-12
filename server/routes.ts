@@ -67,7 +67,8 @@ import analyticsRouter from './routes/analytics'; // Rotas para gerenciamento de
 import sitemapRouter from './routes/sitemap'; // Rotas para sitemap.xml e robots.txt
 import { convertImageUrlsMiddleware } from './routes/image-url-proxy'; // Middleware para converter URLs de imagens
 import imageProxyTestRouter from './routes/image-proxy-test'; // Rota para testar o proxy de imagens
-import reportsRouter from './routes/reports'; // Rotas para o sistema de denúncias
+import reportsRouter from './routes/reports'; // Rotas para o sistema de denúncias (original)
+import reportsV2Router from './routes/reports-v2'; // Rotas para o sistema de denúncias (reescrito)
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Aplicar middleware global para converter URLs de imagens para todas as respostas JSON
@@ -5159,7 +5160,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(communityRouter);
   
   // Rotas para o sistema de denúncias
+  // Versão original do sistema de denúncias (utiliza ORM/schema)
   app.use('/api/reports', reportsRouter);
+  
+  // Versão 2 do sistema de denúncias (utiliza SQL puro)
+  // Implementada em reports-v2.ts para resolver problemas de ORM
+  app.use('/api/reports-v2', reportsV2Router);
   
 
   

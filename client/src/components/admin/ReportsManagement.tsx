@@ -123,16 +123,22 @@ const ReportsManagement = () => {
     isLoading: isLoadingTypes,
     isError: isTypesError 
   } = useQuery({
-    queryKey: ['/api/reports/types'],
+    queryKey: ['/api/reports-v2/types'],
     queryFn: async () => {
       try {
-        // Primeiro tentamos carregar do endpoint da API
-        const response = await fetch('/api/reports/types');
+        // Primeiro tentamos carregar do novo endpoint da API V2
+        const response = await fetch('/api/reports-v2/types');
         if (response.ok) {
           return await response.json();
         }
         
-        // Se a API falhar, carregamos do arquivo estático
+        // Se a API V2 falhar, tentamos a versão antiga
+        const legacyResponse = await fetch('/api/reports/types');
+        if (legacyResponse.ok) {
+          return await legacyResponse.json();
+        }
+        
+        // Se ambas APIs falharem, carregamos do arquivo estático
         const staticResponse = await fetch('/data/report-types.json');
         if (staticResponse.ok) {
           return await staticResponse.json();
