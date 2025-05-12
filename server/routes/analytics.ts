@@ -30,12 +30,12 @@ router.get('/', async (req, res) => {
     // e não todas as configurações internas
     const clientSettings = {
       metaPixelId: settings.metaPixelId,
-      gaId: settings.gaId,
-      gtmId: settings.gtmId,
-      clarityId: settings.clarityId,
-      hotjarId: settings.hotjarId,
-      linkedinId: settings.linkedinId,
-      tiktokId: settings.tiktokId
+      gaId: settings.ga4MeasurementId,
+      gtmId: settings.gtmContainerId,
+      clarityId: settings.clarityProjectId,
+      hotjarId: settings.hotjarSiteId,
+      linkedinId: settings.linkedinPartnerId,
+      tiktokId: settings.tiktokPixelId
     };
     
     res.json(clientSettings);
@@ -103,8 +103,8 @@ router.put('/admin/google-analytics', isAdmin, async (req, res) => {
     
     await db.update(analyticsSettings)
       .set({ 
-        gaId, 
-        gaEnabled: !!gaEnabled,
+        ga4MeasurementId: gaId, 
+        ga4Enabled: !!gaEnabled,
         updatedAt: new Date()
       })
       .where(eq(analyticsSettings.id, settings.id));
@@ -129,7 +129,7 @@ router.put('/admin/google-tag-manager', isAdmin, async (req, res) => {
     
     await db.update(analyticsSettings)
       .set({ 
-        gtmId, 
+        gtmContainerId: gtmId, 
         gtmEnabled: !!gtmEnabled,
         updatedAt: new Date()
       })
@@ -155,7 +155,7 @@ router.put('/admin/clarity', isAdmin, async (req, res) => {
     
     await db.update(analyticsSettings)
       .set({ 
-        clarityId, 
+        clarityProjectId: clarityId, 
         clarityEnabled: !!clarityEnabled,
         updatedAt: new Date()
       })
@@ -181,7 +181,7 @@ router.put('/admin/hotjar', isAdmin, async (req, res) => {
     
     await db.update(analyticsSettings)
       .set({ 
-        hotjarId, 
+        hotjarSiteId: hotjarId, 
         hotjarEnabled: !!hotjarEnabled,
         updatedAt: new Date()
       })
@@ -207,7 +207,7 @@ router.put('/admin/linkedin', isAdmin, async (req, res) => {
     
     await db.update(analyticsSettings)
       .set({ 
-        linkedinId, 
+        linkedinPartnerId: linkedinId, 
         linkedinEnabled: !!linkedinEnabled,
         updatedAt: new Date()
       })
@@ -233,7 +233,7 @@ router.put('/admin/tiktok', isAdmin, async (req, res) => {
     
     await db.update(analyticsSettings)
       .set({ 
-        tiktokId, 
+        tiktokPixelId: tiktokId, 
         tiktokEnabled: !!tiktokEnabled,
         updatedAt: new Date()
       })
