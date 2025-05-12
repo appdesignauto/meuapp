@@ -42,14 +42,9 @@ const AnalyticsSettings = () => {
     clarityEnabled: false
   });
 
-  const [hotjarSettings, setHotjarSettings] = useState({
-    hotjarSiteId: '',
-    hotjarEnabled: false
-  });
-
-  const [linkedinSettings, setLinkedinSettings] = useState({
-    linkedinPartnerId: '',
-    linkedinEnabled: false
+  const [pinterestSettings, setPinterestSettings] = useState({
+    pinterestTagId: '',
+    pinterestEnabled: false
   });
 
   const [tiktokSettings, setTiktokSettings] = useState({
@@ -109,14 +104,9 @@ const AnalyticsSettings = () => {
         clarityEnabled: !!data.clarityEnabled
       });
 
-      setHotjarSettings({
-        hotjarSiteId: data.hotjarSiteId || '',
-        hotjarEnabled: !!data.hotjarEnabled
-      });
-
-      setLinkedinSettings({
-        linkedinPartnerId: data.linkedinPartnerId || '',
-        linkedinEnabled: !!data.linkedinEnabled
+      setPinterestSettings({
+        pinterestTagId: data.pinterestTagId || '',
+        pinterestEnabled: !!data.pinterestEnabled
       });
 
       setTiktokSettings({
@@ -140,7 +130,7 @@ const AnalyticsSettings = () => {
     }
   }, [data]);
 
-  // Mutations para salvar as configurações
+  // Atualizações para cada tipo de configuração
   const updateMetaPixelMutation = useMutation({
     mutationFn: async (data: typeof metaPixelSettings) => {
       const response = await apiRequest('PUT', '/api/analytics/admin/meta-pixel', data);
@@ -248,13 +238,13 @@ const AnalyticsSettings = () => {
       setError(error.message);
     }
   });
-
-  const updateHotjarMutation = useMutation({
-    mutationFn: async (data: typeof hotjarSettings) => {
-      const response = await apiRequest('PUT', '/api/analytics/admin/hotjar', data);
+  
+  const updatePinterestMutation = useMutation({
+    mutationFn: async (data: typeof pinterestSettings) => {
+      const response = await apiRequest('PUT', '/api/analytics/admin/pinterest', data);
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Erro ao atualizar configurações do Hotjar');
+        throw new Error(errorData.message || 'Erro ao atualizar configurações do Pinterest Tag');
       }
       return response.json();
     },
@@ -262,34 +252,7 @@ const AnalyticsSettings = () => {
       queryClient.invalidateQueries({ queryKey: ['/api/analytics/admin'] });
       toast({
         title: 'Configurações salvas',
-        description: 'As configurações do Hotjar foram atualizadas com sucesso',
-      });
-      setError(null);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: 'Erro ao salvar configurações',
-        description: error.message,
-        variant: 'destructive',
-      });
-      setError(error.message);
-    }
-  });
-
-  const updateLinkedinMutation = useMutation({
-    mutationFn: async (data: typeof linkedinSettings) => {
-      const response = await apiRequest('PUT', '/api/analytics/admin/linkedin', data);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erro ao atualizar configurações do LinkedIn Insight Tag');
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/analytics/admin'] });
-      toast({
-        title: 'Configurações salvas',
-        description: 'As configurações do LinkedIn Insight Tag foram atualizadas com sucesso',
+        description: 'As configurações do Pinterest Tag foram atualizadas com sucesso',
       });
       setError(null);
     },
@@ -335,7 +298,7 @@ const AnalyticsSettings = () => {
       const response = await apiRequest('PUT', '/api/analytics/admin/custom-scripts', data);
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Erro ao atualizar scripts personalizados');
+        throw new Error(errorData.message || 'Erro ao atualizar configurações de scripts personalizados');
       }
       return response.json();
     },
@@ -343,7 +306,7 @@ const AnalyticsSettings = () => {
       queryClient.invalidateQueries({ queryKey: ['/api/analytics/admin'] });
       toast({
         title: 'Configurações salvas',
-        description: 'Os scripts personalizados foram atualizados com sucesso',
+        description: 'As configurações de scripts personalizados foram atualizadas com sucesso',
       });
       setError(null);
     },
@@ -359,7 +322,7 @@ const AnalyticsSettings = () => {
 
   const updateTrackingSettingsMutation = useMutation({
     mutationFn: async (data: typeof trackingSettings) => {
-      const response = await apiRequest('PUT', '/api/analytics/admin/tracking-settings', data);
+      const response = await apiRequest('PUT', '/api/analytics/admin/tracking', data);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Erro ao atualizar configurações de rastreamento');
@@ -384,7 +347,7 @@ const AnalyticsSettings = () => {
     }
   });
 
-  // Handlers para salvar cada seção
+  // Handlers para salvar cada tipo de configuração
   const handleSaveMetaPixel = () => {
     updateMetaPixelMutation.mutate({
       metaPixelId: metaPixelSettings.metaPixelId,
@@ -414,18 +377,11 @@ const AnalyticsSettings = () => {
       clarityEnabled: microsoftClaritySettings.clarityEnabled
     });
   };
-
-  const handleSaveHotjar = () => {
-    updateHotjarMutation.mutate({
-      hotjarSiteId: hotjarSettings.hotjarSiteId,
-      hotjarEnabled: hotjarSettings.hotjarEnabled
-    });
-  };
-
-  const handleSaveLinkedin = () => {
-    updateLinkedinMutation.mutate({
-      linkedinPartnerId: linkedinSettings.linkedinPartnerId,
-      linkedinEnabled: linkedinSettings.linkedinEnabled
+  
+  const handleSavePinterest = () => {
+    updatePinterestMutation.mutate({
+      pinterestTagId: pinterestSettings.pinterestTagId,
+      pinterestEnabled: pinterestSettings.pinterestEnabled
     });
   };
 
@@ -477,16 +433,15 @@ const AnalyticsSettings = () => {
   return (
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-3 md:grid-cols-9 mb-6">
-          <TabsTrigger value="meta-pixel">Meta Pixel</TabsTrigger>
-          <TabsTrigger value="google-analytics">Google Analytics</TabsTrigger>
-          <TabsTrigger value="gtm">Google Tag Manager</TabsTrigger>
-          <TabsTrigger value="clarity">Microsoft Clarity</TabsTrigger>
-          <TabsTrigger value="hotjar">Hotjar</TabsTrigger>
-          <TabsTrigger value="linkedin">LinkedIn</TabsTrigger>
-          <TabsTrigger value="tiktok">TikTok</TabsTrigger>
-          <TabsTrigger value="custom-scripts">Scripts Personalizados</TabsTrigger>
-          <TabsTrigger value="tracking-options">Opções de Rastreamento</TabsTrigger>
+        <TabsList className="flex flex-wrap gap-1 mb-6 justify-start">
+          <TabsTrigger value="meta-pixel" className="flex-grow sm:flex-grow-0">Meta Pixel</TabsTrigger>
+          <TabsTrigger value="google-analytics" className="flex-grow sm:flex-grow-0">Google Analytics</TabsTrigger>
+          <TabsTrigger value="gtm" className="flex-grow sm:flex-grow-0">GTM</TabsTrigger>
+          <TabsTrigger value="clarity" className="flex-grow sm:flex-grow-0">Clarity</TabsTrigger>
+          <TabsTrigger value="pinterest" className="flex-grow sm:flex-grow-0">Pinterest</TabsTrigger>
+          <TabsTrigger value="tiktok" className="flex-grow sm:flex-grow-0">TikTok</TabsTrigger>
+          <TabsTrigger value="custom-scripts" className="flex-grow sm:flex-grow-0">Scripts</TabsTrigger>
+          <TabsTrigger value="tracking-options" className="flex-grow sm:flex-grow-0">Rastreamento</TabsTrigger>
         </TabsList>
 
         {/* Meta Pixel */}
@@ -498,48 +453,43 @@ const AnalyticsSettings = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="meta-pixel-enabled">Ativar Meta Pixel</Label>
-                  <Switch
-                    id="meta-pixel-enabled"
-                    checked={metaPixelSettings.metaPixelEnabled}
-                    onCheckedChange={(checked) => setMetaPixelSettings({...metaPixelSettings, metaPixelEnabled: checked})}
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="meta-pixel-id">ID do Meta Pixel</Label>
+                <Label htmlFor="metaPixelId">Meta Pixel ID</Label>
                 <Input
-                  id="meta-pixel-id"
-                  placeholder="Ex: 123456789012345"
+                  id="metaPixelId"
+                  placeholder="Exemplo: 123456789012345"
                   value={metaPixelSettings.metaPixelId}
-                  onChange={(e) => setMetaPixelSettings({...metaPixelSettings, metaPixelId: e.target.value})}
+                  onChange={(e) => setMetaPixelSettings(prev => ({ ...prev, metaPixelId: e.target.value }))}
                 />
-                <p className="text-sm text-muted-foreground">
-                  ID do seu Meta Pixel. Você pode encontrá-lo no <a href="https://business.facebook.com/events_manager" target="_blank" rel="noopener noreferrer" className="underline">Gerenciador de Eventos</a> do Meta.
+                <p className="text-xs text-muted-foreground">
+                  O ID do Meta Pixel pode ser encontrado no Gerenciador de Eventos do Meta Business.
                 </p>
               </div>
-              
+
               <div className="space-y-2">
-                <Label htmlFor="meta-ads-token">Token de Acesso do Meta Ads API (opcional)</Label>
+                <Label htmlFor="metaAdsAccessToken">Access Token da API do Facebook Ads (opcional)</Label>
                 <Input
-                  id="meta-ads-token"
-                  placeholder="Token de acesso"
+                  id="metaAdsAccessToken"
+                  placeholder="Access Token para Facebook Ads API (opcional)"
                   value={metaPixelSettings.metaAdsAccessToken}
-                  onChange={(e) => setMetaPixelSettings({...metaPixelSettings, metaAdsAccessToken: e.target.value})}
+                  onChange={(e) => setMetaPixelSettings(prev => ({ ...prev, metaAdsAccessToken: e.target.value }))}
                 />
-                <p className="text-sm text-muted-foreground">
-                  Token de acesso à API do Facebook Ads para conversões avançadas.
+                <p className="text-xs text-muted-foreground">
+                  Este token é necessário apenas para enviar eventos de conversão avançados.
                 </p>
+              </div>
+
+              <div className="flex items-center space-x-2 pt-4">
+                <Switch 
+                  id="metaPixelEnabled"
+                  checked={metaPixelSettings.metaPixelEnabled}
+                  onCheckedChange={(checked) => setMetaPixelSettings(prev => ({ ...prev, metaPixelEnabled: checked }))}
+                />
+                <Label htmlFor="metaPixelEnabled">Ativar Meta Pixel</Label>
               </div>
             </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button variant="outline" onClick={() => setActiveTab('google-analytics')}>
-                Próximo
-              </Button>
+            <CardFooter>
               <Button 
-                onClick={handleSaveMetaPixel} 
+                onClick={handleSaveMetaPixel}
                 disabled={updateMetaPixelMutation.isPending}
               >
                 {updateMetaPixelMutation.isPending ? (
@@ -550,7 +500,7 @@ const AnalyticsSettings = () => {
                 ) : (
                   <>
                     <Save className="mr-2 h-4 w-4" />
-                    Salvar
+                    Salvar Configurações
                   </>
                 )}
               </Button>
@@ -562,58 +512,48 @@ const AnalyticsSettings = () => {
         <TabsContent value="google-analytics" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Configurações do Google Analytics</CardTitle>
-              <CardDescription>Configure o Google Analytics 4 para análise de tráfego</CardDescription>
+              <CardTitle>Configurações do Google Analytics 4</CardTitle>
+              <CardDescription>Configure o Google Analytics 4 para rastreamento de eventos</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="ga-enabled">Ativar Google Analytics</Label>
-                  <Switch
-                    id="ga-enabled"
-                    checked={googleAnalyticsSettings.ga4Enabled}
-                    onCheckedChange={(checked) => setGoogleAnalyticsSettings({...googleAnalyticsSettings, ga4Enabled: checked})}
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="ga-measurement-id">ID de Medição do GA4</Label>
+                <Label htmlFor="ga4MeasurementId">Measurement ID do GA4</Label>
                 <Input
-                  id="ga-measurement-id"
-                  placeholder="Ex: G-XXXXXXXXXX"
+                  id="ga4MeasurementId"
+                  placeholder="Exemplo: G-XXXXXXXXXX"
                   value={googleAnalyticsSettings.ga4MeasurementId}
-                  onChange={(e) => setGoogleAnalyticsSettings({...googleAnalyticsSettings, ga4MeasurementId: e.target.value})}
+                  onChange={(e) => setGoogleAnalyticsSettings(prev => ({ ...prev, ga4MeasurementId: e.target.value }))}
                 />
-                <p className="text-sm text-muted-foreground">
-                  O ID de Medição do GA4 começa com "G-".
+                <p className="text-xs text-muted-foreground">
+                  Encontre nas configurações do seu fluxo de dados no GA4.
                 </p>
               </div>
-              
+
               <div className="space-y-2">
-                <Label htmlFor="ga-api-secret">API Secret do GA4 (opcional)</Label>
+                <Label htmlFor="ga4ApiSecret">API Secret do GA4 (opcional)</Label>
                 <Input
-                  id="ga-api-secret"
-                  placeholder="Segredo da API"
+                  id="ga4ApiSecret"
+                  placeholder="API Secret para envio de eventos avançados (opcional)"
                   value={googleAnalyticsSettings.ga4ApiSecret}
-                  onChange={(e) => setGoogleAnalyticsSettings({...googleAnalyticsSettings, ga4ApiSecret: e.target.value})}
+                  onChange={(e) => setGoogleAnalyticsSettings(prev => ({ ...prev, ga4ApiSecret: e.target.value }))}
                 />
-                <p className="text-sm text-muted-foreground">
-                  Utilizado para envio de eventos do servidor para o GA4.
+                <p className="text-xs text-muted-foreground">
+                  Necessário apenas para eventos no lado do servidor.
                 </p>
+              </div>
+
+              <div className="flex items-center space-x-2 pt-4">
+                <Switch 
+                  id="ga4Enabled"
+                  checked={googleAnalyticsSettings.ga4Enabled}
+                  onCheckedChange={(checked) => setGoogleAnalyticsSettings(prev => ({ ...prev, ga4Enabled: checked }))}
+                />
+                <Label htmlFor="ga4Enabled">Ativar Google Analytics 4</Label>
               </div>
             </CardContent>
-            <CardFooter className="flex justify-between">
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setActiveTab('meta-pixel')}>
-                  Anterior
-                </Button>
-                <Button variant="outline" onClick={() => setActiveTab('gtm')}>
-                  Próximo
-                </Button>
-              </div>
+            <CardFooter>
               <Button 
-                onClick={handleSaveGoogleAnalytics} 
+                onClick={handleSaveGoogleAnalytics}
                 disabled={updateGoogleAnalyticsMutation.isPending}
               >
                 {updateGoogleAnalyticsMutation.isPending ? (
@@ -624,7 +564,7 @@ const AnalyticsSettings = () => {
                 ) : (
                   <>
                     <Save className="mr-2 h-4 w-4" />
-                    Salvar
+                    Salvar Configurações
                   </>
                 )}
               </Button>
@@ -637,44 +577,34 @@ const AnalyticsSettings = () => {
           <Card>
             <CardHeader>
               <CardTitle>Configurações do Google Tag Manager</CardTitle>
-              <CardDescription>Configure o GTM para gerenciar tags de rastreamento</CardDescription>
+              <CardDescription>Configure o GTM para gerenciamento centralizado de tags</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="gtm-enabled">Ativar Google Tag Manager</Label>
-                  <Switch
-                    id="gtm-enabled"
-                    checked={googleTagManagerSettings.gtmEnabled}
-                    onCheckedChange={(checked) => setGoogleTagManagerSettings({...googleTagManagerSettings, gtmEnabled: checked})}
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="gtm-container-id">ID do Container GTM</Label>
+                <Label htmlFor="gtmContainerId">Container ID do GTM</Label>
                 <Input
-                  id="gtm-container-id"
-                  placeholder="Ex: GTM-XXXXXXX"
+                  id="gtmContainerId"
+                  placeholder="Exemplo: GTM-XXXXXXX"
                   value={googleTagManagerSettings.gtmContainerId}
-                  onChange={(e) => setGoogleTagManagerSettings({...googleTagManagerSettings, gtmContainerId: e.target.value})}
+                  onChange={(e) => setGoogleTagManagerSettings(prev => ({ ...prev, gtmContainerId: e.target.value }))}
                 />
-                <p className="text-sm text-muted-foreground">
-                  O ID do Container do Google Tag Manager geralmente começa com "GTM-".
+                <p className="text-xs text-muted-foreground">
+                  Encontre na interface do Google Tag Manager.
                 </p>
               </div>
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setActiveTab('google-analytics')}>
-                  Anterior
-                </Button>
-                <Button variant="outline" onClick={() => setActiveTab('clarity')}>
-                  Próximo
-                </Button>
+
+              <div className="flex items-center space-x-2 pt-4">
+                <Switch 
+                  id="gtmEnabled"
+                  checked={googleTagManagerSettings.gtmEnabled}
+                  onCheckedChange={(checked) => setGoogleTagManagerSettings(prev => ({ ...prev, gtmEnabled: checked }))}
+                />
+                <Label htmlFor="gtmEnabled">Ativar Google Tag Manager</Label>
               </div>
+            </CardContent>
+            <CardFooter>
               <Button 
-                onClick={handleSaveGoogleTagManager} 
+                onClick={handleSaveGoogleTagManager}
                 disabled={updateGoogleTagManagerMutation.isPending}
               >
                 {updateGoogleTagManagerMutation.isPending ? (
@@ -685,7 +615,7 @@ const AnalyticsSettings = () => {
                 ) : (
                   <>
                     <Save className="mr-2 h-4 w-4" />
-                    Salvar
+                    Salvar Configurações
                   </>
                 )}
               </Button>
@@ -698,44 +628,34 @@ const AnalyticsSettings = () => {
           <Card>
             <CardHeader>
               <CardTitle>Configurações do Microsoft Clarity</CardTitle>
-              <CardDescription>Configure o Microsoft Clarity para mapas de calor e gravações de sessão</CardDescription>
+              <CardDescription>Configure o Microsoft Clarity para análise de comportamento</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="clarity-enabled">Ativar Microsoft Clarity</Label>
-                  <Switch
-                    id="clarity-enabled"
-                    checked={microsoftClaritySettings.clarityEnabled}
-                    onCheckedChange={(checked) => setMicrosoftClaritySettings({...microsoftClaritySettings, clarityEnabled: checked})}
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="clarity-project-id">ID do Projeto Clarity</Label>
+                <Label htmlFor="clarityProjectId">Project ID do Clarity</Label>
                 <Input
-                  id="clarity-project-id"
-                  placeholder="Ex: abcdefghij"
+                  id="clarityProjectId"
+                  placeholder="Exemplo: abcdefghij"
                   value={microsoftClaritySettings.clarityProjectId}
-                  onChange={(e) => setMicrosoftClaritySettings({...microsoftClaritySettings, clarityProjectId: e.target.value})}
+                  onChange={(e) => setMicrosoftClaritySettings(prev => ({ ...prev, clarityProjectId: e.target.value }))}
                 />
-                <p className="text-sm text-muted-foreground">
-                  Você pode encontrar este ID no painel do Microsoft Clarity ao configurar seu site.
+                <p className="text-xs text-muted-foreground">
+                  Encontre nas configurações do seu projeto no Microsoft Clarity.
                 </p>
               </div>
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setActiveTab('gtm')}>
-                  Anterior
-                </Button>
-                <Button variant="outline" onClick={() => setActiveTab('hotjar')}>
-                  Próximo
-                </Button>
+
+              <div className="flex items-center space-x-2 pt-4">
+                <Switch 
+                  id="clarityEnabled"
+                  checked={microsoftClaritySettings.clarityEnabled}
+                  onCheckedChange={(checked) => setMicrosoftClaritySettings(prev => ({ ...prev, clarityEnabled: checked }))}
+                />
+                <Label htmlFor="clarityEnabled">Ativar Microsoft Clarity</Label>
               </div>
+            </CardContent>
+            <CardFooter>
               <Button 
-                onClick={handleSaveClarity} 
+                onClick={handleSaveClarity}
                 disabled={updateClarityMutation.isPending}
               >
                 {updateClarityMutation.isPending ? (
@@ -746,7 +666,7 @@ const AnalyticsSettings = () => {
                 ) : (
                   <>
                     <Save className="mr-2 h-4 w-4" />
-                    Salvar
+                    Salvar Configurações
                   </>
                 )}
               </Button>
@@ -754,113 +674,42 @@ const AnalyticsSettings = () => {
           </Card>
         </TabsContent>
 
-        {/* Hotjar */}
-        <TabsContent value="hotjar" className="space-y-4">
+        {/* Pinterest */}
+        <TabsContent value="pinterest" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Configurações do Hotjar</CardTitle>
-              <CardDescription>Configure o Hotjar para mapas de calor, gravações e feedback</CardDescription>
+              <CardTitle>Configurações do Pinterest Tag</CardTitle>
+              <CardDescription>Configure o Pinterest Tag para rastreamento de conversões</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="hotjar-enabled">Ativar Hotjar</Label>
-                  <Switch
-                    id="hotjar-enabled"
-                    checked={hotjarSettings.hotjarEnabled}
-                    onCheckedChange={(checked) => setHotjarSettings({...hotjarSettings, hotjarEnabled: checked})}
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="hotjar-site-id">ID do Site Hotjar</Label>
+                <Label htmlFor="pinterestTagId">Tag ID do Pinterest</Label>
                 <Input
-                  id="hotjar-site-id"
-                  placeholder="Ex: 1234567"
-                  value={hotjarSettings.hotjarSiteId}
-                  onChange={(e) => setHotjarSettings({...hotjarSettings, hotjarSiteId: e.target.value})}
+                  id="pinterestTagId"
+                  placeholder="Exemplo: 1234567890123"
+                  value={pinterestSettings.pinterestTagId}
+                  onChange={(e) => setPinterestSettings(prev => ({ ...prev, pinterestTagId: e.target.value }))}
                 />
-                <p className="text-sm text-muted-foreground">
-                  Você pode encontrar o ID do site no código de instalação do Hotjar.
+                <p className="text-xs text-muted-foreground">
+                  Encontre nas configurações do Pinterest Ads Manager.
                 </p>
               </div>
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setActiveTab('clarity')}>
-                  Anterior
-                </Button>
-                <Button variant="outline" onClick={() => setActiveTab('linkedin')}>
-                  Próximo
-                </Button>
-              </div>
-              <Button 
-                onClick={handleSaveHotjar} 
-                disabled={updateHotjarMutation.isPending}
-              >
-                {updateHotjarMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Salvando...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Salvar
-                  </>
-                )}
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
 
-        {/* LinkedIn */}
-        <TabsContent value="linkedin" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Configurações do LinkedIn Insight Tag</CardTitle>
-              <CardDescription>Configure o LinkedIn para rastreamento de conversões</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="linkedin-enabled">Ativar LinkedIn Insight Tag</Label>
-                  <Switch
-                    id="linkedin-enabled"
-                    checked={linkedinSettings.linkedinEnabled}
-                    onCheckedChange={(checked) => setLinkedinSettings({...linkedinSettings, linkedinEnabled: checked})}
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="linkedin-partner-id">ID do Parceiro LinkedIn</Label>
-                <Input
-                  id="linkedin-partner-id"
-                  placeholder="Ex: 123456"
-                  value={linkedinSettings.linkedinPartnerId}
-                  onChange={(e) => setLinkedinSettings({...linkedinSettings, linkedinPartnerId: e.target.value})}
+              <div className="flex items-center space-x-2 pt-4">
+                <Switch 
+                  id="pinterestEnabled"
+                  checked={pinterestSettings.pinterestEnabled}
+                  onCheckedChange={(checked) => setPinterestSettings(prev => ({ ...prev, pinterestEnabled: checked }))}
                 />
-                <p className="text-sm text-muted-foreground">
-                  Você pode encontrar este ID na sua conta do LinkedIn Campaign Manager.
-                </p>
+                <Label htmlFor="pinterestEnabled">Ativar Pinterest Tag</Label>
               </div>
             </CardContent>
-            <CardFooter className="flex justify-between">
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setActiveTab('hotjar')}>
-                  Anterior
-                </Button>
-                <Button variant="outline" onClick={() => setActiveTab('tiktok')}>
-                  Próximo
-                </Button>
-              </div>
+            <CardFooter>
               <Button 
-                onClick={handleSaveLinkedin} 
-                disabled={updateLinkedinMutation.isPending}
+                onClick={handleSavePinterest}
+                disabled={updatePinterestMutation.isPending}
               >
-                {updateLinkedinMutation.isPending ? (
+                {updatePinterestMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Salvando...
@@ -868,7 +717,7 @@ const AnalyticsSettings = () => {
                 ) : (
                   <>
                     <Save className="mr-2 h-4 w-4" />
-                    Salvar
+                    Salvar Configurações
                   </>
                 )}
               </Button>
@@ -881,44 +730,34 @@ const AnalyticsSettings = () => {
           <Card>
             <CardHeader>
               <CardTitle>Configurações do TikTok Pixel</CardTitle>
-              <CardDescription>Configure o TikTok Pixel para rastreamento de conversões</CardDescription>
+              <CardDescription>Configure o TikTok Pixel para rastreamento de eventos</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="tiktok-enabled">Ativar TikTok Pixel</Label>
-                  <Switch
-                    id="tiktok-enabled"
-                    checked={tiktokSettings.tiktokEnabled}
-                    onCheckedChange={(checked) => setTiktokSettings({...tiktokSettings, tiktokEnabled: checked})}
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="tiktok-pixel-id">ID do Pixel TikTok</Label>
+                <Label htmlFor="tiktokPixelId">Pixel ID do TikTok</Label>
                 <Input
-                  id="tiktok-pixel-id"
-                  placeholder="Ex: CNNNNNNC"
+                  id="tiktokPixelId"
+                  placeholder="Exemplo: XXXXXXXXXXXXXXXXXX"
                   value={tiktokSettings.tiktokPixelId}
-                  onChange={(e) => setTiktokSettings({...tiktokSettings, tiktokPixelId: e.target.value})}
+                  onChange={(e) => setTiktokSettings(prev => ({ ...prev, tiktokPixelId: e.target.value }))}
                 />
-                <p className="text-sm text-muted-foreground">
-                  Você pode encontrar este ID no painel de Eventos do TikTok Ads Manager.
+                <p className="text-xs text-muted-foreground">
+                  Encontre nas configurações do TikTok Ads Manager.
                 </p>
               </div>
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setActiveTab('linkedin')}>
-                  Anterior
-                </Button>
-                <Button variant="outline" onClick={() => setActiveTab('custom-scripts')}>
-                  Próximo
-                </Button>
+
+              <div className="flex items-center space-x-2 pt-4">
+                <Switch 
+                  id="tiktokEnabled"
+                  checked={tiktokSettings.tiktokEnabled}
+                  onCheckedChange={(checked) => setTiktokSettings(prev => ({ ...prev, tiktokEnabled: checked }))}
+                />
+                <Label htmlFor="tiktokEnabled">Ativar TikTok Pixel</Label>
               </div>
+            </CardContent>
+            <CardFooter>
               <Button 
-                onClick={handleSaveTiktok} 
+                onClick={handleSaveTiktok}
                 disabled={updateTiktokMutation.isPending}
               >
                 {updateTiktokMutation.isPending ? (
@@ -929,7 +768,7 @@ const AnalyticsSettings = () => {
                 ) : (
                   <>
                     <Save className="mr-2 h-4 w-4" />
-                    Salvar
+                    Salvar Configurações
                   </>
                 )}
               </Button>
@@ -942,59 +781,49 @@ const AnalyticsSettings = () => {
           <Card>
             <CardHeader>
               <CardTitle>Scripts Personalizados</CardTitle>
-              <CardDescription>Adicione scripts de rastreamento personalizados ao site</CardDescription>
+              <CardDescription>Adicione scripts personalizados para funcionalidades adicionais</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="custom-scripts-enabled">Ativar Scripts Personalizados</Label>
-                  <Switch
-                    id="custom-scripts-enabled"
-                    checked={customScriptsSettings.customScriptEnabled}
-                    onCheckedChange={(checked) => setCustomScriptsSettings({...customScriptsSettings, customScriptEnabled: checked})}
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="custom-script-head">Script para o &lt;head&gt;</Label>
+                <Label htmlFor="customScriptHead">Scripts para o &lt;head&gt;</Label>
                 <Textarea
-                  id="custom-script-head"
-                  placeholder="<!-- Código para inserir no head -->"
+                  id="customScriptHead"
+                  placeholder="Cole aqui os scripts para o <head>"
                   value={customScriptsSettings.customScriptHead}
-                  onChange={(e) => setCustomScriptsSettings({...customScriptsSettings, customScriptHead: e.target.value})}
-                  rows={6}
+                  onChange={(e) => setCustomScriptsSettings(prev => ({ ...prev, customScriptHead: e.target.value }))}
+                  className="h-32 font-mono text-sm"
                 />
-                <p className="text-sm text-muted-foreground">
-                  Este código será inserido na seção &lt;head&gt; de todas as páginas.
+                <p className="text-xs text-muted-foreground">
+                  Inseridos no final da tag &lt;head&gt;.
                 </p>
               </div>
-              
+
               <div className="space-y-2">
-                <Label htmlFor="custom-script-body">Script para o final do &lt;body&gt;</Label>
+                <Label htmlFor="customScriptBody">Scripts para o final do &lt;body&gt;</Label>
                 <Textarea
-                  id="custom-script-body"
-                  placeholder="<!-- Código para inserir no final do body -->"
+                  id="customScriptBody"
+                  placeholder="Cole aqui os scripts para o final do <body>"
                   value={customScriptsSettings.customScriptBody}
-                  onChange={(e) => setCustomScriptsSettings({...customScriptsSettings, customScriptBody: e.target.value})}
-                  rows={6}
+                  onChange={(e) => setCustomScriptsSettings(prev => ({ ...prev, customScriptBody: e.target.value }))}
+                  className="h-32 font-mono text-sm"
                 />
-                <p className="text-sm text-muted-foreground">
-                  Este código será inserido no final da seção &lt;body&gt; de todas as páginas.
+                <p className="text-xs text-muted-foreground">
+                  Inseridos no final da tag &lt;body&gt;.
                 </p>
+              </div>
+
+              <div className="flex items-center space-x-2 pt-4">
+                <Switch 
+                  id="customScriptEnabled"
+                  checked={customScriptsSettings.customScriptEnabled}
+                  onCheckedChange={(checked) => setCustomScriptsSettings(prev => ({ ...prev, customScriptEnabled: checked }))}
+                />
+                <Label htmlFor="customScriptEnabled">Ativar Scripts Personalizados</Label>
               </div>
             </CardContent>
-            <CardFooter className="flex justify-between">
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setActiveTab('tiktok')}>
-                  Anterior
-                </Button>
-                <Button variant="outline" onClick={() => setActiveTab('tracking-options')}>
-                  Próximo
-                </Button>
-              </div>
+            <CardFooter>
               <Button 
-                onClick={handleSaveCustomScripts} 
+                onClick={handleSaveCustomScripts}
                 disabled={updateCustomScriptsMutation.isPending}
               >
                 {updateCustomScriptsMutation.isPending ? (
@@ -1005,7 +834,7 @@ const AnalyticsSettings = () => {
                 ) : (
                   <>
                     <Save className="mr-2 h-4 w-4" />
-                    Salvar
+                    Salvar Configurações
                   </>
                 )}
               </Button>
@@ -1018,83 +847,59 @@ const AnalyticsSettings = () => {
           <Card>
             <CardHeader>
               <CardTitle>Opções de Rastreamento</CardTitle>
-              <CardDescription>Configure quais tipos de eventos serão rastreados</CardDescription>
+              <CardDescription>Configure quais eventos serão rastreados automaticamente</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3">
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex items-center space-x-2">
                   <Checkbox
-                    id="track-pageviews"
+                    id="trackPageviews"
                     checked={trackingSettings.trackPageviews}
-                    onCheckedChange={(checked) => setTrackingSettings({...trackingSettings, trackPageviews: !!checked})}
+                    onCheckedChange={(checked) => setTrackingSettings(prev => ({ ...prev, trackPageviews: checked === true }))}
                   />
-                  <Label
-                    htmlFor="track-pageviews"
-                    className="font-normal"
-                  >
-                    Rastrear visualizações de página
-                  </Label>
+                  <Label htmlFor="trackPageviews">Rastrear visualizações de página</Label>
                 </div>
+
                 <div className="flex items-center space-x-2">
                   <Checkbox
-                    id="track-clicks"
+                    id="trackClicks"
                     checked={trackingSettings.trackClicks}
-                    onCheckedChange={(checked) => setTrackingSettings({...trackingSettings, trackClicks: !!checked})}
+                    onCheckedChange={(checked) => setTrackingSettings(prev => ({ ...prev, trackClicks: checked === true }))}
                   />
-                  <Label
-                    htmlFor="track-clicks"
-                    className="font-normal"
-                  >
-                    Rastrear cliques em botões e links
-                  </Label>
+                  <Label htmlFor="trackClicks">Rastrear cliques em elementos</Label>
                 </div>
+
                 <div className="flex items-center space-x-2">
                   <Checkbox
-                    id="track-forms"
+                    id="trackFormSubmissions"
                     checked={trackingSettings.trackFormSubmissions}
-                    onCheckedChange={(checked) => setTrackingSettings({...trackingSettings, trackFormSubmissions: !!checked})}
+                    onCheckedChange={(checked) => setTrackingSettings(prev => ({ ...prev, trackFormSubmissions: checked === true }))}
                   />
-                  <Label
-                    htmlFor="track-forms"
-                    className="font-normal"
-                  >
-                    Rastrear envio de formulários
-                  </Label>
+                  <Label htmlFor="trackFormSubmissions">Rastrear envios de formulários</Label>
                 </div>
+
                 <div className="flex items-center space-x-2">
                   <Checkbox
-                    id="track-arts-viewed"
+                    id="trackArtsViewed"
                     checked={trackingSettings.trackArtsViewed}
-                    onCheckedChange={(checked) => setTrackingSettings({...trackingSettings, trackArtsViewed: !!checked})}
+                    onCheckedChange={(checked) => setTrackingSettings(prev => ({ ...prev, trackArtsViewed: checked === true }))}
                   />
-                  <Label
-                    htmlFor="track-arts-viewed"
-                    className="font-normal"
-                  >
-                    Rastrear visualizações de artes
-                  </Label>
+                  <Label htmlFor="trackArtsViewed">Rastrear visualizações de artes</Label>
                 </div>
+
                 <div className="flex items-center space-x-2">
                   <Checkbox
-                    id="track-arts-downloaded"
+                    id="trackArtsDownloaded"
                     checked={trackingSettings.trackArtsDownloaded}
-                    onCheckedChange={(checked) => setTrackingSettings({...trackingSettings, trackArtsDownloaded: !!checked})}
+                    onCheckedChange={(checked) => setTrackingSettings(prev => ({ ...prev, trackArtsDownloaded: checked === true }))}
                   />
-                  <Label
-                    htmlFor="track-arts-downloaded"
-                    className="font-normal"
-                  >
-                    Rastrear downloads de artes
-                  </Label>
+                  <Label htmlFor="trackArtsDownloaded">Rastrear downloads de artes</Label>
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button variant="outline" onClick={() => setActiveTab('custom-scripts')}>
-                Anterior
-              </Button>
+            <CardFooter>
               <Button 
-                onClick={handleSaveTrackingSettings} 
+                onClick={handleSaveTrackingSettings}
                 disabled={updateTrackingSettingsMutation.isPending}
               >
                 {updateTrackingSettingsMutation.isPending ? (
@@ -1105,7 +910,7 @@ const AnalyticsSettings = () => {
                 ) : (
                   <>
                     <Save className="mr-2 h-4 w-4" />
-                    Salvar
+                    Salvar Configurações
                   </>
                 )}
               </Button>
