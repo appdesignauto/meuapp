@@ -1147,9 +1147,10 @@ export const analyticsSettings = pgTable('analyticsSettings', {
   customScriptBody: text('customScriptBody'),
   customScriptEnabled: boolean('customScriptEnabled').default(false),
   
-  // Metadados
-  updatedAt: timestamp('updatedAt').defaultNow(),
-  updatedBy: text('updatedBy')
+  // Metadados 
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+  updatedBy: integer('updatedBy')
 });
 
 // Schema para inserção

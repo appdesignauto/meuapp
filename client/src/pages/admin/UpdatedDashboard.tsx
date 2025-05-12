@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
+import AnalyticsSettings from '@/components/admin/AnalyticsSettings';
 import {
   LayoutGrid,
   Image,
