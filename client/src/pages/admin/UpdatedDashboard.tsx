@@ -954,35 +954,47 @@ const AdminDashboard = () => {
 
   return (
     <div className="flex h-screen bg-gray-100 relative">
-      {/* Overlay - aparece apenas em telas pequenas quando a sidebar está aberta */}
+      {/* Overlay - aparece em telas pequenas quando a sidebar está aberta */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-10 sm:hidden" 
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden" 
           onClick={() => setSidebarOpen(false)}
           aria-hidden="true"
         />
       )}
       
-      {/* Sidebar - visível em telas maiores ou quando sidebarOpen=true em telas menores */}
-      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} sm:translate-x-0 absolute sm:relative z-20 h-full w-64 bg-white shadow-md transition-transform duration-300 ease-in-out`}>
+      {/* Sidebar - com possibilidade de ser recolhida em todos os tamanhos de tela */}
+      <div 
+        className={`
+          ${sidebarOpen ? 'translate-x-0 shadow-lg' : '-translate-x-full lg:translate-x-0 lg:w-20'} 
+          fixed lg:relative z-40 h-full bg-white 
+          ${sidebarOpen ? 'w-64' : 'w-0 lg:w-20'} 
+          transition-all duration-300 ease-in-out overflow-hidden
+        `}
+      >
         <div className="p-4 border-b flex justify-between items-center">
-          <h1 className="text-xl font-bold text-blue-600">DesignAuto Admin</h1>
-          <button 
-            className="sm:hidden text-gray-500 hover:text-gray-700" 
-            onClick={() => setSidebarOpen(false)}
-          >
-            <PanelLeft className="w-5 h-5" />
-          </button>
+          <h1 className={`text-xl font-bold text-blue-600 ${!sidebarOpen && 'lg:hidden'}`}>DesignAuto</h1>
+          <div className={`${!sidebarOpen && 'lg:w-full lg:flex lg:justify-center'}`}>
+            <button 
+              className="text-gray-500 hover:text-blue-600" 
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              aria-label={sidebarOpen ? "Recolher menu" : "Expandir menu"}
+            >
+              {sidebarOpen ? <PanelLeft className="w-5 h-5" /> : <PanelRight className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
-        <div className="p-4">
-          <div className="flex items-center mb-6">
+        <div className="p-4 overflow-hidden">
+          <div className={`flex items-center mb-6 ${!sidebarOpen && 'lg:justify-center'}`}>
             <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-3">
               {user?.name?.charAt(0) || 'A'}
             </div>
-            <div>
-              <p className="font-medium">{user?.name || 'Admin'}</p>
-              <p className="text-sm text-gray-500">{user?.role}</p>
-            </div>
+            {sidebarOpen && (
+              <div>
+                <p className="font-medium">{user?.name || 'Admin'}</p>
+                <p className="text-sm text-gray-500">{user?.role}</p>
+              </div>
+            )}
           </div>
           <nav className="mt-6 space-y-2">
             {/* Dashboard principal */}
@@ -990,10 +1002,11 @@ const AdminDashboard = () => {
               onClick={() => setActiveTab('stats')}
               className={`flex items-center w-full px-4 py-2.5 rounded-lg ${
                 activeTab === 'stats' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-              }`}
+              } ${!sidebarOpen && 'lg:justify-center lg:px-2'}`}
+              title="Visão Geral"
             >
-              <LayoutDashboard className="w-5 h-5 mr-3" />
-              <span>Visão Geral</span>
+              <LayoutDashboard className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+              {sidebarOpen && <span>Visão Geral</span>}
             </button>
 
 
@@ -1001,13 +1014,21 @@ const AdminDashboard = () => {
             <Collapsible 
               className="bg-gray-50 rounded-lg py-1 mb-1"
               defaultOpen={['users', 'community'].includes(activeTab)}
+              open={sidebarOpen ? undefined : false}
             >
-              <CollapsibleTrigger className="flex items-center w-full px-4 py-2 text-gray-700 font-medium">
-                <Users className="w-5 h-5 mr-3" />
-                <span>Usuários</span>
-                <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+              <CollapsibleTrigger 
+                className={`flex items-center w-full px-4 py-2 text-gray-700 font-medium ${!sidebarOpen && 'lg:justify-center lg:px-2'}`}
+                title="Usuários"
+              >
+                <Users className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+                {sidebarOpen && (
+                  <>
+                    <span>Usuários</span>
+                    <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+                  </>
+                )}
               </CollapsibleTrigger>
-              <CollapsibleContent className="pl-4 space-y-1 pt-1 pb-2">
+              <CollapsibleContent className={`${sidebarOpen ? 'pl-4' : 'lg:pl-0'} space-y-1 pt-1 pb-2`}>
                 <button
                   onClick={() => setActiveTab('users')}
                   className={`flex items-center w-full px-4 py-2 rounded-md ${
