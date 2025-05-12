@@ -49,6 +49,7 @@ import testCreateGroupRouter from './routes/test-create-group'; // Rota de teste
 import videoaulasRouter from './routes/videoaulas-routes'; // Rotas para as videoaulas
 import courseRouter from './routes/course-routes'; // Rotas para gerenciamento de módulos e aulas
 import imageProxyRouter from './routes/image-proxy'; // Proxy para imagens do Supabase
+import pwaRouter from './routes/pwa-routes'; // Rotas para PWA (manifest.json, service-worker, etc)
 import coursesRouter from './routes/courses-routes'; // Rotas para gerenciamento de cursos
 import { registerPostPositionRoute } from './routes/post-position-route'; // Rota para calcular posição
 import ferramentasRouter from './routes/ferramentas-routes'; // Rotas para gerenciamento de ferramentas úteis do post
@@ -5174,6 +5175,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Registrar rotas para sitemap.xml e robots.txt (acessíveis na raiz do site)
   app.use(sitemapRouter);
+  
+  // Registrar rotas para PWA (manifest.json e configurações)
+  app.use(pwaRouter);
 
   const httpServer = createServer(app);
   
