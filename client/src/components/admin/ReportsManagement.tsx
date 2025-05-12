@@ -265,7 +265,7 @@ const ReportsManagement = () => {
       setIsDetailsOpen(false);
       setFeedbackInput('');
       
-      console.log('Denúncia atualizada com sucesso:', data);
+      console.log('Report atualizado com sucesso:', data);
       
       toast({
         title: 'Report atualizado',
@@ -569,7 +569,7 @@ const ReportsManagement = () => {
   const renderStats = () => {
     if (isLoadingAllReports) return null;
     
-    // Conta denúncias por status usando todas as denúncias (sem filtros)
+    // Conta reports por status usando todos os reports (sem filtros)
     const reportStats = {
       total: allReportsData.reports?.length || 0,
       pending: allReportsData.reports?.filter((r: Report) => r.status === 'pendente').length || 0,
@@ -659,7 +659,7 @@ const ReportsManagement = () => {
       <div className="flex flex-col sm:flex-row gap-4 mb-4">
         <div className="flex-1">
           <Input
-            placeholder="Pesquisar denúncias..."
+            placeholder="Pesquisar reports..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full"
@@ -855,7 +855,7 @@ const ReportsManagement = () => {
                   id="adminFeedback"
                   value={feedbackInput}
                   onChange={(e) => setFeedbackInput(e.target.value)}
-                  placeholder="Adicione observações ou feedbacks sobre esta denúncia"
+                  placeholder="Adicione observações ou feedbacks sobre este report"
                   rows={3}
                   className="mt-1"
                 />
