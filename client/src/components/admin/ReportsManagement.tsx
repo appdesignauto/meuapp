@@ -144,7 +144,7 @@ const ReportsManagement = () => {
 
   // Consulta para obter denúncias
   const {
-    data: reports = [],
+    data: reportsData = { reports: [], pagination: { total: 0, page: 1, limit: 10, pages: 0 } },
     isLoading: isLoadingReports,
     isError: isReportsError,
     refetch: refetchReports
@@ -224,8 +224,8 @@ const ReportsManagement = () => {
   });
 
   // Filtra denúncias com base nos critérios de pesquisa e filtros
-  const filteredReports = reports
-    ? reports.filter((report: Report) => {
+  const filteredReports = reportsData.reports
+    ? reportsData.reports.filter((report: Report) => {
         // Filtro por termo de pesquisa
         const matchesSearch = 
           searchTerm === '' || 
@@ -417,11 +417,11 @@ const ReportsManagement = () => {
     
     // Conta denúncias por status
     const reportStats = {
-      total: reports?.length || 0,
-      pending: reports?.filter((r: Report) => r.status === 'pending').length || 0,
-      reviewing: reports?.filter((r: Report) => r.status === 'reviewing').length || 0,
-      resolved: reports?.filter((r: Report) => r.status === 'resolved').length || 0,
-      rejected: reports?.filter((r: Report) => r.status === 'rejected').length || 0,
+      total: reportsData.reports?.length || 0,
+      pending: reportsData.reports?.filter((r: Report) => r.status === 'pending').length || 0,
+      reviewing: reportsData.reports?.filter((r: Report) => r.status === 'reviewing').length || 0,
+      resolved: reportsData.reports?.filter((r: Report) => r.status === 'resolved').length || 0,
+      rejected: reportsData.reports?.filter((r: Report) => r.status === 'rejected').length || 0,
     };
     
     return (
