@@ -403,8 +403,16 @@ const ArtsList = () => {
                         <TableCell>
                           {categories?.find(c => c.id === art.categoryId)?.name || '-'}
                         </TableCell>
-                        <TableCell>{art.format}</TableCell>
-                        <TableCell>{art.fileType}</TableCell>
+                        <TableCell>
+                          {art.format && typeof art.format === 'string' 
+                            ? art.format.charAt(0).toUpperCase() + art.format.slice(1) 
+                            : art.format}
+                        </TableCell>
+                        <TableCell>
+                          {art.fileType && typeof art.fileType === 'string'
+                            ? art.fileType.charAt(0).toUpperCase() + art.fileType.slice(1)
+                            : art.fileType}
+                        </TableCell>
                         <TableCell>
                           <Switch 
                             checked={art.isPremium} 
