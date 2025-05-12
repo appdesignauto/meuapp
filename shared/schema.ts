@@ -1142,6 +1142,11 @@ export const analyticsSettings = pgTable('analyticsSettings', {
   trackArtsViewed: boolean('trackArtsViewed').default(true),
   trackArtsDownloaded: boolean('trackArtsDownloaded').default(true),
   
+  // Scripts personalizados
+  customScriptHead: text('customScriptHead'),
+  customScriptBody: text('customScriptBody'),
+  customScriptEnabled: boolean('customScriptEnabled').default(false),
+  
   // Metadados
   updatedAt: timestamp('updatedAt').defaultNow(),
   updatedBy: text('updatedBy')
@@ -1159,7 +1164,9 @@ export const insertAnalyticsSettingsSchema = createInsertSchema(analyticsSetting
   linkedinPartnerId: z.string().trim().optional(),
   tiktokPixelId: z.string().trim().optional(),
   amplitudeApiKey: z.string().trim().optional(),
-  mixpanelToken: z.string().trim().optional()
+  mixpanelToken: z.string().trim().optional(),
+  customScriptHead: z.string().trim().optional(),
+  customScriptBody: z.string().trim().optional()
 }).omit({ id: true });
 
 // Tipos derivados

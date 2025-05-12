@@ -11,7 +11,7 @@ const router = express.Router();
 
 // Middleware para verificar se o usuário é admin
 const isAdmin = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  if (!req.isAuthenticated() || req.user.nivelAcesso !== 'admin') {
+  if (!req.isAuthenticated() || req.user.nivelacesso !== 'admin') {
     return res.status(403).json({ success: false, message: 'Acesso negado. Permissão de administrador necessária.' });
   }
   next();
