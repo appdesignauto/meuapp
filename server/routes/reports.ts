@@ -276,9 +276,9 @@ router.put('/:id', async (req, res) => {
     // Se a denúncia está sendo marcada como resolvida, registramos a data de resolução
     if (updateData.isResolved === true || updateData.status === 'resolvido') {
       updateData.isResolved = true;
-      // @ts-ignore - O campo resolvedAt existe na tabela, mas pode não estar no tipo atual
-      updateData.resolvedAt = new Date();
-      console.log('PUT /api/reports/:id - Denúncia marcada como resolvida em:', updateData.resolvedAt);
+      // @ts-ignore - O campo resolvedat existe na tabela, mas pode não estar no tipo atual
+      updateData.resolvedat = new Date();
+      console.log('PUT /api/reports/:id - Denúncia marcada como resolvida em:', updateData.resolvedat);
     }
     
     console.log('PUT /api/reports/:id - Dados para atualização:', updateData);

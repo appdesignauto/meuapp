@@ -3121,20 +3121,31 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createReport(report: InsertReport): Promise<Report> {
-    console.log('Storage - criando denúncia com dados:', report);
-    const [result] = await db
-      .insert(reports)
-      .values({
-        ...report,
-        status: 'pendente', // Sempre definir o status como pendente por padrão
-        isResolved: false,  // Sempre definir como não resolvido por padrão
-        createdAt: new Date(),
-        updatedAt: new Date()
-      })
-      .returning();
-    
-    console.log('Storage - denúncia criada:', result);
-    return result;
+    try {
+      console.log('Storage - criando denúncia com dados:', report);
+      // Verificar se o reportTypeId é um número válido
+      if (typeof report.reportTypeId !== 'number' || isNaN(report.reportTypeId)) {
+        console.error('Erro na validação: reportTypeId inválido', report.reportTypeId);
+        throw new Error('O tipo de denúncia fornecido é inválido');
+      }
+      
+      const [result] = await db
+        .insert(reports)
+        .values({
+          ...report,
+          status: 'pendente', // Sempre definir o status como pendente por padrão
+          isResolved: false,  // Sempre definir como não resolvido por padrão
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+        .returning();
+      
+      console.log('Storage - denúncia criada:', result);
+      return result;
+    } catch (error) {
+      console.error('Erro ao criar denúncia:', error);
+      throw new Error('Não foi possível criar a denúncia. Por favor, tente novamente.');
+    }
   }
 
   async updateReport(id: number, data: Partial<Report>): Promise<Report | undefined> {
