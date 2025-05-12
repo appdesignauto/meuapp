@@ -808,19 +808,26 @@ const ReportsManagement = () => {
                 </div>
               )}
               
-              {currentReport?.evidenceUrl && (
+              {currentReport?.evidence && (
                 <div>
                   <Label className="font-semibold">Evidência</Label>
                   <div className="mt-1">
+                    <div className="rounded-md overflow-hidden border border-gray-200 mb-2">
+                      <img 
+                        src={currentReport.evidence} 
+                        alt="Evidência enviada" 
+                        className="w-full max-h-[300px] object-contain"
+                      />
+                    </div>
                     <Button variant="outline" size="sm" asChild>
                       <a 
-                        href={currentReport.evidenceUrl} 
+                        href={currentReport.evidence} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="flex items-center gap-2"
                       >
                         <FileIcon className="h-4 w-4" />
-                        Ver Evidência
+                        Ver em tamanho original
                         <ExternalLink className="h-3 w-3" />
                       </a>
                     </Button>
@@ -837,6 +844,16 @@ const ReportsManagement = () => {
                     {statusLabels[currentReport?.status || 'pending'].label}
                   </Badge>
                 </div>
+                {currentReport?.resolvedat && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Resolvido em: {new Date(currentReport.resolvedat).toLocaleString('pt-BR')}
+                  </p>
+                )}
+                {currentReport?.respondedBy && currentReport?.admin?.username && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Por: {currentReport.admin.username}
+                  </p>
+                )}
               </div>
               
               <div>
