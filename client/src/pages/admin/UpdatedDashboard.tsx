@@ -19,6 +19,7 @@ import {
   Database,
   HardDrive,
   FileType,
+  Flag,
   CreditCard,
   BookOpen,
   LayoutDashboard,
@@ -55,7 +56,7 @@ import {
   Save,
   Calendar,
   Wrench,
-  Flag
+  FlagIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -1177,6 +1178,26 @@ const AdminDashboard = () => {
                 >
                   <BellRing className="w-4 h-4 mr-3" />
                   <span>Gerenciar Popups</span>
+                </button>
+              </CollapsibleContent>
+            </Collapsible>
+            
+            {/* Denúncias */}
+            <Collapsible className="w-full">
+              <CollapsibleTrigger className="flex items-center w-full px-4 py-2 text-gray-700 font-medium">
+                <FlagIcon className="w-5 h-5 mr-3" />
+                <span>Denúncias</span>
+                <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pl-4 space-y-1 pt-1 pb-2">
+                <button
+                  onClick={() => setActiveTab('reports')}
+                  className={`flex items-center w-full px-4 py-2 rounded-md ${
+                    activeTab === 'reports' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <FlagIcon className="w-4 h-4 mr-3" />
+                  <span>Gerenciar Denúncias</span>
                 </button>
               </CollapsibleContent>
             </Collapsible>
@@ -2927,6 +2948,10 @@ const AdminDashboard = () => {
             
             <TabsContent value="community">
               <CommunityManagement />
+            </TabsContent>
+            
+            <TabsContent value="reports">
+              <ReportsManagement />
             </TabsContent>
             
             <TabsContent value="arts">

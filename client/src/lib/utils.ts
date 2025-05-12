@@ -1,123 +1,30 @@
-import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+import { format, parseISO } from "date-fns"
+import { ptBR } from "date-fns/locale"
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+  return twMerge(clsx(inputs))
 }
 
-export function formatDate(dateString: string): string {
-  if (!dateString) return "Data não disponível";
-  
+export function formatDate(dateString: string, formatStr: string = "dd 'de' MMMM 'de' yyyy"): string {
   try {
-    // Criar data a partir da string
-    const date = new Date(dateString);
-    
-    // Verificar se a data é válida
-    if (isNaN(date.getTime())) {
-      console.error("Data inválida:", dateString);
-      return "Data não disponível";
-    }
-    
-    // Para posts recém-criados ou edições recentes, formatamos dinamicamente o tempo
-    // relativo para mostrar "agora", "há X minutos", etc., como no Instagram
-    return formatRelativeTime(date);
+    const date = typeof dateString === 'string' ? parseISO(dateString) : dateString;
+    return format(date, formatStr, { locale: ptBR });
   } catch (error) {
-    console.error("Erro ao formatar data:", error, "Data:", dateString);
-    return "Data não disponível";
+    console.error("Erro ao formatar data:", error);
+    return "Data inválida";
   }
 }
 
-// Função auxiliar para formatar o tempo relativo a partir de uma data (formato híbrido mais descritivo)
-function formatRelativeTime(date: Date): string {
-  try {
-    const now = new Date();
-    
-    const diffMs = now.getTime() - date.getTime();
-    
-    // Caso haja algum problema com o clock do servidor (data futura), tratar como "agora"
-    if (diffMs < 0) {
-      return "agora";
-    }
-    
-    // Convertendo para segundos, minutos, horas, etc.
-    const diffSeconds = Math.floor(diffMs / 1000);
-    const diffMinutes = Math.floor(diffSeconds / 60);
-    const diffHours = Math.floor(diffMinutes / 60);
-    const diffDays = Math.floor(diffHours / 24);
-    
-    // Formatação exatamente como Instagram
-    if (diffSeconds < 60) {
-      return "agora"; // Posts com menos de 1 minuto mostram "agora"
-    } else if (diffMinutes < 60) {
-      return `há ${diffMinutes} ${diffMinutes === 1 ? 'minuto' : 'minutos'}`;
-    } else if (diffHours < 24) {
-      return `há ${diffHours} ${diffHours === 1 ? 'hora' : 'horas'}`;
-    } else if (diffDays < 7) {
-      return `há ${diffDays} ${diffDays === 1 ? 'dia' : 'dias'}`;
-    } else {
-      // Para posts mais antigos que 7 dias, mostrar a data completa
-      return new Intl.DateTimeFormat('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZone: 'America/Sao_Paulo'
-      }).format(date);
-    }
-  } catch (error) {
-    console.error("Erro ao calcular tempo relativo:", error);
-    
-    // Fallback para formato mais simples
-    return date.toLocaleDateString('pt-BR');
-  }
-}
-
-export function truncateText(text: string, maxLength: number): string {
-  if (text.length <= maxLength) return text;
-  return text.slice(0, maxLength) + '...';
-}
-
-export function generatePlaceholderImage(width: number, height: number, text: string): string {
-  return `https://via.placeholder.com/${width}x${height}.webp?text=${encodeURIComponent(text)}`;
-}
-
-// Função para obter iniciais do nome
 export function getInitials(name: string): string {
   if (!name) return '';
   
-  // Dividir o nome em partes e pegar a primeira letra de cada parte
-  return name
-    .split(' ')
-    .map(part => part[0])
-    .join('')
-    .toUpperCase()
-    .substring(0, 2); // Limitar a 2 caracteres
-}
-
-/**
- * Formata uma data para exibição em português do Brasil
- * @param dateString - String de data (ISO ou formato DB)
- * @param includeTime - Se deve incluir a hora na formatação
- * @returns String formatada da data
- */
-export function formatTimestamp(dateString: string, includeTime: boolean = false): string {
-  if (!dateString) return '';
+  const words = name.trim().split(/\s+/);
   
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) return '';
-  
-  const options: Intl.DateTimeFormatOptions = {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    timeZone: 'America/Sao_Paulo'
-  };
-  
-  if (includeTime) {
-    options.hour = '2-digit';
-    options.minute = '2-digit';
+  if (words.length === 1) {
+    return words[0].substring(0, 2).toUpperCase();
   }
   
-  return new Intl.DateTimeFormat('pt-BR', options).format(date);
+  return (words[0][0] + words[words.length - 1][0]).toUpperCase();
 }
