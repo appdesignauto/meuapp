@@ -69,19 +69,14 @@ export function Popup({
 
   // Registrar visualização
   useEffect(() => {
-    const registerView = async () => {
-      try {
-        await apiRequest('POST', '/api/popups/view', {
-          popupId: id,
-          sessionId,
-          action: 'view'
-        });
-      } catch (error) {
-        console.error('Erro ao registrar visualização:', error);
-      }
-    };
-    
-    registerView();
+    // Registrar visualização em segundo plano sem bloquear o carregamento do popup
+    apiRequest('POST', '/api/popups/view', {
+      popupId: id,
+      sessionId,
+      action: 'view'
+    }).catch(error => {
+      console.error('Erro ao registrar visualização:', error);
+    });
   }, [id, sessionId]);
 
   // Mostrar popup com delay e aplicar animação de entrada
@@ -111,43 +106,37 @@ export function Popup({
     return () => clearTimeout(timer);
   }, [delay, animation]);
 
-  const handleButtonClick = async () => {
-    try {
-      // Registrar clique no botão
-      await apiRequest('POST', '/api/popups/view', {
-        popupId: id,
-        sessionId,
-        action: 'click'
-      });
-      
-      // Se tiver URL, abrir em nova aba
-      if (buttonUrl) {
-        window.open(buttonUrl, '_blank');
-      }
-      
-      // Fechar popup
-      onClose();
-    } catch (error) {
-      console.error('Erro ao registrar clique:', error);
-      onClose();
+  const handleButtonClick = () => {
+    // Se tiver URL, abrir em nova aba
+    if (buttonUrl) {
+      window.open(buttonUrl, '_blank');
     }
+    
+    // Fechar popup imediatamente para melhorar a experiência do usuário
+    onClose();
+    
+    // Registrar clique no botão em segundo plano sem bloquear a interface
+    apiRequest('POST', '/api/popups/view', {
+      popupId: id,
+      sessionId,
+      action: 'click'
+    }).catch(error => {
+      console.error('Erro ao registrar clique:', error);
+    });
   };
 
-  const handleDismiss = async () => {
-    try {
-      // Registrar fechamento
-      await apiRequest('POST', '/api/popups/view', {
-        popupId: id,
-        sessionId,
-        action: 'dismiss'
-      });
-      
-      // Fechar popup
-      onClose();
-    } catch (error) {
+  const handleDismiss = () => {
+    // Fechar o popup imediatamente para melhorar a experiência do usuário
+    onClose();
+    
+    // Registrar fechamento em segundo plano sem bloquear a interface
+    apiRequest('POST', '/api/popups/view', {
+      popupId: id,
+      sessionId,
+      action: 'dismiss'
+    }).catch(error => {
       console.error('Erro ao registrar fechamento:', error);
-      onClose();
-    }
+    });
   };
 
   if (!isVisible) {
