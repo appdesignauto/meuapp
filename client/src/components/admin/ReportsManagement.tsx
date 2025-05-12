@@ -117,7 +117,7 @@ const ReportsManagement = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Consulta para obter tipos de denúncia
+  // Consulta para obter tipos de report
   const { 
     data: reportTypes = [],
     isLoading: isLoadingTypes,
@@ -153,7 +153,7 @@ const ReportsManagement = () => {
     refetchOnWindowFocus: false,
   });
 
-  // Consulta para obter denúncias
+  // Consulta para obter reports
   const {
     data: reportsData = { reports: [], pagination: { total: 0, page: 1, limit: 10, pages: 0 } },
     isLoading: isLoadingReports,
@@ -268,49 +268,49 @@ const ReportsManagement = () => {
       console.log('Denúncia atualizada com sucesso:', data);
       
       toast({
-        title: 'Denúncia atualizada',
-        description: data?.message || 'O status da denúncia foi atualizado com sucesso',
+        title: 'Report atualizado',
+        description: data?.message || 'O status do report foi atualizado com sucesso',
         variant: 'default'
       });
     },
     onError: (error: Error) => {
       toast({
-        title: 'Erro ao atualizar denúncia',
+        title: 'Erro ao atualizar report',
         description: error.message,
         variant: 'destructive',
       });
     }
   });
 
-  // Mutation para excluir uma denúncia
+  // Mutation para excluir um report
   const deleteReportMutation = useMutation({
     mutationFn: async (id: number) => {
-      console.log(`Tentando excluir denúncia #${id} com API V2...`);
+      console.log(`Tentando excluir report #${id} com API V2...`);
       
       // Primeiro tentamos a V2 da API
       const v2Response = await apiRequest('DELETE', `/api/reports-v2/${id}`);
-      console.log(`Resposta da API V2 ao excluir denúncia #${id}:`, v2Response);
+      console.log(`Resposta da API V2 ao excluir report #${id}:`, v2Response);
       
       if (v2Response.ok) {
         const result = await v2Response.json();
-        console.log(`Exclusão V2 concluída para denúncia #${id}:`, result);
+        console.log(`Exclusão V2 concluída para report #${id}:`, result);
         return result;
       } else {
-        console.warn(`API V2 falhou para exclusão da denúncia #${id}, tentando API V1`);
+        console.warn(`API V2 falhou para exclusão do report #${id}, tentando API V1`);
       }
       
       // Se a V2 falhar, tentamos a versão original
       const response = await apiRequest('DELETE', `/api/reports/${id}`);
-      console.log(`Resposta da API V1 ao excluir denúncia #${id}:`, response);
+      console.log(`Resposta da API V1 ao excluir report #${id}:`, response);
       
       if (!response.ok) {
         const errorData = await response.json();
-        console.error(`Erro ao excluir denúncia #${id}:`, errorData);
-        throw new Error(errorData.message || 'Erro ao excluir denúncia');
+        console.error(`Erro ao excluir report #${id}:`, errorData);
+        throw new Error(errorData.message || 'Erro ao excluir report');
       }
       
       const result = await response.json();
-      console.log(`Exclusão V1 concluída para denúncia #${id}:`, result);
+      console.log(`Exclusão V1 concluída para report #${id}:`, result);
       return result;
     },
     onSuccess: () => {
@@ -321,13 +321,13 @@ const ReportsManagement = () => {
       setIsDetailsOpen(false);
       
       toast({
-        title: 'Denúncia excluída',
-        description: 'A denúncia foi removida permanentemente',
+        title: 'Report excluído',
+        description: 'O report foi removido permanentemente',
       });
     },
     onError: (error: Error) => {
       toast({
-        title: 'Erro ao excluir denúncia',
+        title: 'Erro ao excluir report',
         description: error.message,
         variant: 'destructive',
       });
