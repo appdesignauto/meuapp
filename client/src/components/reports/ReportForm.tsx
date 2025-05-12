@@ -125,7 +125,52 @@ const ReportForm = () => {
       setLoading(true);
       setError(null);
 
-      // Criar um objeto FormData para enviar arquivos
+      // Adicionar o arquivo se selecionado
+      let evidenceFile = null;
+      if (fileInputRef.current?.files && fileInputRef.current.files.length > 0) {
+        evidenceFile = fileInputRef.current.files[0];
+      }
+
+      // Tenta primeiro enviar para a API v2 (JSON)
+      if (!evidenceFile) {
+        try {
+          // Se não tem arquivo, podemos usar JSON diretamente (mais simples)
+          const jsonData = {
+            reportTypeId: parseInt(data.typeId), // API espera um número
+            title: data.title,
+            description: data.description,
+            url: data.url || null
+          };
+
+          const jsonResponse = await fetch('/api/reports-v2', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(jsonData)
+          });
+
+          if (jsonResponse.ok) {
+            // Se a API v2 funcionar, retornamos e não tentamos a v1
+            const responseData = await jsonResponse.json();
+            console.log('Denúncia enviada com sucesso (API v2):', responseData);
+
+            toast({
+              title: 'Denúncia enviada',
+              description: 'Sua denúncia foi enviada com sucesso. Agradecemos sua contribuição.',
+            });
+
+            // Limpar formulário e fechar modal
+            form.reset();
+            setIsOpen(false);
+            return;
+          }
+        } catch (e) {
+          console.error('Erro ao enviar para API v2, tentando v1:', e);
+        }
+      }
+
+      // Fallback para a API v1 (multipart/form-data)
       const formData = new FormData();
       formData.append('typeId', data.typeId);
       formData.append('title', data.title);
@@ -136,11 +181,11 @@ const ReportForm = () => {
       }
 
       // Adicionar o arquivo se selecionado
-      if (fileInputRef.current?.files && fileInputRef.current.files.length > 0) {
-        formData.append('evidence', fileInputRef.current.files[0]);
+      if (evidenceFile) {
+        formData.append('evidence', evidenceFile);
       }
 
-      // Enviar a denúncia
+      // Enviar a denúncia para a API v1
       const response = await fetch('/api/reports', {
         method: 'POST',
         body: formData,
