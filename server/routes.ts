@@ -5151,6 +5151,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Rotas para upload de imagens de ferramentas
   app.use(ferramentasUploadRouter);
   
+  // Rotas para gerenciamento de analytics
+  app.use('/api/analytics', analyticsRouter);
+  
   // Rotas para o sistema de comunidade
   app.use(communityRouter);
   

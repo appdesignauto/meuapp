@@ -1,7 +1,15 @@
 /**
  * Script para criar a tabela de configurações de analytics
  */
-import { db, pool } from './server/db.js';
+const { Pool } = require('@neondatabase/serverless');
+const dotenv = require('dotenv');
+
+// Carregar variáveis de ambiente do arquivo .env
+dotenv.config();
+
+const pool = new Pool({ 
+  connectionString: process.env.DATABASE_URL 
+});
 
 async function createAnalyticsSettingsTable() {
   try {
