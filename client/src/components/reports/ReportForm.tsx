@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 import {
   Dialog,
   DialogContent,
@@ -32,7 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { AlertCircle, Bug, BookCopy, AlertTriangle, HelpCircle, PanelRight } from 'lucide-react';
+import { AlertCircle, Bug, BookCopy, AlertTriangle, HelpCircle, PanelRight, User } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 // Definir os tipos de problema pré-definidos
@@ -54,8 +55,13 @@ const problemReportSchema = z.object({
   description: z.string()
     .min(10, { message: 'A descrição deve ter no mínimo 10 caracteres' })
     .max(1000, { message: 'A descrição deve ter no máximo 1000 caracteres' }),
-  url: z.string()
-    .url({ message: 'Por favor, insira um URL válido' })
+  email: z.string()
+    .email({ message: 'Insira um e-mail válido' })
+    .optional()
+    .or(z.literal('')),
+  whatsapp: z.string()
+    .min(10, { message: 'Número de WhatsApp inválido' })
+    .max(15, { message: 'Número de WhatsApp muito longo' })
     .optional()
     .or(z.literal('')),
 });
@@ -69,16 +75,28 @@ const ReportForm = () => {
   const [success, setSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
+  // Inicializa o formulário
   const form = useForm<ProblemReportValues>({
     resolver: zodResolver(problemReportSchema),
     defaultValues: {
       reportTypeId: undefined,
       title: '',
       description: '',
-      url: '',
+      email: user?.email || '',
+      whatsapp: '',
     },
   });
+  
+  // Atualiza o campo de e-mail quando o usuário estiver logado
+  useEffect(() => {
+    setIsLoggedIn(!!user);
+    if (user?.email) {
+      form.setValue('email', user.email);
+    }
+  }, [user, form]);
 
   // Limpa o formulário quando o diálogo é fechado
   useEffect(() => {
