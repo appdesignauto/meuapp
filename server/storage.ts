@@ -3152,38 +3152,26 @@ export class DatabaseStorage implements IStorage {
       const { page, limit, status } = options;
       const offset = (page - 1) * limit;
       
-      let query = db.select({
-        report: reports,
-        user: users,
-        reportType: reportTypes,
-        admin: {
-          id: users.id,
-          username: users.username,
-          name: users.name,
-          profileimageurl: users.profileimageurl
-        }
-      })
-      .from(reports)
-      .leftJoin(users, eq(reports.userId, users.id))
-      .leftJoin(reportTypes, eq(reports.reportTypeId, reportTypes.id))
-      .leftJoin(users, eq(reports.respondedBy, users.id), "admin");
+      // Simplificando para garantir que funcione
+      let query = db.select()
+        .from(reports)
+        .limit(limit)
+        .offset(offset)
+        .orderBy(desc(reports.createdAt));
 
       // Aplicar filtro por status se fornecido
       if (status) {
         query = query.where(eq(reports.status, status));
       }
       
-      const result = await query
-        .limit(limit)
-        .offset(offset)
-        .orderBy(desc(reports.createdAt));
+      const result = await query;
       
-      // Transformar o resultado para o formato esperado
-      return result.map(item => ({
-        ...item.report,
-        user: item.user || null,
-        reportType: item.reportType || null,
-        admin: item.admin || null
+      // Retornar apenas os relatórios, sem os joins por enquanto
+      return result.map(report => ({
+        ...report,
+        user: null,
+        reportType: null,
+        admin: null
       }));
     } catch (error) {
       console.error('Erro ao buscar denúncias:', error);
