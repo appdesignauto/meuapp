@@ -3043,26 +3043,33 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getReportById(id: number): Promise<Report | undefined> {
-    const [report] = await db.select({
-      report: reports,
-      reportType: reportTypes,
-      user: users,
-      admin: users.as('admin')
-    })
-    .from(reports)
-    .leftJoin(reportTypes, eq(reports.typeId, reportTypes.id))
-    .leftJoin(users, eq(reports.userId, users.id))
-    .leftJoin(users.as('admin'), eq(reports.adminId, users.as('admin').id))
-    .where(eq(reports.id, id));
-
-    if (!report) return undefined;
-
-    return {
-      ...report.report,
-      reportType: report.reportType,
-      user: report.user,
-      admin: report.admin
-    } as unknown as Report;
+    try {
+      const [report] = await db.select({
+        report: reports,
+        reportType: reportTypes,
+        user: users,
+        admin: users.as('admin')
+      })
+      .from(reports)
+      .leftJoin(reportTypes, eq(reports.reportTypeId, reportTypes.id))
+      .leftJoin(users, eq(reports.userId, users.id))
+      .leftJoin(users.as('admin'), eq(reports.respondedBy, users.as('admin').id))
+      .where(eq(reports.id, id));
+  
+      console.log(`getReportById - Buscando denúncia #${id}:`, report);
+  
+      if (!report) return undefined;
+  
+      return {
+        ...report.report,
+        reportType: report.reportType,
+        user: report.user,
+        admin: report.admin
+      } as unknown as Report;
+    } catch (error) {
+      console.error(`Erro ao buscar denúncia #${id}:`, error);
+      return undefined;
+    }
   }
 
   async getReports(options: { page: number, limit: number, status?: string | null }): Promise<Report[]> {

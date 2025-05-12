@@ -1197,6 +1197,7 @@ export const reports = pgTable("reports", {
   respondedBy: integer("respondedBy").references(() => users.id),
   respondedAt: timestamp("respondedAt"),
   isResolved: boolean("isResolved").default(false).notNull(),
+  resolvedAt: timestamp("resolvedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
