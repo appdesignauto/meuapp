@@ -1,7 +1,7 @@
 import { Metric } from 'web-vitals';
 
 // Tipos de métricas de Web Vitals
-type MetricName = 'CLS' | 'FCP' | 'FID' | 'LCP' | 'TTFB';
+type MetricName = 'CLS' | 'FCP' | 'INP' | 'LCP' | 'TTFB';
 type WebVitalsMetric = Metric;
 
 // Tipos de funções de reportagem
@@ -69,7 +69,7 @@ const formatMetricValue = (name: MetricName, value: number): string => {
     case 'FCP':
     case 'LCP':
     case 'TTFB':
-    case 'FID':
+    case 'INP':
       return `${Math.round(value)}ms`; // Milissegundos
     default:
       return `${value}`;
@@ -85,8 +85,8 @@ const getMetricColor = (name: MetricName, value: number): string => {
       return value <= 1800 ? 'green' : value <= 3000 ? 'orange' : 'red';
     case 'LCP':
       return value <= 2500 ? 'green' : value <= 4000 ? 'orange' : 'red';
-    case 'FID':
-      return value <= 100 ? 'green' : value <= 300 ? 'orange' : 'red';
+    case 'INP':
+      return value <= 200 ? 'green' : value <= 500 ? 'orange' : 'red';
     case 'TTFB':
       return value <= 800 ? 'green' : value <= 1800 ? 'orange' : 'red';
     default:
@@ -101,7 +101,7 @@ const getMetricIcon = (name: MetricName, value: number): string => {
     (name === 'CLS' && value <= 0.1) ||
     (name === 'FCP' && value <= 1800) ||
     (name === 'LCP' && value <= 2500) ||
-    (name === 'FID' && value <= 100) ||
+    (name === 'INP' && value <= 200) ||
     (name === 'TTFB' && value <= 800);
   
   // Ícones com base na qualidade
