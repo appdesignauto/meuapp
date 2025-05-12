@@ -1649,9 +1649,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`[GET /api/arts/${id}/related] Encontradas ${relatedArts.length} artes relacionadas`);
       
+      // Converter URLs de imagem para o formato de proxy
+      const convertedArts = supabaseStorageService.convertImageUrls(relatedArts, ['imageUrl', 'thumbnailUrl']);
+      
       // Se não houver artes relacionadas, retorna array vazio em vez de 404
       // para que o frontend possa lidar com isso de maneira apropriada
-      res.json(relatedArts);
+      res.json(convertedArts);
     } catch (error) {
       console.error("Erro ao buscar artes relacionadas:", error);
       res.status(500).json({ message: "Erro ao buscar artes relacionadas" });
