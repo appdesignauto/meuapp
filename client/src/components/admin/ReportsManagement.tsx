@@ -643,7 +643,7 @@ const ReportsManagement = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold tracking-tight">Gerenciamento de Denúncias</h2>
+        <h2 className="text-3xl font-bold tracking-tight">Gerenciamento de Reports</h2>
         <Button 
           onClick={() => refetchReports()} 
           variant="outline" 
@@ -775,7 +775,7 @@ const ReportsManagement = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-4">
               <div>
-                <Label className="font-semibold">Tipo de Denúncia</Label>
+                <Label className="font-semibold">Tipo de Report</Label>
                 <p>
                   {currentReport?.type?.name || 
                    reportTypes.find((type: ReportType) => type.id === currentReport?.reportTypeId)?.name || 
