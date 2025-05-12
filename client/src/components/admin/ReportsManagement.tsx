@@ -160,12 +160,28 @@ const ReportsManagement = () => {
     isError: isReportsError,
     refetch: refetchReports
   } = useQuery({
-    queryKey: ['/api/reports-v2', activeTab],
+    queryKey: ['/api/reports-v2', activeTab, selectedStatusFilter],
     queryFn: async () => {
       try {
+        // Preparar parâmetros da consulta
+        const statusParam = selectedStatusFilter !== 'all' ? selectedStatusFilter : 
+                          activeTab !== 'all' ? activeTab : null;
+        
+        const queryParams = new URLSearchParams({
+          page: '1',
+          limit: '50'
+        });
+        
+        if (statusParam) {
+          queryParams.append('status', statusParam);
+        }
+        
+        const queryString = queryParams.toString();
+        console.log(`Consultando denúncias com filtros: ${queryString}`);
+        
         // Primeiro tentamos a versão V2 da API com SQL puro
         console.log('Tentando API v2 para reports...');
-        const v2Response = await apiRequest('GET', `/api/reports-v2?page=1&limit=50`);
+        const v2Response = await apiRequest('GET', `/api/reports-v2?${queryString}`);
         console.log('Resposta da API V2 de reports:', v2Response);
         
         if (v2Response.ok) {
@@ -177,7 +193,7 @@ const ReportsManagement = () => {
         }
         
         // Se a V2 falhar, tentamos a versão original
-        const response = await apiRequest('GET', `/api/reports?page=1&limit=50`);
+        const response = await apiRequest('GET', `/api/reports?${queryString}`);
         console.log('Resposta da API V1 de reports:', response);
         
         if (!response.ok) {
@@ -653,7 +669,10 @@ const ReportsManagement = () => {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)}>
+      <Tabs value={activeTab} onValueChange={(value) => {
+        setActiveTab(value as any);
+        setSelectedStatusFilter(value);
+      }}>
         <TabsList className="mb-4 border-b w-full justify-start rounded-none gap-4 bg-transparent p-0">
           <TabsTrigger 
             value="pendente" 
