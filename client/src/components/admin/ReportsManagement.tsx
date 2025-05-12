@@ -181,7 +181,7 @@ const ReportsManagement = () => {
     mutationFn: async ({ id, status, adminFeedback }: { id: number, status: string, adminFeedback?: string }) => {
       const data: any = { status };
       if (adminFeedback) {
-        data.adminFeedback = adminFeedback;
+        data.adminResponse = adminFeedback; // Renomeado para corresponder ao esperado pelo backend
       }
       
       console.log(`Enviando atualização para denúncia #${id}:`, data);
@@ -204,14 +204,17 @@ const ReportsManagement = () => {
         throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/reports'] });
       setIsDetailsOpen(false);
       setFeedbackInput('');
       
+      console.log('Denúncia atualizada com sucesso:', data);
+      
       toast({
         title: 'Denúncia atualizada',
-        description: 'O status da denúncia foi atualizado com sucesso',
+        description: data?.message || 'O status da denúncia foi atualizado com sucesso',
+        variant: 'default'
       });
     },
     onError: (error: Error) => {

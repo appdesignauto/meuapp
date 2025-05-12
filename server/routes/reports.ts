@@ -254,39 +254,38 @@ router.put('/:id', async (req, res) => {
     // Validar corpo da requisição
     console.log('PUT /api/reports/:id - Dados recebidos:', req.body);
     
-    try {
-      const validatedData = adminResponseSchema.parse(req.body);
-      console.log('PUT /api/reports/:id - Dados validados:', validatedData);
-      
-      // Verificar se a denúncia existe
-      const existingReport = await storage.getReportById(reportId);
-      if (!existingReport) {
-        return res.status(404).json({ message: 'Denúncia não encontrada' });
-      }
-      
-      console.log('PUT /api/reports/:id - Denúncia encontrada:', existingReport);
-      
-      // Atualizar a denúncia
-      const updateData = {
-        ...validatedData,
-        respondedBy: req.user?.id, // ID do administrador que respondeu
-        respondedAt: new Date()
-      };
-      
-      console.log('PUT /api/reports/:id - Dados para atualização:', updateData);
-      
-      const updatedReport = await storage.updateReport(reportId, updateData);
-      console.log('PUT /api/reports/:id - Denúncia atualizada:', updatedReport);
-      
-      return res.status(200).json({
-        message: 'Denúncia atualizada com sucesso',
-        report: updatedReport
-      });
-    } catch (error) {
-      console.error('PUT /api/reports/:id - Erro na validação:', error);
-      throw error;
+    // Validação dos dados recebidos
+    const validatedData = adminResponseSchema.parse(req.body);
+    console.log('PUT /api/reports/:id - Dados validados:', validatedData);
+    
+    // Verificar se a denúncia existe
+    const existingReport = await storage.getReportById(reportId);
+    if (!existingReport) {
+      return res.status(404).json({ message: 'Denúncia não encontrada' });
     }
+    
+    console.log('PUT /api/reports/:id - Denúncia encontrada:', existingReport);
+    
+    // Atualizar a denúncia - adiciona fallback para o ID de admin em desenvolvimento
+    const updateData = {
+      ...validatedData,
+      respondedBy: req.user?.id || 1, // ID do administrador que respondeu (fallback para ID 1 durante desenvolvimento)
+      respondedAt: new Date()
+    };
+    
+    console.log('PUT /api/reports/:id - Dados para atualização:', updateData);
+    
+    const updatedReport = await storage.updateReport(reportId, updateData);
+    console.log('PUT /api/reports/:id - Denúncia atualizada:', updatedReport);
+    
+    return res.status(200).json({
+      message: 'Denúncia atualizada com sucesso',
+      report: updatedReport
+    });
+    
   } catch (error) {
+    console.error('PUT /api/reports/:id - Erro:', error);
+    
     if (error instanceof z.ZodError) {
       return res.status(400).json({ 
         message: 'Dados inválidos', 
