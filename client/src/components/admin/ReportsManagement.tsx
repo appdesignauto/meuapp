@@ -338,7 +338,7 @@ const ReportsManagement = () => {
     console.log('Reports data:', reportsData);
   }, [reportsData]);
 
-  // Filtra denúncias com base nos critérios de pesquisa e filtros
+  // Filtra reports com base nos critérios de pesquisa e filtros
   const filteredReports = reportsData.reports
     ? reportsData.reports.filter((report: Report) => {
         // Filtro por termo de pesquisa
@@ -385,7 +385,7 @@ const ReportsManagement = () => {
   const handleUpdateStatus = (status: string) => {
     if (!currentReport) return;
     
-    console.log(`Atualizando status da denúncia para: ${status}`);
+    console.log(`Atualizando status do report para: ${status}`);
     
     // Se o status for "resolvido", definimos isResolved como true
     const isResolved = status === 'resolvido';
@@ -398,11 +398,11 @@ const ReportsManagement = () => {
     });
   };
 
-  // Função para excluir denúncia
+  // Função para excluir report
   const handleDeleteReport = () => {
     if (!currentReport) return;
     
-    if (window.confirm('Tem certeza que deseja excluir esta denúncia? Esta ação não pode ser desfeita.')) {
+    if (window.confirm('Tem certeza que deseja excluir este report? Esta ação não pode ser desfeita.')) {
       deleteReportMutation.mutate(currentReport.id);
     }
   };
@@ -422,7 +422,7 @@ const ReportsManagement = () => {
         <Alert variant="destructive" className="mb-4">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Erro</AlertTitle>
-          <AlertDescription>Não foi possível carregar as denúncias. Tente novamente mais tarde.</AlertDescription>
+          <AlertDescription>Não foi possível carregar os reports. Tente novamente mais tarde.</AlertDescription>
         </Alert>
       );
     }
