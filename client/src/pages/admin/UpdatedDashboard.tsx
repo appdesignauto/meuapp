@@ -29,8 +29,8 @@ import {
   Layers,
   PanelRight,
   PanelLeft,
-  PanelLeftClose,
-  PanelRightOpen,
+  ChevronLeft,
+  ChevronRight,
   Video,
   Trash2,
   FileImage,
@@ -1327,9 +1327,9 @@ const AdminDashboard = () => {
                 aria-label={sidebarOpen ? "Recolher menu lateral" : "Abrir menu lateral"}
               >
                 {sidebarOpen ? (
-                  <PanelLeftClose className="w-5 h-5" />
+                  <ChevronLeft className="w-5 h-5" />
                 ) : (
-                  <PanelRightOpen className="w-5 h-5" />
+                  <ChevronRight className="w-5 h-5" />
                 )}
               </button>
               
