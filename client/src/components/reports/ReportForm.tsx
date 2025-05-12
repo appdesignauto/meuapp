@@ -1,58 +1,53 @@
-import { useState, useEffect } from 'react';
-import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, Upload, X } from 'lucide-react';
-import { apiRequest } from '@/lib/queryClient';
+import { useState, useEffect, useRef } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+} from '@/components/ui/form';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useAuth } from '@/hooks/use-auth';
+} from '@/components/ui/select';
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ACCEPTED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
-
+// Definir o schema para o formulário
 const reportFormSchema = z.object({
-  title: z.string().min(5, "O título deve ter pelo menos 5 caracteres"),
-  description: z.string().min(20, "A descrição deve ter pelo menos 20 caracteres"),
-  reportTypeId: z.string().min(1, "Selecione um tipo de denúncia"),
-  artId: z.string().optional(),
-  evidence: z.any()
+  typeId: z.string({
+    required_error: 'Selecione um tipo de denúncia',
+  }),
+  title: z.string()
+    .min(5, { message: 'O título deve ter no mínimo 5 caracteres' })
+    .max(100, { message: 'O título deve ter no máximo 100 caracteres' }),
+  description: z.string()
+    .min(20, { message: 'A descrição deve ter no mínimo 20 caracteres' })
+    .max(1000, { message: 'A descrição deve ter no máximo 1000 caracteres' }),
+  url: z.string()
+    .url({ message: 'Por favor, insira um URL válido' })
     .optional()
-    .refine(
-      (file) => !file || !file.length || (file[0]?.size ?? 0) <= MAX_FILE_SIZE,
-      "O arquivo deve ter no máximo 5MB"
-    )
-    .refine(
-      (file) => !file || !file.length || ACCEPTED_FILE_TYPES.includes(file[0]?.type ?? ''),
-      "Formato de arquivo não suportado. Use JPG, PNG, WEBP ou PDF"
-    ),
+    .or(z.literal('')),
 });
 
 type ReportFormValues = z.infer<typeof reportFormSchema>;
@@ -60,136 +55,167 @@ type ReportFormValues = z.infer<typeof reportFormSchema>;
 type ReportType = {
   id: number;
   name: string;
-  description: string | null;
+  description: string;
 };
 
 const ReportForm = () => {
-  const [open, setOpen] = useState(false);
   const [reportTypes, setReportTypes] = useState<ReportType[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [loadingTypes, setLoadingTypes] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  const { user } = useAuth();
 
   const form = useForm<ReportFormValues>({
     resolver: zodResolver(reportFormSchema),
     defaultValues: {
-      title: "",
-      description: "",
-      reportTypeId: "",
-      artId: "",
-      evidence: undefined
+      typeId: '',
+      title: '',
+      description: '',
+      url: '',
     },
   });
 
   useEffect(() => {
-    const fetchReportTypes = async () => {
+    // Carregar os tipos de denúncia a partir do arquivo estático
+    const loadReportTypes = async () => {
       try {
-        const response = await fetch('/api/reports/types');
-        if (!response.ok) {
-          throw new Error('Erro ao carregar tipos de denúncia');
+        setLoadingTypes(true);
+        setError(null);
+        
+        // Primeiro tentamos carregar do endpoint da API
+        try {
+          const response = await fetch('/api/reports/types');
+          if (response.ok) {
+            const data = await response.json();
+            if (Array.isArray(data) && data.length > 0) {
+              setReportTypes(data);
+              setLoadingTypes(false);
+              return;
+            }
+          }
+        } catch (apiError) {
+          console.error('Erro ao carregar tipos de denúncia da API:', apiError);
         }
-        const data = await response.json();
-        setReportTypes(data);
-      } catch (error) {
-        console.error('Erro ao carregar tipos de denúncia:', error);
-        toast({
-          title: "Erro",
-          description: "Não foi possível carregar os tipos de denúncia",
-          variant: "destructive",
-        });
+        
+        // Se a API falhar, carregamos do arquivo estático
+        const staticResponse = await fetch('/data/report-types.json');
+        if (staticResponse.ok) {
+          const staticData = await staticResponse.json();
+          setReportTypes(staticData);
+        } else {
+          throw new Error('Não foi possível carregar os tipos de denúncia');
+        }
+      } catch (err) {
+        console.error('Erro ao carregar tipos de denúncia:', err);
+        setError('Não foi possível carregar os tipos de denúncia');
+      } finally {
+        setLoadingTypes(false);
       }
     };
 
-    fetchReportTypes();
-  }, [toast]);
-
-  const onSubmit = async (values: ReportFormValues) => {
-    if (!user) {
-      toast({
-        title: "Autenticação necessária",
-        description: "Você precisa estar logado para enviar uma denúncia",
-        variant: "destructive",
-      });
-      return;
+    if (isOpen) {
+      loadReportTypes();
     }
+  }, [isOpen]);
 
-    setIsLoading(true);
+  const onSubmit = async (data: ReportFormValues) => {
     try {
+      setLoading(true);
+      setError(null);
+
+      // Criar um objeto FormData para enviar arquivos
       const formData = new FormData();
-      formData.append('title', values.title);
-      formData.append('description', values.description);
-      formData.append('reportTypeId', values.reportTypeId);
+      formData.append('typeId', data.typeId);
+      formData.append('title', data.title);
+      formData.append('description', data.description);
       
-      if (values.artId) {
-        formData.append('artId', values.artId);
+      if (data.url) {
+        formData.append('url', data.url);
       }
-      
-      if (values.evidence && values.evidence.length > 0) {
-        formData.append('evidence', values.evidence[0]);
+
+      // Adicionar o arquivo se selecionado
+      if (fileInputRef.current?.files && fileInputRef.current.files.length > 0) {
+        formData.append('evidence', fileInputRef.current.files[0]);
       }
-      
+
+      // Enviar a denúncia
       const response = await fetch('/api/reports', {
         method: 'POST',
-        credentials: 'include',
         body: formData,
+        // Não definir o cabeçalho Content-Type para que o navegador defina corretamente com boundary para FormData
       });
-      
+
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Erro ao enviar denúncia');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao enviar denúncia');
       }
-      
+
+      // Sucesso
       toast({
-        title: "Denúncia enviada",
-        description: "Sua denúncia foi enviada com sucesso e será analisada por nossa equipe",
+        title: 'Denúncia enviada',
+        description: 'Sua denúncia foi enviada com sucesso. Agradecemos sua contribuição.',
       });
-      
-      // Resetar formulário e fechar modal
+
+      // Limpar formulário e fechar modal
       form.reset();
-      setOpen(false);
-    } catch (error: any) {
-      toast({
-        title: "Erro ao enviar denúncia",
-        description: error.message || "Ocorreu um erro ao enviar sua denúncia",
-        variant: "destructive",
-      });
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      setIsOpen(false);
+    } catch (err: any) {
+      console.error('Erro ao enviar denúncia:', err);
+      setError(err.message || 'Erro ao enviar denúncia. Tente novamente mais tarde.');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="link" size="sm" className="text-neutral-500 text-xs">
-          Reportar problema
+        <Button 
+          variant="link" 
+          className="text-neutral-500 hover:text-primary text-sm font-normal"
+        >
+          Denunciar conteúdo
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Reportar problema</DialogTitle>
-          <DialogDescription>
-            Envie uma denúncia sobre conteúdo que viola nossos termos ou direitos autorais
-          </DialogDescription>
+          <DialogTitle>Denunciar conteúdo</DialogTitle>
         </DialogHeader>
 
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Erro</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-2">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="reportTypeId"
+              name="typeId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Tipo de denúncia</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select
+                    disabled={loadingTypes}
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecione o tipo de denúncia" />
+                        <SelectValue placeholder={loadingTypes ? "Carregando..." : "Selecione um tipo"} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {reportTypes.map((type) => (
-                        <SelectItem key={type.id} value={type.id.toString()}>
+                        <SelectItem key={type.id} value={String(type.id)}>
                           {type.name}
                         </SelectItem>
                       ))}
@@ -207,7 +233,10 @@ const ReportForm = () => {
                 <FormItem>
                   <FormLabel>Título</FormLabel>
                   <FormControl>
-                    <Input placeholder="Título da denúncia" {...field} />
+                    <Input 
+                      placeholder="Título resumido da denúncia" 
+                      {...field} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -222,8 +251,8 @@ const ReportForm = () => {
                   <FormLabel>Descrição</FormLabel>
                   <FormControl>
                     <Textarea 
-                      placeholder="Descreva o problema com detalhes" 
-                      className="min-h-[100px]" 
+                      placeholder="Descreva detalhadamente o problema" 
+                      rows={4}
                       {...field} 
                     />
                   </FormControl>
@@ -234,47 +263,41 @@ const ReportForm = () => {
 
             <FormField
               control={form.control}
-              name="evidence"
-              render={({ field: { value, onChange, ...field } }) => (
+              name="url"
+              render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Evidência (opcional)</FormLabel>
+                  <FormLabel>URL (opcional)</FormLabel>
                   <FormControl>
-                    <div className="flex items-center justify-center w-full">
-                      <label
-                        htmlFor="dropzone-file"
-                        className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-neutral-50 border-neutral-300 hover:bg-neutral-100"
-                      >
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                          <Upload className="w-8 h-8 mb-3 text-neutral-400" />
-                          <p className="mb-2 text-sm text-neutral-500">
-                            <span className="font-medium">Clique para enviar</span> ou arraste um arquivo
-                          </p>
-                          <p className="text-xs text-neutral-500">
-                            JPG, PNG, WEBP ou PDF (max. 5MB)
-                          </p>
-                        </div>
-                        <input
-                          id="dropzone-file"
-                          type="file"
-                          className="hidden"
-                          accept={ACCEPTED_FILE_TYPES.join(',')}
-                          onChange={(e) => onChange(e.target.files)}
-                          {...field}
-                        />
-                      </label>
-                    </div>
+                    <Input 
+                      placeholder="https://exemplo.com/pagina-com-problema" 
+                      {...field} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
+            <div>
+              <FormLabel htmlFor="evidence">Evidência (opcional)</FormLabel>
+              <Input
+                id="evidence"
+                type="file"
+                ref={fileInputRef}
+                accept="image/png, image/jpeg, image/webp, application/pdf"
+                className="mt-1"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Aceita PNG, JPEG, WEBP ou PDF (máx. 5MB)
+              </p>
+            </div>
+
             <DialogFooter className="pt-4">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isLoading}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Enviando..." : "Enviar denúncia"}
+              <DialogClose asChild>
+                <Button type="button" variant="outline">Cancelar</Button>
+              </DialogClose>
+              <Button type="submit" disabled={loading}>
+                {loading ? 'Enviando...' : 'Enviar denúncia'}
               </Button>
             </DialogFooter>
           </form>
