@@ -178,8 +178,11 @@ const ReportsManagement = () => {
 
   // Mutation para atualizar o status de uma denúncia
   const updateReportMutation = useMutation({
-    mutationFn: async ({ id, status, adminFeedback }: { id: number, status: string, adminFeedback?: string }) => {
-      const data: any = { status };
+    mutationFn: async ({ id, status, adminFeedback, isResolved }: { id: number, status: string, adminFeedback?: string, isResolved?: boolean }) => {
+      const data: any = { 
+        status,
+        isResolved: isResolved || false 
+      };
       if (adminFeedback) {
         data.adminResponse = adminFeedback; // Renomeado para corresponder ao esperado pelo backend
       }
@@ -307,10 +310,14 @@ const ReportsManagement = () => {
     
     console.log(`Atualizando status da denúncia para: ${status}`);
     
+    // Se o status for "resolvido", definimos isResolved como true
+    const isResolved = status === 'resolvido';
+    
     updateReportMutation.mutate({
       id: currentReport.id,
       status,
-      adminFeedback: feedbackInput
+      adminFeedback: feedbackInput,
+      isResolved
     });
   };
 
