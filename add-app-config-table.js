@@ -1,5 +1,22 @@
-import { db } from './server/db.js';
+import { Pool, neonConfig } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-serverless';
 import { sql } from 'drizzle-orm';
+import ws from 'ws';
+import dotenv from 'dotenv';
+
+// Configurar ambiente
+dotenv.config();
+neonConfig.webSocketConstructor = ws;
+
+// Verificar se DATABASE_URL está definido
+if (!process.env.DATABASE_URL) {
+  console.error('❌ Erro: DATABASE_URL não está definido no ambiente');
+  process.exit(1);
+}
+
+// Criar pool e instância do Drizzle
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const db = drizzle(pool);
 
 async function createAppConfigTable() {
   try {
@@ -23,9 +40,10 @@ async function createAppConfigTable() {
     
     // Verificar se já existe algum registro
     const existingConfig = await db.execute(sql`SELECT COUNT(*) as count FROM app_config`);
+    console.log('Resultado da consulta:', existingConfig);
     
     // Se não existir nenhum registro, criar um com valores padrão
-    if (existingConfig[0].count === '0') {
+    if (!existingConfig || !existingConfig[0] || existingConfig[0].count === '0') {
       console.log('Inserindo configuração padrão...');
       await db.execute(sql`
         INSERT INTO app_config (name, short_name, theme_color, background_color)
@@ -37,6 +55,7 @@ async function createAppConfigTable() {
   } catch (error) {
     console.error('Erro ao criar tabela app_config:', error);
   } finally {
+    await pool.end();
     process.exit(0);
   }
 }
