@@ -42,7 +42,9 @@ const createReportSchema = z.object({
   description: z.string().min(10, "A descrição deve ter pelo menos 10 caracteres"),
   artId: z.number().optional(),
   userId: z.number().optional(),
-  evidence: z.string().optional()
+  evidence: z.string().optional(),
+  email: z.string().email("Email inválido").optional(),
+  whatsapp: z.string().optional()
 });
 
 const updateReportSchema = z.object({
@@ -88,7 +90,7 @@ router.post('/', async (req, res) => {
     const insertQuery = `
       INSERT INTO reports (
         "reportTypeId", title, description, "artId", "userId", evidence, 
-        status, "isResolved", "createdAt", "updatedAt"
+        status, "isResolved", "createdAt", "updatedAt", "email", "whatsapp"
       ) VALUES (
         ${validatedData.reportTypeId},
         '${validatedData.title.replace(/'/g, "''")}',
@@ -99,7 +101,9 @@ router.post('/', async (req, res) => {
         'pendente',
         false,
         NOW(),
-        NOW()
+        NOW(),
+        ${validatedData.email ? `'${validatedData.email.replace(/'/g, "''")}'` : 'NULL'},
+        ${validatedData.whatsapp ? `'${validatedData.whatsapp.replace(/'/g, "''")}'` : 'NULL'}
       ) RETURNING *;
     `;
     
@@ -537,7 +541,9 @@ router.post('/upload', upload.single('evidence'), async (req, res) => {
     const validatedData = z.object({
       reportTypeId: z.string().transform(val => parseInt(val)),
       title: z.string().min(5),
-      description: z.string().min(10)
+      description: z.string().min(10),
+      email: z.string().email("Email inválido").optional(),
+      whatsapp: z.string().optional()
     }).parse(req.body);
 
     // Verificação do arquivo
@@ -569,7 +575,8 @@ router.post('/upload', upload.single('evidence'), async (req, res) => {
     const insertQuery = `
       INSERT INTO reports (
         "reportTypeId", title, description, evidence, 
-        status, "isResolved", "createdAt", "updatedAt"
+        status, "isResolved", "createdAt", "updatedAt", 
+        "email", "whatsapp"
       ) VALUES (
         ${validatedData.reportTypeId},
         '${validatedData.title.replace(/'/g, "''")}',
@@ -578,7 +585,9 @@ router.post('/upload', upload.single('evidence'), async (req, res) => {
         'pendente',
         false,
         NOW(),
-        NOW()
+        NOW(),
+        ${validatedData.email ? `'${validatedData.email.replace(/'/g, "''")}'` : 'NULL'},
+        ${validatedData.whatsapp ? `'${validatedData.whatsapp.replace(/'/g, "''")}'` : 'NULL'}
       ) RETURNING *;
     `;
     
