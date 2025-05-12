@@ -1314,17 +1314,21 @@ const AdminDashboard = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto">
+      <div className={`flex-1 overflow-auto transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
         <header className="bg-white shadow-sm">
           <div className="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between">
             <div className="flex items-center mb-3 sm:mb-0">
-              {/* Botão de alternância do menu (visível apenas em telas menores) */}
+              {/* Botão de alternância do menu */}
               <button 
-                className="sm:hidden mr-3 text-gray-600 hover:text-blue-600"
-                onClick={() => setSidebarOpen(true)}
-                aria-label="Abrir menu lateral"
+                className="mr-3 text-gray-600 hover:text-blue-600"
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                aria-label={sidebarOpen ? "Recolher menu lateral" : "Abrir menu lateral"}
               >
-                <PanelRight className="w-5 h-5" />
+                {sidebarOpen ? (
+                  <PanelLeftClose className="w-5 h-5" />
+                ) : (
+                  <PanelRightOpen className="w-5 h-5" />
+                )}
               </button>
               
               <h1 className="text-xl font-semibold">
