@@ -10,9 +10,10 @@ import { ProtectedRoute } from "@/lib/protected-route";
 import { ScrollToTop } from "@/hooks/useScrollTop";
 import { ThemeProvider } from "@/components/theme-provider";
 import { PopupContainer } from "@/components/Popup";
-import { HelmetProvider } from "react-helmet-async";
+import { HelmetProvider, Helmet } from "react-helmet-async";
 import DynamicFavicon from "@/components/global/DynamicFavicon";
 import { measureWebVitals } from "./lib/measureWebVitals";
+import { registerServiceWorker } from "./lib/pwa-utils";
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -284,11 +285,22 @@ function App() {
   useEffect(() => {
     // Iniciar medição de métricas de performance
     measureWebVitals();
+    
+    // Registrar o service worker para PWA
+    registerServiceWorker();
   }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
       <HelmetProvider>
+        <Helmet>
+          <meta name="theme-color" content="#4F46E5" />
+          <meta name="apple-mobile-web-app-capable" content="yes" />
+          <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+          <meta name="apple-mobile-web-app-title" content="DesignAuto" />
+          <link rel="manifest" href="/manifest.json" />
+          <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+        </Helmet>
         <ThemeProvider defaultTheme="light">
           <AuthProvider>
             <SupabaseAuthProvider>
