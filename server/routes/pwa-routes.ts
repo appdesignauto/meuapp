@@ -1,9 +1,9 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { db } from "../db.js";
-import { appConfig } from "../../shared/schema.js";
+import { db } from "../db";
+import { appConfig } from "../../shared/schema";
 import { eq } from "drizzle-orm";
 import sharp from "sharp";
 
@@ -19,7 +19,7 @@ if (!fs.existsSync(ICONS_DIR)) {
 }
 
 // Rota para obter as configurações do PWA
-router.get("/api/app-config", async (req, res) => {
+router.get("/api/app-config", async (req: Request, res: Response) => {
   try {
     const configs = await db.select().from(appConfig);
     const config = configs.length > 0 ? configs[0] : null;
@@ -36,8 +36,8 @@ router.get("/api/app-config", async (req, res) => {
 });
 
 // Rota para atualizar as configurações do PWA
-router.put("/api/app-config", async (req, res) => {
-  if (!req.isAuthenticated() || req.user.nivelAcesso !== "admin") {
+router.put("/api/app-config", async (req: Request, res: Response) => {
+  if (!req.isAuthenticated() || (req.user as any).nivelAcesso !== "admin") {
     return res.status(403).json({ message: "Acesso não autorizado" });
   }
   
@@ -58,8 +58,8 @@ router.put("/api/app-config", async (req, res) => {
         shortName,
         themeColor, 
         backgroundColor,
-        updatedBy: req.user.id,
-        createdBy: req.user.id
+        updatedBy: (req.user as any).id,
+        createdBy: (req.user as any).id
       }).returning();
       
       res.json(newConfig);
@@ -72,7 +72,7 @@ router.put("/api/app-config", async (req, res) => {
           shortName, 
           themeColor,
           backgroundColor,
-          updatedBy: req.user.id,
+          updatedBy: (req.user as any).id,
           updatedAt: new Date()
         })
         .where(eq(appConfig.id, configs[0].id))
@@ -87,8 +87,8 @@ router.put("/api/app-config", async (req, res) => {
 });
 
 // Rota para fazer upload dos ícones
-router.post("/api/app-config/icon", upload.single("icon"), async (req, res) => {
-  if (!req.isAuthenticated() || req.user.nivelAcesso !== "admin") {
+router.post("/api/app-config/icon", upload.single("icon"), async (req: Request, res: Response) => {
+  if (!req.isAuthenticated() || (req.user as any).nivelAcesso !== "admin") {
     return res.status(403).json({ message: "Acesso não autorizado" });
   }
   
@@ -120,16 +120,16 @@ router.post("/api/app-config/icon", upload.single("icon"), async (req, res) => {
     const iconValue = `/icons/${iconFilename}`;
     
     if (configs.length === 0) {
-      const values = {
-        updatedBy: req.user.id,
-        createdBy: req.user.id
+      const values: any = {
+        updatedBy: (req.user as any).id,
+        createdBy: (req.user as any).id
       };
       values[iconField] = iconValue;
       
       await db.insert(appConfig).values(values);
     } else {
-      const values = {
-        updatedBy: req.user.id,
+      const values: any = {
+        updatedBy: (req.user as any).id,
         updatedAt: new Date()
       };
       values[iconField] = iconValue;
@@ -156,7 +156,7 @@ router.post("/api/app-config/icon", upload.single("icon"), async (req, res) => {
 });
 
 // Rota para gerar o manifest.json dinamicamente
-router.get("/manifest.json", async (req, res) => {
+router.get("/manifest.json", async (req: Request, res: Response) => {
   try {
     const configs = await db.select().from(appConfig);
     const config = configs.length > 0 ? configs[0] : null;
