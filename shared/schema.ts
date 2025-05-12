@@ -1197,7 +1197,7 @@ export const reports = pgTable("reports", {
   respondedBy: integer("respondedBy").references(() => users.id),
   respondedAt: timestamp("respondedAt"),
   isResolved: boolean("isResolved").default(false).notNull(),
-  resolvedat: timestamp("resolvedat"),
+  resolvedAt: timestamp("resolvedat"), // Mantendo a coluna do banco como "resolvedat" mas usando "resolvedAt" no código
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
