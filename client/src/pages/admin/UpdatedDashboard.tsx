@@ -966,12 +966,11 @@ const AdminDashboard = () => {
       )}
       
       {/* Sidebar - com possibilidade de ser recolhida em todos os tamanhos de tela */}
-      <div 
+      <aside 
         className={`
-          ${sidebarOpen ? 'translate-x-0 shadow-lg' : '-translate-x-full lg:translate-x-0 lg:w-20'} 
-          fixed lg:relative z-40 h-full bg-white 
-          ${sidebarOpen ? 'w-64' : 'w-0 lg:w-20'} 
-          transition-all duration-300 ease-in-out overflow-hidden
+          fixed lg:sticky top-0 left-0 z-40 h-full bg-white shadow-lg border-r
+          ${sidebarOpen ? 'w-64' : 'w-16'} 
+          transition-all duration-300 ease-in-out
         `}
       >
         <div className="p-4 border-b flex justify-between items-center">
@@ -1002,13 +1001,13 @@ const AdminDashboard = () => {
             {/* Dashboard principal */}
             <button
               onClick={() => setActiveTab('stats')}
-              className={`flex items-center w-full px-4 py-2.5 rounded-lg ${
+              className={`flex items-center w-full py-2.5 rounded-lg ${
                 activeTab === 'stats' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-              } ${!sidebarOpen && 'lg:justify-center lg:px-2'}`}
+              } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
               title="Visão Geral"
             >
-              <LayoutDashboard className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-              {sidebarOpen && <span>Visão Geral</span>}
+              <LayoutDashboard className="w-5 h-5" />
+              {sidebarOpen && <span className="ml-3">Visão Geral</span>}
             </button>
 
 
@@ -1019,35 +1018,35 @@ const AdminDashboard = () => {
               open={sidebarOpen ? undefined : false}
             >
               <CollapsibleTrigger 
-                className={`flex items-center w-full px-4 py-2 text-gray-700 font-medium ${!sidebarOpen && 'lg:justify-center lg:px-2'}`}
+                className={`flex items-center w-full py-2 text-gray-700 font-medium ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
                 title="Usuários"
               >
-                <Users className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+                <Users className="w-5 h-5" />
                 {sidebarOpen && (
                   <>
-                    <span>Usuários</span>
+                    <span className="ml-3">Usuários</span>
                     <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
                   </>
                 )}
               </CollapsibleTrigger>
-              <CollapsibleContent className={`${sidebarOpen ? 'pl-4' : 'lg:pl-0'} space-y-1 pt-1 pb-2`}>
+              <CollapsibleContent className={`${sidebarOpen ? 'pl-4' : 'pl-0'} space-y-1 pt-1 pb-2`}>
                 <button
                   onClick={() => setActiveTab('users')}
-                  className={`flex items-center w-full px-4 py-2 rounded-md ${
+                  className={`flex items-center w-full rounded-md ${
                     activeTab === 'users' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
+                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
                 >
-                  <Users className="w-4 h-4 mr-3" />
-                  <span>Gerenciar Usuários</span>
+                  <Users className="w-4 h-4" />
+                  {sidebarOpen && <span className="ml-3">Gerenciar Usuários</span>}
                 </button>
                 <button
                   onClick={() => setActiveTab('community')}
-                  className={`flex items-center w-full px-4 py-2 rounded-md ${
+                  className={`flex items-center w-full rounded-md ${
                     activeTab === 'community' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
+                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
                 >
-                  <MessageSquare className="w-4 h-4 mr-3" />
-                  <span>Comunidade</span>
+                  <MessageSquare className="w-4 h-4" />
+                  {sidebarOpen && <span className="ml-3">Comunidade</span>}
                 </button>
               </CollapsibleContent>
             </Collapsible>
@@ -1057,10 +1056,17 @@ const AdminDashboard = () => {
               className="bg-gray-50 rounded-lg py-1 mb-1"
               defaultOpen={['arts', 'categories', 'formats', 'fileTypes'].includes(activeTab)}
             >
-              <CollapsibleTrigger className="flex items-center w-full px-4 py-2 text-gray-700 font-medium">
-                <Layers className="w-5 h-5 mr-3" />
-                <span>Conteúdo</span>
-                <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+              <CollapsibleTrigger 
+                className={`flex items-center w-full py-2 text-gray-700 font-medium ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
+                title="Conteúdo"
+              >
+                <Layers className="w-5 h-5" />
+                {sidebarOpen && (
+                  <>
+                    <span className="ml-3">Conteúdo</span>
+                    <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+                  </>
+                )}
               </CollapsibleTrigger>
               <CollapsibleContent className="pl-4 space-y-1 pt-1 pb-2">
                 <button
@@ -1316,7 +1322,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Main Content */}
-      <div className={`flex-1 overflow-auto transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
+      <div className="flex-1 overflow-auto transition-all duration-300 ml-0 w-full">
         <header className="bg-white shadow-sm">
           <div className="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between">
             <div className="flex items-center mb-3 sm:mb-0">
