@@ -49,6 +49,13 @@ const adminResponseSchema = z.object({
   isResolved: z.boolean().optional()
 });
 
+// Esquema para atualização de uma denúncia - mais flexível para UX
+const updateReportSchema = z.object({
+  status: z.enum(['pendente', 'em-analise', 'resolvido', 'rejeitado']).optional(),
+  adminResponse: z.string().min(5, "A resposta deve ter pelo menos 5 caracteres").optional(),
+  isResolved: z.boolean().optional()
+});
+
 /**
  * Obter todos os tipos de denúncias
  * GET /api/reports/types
@@ -395,7 +402,7 @@ router.put('/:id', async (req, res) => {
     console.log('PUT /api/reports/:id - Dados recebidos:', req.body);
     
     // Validação dos dados recebidos
-    const validatedData = adminResponseSchema.parse(req.body);
+    const validatedData = updateReportSchema.parse(req.body);
     console.log('PUT /api/reports/:id - Dados validados:', validatedData);
     
     // SOLUÇÃO DEFINITIVA: Vamos fazer tudo com SQL bruto puro sem depender do ORM
