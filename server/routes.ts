@@ -65,6 +65,7 @@ import communityRouter from './routes/community-routes'; // Rotas para o sistema
 import ferramentasUploadRouter from './routes/ferramentas-upload'; // Rotas para upload de imagens de ferramentas
 import sitemapRouter from './routes/sitemap'; // Rotas para sitemap.xml e robots.txt
 import { convertImageUrlsMiddleware } from './routes/image-url-proxy'; // Middleware para converter URLs de imagens
+import imageProxyTestRouter from './routes/image-proxy-test'; // Rota para testar o proxy de imagens
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Aplicar middleware global para converter URLs de imagens para todas as respostas JSON
