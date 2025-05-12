@@ -542,6 +542,7 @@ router.post('/upload', upload.single('evidence'), async (req, res) => {
       reportTypeId: z.string().transform(val => parseInt(val)),
       title: z.string().min(5),
       description: z.string().min(10),
+      userId: z.string().transform(val => parseInt(val)).optional(),
       email: z.string().email("Email inválido").optional(),
       whatsapp: z.string().optional()
     }).parse(req.body);
@@ -576,7 +577,7 @@ router.post('/upload', upload.single('evidence'), async (req, res) => {
       INSERT INTO reports (
         "reportTypeId", title, description, evidence, 
         status, "isResolved", "createdAt", "updatedAt", 
-        "email", "whatsapp"
+        "userId", "email", "whatsapp"
       ) VALUES (
         ${validatedData.reportTypeId},
         '${validatedData.title.replace(/'/g, "''")}',
@@ -586,6 +587,7 @@ router.post('/upload', upload.single('evidence'), async (req, res) => {
         false,
         NOW(),
         NOW(),
+        ${validatedData.userId ? validatedData.userId : 'NULL'},
         ${validatedData.email ? `'${validatedData.email.replace(/'/g, "''")}'` : 'NULL'},
         ${validatedData.whatsapp ? `'${validatedData.whatsapp.replace(/'/g, "''")}'` : 'NULL'}
       ) RETURNING *;

@@ -128,6 +128,11 @@ const ReportForm = () => {
         formData.append('title', data.title);
         formData.append('description', data.description);
         
+        // Adiciona o ID do usuário quando logado
+        if (isLoggedIn && user?.id) {
+          formData.append('userId', user.id.toString());
+        }
+        
         // Adiciona campos de contato quando usuário não está logado
         if (!isLoggedIn && data.email) {
           formData.append('email', data.email);
@@ -165,6 +170,11 @@ const ReportForm = () => {
         title: data.title,
         description: data.description
       };
+      
+      // Adiciona o ID do usuário quando logado
+      if (isLoggedIn && user?.id) {
+        jsonData.userId = user.id;
+      }
       
       // Adiciona campos de contato quando usuário não está logado
       if (!isLoggedIn && data.email) {
