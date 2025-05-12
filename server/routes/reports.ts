@@ -13,7 +13,22 @@ const router = express.Router();
 // Configuração do Multer para uploads temporários
 const upload = multer({ 
   dest: 'temp/', 
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => {
+    // Lista de tipos MIME permitidos
+    const allowedMimes = [
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'application/pdf'
+    ];
+    
+    if (allowedMimes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Formato de arquivo não suportado. Use JPG, PNG, WEBP ou PDF'));
+    }
+  }
 });
 
 // Esquema para validação do corpo da requisição para criação de denúncia
@@ -37,11 +52,38 @@ const adminResponseSchema = z.object({
  */
 router.get('/types', async (req, res) => {
   try {
-    const reportTypes = await storage.getReportTypes();
+    // Verifica se o cliente está solicitando JSON explicitamente
+    const acceptHeader = req.get('Accept');
+    const requestsJson = acceptHeader && acceptHeader.includes('application/json');
     
-    return res.status(200).json(reportTypes);
+    // Verifica se há um parâmetro de formato na URL
+    const formatParam = req.query.format === 'json';
+    
+    // Se o cliente solicitou JSON via Accept header ou formato de consulta
+    if (requestsJson || formatParam) {
+      res.set('Content-Type', 'application/json');
+      const reportTypes = await storage.getReportTypes();
+      return res.status(200).json(reportTypes);
+    } else {
+      // Caso contrário, definir um array mínimo de tipos
+      const reportTypes = await storage.getReportTypes();
+      // Se a lógica de storage não estiver implementada, definir tipos padrão
+      if (!reportTypes || reportTypes.length === 0) {
+        const defaultTypes = [
+          { id: 1, name: 'Plágio', description: 'Conteúdo copiado sem autorização ou crédito' },
+          { id: 2, name: 'Conteúdo impróprio', description: 'Material ofensivo ou inadequado' },
+          { id: 3, name: 'Erro técnico', description: 'Problemas de funcionamento da plataforma' }
+        ];
+        res.set('Content-Type', 'application/json');
+        return res.status(200).json(defaultTypes);
+      }
+      
+      res.set('Content-Type', 'application/json');
+      return res.status(200).json(reportTypes);
+    }
   } catch (error) {
     console.error('Erro ao buscar tipos de denúncias:', error);
+    res.set('Content-Type', 'application/json');
     return res.status(500).json({ message: 'Erro ao buscar tipos de denúncias' });
   }
 });
@@ -51,7 +93,7 @@ router.get('/types', async (req, res) => {
  * POST /api/reports
  * Autenticado
  */
-router.post('/', isAuthenticated, upload.none(), async (req, res) => {
+router.post('/', isAuthenticated, upload.single('evidence'), async (req, res) => {
   try {
     // Validar corpo da requisição
     const validatedData = createReportSchema.parse(req.body);
@@ -59,10 +101,18 @@ router.post('/', isAuthenticated, upload.none(), async (req, res) => {
     // Adicionar o ID do usuário logado (se disponível)
     const userId = req.user?.id || null;
     
+    // Adicionar o caminho do arquivo de evidência, se houver
+    let evidence = null;
+    if (req.file) {
+      // O arquivo está disponível em req.file graças ao multer
+      evidence = req.file.path;
+    }
+    
     // Criar a denúncia
     const report = await storage.createReport({
       ...validatedData,
-      userId
+      userId,
+      evidence
     });
     
     return res.status(201).json({
@@ -159,7 +209,7 @@ router.put('/:id', isAdmin, async (req, res) => {
     // Atualizar a denúncia
     const report = await storage.updateReport(reportId, {
       ...validatedData,
-      respondedByUserId: req.user?.id, // ID do administrador que respondeu
+      respondedBy: req.user?.id, // ID do administrador que respondeu
       respondedAt: new Date()
     });
     
