@@ -275,17 +275,17 @@ router.put('/:id', async (req, res) => {
       
       console.log('PUT /api/reports/:id - Dados para atualização:', updateData);
       
-      const report = await storage.updateReport(reportId, updateData);
-      console.log('PUT /api/reports/:id - Denúncia atualizada:', report);
+      const updatedReport = await storage.updateReport(reportId, updateData);
+      console.log('PUT /api/reports/:id - Denúncia atualizada:', updatedReport);
+      
+      return res.status(200).json({
+        message: 'Denúncia atualizada com sucesso',
+        report: updatedReport
+      });
     } catch (error) {
       console.error('PUT /api/reports/:id - Erro na validação:', error);
       throw error;
     }
-    
-    return res.status(200).json({
-      message: 'Denúncia atualizada com sucesso',
-      report
-    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ 

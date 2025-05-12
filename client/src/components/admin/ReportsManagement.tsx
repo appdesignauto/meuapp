@@ -184,12 +184,25 @@ const ReportsManagement = () => {
         data.adminFeedback = adminFeedback;
       }
       
-      const response = await apiRequest('PUT', `/api/reports/${id}`, data);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erro ao atualizar denúncia');
+      console.log(`Enviando atualização para denúncia #${id}:`, data);
+      
+      try {
+        const response = await apiRequest('PUT', `/api/reports/${id}`, data);
+        console.log(`Resposta da API ao atualizar denúncia #${id}:`, response);
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error(`Erro ao atualizar denúncia #${id}:`, errorData);
+          throw new Error(errorData.message || 'Erro ao atualizar denúncia');
+        }
+        
+        const result = await response.json();
+        console.log(`Atualização concluída para denúncia #${id}:`, result);
+        return result;
+      } catch (error) {
+        console.error(`Erro na atualização da denúncia #${id}:`, error);
+        throw error;
       }
-      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/reports'] });
