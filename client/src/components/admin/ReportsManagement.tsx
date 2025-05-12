@@ -229,31 +229,31 @@ const ReportsManagement = () => {
         // Primeiro tentamos a V2 da API
         console.log(`Tentando atualizar report #${id} com API V2:`, data);
         const v2Response = await apiRequest('PUT', `/api/reports-v2/${id}`, data);
-        console.log(`Resposta da API V2 ao atualizar denúncia #${id}:`, v2Response);
+        console.log(`Resposta da API V2 ao atualizar report #${id}:`, v2Response);
         
         if (v2Response.ok) {
           const result = await v2Response.json();
-          console.log(`Atualização V2 concluída para denúncia #${id}:`, result);
+          console.log(`Atualização V2 concluída para report #${id}:`, result);
           return result;
         } else {
-          console.warn(`API V2 falhou para atualização da denúncia #${id}, tentando API V1`);
+          console.warn(`API V2 falhou para atualização do report #${id}, tentando API V1`);
         }
         
         // Se a V2 falhar, tentamos a versão original
         const response = await apiRequest('PUT', `/api/reports/${id}`, data);
-        console.log(`Resposta da API V1 ao atualizar denúncia #${id}:`, response);
+        console.log(`Resposta da API V1 ao atualizar report #${id}:`, response);
         
         if (!response.ok) {
           const errorData = await response.json();
-          console.error(`Erro ao atualizar denúncia #${id}:`, errorData);
-          throw new Error(errorData.message || 'Erro ao atualizar denúncia');
+          console.error(`Erro ao atualizar report #${id}:`, errorData);
+          throw new Error(errorData.message || 'Erro ao atualizar report');
         }
         
         const result = await response.json();
-        console.log(`Atualização V1 concluída para denúncia #${id}:`, result);
+        console.log(`Atualização V1 concluída para report #${id}:`, result);
         return result;
       } catch (error) {
-        console.error(`Erro na atualização da denúncia #${id}:`, error);
+        console.error(`Erro na atualização do report #${id}:`, error);
         throw error;
       }
     },
