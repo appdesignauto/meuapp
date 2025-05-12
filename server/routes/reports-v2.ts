@@ -74,12 +74,14 @@ router.get('/types', async (req, res) => {
 });
 
 /**
- * Criar uma denúncia
+ * Criar um relatório de problema
  * POST /api/reports-v2
  * Público - Não requer autenticação
  */
 router.post('/', async (req, res) => {
   try {
+    console.log('POST /api/reports-v2 - Recebendo relatório:', req.body);
+    
     // Validação dos dados
     const validatedData = createReportSchema.parse(req.body);
     
@@ -106,11 +108,11 @@ router.post('/', async (req, res) => {
     const result = await db.execute(sql.raw(insertQuery));
     
     if (!result.rows || result.rows.length === 0) {
-      return res.status(500).json({ message: 'Erro ao criar denúncia' });
+      return res.status(500).json({ message: 'Erro ao criar relatório de problema' });
     }
     
     return res.status(201).json({
-      message: 'Denúncia criada com sucesso',
+      message: 'Relatório enviado com sucesso',
       report: result.rows[0]
     });
   } catch (error) {
@@ -121,8 +123,8 @@ router.post('/', async (req, res) => {
       });
     }
     
-    console.error('Erro ao criar denúncia:', error);
-    return res.status(500).json({ message: 'Erro ao criar denúncia' });
+    console.error('Erro ao criar relatório de problema:', error);
+    return res.status(500).json({ message: 'Erro ao processar relatório' });
   }
 });
 
@@ -521,6 +523,89 @@ router.delete('/:id', async (req, res) => {
   } catch (error) {
     console.error(`DELETE /api/reports-v2/:id - Erro:`, error);
     return res.status(500).json({ message: 'Erro ao excluir denúncia' });
+  }
+});
+
+/**
+ * Criar uma denúncia com upload de evidência
+ * POST /api/reports-v2/upload
+ * Público - Não requer autenticação
+ */
+router.post('/upload', upload.single('evidence'), async (req, res) => {
+  try {
+    console.log('POST /api/reports-v2/upload - Recebendo requisição com arquivo', req.file);
+
+    // Validação dos dados do formulário
+    const validatedData = z.object({
+      reportTypeId: z.string().transform(val => parseInt(val)),
+      title: z.string().min(5),
+      description: z.string().min(10),
+      url: z.string().optional().nullable()
+    }).parse(req.body);
+
+    // Verificação do arquivo
+    if (!req.file) {
+      return res.status(400).json({ 
+        message: 'Arquivo de evidência não fornecido',
+      });
+    }
+
+    // Garantir que o diretório de destino existe
+    const uploadDir = 'uploads/evidencias';
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    // Gerar nome de arquivo único
+    const fileExt = path.extname(req.file.originalname);
+    const fileName = `${uuidv4()}${fileExt}`;
+    const filePath = path.join(uploadDir, fileName);
+
+    // Mover arquivo do diretório temporário para o destino final
+    fs.copyFileSync(req.file.path, filePath);
+    fs.unlinkSync(req.file.path); // Remover arquivo temporário
+
+    // URL da evidência será o caminho relativo no servidor
+    const evidenceUrl = `/${filePath}`;
+
+    // Inserção no banco de dados com SQL puro
+    const insertQuery = `
+      INSERT INTO reports (
+        "reportTypeId", title, description, url, evidence, 
+        status, "isResolved", "createdAt", "updatedAt"
+      ) VALUES (
+        ${validatedData.reportTypeId},
+        '${validatedData.title.replace(/'/g, "''")}',
+        '${validatedData.description.replace(/'/g, "''")}',
+        ${validatedData.url ? `'${validatedData.url.replace(/'/g, "''")}'` : 'NULL'},
+        '${evidenceUrl}',
+        'pendente',
+        false,
+        NOW(),
+        NOW()
+      ) RETURNING *;
+    `;
+    
+    const result = await db.execute(sql.raw(insertQuery));
+    
+    if (!result.rows || result.rows.length === 0) {
+      return res.status(500).json({ message: 'Erro ao criar relatório de problema' });
+    }
+    
+    return res.status(201).json({
+      message: 'Relatório enviado com sucesso',
+      report: result.rows[0]
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ 
+        message: 'Dados inválidos', 
+        errors: error.errors.map(e => ({ path: e.path.join('.'), message: e.message }))
+      });
+    }
+    
+    console.error('Erro ao processar upload e criar relatório:', error);
+    return res.status(500).json({ message: 'Erro ao processar relatório' });
   }
 });
 
