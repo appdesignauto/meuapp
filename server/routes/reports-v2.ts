@@ -361,7 +361,7 @@ router.put('/:id', async (req, res) => {
       updateSql += `, "isResolved" = ${validatedData.isResolved}`;
       
       if (validatedData.isResolved) {
-        updateSql += `, "resolvedAt" = NOW()`;
+        updateSql += `, "resolvedat" = NOW()`;
       }
     }
     
