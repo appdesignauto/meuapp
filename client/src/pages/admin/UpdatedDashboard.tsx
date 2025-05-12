@@ -955,7 +955,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100 relative">
+    <div className="flex h-screen bg-gray-100 overflow-hidden">
       {/* Overlay - aparece em telas pequenas quando a sidebar está aberta */}
       {sidebarOpen && (
         <div 
@@ -966,9 +966,9 @@ const AdminDashboard = () => {
       )}
       
       {/* Sidebar - com possibilidade de ser recolhida em todos os tamanhos de tela */}
-      <aside 
+      <div 
         className={`
-          fixed lg:sticky top-0 left-0 z-40 h-full bg-white shadow-lg border-r
+          fixed lg:relative top-0 left-0 z-40 h-full bg-white shadow-lg border-r
           ${sidebarOpen ? 'w-64' : 'w-16'} 
           transition-all duration-300 ease-in-out
         `}
@@ -986,8 +986,8 @@ const AdminDashboard = () => {
           </div>
         </div>
         <div className="p-4 overflow-hidden">
-          <div className={`flex items-center mb-6 ${!sidebarOpen && 'lg:justify-center'}`}>
-            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-3">
+          <div className={`flex items-center mb-6 ${!sidebarOpen ? 'justify-center' : ''}`}>
+            <div className={`w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 ${sidebarOpen ? 'mr-3' : ''}`}>
               {user?.name?.charAt(0) || 'A'}
             </div>
             {sidebarOpen && (
@@ -1319,11 +1319,11 @@ const AdminDashboard = () => {
             Sair
           </Button>
         </div>
-      </div>
+      </aside>
 
-      {/* Main Content */}
-      <div className="flex-1 overflow-auto transition-all duration-300 ml-0 w-full">
-        <header className="bg-white shadow-sm">
+      {/* Main Content - se expande quando a sidebar está recolhida */}
+      <div className={`flex-1 overflow-auto transition-all duration-300 ${!sidebarOpen ? 'lg:ml-16' : 'lg:ml-64'} w-full`}>
+        <header className="bg-white shadow-sm sticky top-0 z-10">
           <div className="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between">
             <div className="flex items-center mb-3 sm:mb-0">
               {/* Botão de alternância do menu */}
@@ -1467,7 +1467,7 @@ const AdminDashboard = () => {
           </div>
         </header>
         
-        <main className="p-6">
+        <div className="p-6">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsContent value="comments">
               <div className="mb-6">
@@ -3973,8 +3973,8 @@ const AdminDashboard = () => {
               </div>
             </TabsContent>
           </Tabs>
-        </main>
-      </div>
+        </div>
+      </main>
       
       {/* Diálogo de criação de arte multi-formato */}
       <SimpleFormMultiDialog open={isMultiFormOpen} onOpenChange={setIsMultiFormOpen} />
