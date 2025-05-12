@@ -1173,3 +1173,71 @@ export const insertAnalyticsSettingsSchema = createInsertSchema(analyticsSetting
 // Tipos derivados
 export type AnalyticsSettings = typeof analyticsSettings.$inferSelect;
 export type InsertAnalyticsSettings = z.infer<typeof insertAnalyticsSettingsSchema>;
+
+// Sistema de denúncias
+export const reportTypes = pgTable("reportTypes", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export const reports = pgTable("reports", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").references(() => users.id),
+  artId: integer("artId").references(() => arts.id),
+  reportTypeId: integer("reportTypeId").references(() => reportTypes.id),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  evidence: text("evidence"),
+  status: text("status").notNull().default('pendente'),
+  adminResponse: text("adminResponse"),
+  respondedBy: integer("respondedBy").references(() => users.id),
+  respondedAt: timestamp("respondedAt"),
+  isResolved: boolean("isResolved").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export const reportRelations = relations(reports, ({ one }) => ({
+  user: one(users, {
+    fields: [reports.userId],
+    references: [users.id],
+  }),
+  art: one(arts, {
+    fields: [reports.artId],
+    references: [arts.id],
+  }),
+  reportType: one(reportTypes, {
+    fields: [reports.reportTypeId],
+    references: [reportTypes.id],
+  }),
+  admin: one(users, {
+    fields: [reports.respondedBy],
+    references: [users.id],
+  }),
+}));
+
+export const insertReportTypeSchema = createInsertSchema(reportTypes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertReportSchema = createInsertSchema(reports).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  respondedAt: true,
+  status: true,
+  adminResponse: true,
+  respondedBy: true,
+  isResolved: true,
+});
+
+export type ReportType = typeof reportTypes.$inferSelect;
+export type InsertReportType = z.infer<typeof insertReportTypeSchema>;
+export type Report = typeof reports.$inferSelect;
+export type InsertReport = z.infer<typeof insertReportSchema>;
