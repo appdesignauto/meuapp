@@ -62,6 +62,10 @@ import {
 
 import { db } from "./db";
 import { eq, like, desc, and, or, isNull, sql } from "drizzle-orm";
+import { 
+  reports, 
+  reportTypes 
+} from "../shared/schema";
 
 export interface IStorage {
   // Métodos SEO
@@ -170,6 +174,14 @@ export interface IStorage {
   getUserStats(userId: number): Promise<UserStats | undefined>;
   createUserStats(stats: InsertUserStats): Promise<UserStats>;
   updateUserStats(userId: number, data: Partial<InsertUserStats>): Promise<UserStats | undefined>;
+  
+  // Report methods
+  getReportTypes(): Promise<ReportType[]>;
+  getReportById(id: number): Promise<Report | undefined>;
+  getReports(options: { page: number, limit: number, status?: string | null }): Promise<Report[]>;
+  getReportsCount(status?: string | null): Promise<number>;
+  createReport(report: InsertReport): Promise<Report>;
+  updateReport(id: number, data: Partial<Report>): Promise<Report | undefined>;
   
   // Designer Stats methods
   getDesignerStats(userId: number): Promise<{ followers: number; totalArts: number; } | undefined>;
@@ -3011,6 +3023,101 @@ export class DatabaseStorage implements IStorage {
       .where(eq(communityPosts.id, id))
       .returning();
     return updatedPost;
+  }
+
+  // Implementação dos métodos de Reports (Denúncias)
+  async getReportTypes(): Promise<ReportType[]> {
+    return db.select().from(reportTypes).orderBy(reportTypes.name);
+  }
+
+  async getReportById(id: number): Promise<Report | undefined> {
+    const [report] = await db.select({
+      report: reports,
+      reportType: reportTypes,
+      user: users,
+      admin: users.as('admin')
+    })
+    .from(reports)
+    .leftJoin(reportTypes, eq(reports.typeId, reportTypes.id))
+    .leftJoin(users, eq(reports.userId, users.id))
+    .leftJoin(users.as('admin'), eq(reports.adminId, users.as('admin').id))
+    .where(eq(reports.id, id));
+
+    if (!report) return undefined;
+
+    return {
+      ...report.report,
+      reportType: report.reportType,
+      user: report.user,
+      admin: report.admin
+    } as unknown as Report;
+  }
+
+  async getReports(options: { page: number, limit: number, status?: string | null }): Promise<Report[]> {
+    const { page = 1, limit = 20, status = null } = options;
+    
+    let query = db.select({
+      report: reports,
+      reportType: reportTypes,
+      user: users,
+      admin: users.as('admin')
+    })
+    .from(reports)
+    .leftJoin(reportTypes, eq(reports.typeId, reportTypes.id))
+    .leftJoin(users, eq(reports.userId, users.id))
+    .leftJoin(users.as('admin'), eq(reports.adminId, users.as('admin').id));
+    
+    if (status) {
+      query = query.where(eq(reports.status, status));
+    }
+    
+    const results = await query
+      .orderBy(desc(reports.createdAt))
+      .limit(limit)
+      .offset((page - 1) * limit);
+    
+    return results.map(result => ({
+      ...result.report,
+      reportType: result.reportType,
+      user: result.user,
+      admin: result.admin
+    })) as unknown as Report[];
+  }
+
+  async getReportsCount(status?: string | null): Promise<number> {
+    let query = db.select({ count: sql<number>`count(*)` }).from(reports);
+    if (status) {
+      query = query.where(eq(reports.status, status));
+    }
+    
+    const result = await query;
+    return result[0]?.count || 0;
+  }
+
+  async createReport(report: InsertReport): Promise<Report> {
+    const [result] = await db
+      .insert(reports)
+      .values({
+        ...report,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    
+    return result;
+  }
+
+  async updateReport(id: number, data: Partial<Report>): Promise<Report | undefined> {
+    const [result] = await db
+      .update(reports)
+      .set({
+        ...data,
+        updatedAt: new Date()
+      })
+      .where(eq(reports.id, id))
+      .returning();
+    
+    return result;
   }
 }
 
