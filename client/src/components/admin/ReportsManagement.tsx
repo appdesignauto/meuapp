@@ -144,9 +144,9 @@ const ReportsManagement = () => {
           return await staticResponse.json();
         }
         
-        throw new Error('Não foi possível carregar os tipos de denúncia');
+        throw new Error('Não foi possível carregar os tipos de report');
       } catch (error) {
-        console.error('Erro ao carregar tipos de denúncia:', error);
+        console.error('Erro ao carregar tipos de report:', error);
         throw error;
       }
     },
@@ -177,7 +177,7 @@ const ReportsManagement = () => {
         }
         
         const queryString = queryParams.toString();
-        console.log(`Consultando denúncias com filtros: ${queryString}`);
+        console.log(`Consultando reports com filtros: ${queryString}`);
         
         // Primeiro tentamos a versão V2 da API com SQL puro
         console.log('Tentando API v2 para reports...');
@@ -198,7 +198,7 @@ const ReportsManagement = () => {
         
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData.message || 'Erro ao carregar denúncias');
+          throw new Error(errorData.message || 'Erro ao carregar reports');
         }
         
         const data = await response.json();
@@ -212,7 +212,7 @@ const ReportsManagement = () => {
     refetchOnWindowFocus: false
   });
 
-  // Mutation para atualizar o status de uma denúncia
+  // Mutation para atualizar o status de um report
   const updateReportMutation = useMutation({
     mutationFn: async ({ id, status, adminFeedback, isResolved }: { id: number, status: string, adminFeedback?: string, isResolved?: boolean }) => {
       const data: any = { 
@@ -223,11 +223,11 @@ const ReportsManagement = () => {
         data.adminResponse = adminFeedback; // Renomeado para corresponder ao esperado pelo backend
       }
       
-      console.log(`Enviando atualização para denúncia #${id}:`, data);
+      console.log(`Enviando atualização para report #${id}:`, data);
       
       try {
         // Primeiro tentamos a V2 da API
-        console.log(`Tentando atualizar denúncia #${id} com API V2:`, data);
+        console.log(`Tentando atualizar report #${id} com API V2:`, data);
         const v2Response = await apiRequest('PUT', `/api/reports-v2/${id}`, data);
         console.log(`Resposta da API V2 ao atualizar denúncia #${id}:`, v2Response);
         
