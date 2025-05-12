@@ -42,7 +42,7 @@ const createReportSchema = insertReportSchema.extend({
 
 // Esquema para validação da resposta do administrador
 const adminResponseSchema = z.object({
-  status: z.enum(['pendente', 'em_analise', 'resolvido', 'rejeitado']),
+  status: z.enum(['pendente', 'em-analise', 'resolvido', 'rejeitado']),
   adminResponse: z.string().min(5, "A resposta deve ter pelo menos 5 caracteres").optional(),
   isResolved: z.boolean().optional()
 });
@@ -252,20 +252,35 @@ router.put('/:id', async (req, res) => {
     }
     
     // Validar corpo da requisição
-    const validatedData = adminResponseSchema.parse(req.body);
+    console.log('PUT /api/reports/:id - Dados recebidos:', req.body);
     
-    // Verificar se a denúncia existe
-    const existingReport = await storage.getReportById(reportId);
-    if (!existingReport) {
-      return res.status(404).json({ message: 'Denúncia não encontrada' });
+    try {
+      const validatedData = adminResponseSchema.parse(req.body);
+      console.log('PUT /api/reports/:id - Dados validados:', validatedData);
+      
+      // Verificar se a denúncia existe
+      const existingReport = await storage.getReportById(reportId);
+      if (!existingReport) {
+        return res.status(404).json({ message: 'Denúncia não encontrada' });
+      }
+      
+      console.log('PUT /api/reports/:id - Denúncia encontrada:', existingReport);
+      
+      // Atualizar a denúncia
+      const updateData = {
+        ...validatedData,
+        respondedBy: req.user?.id, // ID do administrador que respondeu
+        respondedAt: new Date()
+      };
+      
+      console.log('PUT /api/reports/:id - Dados para atualização:', updateData);
+      
+      const report = await storage.updateReport(reportId, updateData);
+      console.log('PUT /api/reports/:id - Denúncia atualizada:', report);
+    } catch (error) {
+      console.error('PUT /api/reports/:id - Erro na validação:', error);
+      throw error;
     }
-    
-    // Atualizar a denúncia
-    const report = await storage.updateReport(reportId, {
-      ...validatedData,
-      respondedBy: req.user?.id, // ID do administrador que respondeu
-      respondedAt: new Date()
-    });
     
     return res.status(200).json({
       message: 'Denúncia atualizada com sucesso',
