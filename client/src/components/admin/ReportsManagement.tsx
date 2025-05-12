@@ -57,18 +57,19 @@ import {
 
 interface Report {
   id: number;
-  typeId: number;
+  reportTypeId: number;
   userId: number;
   title: string;
   description: string;
-  url?: string;
-  evidenceUrl?: string;
-  status: 'pending' | 'reviewing' | 'resolved' | 'rejected';
-  adminId?: number;
-  adminFeedback?: string;
+  evidence?: string;
+  status: string;
+  adminResponse?: string;
+  respondedBy?: number;
+  respondedAt?: string;
+  isResolved: boolean;
   createdAt: string;
   updatedAt: string;
-  type?: {
+  reportType?: {
     id: number;
     name: string;
     description: string;
@@ -90,17 +91,21 @@ interface ReportType {
   description: string;
 }
 
-const statusLabels = {
+const statusLabels: Record<string, { label: string, color: string }> = {
   pending: { label: 'Pendente', color: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' },
   reviewing: { label: 'Em análise', color: 'bg-blue-100 text-blue-800 hover:bg-blue-200' },
   resolved: { label: 'Resolvido', color: 'bg-green-100 text-green-800 hover:bg-green-200' },
-  rejected: { label: 'Rejeitado', color: 'bg-red-100 text-red-800 hover:bg-red-200' }
+  rejected: { label: 'Rejeitado', color: 'bg-red-100 text-red-800 hover:bg-red-200' },
+  pendente: { label: 'Pendente', color: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' },
+  'em-analise': { label: 'Em análise', color: 'bg-blue-100 text-blue-800 hover:bg-blue-200' },
+  resolvido: { label: 'Resolvido', color: 'bg-green-100 text-green-800 hover:bg-green-200' },
+  rejeitado: { label: 'Rejeitado', color: 'bg-red-100 text-red-800 hover:bg-red-200' }
 };
 
 const ITEMS_PER_PAGE = 10;
 
 const ReportsManagement = () => {
-  const [activeTab, setActiveTab] = useState<'pending' | 'reviewing' | 'resolved' | 'rejected'>('pending');
+  const [activeTab, setActiveTab] = useState<string>('pendente');
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentReport, setCurrentReport] = useState<Report | null>(null);
@@ -151,12 +156,22 @@ const ReportsManagement = () => {
   } = useQuery({
     queryKey: ['/api/reports', activeTab],
     queryFn: async () => {
-      const response = await apiRequest('GET', `/api/reports?status=${activeTab}`);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erro ao carregar denúncias');
+      try {
+        const response = await apiRequest('GET', `/api/reports?page=1&limit=50`);
+        console.log('Resposta da API de reports:', response);
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Erro ao carregar denúncias');
+        }
+        
+        const data = await response.json();
+        console.log('Dados recebidos dos reports:', data);
+        return data;
+      } catch (error) {
+        console.error('Erro ao buscar reports:', error);
+        throw error;
       }
-      return response.json();
     },
     refetchOnWindowFocus: false
   });
@@ -267,7 +282,7 @@ const ReportsManagement = () => {
   };
 
   // Função para atualizar o status
-  const handleUpdateStatus = (status: 'pending' | 'reviewing' | 'resolved' | 'rejected') => {
+  const handleUpdateStatus = (status: string) => {
     if (!currentReport) return;
     
     updateReportMutation.mutate({
