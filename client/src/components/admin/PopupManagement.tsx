@@ -389,7 +389,7 @@ export default function PopupManagement() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Gerenciar Popups Promocionais</h2>
+        <p className="text-gray-500">Crie e gerencie popups promocionais para exibir em seu site</p>
         <Button 
           onClick={() => {
             resetForm();

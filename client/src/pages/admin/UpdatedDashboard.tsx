@@ -1527,15 +1527,6 @@ const AdminDashboard = () => {
             </TabsContent>
             
             <TabsContent value="popups">
-              <div className="mb-6">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-800">Gerenciamento de Popups</h2>
-                    <p className="text-gray-500 mt-1">Crie e gerencie popups promocionais para exibir em seu site</p>
-                  </div>
-                </div>
-              </div>
-              
               <PopupManagement />
             </TabsContent>
             
