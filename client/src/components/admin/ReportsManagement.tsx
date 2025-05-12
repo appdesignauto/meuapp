@@ -433,11 +433,11 @@ const ReportsManagement = () => {
           <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
             <Search className="h-8 w-8 text-muted-foreground" />
           </div>
-          <h3 className="text-lg font-medium">Nenhuma denúncia encontrada</h3>
+          <h3 className="text-lg font-medium">Nenhum report encontrado</h3>
           <p className="text-muted-foreground mt-2">
             {searchTerm || selectedTypeFilter !== 'all' || selectedStatusFilter !== 'all'
               ? 'Tente ajustar os filtros ou critérios de pesquisa'
-              : 'Não há denúncias nesta categoria no momento'}
+              : 'Não há reports nesta categoria no momento'}
           </p>
         </div>
       );
@@ -447,7 +447,7 @@ const ReportsManagement = () => {
       <>
         <Table>
           <TableCaption>
-            Mostrando {paginatedReports.length} de {filteredReports.length} denúncias
+            Mostrando {paginatedReports.length} de {filteredReports.length} reports
           </TableCaption>
           <TableHeader>
             <TableRow>
@@ -532,7 +532,7 @@ const ReportsManagement = () => {
     );
   };
 
-  // Consulta para obter todas as denúncias (para estatísticas)
+  // Consulta para obter todos os reports (para estatísticas)
   const {
     data: allReportsData = { reports: [] },
     isLoading: isLoadingAllReports,
@@ -540,7 +540,7 @@ const ReportsManagement = () => {
     queryKey: ['/api/reports-v2/all'],
     queryFn: async () => {
       try {
-        // Fazemos uma consulta sem filtros para obter todas as denúncias para estatísticas
+        // Fazemos uma consulta sem filtros para obter todos os reports para estatísticas
         const response = await apiRequest('GET', `/api/reports-v2?limit=1000`);
         
         if (response.ok) {
@@ -555,9 +555,9 @@ const ReportsManagement = () => {
           return data;
         }
         
-        throw new Error('Não foi possível carregar todas as denúncias');
+        throw new Error('Não foi possível carregar todos os reports');
       } catch (error) {
-        console.error('Erro ao carregar todas as denúncias:', error);
+        console.error('Erro ao carregar todos os reports:', error);
         return { reports: [] };
       }
     },
@@ -565,7 +565,7 @@ const ReportsManagement = () => {
     refetchInterval: 60000, // Atualiza a cada minuto
   });
 
-  // Renderiza as estatísticas das denúncias
+  // Renderiza as estatísticas dos reports
   const renderStats = () => {
     if (isLoadingAllReports) return null;
     
@@ -766,7 +766,7 @@ const ReportsManagement = () => {
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Detalhes da Denúncia #{currentReport?.id}</DialogTitle>
+            <DialogTitle>Detalhes do Report #{currentReport?.id}</DialogTitle>
             <DialogDescription>
               Criada em {currentReport && new Date(currentReport.createdAt).toLocaleString('pt-BR')}
             </DialogDescription>
