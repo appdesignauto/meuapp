@@ -277,4 +277,33 @@ router.put('/admin/custom-scripts', isAdmin, async (req, res) => {
   }
 });
 
+// Rota para atualizar configurações de rastreamento
+router.put('/admin/tracking-settings', isAdmin, async (req, res) => {
+  try {
+    const { trackPageviews, trackClicks, trackFormSubmissions, trackArtsViewed, trackArtsDownloaded } = req.body;
+    
+    const [settings] = await db.select().from(analyticsSettings);
+    
+    if (!settings) {
+      return res.status(404).json({ success: false, message: 'Configurações de analytics não encontradas' });
+    }
+    
+    await db.update(analyticsSettings)
+      .set({ 
+        trackPageviews: !!trackPageviews,
+        trackClicks: !!trackClicks,
+        trackFormSubmissions: !!trackFormSubmissions,
+        trackArtsViewed: !!trackArtsViewed,
+        trackArtsDownloaded: !!trackArtsDownloaded,
+        updatedAt: new Date()
+      })
+      .where(eq(analyticsSettings.id, settings.id));
+    
+    res.json({ success: true, message: 'Configurações de rastreamento atualizadas com sucesso' });
+  } catch (error) {
+    console.error('Erro ao atualizar configurações de rastreamento:', error);
+    res.status(500).json({ success: false, message: 'Erro ao atualizar configurações de rastreamento' });
+  }
+});
+
 export default router;
