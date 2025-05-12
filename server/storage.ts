@@ -18,6 +18,10 @@ import {
   InsertFavorite,
   View,
   InsertView,
+  Report,
+  InsertReport,
+  ReportType,
+  InsertReportType,
   Download,
   InsertDownload,
   Subscription,
@@ -216,6 +220,14 @@ export interface IStorage {
   
   // Email verification methods
   updateUserEmailConfirmed(userId: number, confirmed: boolean): Promise<User>;
+  
+  // Report methods
+  getReportTypes(): Promise<ReportType[]>;
+  getReports(options: { page: number; limit: number; status?: string | null }): Promise<Report[]>;
+  getReportsCount(status?: string | null): Promise<number>;
+  getReportById(id: number): Promise<Report | undefined>;
+  createReport(report: InsertReport): Promise<Report>;
+  updateReport(id: number, updates: Partial<Report>): Promise<Report | undefined>;
 }
 
 interface ArtFilters {
