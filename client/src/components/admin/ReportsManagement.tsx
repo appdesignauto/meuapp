@@ -733,9 +733,9 @@ const ReportsManagement = () => {
             <div className="flex gap-2 flex-wrap sm:ml-auto">
               <Button
                 variant="outline"
-                onClick={() => handleUpdateStatus('pending')}
+                onClick={() => handleUpdateStatus('pendente')}
                 className="flex items-center gap-2"
-                disabled={currentReport?.status === 'pending'}
+                disabled={currentReport?.status === 'pendente'}
               >
                 <AlertCircle className="h-4 w-4 text-yellow-600" />
                 Pendente
@@ -743,9 +743,9 @@ const ReportsManagement = () => {
               
               <Button
                 variant="outline"
-                onClick={() => handleUpdateStatus('reviewing')}
+                onClick={() => handleUpdateStatus('em-analise')}
                 className="flex items-center gap-2"
-                disabled={currentReport?.status === 'reviewing'}
+                disabled={currentReport?.status === 'em-analise'}
               >
                 <Search className="h-4 w-4 text-blue-600" />
                 Em análise
@@ -753,9 +753,9 @@ const ReportsManagement = () => {
               
               <Button
                 variant="outline"
-                onClick={() => handleUpdateStatus('rejected')}
+                onClick={() => handleUpdateStatus('rejeitado')}
                 className="flex items-center gap-2"
-                disabled={currentReport?.status === 'rejected'}
+                disabled={currentReport?.status === 'rejeitado'}
               >
                 <XCircle className="h-4 w-4 text-red-600" />
                 Rejeitar
@@ -763,9 +763,9 @@ const ReportsManagement = () => {
               
               <Button
                 variant="default"
-                onClick={() => handleUpdateStatus('resolved')}
+                onClick={() => handleUpdateStatus('resolvido')}
                 className="flex items-center gap-2"
-                disabled={currentReport?.status === 'resolved'}
+                disabled={currentReport?.status === 'resolvido'}
               >
                 <CheckCircle2 className="h-4 w-4" />
                 Resolver
