@@ -62,7 +62,8 @@ import courseThumbnailUploadRouter from './routes/course-thumbnail-upload'; // R
 import bannerUploadRouter from './routes/banner-upload'; // Rota para upload de banners de
 import moduleUploadRouter from './routes/module-upload'; // Rota para upload de thumbnails de módulos cursos
 import communityRouter from './routes/community-routes'; // Rotas para o sistema de comunidade
-import ferramentasUploadRouter from './routes/ferramentas-upload'; // Rotas para upload de imagens de ferramentas
+import ferramentasUploadRouter from './routes/ferramentas-upload'; // Rotas para upload de imagens 
+import analyticsRouter from './routes/analytics.js'; // Rotas para gerenciamento de analytics
 import sitemapRouter from './routes/sitemap'; // Rotas para sitemap.xml e robots.txt
 import { convertImageUrlsMiddleware } from './routes/image-url-proxy'; // Middleware para converter URLs de imagens
 import imageProxyTestRouter from './routes/image-proxy-test'; // Rota para testar o proxy de imagens
