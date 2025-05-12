@@ -3044,6 +3044,21 @@ export class DatabaseStorage implements IStorage {
 
   async getReportById(id: number): Promise<Report | undefined> {
     try {
+      console.log(`[DEBUG] getReportById(${id}) - Iniciando busca...`);
+      
+      // Primeiro, verificamos se a denúncia existe em uma consulta simples
+      const [simpleReport] = await db.select()
+        .from(reports)
+        .where(eq(reports.id, id));
+      
+      console.log(`[DEBUG] getReportById(${id}) - Verificação simples:`, simpleReport ? 'Denúncia encontrada' : 'Denúncia NÃO encontrada');
+      
+      if (!simpleReport) {
+        console.log(`[DEBUG] getReportById(${id}) - Denúncia não existe na base de dados`);
+        return undefined;
+      }
+      
+      // Se a denúncia existe, fazemos a consulta completa com os joins
       const [report] = await db.select({
         report: reports,
         reportType: reportTypes,
@@ -3056,10 +3071,17 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(users.as('admin'), eq(reports.respondedBy, users.as('admin').id))
       .where(eq(reports.id, id));
   
-      console.log(`getReportById - Buscando denúncia #${id}:`, report);
+      console.log(`[DEBUG] getReportById(${id}) - Resultado da consulta completa:`, 
+        report ? 'Dados encontrados com joins' : 'Nenhum dado retornado após joins');
   
-      if (!report) return undefined;
+      if (!report) {
+        console.log(`[DEBUG] getReportById(${id}) - Usando apenas dados básicos da denúncia sem relações`);
+        // Se a consulta completa não retornar nada, mas a denúncia existe,
+        // retornamos apenas os dados da denúncia sem relações
+        return simpleReport as Report;
+      }
   
+      console.log(`[DEBUG] getReportById(${id}) - Montando objeto completo com relações`);
       return {
         ...report.report,
         reportType: report.reportType,
@@ -3067,7 +3089,7 @@ export class DatabaseStorage implements IStorage {
         admin: report.admin
       } as unknown as Report;
     } catch (error) {
-      console.error(`Erro ao buscar denúncia #${id}:`, error);
+      console.error(`[ERROR] getReportById(${id}) - Erro ao buscar denúncia:`, error);
       return undefined;
     }
   }
@@ -3149,16 +3171,32 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateReport(id: number, data: Partial<Report>): Promise<Report | undefined> {
-    const [result] = await db
-      .update(reports)
-      .set({
-        ...data,
-        updatedAt: new Date()
-      })
-      .where(eq(reports.id, id))
-      .returning();
-    
-    return result;
+    try {
+      console.log(`[DEBUG] updateReport(${id}) - Iniciando atualização da denúncia...`, data);
+      
+      // Verificar se a denúncia existe antes de tentar atualizar
+      const reportExists = await this.getReportById(id);
+      if (!reportExists) {
+        console.log(`[DEBUG] updateReport(${id}) - Denúncia não encontrada para atualização`);
+        return undefined;
+      }
+      
+      // Realizar a atualização
+      const [result] = await db
+        .update(reports)
+        .set({
+          ...data,
+          updatedAt: new Date()
+        })
+        .where(eq(reports.id, id))
+        .returning();
+      
+      console.log(`[DEBUG] updateReport(${id}) - Denúncia atualizada com sucesso:`, result);
+      return result;
+    } catch (error) {
+      console.error(`[ERROR] updateReport(${id}) - Erro ao atualizar denúncia:`, error);
+      throw new Error('Erro ao atualizar denúncia');
+    }
   }
 
   // Report methods
