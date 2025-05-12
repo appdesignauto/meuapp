@@ -198,8 +198,90 @@ router.get('/', async (req, res) => {
     const limit = parseInt(req.query.limit as string) || 10;
     const status = req.query.status as string || null;
     
-    const reports = await storage.getReports({ page, limit, status });
-    const count = await storage.getReportsCount(status);
+    console.log('GET /api/reports - Listando denúncias');
+    console.log(`GET /api/reports - Parâmetros: page=${page}, limit=${limit}, status=${status}`);
+    
+    // Calcular offset para paginação
+    const offset = (page - 1) * limit;
+    
+    // Consulta SQL base
+    let listSql = `
+      SELECT 
+        r.*,
+        rt.name as "reportTypeName",
+        rt.description as "reportTypeDescription",
+        u.username as "username",
+        u.email as "userEmail",
+        a.username as "adminUsername"
+      FROM 
+        reports r
+      LEFT JOIN
+        "reportTypes" rt ON r."reportTypeId" = rt.id
+      LEFT JOIN
+        users u ON r."userId" = u.id
+      LEFT JOIN
+        users a ON r."respondedBy" = a.id
+    `;
+    
+    // Adicionar filtro por status se fornecido
+    if (status) {
+      listSql += ` WHERE r.status = '${status}'`;
+    }
+    
+    // Ordenação e paginação
+    listSql += ` ORDER BY r."createdAt" DESC LIMIT ${limit} OFFSET ${offset}`;
+    
+    console.log('GET /api/reports - SQL de listagem:', listSql);
+    
+    // Executar consulta principal
+    const result = await db.execute(sql.raw(listSql));
+    
+    // Consulta de contagem
+    let countSql = `SELECT COUNT(*) as total FROM reports`;
+    if (status) {
+      countSql += ` WHERE status = '${status}'`;
+    }
+    
+    console.log('GET /api/reports - SQL de contagem:', countSql);
+    
+    // Executar consulta de contagem
+    const countResult = await db.execute(sql.raw(countSql));
+    const count = parseInt(countResult.rows[0].total);
+    
+    console.log(`GET /api/reports - Total de denúncias encontradas: ${count}`);
+    
+    // Formatar os resultados
+    const reports = result.rows.map(row => {
+      // Criar objeto formatado com as relações
+      const report = {
+        ...row,
+        reportType: row.reportTypeName ? {
+          id: row.reportTypeId,
+          name: row.reportTypeName,
+          description: row.reportTypeDescription
+        } : null,
+        user: row.username ? {
+          id: row.userId,
+          username: row.username,
+          email: row.userEmail
+        } : null,
+        admin: row.adminUsername ? {
+          id: row.respondedBy,
+          username: row.adminUsername
+        } : null
+      };
+      
+      // Remover campos extras
+      delete report.reportTypeName;
+      delete report.reportTypeDescription;
+      delete report.username;
+      delete report.userEmail;
+      delete report.adminUsername;
+      
+      return report;
+    });
+    
+    console.log(`GET /api/reports - Retornando ${reports.length} denúncias formatadas`);
     
     return res.status(200).json({
       reports,
@@ -228,12 +310,69 @@ router.get('/:id', async (req, res) => {
       return res.status(400).json({ message: 'ID de denúncia inválido' });
     }
     
-    const report = await storage.getReportById(reportId);
-    if (!report) {
+    console.log(`GET /api/reports/${reportId} - Buscando detalhes da denúncia com SQL`);
+    
+    // Executamos SQL puro para evitar problemas com o ORM
+    const sql_query = `
+      SELECT 
+        r.*,
+        rt.name as "reportTypeName",
+        rt.description as "reportTypeDescription",
+        u.username as "username",
+        u.email as "userEmail",
+        a.username as "adminUsername"
+      FROM 
+        reports r
+      LEFT JOIN
+        "reportTypes" rt ON r."reportTypeId" = rt.id
+      LEFT JOIN
+        users u ON r."userId" = u.id
+      LEFT JOIN
+        users a ON r."respondedBy" = a.id
+      WHERE 
+        r.id = ${reportId}
+    `;
+    
+    const result = await db.execute(sql.raw(sql_query));
+    console.log(`GET /api/reports/${reportId} - Resultado da consulta:`, result.rows);
+    
+    if (!result.rows || result.rows.length === 0) {
+      console.log(`GET /api/reports/${reportId} - Denúncia não encontrada`);
       return res.status(404).json({ message: 'Denúncia não encontrada' });
     }
     
-    return res.status(200).json(report);
+    // Formatamos o resultado para retornar com o mesmo formato esperado pelo frontend
+    const reportData = result.rows[0];
+    
+    // Adicionamos os objetos relacionados formatados
+    const formattedReport = {
+      ...reportData,
+      reportType: reportData.reportTypeName ? {
+        id: reportData.reportTypeId,
+        name: reportData.reportTypeName,
+        description: reportData.reportTypeDescription
+      } : null,
+      user: reportData.username ? {
+        id: reportData.userId,
+        username: reportData.username,
+        email: reportData.userEmail
+      } : null,
+      admin: reportData.adminUsername ? {
+        id: reportData.respondedBy,
+        username: reportData.adminUsername
+      } : null
+    };
+    
+    // Removemos campos extras
+    delete formattedReport.reportTypeName;
+    delete formattedReport.reportTypeDescription;
+    delete formattedReport.username;
+    delete formattedReport.userEmail;
+    delete formattedReport.adminUsername;
+    
+    console.log(`GET /api/reports/${reportId} - Denúncia formatada:`, formattedReport);
+    
+    return res.status(200).json(formattedReport);
   } catch (error) {
     console.error('Erro ao buscar denúncia:', error);
     return res.status(500).json({ message: 'Erro ao buscar denúncia' });
@@ -340,6 +479,56 @@ router.put('/:id', async (req, res) => {
     
     console.error('Erro ao atualizar denúncia:', error);
     return res.status(500).json({ message: 'Erro ao atualizar denúncia' });
+  }
+});
+
+/**
+ * Excluir uma denúncia (apenas para administradores)
+ * DELETE /api/reports/:id
+ * Admin - Temporariamente sem autenticação para fins de desenvolvimento
+ */
+router.delete('/:id', async (req, res) => {
+  try {
+    const reportId = parseInt(req.params.id);
+    if (isNaN(reportId)) {
+      return res.status(400).json({ message: 'ID de denúncia inválido' });
+    }
+    
+    console.log(`DELETE /api/reports/${reportId} - Iniciando exclusão de denúncia`);
+    
+    // 1. Verificar se a denúncia existe com SQL puro
+    const checkSql = `SELECT * FROM reports WHERE id = ${reportId};`;
+    const checkResult = await db.execute(sql.raw(checkSql));
+    
+    if (!checkResult.rows || checkResult.rows.length === 0) {
+      console.log(`DELETE /api/reports/${reportId} - Denúncia não encontrada`);
+      return res.status(404).json({ message: 'Denúncia não encontrada' });
+    }
+    
+    console.log(`DELETE /api/reports/${reportId} - Denúncia encontrada, procedendo com a exclusão`);
+    
+    // 2. Excluir a denúncia com SQL puro
+    const deleteSql = `DELETE FROM reports WHERE id = ${reportId} RETURNING id;`;
+    const deleteResult = await db.execute(sql.raw(deleteSql));
+    
+    console.log(`DELETE /api/reports/${reportId} - Resultado da exclusão:`, deleteResult.rows);
+    
+    // 3. Verificar se a exclusão foi bem-sucedida
+    if (!deleteResult.rows || deleteResult.rows.length === 0) {
+      console.log(`DELETE /api/reports/${reportId} - Falha na exclusão`);
+      return res.status(500).json({ message: 'Erro ao excluir denúncia: operação não realizada' });
+    }
+    
+    // 4. Retornar sucesso
+    console.log(`DELETE /api/reports/${reportId} - Exclusão concluída com sucesso`);
+    return res.status(200).json({
+      message: 'Denúncia excluída com sucesso',
+      id: reportId
+    });
+    
+  } catch (error) {
+    console.error(`DELETE /api/reports/:id - Erro:`, error);
+    return res.status(500).json({ message: 'Erro ao excluir denúncia' });
   }
 });
 
