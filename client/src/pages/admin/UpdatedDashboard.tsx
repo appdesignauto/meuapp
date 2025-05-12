@@ -992,17 +992,7 @@ const AdminDashboard = () => {
               <span>Visão Geral</span>
             </button>
 
-            {/* Ferramentas */}
-            <button
-              onClick={() => setActiveTab('ferramentas')}
-              className={`flex items-center w-full px-4 py-2.5 rounded-lg ${
-                activeTab === 'ferramentas' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <Wrench className="w-5 h-5 mr-3" />
-              <span>Ferramentas</span>
-            </button>
-            
+
             {/* Usuários e Comunidade */}
             <Collapsible 
               className="bg-gray-50 rounded-lg py-1 mb-1"
