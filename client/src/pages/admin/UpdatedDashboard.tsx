@@ -1314,6 +1314,16 @@ const AdminDashboard = () => {
                   {sidebarOpen && <span>Configurações do Site</span>}
                 </button>
                 <button
+                  onClick={() => setActiveTab('pwa')}
+                  className={`flex items-center w-full py-2.5 rounded-md ${
+                    activeTab === 'pwa' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
+                  title="Configurações PWA"
+                >
+                  <Smartphone className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+                  {sidebarOpen && <span>Configurações PWA</span>}
+                </button>
+                <button
                   onClick={() => setActiveTab('collections')}
                   className={`flex items-center w-full py-2.5 rounded-md ${
                     activeTab === 'collections' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
@@ -1395,6 +1405,7 @@ const AdminDashboard = () => {
                 {activeTab === 'community' && 'Comunidade'}
                 {activeTab === 'stats' && 'Visão Geral'}
                 {activeTab === 'settings' && 'Configurações'}
+                {activeTab === 'pwa' && 'Configurações PWA'}
                 {activeTab === 'coursesList' && 'Gerenciamento de Cursos'}
                 {activeTab === 'modules' && 'Módulos dos Cursos'}
                 {activeTab === 'lessons' && 'Aulas dos Cursos'}
