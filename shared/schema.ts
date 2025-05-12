@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, primaryKey, date, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, primaryKey, date, jsonb, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -1092,4 +1092,76 @@ export type InsertFerramentaCategoria = z.infer<typeof insertFerramentaCategoria
 export type Ferramenta = typeof ferramentas.$inferSelect;
 export type InsertFerramenta = z.infer<typeof insertFerramentaSchema>;
 
+// Tabela para armazenar as configurações de analytics
+export const analyticsSettings = pgTable('analyticsSettings', {
+  id: serial('id').primaryKey(),
+  
+  // Meta Pixel (Facebook Pixel)
+  metaPixelId: text('metaPixelId'),
+  metaAdsEnabled: boolean('metaAdsEnabled').default(false),
+  metaAdsAccessToken: text('metaAdsAccessToken'),
+  
+  // Google Analytics 4
+  ga4MeasurementId: text('ga4MeasurementId'),
+  ga4ApiSecret: text('ga4ApiSecret'),
+  
+  // Google Tag Manager
+  gtmContainerId: text('gtmContainerId'),
+  
+  // Microsoft Clarity
+  clarityProjectId: text('clarityProjectId'),
+  
+  // Hotjar
+  hotjarSiteId: text('hotjarSiteId'),
+  
+  // LinkedIn Insight Tag
+  linkedinPartnerId: text('linkedinPartnerId'),
+  
+  // TikTok Pixel
+  tiktokPixelId: text('tiktokPixelId'),
+  
+  // Amplitude ou Mixpanel
+  amplitudeApiKey: text('amplitudeApiKey'),
+  mixpanelToken: text('mixpanelToken'),
+  
+  // Status de ativação para cada serviço
+  metaPixelEnabled: boolean('metaPixelEnabled').default(false),
+  ga4Enabled: boolean('ga4Enabled').default(false),
+  gtmEnabled: boolean('gtmEnabled').default(false),
+  clarityEnabled: boolean('clarityEnabled').default(false),
+  hotjarEnabled: boolean('hotjarEnabled').default(false),
+  linkedinEnabled: boolean('linkedinEnabled').default(false),
+  tiktokEnabled: boolean('tiktokEnabled').default(false),
+  amplitudeEnabled: boolean('amplitudeEnabled').default(false),
+  mixpanelEnabled: boolean('mixpanelEnabled').default(false),
+  
+  // Configurações de eventos
+  trackPageviews: boolean('trackPageviews').default(true),
+  trackClicks: boolean('trackClicks').default(false),
+  trackFormSubmissions: boolean('trackFormSubmissions').default(false),
+  trackArtsViewed: boolean('trackArtsViewed').default(true),
+  trackArtsDownloaded: boolean('trackArtsDownloaded').default(true),
+  
+  // Metadados
+  updatedAt: timestamp('updatedAt').defaultNow(),
+  updatedBy: text('updatedBy')
+});
 
+// Schema para inserção
+export const insertAnalyticsSettingsSchema = createInsertSchema(analyticsSettings, {
+  metaPixelId: z.string().trim().optional(),
+  metaAdsAccessToken: z.string().trim().optional(),
+  ga4MeasurementId: z.string().trim().optional(),
+  ga4ApiSecret: z.string().trim().optional(), 
+  gtmContainerId: z.string().trim().optional(),
+  clarityProjectId: z.string().trim().optional(),
+  hotjarSiteId: z.string().trim().optional(),
+  linkedinPartnerId: z.string().trim().optional(),
+  tiktokPixelId: z.string().trim().optional(),
+  amplitudeApiKey: z.string().trim().optional(),
+  mixpanelToken: z.string().trim().optional()
+}).omit({ id: true });
+
+// Tipos derivados
+export type AnalyticsSettings = typeof analyticsSettings.$inferSelect;
+export type InsertAnalyticsSettings = z.infer<typeof insertAnalyticsSettingsSchema>;
