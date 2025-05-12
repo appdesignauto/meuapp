@@ -2122,58 +2122,6 @@ const CommunityPage: React.FC = () => {
                       <CardTitle className="text-lg">Posts Populares</CardTitle>
                       <CardDescription>Conteúdo mais engajado</CardDescription>
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-6 w-6 p-0"
-                      onClick={async () => {
-                        // Adiciona classe de animação ao ícone
-                        const refreshIcon = document.getElementById('refresh-popular-posts-header-icon');
-                        const refreshButton = refreshIcon?.closest('button');
-                        
-                        if (refreshIcon) {
-                          refreshIcon.classList.add('animate-spin');
-                          if (refreshButton) {
-                            refreshButton.classList.add('bg-blue-50', 'dark:bg-blue-900/20', 'text-blue-500');
-                          }
-                          
-                          // Mostrar toast pequeno
-                          toast({
-                            title: "Atualizando posts populares",
-                            variant: "default",
-                          });
-                        }
-                        
-                        // Aguardar a conclusão do refetch
-                        await refetchPopularPosts();
-                        
-                        // Remover animação após conclusão
-                        setTimeout(() => {
-                          if (refreshIcon) {
-                            refreshIcon.classList.remove('animate-spin');
-                          }
-                          
-                          if (refreshButton) {
-                            refreshButton.classList.remove('bg-blue-50', 'dark:bg-blue-900/20', 'text-blue-500');
-                            
-                            // Adicionar e remover classe de pulsar rapidamente
-                            refreshButton.classList.add('scale-110');
-                            setTimeout(() => {
-                              refreshButton?.classList.remove('scale-110');
-                            }, 200);
-                          }
-                          
-                          // Mostrar toast de sucesso
-                          toast({
-                            title: "Posts populares atualizados!",
-                            variant: "success",
-                          });
-                        }, 1000);
-                      }}
-                      title="Atualizar posts populares"
-                    >
-                      <RefreshCw id="refresh-popular-posts-header-icon" className="h-4 w-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-transform" />
-                    </Button>
                   </div>
                 </CardHeader>
                 
@@ -2198,49 +2146,6 @@ const CommunityPage: React.FC = () => {
                       <p className="text-sm text-zinc-600 dark:text-zinc-400">
                         Erro ao carregar posts populares
                       </p>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={async () => {
-                          // Adiciona classe de animação ao ícone
-                          const refreshIcon = document.getElementById('refresh-popular-posts-icon');
-                          const refreshButton = refreshIcon?.closest('button');
-                          
-                          if (refreshIcon) {
-                            refreshIcon.classList.add('animate-spin');
-                            
-                            if (refreshButton) {
-                              refreshButton.classList.add('bg-blue-50', 'dark:bg-blue-900/20', 'text-blue-600', 
-                              'dark:text-blue-400', 'border-blue-200', 'dark:border-blue-800');
-                            }
-                          }
-                          
-                          // Aguardar a conclusão do refetch
-                          await refetchPopularPosts();
-                          
-                          // Remover animação após conclusão
-                          setTimeout(() => {
-                            if (refreshIcon) {
-                              refreshIcon.classList.remove('animate-spin');
-                            }
-                            
-                            if (refreshButton) {
-                              refreshButton.classList.remove('bg-blue-50', 'dark:bg-blue-900/20', 'text-blue-600', 
-                                'dark:text-blue-400', 'border-blue-200', 'dark:border-blue-800');
-                              
-                              // Adicionar e remover classe de pulsar rapidamente
-                              refreshButton.classList.add('scale-105');
-                              setTimeout(() => {
-                                refreshButton?.classList.remove('scale-105');
-                              }, 200);
-                            }
-                          }, 1000);
-                        }}
-                        className="mt-2"
-                      >
-                        <RefreshCw id="refresh-popular-posts-icon" className="h-3.5 w-3.5 mr-1.5" />
-                        Atualizar
-                      </Button>
                     </div>
                   ) : !popularPosts || popularPosts.length === 0 ? (
                     // Nenhum post encontrado
