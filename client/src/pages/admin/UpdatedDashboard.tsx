@@ -1319,7 +1319,7 @@ const AdminDashboard = () => {
             Sair
           </Button>
         </div>
-      </aside>
+      </div>
 
       {/* Main Content - se expande quando a sidebar está recolhida */}
       <div className={`flex-1 overflow-auto transition-all duration-300 ${!sidebarOpen ? 'lg:ml-16' : 'lg:ml-64'} w-full`}>
@@ -3974,7 +3974,7 @@ const AdminDashboard = () => {
             </TabsContent>
           </Tabs>
         </div>
-      </main>
+      </div>
       
       {/* Diálogo de criação de arte multi-formato */}
       <SimpleFormMultiDialog open={isMultiFormOpen} onOpenChange={setIsMultiFormOpen} />
