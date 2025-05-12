@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Copy, Crown, Layers, User } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { createSeoUrl } from "@/lib/utils/slug";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 interface Art {
   id: number;
@@ -56,13 +57,13 @@ function ArtCard({
   const renderCard = () => (
     <div className={`overflow-hidden rounded-xl shadow-sm transition-all duration-300 hover:shadow-lg cursor-pointer bg-white ${isSameGroup ? 'ring-1 ring-blue-400' : ''}`}>
       <div className="relative overflow-hidden w-full">
-        <img
+        <OptimizedImage
           src={art.imageUrl}
           alt={art.title}
           className="object-cover w-full transition-all duration-300 hover:scale-[1.03]"
-          loading="lazy"
-          decoding="async"
-          fetchpriority="high"
+          priority={false}
+          quality={95}
+          showPlaceholder={true}
           title={art.title} // Mostra o título no hover
         />
         
