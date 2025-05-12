@@ -1238,6 +1238,30 @@ export const insertReportSchema = createInsertSchema(reports).omit({
   isResolved: true,
 });
 
+// Tabela para configurações do PWA
+export const appConfig = pgTable("app_config", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().default("DesignAuto"),
+  shortName: text("short_name").notNull().default("DesignAuto"),
+  themeColor: text("theme_color").notNull().default("#4F46E5"),
+  backgroundColor: text("background_color").notNull().default("#FFFFFF"),
+  icon192: text("icon_192").notNull().default("/icons/icon-192.png"),
+  icon512: text("icon_512").notNull().default("/icons/icon-512.png"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  createdBy: integer("created_by").references(() => users.id),
+  updatedBy: integer("updated_by").references(() => users.id),
+});
+
+export const insertAppConfigSchema = createInsertSchema(appConfig).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type AppConfig = typeof appConfig.$inferSelect;
+export type InsertAppConfig = z.infer<typeof insertAppConfigSchema>;
+
 export type ReportType = typeof reportTypes.$inferSelect;
 export type InsertReportType = z.infer<typeof insertReportTypeSchema>;
 export type Report = typeof reports.$inferSelect;
