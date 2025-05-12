@@ -181,13 +181,16 @@ export default function ArtDetail() {
   const { data: art, isLoading, error } = useQuery({
     queryKey: ['/api/arts', id],
     queryFn: async () => {
-      const res = await fetch(`/api/arts/${id}`);
+      const res = await fetch(`/api/arts/${id}`, {
+        priority: 'high' // Prioridade alta para carregar os detalhes da arte rapidamente
+      });
       if (!res.ok) {
         throw new Error('Erro ao carregar detalhes da arte');
       }
       return res.json();
     },
     retry: 1,
+    staleTime: 60 * 1000, // Cache por 1 minuto
   });
   
   // Verificar o ID do grupo usando a rota de admin

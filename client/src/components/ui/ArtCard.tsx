@@ -61,6 +61,8 @@ function ArtCard({
           alt={art.title}
           className="object-cover w-full transition-all duration-300 hover:scale-[1.03]"
           loading="lazy"
+          decoding="async"
+          fetchpriority="high"
           title={art.title} // Mostra o título no hover
         />
         
