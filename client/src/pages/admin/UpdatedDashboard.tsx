@@ -1315,7 +1315,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto">
+      <div className={`flex-1 overflow-auto transition-all duration-300 ${!sidebarOpen ? 'lg:ml-0 lg:w-[calc(100%-5rem)]' : 'lg:w-[calc(100%-16rem)]'}`}>
         <header className="bg-white shadow-sm">
           <div className="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between">
             <div className="flex items-center mb-3 sm:mb-0">
