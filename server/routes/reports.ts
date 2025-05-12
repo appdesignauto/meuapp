@@ -33,7 +33,7 @@ const upload = multer({
 
 // Esquema para validação do corpo da requisição para criação de denúncia
 const createReportSchema = insertReportSchema.extend({
-  typeId: z.number({ required_error: "O tipo de denúncia é obrigatório" }),
+  reportTypeId: z.number({ required_error: "O tipo de denúncia é obrigatório" }),
   title: z.string().min(5, "O título deve ter pelo menos 5 caracteres"),
   description: z.string().min(10, "A descrição deve ter pelo menos 10 caracteres"),
   url: z.string().url({ message: "URL inválida" }).optional().or(z.literal('')),
@@ -276,6 +276,7 @@ router.put('/:id', async (req, res) => {
     // Se a denúncia está sendo marcada como resolvida, registramos a data de resolução
     if (updateData.isResolved === true || updateData.status === 'resolvido') {
       updateData.isResolved = true;
+      // @ts-ignore - O campo resolvedAt existe na tabela, mas pode não estar no tipo atual
       updateData.resolvedAt = new Date();
       console.log('PUT /api/reports/:id - Denúncia marcada como resolvida em:', updateData.resolvedAt);
     }

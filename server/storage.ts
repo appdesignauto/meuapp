@@ -3073,34 +3073,41 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getReports(options: { page: number, limit: number, status?: string | null }): Promise<Report[]> {
-    const { page = 1, limit = 20, status = null } = options;
-    
-    let query = db.select({
-      report: reports,
-      reportType: reportTypes,
-      user: users,
-      admin: users.as('admin')
-    })
-    .from(reports)
-    .leftJoin(reportTypes, eq(reports.typeId, reportTypes.id))
-    .leftJoin(users, eq(reports.userId, users.id))
-    .leftJoin(users.as('admin'), eq(reports.adminId, users.as('admin').id));
-    
-    if (status) {
-      query = query.where(eq(reports.status, status));
+    try {
+      const { page = 1, limit = 20, status = null } = options;
+      
+      let query = db.select({
+        report: reports,
+        reportType: reportTypes,
+        user: users,
+        admin: users.as('admin')
+      })
+      .from(reports)
+      .leftJoin(reportTypes, eq(reports.reportTypeId, reportTypes.id))
+      .leftJoin(users, eq(reports.userId, users.id))
+      .leftJoin(users.as('admin'), eq(reports.respondedBy, users.as('admin').id));
+      
+      if (status) {
+        query = query.where(eq(reports.status, status));
+      }
+      
+      const results = await query
+        .orderBy(desc(reports.createdAt))
+        .limit(limit)
+        .offset((page - 1) * limit);
+      
+      console.log(`getReports - ${results.length} denúncias encontradas`, results[0]?.report?.id ? `(primeira: #${results[0].report.id})` : '');
+      
+      return results.map(result => ({
+        ...result.report,
+        reportType: result.reportType,
+        user: result.user,
+        admin: result.admin
+      })) as unknown as Report[];
+    } catch (error) {
+      console.error('Erro ao buscar denúncias:', error);
+      return [];
     }
-    
-    const results = await query
-      .orderBy(desc(reports.createdAt))
-      .limit(limit)
-      .offset((page - 1) * limit);
-    
-    return results.map(result => ({
-      ...result.report,
-      reportType: result.reportType,
-      user: result.user,
-      admin: result.admin
-    })) as unknown as Report[];
   }
 
   async getReportsCount(status?: string | null): Promise<number> {
