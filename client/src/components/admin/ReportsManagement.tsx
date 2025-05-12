@@ -238,6 +238,10 @@ const ReportsManagement = () => {
     }
   });
 
+  useEffect(() => {
+    console.log('Reports data:', reportsData);
+  }, [reportsData]);
+
   // Filtra denúncias com base nos critérios de pesquisa e filtros
   const filteredReports = reportsData.reports
     ? reportsData.reports.filter((report: Report) => {
@@ -251,7 +255,7 @@ const ReportsManagement = () => {
         // Filtro por tipo
         const matchesType = 
           selectedTypeFilter === 'all' || 
-          report.typeId === parseInt(selectedTypeFilter);
+          report.reportTypeId === parseInt(selectedTypeFilter);
           
         // Filtro por status
         const matchesStatus = 
@@ -362,8 +366,8 @@ const ReportsManagement = () => {
                   {report.title}
                 </TableCell>
                 <TableCell>
-                  {report.type?.name || 
-                   reportTypes.find((type: ReportType) => type.id === report.typeId)?.name || 
+                  {report.reportType?.name || 
+                   reportTypes.find((type: ReportType) => type.id === report.reportTypeId)?.name || 
                    'Desconhecido'}
                 </TableCell>
                 <TableCell>
@@ -433,10 +437,10 @@ const ReportsManagement = () => {
     // Conta denúncias por status
     const reportStats = {
       total: reportsData.reports?.length || 0,
-      pending: reportsData.reports?.filter((r: Report) => r.status === 'pending').length || 0,
-      reviewing: reportsData.reports?.filter((r: Report) => r.status === 'reviewing').length || 0,
-      resolved: reportsData.reports?.filter((r: Report) => r.status === 'resolved').length || 0,
-      rejected: reportsData.reports?.filter((r: Report) => r.status === 'rejected').length || 0,
+      pending: reportsData.reports?.filter((r: Report) => r.status === 'pendente').length || 0,
+      reviewing: reportsData.reports?.filter((r: Report) => r.status === 'em-analise').length || 0,
+      resolved: reportsData.reports?.filter((r: Report) => r.status === 'resolvido').length || 0,
+      rejected: reportsData.reports?.filter((r: Report) => r.status === 'rejeitado').length || 0,
     };
     
     return (
