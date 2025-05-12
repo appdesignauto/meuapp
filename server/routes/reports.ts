@@ -3,13 +3,18 @@
  */
 import express from 'express';
 import { storage } from '../storage';
-import { auth } from '../middleware/auth';
-import { adminAuth } from '../middleware/adminAuth';
+import { isAuthenticated, isAdmin } from '../middlewares/auth';
 import { insertReportSchema } from '../../shared/schema';
-import { uploadMiddleware } from '../middleware/uploadMiddleware';
+import multer from 'multer';
 import { z } from 'zod';
 
 const router = express.Router();
+
+// Configuração do Multer para uploads temporários
+const upload = multer({ 
+  dest: 'temp/', 
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB
+});
 
 // Esquema para validação do corpo da requisição para criação de denúncia
 const createReportSchema = insertReportSchema.extend({
@@ -46,7 +51,7 @@ router.get('/types', async (req, res) => {
  * POST /api/reports
  * Autenticado
  */
-router.post('/', auth, uploadMiddleware.none(), async (req, res) => {
+router.post('/', isAuthenticated, upload.none(), async (req, res) => {
   try {
     // Validar corpo da requisição
     const validatedData = createReportSchema.parse(req.body);
@@ -154,7 +159,7 @@ router.put('/:id', adminAuth, async (req, res) => {
     // Atualizar a denúncia
     const report = await storage.updateReport(reportId, {
       ...validatedData,
-      respondedBy: req.user.id,
+      adminId: req.user?.id, // Usando adminId em vez de respondedBy para corresponder à definição do schema
       respondedAt: new Date()
     });
     
