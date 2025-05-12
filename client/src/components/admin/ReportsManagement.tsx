@@ -160,11 +160,25 @@ const ReportsManagement = () => {
     isError: isReportsError,
     refetch: refetchReports
   } = useQuery({
-    queryKey: ['/api/reports', activeTab],
+    queryKey: ['/api/reports-v2', activeTab],
     queryFn: async () => {
       try {
+        // Primeiro tentamos a versão V2 da API com SQL puro
+        console.log('Tentando API v2 para reports...');
+        const v2Response = await apiRequest('GET', `/api/reports-v2?page=1&limit=50`);
+        console.log('Resposta da API V2 de reports:', v2Response);
+        
+        if (v2Response.ok) {
+          const data = await v2Response.json();
+          console.log('Dados recebidos da API V2:', data);
+          return data;
+        } else {
+          console.warn('API V2 falhou, voltando para API V1');
+        }
+        
+        // Se a V2 falhar, tentamos a versão original
         const response = await apiRequest('GET', `/api/reports?page=1&limit=50`);
-        console.log('Resposta da API de reports:', response);
+        console.log('Resposta da API V1 de reports:', response);
         
         if (!response.ok) {
           const errorData = await response.json();
@@ -172,7 +186,7 @@ const ReportsManagement = () => {
         }
         
         const data = await response.json();
-        console.log('Dados recebidos dos reports:', data);
+        console.log('Dados recebidos dos reports (API V1):', data);
         return data;
       } catch (error) {
         console.error('Erro ao buscar reports:', error);
@@ -196,8 +210,22 @@ const ReportsManagement = () => {
       console.log(`Enviando atualização para denúncia #${id}:`, data);
       
       try {
+        // Primeiro tentamos a V2 da API
+        console.log(`Tentando atualizar denúncia #${id} com API V2:`, data);
+        const v2Response = await apiRequest('PUT', `/api/reports-v2/${id}`, data);
+        console.log(`Resposta da API V2 ao atualizar denúncia #${id}:`, v2Response);
+        
+        if (v2Response.ok) {
+          const result = await v2Response.json();
+          console.log(`Atualização V2 concluída para denúncia #${id}:`, result);
+          return result;
+        } else {
+          console.warn(`API V2 falhou para atualização da denúncia #${id}, tentando API V1`);
+        }
+        
+        // Se a V2 falhar, tentamos a versão original
         const response = await apiRequest('PUT', `/api/reports/${id}`, data);
-        console.log(`Resposta da API ao atualizar denúncia #${id}:`, response);
+        console.log(`Resposta da API V1 ao atualizar denúncia #${id}:`, response);
         
         if (!response.ok) {
           const errorData = await response.json();
@@ -206,7 +234,7 @@ const ReportsManagement = () => {
         }
         
         const result = await response.json();
-        console.log(`Atualização concluída para denúncia #${id}:`, result);
+        console.log(`Atualização V1 concluída para denúncia #${id}:`, result);
         return result;
       } catch (error) {
         console.error(`Erro na atualização da denúncia #${id}:`, error);
@@ -214,7 +242,10 @@ const ReportsManagement = () => {
       }
     },
     onSuccess: (data) => {
+      // Invalidar o cache das duas versões da API para garantir consistência
+      queryClient.invalidateQueries({ queryKey: ['/api/reports-v2'] });
       queryClient.invalidateQueries({ queryKey: ['/api/reports'] });
+      
       setIsDetailsOpen(false);
       setFeedbackInput('');
       
@@ -238,15 +269,39 @@ const ReportsManagement = () => {
   // Mutation para excluir uma denúncia
   const deleteReportMutation = useMutation({
     mutationFn: async (id: number) => {
+      console.log(`Tentando excluir denúncia #${id} com API V2...`);
+      
+      // Primeiro tentamos a V2 da API
+      const v2Response = await apiRequest('DELETE', `/api/reports-v2/${id}`);
+      console.log(`Resposta da API V2 ao excluir denúncia #${id}:`, v2Response);
+      
+      if (v2Response.ok) {
+        const result = await v2Response.json();
+        console.log(`Exclusão V2 concluída para denúncia #${id}:`, result);
+        return result;
+      } else {
+        console.warn(`API V2 falhou para exclusão da denúncia #${id}, tentando API V1`);
+      }
+      
+      // Se a V2 falhar, tentamos a versão original
       const response = await apiRequest('DELETE', `/api/reports/${id}`);
+      console.log(`Resposta da API V1 ao excluir denúncia #${id}:`, response);
+      
       if (!response.ok) {
         const errorData = await response.json();
+        console.error(`Erro ao excluir denúncia #${id}:`, errorData);
         throw new Error(errorData.message || 'Erro ao excluir denúncia');
       }
-      return response.json();
+      
+      const result = await response.json();
+      console.log(`Exclusão V1 concluída para denúncia #${id}:`, result);
+      return result;
     },
     onSuccess: () => {
+      // Invalidar o cache das duas versões da API para garantir consistência
+      queryClient.invalidateQueries({ queryKey: ['/api/reports-v2'] });
       queryClient.invalidateQueries({ queryKey: ['/api/reports'] });
+      
       setIsDetailsOpen(false);
       
       toast({
