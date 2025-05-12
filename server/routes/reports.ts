@@ -275,8 +275,12 @@ router.put('/:id', async (req, res) => {
     // Se a denúncia está sendo marcada como resolvida, registramos a data de resolução
     if (updateData.isResolved === true || updateData.status === 'resolvido') {
       updateData.isResolved = true;
-      updateData.resolvedAt = new Date();
-      console.log('PUT /api/reports/:id - Denúncia marcada como resolvida em:', updateData.resolvedAt);
+      // Importante: no banco de dados o campo é "resolvedat", mas no schema está como "resolvedAt"
+      // A versão em camelCase é usada no código, enquanto a versão em lowercase é usada no banco
+      if (!('resolvedAt' in updateData)) {
+        updateData.resolvedAt = new Date();
+        console.log('PUT /api/reports/:id - Denúncia marcada como resolvida em:', updateData.resolvedAt);
+      }
     }
     
     console.log('PUT /api/reports/:id - Dados para atualização:', updateData);

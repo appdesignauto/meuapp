@@ -3044,50 +3044,17 @@ export class DatabaseStorage implements IStorage {
 
   async getReportById(id: number): Promise<Report | undefined> {
     try {
-      console.log(`[DEBUG] getReportById(${id}) - Iniciando busca...`);
+      console.log(`[DEBUG] getReportById(${id}) - Iniciando busca simplificada...`);
       
-      // Primeiro, verificamos se a denúncia existe em uma consulta simples
-      const [simpleReport] = await db.select()
+      // Consulta simples apenas pela ID, sem joins complexos
+      const [report] = await db.select()
         .from(reports)
         .where(eq(reports.id, id));
       
-      console.log(`[DEBUG] getReportById(${id}) - Verificação simples:`, simpleReport ? 'Denúncia encontrada' : 'Denúncia NÃO encontrada');
+      console.log(`[DEBUG] getReportById(${id}) - Resultado:`, 
+        report ? JSON.stringify(report) : 'Denúncia NÃO encontrada');
       
-      if (!simpleReport) {
-        console.log(`[DEBUG] getReportById(${id}) - Denúncia não existe na base de dados`);
-        return undefined;
-      }
-      
-      // Se a denúncia existe, fazemos a consulta completa com os joins
-      const [report] = await db.select({
-        report: reports,
-        reportType: reportTypes,
-        user: users,
-        admin: users.as('admin')
-      })
-      .from(reports)
-      .leftJoin(reportTypes, eq(reports.reportTypeId, reportTypes.id))
-      .leftJoin(users, eq(reports.userId, users.id))
-      .leftJoin(users.as('admin'), eq(reports.respondedBy, users.as('admin').id))
-      .where(eq(reports.id, id));
-  
-      console.log(`[DEBUG] getReportById(${id}) - Resultado da consulta completa:`, 
-        report ? 'Dados encontrados com joins' : 'Nenhum dado retornado após joins');
-  
-      if (!report) {
-        console.log(`[DEBUG] getReportById(${id}) - Usando apenas dados básicos da denúncia sem relações`);
-        // Se a consulta completa não retornar nada, mas a denúncia existe,
-        // retornamos apenas os dados da denúncia sem relações
-        return simpleReport as Report;
-      }
-  
-      console.log(`[DEBUG] getReportById(${id}) - Montando objeto completo com relações`);
-      return {
-        ...report.report,
-        reportType: report.reportType,
-        user: report.user,
-        admin: report.admin
-      } as unknown as Report;
+      return report;
     } catch (error) {
       console.error(`[ERROR] getReportById(${id}) - Erro ao buscar denúncia:`, error);
       return undefined;
@@ -3181,13 +3148,27 @@ export class DatabaseStorage implements IStorage {
         return undefined;
       }
       
+      // Preparar os dados para atualização
+      // Clonamos o objeto para não modificar o original
+      const updateData = { ...data, updatedAt: new Date() };
+      
+      // Tratar o caso especial do campo resolvedAt
+      if ('resolvedAt' in updateData) {
+        console.log(`[DEBUG] updateReport(${id}) - Campo resolvedAt detectado, tratando nome do campo para banco de dados`);
+        // O nome da coluna no banco é "resolvedat" (tudo minúsculo)
+        const resolvedAtValue = updateData.resolvedAt;
+        // @ts-ignore - Estamos manipulando o campo diretamente para o nome usado no banco
+        updateData.resolvedat = resolvedAtValue;
+        // Remover o campo camelCase para não confundir o Drizzle
+        delete updateData.resolvedAt;
+      }
+      
+      console.log(`[DEBUG] updateReport(${id}) - Dados preparados para o banco:`, updateData);
+      
       // Realizar a atualização
       const [result] = await db
         .update(reports)
-        .set({
-          ...data,
-          updatedAt: new Date()
-        })
+        .set(updateData)
         .where(eq(reports.id, id))
         .returning();
       
