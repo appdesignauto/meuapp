@@ -13,7 +13,9 @@ import {
   Wrench,
   Upload,
   Menu,
-  X
+  X,
+  BarChart,
+  LineChart
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -92,6 +94,11 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
       title: 'Páginas',
       href: '/admin/pages',
       icon: <FileText className="h-5 w-5" />,
+    },
+    {
+      title: 'Analytics',
+      href: '/admin/analytics',
+      icon: <BarChart className="h-5 w-5" />,
     },
     {
       title: 'Configurações',
