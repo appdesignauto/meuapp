@@ -532,17 +532,50 @@ const ReportsManagement = () => {
     );
   };
 
+  // Consulta para obter todas as denúncias (para estatísticas)
+  const {
+    data: allReportsData = { reports: [] },
+    isLoading: isLoadingAllReports,
+  } = useQuery({
+    queryKey: ['/api/reports-v2/all'],
+    queryFn: async () => {
+      try {
+        // Fazemos uma consulta sem filtros para obter todas as denúncias para estatísticas
+        const response = await apiRequest('GET', `/api/reports-v2?limit=1000`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          return data;
+        }
+        
+        // Fallback para a API V1 se necessário
+        const fallbackResponse = await apiRequest('GET', `/api/reports?limit=1000`);
+        if (fallbackResponse.ok) {
+          const data = await fallbackResponse.json();
+          return data;
+        }
+        
+        throw new Error('Não foi possível carregar todas as denúncias');
+      } catch (error) {
+        console.error('Erro ao carregar todas as denúncias:', error);
+        return { reports: [] };
+      }
+    },
+    refetchOnWindowFocus: false,
+    refetchInterval: 60000, // Atualiza a cada minuto
+  });
+
   // Renderiza as estatísticas das denúncias
   const renderStats = () => {
-    if (isLoadingReports) return null;
+    if (isLoadingAllReports) return null;
     
-    // Conta denúncias por status
+    // Conta denúncias por status usando todas as denúncias (sem filtros)
     const reportStats = {
-      total: reportsData.reports?.length || 0,
-      pending: reportsData.reports?.filter((r: Report) => r.status === 'pendente').length || 0,
-      reviewing: reportsData.reports?.filter((r: Report) => r.status === 'em-analise').length || 0,
-      resolved: reportsData.reports?.filter((r: Report) => r.status === 'resolvido').length || 0,
-      rejected: reportsData.reports?.filter((r: Report) => r.status === 'rejeitado').length || 0,
+      total: allReportsData.reports?.length || 0,
+      pending: allReportsData.reports?.filter((r: Report) => r.status === 'pendente').length || 0,
+      reviewing: allReportsData.reports?.filter((r: Report) => r.status === 'em-analise').length || 0,
+      resolved: allReportsData.reports?.filter((r: Report) => r.status === 'resolvido').length || 0,
+      rejected: allReportsData.reports?.filter((r: Report) => r.status === 'rejeitado').length || 0,
     };
     
     return (
@@ -678,25 +711,37 @@ const ReportsManagement = () => {
             value="pendente" 
             className={`rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-primary data-[state=active]:bg-transparent`}
           >
-            Pendentes
+            <div className="flex gap-2 items-center">
+              <span>Pendentes</span>
+              <Badge variant="outline">{allReportsData.reports?.filter(r => r.status === 'pendente').length || 0}</Badge>
+            </div>
           </TabsTrigger>
           <TabsTrigger 
             value="em-analise" 
             className={`rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-primary data-[state=active]:bg-transparent`}
           >
-            Em análise
+            <div className="flex gap-2 items-center">
+              <span>Em análise</span>
+              <Badge variant="outline">{allReportsData.reports?.filter(r => r.status === 'em-analise').length || 0}</Badge>
+            </div>
           </TabsTrigger>
           <TabsTrigger 
             value="resolvido" 
             className={`rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-primary data-[state=active]:bg-transparent`}
           >
-            Resolvidas
+            <div className="flex gap-2 items-center">
+              <span>Resolvidas</span>
+              <Badge variant="outline">{allReportsData.reports?.filter(r => r.status === 'resolvido').length || 0}</Badge>
+            </div>
           </TabsTrigger>
           <TabsTrigger 
             value="rejeitado" 
             className={`rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-primary data-[state=active]:bg-transparent`}
           >
-            Rejeitadas
+            <div className="flex gap-2 items-center">
+              <span>Rejeitadas</span>
+              <Badge variant="outline">{allReportsData.reports?.filter(r => r.status === 'rejeitado').length || 0}</Badge>
+            </div>
           </TabsTrigger>
         </TabsList>
 
