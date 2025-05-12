@@ -136,9 +136,9 @@ router.get('/types-raw', async (req, res) => {
 router.post('/', upload.single('evidence'), async (req, res) => {
   try {
     console.log('Recebendo denúncia:', req.body);
-    // Converter typeId para número (vem como string do formulário)
-    if (req.body.typeId) {
-      req.body.typeId = parseInt(req.body.typeId);
+    // Converter reportTypeId para número (vem como string do formulário)
+    if (req.body.reportTypeId) {
+      req.body.reportTypeId = parseInt(req.body.reportTypeId);
     }
     
     // Validar corpo da requisição
@@ -161,7 +161,6 @@ router.post('/', upload.single('evidence'), async (req, res) => {
       ...validatedData,
       userId,
       evidence,
-      reportTypeId: parseInt(req.body.typeId) // Garantir que temos reportTypeId definido
     };
     
     console.log('Dados finais para criação da denúncia:', reportData);
