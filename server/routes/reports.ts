@@ -33,8 +33,10 @@ const upload = multer({
 
 // Esquema para validação do corpo da requisição para criação de denúncia
 const createReportSchema = insertReportSchema.extend({
+  typeId: z.number({ required_error: "O tipo de denúncia é obrigatório" }),
   title: z.string().min(5, "O título deve ter pelo menos 5 caracteres"),
   description: z.string().min(10, "A descrição deve ter pelo menos 10 caracteres"),
+  url: z.string().url({ message: "URL inválida" }).optional().or(z.literal('')),
   evidence: z.string().optional()
 });
 
@@ -129,15 +131,21 @@ router.get('/types-raw', async (req, res) => {
 /**
  * Criar uma nova denúncia
  * POST /api/reports
- * Autenticado
+ * Aberto para todos (incluindo anônimos)
  */
-router.post('/', isAuthenticated, upload.single('evidence'), async (req, res) => {
+router.post('/', upload.single('evidence'), async (req, res) => {
   try {
+    console.log('Recebendo denúncia:', req.body);
+    // Converter typeId para número (vem como string do formulário)
+    if (req.body.typeId) {
+      req.body.typeId = parseInt(req.body.typeId);
+    }
+    
     // Validar corpo da requisição
     const validatedData = createReportSchema.parse(req.body);
     
     // Adicionar o ID do usuário logado (se disponível)
-    const userId = req.user?.id || null;
+    const userId = req.isAuthenticated() ? req.user?.id : null;
     
     // Adicionar o caminho do arquivo de evidência, se houver
     let evidence = null;
@@ -146,11 +154,14 @@ router.post('/', isAuthenticated, upload.single('evidence'), async (req, res) =>
       evidence = req.file.path;
     }
     
+    console.log('Dados validados:', validatedData);
+    
     // Criar a denúncia
     const report = await storage.createReport({
       ...validatedData,
       userId,
-      evidence
+      evidence,
+      status: 'pending' // Garantir que a denúncia começa como pendente
     });
     
     return res.status(201).json({
