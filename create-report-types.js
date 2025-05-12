@@ -1,10 +1,9 @@
-const { config } = require('dotenv');
-config(); // Carregar variáveis de ambiente
+import 'dotenv/config'; // Carregar variáveis de ambiente
 
 // Importar o necessário para conectar ao banco de dados
-const { neon, neonConfig } = require('@neondatabase/serverless');
-const { drizzle } = require('drizzle-orm/neon-serverless');
-const ws = require('ws');
+import { neon, neonConfig } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-serverless';
+import ws from 'ws';
 neonConfig.webSocketConstructor = ws;
 
 // Função principal para conectar ao banco e criar os tipos de denúncia
@@ -100,3 +99,6 @@ main().then(() => process.exit(0)).catch(err => {
   console.error('Erro fatal:', err);
   process.exit(1);
 });
+
+// Necessário para módulos ES
+export {};

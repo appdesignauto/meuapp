@@ -50,41 +50,79 @@ const adminResponseSchema = z.object({
  * GET /api/reports/types
  * Público
  */
+// Endpoint principal para obter tipos de denúncias
 router.get('/types', async (req, res) => {
   try {
-    // Verifica se o cliente está solicitando JSON explicitamente
-    const acceptHeader = req.get('Accept');
-    const requestsJson = acceptHeader && acceptHeader.includes('application/json');
+    const reportTypes = await storage.getReportTypes();
     
-    // Verifica se há um parâmetro de formato na URL
-    const formatParam = req.query.format === 'json';
-    
-    // Se o cliente solicitou JSON via Accept header ou formato de consulta
-    if (requestsJson || formatParam) {
-      res.set('Content-Type', 'application/json');
-      const reportTypes = await storage.getReportTypes();
-      return res.status(200).json(reportTypes);
-    } else {
-      // Caso contrário, definir um array mínimo de tipos
-      const reportTypes = await storage.getReportTypes();
-      // Se a lógica de storage não estiver implementada, definir tipos padrão
-      if (!reportTypes || reportTypes.length === 0) {
-        const defaultTypes = [
-          { id: 1, name: 'Plágio', description: 'Conteúdo copiado sem autorização ou crédito' },
-          { id: 2, name: 'Conteúdo impróprio', description: 'Material ofensivo ou inadequado' },
-          { id: 3, name: 'Erro técnico', description: 'Problemas de funcionamento da plataforma' }
-        ];
-        res.set('Content-Type', 'application/json');
-        return res.status(200).json(defaultTypes);
-      }
-      
-      res.set('Content-Type', 'application/json');
-      return res.status(200).json(reportTypes);
+    // Adiciona fallback para caso não existam tipos no banco
+    if (!reportTypes || reportTypes.length === 0) {
+      const defaultTypes = [
+        { id: 1, name: 'Plágio', description: 'Conteúdo copiado sem autorização ou crédito' },
+        { id: 2, name: 'Conteúdo impróprio', description: 'Material ofensivo ou inadequado' },
+        { id: 3, name: 'Erro técnico', description: 'Problemas de funcionamento da plataforma' }
+      ];
+      return res.status(200).json(defaultTypes);
     }
+    
+    return res.status(200).json(reportTypes);
   } catch (error) {
     console.error('Erro ao buscar tipos de denúncias:', error);
-    res.set('Content-Type', 'application/json');
     return res.status(500).json({ message: 'Erro ao buscar tipos de denúncias' });
+  }
+});
+
+// Endpoint adicional específico para JSON (garantia de receber JSON)
+router.get('/types/json', async (req, res) => {
+  try {
+    // Força o Content-Type para application/json
+    res.setHeader('Content-Type', 'application/json');
+    
+    const reportTypes = await storage.getReportTypes();
+    
+    // Adiciona fallback para caso não existam tipos no banco
+    if (!reportTypes || reportTypes.length === 0) {
+      const defaultTypes = [
+        { id: 1, name: 'Plágio', description: 'Conteúdo copiado sem autorização ou crédito' },
+        { id: 2, name: 'Conteúdo impróprio', description: 'Material ofensivo ou inadequado' },
+        { id: 3, name: 'Erro técnico', description: 'Problemas de funcionamento da plataforma' }
+      ];
+      return res.status(200).json(defaultTypes);
+    }
+    
+    return res.status(200).json(reportTypes);
+  } catch (error) {
+    console.error('Erro ao buscar tipos de denúncias:', error);
+    return res.status(500).json({ message: 'Erro ao buscar tipos de denúncias' });
+  }
+});
+
+// Endpoint adicional para obter os dados diretamente sem passar pelo Express Router
+router.get('/types-raw', async (req, res) => {
+  try {
+    // Configurar cabeçalhos para forçar entrega como JSON puro
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    
+    // Obter dados
+    const reportTypes = await storage.getReportTypes();
+    
+    // Adiciona fallback para caso não existam tipos no banco
+    let data = reportTypes;
+    if (!reportTypes || reportTypes.length === 0) {
+      data = [
+        { id: 1, name: 'Plágio', description: 'Conteúdo copiado sem autorização ou crédito' },
+        { id: 2, name: 'Conteúdo impróprio', description: 'Material ofensivo ou inadequado' },
+        { id: 3, name: 'Erro técnico', description: 'Problemas de funcionamento da plataforma' }
+      ];
+    }
+    
+    // Enviar diretamente como texto sem passar pelo express.json()
+    const jsonString = JSON.stringify(data);
+    return res.status(200).send(jsonString);
+  } catch (error) {
+    console.error('Erro ao buscar tipos de denúncias:', error);
+    return res.status(500).send(JSON.stringify({ message: 'Erro ao buscar tipos de denúncias' }));
   }
 });
 
