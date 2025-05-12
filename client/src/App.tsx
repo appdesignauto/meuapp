@@ -1,5 +1,5 @@
 import { Switch, Route, Router, useLocation } from "wouter";
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
@@ -12,6 +12,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { PopupContainer } from "@/components/Popup";
 import { HelmetProvider } from "react-helmet-async";
 import DynamicFavicon from "@/components/global/DynamicFavicon";
+import { measureWebVitals } from "./lib/measureWebVitals";
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -279,6 +280,12 @@ function AppRoutes() {
 }
 
 function App() {
+  // Inicializar métricas de Web Vitals quando o componente é montado
+  useEffect(() => {
+    // Iniciar medição de métricas de performance
+    measureWebVitals();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <HelmetProvider>

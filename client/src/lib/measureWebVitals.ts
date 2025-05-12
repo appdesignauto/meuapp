@@ -1,4 +1,4 @@
-import { getCLS, getFCP, getFID, getLCP, getTTFB } from 'web-vitals';
+import { onCLS, onFCP, onINP, onLCP, onTTFB, Metric } from 'web-vitals';
 import { reportWebVitals } from './webVitals';
 
 /**
@@ -8,27 +8,27 @@ import { reportWebVitals } from './webVitals';
  */
 export function measureWebVitals() {
   // Iniciar medição do Cumulative Layout Shift
-  getCLS(metric => {
+  onCLS((metric: Metric) => {
     reportWebVitals(metric);
   });
   
   // Iniciar medição do First Contentful Paint
-  getFCP(metric => {
+  onFCP((metric: Metric) => {
     reportWebVitals(metric);
   });
   
-  // Iniciar medição do First Input Delay
-  getFID(metric => {
+  // Iniciar medição do Interaction to Next Paint (substitui o FID)
+  onINP((metric: Metric) => {
     reportWebVitals(metric);
   });
   
   // Iniciar medição do Largest Contentful Paint
-  getLCP(metric => {
+  onLCP((metric: Metric) => {
     reportWebVitals(metric);
   });
   
   // Iniciar medição do Time to First Byte
-  getTTFB(metric => {
+  onTTFB((metric: Metric) => {
     reportWebVitals(metric);
   });
   

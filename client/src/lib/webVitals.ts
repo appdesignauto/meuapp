@@ -1,8 +1,8 @@
-import { CLSMetric, FCPMetric, FIDMetric, LCPMetric, TTFBMetric } from 'web-vitals';
+import { Metric } from 'web-vitals';
 
 // Tipos de métricas de Web Vitals
 type MetricName = 'CLS' | 'FCP' | 'FID' | 'LCP' | 'TTFB';
-type WebVitalsMetric = CLSMetric | FCPMetric | FIDMetric | LCPMetric | TTFBMetric;
+type WebVitalsMetric = Metric;
 
 // Tipos de funções de reportagem
 interface ReportMetricOptions {
