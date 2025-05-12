@@ -1196,12 +1196,13 @@ const AdminDashboard = () => {
             {/* Analytics - Agora como um item principal no menu */}
             <button
               onClick={() => setActiveTab('analytics')}
-              className={`flex items-center w-full px-4 py-2.5 rounded-lg ${
+              className={`flex items-center w-full py-2.5 rounded-lg ${
                 activeTab === 'analytics' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-              }`}
+              } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
+              title="Analytics"
             >
-              <BarChart3 className="w-5 h-5 mr-3" />
-              <span>Analytics</span>
+              <BarChart3 className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+              {sidebarOpen && <span>Analytics</span>}
             </button>
             
             {/* Marketing - Apenas Popups agora */}
@@ -1209,40 +1210,50 @@ const AdminDashboard = () => {
               className="bg-gray-50 rounded-lg py-1 mb-1"
               defaultOpen={['popups'].includes(activeTab)}
             >
-              <CollapsibleTrigger className="flex items-center w-full px-4 py-2 text-gray-700 font-medium">
-                <BellRing className="w-5 h-5 mr-3" />
-                <span>Marketing</span>
-                <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+              <CollapsibleTrigger className={`flex items-center w-full py-2.5 text-gray-700 font-medium ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}>
+                <BellRing className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+                {sidebarOpen && (
+                  <>
+                    <span>Marketing</span>
+                    <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+                  </>
+                )}
               </CollapsibleTrigger>
-              <CollapsibleContent className="pl-4 space-y-1 pt-1 pb-2">
+              <CollapsibleContent className={`${sidebarOpen ? 'pl-4' : 'pl-0'} space-y-1 pt-1 pb-2`}>
                 <button
                   onClick={() => setActiveTab('popups')}
-                  className={`flex items-center w-full px-4 py-2 rounded-md ${
+                  className={`flex items-center w-full py-2.5 rounded-md ${
                     activeTab === 'popups' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
+                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
+                  title="Gerenciar Popups"
                 >
-                  <BellRing className="w-4 h-4 mr-3" />
-                  <span>Gerenciar Popups</span>
+                  <BellRing className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+                  {sidebarOpen && <span>Gerenciar Popups</span>}
                 </button>
               </CollapsibleContent>
             </Collapsible>
             
             {/* Reports */}
             <Collapsible className="w-full">
-              <CollapsibleTrigger className="flex items-center w-full px-4 py-2 text-gray-700 font-medium">
-                <FlagIcon className="w-5 h-5 mr-3" />
-                <span>Reports</span>
-                <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+              <CollapsibleTrigger className={`flex items-center w-full py-2.5 text-gray-700 font-medium ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}>
+                <FlagIcon className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+                {sidebarOpen && (
+                  <>
+                    <span>Reports</span>
+                    <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+                  </>
+                )}
               </CollapsibleTrigger>
-              <CollapsibleContent className="pl-4 space-y-1 pt-1 pb-2">
+              <CollapsibleContent className={`${sidebarOpen ? 'pl-4' : 'pl-0'} space-y-1 pt-1 pb-2`}>
                 <button
                   onClick={() => setActiveTab('reports')}
-                  className={`flex items-center w-full px-4 py-2 rounded-md ${
+                  className={`flex items-center w-full py-2.5 rounded-md ${
                     activeTab === 'reports' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
+                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
+                  title="Gerenciar Reports"
                 >
-                  <FlagIcon className="w-4 h-4 mr-3" />
-                  <span>Gerenciar Reports</span>
+                  <FlagIcon className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+                  {sidebarOpen && <span>Gerenciar Reports</span>}
                 </button>
               </CollapsibleContent>
             </Collapsible>
@@ -1252,20 +1263,25 @@ const AdminDashboard = () => {
               className="bg-gray-50 rounded-lg py-1 mb-1"
               defaultOpen={['ferramentas'].includes(activeTab)}
             >
-              <CollapsibleTrigger className="flex items-center w-full px-4 py-2 text-gray-700 font-medium">
-                <Wrench className="w-5 h-5 mr-3" />
-                <span>Ferramentas</span>
-                <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+              <CollapsibleTrigger className={`flex items-center w-full py-2.5 text-gray-700 font-medium ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}>
+                <Wrench className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+                {sidebarOpen && (
+                  <>
+                    <span>Ferramentas</span>
+                    <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+                  </>
+                )}
               </CollapsibleTrigger>
-              <CollapsibleContent className="pl-4 space-y-1 pt-1 pb-2">
+              <CollapsibleContent className={`${sidebarOpen ? 'pl-4' : 'pl-0'} space-y-1 pt-1 pb-2`}>
                 <button
                   onClick={() => setActiveTab('ferramentas')}
-                  className={`flex items-center w-full px-4 py-2 rounded-md ${
+                  className={`flex items-center w-full py-2.5 rounded-md ${
                     activeTab === 'ferramentas' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
+                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
+                  title="Gerenciar Ferramentas"
                 >
-                  <Wrench className="w-4 h-4 mr-3" />
-                  <span>Gerenciar Ferramentas</span>
+                  <Wrench className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+                  {sidebarOpen && <span>Gerenciar Ferramentas</span>}
                 </button>
               </CollapsibleContent>
             </Collapsible>
@@ -1275,37 +1291,46 @@ const AdminDashboard = () => {
               className="bg-gray-50 rounded-lg py-1 mb-1"
               defaultOpen={['settings', 'collections'].includes(activeTab)}
             >
-              <CollapsibleTrigger className="flex items-center w-full px-4 py-2 text-gray-700 font-medium">
-                <Settings className="w-5 h-5 mr-3" />
-                <span>Configurações</span>
-                <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+              <CollapsibleTrigger className={`flex items-center w-full py-2.5 text-gray-700 font-medium ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}>
+                <Settings className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+                {sidebarOpen && (
+                  <>
+                    <span>Configurações</span>
+                    <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+                  </>
+                )}
               </CollapsibleTrigger>
-              <CollapsibleContent className="pl-4 space-y-1 pt-1 pb-2">
+              <CollapsibleContent className={`${sidebarOpen ? 'pl-4' : 'pl-0'} space-y-1 pt-1 pb-2`}>
                 <button
                   onClick={() => setActiveTab('settings')}
-                  className={`flex items-center w-full px-4 py-2 rounded-md ${
+                  className={`flex items-center w-full py-2.5 rounded-md ${
                     activeTab === 'settings' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
+                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
+                  title="Configurações do Site"
                 >
-                  <Settings className="w-4 h-4 mr-3" />
-                  <span>Configurações do Site</span>
+                  <Settings className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+                  {sidebarOpen && <span>Configurações do Site</span>}
                 </button>
                 <button
                   onClick={() => setActiveTab('collections')}
-                  className={`flex items-center w-full px-4 py-2 rounded-md ${
+                  className={`flex items-center w-full py-2.5 rounded-md ${
                     activeTab === 'collections' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
+                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
+                  title="Coleções"
                 >
-                  <ListChecks className="w-4 h-4 mr-3" />
-                  <span>Coleções</span>
+                  <ListChecks className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+                  {sidebarOpen && <span>Coleções</span>}
                 </button>
                 {user?.role === 'admin' && (
                   <>
-                    <Link href="/admin/logo-upload">
-                      <Button variant="ghost" className="w-full justify-start text-gray-600 py-2 h-auto">
-                        <Image className="w-4 h-4 mr-3" />
-                        <span>Gerenciar Logo</span>
-                      </Button>
+                    <Link 
+                      href="/admin/logo-upload"
+                      title="Gerenciar Logo"
+                      className={`flex items-center w-full py-2.5 rounded-md text-gray-600 hover:bg-gray-100 
+                      ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
+                    >
+                      <Image className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+                      {sidebarOpen && <span>Gerenciar Logo</span>}
                     </Link>
                     <Link href="/admin/storage-test">
                       <Button variant="ghost" className="w-full justify-start text-gray-600 py-2 h-auto">
