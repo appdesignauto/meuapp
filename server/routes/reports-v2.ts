@@ -42,7 +42,6 @@ const createReportSchema = z.object({
   description: z.string().min(10, "A descrição deve ter pelo menos 10 caracteres"),
   artId: z.number().optional(),
   userId: z.number().optional(),
-  url: z.string().url({ message: "URL inválida" }).optional().or(z.literal('')),
   evidence: z.string().optional()
 });
 
@@ -88,7 +87,7 @@ router.post('/', async (req, res) => {
     // Inserção no banco de dados com SQL puro
     const insertQuery = `
       INSERT INTO reports (
-        "reportTypeId", title, description, "artId", "userId", url, evidence, 
+        "reportTypeId", title, description, "artId", "userId", evidence, 
         status, "isResolved", "createdAt", "updatedAt"
       ) VALUES (
         ${validatedData.reportTypeId},
@@ -96,7 +95,6 @@ router.post('/', async (req, res) => {
         '${validatedData.description.replace(/'/g, "''")}',
         ${validatedData.artId || 'NULL'},
         ${validatedData.userId || 'NULL'},
-        ${validatedData.url ? `'${validatedData.url.replace(/'/g, "''")}'` : 'NULL'},
         ${validatedData.evidence ? `'${validatedData.evidence.replace(/'/g, "''")}'` : 'NULL'},
         'pendente',
         false,
@@ -539,8 +537,7 @@ router.post('/upload', upload.single('evidence'), async (req, res) => {
     const validatedData = z.object({
       reportTypeId: z.string().transform(val => parseInt(val)),
       title: z.string().min(5),
-      description: z.string().min(10),
-      url: z.string().optional().nullable()
+      description: z.string().min(10)
     }).parse(req.body);
 
     // Verificação do arquivo
@@ -571,13 +568,12 @@ router.post('/upload', upload.single('evidence'), async (req, res) => {
     // Inserção no banco de dados com SQL puro
     const insertQuery = `
       INSERT INTO reports (
-        "reportTypeId", title, description, url, evidence, 
+        "reportTypeId", title, description, evidence, 
         status, "isResolved", "createdAt", "updatedAt"
       ) VALUES (
         ${validatedData.reportTypeId},
         '${validatedData.title.replace(/'/g, "''")}',
         '${validatedData.description.replace(/'/g, "''")}',
-        ${validatedData.url ? `'${validatedData.url.replace(/'/g, "''")}'` : 'NULL'},
         '${evidenceUrl}',
         'pendente',
         false,
