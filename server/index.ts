@@ -73,17 +73,17 @@ app.use((req, res, next) => {
   try {
     // Verificar configuração de ambiente (migrado para Supabase Storage)
     validateR2Environment();
-
+    
     // Inicializar o banco de dados com dados
     await initializeDatabase();
     console.log("Banco de dados inicializado com sucesso");
-
+    
     // Criar usuário administrador
     await createAdminUser();
-
+    
     // Configurar verificação diária de assinaturas expiradas (executar a cada 12 horas)
     const VERIFICAR_ASSINATURAS_INTERVALO = 12 * 60 * 60 * 1000; // 12 horas em milissegundos
-
+    
     // Iniciar verificador de assinaturas expiradas
     setInterval(async () => {
       try {
@@ -94,7 +94,7 @@ app.use((req, res, next) => {
         console.error("Erro ao verificar assinaturas expiradas:", error);
       }
     }, VERIFICAR_ASSINATURAS_INTERVALO);
-
+    
     // Executar verificação inicial na inicialização do servidor
     console.log("Executando verificação inicial de assinaturas expiradas...");
     const initialDowngradedCount = await SubscriptionService.checkExpiredSubscriptions();
@@ -102,7 +102,7 @@ app.use((req, res, next) => {
   } catch (error) {
     console.error("Erro ao inicializar banco de dados:", error);
   }
-
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -122,32 +122,15 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // Porta configurada para suportar deploy no Replit (usa 3001)
-  const port = process.env.PORT || 3001;
-  const startServer = () => {
-    try {
-      server.listen({
-        port,
-        host: "0.0.0.0",
-        reusePort: true,
-      }, () => {
-        log(`Server running on port ${port}`);
-      });
-  
-      server.on('error', (e: any) => {
-        if (e.code === 'EADDRINUSE') {
-          log(`Port ${port} is busy, retrying in 1 second...`);
-          setTimeout(() => {
-            server.close();
-            startServer();
-          }, 1000);
-        }
-      });
-    } catch (error) {
-      log(`Failed to start server: ${error}`);
-      process.exit(1);
-    }
-  };
-  
-  startServer();
+  // ALWAYS serve the app on port 5000
+  // this serves both the API and the client.
+  // It is the only port that is not firewalled.
+  const port = 5000;
+  server.listen({
+    port,
+    host: "0.0.0.0",
+    reusePort: true,
+  }, () => {
+    log(`serving on port ${port}`);
+  });
 })();

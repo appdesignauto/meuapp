@@ -197,22 +197,10 @@ function AppRoutes() {
           );
         }} />
       
-      {/* Rotas para redirecionamento ao dashboard unificado */}
+      {/* Rota para redirecionamento ao dashboard unificado */}
       <ProtectedRoute
         path="/admin-unified"
         component={() => <UpdatedDashboard />}
-        roles={['admin', 'designer_adm']}
-      />
-      <ProtectedRoute
-        path="/force-admin-unified"
-        component={() => {
-          const ForceAdminUnified = lazy(() => import("@/pages/force-admin-unified"));
-          return (
-            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
-              <ForceAdminUnified />
-            </Suspense>
-          );
-        }}
         roles={['admin', 'designer_adm']}
       />
 
@@ -310,18 +298,8 @@ function AppRoutes() {
       />
       <ProtectedRoute 
         path="/admin/:page" 
-        component={() => <UpdatedDashboard initialTab="dashboard" />}
+        component={() => <UpdatedDashboard />}
         roles={['admin', 'designer_adm']} 
-      />
-      
-      {/* Redirecionar rotas antigas para o novo painel */}
-      <ProtectedRoute
-        path="/admin-unified"
-        component={() => {
-          window.location.href = '/admin/dashboard';
-          return null;
-        }}
-        roles={['admin', 'designer_adm']}
       />
       
       {/* Página não encontrada */}

@@ -11,10 +11,10 @@ import UpdatedDashboard from '../UpdatedDashboard';
 const AssinaturasPage: React.FC = () => {
   const [, setLocation] = useLocation();
   
-  // Não redirecionamos mais, vamos exibir diretamente o dashboard com a aba correta
+  // Redirecionar para o painel unificado com a aba correta
   useEffect(() => {
-    // Efeito vazio - não redirecionamos mais
-  }, []);
+    setLocation('/admin');
+  }, [setLocation]);
   
   return <UpdatedDashboard initialTab="subscriptions" />;
 };

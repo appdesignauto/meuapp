@@ -92,12 +92,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Aplicar middleware global para converter URLs de imagens para todas as respostas JSON
   app.use(convertImageUrlsMiddleware());
   
-  // Endpoint de verificação de saúde para deploy no Replit
-  app.get('/', (req, res) => {
-    res.status(200).send('OK - DesignAuto API Server');
-  });
-  
-  // Rota de verificação de saúde detalhada
+  // Rota simples de verificação de saúde
   app.get('/health', (req, res) => {
     res.status(200).json({
       status: 'ok',
