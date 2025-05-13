@@ -49,6 +49,7 @@ import testCreateGroupRouter from './routes/test-create-group'; // Rota de teste
 import videoaulasRouter from './routes/videoaulas-routes'; // Rotas para as videoaulas
 import courseRouter from './routes/course-routes'; // Rotas para gerenciamento de módulos e aulas
 import manifestRouter from './routes/manifest-route'; // Rota para o manifest.json do PWA
+import appConfigRouter from './routes/app-config-routes'; // Rotas para configuração do PWA
 import imageProxyRouter from './routes/image-proxy'; // Proxy para imagens do Supabase
 import coursesRouter from './routes/courses-routes'; // Rotas para gerenciamento de cursos
 import { registerPostPositionRoute } from './routes/post-position-route'; // Rota para calcular posição
@@ -655,6 +656,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Registrar a rota para o manifest.json dinâmico do PWA
   app.use(manifestRouter);
+  
+  // Registrar as rotas para configuração do PWA
+  app.use('/api', appConfigRouter);
   
   // Adicionar rota para remover o logo
   removeLogoRouter(app);
