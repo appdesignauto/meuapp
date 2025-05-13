@@ -281,22 +281,25 @@ function AppRoutes() {
 }
 
 function App() {
-  // Inicializar métricas de Web Vitals quando o componente é montado
+  // Inicializar métricas de Web Vitals e configurar PWA quando o componente é montado
   useEffect(() => {
     // Iniciar medição de métricas de performance
     measureWebVitals();
     
     // Registrar o service worker para PWA
+    // Utiliza a implementação otimizada de pwa-utils.ts
     registerServiceWorker().then(registration => {
       if (registration) {
         console.log('PWA service worker registrado com sucesso');
         
         // Configura verificação periódica para atualizações
+        // Verifica por atualizações a cada hora
         setInterval(() => {
           registration.update();
         }, 1000 * 60 * 60); // Verificar atualizações a cada hora
         
         // Atualiza automaticamente quando há uma nova versão
+        // Isso garante que o usuário sempre tenha a versão mais recente
         let refreshing = false;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
           if (refreshing) return;
