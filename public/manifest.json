@@ -1,12 +1,10 @@
 {
-  "name": "DesignAuto - Artes para Automotivos",
+  "name": "DesignAuto",
   "short_name": "DesignAuto",
-  "description": "Plataforma de artes editáveis para profissionais do setor automotivo",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#4F46E5",
-  "orientation": "any",
+  "theme_color": "#000000",
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -20,38 +18,5 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ],
-  "shortcuts": [
-    {
-      "name": "Artes Recentes",
-      "short_name": "Recentes",
-      "description": "Ver as artes mais recentes",
-      "url": "/?source=pwa"
-    },
-    {
-      "name": "Categorias",
-      "short_name": "Categorias",
-      "description": "Explorar categorias de artes",
-      "url": "/categorias?source=pwa"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "platform": "wide",
-      "label": "Logo do DesignAuto"
-    }
-  ],
-  "prefer_related_applications": false,
-  "related_applications": [],
-  "categories": [
-    "design",
-    "productivity",
-    "tools"
-  ],
-  "scope": "/",
-  "dir": "ltr",
-  "lang": "pt-BR"
+  ]
 }

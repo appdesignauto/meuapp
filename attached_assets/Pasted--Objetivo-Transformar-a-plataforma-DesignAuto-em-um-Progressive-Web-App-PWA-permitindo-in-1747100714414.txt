@@ -1,0 +1,64 @@
+/*
+📦 Objetivo:
+Transformar a plataforma DesignAuto em um Progressive Web App (PWA), permitindo instalação no celular e desktop, sem afetar layout, cores, estilos ou funcionalidades atuais.
+
+🧯 Aviso importante:
+👉 **NÃO modificar nenhum estilo existente, cores de tema, nem classes CSS já aplicadas**
+👉 **NÃO interferir em rotas, lógicas JS ou estados do app**
+👉 Qualquer alteração deve ser 100% reversível
+
+📍 Etapas solicitadas:
+
+1. 🔧 Criar o arquivo `/public/manifest.json` com dados do app:
+  - name: "DesignAuto"
+  - short_name: "DesignAuto"
+  - start_url: "/"
+  - display: "standalone"
+  - background_color: "#ffffff"
+  - theme_color: "#000000"
+  - icons:
+    - /icons/icon-192.png
+    - /icons/icon-512.png
+
+2. 🖼 Criar pasta `/public/icons/` e colocar os ícones:
+  - icon-192.png
+  - icon-512.png
+  (usar fundo transparente, SVG ou PNG)
+
+3. 🔒 Adicionar as tags abaixo no `<head>` do layout principal sem substituir nada existente:
+
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="DesignAuto">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+
+4. ⚙️ Criar o arquivo `/public/service-worker.js` com conteúdo básico:
+
+  self.addEventListener('install', event => {
+    console.log('Service Worker instalado');
+  });
+
+  self.addEventListener('fetch', event => {
+    event.respondWith(fetch(event.request));
+  });
+
+5. 📲 Registrar o service worker apenas se ainda não houver registro ativo:
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(() => console.log('PWA ativo'))
+      .catch(err => console.error('Erro ao registrar SW', err));
+  }
+
+6. 📥 Criar botão `#pwa-install-btn` com display:none no HTML
+7. 📡 Adicionar script JS para capturar o evento `beforeinstallprompt` e exibir o botão de instalação somente quando permitido pelo navegador
+
+8. ⚠️ Garantir que o botão de instalação não sobreponha nem altere a navbar atual
+
+9. ✅ Validar tudo no Lighthouse (Audit PWA)
+
+🧩 Observação final:
+Após concluir, restaurar qualquer cor ou funcionalidade visual que for afetada. O app deve continuar **100% idêntico visualmente** ao estado anterior à instalação do PWA.
+
+*/

@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { SHOW_SEARCHBAR_EVENT, HIDE_SEARCHBAR_EVENT } from '@/components/home/Hero';
-import { InstallPWAButton } from '@/components/global/InstallPWAButton';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -332,9 +331,6 @@ const Header = () => {
 
           {/* User Actions */}
           <div className="flex items-center space-x-3">
-            {/* Botão para instalação do PWA */}
-            <InstallPWAButton />
-            
             {/* Barra de pesquisa para videoaulas - apenas aparece na página de videoaulas */}
             {isVideoaulasPage && (
               <form 
@@ -368,9 +364,6 @@ const Header = () => {
                 <Search className="h-4 w-4" />
               </Button>
             )}
-            
-            {/* Botão de instalação do PWA */}
-            <InstallPWAButton />
 
             {user && user.role !== 'premium' && (
               <Link href="/planos">
@@ -396,9 +389,6 @@ const Header = () => {
                 </Button>
               </Link>
             )}
-            
-            {/* Botão para instalar o PWA */}
-            <InstallPWAButton />
             
             {/* Botão do menu mobile */}
             <Button 

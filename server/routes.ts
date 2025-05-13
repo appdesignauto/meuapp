@@ -49,7 +49,6 @@ import testCreateGroupRouter from './routes/test-create-group'; // Rota de teste
 import videoaulasRouter from './routes/videoaulas-routes'; // Rotas para as videoaulas
 import courseRouter from './routes/course-routes'; // Rotas para gerenciamento de módulos e aulas
 import imageProxyRouter from './routes/image-proxy'; // Proxy para imagens do Supabase
-import pwaRouter from './routes/pwa-routes'; // Rotas para PWA (manifest.json, service-worker, etc)
 import coursesRouter from './routes/courses-routes'; // Rotas para gerenciamento de cursos
 import { registerPostPositionRoute } from './routes/post-position-route'; // Rota para calcular posição
 import ferramentasRouter from './routes/ferramentas-routes'; // Rotas para gerenciamento de ferramentas úteis do post
@@ -70,7 +69,6 @@ import { convertImageUrlsMiddleware } from './routes/image-url-proxy'; // Middle
 import imageProxyTestRouter from './routes/image-proxy-test'; // Rota para testar o proxy de imagens
 import reportsRouter from './routes/reports'; // Rotas para o sistema de denúncias (original)
 import reportsV2Router from './routes/reports-v2'; // Rotas para o sistema de denúncias (reescrito)
-import manifestRouter from './routes/manifest-route'; // Rota para o manifest.json dinâmico
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Aplicar middleware global para converter URLs de imagens para todas as respostas JSON
@@ -5176,12 +5174,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Registrar rotas para sitemap.xml e robots.txt (acessíveis na raiz do site)
   app.use(sitemapRouter);
-  
-  // Registrar rotas para PWA (manifest.json e configurações)
-  app.use(pwaRouter);
-  
-  // Rota para o manifest.json dinâmico (sobreescreve o arquivo estático)
-  app.use(manifestRouter);
 
   const httpServer = createServer(app);
   

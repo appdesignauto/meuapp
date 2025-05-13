@@ -10,10 +10,9 @@ import { ProtectedRoute } from "@/lib/protected-route";
 import { ScrollToTop } from "@/hooks/useScrollTop";
 import { ThemeProvider } from "@/components/theme-provider";
 import { PopupContainer } from "@/components/Popup";
-import { HelmetProvider, Helmet } from "react-helmet-async";
+import { HelmetProvider } from "react-helmet-async";
 import DynamicFavicon from "@/components/global/DynamicFavicon";
 import { measureWebVitals } from "./lib/measureWebVitals";
-import { registerServiceWorker } from "./lib/pwa-utils";
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -281,51 +280,15 @@ function AppRoutes() {
 }
 
 function App() {
-  // Inicializar métricas de Web Vitals e configurar PWA quando o componente é montado
+  // Inicializar métricas de Web Vitals quando o componente é montado
   useEffect(() => {
     // Iniciar medição de métricas de performance
     measureWebVitals();
-    
-    // Registrar o service worker para PWA
-    // Utiliza a implementação otimizada de pwa-utils.ts
-    registerServiceWorker().then(registration => {
-      if (registration) {
-        console.log('PWA service worker registrado com sucesso');
-        
-        // Configura verificação periódica para atualizações
-        // Verifica por atualizações a cada hora
-        setInterval(() => {
-          registration.update();
-        }, 1000 * 60 * 60); // Verificar atualizações a cada hora
-        
-        // Atualiza automaticamente quando há uma nova versão
-        // Isso garante que o usuário sempre tenha a versão mais recente
-        let refreshing = false;
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (refreshing) return;
-          refreshing = true;
-          console.log('Nova versão do PWA disponível, atualizando...');
-          window.location.reload();
-        });
-      }
-    }).catch(error => {
-      console.error('Erro ao registrar service worker PWA:', error);
-    });
   }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
       <HelmetProvider>
-        <Helmet>
-          <meta name="theme-color" content="#4F46E5" />
-          <meta name="apple-mobile-web-app-capable" content="yes" />
-          <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-          <meta name="apple-mobile-web-app-title" content="DesignAuto" />
-          <link rel="manifest" href="/manifest.json" />
-          <link rel="apple-touch-icon" href="/icons/icon-192.png" />
-          <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
-          <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png" />
-        </Helmet>
         <ThemeProvider defaultTheme="light">
           <AuthProvider>
             <SupabaseAuthProvider>
