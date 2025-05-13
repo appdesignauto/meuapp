@@ -17,6 +17,9 @@
     <meta name="msapplication-TileColor" content="#000000" />
     <meta name="msapplication-TileImage" content="/favicon.png" />
     
+    <!-- Resolver problema de carregamento de imagens -->
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval' 'unsafe-inline'; style-src * 'self' 'unsafe-inline'; media-src *; img-src * 'self' data: content:;" />
+    
     <!-- PWA Tags -->
     <link rel="manifest" href="/manifest.json">
     <meta name="application-name" content="DesignAuto">
