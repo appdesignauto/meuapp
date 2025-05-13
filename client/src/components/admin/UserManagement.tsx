@@ -225,7 +225,7 @@ const UserManagement = () => {
     },
   });
   const [activeTab, setActiveTab] = useState("all");
-  const [sortConfig, setSortConfig] = useState<{key: string, direction: 'asc' | 'desc'} | null>(null);
+  const [sortConfig, setSortConfig] = useState<{key: string, direction: 'asc' | 'desc'} | undefined>(undefined);
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
   
   // Estados para controlar a visibilidade dos campos do formulário
@@ -2652,7 +2652,7 @@ const UserManagement = () => {
 interface UserTableProps {
   users: UserWithStats[];
   isLoading: boolean;
-  renderRoleBadge: (role: NivelAcesso) => JSX.Element;
+  renderRoleBadge: (role?: NivelAcesso) => JSX.Element | null;
   renderStatusBadge: (isactive: boolean) => JSX.Element;
   formatExpirationInfo: (user: UserWithStats) => React.ReactNode;
   renderSubscriptionSource: (user: UserWithStats) => React.ReactNode;
