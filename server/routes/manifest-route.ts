@@ -57,18 +57,44 @@ router.get('/manifest.json', async (req, res) => {
           src: icon192WithTimestamp,
           sizes: '192x192',
           type: 'image/png',
-          purpose: 'any maskable'
+          purpose: 'any'
+        },
+        {
+          src: icon192WithTimestamp,
+          sizes: '192x192',
+          type: 'image/png',
+          purpose: 'maskable'
         },
         {
           src: icon512WithTimestamp,
           sizes: '512x512',
           type: 'image/png',
-          purpose: 'any maskable'
+          purpose: 'any'
+        },
+        {
+          src: icon512WithTimestamp,
+          sizes: '512x512',
+          type: 'image/png',
+          purpose: 'maskable'
         }
       ],
       id: '/',
       orientation: 'any',
-      scope: '/'
+      scope: '/',
+      screenshots: [
+        {
+          src: '/screenshots/home.png',
+          sizes: '1280x720',
+          type: 'image/png',
+          form_factor: 'wide'
+        },
+        {
+          src: '/screenshots/mobile.png',
+          sizes: '540x1080',
+          type: 'image/png',
+          form_factor: 'narrow'
+        }
+      ]
     };
     
     // Definir cabeçalhos corretos para o manifest
