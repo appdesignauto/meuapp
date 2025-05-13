@@ -25,12 +25,19 @@ const storage = multer.diskStorage({
       fs.mkdirSync(iconDir, { recursive: true });
     }
     
-    cb(null, iconDir);
+    // Diretório temporário para processamento
+    const tempDir = './temp';
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir, { recursive: true });
+    }
+    
+    cb(null, tempDir); // Salvar primeiro em um diretório temporário
   },
   filename: function (req, file, cb) {
-    // Nome padronizado para os ícones (icon-192.png ou icon-512.png)
-    const size = req.body.size || '192';
-    cb(null, `icon-${size}.png`);
+    // Gerar um nome único para evitar colisões
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const extension = path.extname(file.originalname);
+    cb(null, file.fieldname + '-' + uniqueSuffix + extension);
   }
 });
 
@@ -41,9 +48,9 @@ const upload = multer({
   },
   fileFilter: (req, file, cb) => {
     // Aceitar apenas imagens
-    const allowedTypes = ['image/png', 'image/jpeg', 'image/webp'];
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'];
     if (!allowedTypes.includes(file.mimetype)) {
-      return cb(new Error('Apenas imagens são permitidas (.png, .jpg, .webp)'));
+      return cb(new Error('Apenas imagens são permitidas (.png, .jpg, .webp, .svg)'));
     }
     cb(null, true);
   }
@@ -114,6 +121,31 @@ router.post('/app-config', checkAdmin, async (req, res) => {
   }
 });
 
+// Função auxiliar para processar a imagem
+async function processImage(file, size, targetPath) {
+  try {
+    // Importar sharp dinamicamente (apenas quando necessário)
+    const sharp = await import('sharp');
+    
+    // Processar a imagem para o tamanho correto
+    await sharp.default(file.path)
+      .resize(size, size)
+      .png() // Converter para PNG
+      .toFile(targetPath);
+      
+    // Remover o arquivo temporário
+    fs.unlinkSync(file.path);
+    
+    return true;
+  } catch (error) {
+    console.error(`Erro ao processar imagem para tamanho ${size}x${size}:`, error);
+    // Se falhar o processamento, copiar o arquivo diretamente
+    fs.copyFileSync(file.path, targetPath);
+    fs.unlinkSync(file.path);
+    return false;
+  }
+}
+
 // Rota para fazer upload do ícone 192x192
 router.post('/app-config/icon-192', checkAdmin, upload.single('icon'), async (req, res) => {
   try {
@@ -123,6 +155,12 @@ router.post('/app-config/icon-192', checkAdmin, upload.single('icon'), async (re
         error: 'Nenhum arquivo foi enviado' 
       });
     }
+    
+    // Caminho de destino para o ícone
+    const iconPath = './public/icons/icon-192.png';
+    
+    // Processar e salvar o ícone com o tamanho correto
+    await processImage(req.file, 192, iconPath);
     
     const configs = await db.select().from(appConfig);
     const userId = req.user?.id;
@@ -167,6 +205,12 @@ router.post('/app-config/icon-512', checkAdmin, upload.single('icon'), async (re
         error: 'Nenhum arquivo foi enviado' 
       });
     }
+    
+    // Caminho de destino para o ícone
+    const iconPath = './public/icons/icon-512.png';
+    
+    // Processar e salvar o ícone com o tamanho correto
+    await processImage(req.file, 512, iconPath);
     
     const configs = await db.select().from(appConfig);
     const userId = req.user?.id;
