@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, AlertCircle, Loader2, RefreshCw, ExternalLink } from 'lucide-react';
+import { Upload, AlertCircle, Loader2, RefreshCw, ExternalLink, Smartphone } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Link } from 'wouter';
 
@@ -441,6 +441,38 @@ const SiteSettings = () => {
         
         <TabsContent value="advanced" className="mt-6">
           <div className="space-y-6">
+            {/* Card para PWA */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Progressive Web App (PWA)</CardTitle>
+                <CardDescription>
+                  Configure as opções do aplicativo para dispositivos móveis
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-blue-100 text-blue-700 p-3 rounded-full">
+                      <Smartphone className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-medium">Configurações do PWA</h4>
+                      <p className="text-sm text-gray-500">
+                        Personalize cores, ícones e informações do aplicativo móvel
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <Link href="/admin/app-config">
+                    <Button className="w-full">
+                      <Smartphone className="mr-2 h-4 w-4" />
+                      Gerenciar Configurações PWA
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+            
             <h3 className="text-lg font-medium">Configurações Avançadas</h3>
             <p className="text-gray-500">Configurações avançadas do sistema em desenvolvimento.</p>
           </div>
