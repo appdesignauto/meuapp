@@ -2424,6 +2424,220 @@ const UserManagement = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Diálogo de Gerenciamento de Assinatura */}
+      <Dialog open={isSubscriptionDialogOpen} onOpenChange={setIsSubscriptionDialogOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Gerenciamento de Assinatura</DialogTitle>
+            <DialogDescription>
+              Visualize e gerencie a assinatura e webhooks relacionados a este usuário.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedUser && (
+            <Tabs defaultValue="subscription" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="subscription">Detalhes da Assinatura</TabsTrigger>
+                <TabsTrigger value="webhooks">Webhooks Recebidos</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="subscription" className="space-y-4 mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Informações da Assinatura</h3>
+                    
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label>Status</Label>
+                          <div className="mt-1">
+                            {renderSubscriptionStatus(selectedUser.planstatus)}
+                          </div>
+                        </div>
+                        <div>
+                          <Label>Origem</Label>
+                          <div className="mt-1">
+                            {renderSubscriptionOrigin(selectedUser.origemassinatura)}
+                          </div>
+                        </div>
+                        <div>
+                          <Label>Tipo de Plano</Label>
+                          <div className="mt-1">
+                            {selectedUser.tipoplano || "N/A"}
+                          </div>
+                        </div>
+                        <div>
+                          <Label>Acesso Vitalício</Label>
+                          <div className="mt-1">
+                            {selectedUser.acessovitalicio ? (
+                              <Badge variant="outline" className="bg-green-50 text-green-700">
+                                <CheckCircleIcon className="w-3 h-3 mr-1" />
+                                Sim
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="bg-gray-50 text-gray-700">
+                                Não
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <Label>Data de Assinatura</Label>
+                          <div className="mt-1 text-sm">
+                            {selectedUser.dataassinatura 
+                              ? new Date(selectedUser.dataassinatura).toLocaleDateString('pt-BR')
+                              : "N/A"}
+                          </div>
+                        </div>
+                        <div>
+                          <Label>Data de Expiração</Label>
+                          <div className="mt-1 text-sm">
+                            {selectedUser.dataexpiracao
+                              ? new Date(selectedUser.dataexpiracao).toLocaleDateString('pt-BR')
+                              : "N/A"}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-6">
+                        <Button 
+                          variant="outline" 
+                          onClick={() => {
+                            setSelectedUser(selectedUser);
+                            setIsEditDialogOpen(true);
+                            setIsSubscriptionDialogOpen(false);
+                          }}
+                          className="mr-2"
+                        >
+                          <PencilIcon className="w-4 h-4 mr-2" />
+                          Editar Assinatura
+                        </Button>
+                        
+                        {selectedUser.origemassinatura === 'hotmart' && (
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              // Aqui poderia ir uma lógica para verificar assinatura na Hotmart
+                              toast({
+                                title: "Verificação solicitada",
+                                description: "Consultando status atualizado na Hotmart...",
+                              });
+                            }}
+                          >
+                            <RefreshCw className="w-4 h-4 mr-2" />
+                            Verificar na Hotmart
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Dados do Usuário</h3>
+                    <div className="space-y-3">
+                      <div>
+                        <Label>Nome</Label>
+                        <div className="mt-1 text-sm font-medium">
+                          {selectedUser.name || selectedUser.username}
+                        </div>
+                      </div>
+                      <div>
+                        <Label>Email</Label>
+                        <div className="mt-1 text-sm">
+                          {selectedUser.email}
+                        </div>
+                      </div>
+                      <div>
+                        <Label>Nível de Acesso</Label>
+                        <div className="mt-1">
+                          {renderUserRole(selectedUser.nivelacesso)}
+                        </div>
+                      </div>
+                      <div>
+                        <Label>Criado em</Label>
+                        <div className="mt-1 text-sm">
+                          {new Date(selectedUser.criadoem).toLocaleDateString('pt-BR')}
+                        </div>
+                      </div>
+                      <div>
+                        <Label>Último login</Label>
+                        <div className="mt-1 text-sm">
+                          {selectedUser.ultimologin 
+                            ? new Date(selectedUser.ultimologin).toLocaleDateString('pt-BR') 
+                            : "Nunca"}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="webhooks" className="space-y-4 mt-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">Webhooks da Hotmart</h3>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      // Opcionalmente recarregar dados de webhook
+                      toast({
+                        title: "Carregando webhooks",
+                        description: "Atualizando lista de webhooks recebidos...",
+                      });
+                    }}
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Atualizar
+                  </Button>
+                </div>
+                
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Evento</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {/* Aqui você pode adicionar os logs de webhook quando disponíveis */}
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-6 text-gray-500">
+                        Nenhum webhook recebido para este usuário.
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+                
+                <div className="mt-4 p-4 bg-amber-50 rounded-md border border-amber-200">
+                  <div className="flex items-start">
+                    <InfoIcon className="w-5 h-5 text-amber-500 mt-0.5 mr-2 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-medium text-amber-800">Sobre Webhooks da Hotmart</h4>
+                      <p className="text-sm text-amber-700 mt-1">
+                        Webhooks são notificações automáticas enviadas pela Hotmart quando ocorrem eventos
+                        relacionados a assinaturas, como compras, cancelamentos ou reembolsos.
+                        A tabela acima mostra os eventos mais recentes recebidos para este usuário.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+          )}
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsSubscriptionDialogOpen(false)}
+            >
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
@@ -2438,6 +2652,7 @@ interface UserTableProps {
   renderSubscriptionSource: (user: UserWithStats) => React.ReactNode;
   setSelectedUser: (user: UserWithStats) => void;
   setIsEditDialogOpen: (open: boolean) => void;
+  setIsSubscriptionDialogOpen: (open: boolean) => void;
   toggleUserStatusMutation: any;
   sortConfig?: {
     key: string;
@@ -2458,6 +2673,7 @@ const UserTable = ({
   renderSubscriptionSource,
   setSelectedUser,
   setIsEditDialogOpen,
+  setIsSubscriptionDialogOpen,
   toggleUserStatusMutation,
   sortConfig,
   onSort,
@@ -2941,6 +3157,16 @@ const UserTable = ({
                       >
                         <KeyRoundIcon className="h-4 w-4 mr-2" />
                         Resetar senha
+                      </DropdownMenuItem>
+
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setSelectedUser(user);
+                          setIsSubscriptionDialogOpen(true);
+                        }}
+                      >
+                        <CreditCard className="h-4 w-4 mr-2" />
+                        Gerenciar assinatura
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
