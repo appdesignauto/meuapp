@@ -15,13 +15,6 @@ import DynamicFavicon from "@/components/global/DynamicFavicon";
 import { measureWebVitals } from "./lib/measureWebVitals";
 import { registerServiceWorker } from "./lib/pwa-utils";
 
-// Declaração para estender a interface Window
-declare global {
-  interface Window {
-    deferredPrompt?: any;
-  }
-}
-
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Home from "@/pages/Home";
@@ -350,6 +343,7 @@ function App() {
           <link rel="apple-touch-icon" href="/icons/icon-192.png" />
           <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
           <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png" />
+          <script src="/js/install-pwa.js"></script>
         </Helmet>
         <ThemeProvider defaultTheme="light">
           <AuthProvider>

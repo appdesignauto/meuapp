@@ -1,44 +1,42 @@
-// Nome do cache para armazenar arquivos offline
-const CACHE_NAME = 'designauto-v1.1';
+/**
+ * Service Worker para o DesignAuto PWA
+ * Gerencia cache e fornece experiência offline
+ */
 
-// Lista de recursos que devem ser armazenados em cache para uso offline
-const STATIC_CACHE_URLS = [
+const CACHE_NAME = 'designauto-cache-v1';
+
+// Arquivos a serem cacheados
+const urlsToCache = [
   '/',
-  '/index.html',
   '/offline.html',
-  '/favicon.png',
+  '/index.html',
   '/manifest.json',
-  '/images/offline-placeholder.svg',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
-  '/icons/icon-192.svg',
-  '/icons/icon-512.svg'
+  '/js/install-pwa.js',
+  '/images/logos/logo_1719266664669.png',
+  '/src/index.css'
 ];
 
-// Evento de instalação - pré-cache de recursos estáticos
+// Instala o service worker e adiciona recursos ao cache
 self.addEventListener('install', (event) => {
   console.log('[Service Worker] Instalando...');
-  
-  // Impede a finalização do evento até que a Promise seja resolvida
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('[Service Worker] Pré-cacheando recursos estáticos');
-        return cache.addAll(STATIC_CACHE_URLS);
+        console.log('[Service Worker] Cacheando recursos estáticos');
+        return cache.addAll(urlsToCache);
       })
       .then(() => {
-        // Ativa o service worker imediatamente sem esperar por navegação
-        console.log('[Service Worker] Ativando sem esperar');
+        console.log('[Service Worker] Instalação concluída');
         return self.skipWaiting();
       })
   );
 });
 
-// Evento de ativação - limpeza de caches antigos
+// Limpa caches antigos quando uma nova versão do service worker é ativada
 self.addEventListener('activate', (event) => {
   console.log('[Service Worker] Ativando...');
-  
-  // Limpa caches antigos
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -50,119 +48,130 @@ self.addEventListener('activate', (event) => {
         })
       );
     }).then(() => {
-      // Assume o controle imediatamente para todos os clientes
-      console.log('[Service Worker] Reivindicando clientes');
+      console.log('[Service Worker] Agora está gerenciando requisições');
       return self.clients.claim();
     })
   );
 });
 
-// Evento de fetch - estratégia de cache com fallback para rede
+// Intercepta requisições e usa a estratégia de cache-primeiro para arquivos estáticos
+// e rede-primeiro para conteúdo dinâmico
 self.addEventListener('fetch', (event) => {
-  // Ignorar requisições de API e admin
+  // Ignora requisições sem URL (ex: chrome-extension://)
+  if (!event.request.url.startsWith('http')) return;
+  
+  // Obtém o modo de requisição (cors, no-cors, etc)
+  const requestMode = event.request.mode;
+  
+  // Não intercepta requisições de API ou de outros domínios
   if (event.request.url.includes('/api/') || 
-      event.request.url.includes('/admin') ||
-      event.request.url.includes('/uploads/') ||
-      event.request.url.includes('/auth')) {
+      event.request.url.includes('analytics') ||
+      event.request.url.includes('hotjar') ||
+      !event.request.url.includes(self.location.origin)) {
     return;
   }
-
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Cache hit - retorna o recurso do cache
+  
+  // Estratégia de cache-primeiro para arquivos estáticos
+  if (isStaticResource(event.request.url)) {
+    event.respondWith(
+      caches.match(event.request).then((response) => {
+        // Retorna do cache se encontrado
         if (response) {
           return response;
         }
         
-        // Não encontrado no cache, busca da rede
-        return fetch(event.request)
-          .then((response) => {
-            // Retorna a resposta original e salva uma cópia no cache
-            if (!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
-            }
-            
-            // Armazena em cache para uso futuro
-            const responseToCache = response.clone();
-            caches.open(CACHE_NAME)
-              .then((cache) => {
-                cache.put(event.request, responseToCache);
-              });
-              
+        // Se não estiver no cache, busca da rede
+        return fetch(event.request).then((response) => {
+          // Verifica se a resposta é válida
+          if (!response || response.status !== 200 || response.type !== 'basic') {
             return response;
-          })
-          .catch(() => {
-            // Se falhar em buscar e é uma solicitação de uma página...
-            if (event.request.mode === 'navigate') {
-              return caches.match('/offline.html');
-            }
-            
-            // Para imagens, retorna um placeholder
-            if (event.request.destination === 'image') {
-              return caches.match('/images/offline-placeholder.svg');
-            }
-            
-            // Para outros tipos de recursos, retorna uma resposta em branco
-            return new Response('', {
-              status: 408,
-              statusText: 'Request timed out.'
-            });
+          }
+          
+          // Clona a resposta pois o cache consume o corpo da resposta
+          const responseToCache = response.clone();
+          
+          // Adiciona ao cache para uso futuro
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
           });
+          
+          return response;
+        }).catch(() => {
+          // Caso falhe a requisição de um arquivo estático, retorna resposta offline genérica
+          if (event.request.destination === 'document') {
+            return caches.match('/offline.html');
+          }
+          
+          return new Response('Recurso não disponível offline', {
+            status: 503,
+            statusText: 'Service Unavailable',
+            headers: new Headers({
+              'Content-Type': 'text/plain'
+            })
+          });
+        });
       })
-  );
-});
-
-// Evento de sincronização em background (para enviar dados quando voltar online)
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-pending-requests') {
-    console.log('[Service Worker] Sincronizando requisições pendentes');
-    event.waitUntil(syncPendingRequests());
+    );
+  } else {
+    // Estratégia de rede-primeiro para conteúdo dinâmico (HTML)
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          // Clona resposta para o cache
+          const responseToCache = response.clone();
+          
+          // Armazena no cache a versão mais recente da página
+          if (event.request.destination === 'document') {
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          }
+          
+          return response;
+        })
+        .catch(() => {
+          // Se offline, tenta retornar do cache
+          return caches.match(event.request)
+            .then((cachedResponse) => {
+              // Se estiver no cache, retorna
+              if (cachedResponse) {
+                return cachedResponse;
+              }
+              
+              // Se não estiver no cache, retorna página offline
+              if (event.request.destination === 'document') {
+                return caches.match('/offline.html');
+              }
+              
+              // Retorna uma resposta de erro para outros tipos de conteúdo
+              return new Response('Você está offline. Verifique sua conexão.', {
+                status: 503,
+                statusText: 'Service Unavailable',
+                headers: new Headers({
+                  'Content-Type': 'text/plain'
+                })
+              });
+            });
+        })
+    );
   }
 });
 
-// Função para sincronizar requisições pendentes quando estiver online
-async function syncPendingRequests() {
-  // Implementação futura para sincronizar dados
-  console.log('[Service Worker] Sincronização de dados pendentes ainda não implementada');
+// Verifica se uma URL é de recurso estático
+function isStaticResource(url) {
+  const staticExtensions = [
+    '.js', '.css', '.png', '.jpg', '.jpeg', '.gif', '.webp', 
+    '.svg', '.woff', '.woff2', '.ttf', '.eot', '.ico'
+  ];
+  
+  return staticExtensions.some(ext => url.endsWith(ext)) || 
+         url.includes('/icons/') || 
+         url.includes('/images/');
 }
 
-// Evento de notificações push
-self.addEventListener('push', (event) => {
-  if (!event.data) return;
-  
-  const data = event.data.json();
-  const options = {
-    body: data.body || 'Novidade do DesignAuto!',
-    icon: '/icons/icon-192.png', // Mantendo .png para compatibilidade com notificações
-    badge: '/icons/icon-192.png', // Usando o mesmo ícone como badge
-    data: {
-      url: data.url || '/'
-    }
-  };
-  
-  event.waitUntil(
-    self.registration.showNotification(data.title || 'DesignAuto', options)
-  );
-});
-
-// Evento de clique em notificação
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  
-  event.waitUntil(
-    clients.matchAll({type: 'window'}).then((clientList) => {
-      // Se já tem uma janela aberta, navega para a URL
-      for (const client of clientList) {
-        if (client.url === event.notification.data.url && 'focus' in client) {
-          return client.focus();
-        }
-      }
-      
-      // Se não, abre uma nova janela/aba
-      if (clients.openWindow) {
-        return clients.openWindow(event.notification.data.url);
-      }
-    })
-  );
+// Escuta mensagens enviadas ao service worker (por exemplo, para forçar atualizações)
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
