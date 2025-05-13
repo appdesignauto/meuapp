@@ -84,7 +84,7 @@ router.get('/manifest.json', async (req, res) => {
       screenshots: [
         {
           src: '/screenshots/home.png?t=' + timestamp,
-          sizes: '1024x605',
+          sizes: '1280x720',
           type: 'image/png',
           form_factor: 'wide'
         },
