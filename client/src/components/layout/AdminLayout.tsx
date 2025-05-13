@@ -106,11 +106,6 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
       href: '/admin/settings',
       icon: <Settings className="h-5 w-5" />,
     },
-    {
-      title: 'Config PWA',
-      href: '/admin/app-config',
-      icon: <Smartphone className="h-5 w-5" />,
-    },
   ];
 
   const NavLinks = () => (
