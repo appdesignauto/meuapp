@@ -4672,6 +4672,179 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Rota para obter logs de webhooks da Hotmart - Admin
+  app.get("/api/admin/webhook-logs", isAdmin, async (req, res) => {
+    try {
+      // Parâmetros de paginação e filtros
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const status = req.query.status as string || undefined;
+      const eventType = req.query.eventType as string || undefined;
+      
+      const offset = (page - 1) * limit;
+      
+      // Construir a consulta base
+      let query = db.select()
+        .from(webhookLogs)
+        .orderBy(desc(webhookLogs.createdAt));
+      
+      // Adicionar filtros se fornecidos
+      let countQuery = db.select({ count: count() }).from(webhookLogs);
+      
+      if (status) {
+        query = query.where(eq(webhookLogs.status, status));
+        countQuery = countQuery.where(eq(webhookLogs.status, status));
+      }
+      
+      if (eventType) {
+        query = query.where(eq(webhookLogs.eventType, eventType));
+        countQuery = countQuery.where(eq(webhookLogs.eventType, eventType));
+      }
+      
+      // Aplicar paginação
+      query = query.limit(limit).offset(offset);
+      
+      // Executar as consultas
+      const [logs, countResult] = await Promise.all([
+        query,
+        countQuery
+      ]);
+      
+      // Obter a contagem total
+      const total = countResult[0]?.count || 0;
+      
+      res.json({
+        logs,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit)
+        }
+      });
+    } catch (error) {
+      console.error("Erro ao obter logs de webhooks:", error);
+      res.status(500).json({ 
+        message: "Erro ao obter logs de webhooks",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Rota para obter detalhes de um webhook específico - Admin
+  app.get("/api/admin/webhook-logs/:id", isAdmin, async (req, res) => {
+    try {
+      const logId = parseInt(req.params.id);
+      
+      if (isNaN(logId)) {
+        return res.status(400).json({ message: "ID de log inválido" });
+      }
+      
+      // Buscar o log específico
+      const [log] = await db.select()
+        .from(webhookLogs)
+        .where(eq(webhookLogs.id, logId));
+      
+      if (!log) {
+        return res.status(404).json({ message: "Log de webhook não encontrado" });
+      }
+      
+      // Se o webhook afetou um usuário, buscar informações do usuário
+      let userData = null;
+      if (log.userId) {
+        const user = await storage.getUser(log.userId);
+        if (user) {
+          userData = {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            nivelAcesso: user.nivelacesso,
+            assinatura: {
+              origem: user.origemassinatura,
+              tipo: user.tipoplano,
+              status: user.planstatus,
+              dataExpiracao: user.planoexpiracao
+            }
+          };
+        }
+      }
+      
+      res.json({
+        log,
+        user: userData
+      });
+    } catch (error) {
+      console.error("Erro ao obter detalhes do webhook:", error);
+      res.status(500).json({ 
+        message: "Erro ao obter detalhes do webhook",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Rota para reprocessar um webhook que falhou - Admin
+  app.post("/api/admin/webhook-logs/:id/retry", isAdmin, async (req, res) => {
+    try {
+      const logId = parseInt(req.params.id);
+      
+      if (isNaN(logId)) {
+        return res.status(400).json({ message: "ID de log inválido" });
+      }
+      
+      // Buscar o log específico
+      const [log] = await db.select()
+        .from(webhookLogs)
+        .where(eq(webhookLogs.id, logId));
+      
+      if (!log) {
+        return res.status(404).json({ message: "Log de webhook não encontrado" });
+      }
+      
+      // Verificar se o log está com status 'error' para permitir reprocessamento
+      if (log.status !== 'error' && log.status !== 'pending') {
+        return res.status(400).json({ 
+          message: "Apenas webhooks com status 'error' ou 'pending' podem ser reprocessados",
+          status: log.status
+        });
+      }
+      
+      // Tentar reprocessar o webhook
+      const clientIp = req.ip || 'admin-retry';
+      
+      // Extrair os dados do payload original (armazenado como JSON)
+      const webhookData = typeof log.payloadData === 'string' 
+        ? JSON.parse(log.payloadData) 
+        : log.payloadData;
+      
+      // Processar o webhook usando o serviço
+      const result = await SubscriptionService.processHotmartWebhook(webhookData, clientIp);
+      
+      // Atualizar o registro do log para refletir o reprocessamento
+      await db.update(webhookLogs)
+        .set({
+          status: result.success ? 'success' : 'error',
+          errorMessage: result.success ? null : (result.message || 'Falha ao reprocessar'),
+          retryCount: (log.retryCount || 0) + 1,
+          updatedAt: new Date()
+        })
+        .where(eq(webhookLogs.id, logId));
+      
+      res.json({ 
+        success: result.success, 
+        message: result.success 
+          ? "Webhook reprocessado com sucesso" 
+          : "Falha ao reprocessar webhook", 
+        result 
+      });
+    } catch (error) {
+      console.error("Erro ao reprocessar webhook:", error);
+      res.status(500).json({ 
+        message: "Erro ao reprocessar webhook",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
   // Rota para testar rebaixamento de usuário específico (com verificação Hotmart)
   // Temporariamente removida restrição isAdmin para testes
   app.post("/api/test/downgradeUser/:userId", async (req, res) => {
