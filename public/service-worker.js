@@ -5,9 +5,11 @@ const CACHE_NAME = 'designauto-v1';
 const STATIC_CACHE_URLS = [
   '/',
   '/index.html',
-  '/offline.html',    // Página offline específica (será criada)
-  '/images/logos/logo_default.png',
-  '/images/offline-placeholder.png'
+  '/offline.html',
+  '/favicon.png',
+  '/images/offline-placeholder.svg',
+  '/icons/icon-192.svg',
+  '/icons/icon-512.svg'
 ];
 
 // Evento de instalação - pré-cache de recursos estáticos
