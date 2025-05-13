@@ -76,6 +76,9 @@ import {
   PaletteIcon,
   HeadphonesIcon,
   ShieldIcon,
+  CreditCard,
+  RefreshCw,
+  Webhook,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -202,6 +205,7 @@ const UserManagement = () => {
   const [isStatsDialogOpen, setIsStatsDialogOpen] = useState(false);
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [isNotificationDialogOpen, setIsNotificationDialogOpen] = useState(false);
+  const [isSubscriptionDialogOpen, setIsSubscriptionDialogOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -2952,6 +2956,16 @@ const UserTable = ({
                       >
                         <HistoryIcon className="h-4 w-4 mr-2" />
                         Histórico de atividades
+                      </DropdownMenuItem>
+                      
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setSelectedUser(user);
+                          setIsSubscriptionDialogOpen(true);
+                        }}
+                      >
+                        <CreditCard className="h-4 w-4 mr-2" />
+                        Gerenciar assinatura
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
