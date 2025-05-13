@@ -18,16 +18,30 @@
  *    Para testar com outro email, defina a variável de ambiente TEST_EMAIL
  */
 
-const fetch = require('node-fetch');
+import fetch from 'node-fetch';
 
 // Configuração
-const BASE_URL = 'http://localhost:5000'; // URL base do servidor local
+let BASE_URL = 'http://localhost:5000'; // URL base do servidor local
 const WEBHOOK_PATH = '/api/webhooks/hotmart';
 const HOTMART_SECRET = process.env.HOTMART_SECRET || 'seu_token_secreto_hotmart'; // Use o mesmo valor da env HOTMART_SECRET
 const TEST_EMAIL = process.env.TEST_EMAIL || 'example@test.com';
 
 // Obter evento dos argumentos da linha de comando
 const EVENT_TYPE = process.argv[2] || 'approved';
+
+// Para usar a URL correta do Replit (útil em desenvolvimento)
+// Se estiver no Replit, use a URL fornecida pela plataforma
+const IS_REPLIT = process.env.REPL_ID !== undefined;
+if (IS_REPLIT) {
+  // Pegar o URL atual do Replit
+  const replitUrl = process.env.REPL_SLUG;
+  if (replitUrl) {
+    BASE_URL = `https://${replitUrl}.replit.dev`;
+  }
+}
+
+console.log(`[Teste] Usando URL base: ${BASE_URL}`);
+console.log(`[Teste] Usando token: ${HOTMART_SECRET}`);
 
 // Função para criar payloads de teste com base no tipo de evento
 function createTestPayload(eventType) {
