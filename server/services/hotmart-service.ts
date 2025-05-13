@@ -1,4 +1,6 @@
 import fetch from 'node-fetch';
+import { db } from '../db';
+import { webhookLogs } from '../../shared/schema';
 
 /**
  * Serviço para integração com a API da Hotmart
@@ -153,14 +155,58 @@ export class HotmartService {
   }
 
   /**
+   * Registra um webhook recebido no banco de dados para rastreabilidade
+   * @param webhookData Dados do webhook
+   * @param userId ID do usuário afetado, se conhecido
+   * @param status Status do processamento ('success', 'error', 'pending')
+   * @param errorMsg Mensagem de erro, se houver
+   * @param ip Endereço IP de origem da requisição
+   * @returns ID do log criado
+   */
+  static async logWebhook(
+    webhookData: any, 
+    status: 'success' | 'error' | 'pending' = 'pending',
+    userId?: number,
+    errorMsg?: string,
+    ip?: string
+  ) {
+    try {
+      const event = webhookData.event || 'unknown';
+      const transactionId = webhookData.data?.purchase?.transaction || 'unknown';
+      const payload = JSON.stringify(webhookData);
+      
+      const [logEntry] = await db.insert(webhookLogs).values({
+        provider: 'hotmart',
+        event: event,
+        payload: payload,
+        status: status,
+        userId: userId,
+        error: errorMsg,
+        processed: status === 'success',
+        processedAt: status === 'success' ? new Date() : null,
+        ip: ip,
+        transactionId: transactionId
+      }).returning();
+      
+      return logEntry.id;
+    } catch (error) {
+      console.error('Erro ao registrar log de webhook:', error);
+      return null;
+    }
+  }
+
+  /**
    * Processa um webhook recebido da Hotmart
    * @param webhookData Dados do webhook
+   * @param ip Endereço IP de origem da requisição
    * @returns Objeto com o resultado do processamento
    */
-  static async processWebhook(webhookData: any) {
+  static async processWebhook(webhookData: any, ip?: string) {
     // Validação básica dos dados do webhook
     if (!webhookData || !webhookData.data || !webhookData.event) {
-      throw new Error('Dados de webhook inválidos');
+      const errorMsg = 'Dados de webhook inválidos';
+      await this.logWebhook(webhookData, 'error', undefined, errorMsg, ip);
+      throw new Error(errorMsg);
     }
     
     const event = webhookData.event;
@@ -169,12 +215,25 @@ export class HotmartService {
     // Log do evento recebido
     console.log(`Webhook Hotmart recebido: ${event}`, JSON.stringify(data, null, 2));
     
-    // Extrair informações essenciais com tratamento seguro para evitar erros
-    const email = data.buyer?.email;
-    if (!email) {
-      console.error('Email do comprador não encontrado no webhook:', data);
-      throw new Error('Email do comprador não encontrado no webhook');
-    }
+    // Registrar o webhook como pendente até completar o processamento
+    const logId = await this.logWebhook(webhookData, 'pending', undefined, undefined, ip);
+    
+    try {
+      // Extrair informações essenciais com tratamento seguro para evitar erros
+      const email = data.buyer?.email;
+      if (!email) {
+        const errorMsg = 'Email do comprador não encontrado no webhook';
+        console.error(errorMsg, data);
+        
+        // Atualizar o log com status de erro
+        if (logId) {
+          await db.update(webhookLogs)
+            .set({ status: 'error', error: errorMsg })
+            .where(webhookLogs.id = logId);
+        }
+        
+        throw new Error(errorMsg);
+      }
     
     // Processar diferentes tipos de eventos conforme as diretrizes
     switch (event) {
@@ -266,12 +325,56 @@ export class HotmartService {
       default:
         // Evento desconhecido - registrar para análise futura
         console.warn(`Evento Hotmart desconhecido recebido: ${event}`);
-        return {
+        const result = {
           action: 'unknown_event',
           event: event,
           email: email,
           status: 'ignored'
         };
+        
+        // Atualizar o log para marcar como processado
+        if (logId) {
+          await db.update(webhookLogs)
+            .set({ 
+              status: 'success', 
+              processed: true,
+              processedAt: new Date()
+            })
+            .where(webhookLogs.id = logId);
+        }
+        
+        return result;
+    }
+    
+    } catch (error) {
+      // Em caso de erro durante o processamento, atualizar o log
+      console.error('Erro ao processar webhook:', error);
+      if (logId) {
+        await db.update(webhookLogs)
+          .set({ 
+            status: 'error', 
+            error: error?.message || 'Erro desconhecido durante processamento'
+          })
+          .where(webhookLogs.id = logId);
+      }
+      throw error;
+    }
+  }
+  
+  /**
+   * Atualiza o log de webhook com o ID do usuário quando identificado
+   * @param logId ID do log de webhook
+   * @param userId ID do usuário afetado
+   */
+  static async updateWebhookLogWithUser(logId: number, userId: number) {
+    if (!logId || !userId) return;
+    
+    try {
+      await db.update(webhookLogs)
+        .set({ userId })
+        .where(webhookLogs.id = logId);
+    } catch (error) {
+      console.error('Erro ao atualizar log de webhook com usuário:', error);
     }
   }
 }

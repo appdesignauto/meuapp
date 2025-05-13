@@ -362,12 +362,13 @@ export class SubscriptionService {
   /**
    * Processa um webhook recebido da Hotmart
    * @param webhookData Dados do webhook
+   * @param ip Endereço IP de origem da requisição
    * @returns Resultado do processamento
    */
-  static async processHotmartWebhook(webhookData: any) {
+  static async processHotmartWebhook(webhookData: any, ip?: string) {
     try {
       // Processar o webhook usando o serviço da Hotmart
-      const result = await HotmartService.processWebhook(webhookData);
+      const result = await HotmartService.processWebhook(webhookData, ip);
       
       if (!result || !result.action) {
         return { success: false, message: 'Webhook inválido ou não reconhecido' };
