@@ -310,8 +310,18 @@ function AppRoutes() {
       />
       <ProtectedRoute 
         path="/admin/:page" 
-        component={() => <UpdatedDashboard />}
+        component={() => <UpdatedDashboard initialTab="dashboard" />}
         roles={['admin', 'designer_adm']} 
+      />
+      
+      {/* Redirecionar rotas antigas para o novo painel */}
+      <ProtectedRoute
+        path="/admin-unified"
+        component={() => {
+          window.location.href = '/admin/dashboard';
+          return null;
+        }}
+        roles={['admin', 'designer_adm']}
       />
       
       {/* Página não encontrada */}
