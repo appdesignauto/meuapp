@@ -30,14 +30,15 @@ const TEST_EMAIL = process.env.TEST_EMAIL || 'example@test.com';
 const EVENT_TYPE = process.argv[2] || 'approved';
 
 // Para usar a URL correta do Replit (útil em desenvolvimento)
-// Se estiver no Replit, use a URL fornecida pela plataforma
-const IS_REPLIT = process.env.REPL_ID !== undefined;
-if (IS_REPLIT) {
-  // Pegar o URL atual do Replit
-  const replitUrl = process.env.REPL_SLUG;
-  if (replitUrl) {
-    BASE_URL = `https://${replitUrl}.replit.dev`;
-  }
+// O domínio correto está nos logs do servidor
+const replitDomain = "https://e1b8508c-921c-4d22-af73-1cb8fd7145e2-00-121uwb868mg4j.spock.replit.dev";
+
+// Se estivermos no Replit, usar o domínio do Replit
+if (process.env.REPL_ID) {
+  BASE_URL = replitDomain;
+} else {
+  // Em desenvolvimento local, usar localhost
+  BASE_URL = "http://localhost:5000";
 }
 
 console.log(`[Teste] Usando URL base: ${BASE_URL}`);

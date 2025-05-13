@@ -2,6 +2,11 @@ import { db } from "../db";
 import { eq, and, lte, sql } from "drizzle-orm";
 import { users, subscriptions } from "@shared/schema";
 import { HotmartService } from "./hotmart-service";
+import { randomBytes, scrypt } from "crypto";
+import { promisify } from "util";
+
+// Criar versão assíncrona de scrypt
+const scryptAsync = promisify(scrypt);
 
 /**
  * Serviço responsável por gerenciar assinaturas de usuários
