@@ -93,14 +93,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
       icon: <Upload className="h-5 w-5" />,
     },
     {
-      title: 'Assinaturas',
-      href: '/admin/subscriptions',
+      title: 'Assinaturas e Webhooks',
+      href: '/admin/assinaturas',
       icon: <CreditCard className="h-5 w-5" />,
-    },
-    {
-      title: 'Webhooks',
-      href: '/admin/webhooks',
-      icon: <Webhook className="h-5 w-5" />,
     },
     {
       title: 'Páginas',

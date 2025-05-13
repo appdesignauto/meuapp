@@ -280,24 +280,12 @@ function AppRoutes() {
         roles={['admin']}
       />
       <ProtectedRoute
-        path="/admin/subscriptions"
+        path="/admin/assinaturas"
         component={() => {
-          const SubscriptionsPage = lazy(() => import("@/pages/admin/SubscriptionsPage"));
+          const AssinaturasPage = lazy(() => import("@/pages/admin/AssinaturasPage"));
           return (
             <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
-              <SubscriptionsPage />
-            </Suspense>
-          );
-        }}
-        roles={['admin']}
-      />
-      <ProtectedRoute
-        path="/admin/webhooks"
-        component={() => {
-          const WebhooksPage = lazy(() => import("@/pages/admin/WebhooksPage"));
-          return (
-            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
-              <WebhooksPage />
+              <AssinaturasPage />
             </Suspense>
           );
         }}
