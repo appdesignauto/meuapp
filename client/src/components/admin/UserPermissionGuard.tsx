@@ -8,7 +8,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useNavigate } from 'wouter';
+import { useLocation } from 'wouter';
 
 type NivelAcesso = 'visitante' | 'usuario' | 'premium' | 'designer' | 'designer_adm' | 'suporte' | 'admin';
 
