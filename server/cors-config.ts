@@ -53,8 +53,10 @@ export function configureCors(app: Express): void {
       if (ALLOWED_ORIGINS.indexOf(origin) !== -1) {
         callback(null, true);
       } 
-      // Verificar se é um domínio do Replit
-      else if (REPLIT_DOMAINS.some(domain => origin.endsWith(domain))) {
+      // Verificar se é um domínio do Replit ou Replit Autoscale (que usa IDs longos)
+      else if (REPLIT_DOMAINS.some(domain => origin.endsWith(domain)) || 
+               origin.includes('.replit.dev') || 
+               origin.includes('spock.replit.dev')) {
         console.log(`Domínio Replit permitido: ${origin}`);
         callback(null, true);
       }

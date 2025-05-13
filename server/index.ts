@@ -122,8 +122,8 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // Production port configuration for Cloud Run deployment
-  const port = process.env.PORT || 5000;
+  // Porta configurada para suportar deploy no Replit (usa 3001)
+  const port = process.env.PORT || 3001;
   const startServer = () => {
     try {
       server.listen({

@@ -3038,9 +3038,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Implementação dos métodos de Reports (Denúncias)
-  async getReportTypes(): Promise<ReportType[]> {
-    return db.select().from(reportTypes).orderBy(reportTypes.name);
-  }
 
   async getReportById(id: number): Promise<Report | undefined> {
     try {
