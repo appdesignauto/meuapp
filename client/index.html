@@ -19,9 +19,20 @@
     
     <!-- PWA Tags -->
     <link rel="manifest" href="/manifest.json">
+    <meta name="application-name" content="DesignAuto">
+    <meta name="description" content="Plataforma de artes automobilísticas editáveis para profissionais de vendas.">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="DesignAuto">
+    
+    <!-- PWA Icons -->
     <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png">
   </head>
   <body>
     <div id="root"></div>
@@ -29,12 +40,68 @@
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
     <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
     
-    <!-- PWA Installation Script -->
-    <script type="text/javascript" src="/js/install-pwa.js"></script>
-    
-    <!-- Botão oculto para instalação do PWA (será exibido apenas quando disponível) -->
-    <button id="pwa-install-btn" onclick="installPWA()" style="display: none; position: fixed; bottom: 20px; right: 20px; z-index: 999; background-color: #000000; color: white; border: none; border-radius: 50px; padding: 10px 20px; font-size: 14px; font-weight: bold; box-shadow: 0 2px 10px rgba(0,0,0,0.3); cursor: pointer;">
-      Instalar App
+    <!-- PWA Installation Button & Script -->
+    <button id="pwa-install-btn" style="display: none;" class="btn-install">
+      Instalar o App
     </button>
+    <script>
+      let deferredPrompt;
+
+      window.addEventListener('beforeinstallprompt', (e) => {
+        // Impede o Chrome de mostrar automaticamente
+        e.preventDefault();
+        deferredPrompt = e;
+
+        // Exibe o botão de instalação
+        const installBtn = document.getElementById('pwa-install-btn');
+        if (installBtn) {
+          installBtn.style.display = 'inline-block';
+
+          installBtn.addEventListener('click', () => {
+            installBtn.style.display = 'none';
+            deferredPrompt.prompt();
+
+            deferredPrompt.userChoice.then((choiceResult) => {
+              if (choiceResult.outcome === 'accepted') {
+                console.log('Usuário aceitou instalar o app');
+              } else {
+                console.log('Usuário recusou instalar o app');
+              }
+              deferredPrompt = null;
+            });
+          });
+        }
+      });
+
+      // Registrar o service worker apenas se API estiver disponível no navegador
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(() => console.log('PWA ativo'))
+            .catch(err => console.error('Erro ao registrar SW', err));
+        });
+      }
+      
+      // Quando PWA já estiver instalado, esconder o botão
+      window.addEventListener('appinstalled', () => {
+        deferredPrompt = null;
+        const pwaInstallBtn = document.getElementById('pwa-install-btn');
+        if (pwaInstallBtn) {
+          pwaInstallBtn.style.display = 'none';
+        }
+      });
+    </script>
+    
+    <style>
+      .btn-install {
+        background-color: #000;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        margin-left: 12px;
+      }
+    </style>
   </body>
 </html>

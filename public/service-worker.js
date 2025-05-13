@@ -4,8 +4,7 @@ const ASSETS_TO_CACHE = [
   '/',
   '/offline.html',
   '/icons/icon-192.png',
-  '/icons/icon-512.png',
-  '/js/install-pwa.js'
+  '/icons/icon-512.png'
 ];
 
 // Instalação do service worker e caching de recursos essenciais
