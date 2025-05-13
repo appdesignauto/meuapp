@@ -281,9 +281,12 @@ function AppRoutes() {
       />
       <ProtectedRoute
         path="/admin/assinaturas"
-        component={() => {
-          return <UpdatedDashboard initialTab="subscriptions" />;
-        }}
+        component={() => <UpdatedDashboard initialTab="subscriptions" />}
+        roles={['admin']}
+      />
+      <ProtectedRoute
+        path="/painel-de-assinaturas"
+        component={() => <UpdatedDashboard initialTab="subscriptions" />}
         roles={['admin']}
       />
       <ProtectedRoute 
