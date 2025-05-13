@@ -15,7 +15,8 @@ import {
   Menu,
   X,
   BarChart,
-  LineChart
+  LineChart,
+  Smartphone
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -104,6 +105,11 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
       title: 'Configurações',
       href: '/admin/settings',
       icon: <Settings className="h-5 w-5" />,
+    },
+    {
+      title: 'Config PWA',
+      href: '/admin/app-config',
+      icon: <Smartphone className="h-5 w-5" />,
     },
   ];
 

@@ -5,12 +5,12 @@
 
 import React from 'react';
 import { AdminLayout } from '@/components/layout/AdminLayout';
-import AppConfigComponent from '@/components/admin/AppConfigPage';
+import AppConfigPageComponent from '@/components/admin/AppConfigPage';
 
 export default function AppConfigPage() {
   return (
-    <AdminLayout>
-      <AppConfigComponent />
+    <AdminLayout title="Configurações do PWA" backLink="/admin">
+      <AppConfigPageComponent />
     </AdminLayout>
   );
 }

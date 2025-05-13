@@ -3,14 +3,24 @@
  */
 
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import { Redirect, useLocation } from 'wouter';
+import { useAuth } from '@/hooks/use-auth';
+import { Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useLocation } from 'wouter';
+import { AlertTriangle } from 'lucide-react';
 
 type NivelAcesso = 'visitante' | 'usuario' | 'premium' | 'designer' | 'designer_adm' | 'suporte' | 'admin';
+
+// Mapa de níveis de acesso e seus respectivos níveis numéricos para comparação hierárquica
+const accessLevelMap: Record<NivelAcesso, number> = {
+  'visitante': 0,
+  'usuario': 1,
+  'premium': 2,
+  'designer': 3,
+  'designer_adm': 4,
+  'suporte': 5,
+  'admin': 6
+};
 
 interface UserPermissionGuardProps {
   children: React.ReactNode;
@@ -22,110 +32,62 @@ interface UserPermissionGuardProps {
 export function UserPermissionGuard({ 
   children, 
   requiredRole, 
-  fallback,
-  redirectTo = '/auth'
+  fallback, 
+  redirectTo = '/' 
 }: UserPermissionGuardProps) {
-  const [_, navigate] = useNavigate();
-  
-  // Buscar informações do usuário logado
-  const { data: user, isLoading, error } = useQuery({
-    queryKey: ['/api/user'],
-    queryFn: async () => {
-      try {
-        const res = await apiRequest('GET', '/api/user');
-        return await res.json();
-      } catch (error) {
-        // Se o usuário não estiver autenticado, redirecionar para página de login
-        if (redirectTo) {
-          navigate(redirectTo);
-        }
-        throw error;
-      }
-    }
-  });
-  
-  // Verificar nível de acesso do usuário
-  const hasPermission = () => {
-    if (!user) return false;
-    
-    // Usuários admin sempre têm acesso
-    if (user.nivelacesso === 'admin') return true;
-    
-    // Designer adm pode acessar áreas de designer e abaixo
-    if (user.nivelacesso === 'designer_adm' && 
-        ['designer', 'premium', 'usuario', 'visitante'].includes(requiredRole)) {
-      return true;
-    }
-    
-    // Suporte pode acessar áreas de suporte e abaixo
-    if (user.nivelacesso === 'suporte' && 
-        ['premium', 'usuario', 'visitante'].includes(requiredRole)) {
-      return true;
-    }
-    
-    // Designer pode acessar áreas de designer e abaixo
-    if (user.nivelacesso === 'designer' && 
-        ['premium', 'usuario', 'visitante'].includes(requiredRole)) {
-      return true;
-    }
-    
-    // Premium pode acessar áreas de premium e abaixo
-    if (user.nivelacesso === 'premium' && 
-        ['usuario', 'visitante'].includes(requiredRole)) {
-      return true;
-    }
-    
-    // Usuário pode acessar áreas de usuário e abaixo
-    if (user.nivelacesso === 'usuario' && requiredRole === 'visitante') {
-      return true;
-    }
-    
-    // Visitante só pode acessar áreas de visitante
-    if (user.nivelacesso === 'visitante' && requiredRole === 'visitante') {
-      return true;
-    }
-    
-    return user.nivelacesso === requiredRole;
-  };
-  
+  const { user, isLoading } = useAuth();
+  const [, setLocation] = useLocation();
+
+  // Mostrar loader enquanto carrega as informações do usuário
   if (isLoading) {
     return (
-      <div className="p-4 space-y-4">
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-32 w-full" />
+      <div className="flex justify-center items-center min-h-[calc(100vh-200px)]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
-  
-  if (error || !user) {
-    // Redirecionar para a página de login
+
+  // Se não houver usuário autenticado, redirecionar para a página de login
+  if (!user) {
     if (redirectTo) {
-      navigate(redirectTo);
+      return <Redirect to={redirectTo} />;
+    }
+    return null;
+  }
+
+  // Obter o nível de acesso do usuário, ou "visitante" se não estiver definido
+  const userAccessLevel = (user.nivelacesso as NivelAcesso) || 'visitante';
+  
+  // Verificar se o usuário tem o nível de acesso necessário
+  const hasRequiredAccess = accessLevelMap[userAccessLevel] >= accessLevelMap[requiredRole];
+
+  if (!hasRequiredAccess) {
+    // Se fallback for fornecido, mostrar o conteúdo alternativo
+    if (fallback) {
+      return <>{fallback}</>;
     }
     
-    return fallback || (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Acesso negado</AlertTitle>
-        <AlertDescription>
-          Você precisa estar autenticado para acessar esta página.
-        </AlertDescription>
-      </Alert>
+    // Caso contrário, mostrar alerta de acesso negado
+    return (
+      <div className="p-8 max-w-3xl mx-auto">
+        <Alert variant="destructive" className="mb-4">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Acesso Negado</AlertTitle>
+          <AlertDescription>
+            Você não tem permissão para acessar esta página. 
+            Esta funcionalidade requer nível de acesso {requiredRole} ou superior.
+          </AlertDescription>
+        </Alert>
+        <button
+          onClick={() => setLocation('/')}
+          className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
+        >
+          Voltar à página inicial
+        </button>
+      </div>
     );
   }
-  
-  if (!hasPermission()) {
-    return fallback || (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Acesso restrito</AlertTitle>
-        <AlertDescription>
-          Você não tem permissão para acessar esta página. Esta área requer nível de acesso "{requiredRole}".
-        </AlertDescription>
-      </Alert>
-    );
-  }
-  
+
+  // Se tiver permissão, renderizar o conteúdo protegido
   return <>{children}</>;
 }

@@ -3,20 +3,32 @@
  * Permite que administradores personalizem as configurações do PWA
  */
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { apiRequest, queryClient } from '@/lib/queryClient';
-import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
-import { AlertCircle, ImageIcon, Save, Upload } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Loader2 } from 'lucide-react';
 import { UserPermissionGuard } from '@/components/admin/UserPermissionGuard';
+import { useToast } from '@/hooks/use-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
+
+// Definindo o schema para validação do formulário
+const appConfigSchema = z.object({
+  name: z.string().min(1, 'Nome do aplicativo é obrigatório'),
+  short_name: z.string().min(1, 'Nome curto do aplicativo é obrigatório'),
+  theme_color: z.string().min(1, 'Cor do tema é obrigatória'),
+  background_color: z.string().min(1, 'Cor de fundo é obrigatória')
+});
+
+type AppConfigFormValues = z.infer<typeof appConfigSchema>;
 
 interface AppConfig {
   id?: number;
@@ -31,52 +43,77 @@ interface AppConfig {
 }
 
 export default function AppConfigPage() {
-  const [formData, setFormData] = useState<AppConfig>({
-    name: 'DesignAuto',
-    short_name: 'DesignAuto',
-    theme_color: '#1e40af',
-    background_color: '#ffffff',
-    icon_192: '/icons/icon-192.png',
-    icon_512: '/icons/icon-512.png',
-  });
-  
-  const icon192InputRef = useRef<HTMLInputElement>(null);
-  const icon512InputRef = useRef<HTMLInputElement>(null);
-  
   const { toast } = useToast();
+  const [icon192Preview, setIcon192Preview] = useState<string | null>(null);
+  const [icon512Preview, setIcon512Preview] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>('general');
   
-  // Buscar configuração atual do PWA
-  const { data, isLoading, error } = useQuery({
+  // Carregando configurações atuais
+  const { data: config, isLoading, error } = useQuery({
     queryKey: ['/api/app-config'],
     queryFn: async () => {
-      const res = await apiRequest('GET', '/api/app-config');
-      const data = await res.json();
-      if (data.success && data.config) {
-        setFormData(data.config);
-        return data.config;
+      try {
+        const res = await apiRequest('GET', '/api/app-config');
+        const data = await res.json();
+        return data as AppConfig;
+      } catch (error) {
+        console.error('Erro ao carregar configurações:', error);
+        throw error;
       }
-      return null;
     }
   });
   
-  // Mutação para atualizar as configurações do PWA
-  const updateConfigMutation = useMutation({
-    mutationFn: async (data: Partial<AppConfig>) => {
+  // Configurar o formulário
+  const form = useForm<AppConfigFormValues>({
+    resolver: zodResolver(appConfigSchema),
+    defaultValues: {
+      name: config?.name || 'Design Auto',
+      short_name: config?.short_name || 'Design Auto',
+      theme_color: config?.theme_color || '#FE9017',
+      background_color: config?.background_color || '#ffffff'
+    }
+  });
+  
+  // Atualizar valores padrão quando os dados são carregados
+  useEffect(() => {
+    if (config) {
+      form.reset({
+        name: config.name,
+        short_name: config.short_name,
+        theme_color: config.theme_color,
+        background_color: config.background_color
+      });
+      
+      // Carregar imagens para preview
+      if (config.icon_192) {
+        setIcon192Preview(config.icon_192);
+      }
+      
+      if (config.icon_512) {
+        setIcon512Preview(config.icon_512);
+      }
+    }
+  }, [config, form]);
+  
+  // Mutação para salvar configurações gerais
+  const saveGeneralMutation = useMutation({
+    mutationFn: async (data: AppConfigFormValues) => {
       const res = await apiRequest('POST', '/api/app-config', data);
-      return res.json();
+      return await res.json();
     },
     onSuccess: () => {
-      toast({
-        title: 'Configurações atualizadas',
-        description: 'As configurações do PWA foram atualizadas com sucesso',
-      });
       queryClient.invalidateQueries({ queryKey: ['/api/app-config'] });
+      toast({
+        title: "Sucesso!",
+        description: "Configurações do PWA atualizadas com sucesso.",
+        variant: "default",
+      });
     },
     onError: (error: Error) => {
       toast({
-        title: 'Erro ao atualizar configurações',
-        description: error.message,
-        variant: 'destructive',
+        title: "Erro!",
+        description: `Falha ao atualizar configurações: ${error.message}`,
+        variant: "destructive",
       });
     }
   });
@@ -84,32 +121,28 @@ export default function AppConfigPage() {
   // Mutação para fazer upload do ícone 192x192
   const uploadIcon192Mutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      const res = await fetch('/api/app-config/icon-192', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
+      const res = await apiRequest('POST', '/api/app-config/icon-192', formData, {
+        headers: {
+          // O Content-Type será definido automaticamente pelo navegador para FormData
+        },
+        skipContentType: true
       });
-      return res.json();
+      return await res.json();
     },
     onSuccess: (data) => {
-      toast({
-        title: 'Ícone atualizado',
-        description: 'O ícone 192x192 foi atualizado com sucesso',
-      });
-      
-      // Atualizar o formData com o novo caminho do ícone
-      setFormData(prev => ({
-        ...prev,
-        icon_192: data.iconPath + '?v=' + new Date().getTime() // Adicionar timestamp para evitar cache
-      }));
-      
       queryClient.invalidateQueries({ queryKey: ['/api/app-config'] });
+      setIcon192Preview(data.url);
+      toast({
+        title: "Sucesso!",
+        description: "Ícone 192x192 atualizado com sucesso.",
+        variant: "default",
+      });
     },
     onError: (error: Error) => {
       toast({
-        title: 'Erro ao fazer upload do ícone',
-        description: error.message,
-        variant: 'destructive',
+        title: "Erro!",
+        description: `Falha ao fazer upload do ícone 192x192: ${error.message}`,
+        variant: "destructive",
       });
     }
   });
@@ -117,438 +150,363 @@ export default function AppConfigPage() {
   // Mutação para fazer upload do ícone 512x512
   const uploadIcon512Mutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      const res = await fetch('/api/app-config/icon-512', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
+      const res = await apiRequest('POST', '/api/app-config/icon-512', formData, {
+        headers: {
+          // O Content-Type será definido automaticamente pelo navegador para FormData
+        },
+        skipContentType: true
       });
-      return res.json();
+      return await res.json();
     },
     onSuccess: (data) => {
-      toast({
-        title: 'Ícone atualizado',
-        description: 'O ícone 512x512 foi atualizado com sucesso',
-      });
-      
-      // Atualizar o formData com o novo caminho do ícone
-      setFormData(prev => ({
-        ...prev,
-        icon_512: data.iconPath + '?v=' + new Date().getTime() // Adicionar timestamp para evitar cache
-      }));
-      
       queryClient.invalidateQueries({ queryKey: ['/api/app-config'] });
+      setIcon512Preview(data.url);
+      toast({
+        title: "Sucesso!",
+        description: "Ícone 512x512 atualizado com sucesso.",
+        variant: "default",
+      });
     },
     onError: (error: Error) => {
       toast({
-        title: 'Erro ao fazer upload do ícone',
-        description: error.message,
-        variant: 'destructive',
+        title: "Erro!",
+        description: `Falha ao fazer upload do ícone 512x512: ${error.message}`,
+        variant: "destructive",
       });
     }
   });
   
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+  // Handler para salvar configurações gerais
+  const handleSaveGeneral = form.handleSubmit((data) => {
+    saveGeneralMutation.mutate(data);
+  });
   
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    updateConfigMutation.mutate({
-      name: formData.name,
-      short_name: formData.short_name,
-      theme_color: formData.theme_color,
-      background_color: formData.background_color,
-    });
-  };
-  
-  const handleIconUpload = (size: '192' | '512') => {
-    const inputRef = size === '192' ? icon192InputRef : icon512InputRef;
+  // Handler para fazer upload de ícones
+  const handleIcon192Upload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
     
-    if (inputRef.current && inputRef.current.files && inputRef.current.files[0]) {
-      const formData = new FormData();
-      formData.append('icon', inputRef.current.files[0]);
-      formData.append('size', size);
-      
-      if (size === '192') {
-        uploadIcon192Mutation.mutate(formData);
-      } else {
-        uploadIcon512Mutation.mutate(formData);
-      }
+    // Validar tamanho e tipo
+    if (!file.type.includes('image/')) {
+      toast({
+        title: "Erro!",
+        description: "O arquivo selecionado não é uma imagem válida.",
+        variant: "destructive",
+      });
+      return;
     }
+    
+    const formData = new FormData();
+    formData.append('icon', file);
+    uploadIcon192Mutation.mutate(formData);
   };
   
-  if (error) {
-    return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Erro</AlertTitle>
-        <AlertDescription>
-          Ocorreu um erro ao carregar as configurações do PWA. Por favor, tente novamente mais tarde.
-        </AlertDescription>
-      </Alert>
-    );
-  }
+  const handleIcon512Upload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    // Validar tamanho e tipo
+    if (!file.type.includes('image/')) {
+      toast({
+        title: "Erro!",
+        description: "O arquivo selecionado não é uma imagem válida.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const formData = new FormData();
+    formData.append('icon', file);
+    uploadIcon512Mutation.mutate(formData);
+  };
   
+  // JSX para o componente
   return (
     <UserPermissionGuard requiredRole="admin">
-      <div className="container py-10">
-        <h1 className="text-3xl font-bold mb-6">Configurações do PWA</h1>
-        <p className="text-muted-foreground mb-8">
-          Configure as opções do Progressive Web App (PWA) para personalizar a experiência de instalação do aplicativo.
-        </p>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">Configurações do PWA</h2>
+            <p className="text-muted-foreground">
+              Personalize as configurações do Progressive Web App para a experiência mobile
+            </p>
+          </div>
+        </div>
         
-        <Tabs defaultValue="general">
-          <TabsList className="mb-6">
-            <TabsTrigger value="general">Geral</TabsTrigger>
+        <Tabs defaultValue="general" value={activeTab} onValueChange={setActiveTab}>
+          <TabsList>
+            <TabsTrigger value="general">Informações Gerais</TabsTrigger>
             <TabsTrigger value="icons">Ícones</TabsTrigger>
             <TabsTrigger value="preview">Visualização</TabsTrigger>
           </TabsList>
           
+          {/* Informações Gerais */}
           <TabsContent value="general">
             <Card>
               <CardHeader>
-                <CardTitle>Configurações Gerais</CardTitle>
+                <CardTitle>Informações Gerais do PWA</CardTitle>
                 <CardDescription>
-                  Defina as configurações básicas do seu PWA, como nome, cor de tema e cor de fundo.
+                  Configure as informações básicas exibidas quando os usuários instalarem o aplicativo.
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {isLoading ? (
-                  <div className="space-y-4">
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
                 ) : (
-                  <form onSubmit={handleSubmit} id="general-form" className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Nome do Aplicativo</Label>
-                      <Input 
-                        id="name"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="short_name">Nome Curto</Label>
-                      <Input 
-                        id="short_name"
-                        name="short_name"
-                        value={formData.short_name}
-                        onChange={handleChange}
-                        maxLength={12}
-                        required
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Nome curto usado na tela inicial (máximo 12 caracteres)
-                      </p>
-                    </div>
-                    
+                  <form onSubmit={handleSaveGeneral} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
+                        <Label htmlFor="name">Nome do Aplicativo</Label>
+                        <Input 
+                          id="name"
+                          placeholder="Nome completo do aplicativo" 
+                          {...form.register('name')}
+                        />
+                        {form.formState.errors.name && (
+                          <p className="text-sm text-red-500">{form.formState.errors.name.message}</p>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="short_name">Nome Curto</Label>
+                        <Input 
+                          id="short_name"
+                          placeholder="Nome curto (para ícones)" 
+                          {...form.register('short_name')}
+                        />
+                        {form.formState.errors.short_name && (
+                          <p className="text-sm text-red-500">{form.formState.errors.short_name.message}</p>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-2">
                         <Label htmlFor="theme_color">Cor do Tema</Label>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex gap-2">
                           <Input 
                             id="theme_color"
-                            name="theme_color"
                             type="color"
-                            value={formData.theme_color}
-                            onChange={handleChange}
-                            className="w-16 h-10 p-1"
-                            required
+                            className="w-12 h-10 p-1"
+                            {...form.register('theme_color')}
                           />
                           <Input 
-                            value={formData.theme_color}
-                            onChange={handleChange}
-                            name="theme_color"
-                            className="flex-grow"
+                            placeholder="Código de cor hex (#FE9017)" 
+                            value={form.watch('theme_color')}
+                            onChange={(e) => form.setValue('theme_color', e.target.value)}
                           />
                         </div>
+                        {form.formState.errors.theme_color && (
+                          <p className="text-sm text-red-500">{form.formState.errors.theme_color.message}</p>
+                        )}
                       </div>
                       
                       <div className="space-y-2">
                         <Label htmlFor="background_color">Cor de Fundo</Label>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex gap-2">
                           <Input 
                             id="background_color"
-                            name="background_color"
                             type="color"
-                            value={formData.background_color}
-                            onChange={handleChange}
-                            className="w-16 h-10 p-1"
-                            required
+                            className="w-12 h-10 p-1"
+                            {...form.register('background_color')}
                           />
                           <Input 
-                            value={formData.background_color}
-                            onChange={handleChange}
-                            name="background_color"
-                            className="flex-grow"
+                            placeholder="Código de cor hex (#ffffff)" 
+                            value={form.watch('background_color')}
+                            onChange={(e) => form.setValue('background_color', e.target.value)}
                           />
                         </div>
-                      </div>
-                    </div>
-                  </form>
-                )}
-              </CardContent>
-              <CardFooter className="flex justify-end">
-                <Button 
-                  type="submit" 
-                  form="general-form"
-                  disabled={isLoading || updateConfigMutation.isPending}
-                  className="gap-2"
-                >
-                  {updateConfigMutation.isPending ? (
-                    <>
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                      Salvando...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4" />
-                      Salvar Configurações
-                    </>
-                  )}
-                </Button>
-              </CardFooter>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="icons">
-            <Card>
-              <CardHeader>
-                <CardTitle>Ícones do Aplicativo</CardTitle>
-                <CardDescription>
-                  Faça upload dos ícones que serão usados quando o aplicativo for instalado na tela inicial.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Ícone 192x192 */}
-                    <div className="border rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-medium">Ícone 192x192</h3>
-                      </div>
-                      <div className="aspect-square w-48 mx-auto mb-4 border rounded flex items-center justify-center overflow-hidden bg-gray-50">
-                        {isLoading ? (
-                          <Skeleton className="w-full h-full" />
-                        ) : (
-                          <img 
-                            src={formData.icon_192 + '?v=' + new Date().getTime()} 
-                            alt="Ícone 192x192" 
-                            className="max-w-full max-h-full object-contain"
-                            onError={(e) => {
-                              // Fallback para caso a imagem não seja encontrada
-                              e.currentTarget.src = '/placeholder-icon.png';
-                            }}
-                          />
+                        {form.formState.errors.background_color && (
+                          <p className="text-sm text-red-500">{form.formState.errors.background_color.message}</p>
                         )}
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <Label htmlFor="icon-192">Selecionar Arquivo</Label>
-                          <span className="text-xs text-muted-foreground">PNG, JPG ou WebP</span>
-                        </div>
-                        <div className="flex gap-2">
-                          <Input
-                            id="icon-192"
-                            type="file"
-                            accept="image/png,image/jpeg,image/webp"
-                            ref={icon192InputRef}
-                            disabled={uploadIcon192Mutation.isPending}
-                            className="flex-grow"
-                          />
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleIconUpload('192')}
-                            disabled={uploadIcon192Mutation.isPending || !icon192InputRef.current?.files?.length}
-                          >
-                            {uploadIcon192Mutation.isPending ? (
-                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                            ) : (
-                              <Upload className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </div>
                       </div>
                     </div>
                     
-                    {/* Ícone 512x512 */}
-                    <div className="border rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-medium">Ícone 512x512</h3>
-                      </div>
-                      <div className="aspect-square w-48 mx-auto mb-4 border rounded flex items-center justify-center overflow-hidden bg-gray-50">
-                        {isLoading ? (
-                          <Skeleton className="w-full h-full" />
-                        ) : (
-                          <img 
-                            src={formData.icon_512 + '?v=' + new Date().getTime()} 
-                            alt="Ícone 512x512"
-                            className="max-w-full max-h-full object-contain"
-                            onError={(e) => {
-                              // Fallback para caso a imagem não seja encontrada
-                              e.currentTarget.src = '/placeholder-icon.png';
-                            }}
-                          />
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <Label htmlFor="icon-512">Selecionar Arquivo</Label>
-                          <span className="text-xs text-muted-foreground">PNG, JPG ou WebP</span>
-                        </div>
-                        <div className="flex gap-2">
-                          <Input
-                            id="icon-512"
-                            type="file"
-                            accept="image/png,image/jpeg,image/webp"
-                            ref={icon512InputRef}
-                            disabled={uploadIcon512Mutation.isPending}
-                            className="flex-grow"
-                          />
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleIconUpload('512')}
-                            disabled={uploadIcon512Mutation.isPending || !icon512InputRef.current?.files?.length}
-                          >
-                            {uploadIcon512Mutation.isPending ? (
-                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                            ) : (
-                              <Upload className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </div>
-                      </div>
+                    <Button 
+                      type="submit" 
+                      className="mt-4"
+                      disabled={saveGeneralMutation.isPending}
+                    >
+                      {saveGeneralMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Salvando...
+                        </>
+                      ) : 'Salvar Configurações'}
+                    </Button>
+                  </form>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Ícones */}
+          <TabsContent value="icons">
+            <Card>
+              <CardHeader>
+                <CardTitle>Ícones do PWA</CardTitle>
+                <CardDescription>
+                  Faça upload dos ícones que serão exibidos na tela inicial e nos dispositivos dos usuários.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Ícone 192x192 */}
+                  <div className="border rounded-lg p-4 space-y-4">
+                    <div className="space-y-2">
+                      <h3 className="font-medium">Ícone 192x192</h3>
+                      <p className="text-sm text-gray-500">
+                        Este ícone será utilizado em telas menores e como ícone padrão.
+                      </p>
                     </div>
+                    
+                    {icon192Preview && (
+                      <div className="flex justify-center mb-4">
+                        <img 
+                          src={icon192Preview} 
+                          alt="Ícone 192x192" 
+                          className="h-24 w-24 border rounded-md object-contain"
+                        />
+                      </div>
+                    )}
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="icon-192">Selecionar imagem (192x192px)</Label>
+                      <Input
+                        id="icon-192"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleIcon192Upload}
+                        disabled={uploadIcon192Mutation.isPending}
+                      />
+                      <p className="text-xs text-gray-500">
+                        Recomendado: PNG ou WebP com fundo transparente.
+                      </p>
+                    </div>
+                    
+                    {uploadIcon192Mutation.isPending && (
+                      <div className="flex items-center mt-2">
+                        <Loader2 className="h-4 w-4 animate-spin mr-2 text-primary" />
+                        <span className="text-sm">Fazendo upload...</span>
+                      </div>
+                    )}
                   </div>
                   
-                  <Alert>
-                    <ImageIcon className="h-4 w-4" />
-                    <AlertTitle>Dica</AlertTitle>
-                    <AlertDescription>
-                      Para melhor resultado, use ícones quadrados, transparentes e com dimensões exatas de 192x192 e 512x512 pixels.
-                    </AlertDescription>
-                  </Alert>
+                  {/* Ícone 512x512 */}
+                  <div className="border rounded-lg p-4 space-y-4">
+                    <div className="space-y-2">
+                      <h3 className="font-medium">Ícone 512x512</h3>
+                      <p className="text-sm text-gray-500">
+                        Este ícone será utilizado em telas maiores e para splash screens.
+                      </p>
+                    </div>
+                    
+                    {icon512Preview && (
+                      <div className="flex justify-center mb-4">
+                        <img 
+                          src={icon512Preview} 
+                          alt="Ícone 512x512" 
+                          className="h-24 w-24 border rounded-md object-contain"
+                        />
+                      </div>
+                    )}
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="icon-512">Selecionar imagem (512x512px)</Label>
+                      <Input
+                        id="icon-512"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleIcon512Upload}
+                        disabled={uploadIcon512Mutation.isPending}
+                      />
+                      <p className="text-xs text-gray-500">
+                        Recomendado: PNG ou WebP com fundo transparente.
+                      </p>
+                    </div>
+                    
+                    {uploadIcon512Mutation.isPending && (
+                      <div className="flex items-center mt-2">
+                        <Loader2 className="h-4 w-4 animate-spin mr-2 text-primary" />
+                        <span className="text-sm">Fazendo upload...</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
           
+          {/* Visualização */}
           <TabsContent value="preview">
             <Card>
               <CardHeader>
-                <CardTitle>Visualização</CardTitle>
+                <CardTitle>Visualização do PWA</CardTitle>
                 <CardDescription>
-                  Veja como o seu PWA vai aparecer quando for instalado.
+                  Veja como o seu aplicativo aparecerá quando instalado.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-6">
-                  {isLoading ? (
-                    <div className="space-y-4">
-                      <Skeleton className="h-10 w-full" />
-                      <Skeleton className="h-40 w-full" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Visualização do manifest.json */}
+                  <div className="space-y-4">
+                    <h3 className="font-medium">Manifest.json</h3>
+                    <div className="p-4 rounded-md bg-gray-100 dark:bg-gray-800 overflow-auto max-h-80">
+                      <pre className="text-xs">
+                        {JSON.stringify({
+                          name: form.watch('name') || config?.name || 'Design Auto',
+                          short_name: form.watch('short_name') || config?.short_name || 'Design Auto',
+                          theme_color: form.watch('theme_color') || config?.theme_color || '#FE9017',
+                          background_color: form.watch('background_color') || config?.background_color || '#ffffff',
+                          display: "standalone",
+                          scope: "/",
+                          start_url: "/",
+                          icons: [
+                            {
+                              src: config?.icon_192 || "/icons/icon-192x192.png",
+                              sizes: "192x192",
+                              type: "image/png"
+                            },
+                            {
+                              src: config?.icon_512 || "/icons/icon-512x512.png",
+                              sizes: "512x512",
+                              type: "image/png"
+                            }
+                          ]
+                        }, null, 2)}
+                      </pre>
                     </div>
-                  ) : (
-                    <>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="border rounded-lg p-4">
-                          <h3 className="font-medium mb-4">Tela Inicial</h3>
-                          <div className="flex justify-center">
-                            <div className="border rounded-lg p-2" style={{ backgroundColor: '#f2f2f2' }}>
-                              <div className="flex flex-col items-center space-y-1">
-                                <div className="w-16 h-16 rounded-lg overflow-hidden border shadow-sm" style={{ backgroundColor: formData.background_color }}>
-                                  <img 
-                                    src={formData.icon_192 + '?v=' + new Date().getTime()} 
-                                    alt="App Icon"
-                                    className="w-full h-full object-contain"
-                                    onError={(e) => {
-                                      e.currentTarget.src = '/placeholder-icon.png';
-                                    }}
-                                  />
-                                </div>
-                                <span className="text-xs text-center font-medium">
-                                  {formData.short_name}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="border rounded-lg p-4">
-                          <h3 className="font-medium mb-4">Tela de Splash</h3>
-                          <div className="flex justify-center">
-                            <div 
-                              className="border rounded-lg p-6 shadow-sm w-64 h-96 flex flex-col items-center justify-center"
-                              style={{ backgroundColor: formData.background_color }}
-                            >
-                              <img 
-                                src={formData.icon_512 + '?v=' + new Date().getTime()} 
-                                alt="App Icon Large"
-                                className="w-24 h-24 mb-4 object-contain"
-                                onError={(e) => {
-                                  e.currentTarget.src = '/placeholder-icon.png';
-                                }}
-                              />
-                              <span className="text-base font-medium" style={{ color: formData.theme_color }}>
-                                {formData.name}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
+                  </div>
+                  
+                  {/* Simulação de tela inicial */}
+                  <div className="space-y-4">
+                    <h3 className="font-medium">Visualização na tela inicial</h3>
+                    <div className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center space-y-3">
+                      <div className="w-16 h-16 rounded-lg overflow-hidden border dark:border-gray-700 flex items-center justify-center" style={{ backgroundColor: form.watch('background_color') || config?.background_color || '#ffffff' }}>
+                        {(icon192Preview || icon512Preview) ? (
+                          <img 
+                            src={icon192Preview || icon512Preview} 
+                            alt="Ícone do app" 
+                            className="max-w-full max-h-full"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 rounded-md" />
+                        )}
                       </div>
-                      
-                      <Separator />
-                      
-                      <div>
-                        <h3 className="font-medium mb-4">Manifest JSON</h3>
-                        <pre className="bg-slate-100 p-4 rounded-lg overflow-auto text-xs">
-                          {JSON.stringify({
-                            name: formData.name,
-                            short_name: formData.short_name,
-                            start_url: '/',
-                            display: 'standalone',
-                            theme_color: formData.theme_color,
-                            background_color: formData.background_color,
-                            icons: [
-                              {
-                                src: formData.icon_192,
-                                sizes: '192x192',
-                                type: 'image/png',
-                                purpose: 'any'
-                              },
-                              {
-                                src: formData.icon_512,
-                                sizes: '512x512',
-                                type: 'image/png',
-                                purpose: 'any'
-                              }
-                            ]
-                          }, null, 2)}
-                        </pre>
-                      </div>
-                      
-                      <div className="flex justify-center">
-                        <Button 
-                          variant="outline" 
-                          onClick={() => window.open('/manifest.json', '_blank')}
-                        >
-                          Ver manifest.json atual
-                        </Button>
-                      </div>
-                    </>
-                  )}
+                      <span className="text-sm font-medium text-center">
+                        {form.watch('short_name') || config?.short_name || 'Design Auto'}
+                      </span>
+                    </div>
+                    
+                    {/* Status da instalação */}
+                    <Alert className="mt-6">
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      <AlertTitle>Instalação disponível</AlertTitle>
+                      <AlertDescription>
+                        O PWA está configurado e pronto para instalação pelos usuários através do botão "Instalar App" no site.
+                      </AlertDescription>
+                    </Alert>
+                  </div>
                 </div>
               </CardContent>
             </Card>
