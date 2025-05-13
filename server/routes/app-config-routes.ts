@@ -124,24 +124,52 @@ router.post('/app-config', checkAdmin, async (req, res) => {
 // Função auxiliar para processar a imagem
 async function processImage(file, size, targetPath) {
   try {
+    console.log(`Processando imagem ${file.path} para ${targetPath} com tamanho ${size}x${size}`);
+    
+    // Verificar se o arquivo de destino já existe e removê-lo
+    if (fs.existsSync(targetPath)) {
+      console.log(`Removendo arquivo existente: ${targetPath}`);
+      fs.unlinkSync(targetPath);
+    }
+    
     // Importar sharp dinamicamente (apenas quando necessário)
     const sharp = await import('sharp');
     
     // Processar a imagem para o tamanho correto
     await sharp.default(file.path)
-      .resize(size, size)
-      .png() // Converter para PNG
+      .resize({
+        width: size,
+        height: size,
+        fit: 'cover',
+        position: 'center'
+      })
+      .png({ quality: 90 }) // Converter para PNG com boa qualidade
       .toFile(targetPath);
       
+    console.log(`Imagem processada com sucesso: ${targetPath}`);
+    
     // Remover o arquivo temporário
     fs.unlinkSync(file.path);
+    console.log(`Arquivo temporário removido: ${file.path}`);
     
     return true;
   } catch (error) {
     console.error(`Erro ao processar imagem para tamanho ${size}x${size}:`, error);
-    // Se falhar o processamento, copiar o arquivo diretamente
-    fs.copyFileSync(file.path, targetPath);
-    fs.unlinkSync(file.path);
+    // Se falhar o processamento, tentar copiar o arquivo diretamente
+    try {
+      fs.copyFileSync(file.path, targetPath);
+      console.log(`Arquivo copiado diretamente: ${file.path} -> ${targetPath}`);
+    } catch (copyError) {
+      console.error(`Erro ao copiar arquivo: ${copyError}`);
+    }
+    
+    try {
+      fs.unlinkSync(file.path);
+      console.log(`Arquivo temporário removido: ${file.path}`);
+    } catch (unlinkError) {
+      console.error(`Erro ao remover arquivo temporário: ${unlinkError}`);
+    }
+    
     return false;
   }
 }
@@ -149,18 +177,33 @@ async function processImage(file, size, targetPath) {
 // Rota para fazer upload do ícone 192x192
 router.post('/app-config/icon-192', checkAdmin, upload.single('icon'), async (req, res) => {
   try {
+    console.log('Upload de ícone 192x192 recebido');
+    
     if (!req.file) {
+      console.log('Nenhum arquivo enviado');
       return res.status(400).json({ 
         success: false, 
         error: 'Nenhum arquivo foi enviado' 
       });
     }
     
+    console.log('Arquivo de ícone recebido:', req.file);
+    
     // Caminho de destino para o ícone
-    const iconPath = './public/icons/icon-192.png';
+    const timestamp = Date.now(); // Adiciona timestamp para evitar cache
+    const iconFileName = `icon-192-${timestamp}.png`;
+    const iconPath = `./public/icons/${iconFileName}`;
+    const iconUrl = `/icons/${iconFileName}`;
     
     // Processar e salvar o ícone com o tamanho correto
-    await processImage(req.file, 192, iconPath);
+    const success = await processImage(req.file, 192, iconPath);
+    
+    if (!success) {
+      return res.status(500).json({ 
+        success: false, 
+        error: 'Erro ao processar a imagem' 
+      });
+    }
     
     const configs = await db.select().from(appConfig);
     const userId = req.user?.id;
@@ -168,24 +211,26 @@ router.post('/app-config/icon-192', checkAdmin, upload.single('icon'), async (re
     if (configs.length === 0) {
       // Criar nova configuração
       await db.insert(appConfig).values({
-        icon_192: '/icons/icon-192.png',
+        icon_192: iconUrl,
         updated_by: userId
       });
     } else {
       // Atualizar configuração existente
       await db.update(appConfig)
         .set({
-          icon_192: '/icons/icon-192.png',
+          icon_192: iconUrl,
           updated_by: userId,
           updated_at: new Date()
         })
         .where(eq(appConfig.id, configs[0].id));
     }
     
+    // Retornar o URL com o timestamp para evitar cache no frontend
     return res.json({ 
       success: true, 
       message: 'Ícone 192x192 atualizado com sucesso',
-      iconPath: '/icons/icon-192.png'
+      iconPath: iconUrl,
+      timestamp: timestamp
     });
   } catch (error) {
     console.error('Erro ao fazer upload do ícone 192x192:', error);
@@ -199,18 +244,33 @@ router.post('/app-config/icon-192', checkAdmin, upload.single('icon'), async (re
 // Rota para fazer upload do ícone 512x512
 router.post('/app-config/icon-512', checkAdmin, upload.single('icon'), async (req, res) => {
   try {
+    console.log('Upload de ícone 512x512 recebido');
+    
     if (!req.file) {
+      console.log('Nenhum arquivo enviado');
       return res.status(400).json({ 
         success: false, 
         error: 'Nenhum arquivo foi enviado' 
       });
     }
     
+    console.log('Arquivo de ícone recebido:', req.file);
+    
     // Caminho de destino para o ícone
-    const iconPath = './public/icons/icon-512.png';
+    const timestamp = Date.now(); // Adiciona timestamp para evitar cache
+    const iconFileName = `icon-512-${timestamp}.png`;
+    const iconPath = `./public/icons/${iconFileName}`;
+    const iconUrl = `/icons/${iconFileName}`;
     
     // Processar e salvar o ícone com o tamanho correto
-    await processImage(req.file, 512, iconPath);
+    const success = await processImage(req.file, 512, iconPath);
+    
+    if (!success) {
+      return res.status(500).json({ 
+        success: false, 
+        error: 'Erro ao processar a imagem' 
+      });
+    }
     
     const configs = await db.select().from(appConfig);
     const userId = req.user?.id;
@@ -218,24 +278,26 @@ router.post('/app-config/icon-512', checkAdmin, upload.single('icon'), async (re
     if (configs.length === 0) {
       // Criar nova configuração
       await db.insert(appConfig).values({
-        icon_512: '/icons/icon-512.png',
+        icon_512: iconUrl,
         updated_by: userId
       });
     } else {
       // Atualizar configuração existente
       await db.update(appConfig)
         .set({
-          icon_512: '/icons/icon-512.png',
+          icon_512: iconUrl,
           updated_by: userId,
           updated_at: new Date()
         })
         .where(eq(appConfig.id, configs[0].id));
     }
     
+    // Retornar o URL com o timestamp para evitar cache no frontend
     return res.json({ 
       success: true, 
       message: 'Ícone 512x512 atualizado com sucesso',
-      iconPath: '/icons/icon-512.png' 
+      iconPath: iconUrl,
+      timestamp: timestamp
     });
   } catch (error) {
     console.error('Erro ao fazer upload do ícone 512x512:', error);

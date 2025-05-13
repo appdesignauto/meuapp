@@ -64,7 +64,9 @@ router.get('/manifest.json', async (req, res) => {
     
     // Definir cabeçalhos corretos para o manifest
     res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     
     // Enviar o manifest como JSON
     return res.json(manifest);

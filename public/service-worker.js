@@ -1,11 +1,12 @@
 // service-worker.js
-const CACHE_NAME = 'designauto-cache-v1';
+const CACHE_NAME = 'designauto-cache-v2'; // Versão incrementada para forçar atualização do cache
 const ASSETS_TO_CACHE = [
   '/',
   '/offline.html',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png'
+  '/manifest.json'
 ];
+
+// As imagens dos ícones agora são dinâmicas e não devem ser cacheadas aqui
 
 // Instalação do service worker e caching de recursos essenciais
 self.addEventListener('install', event => {
