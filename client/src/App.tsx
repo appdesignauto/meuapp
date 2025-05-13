@@ -197,6 +197,13 @@ function AppRoutes() {
           );
         }} />
       
+      {/* Rota para redirecionamento ao dashboard unificado */}
+      <ProtectedRoute
+        path="/admin-unified"
+        component={() => <UpdatedDashboard />}
+        roles={['admin', 'designer_adm']}
+      />
+
       {/* Rota de perfil do usuário */}
       <ProtectedRoute path="/profile" component={ProfilePage} />
       

@@ -21,7 +21,8 @@ const AdminRedirect: React.FC = () => {
     
     // Verificar se o usuário é admin antes de redirecionar
     if (user && (user.role === 'admin' || user.role === 'designer_adm')) {
-      setLocation('/admin');
+      // Direcionar para o UpdatedDashboard que contém as abas de assinaturas e webhooks
+      setLocation('/admin-unified');
     } else {
       // Redirecionar para home se não tiver permissão
       setLocation('/');
