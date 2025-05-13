@@ -26,6 +26,16 @@ export function InstallPWAButton() {
   const [installPrompt, setInstallPrompt] = useState<any>(null);
   const [isInstalled, setIsInstalled] = useState(false);
   
+  // Debug: verificar instalação PWA e prompt disponível
+  useEffect(() => {
+    console.log("InstallPWA Debug:", {
+      isInstalled,
+      hasPrompt: !!installPrompt,
+      windowPrompt: !!window.deferredPrompt,
+      isRunningAsPWA: isRunningAsPWA()
+    });
+  }, [isInstalled, installPrompt]);
+  
   // Verifica se o app já está instalado como PWA
   useEffect(() => {
     const checkIfPWA = () => {
