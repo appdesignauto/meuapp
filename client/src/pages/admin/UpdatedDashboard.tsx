@@ -118,9 +118,13 @@ import { apiRequest } from "@/lib/queryClient";
 import GerenciarFerramentas from './ferramentas/GerenciarFerramentas';
 import GerenciarCategorias from './ferramentas/GerenciarCategorias';
 
-const AdminDashboard = () => {
+interface UpdatedDashboardProps {
+  initialTab?: string;
+}
+
+const AdminDashboard = ({ initialTab = 'arts' }: UpdatedDashboardProps) => {
   const { user, logoutMutation } = useAuth();
-  const [activeTab, setActiveTab] = useState('arts');
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [isMultiFormOpen, setIsMultiFormOpen] = useState(false);

@@ -232,7 +232,7 @@ function AppRoutes() {
       {/* Rotas Administrativas */}
       <ProtectedRoute 
         path="/admin" 
-        component={UpdatedDashboard} 
+        component={() => <UpdatedDashboard />} 
         roles={['admin', 'designer_adm']} 
       />
       <ProtectedRoute
@@ -282,18 +282,13 @@ function AppRoutes() {
       <ProtectedRoute
         path="/admin/assinaturas"
         component={() => {
-          const AssinaturasPage = lazy(() => import("@/pages/admin/AssinaturasPage"));
-          return (
-            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
-              <AssinaturasPage />
-            </Suspense>
-          );
+          return <UpdatedDashboard initialTab="subscriptions" />;
         }}
         roles={['admin']}
       />
       <ProtectedRoute 
         path="/admin/:page" 
-        component={UpdatedDashboard}
+        component={() => <UpdatedDashboard />}
         roles={['admin', 'designer_adm']} 
       />
       
