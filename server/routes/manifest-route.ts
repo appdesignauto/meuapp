@@ -48,15 +48,18 @@ router.get('/manifest.json', async (req, res) => {
           src: config.icon_192,
           sizes: '192x192',
           type: 'image/png',
-          purpose: 'any'
+          purpose: 'any maskable'
         },
         {
           src: config.icon_512,
           sizes: '512x512',
           type: 'image/png',
-          purpose: 'any'
+          purpose: 'any maskable'
         }
-      ]
+      ],
+      id: '/',
+      orientation: 'any',
+      scope: '/'
     };
     
     // Definir cabeçalhos corretos para o manifest
