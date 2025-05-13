@@ -1051,6 +1051,16 @@ const AdminDashboard = () => {
                   <MessageSquare className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
                   {sidebarOpen && <span>Comunidade</span>}
                 </button>
+                <button
+                  onClick={() => setActiveTab('subscriptions')}
+                  className={`flex items-center w-full py-2.5 rounded-md ${
+                    activeTab === 'subscriptions' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
+                  title="Assinaturas"
+                >
+                  <CreditCard className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+                  {sidebarOpen && <span>Assinaturas</span>}
+                </button>
               </CollapsibleContent>
             </Collapsible>
             
