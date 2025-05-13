@@ -250,6 +250,28 @@ const SiteSettings = () => {
     }
   };
   
+  // Handler para mudanças nos campos de formulário PWA
+  const handlePwaInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    
+    setPwaFormData(prev => {
+      if (!prev) {
+        // Se não existir dados anteriores, inicialize com valores padrão
+        return {
+          name: name === 'name' ? value : '',
+          short_name: name === 'short_name' ? value : '',
+          theme_color: name === 'theme_color' ? value : '#FE9017',
+          background_color: name === 'background_color' ? value : '#FFFFFF',
+        };
+      }
+      
+      return {
+        ...prev,
+        [name]: value
+      };
+    });
+  };
+
   // Carregar configurações ao montar o componente
   useEffect(() => {
     loadSettings();
@@ -663,9 +685,7 @@ const SiteSettings = () => {
                             name="name"
                             value={pwaConfig?.name || ''}
                             placeholder="ex: Design Auto"
-                            onChange={(e) => {
-                              setPwaFormData(prev => ({...prev, name: e.target.value}));
-                            }}
+                            onChange={handlePwaInputChange}
                           />
                           <p className="text-xs text-muted-foreground">
                             Nome exibido após a instalação do app
@@ -679,9 +699,7 @@ const SiteSettings = () => {
                             name="short_name"
                             value={pwaFormData?.short_name || pwaConfig?.short_name || ''}
                             placeholder="ex: D.Auto"
-                            onChange={(e) => {
-                              setPwaFormData(prev => ({...prev, short_name: e.target.value}));
-                            }}
+                            onChange={handlePwaInputChange}
                           />
                           <p className="text-xs text-muted-foreground">
                             Nome curto para ícones e espaços limitados
@@ -694,19 +712,17 @@ const SiteSettings = () => {
                             <Input
                               id="theme_color_picker"
                               type="color"
+                              name="theme_color"
                               value={pwaFormData?.theme_color || pwaConfig?.theme_color || '#FE9017'}
                               className="w-12 h-10 p-1"
-                              onChange={(e) => {
-                                setPwaFormData(prev => ({...prev, theme_color: e.target.value}));
-                              }}
+                              onChange={handlePwaInputChange}
                             />
                             <Input 
                               id="theme_color"
+                              name="theme_color"
                               value={pwaFormData?.theme_color || pwaConfig?.theme_color || ''}
                               placeholder="#FE9017"
-                              onChange={(e) => {
-                                setPwaFormData(prev => ({...prev, theme_color: e.target.value}));
-                              }}
+                              onChange={handlePwaInputChange}
                             />
                           </div>
                           <p className="text-xs text-muted-foreground">
@@ -720,19 +736,17 @@ const SiteSettings = () => {
                             <Input
                               id="background_color_picker"
                               type="color"
+                              name="background_color"
                               value={pwaFormData?.background_color || pwaConfig?.background_color || '#FFFFFF'}
                               className="w-12 h-10 p-1"
-                              onChange={(e) => {
-                                setPwaFormData(prev => ({...prev, background_color: e.target.value}));
-                              }}
+                              onChange={handlePwaInputChange}
                             />
                             <Input 
                               id="background_color"
+                              name="background_color"
                               value={pwaFormData?.background_color || pwaConfig?.background_color || ''}
                               placeholder="#FFFFFF"
-                              onChange={(e) => {
-                                setPwaFormData(prev => ({...prev, background_color: e.target.value}));
-                              }}
+                              onChange={handlePwaInputChange}
                             />
                           </div>
                           <p className="text-xs text-muted-foreground">
