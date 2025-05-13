@@ -1,5 +1,5 @@
 // service-worker.js
-const CACHE_NAME = 'designauto-cache-v2'; // Versão incrementada para forçar atualização do cache
+const CACHE_NAME = 'designauto-cache-v3'; // Versão incrementada para forçar atualização do cache e corrigir problemas com ícones
 const ASSETS_TO_CACHE = [
   '/',
   '/offline.html',
@@ -43,29 +43,87 @@ self.addEventListener('activate', event => {
 
 // Interceptação de requisições
 self.addEventListener('fetch', event => {
-  event.respondWith(
-    // Tenta buscar o recurso na rede
-    fetch(event.request)
-      .catch(() => {
-        // Se falhar, verifica se o recurso está no cache
-        return caches.match(event.request)
-          .then(response => {
-            // Se estiver no cache, retorna o recurso do cache
-            if (response) {
-              return response;
-            }
-            
-            // Para requisições HTML, fornecer a página offline
-            if (event.request.mode === 'navigate') {
-              return caches.match('/offline.html');
-            }
-            
-            // Para outros tipos de recursos, retornar uma resposta vazia
-            return new Response('', {
-              status: 408,
-              headers: { 'Content-Type': 'text/plain' }
+  const url = new URL(event.request.url);
+  
+  // Para ícones e manifest.json: sempre buscar da rede (network-first)
+  // Isso garante que os ícones e manifest sempre estejam atualizados
+  if (url.pathname.includes('/icons/') || url.pathname === '/manifest.json') {
+    console.log('Buscar da rede primeiro para:', url.pathname);
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          // Clonar a resposta para armazenar no cache e retornar
+          const responseToCache = response.clone();
+          
+          // Atualizar o cache com a nova versão 
+          caches.open(CACHE_NAME)
+            .then(cache => {
+              // Remover versões antigas do mesmo recurso (útil para ícones)
+              if (url.pathname.includes('/icons/')) {
+                const iconType = url.pathname.includes('icon-192') ? 'icon-192' : 'icon-512';
+                cache.keys().then(keys => {
+                  keys.forEach(key => {
+                    const keyUrl = new URL(key.url);
+                    if (keyUrl.pathname.includes('/icons/') && keyUrl.pathname.includes(iconType)) {
+                      console.log('Removendo ícone antigo do cache:', keyUrl.pathname);
+                      cache.delete(key);
+                    }
+                  });
+                });
+              }
+              
+              // Adicionar a nova versão ao cache
+              cache.put(event.request, responseToCache);
+              console.log('Atualizado no cache:', url.pathname);
             });
-          });
-      })
-  );
+          
+          return response;
+        })
+        .catch(() => {
+          // Se falhar, tentar usar o cache
+          return caches.match(event.request);
+        })
+    );
+  } else {
+    // Para outros recursos, estratégia de cache-first
+    event.respondWith(
+      // Tenta buscar o recurso no cache primeiro
+      caches.match(event.request)
+        .then(response => {
+          // Se estiver no cache, retorna o recurso do cache
+          if (response) {
+            return response;
+          }
+          
+          // Se não estiver no cache, buscar da rede
+          return fetch(event.request)
+            .then(networkResponse => {
+              // Clonar a resposta para armazenar no cache e retornar
+              const responseToCache = networkResponse.clone();
+              
+              // Armazenar no cache apenas se for uma resposta válida
+              if (networkResponse.status === 200) {
+                caches.open(CACHE_NAME)
+                  .then(cache => {
+                    cache.put(event.request, responseToCache);
+                  });
+              }
+              
+              return networkResponse;
+            })
+            .catch(() => {
+              // Para requisições HTML, fornecer a página offline
+              if (event.request.mode === 'navigate') {
+                return caches.match('/offline.html');
+              }
+              
+              // Para outros tipos de recursos, retornar uma resposta vazia
+              return new Response('', {
+                status: 408,
+                headers: { 'Content-Type': 'text/plain' }
+              });
+            });
+        })
+    );
+  }
 });

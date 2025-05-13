@@ -189,11 +189,20 @@ router.post('/app-config/icon-192', checkAdmin, upload.single('icon'), async (re
     
     console.log('Arquivo de ícone recebido:', req.file);
     
+    // Garantir que o diretório de ícones existe
+    const iconDir = './public/icons';
+    if (!fs.existsSync(iconDir)) {
+      console.log('Criando diretório de ícones:', iconDir);
+      fs.mkdirSync(iconDir, { recursive: true });
+    }
+    
     // Caminho de destino para o ícone
     const timestamp = Date.now(); // Adiciona timestamp para evitar cache
     const iconFileName = `icon-192-${timestamp}.png`;
-    const iconPath = `./public/icons/${iconFileName}`;
+    const iconPath = `${iconDir}/${iconFileName}`;
     const iconUrl = `/icons/${iconFileName}`;
+    
+    console.log('Salvando ícone em:', iconPath);
     
     // Processar e salvar o ícone com o tamanho correto
     const success = await processImage(req.file, 192, iconPath);
@@ -256,11 +265,20 @@ router.post('/app-config/icon-512', checkAdmin, upload.single('icon'), async (re
     
     console.log('Arquivo de ícone recebido:', req.file);
     
+    // Garantir que o diretório de ícones existe
+    const iconDir = './public/icons';
+    if (!fs.existsSync(iconDir)) {
+      console.log('Criando diretório de ícones:', iconDir);
+      fs.mkdirSync(iconDir, { recursive: true });
+    }
+    
     // Caminho de destino para o ícone
     const timestamp = Date.now(); // Adiciona timestamp para evitar cache
     const iconFileName = `icon-512-${timestamp}.png`;
-    const iconPath = `./public/icons/${iconFileName}`;
+    const iconPath = `${iconDir}/${iconFileName}`;
     const iconUrl = `/icons/${iconFileName}`;
+    
+    console.log('Salvando ícone em:', iconPath);
     
     // Processar e salvar o ícone com o tamanho correto
     const success = await processImage(req.file, 512, iconPath);

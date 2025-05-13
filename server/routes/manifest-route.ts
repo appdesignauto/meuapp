@@ -35,6 +35,15 @@ router.get('/manifest.json', async (req, res) => {
       icon_512: configs[0].icon_512
     } : defaultConfig;
     
+    // Adicionar timestamp nos ícones para evitar cache
+    const timestamp = Date.now();
+    const icon192WithTimestamp = `${config.icon_192}?t=${timestamp}`;
+    const icon512WithTimestamp = `${config.icon_512}?t=${timestamp}`;
+    
+    console.log('Gerando manifest.json com ícones:');
+    console.log('- Ícone 192x192:', icon192WithTimestamp);
+    console.log('- Ícone 512x512:', icon512WithTimestamp);
+    
     // Construir o objeto manifest
     const manifest = {
       name: config.name,
@@ -45,13 +54,13 @@ router.get('/manifest.json', async (req, res) => {
       background_color: config.background_color,
       icons: [
         {
-          src: config.icon_192,
+          src: icon192WithTimestamp,
           sizes: '192x192',
           type: 'image/png',
           purpose: 'any maskable'
         },
         {
-          src: config.icon_512,
+          src: icon512WithTimestamp,
           sizes: '512x512',
           type: 'image/png',
           purpose: 'any maskable'
