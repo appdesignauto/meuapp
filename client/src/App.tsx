@@ -203,6 +203,20 @@ function AppRoutes() {
         component={() => <UpdatedDashboard />}
         roles={['admin', 'designer_adm']}
       />
+      
+      {/* Rota para forçar acesso à aba de assinaturas */}
+      <ProtectedRoute
+        path="/force-admin-unified"
+        component={() => {
+          const ForceAdminUnified = lazy(() => import("@/pages/force-admin-unified"));
+          return (
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+              <ForceAdminUnified />
+            </Suspense>
+          );
+        }}
+        roles={['admin', 'designer_adm']}
+      />
 
       {/* Rota de perfil do usuário */}
       <ProtectedRoute path="/profile" component={ProfilePage} />
