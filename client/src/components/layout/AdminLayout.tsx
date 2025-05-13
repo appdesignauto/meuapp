@@ -15,8 +15,7 @@ import {
   Menu,
   X,
   BarChart,
-  LineChart,
-  Smartphone
+  LineChart
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';

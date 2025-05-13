@@ -31,6 +31,17 @@ const SiteSettings = () => {
   const [error, setError] = useState<Error | null>(null);
   const [updating, setUpdating] = useState(false);
   
+  // Estado para armazenar as configurações do PWA
+  const [pwaConfig, setPwaConfig] = useState<{
+    name: string;
+    short_name: string;
+    theme_color: string;
+    background_color: string;
+    icon_192?: string;
+    icon_512?: string;
+  } | null>(null);
+  const [pwaLoading, setPwaLoading] = useState(true);
+  
   // Função para carregar as configurações do site
   const loadSettings = async () => {
     try {
@@ -62,9 +73,34 @@ const SiteSettings = () => {
     }
   };
   
+  // Função para carregar as configurações do PWA
+  const loadPwaConfig = async () => {
+    try {
+      setPwaLoading(true);
+      const response = await fetch('/api/app-config');
+      
+      if (!response.ok) {
+        throw new Error('Falha ao carregar configurações do PWA');
+      }
+      
+      const data = await response.json();
+      console.log('Configurações PWA carregadas:', data);
+      
+      if (data.config) {
+        setPwaConfig(data.config);
+      }
+    } catch (err: any) {
+      console.error('Erro ao carregar configurações do PWA:', err);
+      // Não exibimos o erro visualmente, apenas no console
+    } finally {
+      setPwaLoading(false);
+    }
+  };
+  
   // Carregar configurações ao montar o componente
   useEffect(() => {
     loadSettings();
+    loadPwaConfig();
   }, []);
 
   // Função para atualizar as configurações do site
@@ -441,37 +477,110 @@ const SiteSettings = () => {
         
         <TabsContent value="advanced" className="mt-6">
           <div className="space-y-6">
-            {/* Card para PWA */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Progressive Web App (PWA)</CardTitle>
-                <CardDescription>
-                  Configure as opções do aplicativo para dispositivos móveis
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-blue-100 text-blue-700 p-3 rounded-full">
-                      <Smartphone className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-medium">Configurações do PWA</h4>
-                      <p className="text-sm text-gray-500">
-                        Personalize cores, ícones e informações do aplicativo móvel
+            {/* Section para PWA - integrado diretamente */}
+            <div className="border rounded-md p-4 bg-blue-50 border-blue-100">
+              <div className="mb-4 flex items-center gap-3">
+                <div className="bg-blue-100 text-blue-700 p-3 rounded-full">
+                  <Smartphone className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="font-medium">Configurações do Progressive Web App (PWA)</h4>
+                  <p className="text-sm text-gray-500">
+                    Personalize cores, ícones e informações do aplicativo móvel para melhorar a experiência de instalação
+                  </p>
+                </div>
+              </div>
+              
+              {pwaLoading ? (
+                <div className="flex justify-center py-6">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : pwaConfig ? (
+                <>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="pwaName">Nome do Aplicativo</Label>
+                      <Input
+                        id="pwaName"
+                        name="pwaName"
+                        value={pwaConfig.name || ''}
+                        placeholder="ex: Design Auto"
+                        disabled
+                      />
+                      <p className="text-xs text-gray-500">
+                        Nome exibido após a instalação do app
                       </p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="pwaThemeColor">Cor do Tema</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          type="color"
+                          value={pwaConfig.theme_color || '#FE9017'}
+                          className="w-12 h-10 p-1"
+                          disabled
+                        />
+                        <Input 
+                          value={pwaConfig.theme_color || ''}
+                          placeholder="#FE9017"
+                          disabled
+                        />
+                      </div>
                     </div>
                   </div>
                   
-                  <Link href="/admin/app-config">
-                    <Button className="w-full">
-                      <Smartphone className="mr-2 h-4 w-4" />
-                      Gerenciar Configurações PWA
-                    </Button>
-                  </Link>
+                  {/* Prévia dos ícones */}
+                  <div className="mt-4 border-t pt-4 border-blue-100">
+                    <h4 className="text-sm font-medium mb-3">Ícones do Aplicativo</h4>
+                    <div className="flex items-center gap-4">
+                      {pwaConfig.icon_192 && (
+                        <div className="text-center">
+                          <div className="border rounded-md p-2 inline-block">
+                            <img 
+                              src={pwaConfig.icon_192} 
+                              alt="Ícone 192x192" 
+                              className="w-16 h-16 object-contain"
+                            />
+                          </div>
+                          <p className="text-xs mt-1">192x192</p>
+                        </div>
+                      )}
+                      
+                      {pwaConfig.icon_512 && (
+                        <div className="text-center">
+                          <div className="border rounded-md p-2 inline-block">
+                            <img 
+                              src={pwaConfig.icon_512} 
+                              alt="Ícone 512x512" 
+                              className="w-16 h-16 object-contain"
+                            />
+                          </div>
+                          <p className="text-xs mt-1">512x512</p>
+                        </div>
+                      )}
+                      
+                      {!pwaConfig.icon_192 && !pwaConfig.icon_512 && (
+                        <p className="text-sm text-gray-500 italic">Nenhum ícone configurado</p>
+                      )}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-4 text-gray-500">
+                  Configurações do PWA não encontradas
                 </div>
-              </CardContent>
-            </Card>
+              )}
+              
+              <div className="mt-6 flex gap-2">
+                <Link href="/admin/app-config">
+                  <Button variant="default">
+                    <Smartphone className="mr-2 h-4 w-4" />
+                    {pwaConfig ? 'Editar Configurações PWA' : 'Configurar PWA'}
+                  </Button>
+                </Link>
+              </div>
+            </div>
             
             <h3 className="text-lg font-medium">Configurações Avançadas</h3>
             <p className="text-gray-500">Configurações avançadas do sistema em desenvolvimento.</p>
