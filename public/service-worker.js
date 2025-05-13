@@ -1,5 +1,5 @@
 // Nome do cache para armazenar arquivos offline
-const CACHE_NAME = 'designauto-v1';
+const CACHE_NAME = 'designauto-v1.1';
 
 // Lista de recursos que devem ser armazenados em cache para uso offline
 const STATIC_CACHE_URLS = [
@@ -7,9 +7,12 @@ const STATIC_CACHE_URLS = [
   '/index.html',
   '/offline.html',
   '/favicon.png',
+  '/manifest.json',
   '/images/offline-placeholder.svg',
   '/icons/icon-192.png',
-  '/icons/icon-512.png'
+  '/icons/icon-512.png',
+  '/icons/icon-192.svg',
+  '/icons/icon-512.svg'
 ];
 
 // Evento de instalação - pré-cache de recursos estáticos

@@ -18,22 +18,37 @@
  * @returns {boolean} Verdadeiro se o aplicativo estiver sendo executado como PWA instalado
  */
 export function isRunningAsPWA(): boolean {
-  // Método 1: Verifica o display-mode do CSS
-  if (window.matchMedia('(display-mode: standalone)').matches) {
+  // Método 1: Verifica o display-mode do CSS (mais confiável)
+  if (window.matchMedia('(display-mode: standalone)').matches || 
+      window.matchMedia('(display-mode: fullscreen)').matches || 
+      window.matchMedia('(display-mode: minimal-ui)').matches) {
+    console.log('PWA detectado via display-mode CSS');
     return true;
   }
   
   // Método 2: Verifica o navigator.standalone (específico para iOS)
   if ((window.navigator as any).standalone === true) {
+    console.log('PWA detectado via navigator.standalone (iOS)');
     return true;
   }
   
   // Método 3: Verifica a URL (ausência de barra de endereço, específico para algumas implementações)
-  // Esta é uma heurística menos confiável, mas pode ajudar em alguns casos
-  if (window.location.href.includes('?homescreen=1')) {
+  if (window.location.href.includes('?source=pwa') || 
+      window.location.href.includes('?homescreen=1')) {
+    console.log('PWA detectado via parâmetros de URL');
     return true;
   }
   
+  // Método 4: Verifica se é um ambiente de app (algumas implementações PWA)
+  if (document.referrer.includes('android-app://') ||
+      document.URL.startsWith('app://') ||
+      document.URL.startsWith('file://')) {
+    console.log('PWA detectado via URL de aplicativo');
+    return true;
+  }
+  
+  // Não é um PWA
+  console.log('Não é um PWA: navegador normal');
   return false;
 }
 
