@@ -72,29 +72,51 @@ export function InstallPWAButton() {
   
   // Função para instalar o PWA quando o botão é clicado
   const handleInstallClick = () => {
-    if (!installPrompt) return;
-    
-    // Mostrar o prompt de instalação
-    installPrompt.prompt();
-    
-    // Esperar pela escolha do usuário
-    installPrompt.userChoice.then((choiceResult: { outcome: string }) => {
-      if (choiceResult.outcome === 'accepted') {
-        console.log('Usuário aceitou instalar o PWA');
-        setIsInstalled(true);
-      } else {
-        console.log('Usuário recusou instalar o PWA');
-      }
+    // Se temos o prompt, usamos a instalação padrão
+    if (installPrompt) {
+      console.log('Usando evento beforeinstallprompt armazenado');
       
-      // Limpa o prompt armazenado, já que só pode ser usado uma vez
-      setInstallPrompt(null);
-    });
+      // Mostrar o prompt de instalação
+      installPrompt.prompt();
+      
+      // Esperar pela escolha do usuário
+      installPrompt.userChoice.then((choiceResult: { outcome: string }) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('Usuário aceitou instalar o PWA');
+          setIsInstalled(true);
+        } else {
+          console.log('Usuário recusou instalar o PWA');
+        }
+        
+        // Limpa o prompt armazenado, já que só pode ser usado uma vez
+        setInstallPrompt(null);
+      });
+    } else {
+      // Mostramos um toast ou indicação para o usuário sobre como instalar manualmente
+      console.log('Sem evento beforeinstallprompt disponível');
+      
+      // Detecta o navegador para dar as instruções corretas
+      const userAgent = navigator.userAgent.toLowerCase();
+      
+      if (userAgent.includes('chrome')) {
+        alert('Para instalar: Clique nos três pontos no canto superior direito e depois em "Instalar DesignAuto"');
+      } else if (userAgent.includes('firefox')) {
+        alert('Para instalar: Clique no ícone de casa no canto superior direito da barra de endereço');
+      } else if (userAgent.includes('safari') && /iphone|ipad|ipod/.test(userAgent)) {
+        alert('Para instalar: Toque no ícone de compartilhamento e depois em "Adicionar à Tela de Início"');
+      } else {
+        alert('Para instalar: Verifique as opções do seu navegador para adicionar aplicativos à tela inicial');
+      }
+    }
   };
   
-  // Não renderiza nada se o app já estiver instalado ou não tiver o prompt disponível
-  if (isInstalled || !installPrompt) {
+  // Se o app já estiver instalado, não exibimos o botão
+  if (isInstalled) {
     return null;
   }
+  
+  // Deixamos o botão visível mesmo sem o prompt, para fins de teste
+  // Em produção, podemos ajustar isso depois
   
   return (
     <TooltipProvider>

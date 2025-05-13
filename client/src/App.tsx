@@ -15,6 +15,13 @@ import DynamicFavicon from "@/components/global/DynamicFavicon";
 import { measureWebVitals } from "./lib/measureWebVitals";
 import { registerServiceWorker } from "./lib/pwa-utils";
 
+// Declaração para estender a interface Window
+declare global {
+  interface Window {
+    deferredPrompt?: any;
+  }
+}
+
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Home from "@/pages/Home";
