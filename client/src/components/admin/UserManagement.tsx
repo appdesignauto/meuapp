@@ -1706,6 +1706,7 @@ const UserManagement = () => {
             renderSubscriptionSource={renderSubscriptionSource}
             setSelectedUser={setSelectedUser}
             setIsEditDialogOpen={setIsEditDialogOpen}
+            setIsSubscriptionDialogOpen={setIsSubscriptionDialogOpen}
             toggleUserStatusMutation={toggleUserStatusMutation}
             sortConfig={sortConfig}
             onSort={handleSort}
@@ -1723,6 +1724,7 @@ const UserManagement = () => {
             formatExpirationInfo={formatExpirationInfo}
             renderSubscriptionSource={renderSubscriptionSource}
             setSelectedUser={setSelectedUser}
+            setIsSubscriptionDialogOpen={setIsSubscriptionDialogOpen}
             setIsEditDialogOpen={setIsEditDialogOpen}
             toggleUserStatusMutation={toggleUserStatusMutation}
             sortConfig={sortConfig}
@@ -1740,6 +1742,7 @@ const UserManagement = () => {
             renderStatusBadge={renderStatusBadge}
             formatExpirationInfo={formatExpirationInfo}
             renderSubscriptionSource={renderSubscriptionSource}
+            setIsSubscriptionDialogOpen={setIsSubscriptionDialogOpen}
             setSelectedUser={setSelectedUser}
             setIsEditDialogOpen={setIsEditDialogOpen}
             toggleUserStatusMutation={toggleUserStatusMutation}
@@ -1757,6 +1760,7 @@ const UserManagement = () => {
             renderRoleBadge={renderRoleBadge}
             renderStatusBadge={renderStatusBadge}
             formatExpirationInfo={formatExpirationInfo}
+            setIsSubscriptionDialogOpen={setIsSubscriptionDialogOpen}
             renderSubscriptionSource={renderSubscriptionSource}
             setSelectedUser={setSelectedUser}
             setIsEditDialogOpen={setIsEditDialogOpen}
