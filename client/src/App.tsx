@@ -286,27 +286,6 @@ function App() {
     // Iniciar medição de métricas de performance
     measureWebVitals();
     
-    // Captura o evento beforeinstallprompt no nível da aplicação
-    const handleBeforeInstallPrompt = (e: Event) => {
-      // Previne o comportamento padrão
-      e.preventDefault();
-      
-      // Log para debug
-      console.log('App.tsx: Evento beforeinstallprompt capturado!', e);
-      
-      // Armazena o evento para uso posterior
-      window.deferredPrompt = e;
-    };
-    
-    console.log('App.tsx: Configurando listener global para beforeinstallprompt...');
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    
-    // Limpa o evento quando o PWA é instalado
-    window.addEventListener('appinstalled', () => {
-      console.log('App.tsx: Aplicativo foi instalado pelo usuário!');
-      window.deferredPrompt = null;
-    });
-    
     // Registrar o service worker para PWA
     registerServiceWorker().then(registration => {
       if (registration) {

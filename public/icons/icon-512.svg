@@ -1,5 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="512" height="512" rx="112" fill="#4F46E5"/>
-  <path d="M116 256.5V376.5H396V256.5H345.5C345.5 315.5 296.944 364.5 238 364.5H223C164 364.5 116 315.5 116 256.5ZM230.5 137.5C156 137.5 95 198.5 95 273.5V399.5H418V273.5C418 198.5 357 137.5 282.5 137.5H230.5ZM238.5 159.5C297.5 159.5 345.5 207.5 345.5 265.5V279.5H396V265.5C396 195.208 339 137.5 268 137.5H244C173 137.5 116 195 116 265.5V279.5H167V265.5C167 207.5 215 159.5 273 159.5H238.5Z" fill="white"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" rx="120" fill="#4F46E5"/>
+  <path d="M352 138H160C148.954 138 140 146.954 140 158V354C140 365.046 148.954 374 160 374H352C363.046 374 372 365.046 372 354V158C372 146.954 363.046 138 352 138Z" stroke="white" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M202 202L310 310" stroke="white" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M310 202L202 310" stroke="white" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
