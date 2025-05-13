@@ -97,7 +97,7 @@ self.addEventListener('fetch', (event) => {
             
             // Para imagens, retorna um placeholder
             if (event.request.destination === 'image') {
-              return caches.match('/images/offline-placeholder.png');
+              return caches.match('/images/offline-placeholder.svg');
             }
             
             // Para outros tipos de recursos, retorna uma resposta em branco
@@ -131,8 +131,8 @@ self.addEventListener('push', (event) => {
   const data = event.data.json();
   const options = {
     body: data.body || 'Novidade do DesignAuto!',
-    icon: '/icons/icon-192.png',
-    badge: '/icons/badge-72.png',
+    icon: '/icons/icon-192.png', // Mantendo .png para compatibilidade com notificações
+    badge: '/icons/icon-192.png', // Usando o mesmo ícone como badge
     data: {
       url: data.url || '/'
     }

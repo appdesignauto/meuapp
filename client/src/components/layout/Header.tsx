@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { SHOW_SEARCHBAR_EVENT, HIDE_SEARCHBAR_EVENT } from '@/components/home/Hero';
+import { InstallPWAButton } from '@/components/global/InstallPWAButton';
 import { 
   DropdownMenu,
   DropdownMenuContent,
