@@ -104,9 +104,6 @@ router.get('/manifest.json', async (req, res) => {
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
     
-    // Remover o cabeçalho Vary: * para permitir o cache pelo service worker
-    res.removeHeader('Vary');
-    
     // Enviar o manifest como JSON
     return res.json(manifest);
   } catch (error) {

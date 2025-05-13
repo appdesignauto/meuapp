@@ -85,13 +85,9 @@ export function configureCors(app: Express): void {
     // Definir política de referrer
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
     
-    // Definir CSP (Content Security Policy) para ambientes de produção
-    if (process.env.NODE_ENV === 'production') {
-      res.setHeader(
-        'Content-Security-Policy',
-        "default-src 'self' http://designauto.com.br https://designauto.com.br http://*.designauto.com.br https://*.designauto.com.br https://*.replit.app https://*.replit.dev https://*.supabase.co https://*.r2.dev https://*.r2.cloudflarestorage.com; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' http://*.designauto.com.br https://*.designauto.com.br https://*.supabase.co https://*.r2.dev https://*.r2.cloudflarestorage.com data: blob:; font-src 'self' data:; connect-src 'self' http://*.designauto.com.br https://*.replit.app https://*.replit.dev https://*.designauto.com.br https://*.supabase.co https://*.r2.dev https://*.r2.cloudflarestorage.com;"
-      );
-    }
+    // Removendo CSP temporariamente para evitar bloqueio de imagens
+    // Sem CSP, todas as imagens funcionarão normalmente
+    // Em vez disso, mantemos apenas a política de referrer
     
     next();
   });

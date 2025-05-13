@@ -88,15 +88,9 @@ self.addEventListener('fetch', event => {
                 });
               }
               
-              // Verificar se a resposta tem cabeçalho Vary: * antes de armazenar no cache
-              const varyHeader = responseToCache.headers.get('Vary');
-              if (!varyHeader || !varyHeader.includes('*')) {
-                // Somente armazenar no cache se não tiver Vary: *
-                cache.put(event.request, responseToCache);
-                console.log('Atualizado no cache:', url.pathname);
-              } else {
-                console.log('Não armazenado no cache (Vary: *):', url.pathname);
-              }
+              // Adicionar a nova versão ao cache
+              cache.put(event.request, responseToCache);
+              console.log('Atualizado no cache:', url.pathname);
             });
           
           return response;
