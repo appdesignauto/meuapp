@@ -551,11 +551,11 @@ const UserManagement = () => {
     // Para usuários de outros níveis de acesso, o acesso vitalício é decidido automaticamente
     else {
       // Se for papel administrativo, força acesso vitalício = true
-      if (['admin', 'suporte', 'designer', 'designer_adm'].includes(nivelAcesso)) {
+      if (nivelAcesso === 'admin' || nivelAcesso === 'suporte' || nivelAcesso === 'designer' || nivelAcesso === 'designer_adm') {
         form.setValue('acessovitalicio', true);
       } 
       // Se for usuário padrão, força acesso vitalício = false
-      else if (nivelAcesso === 'usuario') {
+      else if (nivelAcesso && nivelAcesso === 'usuario') {
         form.setValue('acessovitalicio', false);
       }
     }
@@ -1046,7 +1046,7 @@ const UserManagement = () => {
         data.acessovitalicio = false;
       }
       // 2. Para papéis administrativos (admin, suporte, designer, designer_adm)
-      else if (['admin', 'suporte', 'designer', 'designer_adm'].includes(data.nivelacesso)) {
+      else if (data.nivelacesso === 'admin' || data.nivelacesso === 'suporte' || data.nivelacesso === 'designer' || data.nivelacesso === 'designer_adm') {
         data.tipoplano = null as any;
         data.origemassinatura = null as any;
         data.dataassinatura = null as any;
