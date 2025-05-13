@@ -94,7 +94,8 @@ router.get('/manifest.json', async (req, res) => {
           type: 'image/png',
           form_factor: 'narrow'
         }
-      ]
+      ],
+      description: "Plataforma de artes automobilísticas editáveis para profissionais de vendas."
     };
     
     // Definir cabeçalhos corretos para o manifest
