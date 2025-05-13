@@ -4601,6 +4601,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Webhook da Hotmart recebido");
       
+      // Captura do IP do cliente para rastreabilidade
+      const clientIp = req.ip || 
+                      req.headers['x-forwarded-for'] || 
+                      req.connection.remoteAddress || 
+                      'desconhecido';
+      
       // Verificar token de segurança no cabeçalho da requisição
       const token = req.headers['x-hotmart-webhook-token'] || req.query.token;
       const hotmartSecret = process.env.HOTMART_SECRET;
@@ -4608,6 +4614,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validar o token de segurança
       if (!token || token !== hotmartSecret) {
         console.error("Token de webhook inválido ou não fornecido");
+        
+        // Registrar tentativa inválida no log
+        await HotmartService.logWebhook(
+          req.body || { event: 'unknown', data: {} },
+          'error',
+          undefined,
+          'Token de segurança inválido',
+          clientIp
+        );
+        
         return res.status(403).json({
           success: false,
           message: "Acesso não autorizado: token de webhook inválido"
@@ -4617,6 +4633,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validação básica do webhook
       if (!req.body || !req.body.data || !req.body.event) {
         console.error("Formato de webhook inválido:", req.body);
+        
+        // Registrar formato inválido no log
+        await HotmartService.logWebhook(
+          req.body || { event: 'invalid', data: {} },
+          'error',
+          undefined,
+          'Formato de webhook inválido',
+          clientIp
+        );
+        
         return res.status(400).json({ 
           success: false, 
           message: "Webhook inválido: formato incorreto" 
@@ -4626,7 +4652,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Evento Hotmart recebido:", req.body.event);
       
       // Processar o webhook usando o serviço
-      const result = await SubscriptionService.processHotmartWebhook(req.body);
+      const result = await SubscriptionService.processHotmartWebhook(req.body, clientIp.toString());
       
       // Log do resultado para monitoramento
       console.log("Resultado do processamento do webhook:", result);
