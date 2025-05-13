@@ -36,22 +36,28 @@ export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
-  options?: { isFormData?: boolean }
+  options?: { isFormData?: boolean, skipContentType?: boolean }
 ): Promise<Response> {
   // Configuração padrão para requisições
   const fetchOptions: RequestInit = {
     method,
     credentials: "include",
+    headers: {}
   };
 
   // Se temos dados para enviar
   if (data) {
-    // Se é FormData, não definimos Content-Type (o navegador define automaticamente com o boundary)
-    if (options?.isFormData) {
-      fetchOptions.body = data as FormData;
+    // Se é FormData ou skipContentType é true, não definimos Content-Type
+    if (data instanceof FormData || options?.isFormData) {
+      fetchOptions.body = data instanceof FormData ? data : data as FormData;
     } else {
       // Para dados JSON normais
-      fetchOptions.headers = { "Content-Type": "application/json" };
+      if (!options?.skipContentType) {
+        fetchOptions.headers = { 
+          ...fetchOptions.headers,
+          "Content-Type": "application/json" 
+        };
+      }
       fetchOptions.body = JSON.stringify(data);
     }
   }

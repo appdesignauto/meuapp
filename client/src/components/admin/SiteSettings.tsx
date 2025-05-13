@@ -477,110 +477,223 @@ const SiteSettings = () => {
         
         <TabsContent value="advanced" className="mt-6">
           <div className="space-y-6">
-            {/* Section para PWA - integrado diretamente */}
-            <div className="border rounded-md p-4 bg-blue-50 border-blue-100">
-              <div className="mb-4 flex items-center gap-3">
-                <div className="bg-blue-100 text-blue-700 p-3 rounded-full">
-                  <Smartphone className="h-5 w-5" />
+            {/* Card principal para PWA - configurações completas */}
+            <Card className="bg-white border">
+              <CardHeader className="border-b bg-blue-50/70">
+                <div className="flex items-center gap-3">
+                  <div className="bg-blue-100 text-blue-700 p-3 rounded-full flex-shrink-0">
+                    <Smartphone className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <CardTitle>Progressive Web App (PWA)</CardTitle>
+                    <CardDescription>
+                      Personalize cores, ícones e informações do aplicativo móvel para melhorar a experiência de instalação
+                    </CardDescription>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-medium">Configurações do Progressive Web App (PWA)</h4>
-                  <p className="text-sm text-gray-500">
-                    Personalize cores, ícones e informações do aplicativo móvel para melhorar a experiência de instalação
-                  </p>
-                </div>
-              </div>
+              </CardHeader>
               
-              {pwaLoading ? (
-                <div className="flex justify-center py-6">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              ) : pwaConfig ? (
-                <>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="pwaName">Nome do Aplicativo</Label>
-                      <Input
-                        id="pwaName"
-                        name="pwaName"
-                        value={pwaConfig.name || ''}
-                        placeholder="ex: Design Auto"
-                        disabled
-                      />
-                      <p className="text-xs text-gray-500">
-                        Nome exibido após a instalação do app
-                      </p>
+              <CardContent className="pt-6">
+                {pwaLoading ? (
+                  <div className="flex justify-center py-6">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-base font-medium mb-4">Informações Gerais</h3>
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="name">Nome do Aplicativo</Label>
+                          <Input
+                            id="name"
+                            name="name"
+                            value={pwaConfig?.name || ''}
+                            placeholder="ex: Design Auto"
+                            onChange={(e) => {
+                              setPwaFormData(prev => ({...prev, name: e.target.value}));
+                            }}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Nome exibido após a instalação do app
+                          </p>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="short_name">Nome Curto</Label>
+                          <Input
+                            id="short_name"
+                            name="short_name"
+                            value={pwaFormData?.short_name || pwaConfig?.short_name || ''}
+                            placeholder="ex: D.Auto"
+                            onChange={(e) => {
+                              setPwaFormData(prev => ({...prev, short_name: e.target.value}));
+                            }}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Nome curto para ícones e espaços limitados
+                          </p>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="theme_color">Cor do Tema</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              id="theme_color_picker"
+                              type="color"
+                              value={pwaFormData?.theme_color || pwaConfig?.theme_color || '#FE9017'}
+                              className="w-12 h-10 p-1"
+                              onChange={(e) => {
+                                setPwaFormData(prev => ({...prev, theme_color: e.target.value}));
+                              }}
+                            />
+                            <Input 
+                              id="theme_color"
+                              value={pwaFormData?.theme_color || pwaConfig?.theme_color || ''}
+                              placeholder="#FE9017"
+                              onChange={(e) => {
+                                setPwaFormData(prev => ({...prev, theme_color: e.target.value}));
+                              }}
+                            />
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Cor da barra de navegação e elementos da interface
+                          </p>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="background_color">Cor de Fundo</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              id="background_color_picker"
+                              type="color"
+                              value={pwaFormData?.background_color || pwaConfig?.background_color || '#FFFFFF'}
+                              className="w-12 h-10 p-1"
+                              onChange={(e) => {
+                                setPwaFormData(prev => ({...prev, background_color: e.target.value}));
+                              }}
+                            />
+                            <Input 
+                              id="background_color"
+                              value={pwaFormData?.background_color || pwaConfig?.background_color || ''}
+                              placeholder="#FFFFFF"
+                              onChange={(e) => {
+                                setPwaFormData(prev => ({...prev, background_color: e.target.value}));
+                              }}
+                            />
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Cor de fundo da tela de splash durante o carregamento
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <Button 
+                        className="mt-4"
+                        onClick={handlePwaSave}
+                        disabled={pwaSaving}
+                      >
+                        {pwaSaving ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Salvando Informações...
+                          </>
+                        ) : "Salvar Informações"}
+                      </Button>
                     </div>
                     
-                    <div className="space-y-2">
-                      <Label htmlFor="pwaThemeColor">Cor do Tema</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          type="color"
-                          value={pwaConfig.theme_color || '#FE9017'}
-                          className="w-12 h-10 p-1"
-                          disabled
-                        />
-                        <Input 
-                          value={pwaConfig.theme_color || ''}
-                          placeholder="#FE9017"
-                          disabled
-                        />
+                    <Separator />
+                    
+                    <div>
+                      <h3 className="text-base font-medium mb-4">Ícones do Aplicativo</h3>
+                      <div className="grid gap-6 md:grid-cols-2">
+                        {/* Ícone 192x192 */}
+                        <div className="border rounded-lg p-4 space-y-4">
+                          <div className="space-y-2">
+                            <h4 className="font-medium">Ícone 192x192</h4>
+                            <p className="text-sm text-muted-foreground">
+                              Este ícone será utilizado em telas menores e como ícone padrão.
+                            </p>
+                          </div>
+                          
+                          {pwaConfig?.icon_192 && (
+                            <div className="flex justify-center mb-4">
+                              <img 
+                                src={pwaConfig.icon_192} 
+                                alt="Ícone 192x192" 
+                                className="h-24 w-24 border rounded-md object-contain"
+                              />
+                            </div>
+                          )}
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="icon-192">Selecionar imagem (192x192px)</Label>
+                            <Input
+                              id="icon-192"
+                              type="file"
+                              accept="image/*"
+                              onChange={handleIcon192Upload}
+                              disabled={icon192Uploading}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Recomendado: PNG ou WebP com fundo transparente.
+                            </p>
+                          </div>
+                          
+                          {icon192Uploading && (
+                            <div className="flex items-center mt-2">
+                              <Loader2 className="h-4 w-4 animate-spin mr-2 text-primary" />
+                              <span className="text-sm">Fazendo upload...</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Ícone 512x512 */}
+                        <div className="border rounded-lg p-4 space-y-4">
+                          <div className="space-y-2">
+                            <h4 className="font-medium">Ícone 512x512</h4>
+                            <p className="text-sm text-muted-foreground">
+                              Este ícone será utilizado em telas maiores e para splash screens.
+                            </p>
+                          </div>
+                          
+                          {pwaConfig?.icon_512 && (
+                            <div className="flex justify-center mb-4">
+                              <img 
+                                src={pwaConfig.icon_512} 
+                                alt="Ícone 512x512" 
+                                className="h-24 w-24 border rounded-md object-contain"
+                              />
+                            </div>
+                          )}
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="icon-512">Selecionar imagem (512x512px)</Label>
+                            <Input
+                              id="icon-512"
+                              type="file"
+                              accept="image/*"
+                              onChange={handleIcon512Upload}
+                              disabled={icon512Uploading}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Recomendado: PNG ou WebP com fundo transparente.
+                            </p>
+                          </div>
+                          
+                          {icon512Uploading && (
+                            <div className="flex items-center mt-2">
+                              <Loader2 className="h-4 w-4 animate-spin mr-2 text-primary" />
+                              <span className="text-sm">Fazendo upload...</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                  
-                  {/* Prévia dos ícones */}
-                  <div className="mt-4 border-t pt-4 border-blue-100">
-                    <h4 className="text-sm font-medium mb-3">Ícones do Aplicativo</h4>
-                    <div className="flex items-center gap-4">
-                      {pwaConfig.icon_192 && (
-                        <div className="text-center">
-                          <div className="border rounded-md p-2 inline-block">
-                            <img 
-                              src={pwaConfig.icon_192} 
-                              alt="Ícone 192x192" 
-                              className="w-16 h-16 object-contain"
-                            />
-                          </div>
-                          <p className="text-xs mt-1">192x192</p>
-                        </div>
-                      )}
-                      
-                      {pwaConfig.icon_512 && (
-                        <div className="text-center">
-                          <div className="border rounded-md p-2 inline-block">
-                            <img 
-                              src={pwaConfig.icon_512} 
-                              alt="Ícone 512x512" 
-                              className="w-16 h-16 object-contain"
-                            />
-                          </div>
-                          <p className="text-xs mt-1">512x512</p>
-                        </div>
-                      )}
-                      
-                      {!pwaConfig.icon_192 && !pwaConfig.icon_512 && (
-                        <p className="text-sm text-gray-500 italic">Nenhum ícone configurado</p>
-                      )}
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="text-center py-4 text-gray-500">
-                  Configurações do PWA não encontradas
-                </div>
-              )}
-              
-              <div className="mt-6 flex gap-2">
-                <Link href="/admin/app-config">
-                  <Button variant="default">
-                    <Smartphone className="mr-2 h-4 w-4" />
-                    {pwaConfig ? 'Editar Configurações PWA' : 'Configurar PWA'}
-                  </Button>
-                </Link>
-              </div>
-            </div>
+                )}
+              </CardContent>
+            </Card>
             
             <h3 className="text-lg font-medium">Configurações Avançadas</h3>
             <p className="text-gray-500">Configurações avançadas do sistema em desenvolvimento.</p>

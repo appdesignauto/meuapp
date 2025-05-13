@@ -121,17 +121,12 @@ export default function AppConfigPage() {
   // Mutação para fazer upload do ícone 192x192
   const uploadIcon192Mutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      const res = await apiRequest('POST', '/api/app-config/icon-192', formData, {
-        headers: {
-          // O Content-Type será definido automaticamente pelo navegador para FormData
-        },
-        skipContentType: true
-      });
+      const res = await apiRequest('POST', '/api/app-config/icon-192', formData);
       return await res.json();
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/app-config'] });
-      setIcon192Preview(data.url);
+      setIcon192Preview(data.iconPath);
       toast({
         title: "Sucesso!",
         description: "Ícone 192x192 atualizado com sucesso.",
@@ -150,17 +145,12 @@ export default function AppConfigPage() {
   // Mutação para fazer upload do ícone 512x512
   const uploadIcon512Mutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      const res = await apiRequest('POST', '/api/app-config/icon-512', formData, {
-        headers: {
-          // O Content-Type será definido automaticamente pelo navegador para FormData
-        },
-        skipContentType: true
-      });
+      const res = await apiRequest('POST', '/api/app-config/icon-512', formData);
       return await res.json();
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/app-config'] });
-      setIcon512Preview(data.url);
+      setIcon512Preview(data.iconPath);
       toast({
         title: "Sucesso!",
         description: "Ícone 512x512 atualizado com sucesso.",
@@ -198,6 +188,7 @@ export default function AppConfigPage() {
     
     const formData = new FormData();
     formData.append('icon', file);
+    formData.append('size', '192');
     uploadIcon192Mutation.mutate(formData);
   };
   
@@ -217,6 +208,7 @@ export default function AppConfigPage() {
     
     const formData = new FormData();
     formData.append('icon', file);
+    formData.append('size', '512');
     uploadIcon512Mutation.mutate(formData);
   };
   
