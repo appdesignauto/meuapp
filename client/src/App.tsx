@@ -325,7 +325,6 @@ function App() {
           <link rel="apple-touch-icon" href="/icons/icon-192.png" />
           <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
           <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png" />
-          <script src="/js/install-pwa.js"></script>
         </Helmet>
         <ThemeProvider defaultTheme="light">
           <AuthProvider>
