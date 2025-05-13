@@ -1,12 +1,10 @@
 // service-worker.js
-const CACHE_NAME = 'designauto-cache-v4'; // Versão incrementada para forçar atualização do cache e incluir as novas screenshots
+const CACHE_NAME = 'designauto-cache-v5'; // Incrementado para forçar atualização
 const ASSETS_TO_CACHE = [
   '/',
   '/offline.html',
   '/manifest.json'
 ];
-
-// As imagens dos ícones agora são dinâmicas e não devem ser cacheadas aqui
 
 // Instalação do service worker e caching de recursos essenciais
 self.addEventListener('install', event => {
@@ -45,8 +43,7 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
   
-  // Para ícones, screenshots e manifest.json: sempre buscar da rede (network-first)
-  // Isso garante que os ícones e manifest sempre estejam atualizados
+  // Para ícones, screenshots e manifest.json: sempre buscar da rede primeiro
   if (url.pathname.includes('/icons/') || 
       url.pathname.includes('/screenshots/') || 
       url.pathname === '/manifest.json') {
@@ -54,43 +51,12 @@ self.addEventListener('fetch', event => {
     event.respondWith(
       fetch(event.request)
         .then(response => {
-          // Clonar a resposta para armazenar no cache e retornar
           const responseToCache = response.clone();
           
-          // Atualizar o cache com a nova versão 
           caches.open(CACHE_NAME)
             .then(cache => {
-              // Remover versões antigas do mesmo recurso (útil para ícones e screenshots)
-              if (url.pathname.includes('/icons/')) {
-                const iconType = url.pathname.includes('icon-192') ? 'icon-192' : 'icon-512';
-                cache.keys().then(keys => {
-                  keys.forEach(key => {
-                    const keyUrl = new URL(key.url);
-                    if (keyUrl.pathname.includes('/icons/') && keyUrl.pathname.includes(iconType)) {
-                      console.log('Removendo ícone antigo do cache:', keyUrl.pathname);
-                      cache.delete(key);
-                    }
-                  });
-                });
-              }
-              
-              // Limpar screenshots antigas do cache
-              if (url.pathname.includes('/screenshots/')) {
-                const screenshotType = url.pathname.includes('mobile') ? 'mobile' : 'home';
-                cache.keys().then(keys => {
-                  keys.forEach(key => {
-                    const keyUrl = new URL(key.url);
-                    if (keyUrl.pathname.includes('/screenshots/') && keyUrl.pathname.includes(screenshotType)) {
-                      console.log('Removendo screenshot antiga do cache:', keyUrl.pathname);
-                      cache.delete(key);
-                    }
-                  });
-                });
-              }
-              
-              // Adicionar a nova versão ao cache
+              // Atualizar cache com a nova versão
               cache.put(event.request, responseToCache);
-              console.log('Atualizado no cache:', url.pathname);
             });
           
           return response;
@@ -103,21 +69,16 @@ self.addEventListener('fetch', event => {
   } else {
     // Para outros recursos, estratégia de cache-first
     event.respondWith(
-      // Tenta buscar o recurso no cache primeiro
       caches.match(event.request)
         .then(response => {
-          // Se estiver no cache, retorna o recurso do cache
           if (response) {
             return response;
           }
           
-          // Se não estiver no cache, buscar da rede
           return fetch(event.request)
             .then(networkResponse => {
-              // Clonar a resposta para armazenar no cache e retornar
               const responseToCache = networkResponse.clone();
               
-              // Armazenar no cache apenas se for uma resposta válida
               if (networkResponse.status === 200) {
                 caches.open(CACHE_NAME)
                   .then(cache => {
