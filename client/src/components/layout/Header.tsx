@@ -332,6 +332,9 @@ const Header = () => {
 
           {/* User Actions */}
           <div className="flex items-center space-x-3">
+            {/* Botão para instalação do PWA */}
+            <InstallPWAButton />
+            
             {/* Barra de pesquisa para videoaulas - apenas aparece na página de videoaulas */}
             {isVideoaulasPage && (
               <form 

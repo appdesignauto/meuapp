@@ -9,6 +9,13 @@ import {
 } from "@/components/ui/tooltip";
 import { isRunningAsPWA } from '@/lib/pwa-utils';
 
+// Declaração para estender a interface Window
+declare global {
+  interface Window {
+    deferredPrompt?: any;
+  }
+}
+
 /**
  * Botão para instalação do PWA
  * Este componente exibe um botão para instalar o aplicativo como PWA
@@ -40,11 +47,23 @@ export function InstallPWAButton() {
       // Previne que o navegador mostre o prompt automaticamente
       e.preventDefault();
       
+      // Log para debug
+      console.log('Evento beforeinstallprompt capturado!', e);
+      
       // Armazena o evento para uso posterior
       setInstallPrompt(e);
     };
     
+    // Log para confirmar que o listener foi configurado
+    console.log('Configurando listener para beforeinstallprompt...');
+    
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    
+    // Se já houver um evento armazenado no deferredPrompt
+    if (window.deferredPrompt) {
+      console.log('Encontrado deferredPrompt existente!', window.deferredPrompt);
+      setInstallPrompt(window.deferredPrompt);
+    }
     
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
