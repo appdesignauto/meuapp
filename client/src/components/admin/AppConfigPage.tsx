@@ -86,11 +86,17 @@ export default function AppConfigPage() {
       
       // Carregar imagens para preview
       if (config.icon_192) {
-        setIcon192Preview(config.icon_192);
+        // Adiciona timestamp para evitar cache
+        const iconUrl192 = `${config.icon_192}?t=${Date.now()}`;
+        setIcon192Preview(iconUrl192);
+        console.log('Carregando ícone 192x192:', iconUrl192);
       }
       
       if (config.icon_512) {
-        setIcon512Preview(config.icon_512);
+        // Adiciona timestamp para evitar cache
+        const iconUrl512 = `${config.icon_512}?t=${Date.now()}`;
+        setIcon512Preview(iconUrl512);
+        console.log('Carregando ícone 512x512:', iconUrl512);
       }
     }
   }, [config, form]);
@@ -126,7 +132,14 @@ export default function AppConfigPage() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/app-config'] });
-      setIcon192Preview(data.iconPath);
+      
+      // Adicionar o timestamp como parâmetro de query para evitar cache
+      const iconPathWithTimestamp = `${data.iconPath}?t=${data.timestamp || Date.now()}`;
+      setIcon192Preview(iconPathWithTimestamp);
+      
+      // Exibir no console o URL completo
+      console.log('Novo ícone 192x192:', iconPathWithTimestamp);
+      
       toast({
         title: "Sucesso!",
         description: "Ícone 192x192 atualizado com sucesso.",
@@ -150,7 +163,14 @@ export default function AppConfigPage() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/app-config'] });
-      setIcon512Preview(data.iconPath);
+      
+      // Adicionar o timestamp como parâmetro de query para evitar cache
+      const iconPathWithTimestamp = `${data.iconPath}?t=${data.timestamp || Date.now()}`;
+      setIcon512Preview(iconPathWithTimestamp);
+      
+      // Exibir no console o URL completo
+      console.log('Novo ícone 512x512:', iconPathWithTimestamp);
+      
       toast({
         title: "Sucesso!",
         description: "Ícone 512x512 atualizado com sucesso.",
