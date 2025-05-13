@@ -397,6 +397,9 @@ const Header = () => {
               </Link>
             )}
             
+            {/* Botão para instalar o PWA */}
+            <InstallPWAButton />
+            
             {/* Botão do menu mobile */}
             <Button 
               variant="ghost" 
