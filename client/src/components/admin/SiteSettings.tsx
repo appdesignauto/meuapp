@@ -8,6 +8,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Upload, AlertCircle, Loader2, RefreshCw, ExternalLink, Smartphone } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Link } from 'wouter';
+import { Separator } from '@/components/ui/separator';
+import { apiRequest } from '@/lib/queryClient';
 
 // Definição da interface para o tipo de dados SiteSettings
 interface SiteSettings {
@@ -23,6 +25,19 @@ interface SiteSettings {
   updatedBy: number;
 }
 
+// Definição da interface para o tipo de dados PWA Config
+interface PwaConfig {
+  id?: number;
+  name: string;
+  short_name: string;
+  theme_color: string;
+  background_color: string;
+  icon_192?: string;
+  icon_512?: string;
+  updated_at?: string;
+  updated_by?: number;
+}
+
 // Componente principal
 const SiteSettings = () => {
   const { toast } = useToast();
@@ -32,15 +47,12 @@ const SiteSettings = () => {
   const [updating, setUpdating] = useState(false);
   
   // Estado para armazenar as configurações do PWA
-  const [pwaConfig, setPwaConfig] = useState<{
-    name: string;
-    short_name: string;
-    theme_color: string;
-    background_color: string;
-    icon_192?: string;
-    icon_512?: string;
-  } | null>(null);
+  const [pwaConfig, setPwaConfig] = useState<PwaConfig | null>(null);
+  const [pwaFormData, setPwaFormData] = useState<Partial<PwaConfig> | null>(null);
   const [pwaLoading, setPwaLoading] = useState(true);
+  const [pwaSaving, setPwaSaving] = useState(false);
+  const [icon192Uploading, setIcon192Uploading] = useState(false);
+  const [icon512Uploading, setIcon512Uploading] = useState(false);
   
   // Função para carregar as configurações do site
   const loadSettings = async () => {
@@ -88,12 +100,153 @@ const SiteSettings = () => {
       
       if (data.config) {
         setPwaConfig(data.config);
+        setPwaFormData({
+          name: data.config.name,
+          short_name: data.config.short_name,
+          theme_color: data.config.theme_color,
+          background_color: data.config.background_color
+        });
       }
     } catch (err: any) {
       console.error('Erro ao carregar configurações do PWA:', err);
       // Não exibimos o erro visualmente, apenas no console
     } finally {
       setPwaLoading(false);
+    }
+  };
+  
+  // Função para salvar as configurações do PWA
+  const handlePwaSave = async () => {
+    if (!pwaFormData) return;
+    
+    try {
+      setPwaSaving(true);
+      
+      const res = await apiRequest('POST', '/api/app-config', {
+        name: pwaFormData.name,
+        short_name: pwaFormData.short_name || pwaFormData.name,
+        theme_color: pwaFormData.theme_color,
+        background_color: pwaFormData.background_color
+      });
+      
+      const data = await res.json();
+      
+      if (data.success) {
+        toast({
+          title: "Sucesso!",
+          description: "Configurações do PWA atualizadas com sucesso.",
+          variant: "default",
+        });
+        
+        // Recarregar configurações
+        loadPwaConfig();
+      } else {
+        throw new Error(data.error || 'Erro ao salvar configurações');
+      }
+    } catch (error: any) {
+      toast({
+        title: "Erro!",
+        description: `Falha ao salvar configurações: ${error.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setPwaSaving(false);
+    }
+  };
+  
+  // Função para fazer upload do ícone 192x192
+  const handleIcon192Upload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    // Validar tamanho e tipo
+    if (!file.type.includes('image/')) {
+      toast({
+        title: "Erro!",
+        description: "O arquivo selecionado não é uma imagem válida.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      setIcon192Uploading(true);
+      
+      const formData = new FormData();
+      formData.append('icon', file);
+      formData.append('size', '192');
+      
+      const res = await apiRequest('POST', '/api/app-config/icon-192', formData);
+      const data = await res.json();
+      
+      if (data.success) {
+        toast({
+          title: "Sucesso!",
+          description: "Ícone 192x192 atualizado com sucesso.",
+          variant: "default",
+        });
+        
+        // Recarregar configurações
+        loadPwaConfig();
+      } else {
+        throw new Error(data.error || 'Erro ao fazer upload do ícone');
+      }
+    } catch (error: any) {
+      toast({
+        title: "Erro!",
+        description: `Falha ao fazer upload do ícone: ${error.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIcon192Uploading(false);
+    }
+  };
+  
+  // Função para fazer upload do ícone 512x512
+  const handleIcon512Upload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    // Validar tamanho e tipo
+    if (!file.type.includes('image/')) {
+      toast({
+        title: "Erro!",
+        description: "O arquivo selecionado não é uma imagem válida.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      setIcon512Uploading(true);
+      
+      const formData = new FormData();
+      formData.append('icon', file);
+      formData.append('size', '512');
+      
+      const res = await apiRequest('POST', '/api/app-config/icon-512', formData);
+      const data = await res.json();
+      
+      if (data.success) {
+        toast({
+          title: "Sucesso!",
+          description: "Ícone 512x512 atualizado com sucesso.",
+          variant: "default",
+        });
+        
+        // Recarregar configurações
+        loadPwaConfig();
+      } else {
+        throw new Error(data.error || 'Erro ao fazer upload do ícone');
+      }
+    } catch (error: any) {
+      toast({
+        title: "Erro!",
+        description: `Falha ao fazer upload do ícone: ${error.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIcon512Uploading(false);
     }
   };
   
