@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
 import AnalyticsSettings from '@/components/admin/AnalyticsSettings';
 import ReportsManagement from '@/components/admin/ReportsManagement';
+import WebhookList from '@/components/admin/WebhookList';
+import SubscriptionManagement from '@/components/admin/SubscriptionManagement';
 import {
   LayoutGrid,
   Image,
@@ -56,7 +58,8 @@ import {
   Save,
   Calendar,
   Wrench,
-  FlagIcon
+  FlagIcon,
+  Webhook
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -1229,6 +1232,39 @@ const AdminDashboard = () => {
                 >
                   <BellRing className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
                   {sidebarOpen && <span>Gerenciar Popups</span>}
+                </button>
+              </CollapsibleContent>
+            </Collapsible>
+            
+            {/* Assinaturas e Webhooks */}
+            <Collapsible className="w-full">
+              <CollapsibleTrigger className={`flex items-center w-full py-2.5 text-gray-700 font-medium ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}>
+                <CreditCard className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+                {sidebarOpen && (
+                  <>
+                    <span>Assinaturas</span>
+                    <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+                  </>
+                )}
+              </CollapsibleTrigger>
+              <CollapsibleContent className={`${sidebarOpen ? 'pl-4' : 'pl-0'} space-y-1 pt-1 pb-2`}>
+                <button
+                  onClick={() => setActiveTab('subscriptions')}
+                  className={`flex items-center w-full py-2.5 rounded-md ${
+                    activeTab === 'subscriptions' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
+                >
+                  <CreditCard className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+                  {sidebarOpen && <span>Gerenciar Assinaturas</span>}
+                </button>
+                <button
+                  onClick={() => setActiveTab('webhooks')}
+                  className={`flex items-center w-full py-2.5 rounded-md ${
+                    activeTab === 'webhooks' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
+                >
+                  <Webhook className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+                  {sidebarOpen && <span>Logs de Webhooks</span>}
                 </button>
               </CollapsibleContent>
             </Collapsible>
