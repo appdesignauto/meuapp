@@ -365,6 +365,9 @@ const Header = () => {
                 <Search className="h-4 w-4" />
               </Button>
             )}
+            
+            {/* Botão de instalação do PWA */}
+            <InstallPWAButton />
 
             {user && user.role !== 'premium' && (
               <Link href="/planos">
