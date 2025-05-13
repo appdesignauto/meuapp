@@ -72,6 +72,22 @@ import imageProxyTestRouter from './routes/image-proxy-test'; // Rota para testa
 import reportsRouter from './routes/reports'; // Rotas para o sistema de denúncias (original)
 import reportsV2Router from './routes/reports-v2'; // Rotas para o sistema de denúncias (reescrito)
 
+// Middleware para verificar se o usuário é admin
+function isAdmin(req: Request, res: Response, next: NextFunction) {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Não autenticado" });
+  }
+  
+  // Verificar se o usuário tem acesso de administrador
+  if (req.user.nivelacesso !== 'admin') {
+    return res.status(403).json({ 
+      message: "Acesso negado. Você não tem permissão para acessar esta área." 
+    });
+  }
+  
+  next();
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Aplicar middleware global para converter URLs de imagens para todas as respostas JSON
   app.use(convertImageUrlsMiddleware());
@@ -4840,6 +4856,444 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Erro ao reprocessar webhook:", error);
       res.status(500).json({ 
         message: "Erro ao reprocessar webhook",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Rota para obter estatísticas de assinaturas - Admin
+  app.get("/api/admin/subscription-stats", isAdmin, async (req, res) => {
+    try {
+      // Buscar estatísticas gerais de assinaturas
+      const [totalResult] = await db.select({ count: count() })
+        .from(users)
+        .where(not(isNull(users.origemassinatura)));
+      
+      const total = totalResult?.count || 0;
+      
+      // Estatísticas por status
+      const activeQuery = db.select({ count: count() })
+        .from(users)
+        .where(and(
+          not(isNull(users.origemassinatura)),
+          eq(users.planstatus, 'active')
+        ));
+      
+      const expiredQuery = db.select({ count: count() })
+        .from(users)
+        .where(and(
+          not(isNull(users.origemassinatura)),
+          eq(users.planstatus, 'expired')
+        ));
+      
+      const trialQuery = db.select({ count: count() })
+        .from(users)
+        .where(and(
+          not(isNull(users.origemassinatura)),
+          eq(users.planstatus, 'trial')
+        ));
+      
+      // Estatísticas por origem de assinatura
+      const hotmartQuery = db.select({ count: count() })
+        .from(users)
+        .where(and(
+          not(isNull(users.origemassinatura)),
+          eq(users.origemassinatura, 'hotmart')
+        ));
+      
+      const doppusQuery = db.select({ count: count() })
+        .from(users)
+        .where(and(
+          not(isNull(users.origemassinatura)),
+          eq(users.origemassinatura, 'doppus')
+        ));
+      
+      const manualQuery = db.select({ count: count() })
+        .from(users)
+        .where(and(
+          not(isNull(users.origemassinatura)),
+          eq(users.origemassinatura, 'manual')
+        ));
+      
+      // Assinaturas expirando em breve (7 e 30 dias)
+      const today = new Date();
+      const in7Days = new Date();
+      in7Days.setDate(today.getDate() + 7);
+      
+      const in30Days = new Date();
+      in30Days.setDate(today.getDate() + 30);
+      
+      const expiringIn7DaysQuery = db.select({ count: count() })
+        .from(users)
+        .where(and(
+          not(isNull(users.planoexpiracao)),
+          eq(users.planstatus, 'active'),
+          sql`${users.planoexpiracao} <= ${in7Days.toISOString()}`,
+          sql`${users.planoexpiracao} > ${today.toISOString()}`
+        ));
+      
+      const expiringIn30DaysQuery = db.select({ count: count() })
+        .from(users)
+        .where(and(
+          not(isNull(users.planoexpiracao)),
+          eq(users.planstatus, 'active'),
+          sql`${users.planoexpiracao} <= ${in30Days.toISOString()}`,
+          sql`${users.planoexpiracao} > ${today.toISOString()}`
+        ));
+      
+      // Estatísticas por tipo de plano
+      const plansQuery = db.select({
+          tipoplano: users.tipoplano,
+          count: count()
+        })
+        .from(users)
+        .where(not(isNull(users.origemassinatura)))
+        .groupBy(users.tipoplano);
+      
+      // Estatísticas por origem de assinatura
+      const originsQuery = db.select({
+          origemassinatura: users.origemassinatura,
+          count: count()
+        })
+        .from(users)
+        .where(not(isNull(users.origemassinatura)))
+        .groupBy(users.origemassinatura);
+      
+      // Assinaturas recentes por data
+      const lastMonthDate = new Date();
+      lastMonthDate.setMonth(lastMonthDate.getMonth() - 1);
+      
+      const recentSubscriptionsQuery = db.select({
+          date: sql`DATE(${users.dataassinatura})`,
+          count: count()
+        })
+        .from(users)
+        .where(and(
+          not(isNull(users.dataassinatura)),
+          sql`${users.dataassinatura} >= ${lastMonthDate.toISOString()}`
+        ))
+        .groupBy(sql`DATE(${users.dataassinatura})`)
+        .orderBy(sql`DATE(${users.dataassinatura})`);
+      
+      // Executar todas as consultas em paralelo
+      const [
+        activeResult,
+        expiredResult,
+        trialResult,
+        hotmartResult,
+        doppusResult,
+        manualResult,
+        expiringIn7DaysResult,
+        expiringIn30DaysResult,
+        plansResults,
+        originsResults,
+        recentSubscriptionsResults
+      ] = await Promise.all([
+        activeQuery,
+        expiredQuery,
+        trialQuery,
+        hotmartQuery,
+        doppusQuery,
+        manualQuery,
+        expiringIn7DaysQuery,
+        expiringIn30DaysQuery,
+        plansQuery,
+        originsQuery,
+        recentSubscriptionsQuery
+      ]);
+      
+      // Montar objeto de estatísticas por tipo de plano
+      const subscriptionsByPlan: { [key: string]: number } = {};
+      plansResults.forEach(result => {
+        if (result.tipoplano) {
+          subscriptionsByPlan[result.tipoplano] = result.count;
+        }
+      });
+      
+      // Montar objeto de estatísticas por origem de assinatura
+      const subscriptionsByOrigin: { [key: string]: number } = {};
+      originsResults.forEach(result => {
+        if (result.origemassinatura) {
+          subscriptionsByOrigin[result.origemassinatura] = result.count;
+        }
+      });
+      
+      // Formatar resultados de assinaturas recentes
+      const recentSubscriptions = recentSubscriptionsResults.map(result => ({
+        date: result.date instanceof Date 
+          ? result.date.toISOString().split('T')[0] 
+          : String(result.date),
+        count: result.count
+      }));
+      
+      res.json({
+        total,
+        active: activeResult[0]?.count || 0,
+        expired: expiredResult[0]?.count || 0,
+        trialCount: trialResult[0]?.count || 0,
+        expiringIn7Days: expiringIn7DaysResult[0]?.count || 0,
+        expiringIn30Days: expiringIn30DaysResult[0]?.count || 0,
+        hotmartCount: hotmartResult[0]?.count || 0,
+        doppusCount: doppusResult[0]?.count || 0,
+        manualCount: manualResult[0]?.count || 0,
+        subscriptionsByPlan,
+        subscriptionsByOrigin,
+        recentSubscriptions
+      });
+    } catch (error) {
+      console.error("Erro ao obter estatísticas de assinaturas:", error);
+      res.status(500).json({ 
+        message: "Erro ao obter estatísticas de assinaturas",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Rota para listar usuários com assinaturas (paginado e filtrado) - Admin
+  app.get("/api/admin/users", isAdmin, async (req, res) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const status = req.query.status as string;
+      const origin = req.query.origin as string;
+      const search = req.query.search as string;
+      
+      const offset = (page - 1) * limit;
+      
+      // Construir a consulta base para usuários com assinatura
+      let query = db.select()
+        .from(users)
+        .where(not(isNull(users.origemassinatura)))
+        .orderBy(desc(users.dataassinatura));
+      
+      // Construir a consulta de contagem
+      let countQuery = db.select({ count: count() })
+        .from(users)
+        .where(not(isNull(users.origemassinatura)));
+      
+      // Adicionar filtros se fornecidos
+      if (status && status !== 'all') {
+        query = query.where(eq(users.planstatus, status));
+        countQuery = countQuery.where(eq(users.planstatus, status));
+      }
+      
+      if (origin && origin !== 'all') {
+        query = query.where(eq(users.origemassinatura, origin));
+        countQuery = countQuery.where(eq(users.origemassinatura, origin));
+      }
+      
+      if (search) {
+        const searchFilter = or(
+          sql`${users.username} ILIKE ${'%' + search + '%'}`,
+          sql`${users.email} ILIKE ${'%' + search + '%'}`,
+          sql`${users.name} ILIKE ${'%' + search + '%'}`
+        );
+        
+        query = query.where(searchFilter);
+        countQuery = countQuery.where(searchFilter);
+      }
+      
+      // Aplicar paginação
+      query = query.limit(limit).offset(offset);
+      
+      // Executar as consultas
+      const [usersList, countResult] = await Promise.all([
+        query,
+        countQuery
+      ]);
+      
+      // Remover senhas dos resultados
+      const usersWithoutPasswords = usersList.map(user => {
+        const { password, ...userWithoutPassword } = user;
+        return userWithoutPassword;
+      });
+      
+      // Obter a contagem total
+      const total = countResult[0]?.count || 0;
+      
+      res.json({
+        users: usersWithoutPasswords,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit)
+        }
+      });
+    } catch (error) {
+      console.error("Erro ao listar usuários:", error);
+      res.status(500).json({ 
+        message: "Erro ao listar usuários",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Rota para obter detalhes de um usuário específico - Admin
+  app.get("/api/admin/users/:id", isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "ID de usuário inválido" });
+      }
+      
+      const [user] = await db.select()
+        .from(users)
+        .where(eq(users.id, userId));
+      
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+      
+      // Remover senha antes de enviar
+      const { password, ...userWithoutPassword } = user;
+      
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Erro ao obter detalhes do usuário:", error);
+      res.status(500).json({ 
+        message: "Erro ao obter detalhes do usuário",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Rota para atualizar a assinatura de um usuário - Admin
+  app.put("/api/admin/users/:id/subscription", isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "ID de usuário inválido" });
+      }
+      
+      const { planstatus, tipoplano, origemassinatura, planoexpiracao, notifyUser, adminNotes } = req.body;
+      
+      // Validar dados essenciais
+      if (!planstatus || !tipoplano || !origemassinatura) {
+        return res.status(400).json({ 
+          message: "Status, tipo de plano e origem da assinatura são obrigatórios" 
+        });
+      }
+      
+      // Buscar usuário existente para verificação
+      const [existingUser] = await db.select()
+        .from(users)
+        .where(eq(users.id, userId));
+      
+      if (!existingUser) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+      
+      // Criar objeto de atualização
+      const updateData: any = {
+        planstatus,
+        tipoplano,
+        origemassinatura,
+        atualizadoem: new Date()
+      };
+      
+      // Adicionar data de assinatura se for nova assinatura ou mudança de origem
+      if (!existingUser.dataassinatura || existingUser.origemassinatura !== origemassinatura) {
+        updateData.dataassinatura = new Date();
+      }
+      
+      // Adicionar data de expiração se fornecida
+      if (planoexpiracao) {
+        updateData.planoexpiracao = new Date(planoexpiracao);
+      } else if (planstatus !== 'active') {
+        // Se não for ativo e não tiver data de expiração, definir como NULL
+        updateData.planoexpiracao = null;
+      }
+      
+      // Definir nível de acesso com base no status
+      if (planstatus === 'active' || planstatus === 'trial') {
+        updateData.nivelacesso = 'premium';
+      } else {
+        // Se expirado, inativo, etc. volta para 'usuario'
+        updateData.nivelacesso = 'usuario';
+      }
+      
+      // Acesso vitalício baseado no tipo de plano
+      if (tipoplano === 'vitalicio') {
+        updateData.acessovitalicio = true;
+      }
+      
+      // Adicionar notas administrativas se fornecidas
+      if (adminNotes) {
+        updateData.observacaoadmin = adminNotes;
+      }
+      
+      // Atualizar o usuário no banco de dados
+      await db.update(users)
+        .set(updateData)
+        .where(eq(users.id, userId));
+      
+      // Buscar dados atualizados do usuário
+      const [updatedUser] = await db.select()
+        .from(users)
+        .where(eq(users.id, userId));
+      
+      // Remover senha antes de enviar
+      const { password, ...userWithoutPassword } = updatedUser;
+      
+      res.json({
+        user: userWithoutPassword,
+        message: "Assinatura atualizada com sucesso"
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar assinatura:", error);
+      res.status(500).json({ 
+        message: "Erro ao atualizar assinatura",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Rota para remover a assinatura de um usuário - Admin
+  app.delete("/api/admin/users/:id/subscription", isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "ID de usuário inválido" });
+      }
+      
+      // Buscar usuário existente para verificação
+      const [existingUser] = await db.select()
+        .from(users)
+        .where(eq(users.id, userId));
+      
+      if (!existingUser) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+      
+      // Dados para rebaixar o usuário
+      const updateData = {
+        planstatus: 'inactive',
+        nivelacesso: 'usuario',
+        planoexpiracao: null,
+        acessovitalicio: false,
+        atualizadoem: new Date()
+      };
+      
+      // Manter o registro de origem e tipo para histórico
+      // Não limpar origemassinatura e tipoplano
+      
+      // Atualizar o usuário no banco de dados
+      await db.update(users)
+        .set(updateData)
+        .where(eq(users.id, userId));
+      
+      res.json({
+        success: true,
+        message: "Assinatura removida com sucesso"
+      });
+    } catch (error) {
+      console.error("Erro ao remover assinatura:", error);
+      res.status(500).json({ 
+        message: "Erro ao remover assinatura",
         error: error instanceof Error ? error.message : String(error)
       });
     }
