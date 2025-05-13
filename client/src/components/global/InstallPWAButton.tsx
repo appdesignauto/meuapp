@@ -25,6 +25,7 @@ declare global {
 export function InstallPWAButton() {
   const [installPrompt, setInstallPrompt] = useState<any>(null);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [showManualInstructions, setShowManualInstructions] = useState(false);
   
   // Debug: verificar instalação PWA e prompt disponível
   useEffect(() => {
@@ -32,9 +33,10 @@ export function InstallPWAButton() {
       isInstalled,
       hasPrompt: !!installPrompt,
       windowPrompt: !!window.deferredPrompt,
-      isRunningAsPWA: isRunningAsPWA()
+      isRunningAsPWA: isRunningAsPWA(),
+      showManualInstructions
     });
-  }, [isInstalled, installPrompt]);
+  }, [isInstalled, installPrompt, showManualInstructions]);
   
   // Verifica se o app já está instalado como PWA
   useEffect(() => {
@@ -43,11 +45,29 @@ export function InstallPWAButton() {
       setIsInstalled(isPWA);
     };
     
+    // Verifica assim que o componente é montado
     checkIfPWA();
+    
+    // Verifica novamente quando a visibilidade da página muda
+    // (útil quando o usuário volta de outra aba após instalar o PWA)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('Visibilidade mudou para visível, verificando PWA novamente');
+        checkIfPWA();
+      }
+    };
+    
+    // Escuta eventos relevantes
     window.addEventListener('appinstalled', checkIfPWA);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Verificar a cada 3 segundos também (para casos de iOS e outros)
+    const intervalId = setInterval(checkIfPWA, 3000);
     
     return () => {
       window.removeEventListener('appinstalled', checkIfPWA);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearInterval(intervalId);
     };
   }, []);
   
@@ -62,12 +82,17 @@ export function InstallPWAButton() {
       
       // Armazena o evento para uso posterior
       setInstallPrompt(e);
+      
+      // Garantimos que o usuário vê o botão normal, não o manual
+      setShowManualInstructions(false);
     };
     
     // Log para confirmar que o listener foi configurado
     console.log('Configurando listener para beforeinstallprompt...');
     
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    // Resolvendo o problema do evento não ser capturado em algumas situações
+    // ao adicionar o listener com captura
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt, { capture: true });
     
     // Se já houver um evento armazenado no deferredPrompt
     if (window.deferredPrompt) {
@@ -75,10 +100,20 @@ export function InstallPWAButton() {
       setInstallPrompt(window.deferredPrompt);
     }
     
+    // Se depois de um tempo não tivermos o prompt e não estamos rodando como PWA,
+    // exibimos instruções manuais
+    const timeoutId = setTimeout(() => {
+      if (!installPrompt && !isRunningAsPWA()) {
+        console.log('Sem prompt após timeout, mostrando instruções manuais');
+        setShowManualInstructions(true);
+      }
+    }, 2000);
+    
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt, { capture: true });
+      clearTimeout(timeoutId);
     };
-  }, []);
+  }, [installPrompt]);
   
   // Função para instalar o PWA quando o botão é clicado
   const handleInstallClick = () => {
@@ -96,27 +131,36 @@ export function InstallPWAButton() {
           setIsInstalled(true);
         } else {
           console.log('Usuário recusou instalar o PWA');
+          // Se o usuário recusou, podemos mostrar instruções manuais
+          setShowManualInstructions(true);
         }
         
         // Limpa o prompt armazenado, já que só pode ser usado uma vez
         setInstallPrompt(null);
+        // Limpa também a variável global
+        window.deferredPrompt = null;
       });
     } else {
-      // Mostramos um toast ou indicação para o usuário sobre como instalar manualmente
-      console.log('Sem evento beforeinstallprompt disponível');
-      
-      // Detecta o navegador para dar as instruções corretas
-      const userAgent = navigator.userAgent.toLowerCase();
-      
-      if (userAgent.includes('chrome')) {
-        alert('Para instalar: Clique nos três pontos no canto superior direito e depois em "Instalar DesignAuto"');
-      } else if (userAgent.includes('firefox')) {
-        alert('Para instalar: Clique no ícone de casa no canto superior direito da barra de endereço');
-      } else if (userAgent.includes('safari') && /iphone|ipad|ipod/.test(userAgent)) {
-        alert('Para instalar: Toque no ícone de compartilhamento e depois em "Adicionar à Tela de Início"');
-      } else {
-        alert('Para instalar: Verifique as opções do seu navegador para adicionar aplicativos à tela inicial');
-      }
+      // Ativamos o modo de instruções manuais
+      console.log('Sem evento beforeinstallprompt disponível, mostrando instruções manuais');
+      setShowManualInstructions(true);
+    }
+  };
+  
+  // Função para detectar o navegador e gerar instruções específicas
+  const getBrowserInstructions = () => {
+    const userAgent = navigator.userAgent.toLowerCase();
+    
+    if (userAgent.includes('chrome')) {
+      return 'Clique nos três pontos no canto superior direito e depois em "Instalar DesignAuto"';
+    } else if (userAgent.includes('firefox')) {
+      return 'Clique no ícone de casa no canto superior direito da barra de endereço';
+    } else if (userAgent.includes('safari') && /iphone|ipad|ipod/.test(userAgent)) {
+      return 'Toque no ícone de compartilhamento e depois em "Adicionar à Tela de Início"';
+    } else if (userAgent.includes('edge')) {
+      return 'Clique nos três pontos no canto superior direito e depois em "Aplicativos" > "Instalar este site como aplicativo"';
+    } else {
+      return 'Verifique as opções do seu navegador para adicionar aplicativos à tela inicial';
     }
   };
   
@@ -125,9 +169,32 @@ export function InstallPWAButton() {
     return null;
   }
   
-  // Deixamos o botão visível mesmo sem o prompt, para fins de teste
-  // Em produção, podemos ajustar isso depois
+  // Se estamos no modo de instruções manuais
+  if (showManualInstructions) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setShowManualInstructions(false)}
+              className="relative flex items-center gap-1 px-3 animated-background"
+            >
+              <DownloadCloud className="h-4 w-4" />
+              <span className="text-xs">Instalar</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent className="w-60 p-3">
+            <p className="font-bold mb-2">Como instalar o DesignAuto:</p>
+            <p className="text-sm">{getBrowserInstructions()}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
   
+  // Botão padrão para quando temos o prompt
   return (
     <TooltipProvider>
       <Tooltip>
@@ -147,7 +214,7 @@ export function InstallPWAButton() {
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          <p>Instalar DesignAuto</p>
+          <p>Instalar DesignAuto como aplicativo</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
