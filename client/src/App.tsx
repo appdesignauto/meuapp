@@ -287,7 +287,27 @@ function App() {
     measureWebVitals();
     
     // Registrar o service worker para PWA
-    registerServiceWorker();
+    registerServiceWorker().then(registration => {
+      if (registration) {
+        console.log('PWA service worker registrado com sucesso');
+        
+        // Configura verificação periódica para atualizações
+        setInterval(() => {
+          registration.update();
+        }, 1000 * 60 * 60); // Verificar atualizações a cada hora
+        
+        // Atualiza automaticamente quando há uma nova versão
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (refreshing) return;
+          refreshing = true;
+          console.log('Nova versão do PWA disponível, atualizando...');
+          window.location.reload();
+        });
+      }
+    }).catch(error => {
+      console.error('Erro ao registrar service worker PWA:', error);
+    });
   }, []);
 
   return (
@@ -300,6 +320,8 @@ function App() {
           <meta name="apple-mobile-web-app-title" content="DesignAuto" />
           <link rel="manifest" href="/manifest.json" />
           <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+          <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+          <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png" />
         </Helmet>
         <ThemeProvider defaultTheme="light">
           <AuthProvider>
