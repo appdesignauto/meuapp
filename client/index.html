@@ -41,31 +41,30 @@
     <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
     
     <!-- PWA Installation Button & Script -->
-    <button id="pwa-install-btn" style="display: none;" class="btn-install">
-      Instalar o App
+    <button id="pwa-install-btn" style="display: none;" class="btn btn-primary ml-4">
+      📲 Instalar App
     </button>
     <script>
       let deferredPrompt;
 
       window.addEventListener('beforeinstallprompt', (e) => {
-        // Impede o Chrome de mostrar automaticamente
+        console.log('[PWA] beforeinstallprompt disparado');
         e.preventDefault();
         deferredPrompt = e;
 
-        // Exibe o botão de instalação
         const installBtn = document.getElementById('pwa-install-btn');
         if (installBtn) {
           installBtn.style.display = 'inline-block';
 
           installBtn.addEventListener('click', () => {
-            installBtn.style.display = 'none';
+            installBtn.disabled = true;
             deferredPrompt.prompt();
 
             deferredPrompt.userChoice.then((choiceResult) => {
               if (choiceResult.outcome === 'accepted') {
-                console.log('Usuário aceitou instalar o app');
+                console.log('[PWA] Usuário aceitou instalar o app');
               } else {
-                console.log('Usuário recusou instalar o app');
+                console.log('[PWA] Usuário recusou instalar');
               }
               deferredPrompt = null;
             });
@@ -77,13 +76,14 @@
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/service-worker.js')
-            .then(() => console.log('PWA ativo'))
-            .catch(err => console.error('Erro ao registrar SW', err));
+            .then(() => console.log('[PWA] Service Worker ativo'))
+            .catch(err => console.error('[PWA] Erro ao registrar SW', err));
         });
       }
       
       // Quando PWA já estiver instalado, esconder o botão
       window.addEventListener('appinstalled', () => {
+        console.log('[PWA] App foi instalado com sucesso!');
         deferredPrompt = null;
         const pwaInstallBtn = document.getElementById('pwa-install-btn');
         if (pwaInstallBtn) {
@@ -91,17 +91,5 @@
         }
       });
     </script>
-    
-    <style>
-      .btn-install {
-        background-color: #000;
-        color: white;
-        padding: 8px 16px;
-        border-radius: 6px;
-        border: none;
-        cursor: pointer;
-        margin-left: 12px;
-      }
-    </style>
   </body>
 </html>
