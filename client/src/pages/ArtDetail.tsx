@@ -732,7 +732,7 @@ export default function ArtDetail() {
               <motion.img 
                 src={art.imageUrl} 
                 alt={art.title} 
-                className="w-full h-full object-contain max-h-[72vh] sm:max-h-[80vh] transition-all duration-300 rounded-md shadow-sm"
+                className="w-auto h-auto object-contain max-w-full max-h-[60vh] sm:max-h-[70vh] transition-all duration-300 rounded-md shadow-sm"
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5 }}
