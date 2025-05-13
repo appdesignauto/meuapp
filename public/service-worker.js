@@ -8,8 +8,8 @@ const STATIC_CACHE_URLS = [
   '/offline.html',
   '/favicon.png',
   '/images/offline-placeholder.svg',
-  '/icons/icon-192.svg',
-  '/icons/icon-512.svg'
+  '/icons/icon-192.png',
+  '/icons/icon-512.png'
 ];
 
 // Evento de instalação - pré-cache de recursos estáticos
