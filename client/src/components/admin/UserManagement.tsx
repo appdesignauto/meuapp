@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { SiHotjar } from "react-icons/si"; // Ícone similar ao da Hotmart
+import { SiHotjar } from "react-icons/si";
 import {
   Dialog,
   DialogContent,
@@ -108,6 +108,7 @@ interface User {
   nivelacesso: NivelAcesso;
   origemassinatura?: OrigemAssinatura | null;
   tipoplano?: TipoPlano | null;
+  planstatus?: string | null;
   dataassinatura?: string | null;
   dataexpiracao?: string | null;
   acessovitalicio: boolean;
@@ -1450,7 +1451,8 @@ const UserManagement = () => {
   };
 
   // Renderização do badge de papel do usuário com tooltip para descrição
-  const renderRoleBadge = (role: NivelAcesso) => {
+  const renderRoleBadge = (role?: NivelAcesso) => {
+    if (!role) return null;
     const roleInfo = userRoles.find(r => r.value === role) || {
       value: role as NivelAcesso,
       label: role,
@@ -3238,7 +3240,7 @@ const UserTable = ({
 };
 
 // Funções auxiliares para renderizar dados de assinatura
-const renderSubscriptionStatus = (status?: string) => {
+const renderSubscriptionStatus = (status?: string | null) => {
   if (!status) return <Badge variant="outline" className="bg-gray-50 text-gray-700">Sem assinatura</Badge>;
 
   switch (status.toLowerCase()) {
