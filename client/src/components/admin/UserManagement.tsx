@@ -3261,7 +3261,7 @@ const renderSubscriptionStatus = (status?: string | null) => {
   }
 };
 
-const renderSubscriptionOrigin = (origin?: string | null) => {
+const renderSubscriptionOrigin = (origin?: string | null | undefined) => {
   if (!origin) return <Badge variant="outline" className="bg-gray-50 text-gray-700">N/A</Badge>;
 
   switch (origin.toLowerCase()) {
