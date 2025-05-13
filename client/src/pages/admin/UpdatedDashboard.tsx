@@ -1055,17 +1055,49 @@ const AdminDashboard = ({ initialTab = 'arts' }: UpdatedDashboardProps) => {
                   <MessageSquare className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
                   {sidebarOpen && <span>Comunidade</span>}
                 </button>
-                <button
-                  onClick={() => setActiveTab('subscriptions')}
-                  className={`flex items-center w-full py-2.5 rounded-md ${
-                    activeTab === 'subscriptions' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
-                  title="Assinaturas"
-                >
-                  <CreditCard className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-                  {sidebarOpen && <span>Assinaturas</span>}
-                </button>
               </CollapsibleContent>
+              
+              {/* Menu de Pagamentos e Assinaturas */}
+              <Collapsible 
+                className="bg-gray-50 rounded-lg py-1 mb-1"
+                defaultOpen={['subscriptions', 'webhooks'].includes(activeTab)}
+                open={sidebarOpen ? undefined : false}
+              >
+                <CollapsibleTrigger 
+                  className={`flex items-center w-full px-4 py-3 text-gray-700 font-medium ${!sidebarOpen ? 'lg:justify-center lg:px-0' : ''}`}
+                  title="Pagamentos"
+                >
+                  <CreditCard className="w-6 h-6 mx-auto" />
+                  {sidebarOpen && (
+                    <>
+                      <span className="ml-3">Pagamentos</span>
+                      <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+                    </>
+                  )}
+                </CollapsibleTrigger>
+                <CollapsibleContent className={`${sidebarOpen ? 'pl-4' : 'lg:pl-0'} space-y-1 pt-1 pb-2`}>
+                  <button
+                    onClick={() => setActiveTab('subscriptions')}
+                    className={`flex items-center w-full py-2.5 rounded-md ${
+                      activeTab === 'subscriptions' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+                    } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
+                    title="Assinaturas"
+                  >
+                    <CreditCard className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+                    {sidebarOpen && <span>Assinaturas</span>}
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('webhooks')}
+                    className={`flex items-center w-full py-2.5 rounded-md ${
+                      activeTab === 'webhooks' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+                    } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
+                    title="Webhooks"
+                  >
+                    <Webhook className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+                    {sidebarOpen && <span>Webhooks</span>}
+                  </button>
+                </CollapsibleContent>
+              </Collapsible>
             </Collapsible>
             
             {/* Gerenciamento de Conteúdo */}
@@ -4078,6 +4110,40 @@ const AdminDashboard = ({ initialTab = 'arts' }: UpdatedDashboardProps) => {
                       <GerenciarCategorias />
                     </TabsContent>
                   </Tabs>
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Gerenciamento de Assinaturas */}
+            <TabsContent value="subscriptions" className="mt-0">
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <div className="flex flex-col space-y-6">
+                  <div className="mb-6">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                      <div>
+                        <h2 className="text-2xl font-bold text-gray-800">Gerenciamento de Assinaturas</h2>
+                        <p className="text-gray-500 mt-1">Visualize e gerencie assinaturas de usuários da plataforma</p>
+                      </div>
+                    </div>
+                  </div>
+                  <SubscriptionManagement />
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Logs de Webhooks */}
+            <TabsContent value="webhooks" className="mt-0">
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <div className="flex flex-col space-y-6">
+                  <div className="mb-6">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                      <div>
+                        <h2 className="text-2xl font-bold text-gray-800">Logs de Webhooks</h2>
+                        <p className="text-gray-500 mt-1">Monitore e gerencie webhooks recebidos de plataformas de pagamento</p>
+                      </div>
+                    </div>
+                  </div>
+                  <WebhookList />
                 </div>
               </div>
             </TabsContent>
