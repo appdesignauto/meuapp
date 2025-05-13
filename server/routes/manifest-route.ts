@@ -83,13 +83,13 @@ router.get('/manifest.json', async (req, res) => {
       scope: '/',
       screenshots: [
         {
-          src: '/screenshots/home.png',
-          sizes: '1280x720',
+          src: '/screenshots/home.png?t=' + timestamp,
+          sizes: '1024x605',
           type: 'image/png',
           form_factor: 'wide'
         },
         {
-          src: '/screenshots/mobile.png',
+          src: '/screenshots/mobile.png?t=' + timestamp,
           sizes: '540x1080',
           type: 'image/png',
           form_factor: 'narrow'

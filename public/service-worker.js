@@ -1,5 +1,5 @@
 // service-worker.js
-const CACHE_NAME = 'designauto-cache-v3'; // Versão incrementada para forçar atualização do cache e corrigir problemas com ícones
+const CACHE_NAME = 'designauto-cache-v4'; // Versão incrementada para forçar atualização do cache e incluir as novas screenshots
 const ASSETS_TO_CACHE = [
   '/',
   '/offline.html',
@@ -45,9 +45,11 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
   
-  // Para ícones e manifest.json: sempre buscar da rede (network-first)
+  // Para ícones, screenshots e manifest.json: sempre buscar da rede (network-first)
   // Isso garante que os ícones e manifest sempre estejam atualizados
-  if (url.pathname.includes('/icons/') || url.pathname === '/manifest.json') {
+  if (url.pathname.includes('/icons/') || 
+      url.pathname.includes('/screenshots/') || 
+      url.pathname === '/manifest.json') {
     console.log('Buscar da rede primeiro para:', url.pathname);
     event.respondWith(
       fetch(event.request)
@@ -58,7 +60,7 @@ self.addEventListener('fetch', event => {
           // Atualizar o cache com a nova versão 
           caches.open(CACHE_NAME)
             .then(cache => {
-              // Remover versões antigas do mesmo recurso (útil para ícones)
+              // Remover versões antigas do mesmo recurso (útil para ícones e screenshots)
               if (url.pathname.includes('/icons/')) {
                 const iconType = url.pathname.includes('icon-192') ? 'icon-192' : 'icon-512';
                 cache.keys().then(keys => {
@@ -66,6 +68,20 @@ self.addEventListener('fetch', event => {
                     const keyUrl = new URL(key.url);
                     if (keyUrl.pathname.includes('/icons/') && keyUrl.pathname.includes(iconType)) {
                       console.log('Removendo ícone antigo do cache:', keyUrl.pathname);
+                      cache.delete(key);
+                    }
+                  });
+                });
+              }
+              
+              // Limpar screenshots antigas do cache
+              if (url.pathname.includes('/screenshots/')) {
+                const screenshotType = url.pathname.includes('mobile') ? 'mobile' : 'home';
+                cache.keys().then(keys => {
+                  keys.forEach(key => {
+                    const keyUrl = new URL(key.url);
+                    if (keyUrl.pathname.includes('/screenshots/') && keyUrl.pathname.includes(screenshotType)) {
+                      console.log('Removendo screenshot antiga do cache:', keyUrl.pathname);
                       cache.delete(key);
                     }
                   });
