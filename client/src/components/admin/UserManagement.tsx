@@ -3007,4 +3007,59 @@ const UserTable = ({
   );
 };
 
+// Funções auxiliares para renderizar dados de assinatura
+const renderSubscriptionStatus = (status?: string) => {
+  if (!status) return <Badge variant="outline" className="bg-gray-50 text-gray-700">Sem assinatura</Badge>;
+
+  switch (status.toLowerCase()) {
+    case 'active':
+    case 'ativo':
+      return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Ativo</Badge>;
+    case 'inactive':
+    case 'inativo':
+      return <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">Inativo</Badge>;
+    case 'expired':
+    case 'expirado':
+      return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Expirado</Badge>;
+    case 'trial':
+    case 'teste':
+      return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Teste</Badge>;
+    default:
+      return <Badge variant="outline">{status}</Badge>;
+  }
+};
+
+const renderSubscriptionOrigin = (origin?: string | null) => {
+  if (!origin) return <Badge variant="outline" className="bg-gray-50 text-gray-700">N/A</Badge>;
+
+  switch (origin.toLowerCase()) {
+    case 'hotmart':
+      return (
+        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 flex items-center">
+          <SiHotjar className="h-3 w-3 mr-1 text-amber-600" />
+          Hotmart
+        </Badge>
+      );
+    case 'manual':
+      return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Manual</Badge>;
+    case 'doppus':
+      return <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">Doppus</Badge>;
+    default:
+      return <Badge variant="outline">{origin}</Badge>;
+  }
+};
+
+const renderUserRole = (role?: NivelAcesso) => {
+  if (!role) return null;
+  
+  const userRole = userRoles.find(r => r.value === role);
+  if (!userRole) return <Badge>{role}</Badge>;
+  
+  return (
+    <Badge variant="outline" className={`${userRole.color.replace('hover:', '')} text-white`}>
+      {userRole.label}
+    </Badge>
+  );
+};
+
 export default UserManagement;
