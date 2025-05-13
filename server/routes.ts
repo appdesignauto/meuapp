@@ -4798,6 +4798,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Rota para listar logs de webhook com paginação e filtros - Admin
+  app.get("/api/admin/webhook-logs", isAdmin, async (req, res) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const status = req.query.status as string;
+      const eventType = req.query.eventType as string;
+      const search = req.query.search as string;
+      
+      const offset = (page - 1) * limit;
+      
+      // Construir a consulta base
+      let query = db.select()
+        .from(webhookLogs)
+        .orderBy(desc(webhookLogs.createdAt));
+      
+      // Construir a consulta de contagem
+      let countQuery = db.select({ count: count() })
+        .from(webhookLogs);
+      
+      // Adicionar filtros se fornecidos
+      if (status && status !== 'all') {
+        query = query.where(eq(webhookLogs.status, status));
+        countQuery = countQuery.where(eq(webhookLogs.status, status));
+      }
+      
+      if (eventType && eventType !== 'all') {
+        query = query.where(eq(webhookLogs.eventType, eventType));
+        countQuery = countQuery.where(eq(webhookLogs.eventType, eventType));
+      }
+      
+      if (search) {
+        const searchFilter = or(
+          sql`${webhookLogs.sourceIp} ILIKE ${'%' + search + '%'}`,
+          sql`${webhookLogs.payloadData}::text ILIKE ${'%' + search + '%'}`
+        );
+        
+        query = query.where(searchFilter);
+        countQuery = countQuery.where(searchFilter);
+      }
+      
+      // Aplicar paginação
+      query = query.limit(limit).offset(offset);
+      
+      // Executar as consultas
+      const [logsList, countResult] = await Promise.all([
+        query,
+        countQuery
+      ]);
+      
+      // Obter a contagem total
+      const total = countResult[0]?.count || 0;
+      
+      res.json({
+        logs: logsList,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit)
+        }
+      });
+    } catch (error) {
+      console.error("Erro ao listar logs de webhook:", error);
+      res.status(500).json({ 
+        message: "Erro ao listar logs de webhook",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Rota para obter detalhes de um log de webhook específico - Admin
+  app.get("/api/admin/webhook-logs/:id", isAdmin, async (req, res) => {
+    try {
+      const logId = parseInt(req.params.id);
+      
+      if (isNaN(logId)) {
+        return res.status(400).json({ message: "ID de log inválido" });
+      }
+      
+      // Buscar o log de webhook
+      const [log] = await db.select()
+        .from(webhookLogs)
+        .where(eq(webhookLogs.id, logId));
+      
+      if (!log) {
+        return res.status(404).json({ message: "Log de webhook não encontrado" });
+      }
+      
+      // Se houver um usuário associado, buscar seus dados
+      let userData = null;
+      if (log.userId) {
+        const [user] = await db.select()
+          .from(users)
+          .where(eq(users.id, log.userId));
+        
+        if (user) {
+          // Remover senha e dados sensíveis
+          const { password, ...userWithoutPassword } = user;
+          
+          // Adicionar informações de assinatura
+          userData = {
+            ...userWithoutPassword,
+            assinatura: {
+              origem: user.origemassinatura || 'nenhuma',
+              tipo: user.tipoplano || 'nenhum',
+              status: user.planstatus || 'inativo',
+              dataExpiracao: user.planoexpiracao || null
+            }
+          };
+        }
+      }
+      
+      // Retornar o log com os dados do usuário se disponível
+      res.json({
+        ...log,
+        user: userData
+      });
+    } catch (error) {
+      console.error("Erro ao obter detalhes do log de webhook:", error);
+      res.status(500).json({ 
+        message: "Erro ao obter detalhes do log de webhook",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
   // Rota para reprocessar um webhook que falhou - Admin
   app.post("/api/admin/webhook-logs/:id/retry", isAdmin, async (req, res) => {
     try {
