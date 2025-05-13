@@ -275,22 +275,22 @@ export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({
 // Tabela para logs de webhooks
 export const webhookLogs = pgTable("webhookLogs", {
   id: serial("id").primaryKey(),
-  provider: text("provider").notNull(), // hotmart, doppus, etc.
-  event: text("event").notNull(), // PURCHASE_APPROVED, SUBSCRIPTION_CANCELED, etc.
-  payload: text("payload"), // JSON payload completo recebido
+  eventType: text("eventType").notNull(), // PURCHASE_APPROVED, SUBSCRIPTION_CANCELED, etc.
+  payloadData: text("payloadData"), // JSON payload completo recebido
   status: text("status").notNull(), // success, error, pending
+  errorMessage: text("errorMessage"), // Mensagem de erro, se houver
   userId: integer("userId").references(() => users.id), // Usuário afetado, se houver
-  error: text("error"), // Mensagem de erro, se houver
-  processed: boolean("processed").notNull().default(false), // Se foi processado com sucesso
-  processedAt: timestamp("processedAt"), // Quando foi processado
+  sourceIp: text("sourceIp"), // IP de origem
+  retryCount: integer("retryCount").default(0), // Número de tentativas de processamento
   createdAt: timestamp("createdAt").notNull().defaultNow(),
-  ip: text("ip"), // IP de origem
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
   transactionId: text("transactionId"), // ID da transação relacionada
 });
 
 export const insertWebhookLogSchema = createInsertSchema(webhookLogs).omit({
   id: true,
   createdAt: true,
+  updatedAt: true,
 });
 
 // Community posts schema
