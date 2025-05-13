@@ -519,6 +519,8 @@ export const insertSiteSettingsSchema = createInsertSchema(siteSettings).omit({
 export type SiteSettings = typeof siteSettings.$inferSelect;
 export type InsertSiteSettings = z.infer<typeof insertSiteSettingsSchema>;
 
+// Nota: A configuração do PWA já está definida no final do arquivo
+
 // Tabela para armazenar códigos de verificação de e-mail
 export const emailVerificationCodes = pgTable("emailVerificationCodes", {
   id: serial("id").primaryKey(),
@@ -1242,21 +1244,27 @@ export const insertReportSchema = createInsertSchema(reports).omit({
 export const appConfig = pgTable("app_config", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().default("DesignAuto"),
-  shortName: text("short_name").notNull().default("DesignAuto"),
-  themeColor: text("theme_color").notNull().default("#4F46E5"),
-  backgroundColor: text("background_color").notNull().default("#FFFFFF"),
-  icon192: text("icon_192").notNull().default("/icons/icon-192.png"),
-  icon512: text("icon_512").notNull().default("/icons/icon-512.png"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  createdBy: integer("created_by").references(() => users.id),
-  updatedBy: integer("updated_by").references(() => users.id),
+  short_name: text("short_name").notNull().default("DesignAuto"),
+  theme_color: text("theme_color").notNull().default("#1e40af"),
+  background_color: text("background_color").notNull().default("#ffffff"),
+  icon_192: text("icon_192").notNull().default("/icons/icon-192.png"),
+  icon_512: text("icon_512").notNull().default("/icons/icon-512.png"),
+  created_at: timestamp("created_at").notNull().defaultNow(),
+  updated_at: timestamp("updated_at").notNull().defaultNow(),
+  updated_by: integer("updated_by").references(() => users.id),
 });
+
+export const appConfigRelations = relations(appConfig, ({ one }) => ({
+  updatedByUser: one(users, {
+    fields: [appConfig.updated_by],
+    references: [users.id],
+  }),
+}));
 
 export const insertAppConfigSchema = createInsertSchema(appConfig).omit({
   id: true,
-  createdAt: true,
-  updatedAt: true,
+  created_at: true,
+  updated_at: true,
 });
 
 export type AppConfig = typeof appConfig.$inferSelect;
