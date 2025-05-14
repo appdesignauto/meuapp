@@ -570,21 +570,20 @@ const PostCard: React.FC<{
     
     setIsDeleting(true);
     try {
+      // Remover o post imediatamente da UI para feedback instantâneo
+      setAllPosts(prevPosts => prevPosts.filter(p => p.post.id !== postId));
+      
+      // Fazer a requisição para excluir no servidor
       const response = await apiRequest('DELETE', `/api/community/posts/${postId}`);
       
       if (!response.ok) {
         throw new Error("Não foi possível excluir o post");
       }
       
-      // Atualizar a lista de posts
-      if (refetch) {
-        refetch();
-      }
-      
-      // Atualizar posts populares se necessário
-      if (refetchPopularPosts) {
-        refetchPopularPosts();
-      }
+      // Invalidar todas as queries relacionadas a posts para forçar atualização
+      queryClient.invalidateQueries({ queryKey: ['/api/community/posts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/community/admin/posts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/community/populares'] });
       
       toast({
         title: "Post excluído",
@@ -596,6 +595,9 @@ const PostCard: React.FC<{
         description: error instanceof Error ? error.message : "Ocorreu um erro ao excluir o post",
         variant: "destructive",
       });
+      
+      // Se falhar, recarregar a página para restaurar o estado
+      refetchPosts();
     } finally {
       setIsDeleting(false);
     }
