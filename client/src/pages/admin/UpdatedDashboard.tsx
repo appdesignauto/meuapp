@@ -54,12 +54,9 @@ import {
   Eye, 
   RefreshCw,
   ListOrdered,
-  BellRing,
   Palette,
   Save,
-  Calendar,
-  Wrench,
-  FlagIcon
+  Calendar
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
