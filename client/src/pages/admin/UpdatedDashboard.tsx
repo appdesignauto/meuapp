@@ -1254,8 +1254,8 @@ const AdminDashboard = () => {
                   } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
                   title="Gerenciar Reports"
                 >
-                  <FlagIcon className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-                  {sidebarOpen && <span>Gerenciar Reports</span>}
+                  <FlagIcon className={`w-${iconSize-1} h-${iconSize-1} ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                  {sidebarOpen && <span className="text-xs">Gerenciar Denúncias</span>}
                 </button>
               </CollapsibleContent>
             </Collapsible>
@@ -1265,12 +1265,12 @@ const AdminDashboard = () => {
               className="bg-gray-50 rounded-lg py-1 mb-1"
               defaultOpen={['ferramentas'].includes(activeTab)}
             >
-              <CollapsibleTrigger className={`flex items-center w-full py-2.5 text-gray-700 font-medium ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}>
-                <Wrench className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+              <CollapsibleTrigger className={`flex items-center w-full py-3 text-gray-700 font-medium ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`} title="Ferramentas">
+                <Wrench className={`w-${iconSize} h-${iconSize} ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
                 {sidebarOpen && (
                   <>
-                    <span>Ferramentas</span>
-                    <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+                    <span className="text-xs">Ferramentas</span>
+                    <ChevronDown className="w-3 h-3 ml-auto transition-transform duration-200 ui-open:rotate-180" />
                   </>
                 )}
               </CollapsibleTrigger>
@@ -1282,8 +1282,8 @@ const AdminDashboard = () => {
                   } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
                   title="Gerenciar Ferramentas"
                 >
-                  <Wrench className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-                  {sidebarOpen && <span>Gerenciar Ferramentas</span>}
+                  <Wrench className={`w-${iconSize-1} h-${iconSize-1} ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                  {sidebarOpen && <span className="text-xs">Gerenciar Ferramentas</span>}
                 </button>
               </CollapsibleContent>
             </Collapsible>
@@ -1293,12 +1293,12 @@ const AdminDashboard = () => {
               className="bg-gray-50 rounded-lg py-1 mb-1"
               defaultOpen={['settings', 'collections'].includes(activeTab)}
             >
-              <CollapsibleTrigger className={`flex items-center w-full py-2.5 text-gray-700 font-medium ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}>
-                <Settings className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+              <CollapsibleTrigger className={`flex items-center w-full py-3 text-gray-700 font-medium ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`} title="Configurações">
+                <Settings className={`w-${iconSize} h-${iconSize} ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
                 {sidebarOpen && (
                   <>
-                    <span>Configurações</span>
-                    <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+                    <span className="text-xs">Configurações</span>
+                    <ChevronDown className="w-3 h-3 ml-auto transition-transform duration-200 ui-open:rotate-180" />
                   </>
                 )}
               </CollapsibleTrigger>
@@ -1310,8 +1310,8 @@ const AdminDashboard = () => {
                   } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
                   title="Configurações do Site"
                 >
-                  <Settings className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-                  {sidebarOpen && <span>Configurações do Site</span>}
+                  <Settings className={`w-${iconSize-1} h-${iconSize-1} ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                  {sidebarOpen && <span className="text-xs">Configurações do Site</span>}
                 </button>
                 <button
                   onClick={() => setActiveTab('collections')}
