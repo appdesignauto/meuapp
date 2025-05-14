@@ -22,6 +22,24 @@ app.use(express.static(path.join(process.cwd(), 'public')));
 // Configuração para servir arquivos de upload local (fallback quando Supabase falha)
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
+// Middleware para adicionar cabeçalhos de cache-control apropriados
+app.use((req, res, next) => {
+  // Para recursos estáticos, permitir cache
+  if (
+    req.path.match(/\.(js|css|jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf|eot)$/)
+  ) {
+    res.setHeader('Cache-Control', 'public, max-age=604800, immutable'); // 7 dias
+  } 
+  // Para API e rotas dinâmicas, não permitir cache
+  else if (req.path.startsWith('/api/')) {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
+  }
+  next();
+});
+
 // Redirecionar HTTP para HTTPS em produção
 if (process.env.NODE_ENV === 'production') {
   app.use((req, res, next) => {
