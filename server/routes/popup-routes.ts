@@ -473,7 +473,8 @@ router.put('/:id/toggle', async (req, res) => {
       return res.status(404).json({ message: 'Popup não encontrado' });
     }
     
-    // Atualizar status do popup
+    // Atualizar status do popup - usamos o valor do cliente diretamente
+    // CORREÇÃO: O frontend está enviando o valor oposto que quer definir (isActive: !isActive)
     const [updatedPopup] = await db.update(popups)
       .set({
         isActive: isActive,
@@ -482,7 +483,14 @@ router.put('/:id/toggle', async (req, res) => {
       .where(eq(popups.id, parseInt(id)))
       .returning();
     
+    // Limpeza de cache: Remover todas as entradas de visualização para esse popup
+    // Isso garante que o popup será reavaliado na próxima vez
+    await db.delete(popupViews)
+      .where(eq(popupViews.popupId, parseInt(id)));
+    
     console.log(`Popup ID ${id} atualizado: isActive=${isActive}`);
+    console.log(`Cache de visualizações limpo para o popup ID ${id}`);
+    
     res.json(updatedPopup);
   } catch (error) {
     console.error('Erro ao alterar status do popup:', error);
