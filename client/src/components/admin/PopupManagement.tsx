@@ -209,24 +209,8 @@ export default function PopupManagement() {
         formData.append('image', selectedImage);
       }
       
-      // Se estamos em modo de edição, buscar o popup atual para preservar o estado isActive
-      let popupStatusAtual = formValues.isActive;
-      
-      if (isEditMode && currentPopupId) {
-        try {
-          // Buscar o status atual do popup no servidor
-          const response = await apiRequest('GET', `/api/popups`);
-          const popups = await response.json();
-          const popupAtual = popups.find((p: Popup) => p.id === currentPopupId);
-          
-          if (popupAtual) {
-            console.log(`Status atual do popup ${currentPopupId} no servidor: ${popupAtual.isActive ? 'ATIVO' : 'INATIVO'}`);
-            popupStatusAtual = popupAtual.isActive;
-          }
-        } catch (error) {
-          console.error("Erro ao buscar status atual do popup:", error);
-        }
-      }
+      // Não tentamos mais buscar o status atual do popup no servidor
+      // O servidor ignorará o valor isActive enviado no PUT e manterá o atual
       
       // Converter objetos de formulário em JSON e adicionar como campo 'data'
       const jsonData = {
@@ -234,8 +218,8 @@ export default function PopupManagement() {
         startDate: formValues.startDate ? format(formValues.startDate, 'yyyy-MM-dd') : null,
         endDate: formValues.endDate ? format(formValues.endDate, 'yyyy-MM-dd') : null,
         frequency: formValues.frequency === 0 ? null : formValues.frequency,
-        // Preservar o status atual durante a edição
-        isActive: isEditMode ? popupStatusAtual : formValues.isActive
+        // Preservamos o valor do formulário, mas o servidor o ignorará na rota de edição
+        isActive: formValues.isActive
       };
       
       formData.append('data', JSON.stringify(jsonData));

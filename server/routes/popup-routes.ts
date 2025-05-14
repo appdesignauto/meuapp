@@ -502,13 +502,20 @@ router.put('/:id/toggle', async (req, res) => {
     
     // Limpeza de cache: Remover todas as entradas de visualização para esse popup
     // Isso garante que o popup será reavaliado na próxima vez
-    await db.delete(popupViews)
-      .where(eq(popupViews.popupId, parseInt(id)));
+    const result = await db.delete(popupViews)
+      .where(eq(popupViews.popupId, parseInt(id)))
+      .returning({ count: sql`count(*)` });
+    
+    const entradasRemovidas = result.length > 0 ? parseInt(result[0].count.toString()) : 0;
     
     console.log(`Popup ID ${id} atualizado: isActive=${novoStatus}`);
-    console.log(`Cache de visualizações limpo para o popup ID ${id}`);
+    console.log(`Cache de visualizações limpo para o popup ID ${id}. ${entradasRemovidas} entradas removidas.`);
     
-    res.json(updatedPopup);
+    res.json({
+      ...updatedPopup,
+      cacheLimpo: true,
+      visualizacoesRemovidas: entradasRemovidas
+    });
   } catch (error) {
     console.error('Erro ao alterar status do popup:', error);
     res.status(500).json({ message: 'Erro ao alterar status do popup' });
