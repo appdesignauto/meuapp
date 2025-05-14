@@ -1,6 +1,6 @@
 // service-worker.js
-const CACHE_NAME = 'designauto-cache-v6'; // Incrementado para forçar atualização
-const STATIC_CACHE = 'designauto-static-v6';
+const CACHE_NAME = 'designauto-cache-v7'; // Incrementado para forçar atualização
+const STATIC_CACHE = 'designauto-static-v7';
 const ASSETS_TO_CACHE = [
   '/',
   '/offline.html',
@@ -8,10 +8,14 @@ const ASSETS_TO_CACHE = [
   '/index.html'
 ];
 
-// Lista de caminhos que sempre devem ser buscados da rede primeiro
-const NETWORK_FIRST_ROUTES = [
+// Lista de caminhos que NUNCA devem ser cacheados pelo service worker
+const NEVER_CACHE_ROUTES = [
   '/api/',
+  '/api/artes',
+  '/api/arts',
+  '/api/admin',
   '/uploads/',
+  '/api/community',
 ];
 
 // Lista de extensões estáticas que podem ser cacheadas com cache-first
@@ -71,18 +75,23 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Função para verificar se uma URL deve usar network-first
-function shouldUseNetworkFirst(url) {
+// Função para verificar se uma URL NUNCA deve ser cacheada
+function shouldNeverCache(url) {
   const pathname = new URL(url).pathname;
   
   // Verificar se é uma rota de API ou upload
-  for (const route of NETWORK_FIRST_ROUTES) {
+  for (const route of NEVER_CACHE_ROUTES) {
     if (pathname.startsWith(route)) {
       return true;
     }
   }
   
-  // Para requisições POST, PUT, DELETE sempre usar network-first
+  // Verificar parâmetros especiais na URL (timestamp, nocache, etc)
+  const params = new URL(url).searchParams;
+  if (params.has('_nocache') || params.has('_ts')) {
+    return true;
+  }
+  
   return false;
 }
 
@@ -131,67 +140,32 @@ self.addEventListener('fetch', event => {
     return;
   }
   
-  // Para APIs e conteúdo dinâmico: network-first
-  if (shouldUseNetworkFirst(event.request.url)) {
-    console.log('[SW] API/Dinâmico - Network First:', url.pathname);
+  // Para APIs e conteúdo dinâmico: NUNCA cachear, sempre buscar da rede
+  if (shouldNeverCache(event.request.url)) {
+    console.log('[SW] API/Dinâmico - Nunca cachear, apenas Network:', url.pathname);
     
     event.respondWith(
       fetch(event.request)
         .then(response => {
-          // Não cachear respostas com erro 
-          if (!response.ok) return response;
-          
-          // Verificar se há cabeçalhos anti-cache específicos do app
-          const hasNoCacheHeader = response.headers.get('X-No-Cache') === 'true';
-          const isPostDeleted = response.headers.get('X-Post-Deleted') === 'true';
-          
-          if (hasNoCacheHeader || isPostDeleted) {
-            console.log('[SW] Pulando cache para conteúdo marcado como no-cache');
-            return response;
-          }
-          
-          const responseToCache = response.clone();
-          
-          caches.open(CACHE_NAME)
-            .then(cache => {
-              // Adicionar timestamp como query param no cache para garantir diferenciação
-              const urlWithTimestamp = new URL(event.request.url);
-              urlWithTimestamp.searchParams.set('_ts', Date.now());
-              
-              // Modificar o request com timestamp para cache
-              const requestToCache = new Request(urlWithTimestamp.toString(), {
-                method: event.request.method,
-                headers: event.request.headers,
-                mode: event.request.mode,
-                credentials: event.request.credentials,
-                redirect: event.request.redirect
-              });
-              
-              cache.put(requestToCache, responseToCache);
-            });
-          
+          // Não manipular ou cachear respostas de API de nenhuma forma
           return response;
         })
         .catch(() => {
-          // Verificar no cache em caso de falha na rede
-          return caches.match(event.request)
-            .then(cachedResponse => {
-              if (cachedResponse) {
-                console.log('[SW] Fornecendo resposta do cache:', url.pathname);
-                return cachedResponse;
-              }
-              
-              // Para navegação de páginas, fornecer página offline
-              if (event.request.mode === 'navigate') {
-                return caches.match('/offline.html');
-              }
-              
-              // Para outros recursos, retornar resposta de erro
-              return new Response('Recurso não disponível offline', {
-                status: 503,
-                headers: { 'Content-Type': 'text/plain' }
-              });
-            });
+          // Em caso de falha na rede para endpoints de API, retornar um erro apropriado
+          if (event.request.mode === 'navigate') {
+            return caches.match('/offline.html');
+          }
+          
+          // Para outros recursos, retornar resposta de erro
+          return new Response('Recurso não disponível. Verifique sua conexão.', {
+            status: 503,
+            headers: { 
+              'Content-Type': 'text/plain',
+              'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0'
+            }
+          });
         })
     );
     return;

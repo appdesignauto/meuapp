@@ -87,10 +87,19 @@ export const getQueryFn: <T>(options: {
       }
     });
     
+    // Adicionar timestamp para evitar cache do navegador
+    url.searchParams.append('_cache_buster', Date.now().toString());
+    
     console.log("Fazendo requisição para:", url.toString(), "com parâmetros:", params);
     
     const res = await fetch(url.toString(), {
       credentials: "include",
+      cache: "no-cache", // Solicitar ao fetch para não usar o cache
+      headers: {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0"
+      }
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
@@ -105,11 +114,13 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
-      refetchInterval: false,
-      refetchOnWindowFocus: true, // Atualizado para true para melhorar sincronização
-      staleTime: 0, // Modificado para 0 (zero) para prevenir problemas de cache
+      refetchInterval: 10000, // Refetch a cada 10 segundos
+      refetchOnWindowFocus: true, 
+      refetchOnMount: true, // Refetch sempre que um componente é montado
+      refetchOnReconnect: true, // Refetch quando a conexão é reestabelecida
+      staleTime: 0, // Dados sempre considerados obsoletos
       retry: false,
-      gcTime: 1000 * 60 * 5, // 5 minutos de cache máximo
+      gcTime: 1000, // Tempo de garbage collection de apenas 1 segundo
     },
     mutations: {
       retry: false,
