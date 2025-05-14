@@ -1062,11 +1062,11 @@ const AdminDashboard = () => {
                 className={`flex items-center w-full px-4 py-3 text-gray-700 font-medium ${!sidebarOpen ? 'lg:justify-center lg:px-0' : ''}`}
                 title="Conteúdo"
               >
-                <Layers className="w-6 h-6 mx-auto" />
+                <Layers className={`w-${iconSize} h-${iconSize} mx-auto`} />
                 {sidebarOpen && (
                   <>
-                    <span className="ml-3">Conteúdo</span>
-                    <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+                    <span className="ml-3 text-xs">Conteúdo</span>
+                    <ChevronDown className="w-3 h-3 ml-auto transition-transform duration-200 ui-open:rotate-180" />
                   </>
                 )}
               </CollapsibleTrigger>
@@ -1078,8 +1078,8 @@ const AdminDashboard = () => {
                   } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
                   title="Artes"
                 >
-                  <Image className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-                  {sidebarOpen && <span>Artes</span>}
+                  <Image className={`w-${iconSize-1} h-${iconSize-1} ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                  {sidebarOpen && <span className="text-xs">Artes</span>}
                 </button>
                 <button
                   onClick={() => setActiveTab('categories')}
@@ -1088,8 +1088,8 @@ const AdminDashboard = () => {
                   } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
                   title="Categorias"
                 >
-                  <LayoutGrid className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-                  {sidebarOpen && <span>Categorias</span>}
+                  <LayoutGrid className={`w-${iconSize-1} h-${iconSize-1} ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                  {sidebarOpen && <span className="text-xs">Categorias</span>}
                 </button>
                 <button
                   onClick={() => setActiveTab('formats')}
@@ -1098,8 +1098,8 @@ const AdminDashboard = () => {
                   } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
                   title="Formatos"
                 >
-                  <CreditCard className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-                  {sidebarOpen && <span>Formatos</span>}
+                  <CreditCard className={`w-${iconSize-1} h-${iconSize-1} ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                  {sidebarOpen && <span className="text-xs">Formatos</span>}
                 </button>
                 <button
                   onClick={() => setActiveTab('fileTypes')}
@@ -1108,8 +1108,8 @@ const AdminDashboard = () => {
                   } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
                   title="Tipos de Arquivo"
                 >
-                  <FileType className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-                  {sidebarOpen && <span>Tipos de Arquivo</span>}
+                  <FileType className={`w-${iconSize-1} h-${iconSize-1} ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                  {sidebarOpen && <span className="text-xs">Tipos de Arquivo</span>}
                 </button>
 
               </CollapsibleContent>
@@ -1120,15 +1120,15 @@ const AdminDashboard = () => {
               className="bg-gray-50 rounded-lg py-1 mb-1"
               defaultOpen={['courses', 'modules', 'lessons', 'coursesConfig', 'courseStats'].includes(activeTab)}
             >
-              <CollapsibleTrigger className="flex items-center w-full px-4 py-2 text-gray-700 font-medium">
+              <CollapsibleTrigger className={`flex items-center w-full px-4 py-3 text-gray-700 font-medium ${!sidebarOpen ? 'lg:justify-center lg:px-0' : ''}`} title="Cursos">
                 {sidebarOpen ? (
                   <>
-                    <BookOpen className="w-5 h-5 mr-3" />
-                    <span>Cursos</span>
-                    <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+                    <BookOpen className={`w-${iconSize} h-${iconSize} mr-2`} />
+                    <span className="text-xs">Cursos</span>
+                    <ChevronDown className="w-3 h-3 ml-auto transition-transform duration-200 ui-open:rotate-180" />
                   </>
                 ) : (
-                  <BookOpen className="w-5 h-5 mx-auto" />
+                  <BookOpen className={`w-${iconSize} h-${iconSize} mx-auto`} />
                 )}
               </CollapsibleTrigger>
               <CollapsibleContent className={`${sidebarOpen ? 'pl-4' : 'lg:pl-0'} space-y-1 pt-1 pb-2`}>
