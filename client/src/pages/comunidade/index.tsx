@@ -1130,9 +1130,13 @@ const CommunityPage: React.FC = () => {
     refetch: refetchPosts,
     isFetching
   } = useQuery({
-    queryKey: ['/api/community/posts', { page, limit: pageSize }],
-    refetchOnWindowFocus: false,
-    refetchInterval: 0, // Desativamos o recarregamento automático para controlar manualmente
+    queryKey: ['/api/community/posts', { page, limit: pageSize, timestamp: Date.now() }],
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
+    staleTime: 0, // Sempre considerar os dados como desatualizados
+    gcTime: 1, // Minimizar o tempo de vida no cache
+    retry: 1, // Fazer apenas 1 tentativa de retry em caso de falha
   });
   
   // Efeito para adicionar novos posts ao array de posts existentes
@@ -1370,7 +1374,7 @@ const CommunityPage: React.FC = () => {
     }
   };
   
-  // Função para recarregar todos os posts (reset)
+  // Função para recarregar todos os posts (reset) com estratégia anti-cache robusta
   const handleRefreshPosts = async () => {
     setPage(1);
     
@@ -1394,15 +1398,34 @@ const CommunityPage: React.FC = () => {
     }
     
     try {
-      // Aguardar a conclusão da refetch antes de continuar
-      const result = await refetchPosts();
+      // ANTI-CACHE: Primeiro limpar o cache completamente
+      queryClient.removeQueries({ queryKey: ['/api/community/posts'] });
+      
+      // Fazer uma chamada de API direta com timestamp para evitar cache
+      const timestamp = Date.now();
+      const response = await fetch(`/api/community/posts?page=1&limit=${pageSize}&_t=${timestamp}`, {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Erro ao buscar posts: ${response.status}`);
+      }
+      
+      const freshData = await response.json();
       
       // Também atualizar posts populares
       refetchPopularPosts();
       
-      if (result.data && Array.isArray(result.data)) {
+      if (freshData && Array.isArray(freshData)) {
+        // Atualizar o cache com novos dados
+        queryClient.setQueryData(['/api/community/posts', { page: 1, limit: pageSize }], freshData);
+        
         // Atualizar os posts diretamente para evitar estado vazio temporário
-        setAllPosts(result.data);
+        setAllPosts(freshData);
         
         // Mostrar toast de sucesso
         toast({
@@ -1411,7 +1434,8 @@ const CommunityPage: React.FC = () => {
           variant: "success",
         });
       } else {
-        // Se result.data não existir ou não for um array, mantenha os posts existentes
+        // Tentar usar refetch como fallback
+        const result = await refetchPosts();
         const postsData = await fetch('/api/community/posts?page=1&limit=10');
         if (postsData.ok) {
           const freshPosts = await postsData.json();

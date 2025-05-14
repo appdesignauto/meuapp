@@ -12,7 +12,7 @@ import {
   communityCommentLikes,
   userFollows
 } from '../../shared/schema';
-import { eq, and, gt, gte, lte, desc, asc, sql, inArray, count as countFn, or, ilike, SQL } from 'drizzle-orm';
+import { eq, and, gt, gte, lte, desc, asc, sql, inArray, count as countFn, or, ilike, SQL, isNotNull, isNull } from 'drizzle-orm';
 import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
@@ -2402,8 +2402,8 @@ router.delete('/api/community/posts/:id', async (req, res) => {
         // 4. Excluir todas as curtidas do post
         console.log('- Excluindo curtidas do post...');
         await tx
-          .delete(communityPostLikes)
-          .where(eq(communityPostLikes.postId, postId));
+          .delete(communityLikes)
+          .where(eq(communityLikes.postId, postId));
         
         // 5. Finalmente excluir o post
         console.log('- Excluindo o post...');
@@ -2414,8 +2414,12 @@ router.delete('/api/community/posts/:id', async (req, res) => {
       
       console.log('- Post e todos os seus dados relacionados excluídos com sucesso');
       
-      // Enviar evento de socket para todos os usuários ativos (se tiver socket implementado)
-      triggerPostDeleteEvent(postId);
+      // Adicionar um cabeçalho de cache especial para forçar atualização
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      res.set('X-Post-Deleted', 'true');
+      res.set('X-Post-Deleted-Id', postId.toString());
       
       return res.json({
         message: 'Post excluído com sucesso',
