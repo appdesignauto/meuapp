@@ -331,9 +331,14 @@ export default function PopupManagement() {
 
   const handleToggleActive = async (id: number, isActive: boolean) => {
     try {
-      // Enviamos o valor inverso para o endpoint de toggle
+      // Não enviamos mais o valor pois o servidor fará a inversão
+      await apiRequest('PUT', `/api/popups/${id}/toggle`, {});
+      
+      // Limpar cache local para garantir estado correto
+      localStorage.setItem('force_clean_popups', 'true');
+      
+      // O valor será invertido no servidor, então usamos o oposto do atual
       const novoStatus = !isActive;
-      await apiRequest('PUT', `/api/popups/${id}/toggle`, { isActive: novoStatus });
       
       // Atualizar o estado local com o novo valor
       setPopups(popups.map(popup => 
@@ -371,6 +376,21 @@ export default function PopupManagement() {
     try {
       await apiRequest('DELETE', `/api/popups/${id}`);
       setPopups(popups.filter(popup => popup.id !== id));
+      
+      // Adicionar ID à lista de popups removidos para limpar o cache
+      try {
+        const removedIds = JSON.parse(localStorage.getItem('removed_popup_ids') || '[]');
+        if (!removedIds.includes(id)) {
+          removedIds.push(id);
+          localStorage.setItem('removed_popup_ids', JSON.stringify(removedIds));
+        }
+        
+        // Forçar limpeza completa de cache
+        localStorage.setItem('force_clean_popups', 'true');
+        console.log(`Popup ${id} excluído - cache local será limpo`);
+      } catch (e) {
+        console.error('Erro ao limpar cache de popups:', e);
+      }
       
       toast({
         title: 'Sucesso',
