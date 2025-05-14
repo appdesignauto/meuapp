@@ -179,11 +179,23 @@ const ArtsList = () => {
   // Mutation para atribuir o admin como designer de todas as artes
   const updateDesignersMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('POST', '/api/admin/update-designers');
+      // Adiciona timestamp para prevenir cache
+      const timestamp = Date.now();
+      const response = await apiRequest('POST', `/api/admin/update-designers?_t=${timestamp}`, {
+        _timestamp: timestamp
+      });
       return await response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
+      // Corrigido: invalidateQueries com a chave correta '/api/artes' (não '/api/arts')
+      queryClient.invalidateQueries({ queryKey: ['/api/artes'] });
+      
+      // Refetch explícito para garantir atualização
+      queryClient.refetchQueries({ 
+        queryKey: ['/api/artes', { page, limit, ...filter }],
+        exact: true 
+      });
+      
       toast({
         title: 'Designers atualizados',
         description: 'Todas as artes foram atribuídas ao usuário administrador como designer.',
