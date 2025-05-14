@@ -1189,8 +1189,8 @@ const AdminDashboard = () => {
                   } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
                   title="Comentários"
                 >
-                  <MessageSquare className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-                  {sidebarOpen && <span>Comentários</span>}
+                  <MessageSquare className={`w-${iconSize-1} h-${iconSize-1} ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                  {sidebarOpen && <span className="text-xs">Comentários</span>}
                 </button>
               </CollapsibleContent>
             </Collapsible>
@@ -1203,8 +1203,8 @@ const AdminDashboard = () => {
               } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
               title="Analytics"
             >
-              <BarChart3 className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-              {sidebarOpen && <span>Analytics</span>}
+              <BarChart3 className={`w-${iconSize} h-${iconSize} ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+              {sidebarOpen && <span className="text-xs">Analytics</span>}
             </button>
             
             {/* Marketing - Apenas Popups agora */}
@@ -1212,12 +1212,12 @@ const AdminDashboard = () => {
               className="bg-gray-50 rounded-lg py-1 mb-1"
               defaultOpen={['popups'].includes(activeTab)}
             >
-              <CollapsibleTrigger className={`flex items-center w-full py-2.5 text-gray-700 font-medium ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}>
-                <BellRing className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+              <CollapsibleTrigger className={`flex items-center w-full py-3 text-gray-700 font-medium ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`} title="Marketing">
+                <BellRing className={`w-${iconSize} h-${iconSize} ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
                 {sidebarOpen && (
                   <>
-                    <span>Marketing</span>
-                    <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+                    <span className="text-xs">Marketing</span>
+                    <ChevronDown className="w-3 h-3 ml-auto transition-transform duration-200 ui-open:rotate-180" />
                   </>
                 )}
               </CollapsibleTrigger>
@@ -1229,20 +1229,20 @@ const AdminDashboard = () => {
                   } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
                   title="Gerenciar Popups"
                 >
-                  <BellRing className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-                  {sidebarOpen && <span>Gerenciar Popups</span>}
+                  <BellRing className={`w-${iconSize-1} h-${iconSize-1} ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                  {sidebarOpen && <span className="text-xs">Gerenciar Popups</span>}
                 </button>
               </CollapsibleContent>
             </Collapsible>
             
             {/* Reports */}
             <Collapsible className="w-full">
-              <CollapsibleTrigger className={`flex items-center w-full py-2.5 text-gray-700 font-medium ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}>
-                <FlagIcon className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+              <CollapsibleTrigger className={`flex items-center w-full py-3 text-gray-700 font-medium ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`} title="Denúncias">
+                <FlagIcon className={`w-${iconSize} h-${iconSize} ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
                 {sidebarOpen && (
                   <>
-                    <span>Reports</span>
-                    <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+                    <span className="text-xs">Denúncias</span>
+                    <ChevronDown className="w-3 h-3 ml-auto transition-transform duration-200 ui-open:rotate-180" />
                   </>
                 )}
               </CollapsibleTrigger>
