@@ -452,7 +452,7 @@ router.post('/view', async (req, res) => {
 router.put('/:id/toggle', async (req, res) => {
   try {
     const { id } = req.params;
-    const { isActive } = req.body;
+    // Ignoramos o valor enviado pelo cliente
     
     // Verificar usuário autenticado
     if (!req.isAuthenticated()) {
@@ -464,7 +464,7 @@ router.put('/:id/toggle', async (req, res) => {
       return res.status(403).json({ message: 'Apenas administradores podem alterar o status de popups' });
     }
     
-    // Verificar se popup existe
+    // Verificar se popup existe e obter seu status atual
     const existingPopup = await db.query.popups.findFirst({
       where: eq(popups.id, parseInt(id)),
     });
@@ -473,11 +473,15 @@ router.put('/:id/toggle', async (req, res) => {
       return res.status(404).json({ message: 'Popup não encontrado' });
     }
     
-    // Atualizar status do popup - usamos o valor do cliente diretamente
-    // CORREÇÃO: O frontend está enviando o valor oposto que quer definir (isActive: !isActive)
+    // Inverter o status atual do popup
+    const novoStatus = !existingPopup.isActive;
+    
+    console.log(`Invertendo status do popup ${id}: de ${existingPopup.isActive} para ${novoStatus}`);
+    
+    // Atualizar o status com o valor INVERSO ao atual
     const [updatedPopup] = await db.update(popups)
       .set({
-        isActive: isActive,
+        isActive: novoStatus,
         updatedAt: new Date(),
       })
       .where(eq(popups.id, parseInt(id)))
@@ -488,7 +492,7 @@ router.put('/:id/toggle', async (req, res) => {
     await db.delete(popupViews)
       .where(eq(popupViews.popupId, parseInt(id)));
     
-    console.log(`Popup ID ${id} atualizado: isActive=${isActive}`);
+    console.log(`Popup ID ${id} atualizado: isActive=${novoStatus}`);
     console.log(`Cache de visualizações limpo para o popup ID ${id}`);
     
     res.json(updatedPopup);
