@@ -97,6 +97,7 @@ export default function SimpleFormMultiDialog({
   const [uploadError, setUploadError] = useState<Record<string, string>>({});
   const [formatsComplete, setFormatsComplete] = useState<Record<string, boolean>>({});
   const [uploadAllComplete, setUploadAllComplete] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Consultas para obter dados
   const { data: categories = [], isLoading: isLoadingCategories } = useQuery({
@@ -508,6 +509,9 @@ export default function SimpleFormMultiDialog({
 
   // Submeter o formulário completo
   const handleSubmit = async () => {
+    // Estado para controlar se está enviando o formulário
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
+    
     // Verificar se todos os formatos estão completos
     const allComplete = Object.values(formatsComplete).every(v => v);
     
@@ -519,6 +523,8 @@ export default function SimpleFormMultiDialog({
       });
       return;
     }
+    
+    setIsSubmitting(true);
 
     try {
       // Converter dados para o formato esperado pela API
@@ -541,19 +547,60 @@ export default function SimpleFormMultiDialog({
           // Se tem groupId, atualizar o grupo inteiro
           formattedData.groupId = editingArt.groupId;
           console.log(`Atualizando grupo de artes: ${editingArt.groupId}`);
-          response = await apiRequest('PUT', `/api/admin/arts/group/${editingArt.groupId}`, formattedData);
+          try {
+            response = await apiRequest('PUT', `/api/admin/arts/group/${editingArt.groupId}`, formattedData);
+            const responseText = await response.clone().text();
+            console.log('Resposta da API (grupo existente):', responseText);
+          } catch (error) {
+            console.error('Erro ao atualizar grupo existente:', error);
+            toast({
+              title: "Erro na atualização",
+              description: `Falha ao atualizar o grupo de artes: ${error.message}`,
+              variant: "destructive",
+            });
+            setIsSubmitting(false);
+            return;
+          }
         } else {
           // Se não tem groupId e estamos editando uma arte única, criar um novo grupo
           console.log(`Criando novo grupo para arte individual: ${editingArt.id}`);
           formattedData.artId = editingArt.id;
-          // CORRIGIDO: Usamos POST para criar um novo grupo em vez de PUT em rota inexistente
-          response = await apiRequest('POST', `/api/admin/arts/multi`, formattedData);
+          
+          // Adicionar logs detalhados dos dados enviados
+          console.log('Dados formatados enviados para a API:', JSON.stringify(formattedData, null, 2));
+          
+          try {
+            // CORRIGIDO: Usamos POST para criar um novo grupo 
+            response = await apiRequest('POST', `/api/admin/arts/multi`, formattedData);
+            console.log('Resposta da API (novo grupo):', await response.clone().text());
+          } catch (error) {
+            console.error('Erro ao criar novo grupo:', error);
+            toast({
+              title: "Erro na criação",
+              description: `Falha ao criar o grupo de artes: ${error.message}`,
+              variant: "destructive",
+            });
+            setIsSubmitting(false);
+            return;
+          }
         }
         successMessage = "Arte atualizada com sucesso";
       } else {
         // Criar nova arte multi-formato
         console.log("Criando nova arte multi-formato");
-        response = await apiRequest('POST', '/api/admin/arts/multi', formattedData);
+        try {
+          response = await apiRequest('POST', '/api/admin/arts/multi', formattedData);
+          console.log('Resposta da API (criação):', await response.clone().text());
+        } catch (error) {
+          console.error('Erro ao criar nova arte multi-formato:', error);
+          toast({
+            title: "Erro na criação",
+            description: `Falha ao criar a arte: ${error.message}`,
+            variant: "destructive",
+          });
+          setIsSubmitting(false);
+          return;
+        }
         successMessage = "Arte criada com sucesso";
       }
 

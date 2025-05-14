@@ -38,13 +38,16 @@ router.post('/api/admin/arts/multi', isAuthenticated, async (req: Request, res: 
     if (existingArtId) {
       console.log(`Atualizando arte existente ID: ${existingArtId} e convertendo para grupo ${artGroupId}`);
       
-      // Verificar se a arte existe
-      const existingArt = await storage.getArt(existingArtId);
+      // Verificar se a arte existe (usando getArtById que é a função existente)
+      const existingArt = await storage.getArtById(existingArtId);
       if (!existingArt) {
         return res.status(404).json({
           message: `Arte com ID ${existingArtId} não encontrada`
         });
       }
+      
+      console.log(`Arte existente encontrada: ${existingArt.id}, título: ${existingArt.title}, formato: ${existingArt.format}`);
+      
       
       // Pegar o formato da arte atual para atualização
       const existingFormat = existingArt.format;
