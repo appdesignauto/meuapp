@@ -1419,33 +1419,33 @@ const AdminDashboard = ({ initialTab = 'arts' }: UpdatedDashboardProps) => {
                 </button>
                 <button
                   onClick={() => setActiveTab('collections')}
-                  className={`flex items-center w-full py-2.5 rounded-md ${
+                  className={`flex items-center w-full py-1.5 rounded-md ${
                     activeTab === 'collections' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
+                  } ${sidebarOpen ? 'px-3 justify-start' : 'px-0 justify-center'}`}
                   title="Coleções"
                 >
-                  <ListChecks className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-                  {sidebarOpen && <span>Coleções</span>}
+                  <ListChecks className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                  {sidebarOpen && <span className="text-xs">Coleções</span>}
                 </button>
                 {user?.role === 'admin' && (
                   <>
                     <Link 
                       href="/admin/logo-upload"
                       title="Gerenciar Logo"
-                      className={`flex items-center w-full py-2.5 rounded-md text-gray-600 hover:bg-gray-100 
-                      ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
+                      className={`flex items-center w-full py-1.5 rounded-md text-gray-600 hover:bg-gray-100 
+                      ${sidebarOpen ? 'px-3 justify-start' : 'px-0 justify-center'}`}
                     >
-                      <Image className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-                      {sidebarOpen && <span>Gerenciar Logo</span>}
+                      <Image className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                      {sidebarOpen && <span className="text-xs">Gerenciar Logo</span>}
                     </Link>
                     <Link 
                       href="/admin/storage-test"
                       title="Testar Armazenamento"
-                      className={`flex items-center w-full py-2.5 rounded-md text-gray-600 hover:bg-gray-100 
-                      ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
+                      className={`flex items-center w-full py-1.5 rounded-md text-gray-600 hover:bg-gray-100 
+                      ${sidebarOpen ? 'px-3 justify-start' : 'px-0 justify-center'}`}
                     >
-                      <HardDrive className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-                      {sidebarOpen && <span>Testar Armazenamento</span>}
+                      <HardDrive className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                      {sidebarOpen && <span className="text-xs">Testar Armazenamento</span>}
                     </Link>
                   </>
                 )}
@@ -1453,24 +1453,24 @@ const AdminDashboard = ({ initialTab = 'arts' }: UpdatedDashboardProps) => {
             </Collapsible>
           </nav>
         </div>
-        <div className={`mt-auto ${sidebarOpen ? 'p-4' : 'p-2 flex flex-col items-center'} border-t`}>
+        <div className={`mt-auto ${sidebarOpen ? 'p-3' : 'p-1 flex flex-col items-center'} border-t`}>
           <Link 
             href="/"
             title="Voltar ao site"
-            className={`flex items-center w-full py-2.5 rounded-md text-gray-600 hover:bg-gray-100 mb-2
-            ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
+            className={`flex items-center w-full py-1.5 rounded-md text-gray-600 hover:bg-gray-100 mb-1
+            ${sidebarOpen ? 'px-3 justify-start' : 'px-1 justify-center'}`}
           >
-            <Home className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : ''}`} />
-            {sidebarOpen && <span>Voltar ao site</span>}
+            <Home className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : ''}`} />
+            {sidebarOpen && <span className="text-xs">Voltar ao site</span>}
           </Link>
           <button
             onClick={handleLogout}
             title="Sair"
-            className={`flex items-center w-full py-2.5 rounded-md text-gray-600 hover:bg-gray-100
-            ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
+            className={`flex items-center w-full py-1.5 rounded-md text-gray-600 hover:bg-gray-100
+            ${sidebarOpen ? 'px-3 justify-start' : 'px-1 justify-center'}`}
           >
-            <LogOut className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : ''}`} />
-            {sidebarOpen && <span>Sair</span>}
+            <LogOut className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : ''}`} />
+            {sidebarOpen && <span className="text-xs">Sair</span>}
           </button>
         </div>
       </div>
