@@ -67,12 +67,16 @@ const ArtsList = () => {
       await apiRequest('DELETE', `/api/admin/artes/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
+      // Invalidar TODAS as consultas de artes em todas as possíveis chaves de cache
       toast({
         title: 'Arte excluída',
-        description: 'A arte foi excluída com sucesso.',
+        description: 'A arte foi excluída com sucesso. Atualizando dados...',
         variant: 'default',
       });
+      
+      // Força atualização do cache em todas as camadas
+      queryClient.clear(); // Limpa todo o cache do React Query
+      window.location.reload(); // Força atualização da página (incluindo recarregar service worker)
     },
     onError: (error: any) => {
       toast({

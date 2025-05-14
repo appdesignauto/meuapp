@@ -24,19 +24,37 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Middleware para adicionar cabeçalhos de cache-control apropriados
 app.use((req, res, next) => {
-  // Para recursos estáticos, permitir cache
+  // Gerar timestamp único para forçar revalidação
+  const uniqueTimestamp = Date.now().toString();
+  
+  // Para recursos estáticos e assets, permitir cache
   if (
     req.path.match(/\.(js|css|jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf|eot)$/)
   ) {
     res.setHeader('Cache-Control', 'public, max-age=604800, immutable'); // 7 dias
   } 
-  // Para API e rotas dinâmicas, não permitir cache
+  // Para API e rotas dinâmicas, não permitir cache de forma alguma
   else if (req.path.startsWith('/api/')) {
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    // Cabeçalhos extremamente agressivos contra cache
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
     res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
+    res.setHeader('Expires', '-1');
     res.setHeader('Surrogate-Control', 'no-store');
+    res.setHeader('Vary', '*');
+    res.setHeader('X-No-Cache', uniqueTimestamp);
+    res.setHeader('ETag', uniqueTimestamp);
   }
+  
+  // Função para permitir que outras partes do código substituam a política de cache
+  res.disableCache = () => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '-1');
+    res.setHeader('Surrogate-Control', 'no-store');
+    res.setHeader('Vary', '*');
+    res.setHeader('X-No-Cache', Date.now().toString());
+  };
+  
   next();
 });
 
