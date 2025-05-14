@@ -1,7 +1,6 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link, useLocation, useParams } from 'wouter';
-import { Link as RouterLink } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import AnalyticsSettings from '@/components/admin/AnalyticsSettings';
 import ReportsManagement from '@/components/admin/ReportsManagement';
 import {
@@ -1009,13 +1008,12 @@ const AdminDashboard = () => {
         `}
       >
         <div className="p-4 border-b flex justify-between items-center">
-          <Link 
-            href="/admin" 
-            className={`text-xl font-bold text-blue-600 ${!sidebarOpen && 'lg:hidden'} hover:text-blue-800 transition-colors`}
+          <button 
+            className={`text-xl font-bold text-blue-600 ${!sidebarOpen && 'lg:hidden'} hover:text-blue-800 transition-colors text-left`}
             onClick={() => setActiveTab('arts')}
           >
             Painel Admin
-          </Link>
+          </button>
           <div className={`${!sidebarOpen && 'lg:w-full lg:flex lg:justify-center'}`}>
             <button 
               className="text-gray-500 hover:text-blue-600" 
