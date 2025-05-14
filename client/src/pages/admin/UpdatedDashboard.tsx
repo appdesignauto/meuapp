@@ -135,7 +135,7 @@ const AdminDashboard = () => {
   const { toast } = useToast();
   const [isMultiFormOpen, setIsMultiFormOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [expandedSections, setExpandedSections] = useState<string[]>(['principal', 'conteudo']);
+  const [expandedSections, setExpandedSections] = useState<string[]>(['principal', 'conteudo', 'usuarios', 'sistema']);
   // Ícones compactos para sidebar bem organizada
   const iconSize = 3; // Tamanho reduzido (3 = 12px) para otimização de espaço
   const queryClient = useQueryClient();
