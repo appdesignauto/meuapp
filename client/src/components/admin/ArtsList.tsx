@@ -64,26 +64,63 @@ const ArtsList = () => {
   // Delete art mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest('DELETE', `/api/admin/artes/${id}`);
+      // Adiciona timestamp para prevenir cache
+      const timestamp = Date.now();
+      const response = await apiRequest('DELETE', `/api/admin/artes/${id}?_t=${timestamp}`, {
+        _timestamp: timestamp
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao excluir arte');
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
-      // Invalidar TODAS as consultas de artes em todas as possíveis chaves de cache
+      // Estratégia anti-cache extremamente agressiva
       toast({
         title: 'Arte excluída',
         description: 'A arte foi excluída com sucesso. Atualizando dados...',
         variant: 'default',
       });
       
-      // Força atualização do cache em todas as camadas
-      queryClient.clear(); // Limpa todo o cache do React Query
-      window.location.reload(); // Força atualização da página (incluindo recarregar service worker)
+      // 1. Limpar todo o cache do React Query
+      queryClient.clear();
+      
+      // 2. Invalidar todas as queries começando com '/api/'
+      queryClient.invalidateQueries({ queryKey: ['/api'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/artes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
+      
+      // 3. Remover cache do service worker (para versões do navegador que suportam)
+      if ('caches' in window) {
+        caches.keys().then(cacheNames => {
+          cacheNames.forEach(cacheName => {
+            caches.delete(cacheName);
+          });
+        });
+      }
+      
+      // 4. Limpar cache do navegador usando parâmetros na URL
+      const clearedUrl = new URL(window.location.href);
+      clearedUrl.searchParams.set('_cache_buster', Date.now().toString());
+      
+      // 5. Forçar recarregamento completo da página, ignorando cache
+      setTimeout(() => {
+        window.location.href = clearedUrl.toString();
+        window.location.reload(true); // true = força recarregamento ignorando cache
+      }, 500);
     },
     onError: (error: any) => {
       toast({
-        title: 'Erro',
+        title: 'Erro ao excluir',
         description: error.message || 'Ocorreu um erro ao excluir a arte.',
         variant: 'destructive',
       });
+      
+      // Mesmo com erro, tentar atualizar os dados
+      queryClient.invalidateQueries({ queryKey: ['/api/artes'] });
     },
   });
 

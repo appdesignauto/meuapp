@@ -1,6 +1,6 @@
 // service-worker.js
-const CACHE_NAME = 'designauto-cache-v7'; // Incrementado para forçar atualização
-const STATIC_CACHE = 'designauto-static-v7';
+const CACHE_NAME = 'designauto-cache-v8'; // Incrementado para forçar atualização geral
+const STATIC_CACHE = 'designauto-static-v8';
 const ASSETS_TO_CACHE = [
   '/',
   '/offline.html',
@@ -8,7 +8,7 @@ const ASSETS_TO_CACHE = [
   '/index.html'
 ];
 
-// Lista de caminhos que NUNCA devem ser cacheados pelo service worker
+// Lista extremamente abrangente de caminhos que NUNCA devem ser cacheados
 const NEVER_CACHE_ROUTES = [
   '/api/',
   '/api/artes',
@@ -16,6 +16,17 @@ const NEVER_CACHE_ROUTES = [
   '/api/admin',
   '/uploads/',
   '/api/community',
+  '/api/categories',
+  '/api/formats',
+  '/api/fileTypes',
+  '/api/user',
+  '/api/favorites',
+  '/api/course',
+  '/dashboard',
+  '/admin',
+  '/artes',
+  '/comunidade',
+  '/cursos',
 ];
 
 // Lista de extensões estáticas que podem ser cacheadas com cache-first

@@ -1,9 +1,23 @@
 import express from 'express';
 import { storage } from '../storage';
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { sql } from 'drizzle-orm';
 import { db } from '../db';
 import { supabaseStorageService } from '../services/supabase-storage';
+
+// Middleware para verificar se o usuário é admin
+const isAdmin = (req: Request, res: Response, next: NextFunction) => {
+  if (!req.isAuthenticated || !req.isAuthenticated()) {
+    return res.status(401).json({ message: "Não autenticado" });
+  }
+  
+  const user = req.user as any;
+  if (!user || (user.nivelacesso !== 'admin' && user.nivelacesso !== 'designer_adm' && user.nivelacesso !== 'designer')) {
+    return res.status(403).json({ message: "Acesso não autorizado" });
+  }
+  
+  next();
+};
 
 /**
  * Arquivo que implementa rotas em português como adaptadores para as rotas em inglês
@@ -478,6 +492,118 @@ router.post('/api/favoritos/toggle/:id', async (req: Request, res: Response) => 
   } catch (error) {
     console.error("Erro ao alternar favorito:", error);
     res.status(500).json({ message: "Erro ao alternar favorito" });
+  }
+});
+
+// Rotas de administração de artes
+
+// Rota para excluir uma arte por ID - "/api/admin/artes/:id"
+router.delete('/api/admin/artes/:id', isAdmin, async (req: Request, res: Response) => {
+  try {
+    const id = parseInt(req.params.id);
+    
+    console.log(`[DELETE] Iniciando exclusão da arte ID: ${id}`);
+    
+    // Verificar se a arte existe
+    const art = await storage.getArtById(id);
+    
+    if (!art) {
+      console.log(`[DELETE] Arte ID ${id} não encontrada`);
+      return res.status(404).json({ message: "Arte não encontrada" });
+    }
+    
+    // Primeiro excluir todas as referências à arte
+    console.log(`[DELETE] Removendo registros relacionados à arte ID: ${id}`);
+    
+    try {
+      // Usar transação para garantir que todas as exclusões ocorram ou nenhuma
+      await db.transaction(async (tx) => {
+        // 1. Remover visualizações
+        await tx.execute(sql`DELETE FROM views WHERE "artId" = ${id}`);
+        console.log(`[DELETE] Visualizações removidas para arte ID: ${id}`);
+        
+        // 2. Remover downloads
+        await tx.execute(sql`DELETE FROM downloads WHERE "artId" = ${id}`);
+        console.log(`[DELETE] Downloads removidos para arte ID: ${id}`);
+        
+        // 3. Remover favoritos
+        await tx.execute(sql`DELETE FROM favorites WHERE "artId" = ${id}`);
+        console.log(`[DELETE] Favoritos removidos para arte ID: ${id}`);
+        
+        // 4. Remover a própria arte
+        await tx.execute(sql`DELETE FROM arts WHERE id = ${id}`);
+        console.log(`[DELETE] Arte ID ${id} removida com sucesso`);
+      });
+      
+      // Desativar cache para esta resposta
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      
+      // Retornar sucesso
+      return res.status(200).json({ 
+        message: "Arte excluída com sucesso",
+        timestamp: Date.now() // Adicionar timestamp para evitar cache
+      });
+    } catch (error) {
+      console.error(`[DELETE] Erro na transação: ${error}`);
+      return res.status(500).json({ 
+        message: "Erro ao excluir arte: falha na transação de banco de dados",
+        error: error.message
+      });
+    }
+  } catch (error) {
+    console.error(`[DELETE] Erro ao excluir arte: ${error}`);
+    res.status(500).json({ message: "Erro ao excluir arte" });
+  }
+});
+
+// Rota para atualizar uma arte por ID - "/api/admin/artes/:id"
+router.put('/api/admin/artes/:id', isAdmin, async (req: Request, res: Response) => {
+  try {
+    const id = parseInt(req.params.id);
+    
+    // Verificar se a arte existe
+    const art = await storage.getArtById(id);
+    
+    if (!art) {
+      return res.status(404).json({ message: "Arte não encontrada" });
+    }
+    
+    // Atualizar os campos da arte conforme o corpo da requisição
+    const updates = req.body;
+    
+    // Remover campos que não devem ser atualizados
+    delete updates.id;
+    delete updates.createdAt;
+    
+    // Adicionar data de atualização
+    updates.updatedAt = new Date();
+    
+    // Executar a atualização
+    await db.execute(sql`
+      UPDATE arts
+      SET ${sql.join(
+        Object.entries(updates).map(
+          ([key, value]) => sql`${sql.identifier(key)} = ${value}`
+        ),
+        sql`, `
+      )}
+      WHERE id = ${id}
+    `);
+    
+    // Desativar cache para esta resposta
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
+    res.status(200).json({ 
+      message: "Arte atualizada com sucesso",
+      timestamp: Date.now() // Adicionar timestamp para evitar cache
+    });
+  } catch (error) {
+    console.error("Erro ao atualizar arte:", error);
+    res.status(500).json({ message: "Erro ao atualizar arte" });
   }
 });
 

@@ -33,9 +33,9 @@ app.use((req, res, next) => {
   ) {
     res.setHeader('Cache-Control', 'public, max-age=604800, immutable'); // 7 dias
   } 
-  // Para API e rotas dinâmicas, não permitir cache de forma alguma
-  else if (req.path.startsWith('/api/')) {
-    // Cabeçalhos extremamente agressivos contra cache
+  // Para TODAS as rotas, não permitir cache de forma alguma
+  else {
+    // Cabeçalhos extremamente agressivos contra cache para todas as rotas
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '-1');
@@ -45,14 +45,19 @@ app.use((req, res, next) => {
     res.setHeader('ETag', uniqueTimestamp);
   }
   
-  // Função para permitir que outras partes do código substituam a política de cache
-  res.disableCache = () => {
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '-1');
-    res.setHeader('Surrogate-Control', 'no-store');
-    res.setHeader('Vary', '*');
-    res.setHeader('X-No-Cache', Date.now().toString());
+  // Adicionar cabeçalho de timestamp em todas as respostas para prevenir cache
+  res.setHeader('X-Timestamp', Date.now().toString());
+  
+  // Estender o objeto response com método personalizado para desativar cache
+  // @ts-ignore - Adicionando método personalizado
+  res.disableCache = function() {
+    this.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+    this.setHeader('Pragma', 'no-cache');
+    this.setHeader('Expires', '-1');
+    this.setHeader('Surrogate-Control', 'no-store');
+    this.setHeader('Vary', '*');
+    this.setHeader('X-No-Cache', Date.now().toString());
+    return this;
   };
   
   next();
