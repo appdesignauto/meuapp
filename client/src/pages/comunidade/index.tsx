@@ -2321,11 +2321,12 @@ const CommunityPage: React.FC = () => {
         onOpenChange={setIsCreatePostOpen}
       />
       
-      {/* Dialog de visualização de post */}
+      {/* Dialog de visualização de post com callback de exclusão */}
       <PostViewDialog
         postId={selectedPostId}
         open={isPostViewOpen}
         onOpenChange={setIsPostViewOpen}
+        onPostDeleted={removePostFromUI}
       />
     </div>
   );
