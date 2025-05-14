@@ -1139,13 +1139,14 @@ const CommunityPage: React.FC = () => {
     retry: 1, // Fazer apenas 1 tentativa de retry em caso de falha
   });
   
-  // Efeito para adicionar novos posts ao array de posts existentes
+  // Efeito para adicionar novos posts ao array de posts existentes com verificação robusta
   useEffect(() => {
     if (posts && Array.isArray(posts)) {
       if (page === 1) {
+        // Página 1: Substituir completamente para garantir dados limpos
         setAllPosts(posts);
       } else if (posts.length > 0) {
-        // Verificar se já temos algum dos posts novos (para evitar duplicatas)
+        // Páginas subsequentes: Adicionar novos posts sem duplicatas
         const newPosts = posts.filter(
           newPost => !allPosts.some(existingPost => existingPost.post.id === newPost.post.id)
         );
@@ -1157,6 +1158,30 @@ const CommunityPage: React.FC = () => {
       setIsLoadingMore(false);
     }
   }, [posts, page]);
+  
+  // Função para limpar posts fantasmas (excluídos mas ainda presentes no cache)
+  const removePostFromUI = (postId: number) => {
+    console.log(`Removendo post ID ${postId} da interface`);
+    setAllPosts(prevPosts => prevPosts.filter(item => item.post.id !== postId));
+    
+    // Também remover do cache de posts para garantir que não reapareça
+    try {
+      // Para cada página no cache
+      for (let i = 1; i <= page; i++) {
+        const cacheKey = ['/api/community/posts', { page: i, limit: pageSize }];
+        const cachedData = queryClient.getQueryData<any[]>(cacheKey);
+        
+        if (cachedData && Array.isArray(cachedData)) {
+          // Filtrar o post excluído
+          const updatedData = cachedData.filter(item => item.post.id !== postId);
+          // Atualizar o cache
+          queryClient.setQueryData(cacheKey, updatedData);
+        }
+      }
+    } catch (err) {
+      console.error('Erro ao atualizar cache após remoção de post:', err);
+    }
+  };
   
   // Configurar o observador da interseção para detectar quando o usuário atinge o final da lista
   useEffect(() => {

@@ -56,9 +56,10 @@ interface PostViewDialogProps {
   postId: number | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onPostDeleted?: (postId: number) => void; // Callback para notificar quando um post é excluído
 }
 
-export function PostViewDialog({ postId, open, onOpenChange }: PostViewDialogProps) {
+export function PostViewDialog({ postId, open, onOpenChange, onPostDeleted }: PostViewDialogProps) {
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
   const [comment, setComment] = useState("");
@@ -251,7 +252,7 @@ export function PostViewDialog({ postId, open, onOpenChange }: PostViewDialogPro
     }
   };
 
-  // Handle delete post (admin only)
+  // Handle delete post (admin only) - versão melhorada com estratégia anti-cache
   const handleDeletePost = async () => {
     if (!postId || !currentUser) return;
     
@@ -271,17 +272,42 @@ export function PostViewDialog({ postId, open, onOpenChange }: PostViewDialogPro
     }
     
     try {
-      await apiRequest("DELETE", `/api/community/posts/${postId}`);
+      // Fazer a requisição DELETE com timestamp para evitar cache
+      const timestamp = Date.now();
+      const response = await fetch(`/api/community/posts/${postId}?_t=${timestamp}`, {
+        method: 'DELETE',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
       
-      // Close dialog and refetch posts list
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Erro ${response.status} ao excluir post`);
+      }
+      
+      // ESTRATÉGIA ANTI-CACHE:
+      // 1. Limpar o cache de todas as consultas de posts
+      queryClient.removeQueries({ queryKey: ['/api/community/posts'] });
+      queryClient.removeQueries({ queryKey: ['/api/community/populares'] });
+      
+      // 2. Fechar o diálogo
       onOpenChange(false);
-      queryClient.invalidateQueries({ queryKey: ["/api/community/posts"] });
       
+      // 3. Notificar o pai sobre a exclusão para remover o post da UI
+      if (onPostDeleted && typeof onPostDeleted === 'function') {
+        onPostDeleted(postId);
+      }
+      
+      // 4. Mostrar mensagem de sucesso
       toast({
         title: "Post excluído",
         description: "O post foi excluído com sucesso."
       });
     } catch (error) {
+      console.error('Erro ao excluir post:', error);
       toast({
         variant: "destructive",
         title: "Erro ao excluir post",
