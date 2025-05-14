@@ -540,15 +540,19 @@ export default function SimpleFormMultiDialog({
         if (editingArt.groupId) {
           // Se tem groupId, atualizar o grupo inteiro
           formattedData.groupId = editingArt.groupId;
+          console.log(`Atualizando grupo de artes: ${editingArt.groupId}`);
           response = await apiRequest('PUT', `/api/admin/arts/group/${editingArt.groupId}`, formattedData);
         } else {
-          // Se não tem groupId, mas estamos adicionando múltiplos formatos a uma arte existente
+          // Se não tem groupId e estamos editando uma arte única, criar um novo grupo
+          console.log(`Criando novo grupo para arte individual: ${editingArt.id}`);
           formattedData.artId = editingArt.id;
-          response = await apiRequest('PUT', `/api/admin/arts/multi/${editingArt.id}`, formattedData);
+          // CORRIGIDO: Usamos POST para criar um novo grupo em vez de PUT em rota inexistente
+          response = await apiRequest('POST', `/api/admin/arts/multi`, formattedData);
         }
         successMessage = "Arte atualizada com sucesso";
       } else {
         // Criar nova arte multi-formato
+        console.log("Criando nova arte multi-formato");
         response = await apiRequest('POST', '/api/admin/arts/multi', formattedData);
         successMessage = "Arte criada com sucesso";
       }
