@@ -122,6 +122,8 @@ const AdminDashboard = () => {
   const { toast } = useToast();
   const [isMultiFormOpen, setIsMultiFormOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Definir um tamanho menor para os ícones da sidebar para caber mais itens
+  const iconSize = 4; // Tamanho reduzido (4 = 16px)
   const queryClient = useQueryClient();
 
   // Estados para cursos
@@ -1004,8 +1006,8 @@ const AdminDashboard = () => {
               } ${!sidebarOpen ? 'lg:justify-center lg:px-0' : ''}`}
               title="Visão Geral"
             >
-              <LayoutDashboard className="w-6 h-6 mx-auto" />
-              {sidebarOpen && <span className="ml-3">Visão Geral</span>}
+              <LayoutDashboard className={`w-${iconSize} h-${iconSize} mx-auto`} />
+              {sidebarOpen && <span className="ml-3 text-xs">Visão Geral</span>}
             </button>
 
 
@@ -1019,11 +1021,11 @@ const AdminDashboard = () => {
                 className={`flex items-center w-full px-4 py-3 text-gray-700 font-medium ${!sidebarOpen ? 'lg:justify-center lg:px-0' : ''}`}
                 title="Usuários"
               >
-                <Users className="w-6 h-6 mx-auto" />
+                <Users className={`w-${iconSize} h-${iconSize} mx-auto`} />
                 {sidebarOpen && (
                   <>
-                    <span className="ml-3">Usuários</span>
-                    <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+                    <span className="ml-3 text-xs">Usuários</span>
+                    <ChevronDown className="w-3 h-3 ml-auto transition-transform duration-200 ui-open:rotate-180" />
                   </>
                 )}
               </CollapsibleTrigger>
@@ -1035,8 +1037,8 @@ const AdminDashboard = () => {
                   } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
                   title="Gerenciar Usuários"
                 >
-                  <Users className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-                  {sidebarOpen && <span>Gerenciar Usuários</span>}
+                  <Users className={`w-${iconSize-1} h-${iconSize-1} ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                  {sidebarOpen && <span className="text-xs">Gerenciar Usuários</span>}
                 </button>
                 <button
                   onClick={() => setActiveTab('community')}
@@ -1045,8 +1047,8 @@ const AdminDashboard = () => {
                   } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
                   title="Comunidade"
                 >
-                  <MessageSquare className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-                  {sidebarOpen && <span>Comunidade</span>}
+                  <MessageSquare className={`w-${iconSize-1} h-${iconSize-1} ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                  {sidebarOpen && <span className="text-xs">Comunidade</span>}
                 </button>
               </CollapsibleContent>
             </Collapsible>
