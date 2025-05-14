@@ -135,9 +135,19 @@ const AdminDashboard = () => {
   const { toast } = useToast();
   const [isMultiFormOpen, setIsMultiFormOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [expandedSections, setExpandedSections] = useState<string[]>(['principal', 'conteudo']);
   // Ícones compactos para sidebar bem organizada
   const iconSize = 3; // Tamanho reduzido (3 = 12px) para otimização de espaço
   const queryClient = useQueryClient();
+  
+  // Função para expandir/recolher seções
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => 
+      prev.includes(section) 
+        ? prev.filter(s => s !== section) 
+        : [...prev, section]
+    );
+  };
   
   // Função navegação centralizada para gerenciar abas e URLs de forma sincronizada
   const setActiveTab = useCallback((tab: string) => {
