@@ -51,20 +51,25 @@ router.post('/api/admin/arts/multi', isAuthenticated, async (req: Request, res: 
       
       // Atualizar apenas a arte existente
       // Encontrar o formato correspondente nos dados enviados
-      const formatToUpdate = artGroupData.formats.find(f => f.format === existingFormat);
+      console.log(`Formatos disponíveis:`, JSON.stringify(artGroupData.formats.map(f => f.format)));
+      console.log(`Procurando formato: ${existingFormat}`);
+      
+      // Se não encontrar o formato específico, usar o primeiro formato disponível
+      const formatToUpdate = artGroupData.formats.find(f => f.format === existingFormat) || artGroupData.formats[0];
       
       if (formatToUpdate) {
-        console.log(`Atualizando arte ID: ${existingArtId} com formato: ${existingFormat}`);
+        console.log(`Formato selecionado para atualização: ${formatToUpdate.format}`);
+        console.log(`Detalhes do formato:`, JSON.stringify(formatToUpdate, null, 2));
         
-        // Preparar dados para atualização
+        // Preparar dados para atualização com verificações de segurança
         const updateData = {
-          title: formatToUpdate.title,
+          title: formatToUpdate.title || artGroupData.formats[0].title,
           description: formatToUpdate.description || '',
           imageUrl: formatToUpdate.imageUrl,
-          editUrl: formatToUpdate.editUrl,
+          editUrl: formatToUpdate.editUrl || '',
           categoryId: artGroupData.categoryId,
           isPremium: artGroupData.isPremium,
-          fileType: formatToUpdate.fileType,
+          fileType: formatToUpdate.fileType || artGroupData.formats[0].fileType,
           groupId: artGroupId,
           updatedAt: new Date()
         };

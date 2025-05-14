@@ -77,6 +77,9 @@ export interface IStorage {
   getArtBySlug(slug: string): Promise<Art | undefined>;
   getArtsByCategorySlug(categorySlug: string, page?: number, limit?: number): Promise<{ arts: Art[]; totalCount: number }>;
   
+  // Art methods
+  getArt(id: number): Promise<Art | undefined>;
+  
   // User methods
   getUser(id: number): Promise<User | undefined>;
   getUserById(id: number): Promise<User | undefined>;
