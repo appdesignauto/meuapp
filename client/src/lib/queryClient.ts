@@ -87,6 +87,11 @@ export const getQueryFn: <T>(options: {
       }
     });
     
+    // MODO ANTI-CACHE AGRESSIVO: Adicionar timestamp a todas as requisições em desenvolvimento
+    if (process.env.NODE_ENV !== 'production') {
+      url.searchParams.append('timestamp', Date.now().toString());
+    }
+    
     console.log("Fazendo requisição para:", url.toString(), "com parâmetros:", params);
     
     const res = await fetch(url.toString(), {
@@ -106,9 +111,10 @@ export const queryClient = new QueryClient({
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
-      refetchOnWindowFocus: false,
-      staleTime: Infinity,
+      refetchOnWindowFocus: true, // Ativado para atualizar dados ao focar na janela
+      staleTime: process.env.NODE_ENV !== 'production' ? 0 : 10000, // Cache mínimo em desenvolvimento
       retry: false,
+      refetchOnMount: true, // Recarregar dados ao montar componentes
     },
     mutations: {
       retry: false,

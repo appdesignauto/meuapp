@@ -16,17 +16,24 @@ configureCors(app);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Middleware para impedir caching de conteúdo dinâmico
+// Middleware para impedir caching de conteúdo dinâmico (MODO AGRESSIVO)
 app.use((req, res, next) => {
-  // Aplicar headers anti-cache para rotas dinâmicas
-  if (req.path.startsWith('/api') || 
+  // Aplicar headers anti-cache para TODAS as rotas no ambiente de desenvolvimento
+  if (process.env.NODE_ENV !== 'production' || 
+      req.path.startsWith('/api') || 
       req.path.includes('/admin') ||
       req.path.includes('/comunidade') ||
       req.path.includes('/painel')) {
-    // Headers para evitar cache
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    
+    // Headers para evitar cache de forma agressiva em desenvolvimento
+    res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate, max-age=0');
     res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
+    res.setHeader('Expires', '-1');
+    res.setHeader('Surrogate-Control', 'no-store');
+    
+    // Adicionar Vary para evitar cache entre usuários
+    res.setHeader('Vary', '*');
+    
     console.log(`Aplicando no-cache para rota: ${req.path}`);
   }
   next();

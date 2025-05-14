@@ -1,5 +1,5 @@
 // service-worker.js
-const CACHE_NAME = 'designauto-cache-v6'; // Incrementado para forçar atualização
+const CACHE_NAME = 'designauto-cache-v7'; // Incrementado para forçar atualização
 const ASSETS_TO_CACHE = [
   '/',
   '/offline.html',
@@ -43,11 +43,13 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
   
-  // Conteúdo dinâmico: sempre buscar da rede primeiro e não cachear
+  // MODO ANTI-CACHE AGRESSIVO PARA DESENVOLVIMENTO
+  // Adicionar timestamp nos URLs para prevenir cache no navegador
   if (url.pathname.includes('/api/') || 
       url.pathname.includes('/admin') || 
       url.pathname.includes('/comunidade') || 
-      url.pathname.includes('/painel') ||
+      url.pathname.includes('/painel') || 
+      url.search.includes('timestamp=') ||
       url.pathname.includes('/icons/') || 
       url.pathname.includes('/screenshots/') || 
       url.pathname === '/manifest.json') {
