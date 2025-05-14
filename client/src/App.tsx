@@ -235,6 +235,12 @@ function AppRoutes() {
         component={UpdatedDashboard} 
         roles={['admin', 'designer_adm']} 
       />
+      {/* Nova rota para o painel administrativo atualizado */}
+      <ProtectedRoute 
+        path="/admin-v2" 
+        component={UpdatedDashboard} 
+        roles={['admin', 'designer_adm']} 
+      />
       <ProtectedRoute
         path="/admin/storage-test"
         component={StorageTestPage}

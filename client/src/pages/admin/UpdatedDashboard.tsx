@@ -117,14 +117,30 @@ import GerenciarCategorias from './ferramentas/GerenciarCategorias';
 
 const AdminDashboard = () => {
   const { user, logoutMutation } = useAuth();
-  const [activeTab, setActiveTab] = useState('arts');
+  // Definir 'arts' como tab ativa por padrão, mas tentar usar o caminho da URL se disponível
+  const [location] = useLocation();
   const [, setLocation] = useLocation();
+  
+  // Extrair o parâmetro 'page' da URL se estiver na rota /admin/:page
+  let initialTab = 'arts';
+  // Verificar se estamos em /admin/:page e extrair o valor de 'page'
+  if (location.startsWith('/admin/')) {
+    const urlPath = location.split('/').filter(Boolean);
+    if (urlPath.length >= 2) {
+      initialTab = urlPath[1];
+    }
+  }
+  
+  const [activeTab, setActiveTab] = useState(initialTab);
   const { toast } = useToast();
   const [isMultiFormOpen, setIsMultiFormOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   // Definir um tamanho menor para os ícones da sidebar para caber mais itens
   const iconSize = 4; // Tamanho reduzido (4 = 16px)
   const queryClient = useQueryClient();
+  
+  // Log para ajudar no debug
+  console.log('UpdatedDashboard renderizado:', { location, activeTab });
 
   // Estados para cursos
   const [isCourseDialogOpen, setIsCourseDialogOpen] = useState(false);
