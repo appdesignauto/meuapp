@@ -131,13 +131,34 @@ const AdminDashboard = () => {
     }
   }
   
-  const [activeTab, setActiveTab] = useState(initialTab);
+  const [activeTab, setActiveTabState] = useState(initialTab);
   const { toast } = useToast();
   const [isMultiFormOpen, setIsMultiFormOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   // Ícones compactos para sidebar bem organizada
-  const iconSize = 3; // Tamanho ainda mais reduzido (3 = 12px)
+  const iconSize = 3; // Tamanho reduzido (3 = 12px) para otimização de espaço
   const queryClient = useQueryClient();
+  
+  // Função navegação centralizada para gerenciar abas e URLs de forma sincronizada
+  const setActiveTab = useCallback((tab: string) => {
+    setActiveTabState(tab);
+    // Atualizar a URL para refletir a aba atual
+    if (tab === 'arts') {
+      // A página principal do admin pode ficar como /admin para melhor UX
+      setLocation('/admin');
+    } else {
+      // Todas as outras abas seguem o padrão /admin/[tab]
+      setLocation(`/admin/${tab}`);
+    }
+  }, [setLocation]);
+  
+  // Efeito para garantir sincronização entre URL e aba ativa
+  useEffect(() => {
+    // Se a URL for atualizada externamente, atualizar a aba ativa
+    if (initialTab !== activeTab) {
+      setActiveTabState(initialTab);
+    }
+  }, [initialTab, location]);
 
   // Estados para cursos
   const [isCourseDialogOpen, setIsCourseDialogOpen] = useState(false);
