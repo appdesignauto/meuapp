@@ -138,8 +138,19 @@ export default function SimpleFormMultiDialog({
       console.log(`Grupo da arte: ${editingArt.groupId}`);
       console.log(`Tipo de dados do groupId: ${typeof editingArt.groupId}`);
       
-      // Log para ajudar na depuração da API recém-implementada
-      console.log("DEPURAÇÃO: Nova API de grupo implementada - testando carregamento de artes do grupo");
+      // Verificar se temos groupArts (artes agrupadas) no objeto editingArt
+      if (editingArt.groupArts && Array.isArray(editingArt.groupArts) && editingArt.groupArts.length > 0) {
+        console.log(`Arte pertence a um grupo com ${editingArt.groupArts.length} formatos`);
+        console.log("Artes do grupo:", editingArt.groupArts);
+        
+        // Verificar se temos um formato inicial definido
+        if (editingArt.initialFormat) {
+          console.log(`Formato inicial a ser exibido: ${editingArt.initialFormat}`);
+          
+          // Definir a aba inicial com base no formato que foi clicado
+          setCurrentTab(editingArt.initialFormat);
+        }
+      }
       
       // Atualizar o formulário da etapa 1 com os dados da arte
       step1Form.setValue('categoryId', editingArt.categoryId?.toString() || '');

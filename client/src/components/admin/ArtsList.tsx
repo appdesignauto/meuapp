@@ -288,9 +288,47 @@ const ArtsList = () => {
     setIsFormOpen(true);
   };
   
-  const handleEdit = (art: Art) => {
+  const handleEdit = async (art: Art) => {
     console.log('Editando arte:', art);
     console.log('Grupo ID da arte:', art.groupId);
+    
+    // Se a arte tiver um groupId, precisamos verificar e carregar as artes do grupo
+    if (art.groupId) {
+      try {
+        console.log(`Verificando grupo para arte ${art.id} usando endpoint check-group`);
+        
+        // Verificar o groupId e obter todas as artes do grupo
+        const checkResponse = await apiRequest('GET', `/api/admin/artes/${art.id}/check-group`);
+        const checkData = await checkResponse.json();
+        
+        if (checkData.groupId) {
+          // Se confirmado que existe um grupo, buscamos todas as artes do grupo
+          console.log(`Buscando artes do grupo: ${checkData.groupId}`);
+          const groupResponse = await apiRequest('GET', `/api/admin/artes/group/${checkData.groupId}`);
+          const groupData = await groupResponse.json();
+          
+          if (groupData && groupData.arts && groupData.arts.length > 0) {
+            console.log(`Grupo encontrado com ${groupData.arts.length} artes`);
+            
+            // Passamos a arte original para manter o foco no formato que foi clicado
+            // mas o dialog irá mostrar todas as artes do grupo
+            setEditingArt({
+              ...art,
+              groupArts: groupData.arts,
+              // Definimos o formato selecionado inicialmente baseado na arte que foi clicada
+              initialFormat: art.format
+            });
+            setIsFormOpen(true);
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao verificar ou carregar artes do grupo:', error);
+        // Em caso de erro, continuamos com a edição normal da arte
+      }
+    }
+    
+    // Caso não tenha grupo ou ocorra algum erro, editamos apenas a arte individual
     setEditingArt(art);
     setIsFormOpen(true);
   };
