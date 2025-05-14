@@ -1130,9 +1130,10 @@ const CommunityPage: React.FC = () => {
     refetch: refetchPosts,
     isFetching
   } = useQuery({
-    queryKey: ['/api/community/posts', { page, limit: pageSize }],
-    refetchOnWindowFocus: false,
-    refetchInterval: 0, // Desativamos o recarregamento automático para controlar manualmente
+    queryKey: ['/api/community/posts', { page, limit: pageSize, timestamp: new Date().getTime() }],
+    refetchOnWindowFocus: true,
+    refetchInterval: 30000, // Recarregar a cada 30 segundos para garantir conteúdo atualizado
+    staleTime: 10000, // Considerar dados obsoletos após 10 segundos
   });
   
   // Efeito para adicionar novos posts ao array de posts existentes

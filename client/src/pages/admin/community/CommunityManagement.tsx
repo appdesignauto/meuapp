@@ -136,8 +136,11 @@ const CommunityManagement: React.FC = () => {
       currentPage, 
       searchQuery, 
       filterUser,
-      sortBy
+      sortBy,
+      new Date().getTime() // Adicionar timestamp para evitar cache
     ],
+    refetchInterval: 15000, // Recarregar a cada 15 segundos
+    staleTime: 5000, // Considerar dados obsoletos após 5 segundos
     queryFn: async () => {
       const status = activeTab === 'pending' ? 'pending' : 'approved';
       const params = new URLSearchParams({
