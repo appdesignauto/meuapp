@@ -257,27 +257,58 @@ const CommunityManagement: React.FC = () => {
   // Mutação para excluir um post
   const deletePostMutation = useMutation({
     mutationFn: async (postId: number) => {
+      // Adicionar timestamp para evitar cache
+      const timestamp = Date.now();
+      return await apiRequest('DELETE', `/api/community/admin/posts/${postId}?timestamp=${timestamp}`);
+    },
+    onMutate: async (postId) => {
+      // Cancelar queries relacionadas para evitar race conditions
+      await queryClient.cancelQueries({ queryKey: ['/api/community/admin/posts'] });
+      await queryClient.cancelQueries({ queryKey: ['/api/community/posts'] });
+      
+      // Snapshot do estado atual para possível rollback
+      const previousData = queryClient.getQueryData(['/api/community/admin/posts']);
+      
       // Otimisticamente atualizar a UI antes de receber resposta do servidor
-      // Remover o post da lista atual exibida no painel admin
       if (postsQuery.data?.posts) {
-        const updatedPosts = postsQuery.data.posts.filter(p => p.id !== postId);
-        postsQuery.data.posts = updatedPosts;
-        postsQuery.data.total = Math.max(0, (postsQuery.data.total || 0) - 1);
+        queryClient.setQueryData(['/api/community/admin/posts'], {
+          ...postsQuery.data,
+          posts: postsQuery.data.posts.filter(p => p.id !== postId),
+          total: Math.max(0, (postsQuery.data.total || 0) - 1)
+        });
       }
       
-      return await apiRequest('DELETE', `/api/community/admin/posts/${postId}`);
+      return { previousData };
     },
-    onSuccess: () => {
-      // Invalidar todas as queries relacionadas
-      queryClient.invalidateQueries({ queryKey: ['/api/community/posts'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/community/admin/posts'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/community/admin/stats'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/community/populares'] });
+    onSuccess: (data, postId, context) => {
+      console.log(`Post ID ${postId} excluído com sucesso no servidor`);
+      
+      // Limpar todos os caches relacionados a posts
+      queryClient.removeQueries({ queryKey: ['/api/community/posts'] });
+      queryClient.removeQueries({ queryKey: ['/api/community/admin/posts'] });
+      queryClient.removeQueries({ queryKey: ['/api/community/admin/stats'] });
+      queryClient.removeQueries({ queryKey: ['/api/community/populares'] });
+      
+      // Forçar refetch para garantir dados sincronizados
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['/api/community/posts'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/community/admin/posts'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/community/admin/stats'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/community/populares'] });
+      }, 300);
+      
       toast({
         description: "Post excluído com sucesso!"
       });
     },
-    onError: (error: Error) => {
+    onError: (error: Error, postId, context: any) => {
+      console.error(`Erro ao excluir post ID ${postId}:`, error);
+      
+      // Restaurar o estado anterior em caso de erro
+      if (context?.previousData) {
+        queryClient.setQueryData(['/api/community/admin/posts'], context.previousData);
+      }
+      
       toast({
         variant: "destructive",
         title: "Erro",
@@ -289,16 +320,53 @@ const CommunityManagement: React.FC = () => {
   // Mutação para alternar visibilidade de um comentário
   const toggleCommentVisibilityMutation = useMutation({
     mutationFn: async (commentId: number) => {
-      await apiRequest('PATCH', `/api/community/admin/comments/${commentId}/toggle-visibility`);
+      // Adicionar timestamp para evitar cache
+      const timestamp = Date.now();
+      const response = await apiRequest('PATCH', `/api/community/admin/comments/${commentId}/toggle-visibility?timestamp=${timestamp}`);
+      return await response.json();
+    },
+    onMutate: async (commentId) => {
+      // Cancelar queries para evitar race conditions
+      await queryClient.cancelQueries({ queryKey: ['/api/community/admin/comments'] });
+      
+      // Snapshot para possível rollback
+      const previousComments = queryClient.getQueryData(['/api/community/admin/comments']);
+      
+      // Atualizar otimisticamente (invertendo isHidden de cada comentário)
+      queryClient.setQueryData(['/api/community/admin/comments'], (old: any) => {
+        if (!old || !old.comments) return old;
+        return {
+          ...old,
+          comments: old.comments.map((comment: any) => 
+            comment.comment.id === commentId 
+              ? {...comment, comment: {...comment.comment, isHidden: !comment.comment.isHidden}} 
+              : comment
+          )
+        };
+      });
+      
+      return { previousComments };
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/community/admin/comments'] });
+      // Limpar e forçar recarregamento dos dados
+      queryClient.removeQueries({ queryKey: ['/api/community/admin/comments'] });
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['/api/community/admin/comments'] });
+      }, 300);
+      
       const action = data.comment.isHidden ? "ocultado" : "mostrado";
       toast({
         description: `Comentário ${action} com sucesso!`
       });
     },
-    onError: (error: Error) => {
+    onError: (error: Error, commentId, context: any) => {
+      console.error(`Erro ao alterar visibilidade do comentário ${commentId}:`, error);
+      
+      // Restaurar estado anterior em caso de erro
+      if (context?.previousComments) {
+        queryClient.setQueryData(['/api/community/admin/comments'], context.previousComments);
+      }
+      
       toast({
         variant: "destructive",
         title: "Erro",
@@ -310,16 +378,58 @@ const CommunityManagement: React.FC = () => {
   // Mutação para excluir um comentário
   const deleteCommentMutation = useMutation({
     mutationFn: async (commentId: number) => {
-      await apiRequest('DELETE', `/api/community/admin/comments/${commentId}`);
+      // Adicionar timestamp para evitar cache
+      const timestamp = Date.now();
+      const response = await apiRequest('DELETE', `/api/community/admin/comments/${commentId}?timestamp=${timestamp}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Erro ${response.status} ao excluir comentário`);
+      }
+      return { success: true, commentId };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/community/admin/comments'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/community/admin/stats'] });
+    onMutate: async (commentId) => {
+      // Cancelar queries relacionadas
+      await queryClient.cancelQueries({ queryKey: ['/api/community/admin/comments'] });
+      
+      // Capturar estado atual para possível rollback
+      const previousComments = queryClient.getQueryData(['/api/community/admin/comments']);
+      
+      // Atualizar UI otimisticamente removendo o comentário
+      queryClient.setQueryData(['/api/community/admin/comments'], (old: any) => {
+        if (!old || !old.comments) return old;
+        return {
+          ...old,
+          comments: old.comments.filter((comment: any) => comment.comment.id !== commentId),
+          total: Math.max(0, old.total - 1)
+        };
+      });
+      
+      return { previousComments };
+    },
+    onSuccess: (data, commentId) => {
+      console.log(`Comentário ID ${commentId} excluído com sucesso`);
+      
+      // Limpar caches e forçar recarregamento
+      queryClient.removeQueries({ queryKey: ['/api/community/admin/comments'] });
+      queryClient.removeQueries({ queryKey: ['/api/community/admin/stats'] });
+      
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['/api/community/admin/comments'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/community/admin/stats'] });
+      }, 300);
+      
       toast({
         description: "Comentário excluído com sucesso!"
       });
     },
-    onError: (error: Error) => {
+    onError: (error: Error, commentId, context: any) => {
+      console.error(`Erro ao excluir comentário ${commentId}:`, error);
+      
+      // Restaurar estado anterior em caso de erro
+      if (context?.previousComments) {
+        queryClient.setQueryData(['/api/community/admin/comments'], context.previousComments);
+      }
+      
       toast({
         variant: "destructive",
         title: "Erro",

@@ -38,11 +38,20 @@ export async function apiRequest(
   data?: unknown | undefined,
   options?: { isFormData?: boolean, skipContentType?: boolean }
 ): Promise<Response> {
-  // Configuração padrão para requisições
+  // MODO ANTI-CACHE AGRESSIVO: Adicionar timestamp a todas as URLs
+  const timestamp = Date.now();
+  const separator = url.includes('?') ? '&' : '?';
+  const urlWithTimestamp = `${url}${separator}_t=${timestamp}`;
+  
+  // Configuração padrão para requisições com headers anti-cache
   const fetchOptions: RequestInit = {
     method,
     credentials: "include",
-    headers: {}
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    }
   };
 
   // Se temos dados para enviar
@@ -62,7 +71,8 @@ export async function apiRequest(
     }
   }
 
-  const res = await fetch(url, fetchOptions);
+  console.log(`Requisição ${method} para: ${urlWithTimestamp}`);
+  const res = await fetch(urlWithTimestamp, fetchOptions);
   await throwIfResNotOk(res);
   return res;
 }
@@ -87,12 +97,11 @@ export const getQueryFn: <T>(options: {
       }
     });
     
-    // MODO ANTI-CACHE AGRESSIVO: Adicionar timestamp a todas as requisições em desenvolvimento
-    if (process.env.NODE_ENV !== 'production') {
-      url.searchParams.append('timestamp', Date.now().toString());
-    }
+    // MODO ANTI-CACHE SUPER AGRESSIVO: Sempre adicionar timestamp a todas as requisições
+    const timestamp = Date.now();
+    url.searchParams.append('_t', timestamp.toString());
     
-    console.log("Fazendo requisição para:", url.toString(), "com parâmetros:", params);
+    console.log(`Fazendo requisição para: ${url.toString()} (timestamp: ${timestamp})`);
     
     const res = await fetch(url.toString(), {
       credentials: "include",
@@ -112,7 +121,8 @@ export const queryClient = new QueryClient({
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
       refetchOnWindowFocus: true, // Ativado para atualizar dados ao focar na janela
-      staleTime: process.env.NODE_ENV !== 'production' ? 0 : 10000, // Cache mínimo em desenvolvimento
+      staleTime: 0, // Desativar cache completamente para todos os ambientes
+      cacheTime: 1000, // Cache mínimo de 1 segundo para evitar requisições duplicadas
       retry: false,
       refetchOnMount: true, // Recarregar dados ao montar componentes
     },
