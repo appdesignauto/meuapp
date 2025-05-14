@@ -109,10 +109,23 @@ const ArtsList = () => {
   // Toggle premium status mutation
   const togglePremiumMutation = useMutation({
     mutationFn: async ({ id, isPremium }: { id: number; isPremium: boolean }) => {
-      await apiRequest('PUT', `/api/admin/artes/${id}`, { isPremium });
+      // Adiciona timestamp para prevenir cache
+      const timestamp = Date.now();
+      await apiRequest('PUT', `/api/admin/artes/${id}?_t=${timestamp}`, { 
+        isPremium,
+        _timestamp: timestamp 
+      });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
+      // Corrigido: invalidateQueries com a chave correta '/api/artes' (não '/api/arts')
+      queryClient.invalidateQueries({ queryKey: ['/api/artes'] });
+      
+      // Refetch explícito para garantir atualização
+      queryClient.refetchQueries({ 
+        queryKey: ['/api/artes', { page, limit, ...filter }],
+        exact: true 
+      });
+      
       toast({
         title: 'Status premium atualizado',
         description: 'O status premium da arte foi atualizado com sucesso.',
@@ -131,10 +144,23 @@ const ArtsList = () => {
   // Toggle visibility status mutation
   const toggleVisibilityMutation = useMutation({
     mutationFn: async ({ id, isVisible }: { id: number; isVisible: boolean }) => {
-      await apiRequest('PUT', `/api/admin/artes/${id}/visibility`, { isVisible });
+      // Adiciona timestamp para prevenir cache
+      const timestamp = Date.now();
+      await apiRequest('PUT', `/api/admin/artes/${id}?_t=${timestamp}`, { 
+        isVisible,
+        _timestamp: timestamp
+      });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
+      // Corrigido: invalidateQueries com a chave correta '/api/artes' (não '/api/arts')
+      queryClient.invalidateQueries({ queryKey: ['/api/artes'] });
+      
+      // Refetch explícito para garantir atualização
+      queryClient.refetchQueries({ 
+        queryKey: ['/api/artes', { page, limit, ...filter }],
+        exact: true 
+      });
+      
       toast({
         title: 'Visibilidade atualizada',
         description: 'A visibilidade da arte foi atualizada com sucesso.',
