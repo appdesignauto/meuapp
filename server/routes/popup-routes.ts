@@ -334,7 +334,12 @@ router.put('/:id', upload.single('image'), async (req, res) => {
       imageUrl = `/uploads/popups/${req.file.filename}`;
     }
     
-    // Atualizar popup
+    // Log para verificar se o status está sendo alterado
+    console.log('Status atual do popup no DB:', existingPopup.isActive);
+    console.log('Status recebido do cliente:', jsonData.isActive);
+    
+    // Atualizar popup - Não alteramos mais o status isActive aqui
+    // Em vez disso, usamos a rota específica de toggle
     const [updatedPopup] = await db.update(popups)
       .set({
         title: jsonData.title,
@@ -359,13 +364,21 @@ router.put('/:id', upload.single('image'), async (req, res) => {
         showToPremiumUsers: jsonData.showToPremiumUsers !== undefined ? jsonData.showToPremiumUsers : true,
         frequency: jsonData.frequency || 1,
         delay: jsonData.delay || 2,
-        isActive: jsonData.isActive !== undefined ? jsonData.isActive : true,
+        // Mantemos o status atual em vez de usar o recebido do cliente
+        isActive: existingPopup.isActive,
         updatedAt: new Date(),
         pages: jsonData.pages || [], // Lista de páginas onde o popup será exibido
         userRoles: jsonData.userRoles || [], // Lista de funções de usuário que podem ver o popup
       })
       .where(eq(popups.id, parseInt(id)))
       .returning();
+    
+    console.log(`Popup ID ${id} atualizado. Status: ${updatedPopup.isActive}`);
+    
+    // Limpeza de cache para garantir estado correto
+    // Remover todas as entradas de visualização para esse popup
+    await db.delete(popupViews)
+      .where(eq(popupViews.popupId, parseInt(id)));
     
     res.json(updatedPopup);
   } catch (error) {
