@@ -1,5 +1,5 @@
 // service-worker.js
-const CACHE_NAME = 'designauto-cache-v7'; // Incrementado para forçar atualização
+const CACHE_NAME = 'designauto-cache-v8'; // Incrementado para forçar atualização completa
 const ASSETS_TO_CACHE = [
   '/',
   '/offline.html',

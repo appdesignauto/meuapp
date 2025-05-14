@@ -122,9 +122,9 @@ export const queryClient = new QueryClient({
       refetchInterval: false,
       refetchOnWindowFocus: true, // Ativado para atualizar dados ao focar na janela
       staleTime: 0, // Desativar cache completamente para todos os ambientes
-      cacheTime: 1000, // Cache mínimo de 1 segundo para evitar requisições duplicadas
+      gcTime: 1000, // Cache mínimo de 1 segundo para evitar requisições duplicadas
       retry: false,
-      refetchOnMount: true, // Recarregar dados ao montar componentes
+      refetchOnMount: true // Recarregar dados ao montar componentes
     },
     mutations: {
       retry: false,
