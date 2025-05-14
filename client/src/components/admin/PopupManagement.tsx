@@ -209,12 +209,33 @@ export default function PopupManagement() {
         formData.append('image', selectedImage);
       }
       
+      // Se estamos em modo de edição, buscar o popup atual para preservar o estado isActive
+      let popupStatusAtual = formValues.isActive;
+      
+      if (isEditMode && currentPopupId) {
+        try {
+          // Buscar o status atual do popup no servidor
+          const response = await apiRequest('GET', `/api/popups`);
+          const popups = await response.json();
+          const popupAtual = popups.find((p: Popup) => p.id === currentPopupId);
+          
+          if (popupAtual) {
+            console.log(`Status atual do popup ${currentPopupId} no servidor: ${popupAtual.isActive ? 'ATIVO' : 'INATIVO'}`);
+            popupStatusAtual = popupAtual.isActive;
+          }
+        } catch (error) {
+          console.error("Erro ao buscar status atual do popup:", error);
+        }
+      }
+      
       // Converter objetos de formulário em JSON e adicionar como campo 'data'
       const jsonData = {
         ...formValues,
         startDate: formValues.startDate ? format(formValues.startDate, 'yyyy-MM-dd') : null,
         endDate: formValues.endDate ? format(formValues.endDate, 'yyyy-MM-dd') : null,
-        frequency: formValues.frequency === 0 ? null : formValues.frequency
+        frequency: formValues.frequency === 0 ? null : formValues.frequency,
+        // Preservar o status atual durante a edição
+        isActive: isEditMode ? popupStatusAtual : formValues.isActive
       };
       
       formData.append('data', JSON.stringify(jsonData));
@@ -310,15 +331,28 @@ export default function PopupManagement() {
 
   const handleToggleActive = async (id: number, isActive: boolean) => {
     try {
-      await apiRequest('PUT', `/api/popups/${id}/toggle`, { isActive: !isActive });
+      // Enviamos o valor inverso para o endpoint de toggle
+      const novoStatus = !isActive;
+      await apiRequest('PUT', `/api/popups/${id}/toggle`, { isActive: novoStatus });
+      
+      // Atualizar o estado local com o novo valor
       setPopups(popups.map(popup => 
-        popup.id === id ? { ...popup, isActive: !isActive } : popup
+        popup.id === id ? { ...popup, isActive: novoStatus } : popup
       ));
+      
+      // Para debug, registrar a mudança no console
+      console.log(`Popup ${id} status alterado para: ${novoStatus ? 'ATIVO' : 'INATIVO'}`);
       
       toast({
         title: 'Status atualizado',
-        description: `Popup ${!isActive ? 'ativado' : 'desativado'} com sucesso.`,
+        description: `Popup ${novoStatus ? 'ativado' : 'desativado'} com sucesso.`,
       });
+      
+      // Recarregar a lista após a alteração para garantir sincronização
+      const response = await apiRequest('GET', '/api/popups');
+      const data = await response.json();
+      setPopups(data);
+      
     } catch (error) {
       console.error('Erro ao alterar status do popup:', error);
       toast({
