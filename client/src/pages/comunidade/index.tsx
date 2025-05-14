@@ -570,8 +570,12 @@ const PostCard: React.FC<{
     
     setIsDeleting(true);
     try {
+      // Armazenar a lista original de posts para caso de erro
+      const originalPosts = [...allPosts];
+      
       // Remover o post imediatamente da UI para feedback instantâneo
-      setAllPosts(prevPosts => prevPosts.filter(p => p.post.id !== postId));
+      const updatedPosts = allPosts.filter(p => p.post.id !== postId);
+      setAllPosts(updatedPosts);
       
       // Fazer a requisição para excluir no servidor
       const response = await apiRequest('DELETE', `/api/community/posts/${postId}`);
@@ -590,14 +594,18 @@ const PostCard: React.FC<{
         description: "O post foi excluído com sucesso",
       });
     } catch (error) {
+      console.error('Erro ao excluir post:', error);
+      
+      // Se falhar, restaurar a lista original de posts
+      if (refetchPosts) {
+        refetchPosts();
+      }
+      
       toast({
         title: "Erro",
         description: error instanceof Error ? error.message : "Ocorreu um erro ao excluir o post",
         variant: "destructive",
       });
-      
-      // Se falhar, recarregar a página para restaurar o estado
-      refetchPosts();
     } finally {
       setIsDeleting(false);
     }

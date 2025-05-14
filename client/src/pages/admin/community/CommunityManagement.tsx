@@ -257,11 +257,22 @@ const CommunityManagement: React.FC = () => {
   // Mutação para excluir um post
   const deletePostMutation = useMutation({
     mutationFn: async (postId: number) => {
-      await apiRequest('DELETE', `/api/community/admin/posts/${postId}`);
+      // Otimisticamente atualizar a UI antes de receber resposta do servidor
+      // Remover o post da lista atual exibida no painel admin
+      if (postsQuery.data?.posts) {
+        const updatedPosts = postsQuery.data.posts.filter(p => p.id !== postId);
+        postsQuery.data.posts = updatedPosts;
+        postsQuery.data.total = Math.max(0, (postsQuery.data.total || 0) - 1);
+      }
+      
+      return await apiRequest('DELETE', `/api/community/admin/posts/${postId}`);
     },
     onSuccess: () => {
+      // Invalidar todas as queries relacionadas
+      queryClient.invalidateQueries({ queryKey: ['/api/community/posts'] });
       queryClient.invalidateQueries({ queryKey: ['/api/community/admin/posts'] });
       queryClient.invalidateQueries({ queryKey: ['/api/community/admin/stats'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/community/populares'] });
       toast({
         description: "Post excluído com sucesso!"
       });
