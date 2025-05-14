@@ -569,16 +569,19 @@ const PostCard: React.FC<{
     }
     
     setIsDeleting(true);
+    
+    // Armazenar a lista atual de posts para caso de erro
+    const originalPostsBackup = [...allPosts];
+    
     try {
-      // Armazenar a lista original de posts para caso de erro
-      const originalPosts = [...allPosts];
-      
       // Remover o post imediatamente da UI para feedback instantâneo
-      const updatedPosts = allPosts.filter(p => p.post.id !== postId);
-      setAllPosts(updatedPosts);
+      setAllPosts(current => current.filter(p => p.post.id !== postId));
+      
+      // Adicionar um timestamp para evitar cache
+      const timestamp = Date.now();
       
       // Fazer a requisição para excluir no servidor
-      const response = await apiRequest('DELETE', `/api/community/posts/${postId}`);
+      const response = await apiRequest('DELETE', `/api/community/posts/${postId}?timestamp=${timestamp}`);
       
       if (!response.ok) {
         throw new Error("Não foi possível excluir o post");
@@ -593,10 +596,20 @@ const PostCard: React.FC<{
         title: "Post excluído",
         description: "O post foi excluído com sucesso",
       });
+      
+      // Forçar atualização
+      if (refetchPosts) {
+        setTimeout(() => {
+          refetchPosts();
+        }, 500);
+      }
     } catch (error) {
       console.error('Erro ao excluir post:', error);
       
       // Se falhar, restaurar a lista original de posts
+      setAllPosts(originalPostsBackup);
+      
+      // Forçar recarregamento completo
       if (refetchPosts) {
         refetchPosts();
       }
