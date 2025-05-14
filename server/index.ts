@@ -16,6 +16,22 @@ configureCors(app);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Middleware para impedir caching de conteúdo dinâmico
+app.use((req, res, next) => {
+  // Aplicar headers anti-cache para rotas dinâmicas
+  if (req.path.startsWith('/api') || 
+      req.path.includes('/admin') ||
+      req.path.includes('/comunidade') ||
+      req.path.includes('/painel')) {
+    // Headers para evitar cache
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    console.log(`Aplicando no-cache para rota: ${req.path}`);
+  }
+  next();
+});
+
 // Configuração para servir arquivos estáticos da pasta public
 app.use(express.static(path.join(process.cwd(), 'public')));
 

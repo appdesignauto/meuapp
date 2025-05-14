@@ -1,5 +1,5 @@
 // service-worker.js
-const CACHE_NAME = 'designauto-cache-v5'; // Incrementado para forçar atualização
+const CACHE_NAME = 'designauto-cache-v6'; // Incrementado para forçar atualização
 const ASSETS_TO_CACHE = [
   '/',
   '/offline.html',
@@ -43,8 +43,12 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
   
-  // Para ícones, screenshots e manifest.json: sempre buscar da rede primeiro
-  if (url.pathname.includes('/icons/') || 
+  // Conteúdo dinâmico: sempre buscar da rede primeiro e não cachear
+  if (url.pathname.includes('/api/') || 
+      url.pathname.includes('/admin') || 
+      url.pathname.includes('/comunidade') || 
+      url.pathname.includes('/painel') ||
+      url.pathname.includes('/icons/') || 
       url.pathname.includes('/screenshots/') || 
       url.pathname === '/manifest.json') {
     console.log('Buscar da rede primeiro para:', url.pathname);
