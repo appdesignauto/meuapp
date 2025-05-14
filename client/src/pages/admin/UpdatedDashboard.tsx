@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link, useLocation } from 'wouter';
+import { Link, useLocation, useParams } from 'wouter';
 import AnalyticsSettings from '@/components/admin/AnalyticsSettings';
 import ReportsManagement from '@/components/admin/ReportsManagement';
 import {
@@ -117,16 +117,16 @@ import GerenciarCategorias from './ferramentas/GerenciarCategorias';
 
 const AdminDashboard = () => {
   const { user, logoutMutation } = useAuth();
-  // Definir 'arts' como tab ativa por padrão, mas tentar usar o caminho da URL se disponível
   const [location] = useLocation();
   const [, setLocation] = useLocation();
   
-  // Extrair o parâmetro 'page' da URL se estiver na rota /admin/:page
+  // Definir 'arts' como tab ativa por padrão
   let initialTab = 'arts';
-  // Verificar se estamos em /admin/:page e extrair o valor de 'page'
+  
+  // Verificar se estamos em uma rota específica do admin
   if (location.startsWith('/admin/')) {
     const urlPath = location.split('/').filter(Boolean);
-    if (urlPath.length >= 2) {
+    if (urlPath.length >= 2 && !['storage-test', 'app-config'].includes(urlPath[1])) {
       initialTab = urlPath[1];
     }
   }
@@ -135,12 +135,9 @@ const AdminDashboard = () => {
   const { toast } = useToast();
   const [isMultiFormOpen, setIsMultiFormOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  // Definir um tamanho menor para os ícones da sidebar para caber mais itens
-  const iconSize = 4; // Tamanho reduzido (4 = 16px)
+  // Ícones compactos para sidebar bem organizada
+  const iconSize = 3; // Tamanho ainda mais reduzido (3 = 12px)
   const queryClient = useQueryClient();
-  
-  // Log para ajudar no debug
-  console.log('UpdatedDashboard renderizado:', { location, activeTab });
 
   // Estados para cursos
   const [isCourseDialogOpen, setIsCourseDialogOpen] = useState(false);
