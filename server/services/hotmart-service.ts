@@ -167,64 +167,109 @@ export class HotmartService {
     const data = webhookData.data;
     
     // Log do evento recebido
-    console.log(`Webhook Hotmart recebido: ${event}`);
+    console.log(`Webhook Hotmart recebido: ${event}`, JSON.stringify(data, null, 2));
     
-    // Processar diferentes tipos de eventos
+    // Extrair informações essenciais com tratamento seguro para evitar erros
+    const email = data.buyer?.email;
+    if (!email) {
+      console.error('Email do comprador não encontrado no webhook:', data);
+      throw new Error('Email do comprador não encontrado no webhook');
+    }
+    
+    // Processar diferentes tipos de eventos conforme as diretrizes
     switch (event) {
       case 'PURCHASE_APPROVED':
-        // Assinatura aprovada
+        // Assinatura aprovada - usuário deve ser premium
+        let planType = 'premium_mensal'; // padrão
+        if (data.subscription?.plan?.name) {
+          const planName = data.subscription.plan.name.toLowerCase();
+          if (planName.includes('anual')) {
+            planType = 'premium_anual';
+          } else if (planName.includes('semestral')) {
+            planType = 'premium_semestral';
+          }
+        }
+        
         return {
           action: 'subscription_approved',
-          email: data.buyer.email,
-          plan: data.subscription.plan.name,
-          purchaseId: data.purchase.transaction,
+          email: email,
+          plan: planType,
+          name: data.buyer?.name,
+          purchaseId: data.purchase?.transaction,
           status: 'active',
-          endDate: data.subscription.end_date
+          endDate: data.subscription?.end_date
         };
         
-      case 'PURCHASE_CANCELED':
       case 'SUBSCRIPTION_CANCELED':
-        // Assinatura cancelada
+      case 'PURCHASE_CANCELED':
+        // Assinatura cancelada - usuário deve ser rebaixado para free
         return {
           action: 'subscription_canceled',
-          email: data.buyer.email,
-          purchaseId: data.purchase.transaction,
-          status: 'canceled'
+          email: email,
+          purchaseId: data.purchase?.transaction,
+          status: 'canceled',
+          reason: 'Cancelamento solicitado pelo usuário'
         };
         
       case 'PURCHASE_REFUNDED':
-        // Assinatura reembolsada
+      case 'CHARGEBACK':
+        // Reembolso ou estorno - usuário deve ser rebaixado para free
         return {
           action: 'subscription_refunded',
-          email: data.buyer.email,
-          purchaseId: data.purchase.transaction,
-          status: 'refunded'
+          email: email,
+          purchaseId: data.purchase?.transaction,
+          status: 'refunded',
+          reason: event === 'CHARGEBACK' ? 'Estorno no cartão' : 'Reembolso solicitado'
+        };
+        
+      case 'PURCHASE_EXPIRED':
+        // Assinatura expirada - usuário deve ser rebaixado para free
+        return {
+          action: 'subscription_expired',
+          email: email,
+          purchaseId: data.purchase?.transaction,
+          status: 'expired',
+          expirationDate: data.subscription?.end_date
         };
         
       case 'PURCHASE_DELAYED':
-        // Pagamento em atraso
+        // Pagamento em atraso - registrar mas não fazer nada ainda
         return {
           action: 'subscription_delayed',
-          email: data.buyer.email,
-          purchaseId: data.purchase.transaction,
-          status: 'delayed'
+          email: email,
+          purchaseId: data.purchase?.transaction,
+          status: 'delayed',
+          dueDate: data.purchase?.due_date
         };
         
       case 'PURCHASE_COMPLETE':
-        // Pagamento realizado
+        // Pagamento realizado - usuário deve ser premium
+        let completePlanType = 'premium_mensal'; // padrão
+        if (data.subscription?.plan?.name) {
+          const planName = data.subscription.plan.name.toLowerCase();
+          if (planName.includes('anual')) {
+            completePlanType = 'premium_anual';
+          } else if (planName.includes('semestral')) {
+            completePlanType = 'premium_semestral';
+          }
+        }
+        
         return {
           action: 'subscription_renewed',
-          email: data.buyer.email,
-          purchaseId: data.purchase.transaction,
-          plan: data.subscription.plan.name,
+          email: email,
+          plan: completePlanType,
+          purchaseId: data.purchase?.transaction,
           status: 'active',
-          endDate: data.subscription.end_date
+          endDate: data.subscription?.end_date
         };
         
       default:
+        // Evento desconhecido - registrar para análise futura
+        console.warn(`Evento Hotmart desconhecido recebido: ${event}`);
         return {
           action: 'unknown_event',
           event: event,
+          email: email,
           status: 'ignored'
         };
     }

@@ -1130,23 +1130,18 @@ const CommunityPage: React.FC = () => {
     refetch: refetchPosts,
     isFetching
   } = useQuery({
-    queryKey: ['/api/community/posts', { page, limit: pageSize, timestamp: Date.now() }],
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
-    refetchOnReconnect: true,
-    staleTime: 0, // Sempre considerar os dados como desatualizados
-    gcTime: 1, // Minimizar o tempo de vida no cache
-    retry: 1, // Fazer apenas 1 tentativa de retry em caso de falha
+    queryKey: ['/api/community/posts', { page, limit: pageSize }],
+    refetchOnWindowFocus: false,
+    refetchInterval: 0, // Desativamos o recarregamento automático para controlar manualmente
   });
   
-  // Efeito para adicionar novos posts ao array de posts existentes com verificação robusta
+  // Efeito para adicionar novos posts ao array de posts existentes
   useEffect(() => {
     if (posts && Array.isArray(posts)) {
       if (page === 1) {
-        // Página 1: Substituir completamente para garantir dados limpos
         setAllPosts(posts);
       } else if (posts.length > 0) {
-        // Páginas subsequentes: Adicionar novos posts sem duplicatas
+        // Verificar se já temos algum dos posts novos (para evitar duplicatas)
         const newPosts = posts.filter(
           newPost => !allPosts.some(existingPost => existingPost.post.id === newPost.post.id)
         );
@@ -1158,30 +1153,6 @@ const CommunityPage: React.FC = () => {
       setIsLoadingMore(false);
     }
   }, [posts, page]);
-  
-  // Função para limpar posts fantasmas (excluídos mas ainda presentes no cache)
-  const removePostFromUI = (postId: number) => {
-    console.log(`Removendo post ID ${postId} da interface`);
-    setAllPosts(prevPosts => prevPosts.filter(item => item.post.id !== postId));
-    
-    // Também remover do cache de posts para garantir que não reapareça
-    try {
-      // Para cada página no cache
-      for (let i = 1; i <= page; i++) {
-        const cacheKey = ['/api/community/posts', { page: i, limit: pageSize }];
-        const cachedData = queryClient.getQueryData<any[]>(cacheKey);
-        
-        if (cachedData && Array.isArray(cachedData)) {
-          // Filtrar o post excluído
-          const updatedData = cachedData.filter(item => item.post.id !== postId);
-          // Atualizar o cache
-          queryClient.setQueryData(cacheKey, updatedData);
-        }
-      }
-    } catch (err) {
-      console.error('Erro ao atualizar cache após remoção de post:', err);
-    }
-  };
   
   // Configurar o observador da interseção para detectar quando o usuário atinge o final da lista
   useEffect(() => {
@@ -1399,7 +1370,7 @@ const CommunityPage: React.FC = () => {
     }
   };
   
-  // Função para recarregar todos os posts (reset) com estratégia anti-cache robusta
+  // Função para recarregar todos os posts (reset)
   const handleRefreshPosts = async () => {
     setPage(1);
     
@@ -1423,34 +1394,15 @@ const CommunityPage: React.FC = () => {
     }
     
     try {
-      // ANTI-CACHE: Primeiro limpar o cache completamente
-      queryClient.removeQueries({ queryKey: ['/api/community/posts'] });
-      
-      // Fazer uma chamada de API direta com timestamp para evitar cache
-      const timestamp = Date.now();
-      const response = await fetch(`/api/community/posts?page=1&limit=${pageSize}&_t=${timestamp}`, {
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Erro ao buscar posts: ${response.status}`);
-      }
-      
-      const freshData = await response.json();
+      // Aguardar a conclusão da refetch antes de continuar
+      const result = await refetchPosts();
       
       // Também atualizar posts populares
       refetchPopularPosts();
       
-      if (freshData && Array.isArray(freshData)) {
-        // Atualizar o cache com novos dados
-        queryClient.setQueryData(['/api/community/posts', { page: 1, limit: pageSize }], freshData);
-        
+      if (result.data && Array.isArray(result.data)) {
         // Atualizar os posts diretamente para evitar estado vazio temporário
-        setAllPosts(freshData);
+        setAllPosts(result.data);
         
         // Mostrar toast de sucesso
         toast({
@@ -1459,8 +1411,7 @@ const CommunityPage: React.FC = () => {
           variant: "success",
         });
       } else {
-        // Tentar usar refetch como fallback
-        const result = await refetchPosts();
+        // Se result.data não existir ou não for um array, mantenha os posts existentes
         const postsData = await fetch('/api/community/posts?page=1&limit=10');
         if (postsData.ok) {
           const freshPosts = await postsData.json();
@@ -2321,12 +2272,11 @@ const CommunityPage: React.FC = () => {
         onOpenChange={setIsCreatePostOpen}
       />
       
-      {/* Dialog de visualização de post com callback de exclusão */}
+      {/* Dialog de visualização de post */}
       <PostViewDialog
         postId={selectedPostId}
         open={isPostViewOpen}
         onOpenChange={setIsPostViewOpen}
-        onPostDeleted={removePostFromUI}
       />
     </div>
   );
