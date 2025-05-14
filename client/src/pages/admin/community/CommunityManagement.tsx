@@ -137,10 +137,11 @@ const CommunityManagement: React.FC = () => {
       searchQuery, 
       filterUser,
       sortBy,
-      new Date().getTime() // Adicionar timestamp para evitar cache
+      Date.now() // Adicionar timestamp para evitar cache completamente
     ],
-    refetchInterval: 15000, // Recarregar a cada 15 segundos
-    staleTime: 5000, // Considerar dados obsoletos após 5 segundos
+    refetchInterval: 10000, // Recarregar a cada 10 segundos (mais frequente)
+    staleTime: 0, // Considerar dados sempre obsoletos
+    gcTime: 1000, // Mínimo tempo em cache para evitar requisições duplicadas
     queryFn: async () => {
       const status = activeTab === 'pending' ? 'pending' : 'approved';
       const params = new URLSearchParams({
@@ -176,8 +177,12 @@ const CommunityManagement: React.FC = () => {
       searchQuery, 
       filterUser,
       sortBy,
-      visibilityFilter
+      visibilityFilter,
+      Date.now() // Adicionar timestamp para evitar cache completamente
     ],
+    refetchInterval: 10000, // Recarregar a cada 10 segundos
+    staleTime: 0, // Considerar dados sempre obsoletos
+    gcTime: 1000, // Mínimo tempo em cache para evitar requisições duplicadas
     queryFn: async () => {
       if (activeTab !== 'comments') {
         return { comments: [], total: 0, totalPages: 0 };
