@@ -1,8 +1,9 @@
 import express from 'express';
 import { storage } from '../storage';
 import { Request, Response, NextFunction } from 'express';
-import { sql } from 'drizzle-orm';
+import { sql, eq } from 'drizzle-orm';
 import { db } from '../db';
+import { arts } from '@shared/schema';
 import { supabaseStorageService } from '../services/supabase-storage';
 
 // Middleware para verificar se o usuário é admin
