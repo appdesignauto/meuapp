@@ -509,9 +509,6 @@ export default function SimpleFormMultiDialog({
 
   // Submeter o formulário completo
   const handleSubmit = async () => {
-    // Estado para controlar se está enviando o formulário
-    const [isSubmitting, setIsSubmitting] = React.useState(false);
-    
     // Verificar se todos os formatos estão completos
     const allComplete = Object.values(formatsComplete).every(v => v);
     
@@ -572,7 +569,8 @@ export default function SimpleFormMultiDialog({
           try {
             // CORRIGIDO: Usamos POST para criar um novo grupo 
             response = await apiRequest('POST', `/api/admin/arts/multi`, formattedData);
-            console.log('Resposta da API (novo grupo):', await response.clone().text());
+            const responseText = await response.clone().text();
+            console.log('Resposta da API (novo grupo):', responseText);
           } catch (error) {
             console.error('Erro ao criar novo grupo:', error);
             toast({
@@ -590,7 +588,8 @@ export default function SimpleFormMultiDialog({
         console.log("Criando nova arte multi-formato");
         try {
           response = await apiRequest('POST', '/api/admin/arts/multi', formattedData);
-          console.log('Resposta da API (criação):', await response.clone().text());
+          const responseText = await response.clone().text();
+          console.log('Resposta da API (criação):', responseText);
         } catch (error) {
           console.error('Erro ao criar nova arte multi-formato:', error);
           toast({
@@ -604,32 +603,43 @@ export default function SimpleFormMultiDialog({
         successMessage = "Arte criada com sucesso";
       }
 
-      const result = await response.json();
+      try {
+        const result = await response.json();
+        
+        toast({
+          title: successMessage,
+          description: isEditing 
+            ? "As alterações foram salvas."
+            : "A arte com múltiplos formatos foi criada.",
+        });
 
-      toast({
-        title: successMessage,
-        description: isEditing 
-          ? "As alterações foram salvas."
-          : "A arte com múltiplos formatos foi criada.",
-      });
-
-      // Resetar o formulário
-      step1Form.reset({
-        categoryId: '',
-        globalFileType: 'canva',
-        isPremium: true,
-        globalTitle: '',
-        globalDescription: '',
-        selectedFormats: []
-      });
-      
-      setFormatDetails({});
-      setImages({});
-      setStep(1);
-      onClose();
-      
-      // Invalidar a consulta para atualizar a lista de artes
-      queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
+        // Resetar o formulário
+        step1Form.reset({
+          categoryId: '',
+          globalFileType: 'canva',
+          isPremium: true,
+          globalTitle: '',
+          globalDescription: '',
+          selectedFormats: []
+        });
+        
+        setFormatDetails({});
+        setImages({});
+        setStep(1);
+        onClose();
+        
+        // Invalidar a consulta para atualizar a lista de artes
+        queryClient.invalidateQueries({ queryKey: ['/api/artes'] });
+      } catch (error) {
+        console.error('Erro ao processar resposta JSON:', error);
+        toast({
+          title: "Erro no processamento",
+          description: "A operação foi concluída mas ocorreu um erro ao processar a resposta.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
     } catch (error: any) {
       toast({
         title: "Erro ao salvar",
