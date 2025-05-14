@@ -97,9 +97,9 @@ router.get('/active', async (req, res) => {
     
     // Construir condições de filtro para seleção de popups
     const conditions = and(
-      eq(popups.isActive, true),
-      lte(popups.startDate, now),
-      gte(popups.endDate, now),
+      eq(popups.isActive, true), // Garante que só retorna popups ativos
+      sql`${popups.startDate} <= ${now}`, // Compara datas usando SQL nativo
+      sql`${popups.endDate} >= ${now}`,
       // Verificar segmentação por tipo de usuário
       or(
         // Para usuários logados
