@@ -97,9 +97,9 @@ router.get('/active', async (req, res) => {
     
     // Construir condições de filtro para seleção de popups
     const conditions = and(
-      eq(popups.isActive, true), // Garante que só retorna popups ativos
-      sql`${popups.startDate} <= ${now}`, // Compara datas usando SQL nativo
-      sql`${popups.endDate} >= ${now}`,
+      eq(popups.isActive, true),
+      lte(popups.startDate, now),
+      gte(popups.endDate, now),
       // Verificar segmentação por tipo de usuário
       or(
         // Para usuários logados
@@ -445,41 +445,6 @@ router.post('/view', async (req, res) => {
   } catch (error) {
     console.error('Erro ao registrar visualização:', error);
     res.status(500).json({ message: 'Erro ao registrar visualização' });
-  }
-});
-
-// Alternar o estado ativo/inativo de um popup
-router.put('/:id/toggle', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { isActive } = req.body;
-    
-    // Verificar usuário autenticado
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: 'Não autorizado' });
-    }
-    
-    // Verificar se popup existe
-    const existingPopup = await db.query.popups.findFirst({
-      where: eq(popups.id, parseInt(id)),
-    });
-    
-    if (!existingPopup) {
-      return res.status(404).json({ message: 'Popup não encontrado' });
-    }
-    
-    // Atualizar status do popup
-    const [updatedPopup] = await db
-      .update(popups)
-      .set({ isActive: isActive })
-      .where(eq(popups.id, parseInt(id)))
-      .returning();
-    
-    console.log(`Popup ${id} ${isActive ? 'ativado' : 'desativado'} com sucesso`);
-    res.json(updatedPopup);
-  } catch (error) {
-    console.error('Erro ao alternar status do popup:', error);
-    res.status(500).json({ message: 'Erro ao alternar status do popup' });
   }
 });
 

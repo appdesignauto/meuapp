@@ -2,11 +2,6 @@ import { db } from "../db";
 import { eq, and, lte, sql } from "drizzle-orm";
 import { users, subscriptions } from "@shared/schema";
 import { HotmartService } from "./hotmart-service";
-import { randomBytes, scrypt } from "crypto";
-import { promisify } from "util";
-
-// Criar versão assíncrona de scrypt
-const scryptAsync = promisify(scrypt);
 
 /**
  * Serviço responsável por gerenciar assinaturas de usuários
@@ -362,19 +357,16 @@ export class SubscriptionService {
   /**
    * Processa um webhook recebido da Hotmart
    * @param webhookData Dados do webhook
-   * @param ip Endereço IP de origem da requisição
    * @returns Resultado do processamento
    */
-  static async processHotmartWebhook(webhookData: any, ip?: string) {
+  static async processHotmartWebhook(webhookData: any) {
     try {
       // Processar o webhook usando o serviço da Hotmart
-      const result = await HotmartService.processWebhook(webhookData, ip);
+      const result = await HotmartService.processWebhook(webhookData);
       
       if (!result || !result.action) {
         return { success: false, message: 'Webhook inválido ou não reconhecido' };
       }
-      
-      console.log(`Processando webhook Hotmart - Ação: ${result.action}`, result);
       
       // Verificar o tipo de ação
       switch (result.action) {
@@ -385,84 +377,43 @@ export class SubscriptionService {
             return { success: false, message: 'E-mail não fornecido no webhook' };
           }
           
-          // Primeiro verificar se o usuário já existe
-          let [user] = await db
+          // Buscar usuário pelo e-mail
+          const [user] = await db
             .select()
             .from(users)
             .where(eq(users.email, result.email));
             
-          // Se o usuário não existir e temos informações suficientes, vamos criar
-          if (!user && result.name) {
-            console.log(`Criando novo usuário a partir do webhook para: ${result.email}`);
-            
-            // Gerar um nome de usuário baseado no email
-            let username = result.email.split('@')[0];
-            // Verificar se já existe usuário com este username
-            const [existingUser] = await db
-              .select()
-              .from(users)
-              .where(eq(users.username, username));
-              
-            if (existingUser) {
-              // Se já existe, adicionar um sufixo aleatório
-              const randomSuffix = Math.floor(Math.random() * 1000);
-              username = `${username}${randomSuffix}`;
-            }
-            
-            // Criar senha aleatória segura
-            const randomPassword = Math.random().toString(36).slice(-10) + 
-                                  Math.random().toString(36).slice(-10);
-            
-            // Hash da senha para armazenamento seguro
-            const salt = randomBytes(16).toString('hex');
-            const buf = await scryptAsync(randomPassword, salt, 64) as Buffer;
-            const hashedPassword = `${buf.toString('hex')}.${salt}`;
-            
-            // Criar o novo usuário
-            const [newUser] = await db
-              .insert(users)
-              .values({
-                username,
-                email: result.email,
-                password: hashedPassword,
-                name: result.name,
-                nivelacesso: 'premium',
-                role: 'premium',
-                criadoem: new Date(),
-                updatedat: new Date(),
-                emailconfirmed: true, // Auto-confirmar e-mail para usuários criados via webhook
-              })
-              .returning();
-              
-            user = newUser;
-            console.log(`Novo usuário criado com ID ${user.id} e username ${username}`);
-          } else if (!user) {
+          if (!user) {
             return { 
               success: false, 
-              message: `Usuário com e-mail ${result.email} não encontrado e dados insuficientes para criação` 
+              message: `Usuário com e-mail ${result.email} não encontrado` 
             };
           }
           
-          // Extrair tipo de plano a partir do resultado do webhook
-          const planParts = result.plan.split('_');
-          let planType = planParts.length > 1 ? planParts[1] : 'mensal'; // padrão
+          // Determinar tipo de plano com base no nome do plano recebido
+          let planType = 'mensal'; // padrão
+          if (result.plan) {
+            const planLower = result.plan.toLowerCase();
+            if (planLower.includes('anual')) {
+              planType = 'anual';
+            } else if (planLower.includes('vitalic') || planLower.includes('lifetime')) {
+              planType = 'vitalicio';
+            }
+          }
           
           // Calcular data de expiração
           let endDate: Date | null = null;
+          if (planType === 'mensal') {
+            endDate = new Date();
+            endDate.setMonth(endDate.getMonth() + 1);
+          } else if (planType === 'anual') {
+            endDate = new Date();
+            endDate.setFullYear(endDate.getFullYear() + 1);
+          }
+          
+          // Se o webhook tiver data de expiração, usar essa
           if (result.endDate) {
             endDate = new Date(result.endDate);
-          } else {
-            // Se não tiver data de expiração explícita, calcular com base no tipo de plano
-            endDate = new Date();
-            if (planType === 'mensal') {
-              endDate.setMonth(endDate.getMonth() + 1);
-            } else if (planType === 'semestral') {
-              endDate.setMonth(endDate.getMonth() + 6);
-            } else if (planType === 'anual') {
-              endDate.setFullYear(endDate.getFullYear() + 1);
-            } else if (planType === 'vitalicio') {
-              endDate = null; // Sem data de expiração para planos vitalícios
-            }
           }
           
           // Atualizar assinatura
@@ -474,81 +425,48 @@ export class SubscriptionService {
             'hotmart_webhook'
           );
           
-          // Atualizar nível de acesso do usuário
-          await db
-            .update(users)
-            .set({
-              nivelacesso: "premium",
-              role: "premium",
-              tipoplano: planType,
-              origemassinatura: "hotmart",
-              dataassinatura: new Date(),
-              dataexpiracao: endDate,
-              acessovitalicio: planType === 'vitalicio',
-              updatedat: new Date()
-            })
-            .where(eq(users.id, user.id));
-          
           return { 
             success: true, 
             message: 'Assinatura criada/renovada com sucesso', 
             userId: user.id,
-            planType,
-            endDate
+            planType
           };
           
         case 'subscription_canceled':
         case 'subscription_refunded':
-        case 'subscription_expired': // Novo caso para expiração
-          // Assinatura cancelada/reembolsada/expirada - rebaixar usuário para free
+          // Assinatura cancelada ou reembolsada
           if (!result.email) {
             return { success: false, message: 'E-mail não fornecido no webhook' };
           }
           
           // Buscar usuário pelo e-mail
-          const [userToDowngrade] = await db
+          const [userToCancel] = await db
             .select()
             .from(users)
             .where(eq(users.email, result.email));
             
-          if (!userToDowngrade) {
+          if (!userToCancel) {
             return { 
               success: false, 
               message: `Usuário com e-mail ${result.email} não encontrado` 
             };
           }
           
-          // Rebaixar usuário - forçado porque foi explicitamente cancelado/reembolsado/expirado
-          const downgradeResult = await this.downgradeUserToFree(userToDowngrade.id, true);
-          
-          const eventTypeMsg = result.action === 'subscription_expired' 
-            ? 'expirada' 
-            : (result.action === 'subscription_refunded' ? 'reembolsada' : 'cancelada');
+          // Rebaixar usuário - forçado porque foi explicitamente cancelado
+          await this.downgradeUserToFree(userToCancel.id, true);
           
           return { 
             success: true, 
-            message: `Assinatura ${eventTypeMsg} com sucesso`, 
-            userId: userToDowngrade.id,
-            reason: result.reason || `Webhook Hotmart - ${eventTypeMsg}`
+            message: 'Assinatura cancelada com sucesso', 
+            userId: userToCancel.id
           };
           
         case 'subscription_delayed':
           // Pagamento em atraso - não faz nada por enquanto, só registra
-          // Pode implementar lógica de aviso ou countdown para cancelamento
           return { 
             success: true, 
             message: 'Pagamento em atraso registrado', 
-            status: 'delayed',
-            dueDate: result.dueDate
-          };
-          
-        case 'unknown_event':
-          // Evento desconhecido - logar para análise posterior
-          console.warn(`Evento Hotmart desconhecido recebido: ${result.event}`);
-          return { 
-            success: true, 
-            message: 'Evento desconhecido registrado para análise', 
-            event: result.event
+            status: 'delayed' 
           };
           
         default:

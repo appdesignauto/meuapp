@@ -15,9 +15,7 @@ import {
   Menu,
   X,
   BarChart,
-  LineChart,
-  CreditCard,
-  Webhook
+  LineChart
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -91,11 +89,6 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
       title: 'Uploads',
       href: '/admin/uploads',
       icon: <Upload className="h-5 w-5" />,
-    },
-    {
-      title: 'Assinaturas e Webhooks',
-      href: '/admin/assinaturas',
-      icon: <CreditCard className="h-5 w-5" />,
     },
     {
       title: 'Páginas',

@@ -23,10 +23,6 @@ export const users = pgTable("users", {
   dataexpiracao: timestamp("dataexpiracao"),
   acessovitalicio: boolean("acessovitalicio").default(false),
   
-  // Campos de integração com plataformas externas
-  hotmartId: text("hotmartId"), // ID do usuário na Hotmart
-  doppusId: text("doppusId"), // ID do usuário na Doppus
-  
   // Campos administrativos e de controle
   observacaoadmin: text("observacaoadmin"),
   isactive: boolean("isactive").notNull().default(true),
@@ -258,36 +254,11 @@ export const subscriptions = pgTable("subscriptions", {
   startDate: timestamp("startDate").notNull().defaultNow(),
   endDate: timestamp("endDate"),
   webhookData: text("webhookData"),
-  origin: text("origin").notNull().default("manual"), // hotmart, doppus, manual
-  transactionId: text("transactionId"), // ID da transação na plataforma de origem
-  lastEvent: text("lastEvent"), // Último evento recebido
-  modifiedBy: integer("modifiedBy").references(() => users.id), // Usuário que modificou manualmente
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 });
 
 export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-// Tabela para logs de webhooks
-export const webhookLogs = pgTable("webhookLogs", {
-  id: serial("id").primaryKey(),
-  eventType: text("eventType").notNull(), // PURCHASE_APPROVED, SUBSCRIPTION_CANCELED, etc.
-  payloadData: text("payloadData"), // JSON payload completo recebido
-  status: text("status").notNull(), // success, error, pending
-  errorMessage: text("errorMessage"), // Mensagem de erro, se houver
-  userId: integer("userId").references(() => users.id), // Usuário afetado, se houver
-  sourceIp: text("sourceIp"), // IP de origem
-  retryCount: integer("retryCount").default(0), // Número de tentativas de processamento
-  createdAt: timestamp("createdAt").notNull().defaultNow(),
-  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
-  transactionId: text("transactionId"), // ID da transação relacionada
-});
-
-export const insertWebhookLogSchema = createInsertSchema(webhookLogs).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -334,9 +305,6 @@ export type InsertDownload = z.infer<typeof insertDownloadSchema>;
 
 export type Subscription = typeof subscriptions.$inferSelect;
 export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
-
-export type WebhookLog = typeof webhookLogs.$inferSelect;
-export type InsertWebhookLog = z.infer<typeof insertWebhookLogSchema>;
 
 export type CommunityPost = typeof communityPosts.$inferSelect;
 export type InsertCommunityPost = z.infer<typeof insertCommunityPostSchema>;

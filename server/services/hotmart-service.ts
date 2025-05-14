@@ -1,6 +1,4 @@
 import fetch from 'node-fetch';
-import { db } from '../db';
-import { webhookLogs } from '../../shared/schema';
 
 /**
  * Serviço para integração com a API da Hotmart
@@ -155,226 +153,80 @@ export class HotmartService {
   }
 
   /**
-   * Registra um webhook recebido no banco de dados para rastreabilidade
-   * @param webhookData Dados do webhook
-   * @param userId ID do usuário afetado, se conhecido
-   * @param status Status do processamento ('success', 'error', 'pending')
-   * @param errorMsg Mensagem de erro, se houver
-   * @param ip Endereço IP de origem da requisição
-   * @returns ID do log criado
-   */
-  static async logWebhook(
-    webhookData: any, 
-    status: 'success' | 'error' | 'pending' = 'pending',
-    userId?: number,
-    errorMsg?: string,
-    ip?: string
-  ) {
-    try {
-      const event = webhookData.event || 'unknown';
-      const transactionId = webhookData.data?.purchase?.transaction || 'unknown';
-      const payload = JSON.stringify(webhookData);
-      
-      const [logEntry] = await db.insert(webhookLogs).values({
-        provider: 'hotmart',
-        event: event,
-        payload: payload,
-        status: status,
-        userId: userId,
-        error: errorMsg,
-        processed: status === 'success',
-        processedAt: status === 'success' ? new Date() : null,
-        ip: ip,
-        transactionId: transactionId
-      }).returning();
-      
-      return logEntry.id;
-    } catch (error) {
-      console.error('Erro ao registrar log de webhook:', error);
-      return null;
-    }
-  }
-
-  /**
    * Processa um webhook recebido da Hotmart
    * @param webhookData Dados do webhook
-   * @param ip Endereço IP de origem da requisição
    * @returns Objeto com o resultado do processamento
    */
-  static async processWebhook(webhookData: any, ip?: string) {
+  static async processWebhook(webhookData: any) {
     // Validação básica dos dados do webhook
     if (!webhookData || !webhookData.data || !webhookData.event) {
-      const errorMsg = 'Dados de webhook inválidos';
-      await this.logWebhook(webhookData, 'error', undefined, errorMsg, ip);
-      throw new Error(errorMsg);
+      throw new Error('Dados de webhook inválidos');
     }
     
     const event = webhookData.event;
     const data = webhookData.data;
     
     // Log do evento recebido
-    console.log(`Webhook Hotmart recebido: ${event}`, JSON.stringify(data, null, 2));
+    console.log(`Webhook Hotmart recebido: ${event}`);
     
-    // Registrar o webhook como pendente até completar o processamento
-    const logId = await this.logWebhook(webhookData, 'pending', undefined, undefined, ip);
-    
-    try {
-      // Extrair informações essenciais com tratamento seguro para evitar erros
-      const email = data.buyer?.email;
-      if (!email) {
-        const errorMsg = 'Email do comprador não encontrado no webhook';
-        console.error(errorMsg, data);
-        
-        // Atualizar o log com status de erro
-        if (logId) {
-          await db.update(webhookLogs)
-            .set({ status: 'error', error: errorMsg })
-            .where(webhookLogs.id = logId);
-        }
-        
-        throw new Error(errorMsg);
-      }
-    
-    // Processar diferentes tipos de eventos conforme as diretrizes
+    // Processar diferentes tipos de eventos
     switch (event) {
       case 'PURCHASE_APPROVED':
-        // Assinatura aprovada - usuário deve ser premium
-        let planType = 'premium_mensal'; // padrão
-        if (data.subscription?.plan?.name) {
-          const planName = data.subscription.plan.name.toLowerCase();
-          if (planName.includes('anual')) {
-            planType = 'premium_anual';
-          } else if (planName.includes('semestral')) {
-            planType = 'premium_semestral';
-          }
-        }
-        
+        // Assinatura aprovada
         return {
           action: 'subscription_approved',
-          email: email,
-          plan: planType,
-          name: data.buyer?.name,
-          purchaseId: data.purchase?.transaction,
+          email: data.buyer.email,
+          plan: data.subscription.plan.name,
+          purchaseId: data.purchase.transaction,
           status: 'active',
-          endDate: data.subscription?.end_date
+          endDate: data.subscription.end_date
         };
         
-      case 'SUBSCRIPTION_CANCELED':
       case 'PURCHASE_CANCELED':
-        // Assinatura cancelada - usuário deve ser rebaixado para free
+      case 'SUBSCRIPTION_CANCELED':
+        // Assinatura cancelada
         return {
           action: 'subscription_canceled',
-          email: email,
-          purchaseId: data.purchase?.transaction,
-          status: 'canceled',
-          reason: 'Cancelamento solicitado pelo usuário'
+          email: data.buyer.email,
+          purchaseId: data.purchase.transaction,
+          status: 'canceled'
         };
         
       case 'PURCHASE_REFUNDED':
-      case 'CHARGEBACK':
-        // Reembolso ou estorno - usuário deve ser rebaixado para free
+        // Assinatura reembolsada
         return {
           action: 'subscription_refunded',
-          email: email,
-          purchaseId: data.purchase?.transaction,
-          status: 'refunded',
-          reason: event === 'CHARGEBACK' ? 'Estorno no cartão' : 'Reembolso solicitado'
-        };
-        
-      case 'PURCHASE_EXPIRED':
-        // Assinatura expirada - usuário deve ser rebaixado para free
-        return {
-          action: 'subscription_expired',
-          email: email,
-          purchaseId: data.purchase?.transaction,
-          status: 'expired',
-          expirationDate: data.subscription?.end_date
+          email: data.buyer.email,
+          purchaseId: data.purchase.transaction,
+          status: 'refunded'
         };
         
       case 'PURCHASE_DELAYED':
-        // Pagamento em atraso - registrar mas não fazer nada ainda
+        // Pagamento em atraso
         return {
           action: 'subscription_delayed',
-          email: email,
-          purchaseId: data.purchase?.transaction,
-          status: 'delayed',
-          dueDate: data.purchase?.due_date
+          email: data.buyer.email,
+          purchaseId: data.purchase.transaction,
+          status: 'delayed'
         };
         
       case 'PURCHASE_COMPLETE':
-        // Pagamento realizado - usuário deve ser premium
-        let completePlanType = 'premium_mensal'; // padrão
-        if (data.subscription?.plan?.name) {
-          const planName = data.subscription.plan.name.toLowerCase();
-          if (planName.includes('anual')) {
-            completePlanType = 'premium_anual';
-          } else if (planName.includes('semestral')) {
-            completePlanType = 'premium_semestral';
-          }
-        }
-        
+        // Pagamento realizado
         return {
           action: 'subscription_renewed',
-          email: email,
-          plan: completePlanType,
-          purchaseId: data.purchase?.transaction,
+          email: data.buyer.email,
+          purchaseId: data.purchase.transaction,
+          plan: data.subscription.plan.name,
           status: 'active',
-          endDate: data.subscription?.end_date
+          endDate: data.subscription.end_date
         };
         
       default:
-        // Evento desconhecido - registrar para análise futura
-        console.warn(`Evento Hotmart desconhecido recebido: ${event}`);
-        const result = {
+        return {
           action: 'unknown_event',
           event: event,
-          email: email,
           status: 'ignored'
         };
-        
-        // Atualizar o log para marcar como processado
-        if (logId) {
-          await db.update(webhookLogs)
-            .set({ 
-              status: 'success', 
-              processed: true,
-              processedAt: new Date()
-            })
-            .where(webhookLogs.id = logId);
-        }
-        
-        return result;
-    }
-    
-    } catch (error) {
-      // Em caso de erro durante o processamento, atualizar o log
-      console.error('Erro ao processar webhook:', error);
-      if (logId) {
-        await db.update(webhookLogs)
-          .set({ 
-            status: 'error', 
-            error: error?.message || 'Erro desconhecido durante processamento'
-          })
-          .where(webhookLogs.id = logId);
-      }
-      throw error;
-    }
-  }
-  
-  /**
-   * Atualiza o log de webhook com o ID do usuário quando identificado
-   * @param logId ID do log de webhook
-   * @param userId ID do usuário afetado
-   */
-  static async updateWebhookLogWithUser(logId: number, userId: number) {
-    if (!logId || !userId) return;
-    
-    try {
-      await db.update(webhookLogs)
-        .set({ userId })
-        .where(webhookLogs.id = logId);
-    } catch (error) {
-      console.error('Erro ao atualizar log de webhook com usuário:', error);
     }
   }
 }
