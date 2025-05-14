@@ -46,7 +46,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest, queryClient } from '@/lib/queryClient';
+import { apiRequest, queryClient, triggerCommentSyncEvent } from '@/lib/queryClient';
 import { formatDate } from '@/lib/utils';
 import LoadingScreen from '@/components/LoadingScreen';
 import ErrorContainer from '@/components/ErrorContainer';
@@ -353,11 +353,26 @@ const CommunityManagement: React.FC = () => {
       return { previousComments };
     },
     onSuccess: (data) => {
-      // Limpar e forçar recarregamento dos dados
+      // Revalidação agressiva imediata com remoção de todos os dados em cache
       queryClient.removeQueries({ queryKey: ['/api/community/admin/comments'] });
+      
       setTimeout(() => {
+        // Intervalo mínimo para garantir que o backend processou a mudança
         queryClient.invalidateQueries({ queryKey: ['/api/community/admin/comments'] });
-      }, 300);
+        queryClient.invalidateQueries({ queryKey: ['/api/community/admin/stats'] });
+        
+        // Também invalidar os comentários na visualização do usuário final
+        queryClient.invalidateQueries({ queryKey: ['/api/community/posts'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/community/comments'] });
+        
+        // Disparar evento de sincronização para componentes que usam o sistema de comentários
+        triggerCommentSyncEvent({
+          type: data.comment.isHidden ? 'hide' : 'show',
+          commentId: data.comment.id,
+          lessonId: 0, // Não se aplica a aulas, mas a estrutura requer
+          timestamp: Date.now()
+        });
+      }, 200);
       
       const action = data.comment.isHidden ? "ocultado" : "mostrado";
       toast({
@@ -414,14 +429,27 @@ const CommunityManagement: React.FC = () => {
     onSuccess: (data, commentId) => {
       console.log(`Comentário ID ${commentId} excluído com sucesso`);
       
-      // Limpar caches e forçar recarregamento
+      // Limpeza agressiva de todos os caches relacionados
       queryClient.removeQueries({ queryKey: ['/api/community/admin/comments'] });
       queryClient.removeQueries({ queryKey: ['/api/community/admin/stats'] });
       
       setTimeout(() => {
+        // Revalidação completa de todas as consultas relacionadas
         queryClient.invalidateQueries({ queryKey: ['/api/community/admin/comments'] });
         queryClient.invalidateQueries({ queryKey: ['/api/community/admin/stats'] });
-      }, 300);
+        
+        // Também invalidar comentários na visualização do usuário final
+        queryClient.invalidateQueries({ queryKey: ['/api/community/posts'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/community/comments'] });
+        
+        // Disparar evento de sincronização para componentes que usam o sistema de comentários
+        triggerCommentSyncEvent({
+          type: 'delete',
+          commentId: commentId,
+          lessonId: 0, // Não se aplica a aulas, mas a estrutura requer
+          timestamp: Date.now()
+        });
+      }, 200); // Tempo reduzido para atualização mais rápida
       
       toast({
         description: "Comentário excluído com sucesso!"
