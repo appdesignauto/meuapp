@@ -969,8 +969,11 @@ const AdminDashboard = () => {
     }
   };
   
-  // Verifica se o usuário é admin ou designer_adm
-  const isAuthorized = user?.role === 'admin' || user?.role === 'designer_adm';
+  // Verifica se o usuário é admin ou designer_adm (verificando tanto 'role' quanto 'nivelacesso')
+  const isAuthorized = user?.role === 'admin' || 
+                       user?.role === 'designer_adm' || 
+                       user?.nivelacesso === 'admin' || 
+                       user?.nivelacesso === 'designer_adm';
 
   if (!isAuthorized) {
     // Redireciona para home se não for autorizado
