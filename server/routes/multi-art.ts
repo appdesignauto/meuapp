@@ -29,7 +29,11 @@ router.post('/api/admin/arts/multi', isAuthenticated, async (req: Request, res: 
     const artGroupId = uuidv4();
     
     // Verificar se estamos editando uma arte existente
+    // Adicionar log detalhado para debug
+    console.log('Body completo recebido:', JSON.stringify(req.body, null, 2));
+    console.log('artId na requisição:', req.body.artId);
     const existingArtId = req.body.artId ? parseInt(req.body.artId) : null;
+    console.log('existingArtId convertido:', existingArtId);
     
     if (existingArtId) {
       console.log(`Atualizando arte existente ID: ${existingArtId} e convertendo para grupo ${artGroupId}`);
