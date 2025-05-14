@@ -569,51 +569,28 @@ const PostCard: React.FC<{
     }
     
     setIsDeleting(true);
-    
-    // Armazenar a lista atual de posts para caso de erro
-    const originalPostsBackup = [...allPosts];
-    
     try {
-      // Remover o post imediatamente da UI para feedback instantâneo
-      setAllPosts(current => current.filter(p => p.post.id !== postId));
-      
-      // Adicionar um timestamp para evitar cache
-      const timestamp = Date.now();
-      
-      // Fazer a requisição para excluir no servidor
-      const response = await apiRequest('DELETE', `/api/community/posts/${postId}?timestamp=${timestamp}`);
+      const response = await apiRequest('DELETE', `/api/community/posts/${postId}`);
       
       if (!response.ok) {
         throw new Error("Não foi possível excluir o post");
       }
       
-      // Invalidar todas as queries relacionadas a posts para forçar atualização
-      queryClient.invalidateQueries({ queryKey: ['/api/community/posts'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/community/admin/posts'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/community/populares'] });
+      // Atualizar a lista de posts
+      if (refetch) {
+        refetch();
+      }
+      
+      // Atualizar posts populares se necessário
+      if (refetchPopularPosts) {
+        refetchPopularPosts();
+      }
       
       toast({
         title: "Post excluído",
         description: "O post foi excluído com sucesso",
       });
-      
-      // Forçar atualização
-      if (refetchPosts) {
-        setTimeout(() => {
-          refetchPosts();
-        }, 500);
-      }
     } catch (error) {
-      console.error('Erro ao excluir post:', error);
-      
-      // Se falhar, restaurar a lista original de posts
-      setAllPosts(originalPostsBackup);
-      
-      // Forçar recarregamento completo
-      if (refetchPosts) {
-        refetchPosts();
-      }
-      
       toast({
         title: "Erro",
         description: error instanceof Error ? error.message : "Ocorreu um erro ao excluir o post",
@@ -1153,10 +1130,9 @@ const CommunityPage: React.FC = () => {
     refetch: refetchPosts,
     isFetching
   } = useQuery({
-    queryKey: ['/api/community/posts', { page, limit: pageSize, timestamp: new Date().getTime() }],
-    refetchOnWindowFocus: true,
-    refetchInterval: 30000, // Recarregar a cada 30 segundos para garantir conteúdo atualizado
-    staleTime: 10000, // Considerar dados obsoletos após 10 segundos
+    queryKey: ['/api/community/posts', { page, limit: pageSize }],
+    refetchOnWindowFocus: false,
+    refetchInterval: 0, // Desativamos o recarregamento automático para controlar manualmente
   });
   
   // Efeito para adicionar novos posts ao array de posts existentes

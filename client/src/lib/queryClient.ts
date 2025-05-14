@@ -38,20 +38,11 @@ export async function apiRequest(
   data?: unknown | undefined,
   options?: { isFormData?: boolean, skipContentType?: boolean }
 ): Promise<Response> {
-  // MODO ANTI-CACHE AGRESSIVO: Adicionar timestamp a todas as URLs
-  const timestamp = Date.now();
-  const separator = url.includes('?') ? '&' : '?';
-  const urlWithTimestamp = `${url}${separator}_t=${timestamp}`;
-  
-  // Configuração padrão para requisições com headers anti-cache
+  // Configuração padrão para requisições
   const fetchOptions: RequestInit = {
     method,
     credentials: "include",
-    headers: {
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Pragma': 'no-cache',
-      'Expires': '0'
-    }
+    headers: {}
   };
 
   // Se temos dados para enviar
@@ -71,8 +62,7 @@ export async function apiRequest(
     }
   }
 
-  console.log(`Requisição ${method} para: ${urlWithTimestamp}`);
-  const res = await fetch(urlWithTimestamp, fetchOptions);
+  const res = await fetch(url, fetchOptions);
   await throwIfResNotOk(res);
   return res;
 }
@@ -97,11 +87,7 @@ export const getQueryFn: <T>(options: {
       }
     });
     
-    // MODO ANTI-CACHE SUPER AGRESSIVO: Sempre adicionar timestamp a todas as requisições
-    const timestamp = Date.now();
-    url.searchParams.append('_t', timestamp.toString());
-    
-    console.log(`Fazendo requisição para: ${url.toString()} (timestamp: ${timestamp})`);
+    console.log("Fazendo requisição para:", url.toString(), "com parâmetros:", params);
     
     const res = await fetch(url.toString(), {
       credentials: "include",
@@ -120,11 +106,9 @@ export const queryClient = new QueryClient({
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
-      refetchOnWindowFocus: true, // Ativado para atualizar dados ao focar na janela
-      staleTime: 0, // Desativar cache completamente para todos os ambientes
-      gcTime: 1000, // Cache mínimo de 1 segundo para evitar requisições duplicadas
+      refetchOnWindowFocus: false,
+      staleTime: Infinity,
       retry: false,
-      refetchOnMount: true // Recarregar dados ao montar componentes
     },
     mutations: {
       retry: false,

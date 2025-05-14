@@ -334,12 +334,7 @@ router.put('/:id', upload.single('image'), async (req, res) => {
       imageUrl = `/uploads/popups/${req.file.filename}`;
     }
     
-    // Log para verificar se o status está sendo alterado
-    console.log('Status atual do popup no DB:', existingPopup.isActive);
-    console.log('Status recebido do cliente:', jsonData.isActive);
-    
-    // Atualizar popup - Não alteramos mais o status isActive aqui
-    // Em vez disso, usamos a rota específica de toggle
+    // Atualizar popup
     const [updatedPopup] = await db.update(popups)
       .set({
         title: jsonData.title,
@@ -364,21 +359,13 @@ router.put('/:id', upload.single('image'), async (req, res) => {
         showToPremiumUsers: jsonData.showToPremiumUsers !== undefined ? jsonData.showToPremiumUsers : true,
         frequency: jsonData.frequency || 1,
         delay: jsonData.delay || 2,
-        // Mantemos o status atual em vez de usar o recebido do cliente
-        isActive: existingPopup.isActive,
+        isActive: jsonData.isActive !== undefined ? jsonData.isActive : true,
         updatedAt: new Date(),
         pages: jsonData.pages || [], // Lista de páginas onde o popup será exibido
         userRoles: jsonData.userRoles || [], // Lista de funções de usuário que podem ver o popup
       })
       .where(eq(popups.id, parseInt(id)))
       .returning();
-    
-    console.log(`Popup ID ${id} atualizado. Status: ${updatedPopup.isActive}`);
-    
-    // Limpeza de cache para garantir estado correto
-    // Remover todas as entradas de visualização para esse popup
-    await db.delete(popupViews)
-      .where(eq(popupViews.popupId, parseInt(id)));
     
     res.json(updatedPopup);
   } catch (error) {
@@ -458,67 +445,6 @@ router.post('/view', async (req, res) => {
   } catch (error) {
     console.error('Erro ao registrar visualização:', error);
     res.status(500).json({ message: 'Erro ao registrar visualização' });
-  }
-});
-
-// Toggle ativo/inativo de um popup
-router.put('/:id/toggle', async (req, res) => {
-  try {
-    const { id } = req.params;
-    // Ignoramos o valor enviado pelo cliente
-    
-    // Verificar usuário autenticado
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: 'Não autorizado' });
-    }
-    
-    // Verificar se o usuário é administrador
-    if (req.user.nivelacesso !== 'admin' && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Apenas administradores podem alterar o status de popups' });
-    }
-    
-    // Verificar se popup existe e obter seu status atual
-    const existingPopup = await db.query.popups.findFirst({
-      where: eq(popups.id, parseInt(id)),
-    });
-    
-    if (!existingPopup) {
-      return res.status(404).json({ message: 'Popup não encontrado' });
-    }
-    
-    // Inverter o status atual do popup
-    const novoStatus = !existingPopup.isActive;
-    
-    console.log(`Invertendo status do popup ${id}: de ${existingPopup.isActive} para ${novoStatus}`);
-    
-    // Atualizar o status com o valor INVERSO ao atual
-    const [updatedPopup] = await db.update(popups)
-      .set({
-        isActive: novoStatus,
-        updatedAt: new Date(),
-      })
-      .where(eq(popups.id, parseInt(id)))
-      .returning();
-    
-    // Limpeza de cache: Remover todas as entradas de visualização para esse popup
-    // Isso garante que o popup será reavaliado na próxima vez
-    const result = await db.delete(popupViews)
-      .where(eq(popupViews.popupId, parseInt(id)))
-      .returning({ count: sql`count(*)` });
-    
-    const entradasRemovidas = result.length > 0 && result[0].count ? parseInt(String(result[0].count)) : 0;
-    
-    console.log(`Popup ID ${id} atualizado: isActive=${novoStatus}`);
-    console.log(`Cache de visualizações limpo para o popup ID ${id}. ${entradasRemovidas} entradas removidas.`);
-    
-    res.json({
-      ...updatedPopup,
-      cacheLimpo: true,
-      visualizacoesRemovidas: entradasRemovidas
-    });
-  } catch (error) {
-    console.error('Erro ao alterar status do popup:', error);
-    res.status(500).json({ message: 'Erro ao alterar status do popup' });
   }
 });
 

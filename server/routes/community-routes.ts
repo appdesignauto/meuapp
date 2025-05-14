@@ -2398,42 +2398,13 @@ router.delete('/api/community/admin/posts/:id', async (req, res) => {
       return res.status(404).json({ message: 'Post não encontrado' });
     }
     
-    // Excluir post e também todos os seus registros relacionados para evitar referências órfãs
-    try {
-      // Primeiro excluir todos os likes do post
-      await db
-        .delete(communityLikes)
-        .where(eq(communityLikes.postId, postId));
-      
-      // Excluir os salvamentos do post
-      await db
-        .delete(communitySaves)
-        .where(eq(communitySaves.postId, postId));
-      
-      // Excluir todos os comentários do post
-      await db
-        .delete(communityComments)
-        .where(eq(communityComments.postId, postId));
-      
-      // Finalmente excluir o post
-      await db
-        .delete(communityPosts)
-        .where(eq(communityPosts.id, postId));
-      
-      console.log(`Post ID ${postId} excluído com sucesso por ${req.user?.username || 'admin'}`);
-    } catch (dbError) {
-      console.error('Erro ao excluir registros relacionados ao post:', dbError);
-      throw new Error('Falha ao excluir registros relacionados ao post');
-    }
-    
-    // Adicionar headers anti-cache específicos para esta resposta
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '-1');
+    // Excluir post
+    await db
+      .delete(communityPosts)
+      .where(eq(communityPosts.id, postId));
     
     return res.json({
-      message: 'Post excluído com sucesso',
-      timestamp: new Date().getTime() // Adicionar timestamp para evitar cache
+      message: 'Post excluído com sucesso'
     });
   } catch (error) {
     console.error('Erro ao excluir post:', error);

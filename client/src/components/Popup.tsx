@@ -75,15 +75,9 @@ export function Popup({
       sessionId,
       action: 'view'
     }).catch(error => {
-      // Se o popup não for encontrado (404), significa que ele foi deletado ou desativado
-      if (error.message && error.message.includes('404')) {
-        console.log('Popup não encontrado ou desativado, notificando para fechar...');
-        onClose(); // Fechar o popup se ele já não existir mais no servidor
-      } else {
-        console.error('Erro ao registrar visualização:', error);
-      }
+      console.error('Erro ao registrar visualização:', error);
     });
-  }, [id, sessionId, onClose]);
+  }, [id, sessionId]);
 
   // Mostrar popup com delay e aplicar animação de entrada
   useEffect(() => {
@@ -233,7 +227,7 @@ export function Popup({
                 !title && !content && !buttonText ? "h-full" : ""
               )}>
                 <img 
-                  src={`${imageUrl}${imageUrl.includes('?') ? '&' : '?'}t=${new Date().getTime()}`}
+                  src={imageUrl} 
                   alt={title || "Popup promocional"} 
                   className={cn(
                     "w-full h-auto", 
@@ -344,38 +338,6 @@ export function PopupContainer() {
   const [fetched, setFetched] = useState(false);
   const [location] = useLocation();
 
-  // Limpar cache de popups se necessário (para depuração)
-  useEffect(() => {
-    // Checar por erros 404 recentes no console para limpar automaticamente o histórico
-    const removedPopupIds = localStorage.getItem('removed_popup_ids');
-    if (removedPopupIds) {
-      try {
-        // Limpa o histórico de popups que foram removidos
-        const removedIds = JSON.parse(removedPopupIds);
-        const popupHistory = JSON.parse(localStorage.getItem('popup_history') || '{}');
-        
-        let changed = false;
-        removedIds.forEach((id: number) => {
-          if (popupHistory[id]) {
-            delete popupHistory[id];
-            changed = true;
-          }
-        });
-        
-        if (changed) {
-          localStorage.setItem('popup_history', JSON.stringify(popupHistory));
-          console.log('Cache de popups atualizado, popups removidos foram eliminados da memória');
-        }
-        
-        // Limpar lista de IDs removidos após processamento
-        localStorage.removeItem('removed_popup_ids');
-      } catch (e) {
-        console.error('Erro ao processar IDs de popups removidos:', e);
-        localStorage.removeItem('removed_popup_ids');
-      }
-    }
-  }, []);
-
   // Buscar popups ativos
   const fetchActivePopup = async () => {
     try {
@@ -418,39 +380,24 @@ export function PopupContainer() {
         });
       } else {
         console.log('Nenhum popup ativo disponível para esta página');
-        // Se não há popups ativos, limpar o popup atual para evitar exibição incorreta
-        setPopup(null);
       }
       
       setFetched(true);
     } catch (error) {
       console.error('Erro ao buscar popups ativos:', error);
       setFetched(true);
-      // Em caso de erro, limpar popup para evitar exibição incorreta
-      setPopup(null);
     }
   };
 
   // Buscar popups quando o componente montar ou quando mudar de página
   useEffect(() => {
-    // Sempre forçar limpeza do cache local antes de buscar popups para evitar problemas de cache
-    console.log('Limpando cache de histórico de popups para evitar problemas de cache');
-    localStorage.removeItem('popup_history');
-    localStorage.removeItem('popup_session_id');
-    
-    // Limpar qualquer flag de limpeza forçada
-    if (localStorage.getItem('force_clean_popups') === 'true') {
-      localStorage.removeItem('force_clean_popups');
-    }
-    
     // Tentar buscar imediatamente
     fetchActivePopup();
     
-    // E depois a cada 15 segundos para verificar novos popups ou mudanças
-    // Reduzido para 15 segundos para garantir atualização mais frequente e evitar problemas de cache
+    // E depois a cada 5 minutos para verificar novos popups
     const interval = setInterval(() => {
       fetchActivePopup();
-    }, 15 * 1000);
+    }, 5 * 60 * 1000);
     
     return () => clearInterval(interval);
   }, [location]); // Re-executar quando a localização (rota) mudar
@@ -462,17 +409,9 @@ export function PopupContainer() {
       const popupHistory = JSON.parse(localStorage.getItem('popup_history') || '{}');
       popupHistory[popup.id] = new Date().toISOString();
       localStorage.setItem('popup_history', JSON.stringify(popupHistory));
-      
-      // Registrar também que este popup foi fechado manualmente
-      localStorage.setItem('last_closed_popup_id', String(popup.id));
     }
     
     setPopup(null);
-    
-    // Força recarregar popups após 500ms
-    setTimeout(() => {
-      fetchActivePopup();
-    }, 500);
   };
 
   if (!popup) {

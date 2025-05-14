@@ -45,8 +45,8 @@ export function ProtectedRoute({
   }
   */
 
-  // Verificação de papel/role específica - verifica tanto role quanto nivelacesso
-  if (roles.length > 0 && !(roles.includes(user.role) || (user.nivelacesso && roles.includes(user.nivelacesso)))) {
+  // Verificação de papel/role específica
+  if (roles.length > 0 && !roles.includes(user.role)) {
     return (
       <Route path={path}>
         <Redirect to="/" />

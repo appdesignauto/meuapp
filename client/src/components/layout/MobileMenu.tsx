@@ -140,23 +140,6 @@ const MobileMenu = ({ isOpen, onClose, navLinks, userRole }: MobileMenuProps) =>
                 <LifeBuoy className="mr-3 flex-shrink-0 h-5 w-5 text-gray-500" />
                 <span>Suporte</span>
               </Link>
-              
-              {/* Link para painel administrativo - mostrado apenas para admin */}
-              {user && (
-                user.role === 'admin' || 
-                user.role === 'designer_adm' || 
-                user.nivelacesso === 'admin' || 
-                user.nivelacesso === 'designer_adm'
-              ) && (
-                <Link
-                  href="/admin"
-                  className="flex items-center rounded-lg mt-2 bg-amber-50 text-amber-700 hover:bg-amber-100 py-3 px-4 transition-colors border border-amber-200"
-                  onClick={onClose}
-                >
-                  <LayoutDashboard className="mr-3 flex-shrink-0 h-5 w-5 text-amber-600" />
-                  <span className="font-medium">Painel Admin</span>
-                </Link>
-              )}
             </div>
           
           {/* Botões de Login e Cadastro (exibidos apenas se não houver usuário) */}

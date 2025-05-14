@@ -229,7 +229,7 @@ function AppRoutes() {
         component={AvatarTestPage}
       />
       
-      {/* Painel Administrativo Unificado */}
+      {/* Rotas Administrativas */}
       <ProtectedRoute 
         path="/admin" 
         component={UpdatedDashboard} 

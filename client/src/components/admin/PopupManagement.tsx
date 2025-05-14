@@ -209,17 +209,12 @@ export default function PopupManagement() {
         formData.append('image', selectedImage);
       }
       
-      // Não tentamos mais buscar o status atual do popup no servidor
-      // O servidor ignorará o valor isActive enviado no PUT e manterá o atual
-      
       // Converter objetos de formulário em JSON e adicionar como campo 'data'
       const jsonData = {
         ...formValues,
         startDate: formValues.startDate ? format(formValues.startDate, 'yyyy-MM-dd') : null,
         endDate: formValues.endDate ? format(formValues.endDate, 'yyyy-MM-dd') : null,
-        frequency: formValues.frequency === 0 ? null : formValues.frequency,
-        // Preservamos o valor do formulário, mas o servidor o ignorará na rota de edição
-        isActive: formValues.isActive
+        frequency: formValues.frequency === 0 ? null : formValues.frequency
       };
       
       formData.append('data', JSON.stringify(jsonData));
@@ -315,49 +310,15 @@ export default function PopupManagement() {
 
   const handleToggleActive = async (id: number, isActive: boolean) => {
     try {
-      // Não enviamos mais o valor pois o servidor fará a inversão
-      const toggleResponse = await apiRequest('PUT', `/api/popups/${id}/toggle`, {});
-      const result = await toggleResponse.json();
-      
-      // Limpar cache local para garantir estado correto
-      localStorage.setItem('force_clean_popups', 'true');
-      
-      // Limpar histórico de visualizações para este popup específico
-      try {
-        const popupHistory = JSON.parse(localStorage.getItem('popup_history') || '{}');
-        if (popupHistory[id]) {
-          delete popupHistory[id];
-          localStorage.setItem('popup_history', JSON.stringify(popupHistory));
-          console.log(`Cache local limpo para o popup ${id}`);
-        }
-      } catch (e) {
-        console.error('Erro ao limpar cache local do popup:', e);
-      }
-      
-      // O valor será invertido no servidor, então usamos o oposto do atual
-      const novoStatus = !isActive;
-      
-      // Atualizar o estado local com o novo valor
+      await apiRequest('PUT', `/api/popups/${id}/toggle`, { isActive: !isActive });
       setPopups(popups.map(popup => 
-        popup.id === id ? { ...popup, isActive: novoStatus } : popup
+        popup.id === id ? { ...popup, isActive: !isActive } : popup
       ));
-      
-      // Para debug, registrar a mudança no console com informações de limpeza de cache
-      console.log(`Popup ${id} status alterado para: ${novoStatus ? 'ATIVO' : 'INATIVO'}`);
-      if (result.cacheLimpo) {
-        console.log(`Cache limpo no servidor: ${result.visualizacoesRemovidas} visualizações removidas`);
-      }
       
       toast({
         title: 'Status atualizado',
-        description: `Popup ${novoStatus ? 'ativado' : 'desativado'} com sucesso.`,
+        description: `Popup ${!isActive ? 'ativado' : 'desativado'} com sucesso.`,
       });
-      
-      // Recarregar a lista após a alteração para garantir sincronização
-      const response = await apiRequest('GET', '/api/popups');
-      const data = await response.json();
-      setPopups(data);
-      
     } catch (error) {
       console.error('Erro ao alterar status do popup:', error);
       toast({
@@ -376,21 +337,6 @@ export default function PopupManagement() {
     try {
       await apiRequest('DELETE', `/api/popups/${id}`);
       setPopups(popups.filter(popup => popup.id !== id));
-      
-      // Adicionar ID à lista de popups removidos para limpar o cache
-      try {
-        const removedIds = JSON.parse(localStorage.getItem('removed_popup_ids') || '[]');
-        if (!removedIds.includes(id)) {
-          removedIds.push(id);
-          localStorage.setItem('removed_popup_ids', JSON.stringify(removedIds));
-        }
-        
-        // Forçar limpeza completa de cache
-        localStorage.setItem('force_clean_popups', 'true');
-        console.log(`Popup ${id} excluído - cache local será limpo`);
-      } catch (e) {
-        console.error('Erro ao limpar cache de popups:', e);
-      }
       
       toast({
         title: 'Sucesso',
@@ -643,7 +589,7 @@ export default function PopupManagement() {
                           {imagePreview ? (
                             <div className="relative w-full h-full">
                               <img 
-                                src={`${imagePreview}${imagePreview && imagePreview.includes('?') ? '&' : '?'}t=${new Date().getTime()}`} 
+                                src={imagePreview} 
                                 alt="Imagem do popup" 
                                 className="object-contain w-full h-full p-2" 
                               />

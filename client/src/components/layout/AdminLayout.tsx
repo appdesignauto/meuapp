@@ -1,4 +1,4 @@
-import React, { ReactNode, useState } from 'react';
+import React, { ReactNode } from 'react';
 import { Link, useLocation } from 'wouter';
 import {
   ChevronLeft,
@@ -15,12 +15,7 @@ import {
   Menu,
   X,
   BarChart,
-  CreditCard,
-  Bell,
-  PanelLeft,
-  Globe,
-  ChevronDown,
-  ChevronRight
+  LineChart
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -32,7 +27,6 @@ import {
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/use-auth';
-import { Badge } from '@/components/ui/badge';
 
 type AdminLayoutProps = {
   children: ReactNode;
@@ -45,12 +39,6 @@ type NavItem = {
   href: string;
   icon: React.ReactNode;
   badge?: string;
-  items?: NavItem[];
-};
-
-type NavSection = {
-  title: string;
-  items: NavItem[];
 };
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ 
@@ -60,161 +48,86 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
 }) => {
   const { user } = useAuth();
   const [location] = useLocation();
-  const [expandedSections, setExpandedSections] = useState<string[]>(['conteudo', 'usuarios']);
-  
-  const toggleSection = (section: string) => {
-    setExpandedSections(prev => 
-      prev.includes(section) 
-        ? prev.filter(s => s !== section) 
-        : [...prev, section]
-    );
-  };
 
-  const navSections: NavSection[] = [
+  const navItems: NavItem[] = [
     {
-      title: "Principal",
-      items: [
-        {
-          title: 'Dashboard',
-          href: '/admin',
-          icon: <Gauge className="h-3.5 w-3.5" />,
-        },
-        {
-          title: 'Analytics',
-          href: '/admin/analytics',
-          icon: <BarChart className="h-3.5 w-3.5" />,
-        },
-      ]
+      title: 'Dashboard',
+      href: '/admin',
+      icon: <Gauge className="h-5 w-5" />,
     },
     {
-      title: "Conteúdo",
-      items: [
-        {
-          title: 'Artes',
-          href: '/admin/arts',
-          icon: <Image className="h-3.5 w-3.5" />,
-        },
-        {
-          title: 'Cursos',
-          href: '/admin/courses',
-          icon: <BookOpen className="h-3.5 w-3.5" />,
-        },
-        {
-          title: 'Comunidade',
-          href: '/admin/community',
-          icon: <MessageSquare className="h-3.5 w-3.5" />,
-        },
-        {
-          title: 'Ferramentas',
-          href: '/admin/ferramentas',
-          icon: <Wrench className="h-3.5 w-3.5" />,
-        },
-        {
-          title: 'Páginas',
-          href: '/admin/pages',
-          icon: <FileText className="h-3.5 w-3.5" />,
-        },
-      ]
+      title: 'Usuários',
+      href: '/admin/users',
+      icon: <Users className="h-5 w-5" />,
     },
     {
-      title: "Usuários",
-      items: [
-        {
-          title: 'Usuários',
-          href: '/admin/users',
-          icon: <Users className="h-3.5 w-3.5" />,
-        },
-        {
-          title: 'Ranking',
-          href: '/admin/ranking',
-          icon: <Award className="h-3.5 w-3.5" />,
-        },
-        {
-          title: 'Assinaturas',
-          href: '/admin/subscriptions',
-          icon: <CreditCard className="h-3.5 w-3.5" />,
-        },
-      ]
+      title: 'Artes',
+      href: '/admin/arts',
+      icon: <Image className="h-5 w-5" />,
     },
     {
-      title: "Sistema",
-      items: [
-        {
-          title: 'Uploads',
-          href: '/admin/uploads',
-          icon: <Upload className="h-3.5 w-3.5" />,
-        },
-        {
-          title: 'Notificações',
-          href: '/admin/notifications',
-          icon: <Bell className="h-3.5 w-3.5" />,
-        },
-        {
-          title: 'Configurações',
-          href: '/admin/settings',
-          icon: <Settings className="h-3.5 w-3.5" />,
-        },
-      ]
-    }
+      title: 'Cursos',
+      href: '/admin/courses',
+      icon: <BookOpen className="h-5 w-5" />,
+    },
+    {
+      title: 'Comunidade',
+      href: '/admin/community',
+      icon: <MessageSquare className="h-5 w-5" />,
+    },
+    {
+      title: 'Ranking',
+      href: '/admin/ranking',
+      icon: <Award className="h-5 w-5" />,
+    },
+    {
+      title: 'Ferramentas',
+      href: '/admin/ferramentas',
+      icon: <Wrench className="h-5 w-5" />,
+    },
+    {
+      title: 'Uploads',
+      href: '/admin/uploads',
+      icon: <Upload className="h-5 w-5" />,
+    },
+    {
+      title: 'Páginas',
+      href: '/admin/pages',
+      icon: <FileText className="h-5 w-5" />,
+    },
+    {
+      title: 'Analytics',
+      href: '/admin/analytics',
+      icon: <BarChart className="h-5 w-5" />,
+    },
+    {
+      title: 'Configurações',
+      href: '/admin/settings',
+      icon: <Settings className="h-5 w-5" />,
+    },
   ];
 
   const NavLinks = () => (
-    <nav className="space-y-2 mt-4">
-      {navSections.map((section) => (
-        <div key={section.title} className="mb-1">
-          <div 
-            className="bg-gray-50 rounded-lg py-1 mb-1"
-          >
-            <button
-              type="button"
-              className="flex items-center justify-between w-full px-4 py-3 text-gray-700 font-medium"
-              onClick={() => toggleSection(section.title.toLowerCase())}
-              title={section.title}
-            >
-              {section.items[0]?.icon && (
-                <span className="flex items-center">
-                  {section.items[0].icon}
-                  {sidebarOpen && <span className="ml-3 text-xs">{section.title}</span>}
-                </span>
-              )}
-              
-              {sidebarOpen && (
-                <ChevronDown className="w-3 h-3 ml-auto transition-transform duration-200" 
-                  style={{ transform: expandedSections.includes(section.title.toLowerCase()) ? 'rotate(180deg)' : 'rotate(0)' }} 
-                />
-              )}
-            </button>
-            
-            {expandedSections.includes(section.title.toLowerCase()) && (
-              <div className="space-y-1 pt-1 pb-2 pl-4">
-                {section.items.map((item) => (
-                  <Link key={item.href} href={item.href}>
-                    <a
-                      className={cn(
-                        'flex items-center w-full py-2.5 rounded-md',
-                        location === item.href || location.startsWith(`${item.href}/`)
-                          ? 'bg-blue-50 text-blue-600'
-                          : 'text-gray-600 hover:bg-gray-100',
-                        sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'
-                      )}
-                      title={item.title}
-                    >
-                      <span className={sidebarOpen ? 'mr-2' : 'mx-auto'}>
-                        {item.icon}
-                      </span>
-                      {sidebarOpen && <span className="text-xs">{item.title}</span>}
-                      {item.badge && sidebarOpen && (
-                        <Badge className="ml-auto text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">
-                          {item.badge}
-                        </Badge>
-                      )}
-                    </a>
-                  </Link>
-                ))}
-              </div>
+    <nav className="space-y-1 mt-4">
+      {navItems.map((item) => (
+        <Link key={item.href} href={item.href}>
+          <a
+            className={cn(
+              'flex items-center px-4 py-2.5 text-sm font-medium rounded-lg',
+              location === item.href || location.startsWith(`${item.href}/`)
+                ? 'bg-primary text-primary-foreground'
+                : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
             )}
-          </div>
-        </div>
+          >
+            {item.icon}
+            <span className="ml-3">{item.title}</span>
+            {item.badge && (
+              <span className="ml-auto px-2 py-0.5 text-xs rounded-full bg-primary/20 text-primary dark:bg-primary/30">
+                {item.badge}
+              </span>
+            )}
+          </a>
+        </Link>
       ))}
     </nav>
   );
