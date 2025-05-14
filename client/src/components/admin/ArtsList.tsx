@@ -78,39 +78,21 @@ const ArtsList = () => {
       return response.json();
     },
     onSuccess: () => {
-      // Estratégia anti-cache extremamente agressiva
+      // Estratégia anti-cache menos agressiva para evitar tela branca
       toast({
         title: 'Arte excluída',
-        description: 'A arte foi excluída com sucesso. Atualizando dados...',
+        description: 'A arte foi excluída com sucesso.',
         variant: 'default',
       });
       
-      // 1. Limpar todo o cache do React Query
-      queryClient.clear();
-      
-      // 2. Invalidar todas as queries começando com '/api/'
-      queryClient.invalidateQueries({ queryKey: ['/api'] });
+      // Invalidar apenas as queries relevantes
       queryClient.invalidateQueries({ queryKey: ['/api/artes'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
       
-      // 3. Remover cache do service worker (para versões do navegador que suportam)
-      if ('caches' in window) {
-        caches.keys().then(cacheNames => {
-          cacheNames.forEach(cacheName => {
-            caches.delete(cacheName);
-          });
-        });
-      }
-      
-      // 4. Limpar cache do navegador usando parâmetros na URL
-      const clearedUrl = new URL(window.location.href);
-      clearedUrl.searchParams.set('_cache_buster', Date.now().toString());
-      
-      // 5. Forçar recarregamento completo da página, ignorando cache
-      setTimeout(() => {
-        window.location.href = clearedUrl.toString();
-        window.location.reload(); // O parâmetro true está obsoleto, usar apenas reload()
-      }, 500);
+      // Usar métodos de refetch em vez de recarregar a página
+      queryClient.refetchQueries({ 
+        queryKey: ['/api/artes', { page, limit, ...filter }],
+        exact: true 
+      });
     },
     onError: (error: any) => {
       toast({
