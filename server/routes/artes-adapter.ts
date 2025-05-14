@@ -576,21 +576,55 @@ router.put('/api/admin/artes/:id', isAdmin, async (req: Request, res: Response) 
     // Remover campos que não devem ser atualizados
     delete updates.id;
     delete updates.createdAt;
+    delete updates._timestamp; // Remover timestamp que é usado apenas para evitar cache
     
     // Adicionar data de atualização
     updates.updatedAt = new Date();
     
-    // Executar a atualização
-    await db.execute(sql`
-      UPDATE arts
-      SET ${sql.join(
-        Object.entries(updates).map(
-          ([key, value]) => sql`${sql.identifier(key)} = ${value}`
-        ),
-        sql`, `
-      )}
-      WHERE id = ${id}
-    `);
+    console.log(`Atualizando arte ${id} com os campos:`, updates);
+    
+    try {
+      // Uso de método atualizado e mais seguro para evitar problemas com tipos
+      if (updates.isVisible !== undefined) {
+        // Converter para booleano explicitamente
+        const isVisibleValue = updates.isVisible === true || updates.isVisible === 'true';
+        console.log(`Atualizando visibilidade da arte ${id} para: ${isVisibleValue} (tipo: ${typeof isVisibleValue})`);
+        
+        // Usar variáveis SQL para evitar injeção ou problemas de tipo
+        await db.update(arts)
+          .set({ 
+            isVisible: isVisibleValue, 
+            updatedAt: updates.updatedAt 
+          })
+          .where(eq(arts.id, id))
+          .execute();
+        
+        console.log(`Atualização de visibilidade concluída para arte ${id}`);
+      } else if (updates.isPremium !== undefined) {
+        // Converter para booleano explicitamente
+        const isPremiumValue = updates.isPremium === true || updates.isPremium === 'true';
+        console.log(`Atualizando status premium da arte ${id} para: ${isPremiumValue} (tipo: ${typeof isPremiumValue})`);
+        
+        await db.update(arts)
+          .set({ 
+            isPremium: isPremiumValue, 
+            updatedAt: updates.updatedAt 
+          })
+          .where(eq(arts.id, id))
+          .execute();
+        
+        console.log(`Atualização de premium concluída para arte ${id}`);
+      } else {
+        // Para outros campos, usar método builder também
+        await db.update(arts)
+          .set(updates)
+          .where(eq(arts.id, id))
+          .execute();
+      }
+    } catch (updateError) {
+      console.error("Erro específico na atualização SQL:", updateError);
+      throw updateError;
+    }
     
     // Desativar cache para esta resposta
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');

@@ -225,8 +225,53 @@ const ArtsList = () => {
     // O valor enviado ao backend deve ser o novo valor desejado
     // Quando currentValue é true, queremos tornar invisible (false)
     // Quando currentValue é false, queremos tornar visible (true)
-    console.log(`Alterando visibilidade da arte ${id}: de ${currentValue ? 'visível' : 'oculta'} para ${!currentValue ? 'visível' : 'oculta'}`);
-    toggleVisibilityMutation.mutate({ id, isVisible: !currentValue });
+    const newVisibilityValue = !currentValue;
+    
+    console.log(`[TOGGLE_VISIBILITY] Alterando visibilidade da arte ${id}: de ${currentValue ? 'visível' : 'oculta'} para ${newVisibilityValue ? 'visível' : 'oculta'}`);
+    
+    // Uso direto para debug de valores e fluxo
+    const timestamp = Date.now();
+    
+    fetch(`/api/admin/artes/${id}?_t=${timestamp}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        isVisible: newVisibilityValue,
+        _timestamp: timestamp
+      })
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Erro ao atualizar visibilidade');
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('[TOGGLE_VISIBILITY] Resposta do servidor:', data);
+      
+      // Atualizar o cache
+      queryClient.invalidateQueries({ queryKey: ['/api/artes'] });
+      queryClient.refetchQueries({ 
+        queryKey: ['/api/artes', { page, limit, ...filter }],
+        exact: true 
+      });
+      
+      toast({
+        title: 'Visibilidade atualizada',
+        description: `A arte foi ${newVisibilityValue ? 'tornada visível' : 'ocultada'} com sucesso.`,
+        variant: 'default',
+      });
+    })
+    .catch(error => {
+      console.error('[TOGGLE_VISIBILITY] Erro:', error);
+      toast({
+        title: 'Erro',
+        description: error.message || 'Ocorreu um erro ao atualizar a visibilidade.',
+        variant: 'destructive',
+      });
+    });
   };
 
   const formatDate = (dateString: string | Date) => {
