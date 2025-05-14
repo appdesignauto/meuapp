@@ -2359,16 +2359,72 @@ router.delete('/api/community/posts/:id', async (req, res) => {
       return res.status(403).json({ message: 'Apenas administradores podem excluir posts na comunidade' });
     }
     
-    // Excluir post
-    await db
-      .delete(communityPosts)
-      .where(eq(communityPosts.id, postId));
-    
-    console.log('- Post excluído com sucesso');
-    
-    return res.json({
-      message: 'Post excluído com sucesso'
-    });
+    try {
+      // Iniciar uma transação para garantir operação atômica
+      await db.transaction(async (tx) => {
+        // 1. Primeiro excluir todas as curtidas de comentários
+        console.log('- Excluindo curtidas de comentários associados a este post...');
+        await tx
+          .delete(communityCommentLikes)
+          .where(
+            inArray(
+              communityCommentLikes.commentId,
+              tx
+                .select({ id: communityComments.id })
+                .from(communityComments)
+                .where(eq(communityComments.postId, postId))
+            )
+          );
+        
+        // 2. Excluir todas as respostas aos comentários (comentários filhos)
+        console.log('- Excluindo respostas aos comentários deste post...');
+        await tx
+          .delete(communityComments)
+          .where(
+            and(
+              inArray(
+                communityComments.parentId,
+                tx
+                  .select({ id: communityComments.id })
+                  .from(communityComments)
+                  .where(eq(communityComments.postId, postId))
+              ),
+              isNotNull(communityComments.parentId)
+            )
+          );
+          
+        // 3. Excluir todos os comentários do post
+        console.log('- Excluindo comentários do post...');
+        await tx
+          .delete(communityComments)
+          .where(eq(communityComments.postId, postId));
+        
+        // 4. Excluir todas as curtidas do post
+        console.log('- Excluindo curtidas do post...');
+        await tx
+          .delete(communityPostLikes)
+          .where(eq(communityPostLikes.postId, postId));
+        
+        // 5. Finalmente excluir o post
+        console.log('- Excluindo o post...');
+        await tx
+          .delete(communityPosts)
+          .where(eq(communityPosts.id, postId));
+      });
+      
+      console.log('- Post e todos os seus dados relacionados excluídos com sucesso');
+      
+      // Enviar evento de socket para todos os usuários ativos (se tiver socket implementado)
+      triggerPostDeleteEvent(postId);
+      
+      return res.json({
+        message: 'Post excluído com sucesso',
+        postId
+      });
+    } catch (txError) {
+      console.error('Erro durante a transação de exclusão do post:', txError);
+      throw txError; // Re-lança para ser capturado pelo catch externo
+    }
   } catch (error) {
     console.error('Erro ao excluir post:', error);
     return res.status(500).json({
