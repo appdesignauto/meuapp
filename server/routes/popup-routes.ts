@@ -448,6 +448,41 @@ router.post('/view', async (req, res) => {
   }
 });
 
+// Alternar o estado ativo/inativo de um popup
+router.put('/:id/toggle', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isActive } = req.body;
+    
+    // Verificar usuário autenticado
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Não autorizado' });
+    }
+    
+    // Verificar se popup existe
+    const existingPopup = await db.query.popups.findFirst({
+      where: eq(popups.id, parseInt(id)),
+    });
+    
+    if (!existingPopup) {
+      return res.status(404).json({ message: 'Popup não encontrado' });
+    }
+    
+    // Atualizar status do popup
+    const [updatedPopup] = await db
+      .update(popups)
+      .set({ isActive: isActive })
+      .where(eq(popups.id, parseInt(id)))
+      .returning();
+    
+    console.log(`Popup ${id} ${isActive ? 'ativado' : 'desativado'} com sucesso`);
+    res.json(updatedPopup);
+  } catch (error) {
+    console.error('Erro ao alternar status do popup:', error);
+    res.status(500).json({ message: 'Erro ao alternar status do popup' });
+  }
+});
+
 // Obter estatísticas de um popup
 router.get('/:id/stats', async (req, res) => {
   try {
