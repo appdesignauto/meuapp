@@ -233,7 +233,7 @@ export function Popup({
                 !title && !content && !buttonText ? "h-full" : ""
               )}>
                 <img 
-                  src={imageUrl} 
+                  src={`${imageUrl}${imageUrl.includes('?') ? '&' : '?'}t=${new Date().getTime()}`}
                   alt={title || "Popup promocional"} 
                   className={cn(
                     "w-full h-auto", 
@@ -433,23 +433,24 @@ export function PopupContainer() {
 
   // Buscar popups quando o componente montar ou quando mudar de página
   useEffect(() => {
-    // Forçar limpeza do cache local antes de buscar popups
-    const forceClean = localStorage.getItem('force_clean_popups') === 'true';
-    if (forceClean) {
-      console.log('Limpando cache de popups devido à solicitação de limpeza forçada');
-      localStorage.removeItem('popup_history');
-      localStorage.removeItem('popup_session_id');
+    // Sempre forçar limpeza do cache local antes de buscar popups para evitar problemas de cache
+    console.log('Limpando cache de histórico de popups para evitar problemas de cache');
+    localStorage.removeItem('popup_history');
+    localStorage.removeItem('popup_session_id');
+    
+    // Limpar qualquer flag de limpeza forçada
+    if (localStorage.getItem('force_clean_popups') === 'true') {
       localStorage.removeItem('force_clean_popups');
     }
     
     // Tentar buscar imediatamente
     fetchActivePopup();
     
-    // E depois a cada 30 segundos para verificar novos popups ou mudanças
-    // Reduzido de 5 minutos para 30 segundos para facilitar testes e evitar problemas de cache
+    // E depois a cada 15 segundos para verificar novos popups ou mudanças
+    // Reduzido para 15 segundos para garantir atualização mais frequente e evitar problemas de cache
     const interval = setInterval(() => {
       fetchActivePopup();
-    }, 30 * 1000);
+    }, 15 * 1000);
     
     return () => clearInterval(interval);
   }, [location]); // Re-executar quando a localização (rota) mudar

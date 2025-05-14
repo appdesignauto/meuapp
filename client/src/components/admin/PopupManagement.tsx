@@ -643,7 +643,7 @@ export default function PopupManagement() {
                           {imagePreview ? (
                             <div className="relative w-full h-full">
                               <img 
-                                src={imagePreview} 
+                                src={`${imagePreview}${imagePreview && imagePreview.includes('?') ? '&' : '?'}t=${new Date().getTime()}`} 
                                 alt="Imagem do popup" 
                                 className="object-contain w-full h-full p-2" 
                               />
