@@ -316,10 +316,23 @@ export default function PopupManagement() {
   const handleToggleActive = async (id: number, isActive: boolean) => {
     try {
       // Não enviamos mais o valor pois o servidor fará a inversão
-      await apiRequest('PUT', `/api/popups/${id}/toggle`, {});
+      const toggleResponse = await apiRequest('PUT', `/api/popups/${id}/toggle`, {});
+      const result = await toggleResponse.json();
       
       // Limpar cache local para garantir estado correto
       localStorage.setItem('force_clean_popups', 'true');
+      
+      // Limpar histórico de visualizações para este popup específico
+      try {
+        const popupHistory = JSON.parse(localStorage.getItem('popup_history') || '{}');
+        if (popupHistory[id]) {
+          delete popupHistory[id];
+          localStorage.setItem('popup_history', JSON.stringify(popupHistory));
+          console.log(`Cache local limpo para o popup ${id}`);
+        }
+      } catch (e) {
+        console.error('Erro ao limpar cache local do popup:', e);
+      }
       
       // O valor será invertido no servidor, então usamos o oposto do atual
       const novoStatus = !isActive;
@@ -329,8 +342,11 @@ export default function PopupManagement() {
         popup.id === id ? { ...popup, isActive: novoStatus } : popup
       ));
       
-      // Para debug, registrar a mudança no console
+      // Para debug, registrar a mudança no console com informações de limpeza de cache
       console.log(`Popup ${id} status alterado para: ${novoStatus ? 'ATIVO' : 'INATIVO'}`);
+      if (result.cacheLimpo) {
+        console.log(`Cache limpo no servidor: ${result.visualizacoesRemovidas} visualizações removidas`);
+      }
       
       toast({
         title: 'Status atualizado',

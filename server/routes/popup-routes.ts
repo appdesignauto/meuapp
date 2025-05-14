@@ -506,7 +506,7 @@ router.put('/:id/toggle', async (req, res) => {
       .where(eq(popupViews.popupId, parseInt(id)))
       .returning({ count: sql`count(*)` });
     
-    const entradasRemovidas = result.length > 0 ? parseInt(result[0].count.toString()) : 0;
+    const entradasRemovidas = result.length > 0 && result[0].count ? parseInt(String(result[0].count)) : 0;
     
     console.log(`Popup ID ${id} atualizado: isActive=${novoStatus}`);
     console.log(`Cache de visualizações limpo para o popup ID ${id}. ${entradasRemovidas} entradas removidas.`);
