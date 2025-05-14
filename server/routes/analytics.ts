@@ -51,13 +51,50 @@ router.get('/', async (req, res) => {
 // Rota para obter todas as configurações de analytics (para painel admin)
 router.get('/admin', isAdmin, async (req, res) => {
   try {
-    const [settings] = await db.select().from(analyticsSettings);
+    console.log('[GET /api/analytics/admin] Buscando configurações de analytics');
     
-    if (!settings) {
-      return res.status(404).json({ success: false, message: 'Configurações de analytics não encontradas' });
+    // Tenta buscar do banco de dados primeiro
+    try {
+      const [settings] = await db.select().from(analyticsSettings);
+      
+      if (settings) {
+        console.log('[GET /api/analytics/admin] Configurações encontradas no banco de dados');
+        return res.json(settings);
+      }
+    } catch (dbError) {
+      console.log('[GET /api/analytics/admin] Erro ao buscar do banco de dados, usando valores padrão');
+      console.error(dbError);
     }
     
-    res.json(settings);
+    // Se não encontrou no banco ou ocorreu erro, retorna valores padrão
+    console.log('[GET /api/analytics/admin] Retornando valores padrão de analytics');
+    res.json({
+      id: 1,
+      metaPixelId: '',
+      metaPixelEnabled: false,
+      metaAdsAccessToken: '',
+      ga4MeasurementId: '',
+      ga4ApiSecret: '',
+      ga4Enabled: false,
+      gtmContainerId: '',
+      gtmEnabled: false,
+      clarityProjectId: '',
+      clarityEnabled: false,
+      pinterestTagId: '',
+      pinterestEnabled: false,
+      tiktokPixelId: '',
+      tiktokEnabled: false,
+      customScriptHead: '',
+      customScriptBody: '',
+      customScriptEnabled: false,
+      trackPageviews: true,
+      trackClicks: false,
+      trackFormSubmissions: false,
+      trackArtsViewed: true,
+      trackArtsDownloaded: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
   } catch (error) {
     console.error('Erro ao buscar configurações de analytics (admin):', error);
     res.status(500).json({ success: false, message: 'Erro ao buscar configurações de analytics' });
