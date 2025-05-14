@@ -151,27 +151,48 @@ self.addEventListener('fetch', event => {
     return;
   }
   
-  // Para APIs e conteúdo dinâmico: NUNCA cachear, sempre buscar da rede
+  // Para APIs e conteúdo dinâmico: NUNCA cachear, sempre buscar da rede com parâmetros anti-cache
   if (shouldNeverCache(event.request.url)) {
-    console.log('[SW] API/Dinâmico - Nunca cachear, apenas Network:', url.pathname);
+    console.log('[SW] API/Dinâmico - Network Only com anti-cache:', url.pathname);
+    
+    // Criar uma nova requisição com parâmetros para evitar cache
+    const timestamp = Date.now();
+    const antiCacheUrl = new URL(event.request.url);
+    antiCacheUrl.searchParams.set('_sw_nocache', timestamp);
+    
+    const antiCacheRequest = new Request(antiCacheUrl, {
+      method: event.request.method,
+      headers: event.request.headers,
+      mode: event.request.mode,
+      credentials: event.request.credentials,
+      redirect: event.request.redirect
+    });
     
     event.respondWith(
-      fetch(event.request)
+      fetch(antiCacheRequest)
         .then(response => {
+          console.log('[SW] Resposta obtida da rede para:', url.pathname);
           // Não manipular ou cachear respostas de API de nenhuma forma
           return response;
         })
-        .catch(() => {
+        .catch((error) => {
+          console.error('[SW] Erro ao buscar da rede:', url.pathname, error);
+          
           // Em caso de falha na rede para endpoints de API, retornar um erro apropriado
           if (event.request.mode === 'navigate') {
             return caches.match('/offline.html');
           }
           
-          // Para outros recursos, retornar resposta de erro
-          return new Response('Recurso não disponível. Verifique sua conexão.', {
+          // Para outros recursos, retornar resposta de erro com cabeçalhos anti-cache
+          return new Response(JSON.stringify({
+            error: 'Falha na conexão de rede',
+            offline: true,
+            timestamp: timestamp,
+            path: url.pathname
+          }), {
             status: 503,
             headers: { 
-              'Content-Type': 'text/plain',
+              'Content-Type': 'application/json',
               'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
               'Pragma': 'no-cache',
               'Expires': '0'

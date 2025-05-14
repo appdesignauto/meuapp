@@ -109,7 +109,7 @@ const ArtsList = () => {
       // 5. Forçar recarregamento completo da página, ignorando cache
       setTimeout(() => {
         window.location.href = clearedUrl.toString();
-        window.location.reload(true); // true = força recarregamento ignorando cache
+        window.location.reload(); // O parâmetro true está obsoleto, usar apenas reload()
       }, 500);
     },
     onError: (error: any) => {

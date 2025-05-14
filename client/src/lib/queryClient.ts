@@ -38,11 +38,22 @@ export async function apiRequest(
   data?: unknown | undefined,
   options?: { isFormData?: boolean, skipContentType?: boolean }
 ): Promise<Response> {
-  // Configuração padrão para requisições
+  // Adicionar timestamp para prevenir cache
+  const timestamp = Date.now();
+  const finalUrl = url.includes('?') 
+    ? `${url}&_t=${timestamp}` 
+    : `${url}?_t=${timestamp}`;
+  
+  // Configuração padrão para requisições com cabeçalhos anti-cache
   const fetchOptions: RequestInit = {
     method,
     credentials: "include",
-    headers: {}
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+      'X-Timestamp': timestamp.toString()
+    }
   };
 
   // Se temos dados para enviar
@@ -58,11 +69,19 @@ export async function apiRequest(
           "Content-Type": "application/json" 
         };
       }
-      fetchOptions.body = JSON.stringify(data);
+      // Adicionar timestamp aos dados para evitar cache
+      const dataWithTimestamp = typeof data === 'object' && data !== null 
+        ? { ...data as object, _timestamp: timestamp } 
+        : data;
+      
+      fetchOptions.body = JSON.stringify(dataWithTimestamp);
     }
   }
 
-  const res = await fetch(url, fetchOptions);
+  console.log(`[API] Fazendo requisição para ${finalUrl} com anti-cache`);
+  
+  // Usar a URL com parâmetros anti-cache
+  const res = await fetch(finalUrl, fetchOptions);
   await throwIfResNotOk(res);
   return res;
 }
