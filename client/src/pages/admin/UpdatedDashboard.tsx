@@ -1217,28 +1217,28 @@ const AdminDashboard = ({ initialTab = 'arts' }: UpdatedDashboardProps) => {
                   } ${sidebarOpen ? 'px-3 justify-start' : 'px-0 justify-center'}`}
                   title="Estatísticas"
                 >
-                  <BarChart3 className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-                  {sidebarOpen && <span>Estatísticas</span>}
+                  <BarChart3 className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                  {sidebarOpen && <span className="text-xs">Estatísticas</span>}
                 </button>
                 <button
                   onClick={() => setActiveTab('coursesConfig')}
-                  className={`flex items-center w-full py-2.5 rounded-md ${
+                  className={`flex items-center w-full py-1.5 rounded-md ${
                     activeTab === 'coursesConfig' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
+                  } ${sidebarOpen ? 'px-3 justify-start' : 'px-0 justify-center'}`}
                   title="Configurações"
                 >
-                  <Settings className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-                  {sidebarOpen && <span>Configurações</span>}
+                  <Settings className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                  {sidebarOpen && <span className="text-xs">Configurações</span>}
                 </button>
                 <button
                   onClick={() => setActiveTab('comments')}
-                  className={`flex items-center w-full py-2.5 rounded-md ${
+                  className={`flex items-center w-full py-1.5 rounded-md ${
                     activeTab === 'comments' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
+                  } ${sidebarOpen ? 'px-3 justify-start' : 'px-0 justify-center'}`}
                   title="Comentários"
                 >
-                  <MessageSquare className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-                  {sidebarOpen && <span>Comentários</span>}
+                  <MessageSquare className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                  {sidebarOpen && <span className="text-xs">Comentários</span>}
                 </button>
               </CollapsibleContent>
             </Collapsible>
@@ -1246,13 +1246,13 @@ const AdminDashboard = ({ initialTab = 'arts' }: UpdatedDashboardProps) => {
             {/* Analytics - Agora como um item principal no menu */}
             <button
               onClick={() => setActiveTab('analytics')}
-              className={`flex items-center w-full py-2.5 rounded-lg ${
+              className={`flex items-center w-full py-2 rounded-lg ${
                 activeTab === 'analytics' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-              } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
+              } ${sidebarOpen ? 'px-3 justify-start' : 'px-0 justify-center'}`}
               title="Analytics"
             >
-              <BarChart3 className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-              {sidebarOpen && <span>Analytics</span>}
+              <BarChart3 className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+              {sidebarOpen && <span className="text-xs">Analytics</span>}
             </button>
             
             {/* Marketing - Apenas Popups agora */}
@@ -1260,49 +1260,59 @@ const AdminDashboard = ({ initialTab = 'arts' }: UpdatedDashboardProps) => {
               className="bg-gray-50 rounded-lg py-1 mb-1"
               defaultOpen={['popups'].includes(activeTab)}
             >
-              <CollapsibleTrigger className={`flex items-center w-full py-2.5 text-gray-700 font-medium ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}>
-                <BellRing className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+              <CollapsibleTrigger 
+                className={`flex items-center w-full px-3 py-2 text-gray-700 font-medium ${!sidebarOpen ? 'lg:justify-center lg:px-0' : ''}`}
+                title="Marketing"
+              >
+                <BellRing className="w-5 h-5 mx-auto" />
                 {sidebarOpen && (
                   <>
-                    <span>Marketing</span>
-                    <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+                    <span className="ml-2 text-sm">Marketing</span>
+                    <ChevronDown className="w-3 h-3 ml-auto transition-transform duration-200 ui-open:rotate-180" />
                   </>
                 )}
               </CollapsibleTrigger>
-              <CollapsibleContent className={`${sidebarOpen ? 'pl-4' : 'pl-0'} space-y-1 pt-1 pb-2`}>
+              <CollapsibleContent className={`${sidebarOpen ? 'pl-3' : 'lg:pl-0'} space-y-0.5 pt-0.5 pb-1`}>
                 <button
                   onClick={() => setActiveTab('popups')}
-                  className={`flex items-center w-full py-2.5 rounded-md ${
+                  className={`flex items-center w-full py-1.5 rounded-md ${
                     activeTab === 'popups' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
+                  } ${sidebarOpen ? 'px-3 justify-start' : 'px-0 justify-center'}`}
                   title="Gerenciar Popups"
                 >
-                  <BellRing className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-                  {sidebarOpen && <span>Gerenciar Popups</span>}
+                  <BellRing className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                  {sidebarOpen && <span className="text-xs">Gerenciar Popups</span>}
                 </button>
               </CollapsibleContent>
             </Collapsible>
             
             {/* Assinaturas e Webhooks */}
-            <Collapsible className="w-full">
-              <CollapsibleTrigger className={`flex items-center w-full py-2.5 text-gray-700 font-medium ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}>
-                <CreditCard className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+            <Collapsible 
+              className="bg-gray-50 rounded-lg py-1 mb-1"
+              defaultOpen={['subscriptions', 'webhooks'].includes(activeTab)}
+            >
+              <CollapsibleTrigger 
+                className={`flex items-center w-full px-3 py-2 text-gray-700 font-medium ${!sidebarOpen ? 'lg:justify-center lg:px-0' : ''}`}
+                title="Assinaturas"
+              >
+                <CreditCard className="w-5 h-5 mx-auto" />
                 {sidebarOpen && (
                   <>
-                    <span>Assinaturas</span>
-                    <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+                    <span className="ml-2 text-sm">Assinaturas</span>
+                    <ChevronDown className="w-3 h-3 ml-auto transition-transform duration-200 ui-open:rotate-180" />
                   </>
                 )}
               </CollapsibleTrigger>
-              <CollapsibleContent className={`${sidebarOpen ? 'pl-4' : 'pl-0'} space-y-1 pt-1 pb-2`}>
+              <CollapsibleContent className={`${sidebarOpen ? 'pl-3' : 'lg:pl-0'} space-y-0.5 pt-0.5 pb-1`}>
                 <button
                   onClick={() => setActiveTab('subscriptions')}
-                  className={`flex items-center w-full py-2.5 rounded-md ${
+                  className={`flex items-center w-full py-1.5 rounded-md ${
                     activeTab === 'subscriptions' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
+                  } ${sidebarOpen ? 'px-3 justify-start' : 'px-0 justify-center'}`}
+                  title="Gerenciar Assinaturas"
                 >
-                  <CreditCard className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-                  {sidebarOpen && <span>Gerenciar Assinaturas</span>}
+                  <CreditCard className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                  {sidebarOpen && <span className="text-xs">Gerenciar Assinaturas</span>}
                 </button>
                 <button
                   onClick={() => setActiveTab('webhooks')}
