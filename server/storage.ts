@@ -3679,6 +3679,28 @@ export class DatabaseStorage implements IStorage {
             )
           )
         );
+        
+      // Calcular valor médio das assinaturas
+      // Assumindo um valor base de R$ 97,00 por assinatura
+      const averageValue = 97.00;
+      
+      // Calcular MRR (Monthly Recurring Revenue)
+      const mrr = activeResult.count * averageValue;
+      
+      // Calcular receita anual projetada
+      const annualRevenue = mrr * 12;
+      
+      // Calcular taxa de churn (estimativa básica)
+      // Taxa de churn = usuários expirados / (usuários ativos + usuários expirados)
+      const churnRate = totalResult.count > 0 
+        ? (Number(expiredResult?.count || 0) / Number(totalResult.count)) * 100 
+        : 0;
+      
+      // Tempo médio de permanência (estimativa em dias)
+      const averageRetention = 365 - (churnRate * 3.65); // Uma aproximação baseada no churn
+      
+      // Valor médio por cliente ao longo da vida (LTV)
+      const averageLTV = averageValue * (averageRetention / 30); // Convertendo dias para meses
       
       // Obter usuários com assinatura expirada
       const [expiredResult] = await db
@@ -3765,7 +3787,13 @@ export class DatabaseStorage implements IStorage {
         trial: Number(trialResult.count),
         expiringIn7Days: Number(expiringIn7DaysResult.count),
         expiringIn30Days: Number(expiringIn30DaysResult.count),
-        byOrigin
+        byOrigin,
+        churnRate: parseFloat(churnRate.toFixed(1)),
+        averageRetention: Math.round(averageRetention),
+        averageLTV: parseFloat(averageLTV.toFixed(2)),
+        mrr: parseFloat(mrr.toFixed(2)),
+        averageValue: parseFloat(averageValue.toFixed(2)),
+        annualRevenue: parseFloat(annualRevenue.toFixed(2))
       };
     } catch (error) {
       console.error("Erro ao buscar estatísticas de assinaturas:", error);
@@ -3777,7 +3805,13 @@ export class DatabaseStorage implements IStorage {
         trial: 0,
         expiringIn7Days: 0,
         expiringIn30Days: 0,
-        byOrigin: { hotmart: 0, doppus: 0, manual: 0 }
+        byOrigin: { hotmart: 0, doppus: 0, manual: 0 },
+        churnRate: 0,
+        averageRetention: 0,
+        averageLTV: 0,
+        mrr: 0,
+        averageValue: 0,
+        annualRevenue: 0
       };
     }
   }
