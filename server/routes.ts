@@ -4757,33 +4757,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Endpoint para salvar configurações de assinatura
-  app.post("/api/subscriptions/settings", isAdmin, async (req, res) => {
+  // Endpoint para obter configurações de assinatura
+  app.get("/api/subscription-settings", isAdmin, async (req, res) => {
     try {
-      const { 
-        autoDowngrade,
-        emailNotifications,
-        notificationDays,
-        gracePeriod 
-      } = req.body;
+      console.log('Buscando configurações de assinatura');
       
-      console.log('Salvando configurações de assinatura:', req.body);
+      // Buscar configurações do banco de dados
+      const settings = await storage.getSubscriptionSettings();
       
-      // Em produção, salvar no banco de dados
-      // Aqui apenas retornamos sucesso como exemplo
+      if (!settings) {
+        return res.status(404).json({ 
+          message: "Configurações não encontradas" 
+        });
+      }
+      
+      res.json(settings);
+    } catch (error) {
+      console.error('Erro ao buscar configurações de assinatura:', error);
+      res.status(500).json({ 
+        message: "Erro ao buscar configurações",
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
+  
+  // Endpoint para atualizar configurações de assinatura
+  app.put("/api/subscription-settings", isAdmin, async (req, res) => {
+    try {
+      console.log('Atualizando configurações de assinatura:', req.body);
+      
+      // Validar campos obrigatórios
+      const requiredFields = [
+        'autoDowngradeAfterExpiration',
+        'sendExpirationWarningEmails',
+        'graceHoursAfterExpiration',
+        'sendExpirationWarningDays',
+        'defaultSubscriptionDuration'
+      ];
+      
+      for (const field of requiredFields) {
+        if (req.body[field] === undefined) {
+          return res.status(400).json({ 
+            message: `Campo obrigatório ausente: ${field}` 
+          });
+        }
+      }
+      
+      // Atualizar no banco de dados
+      const updatedSettings = await storage.updateSubscriptionSettings(req.body);
+      
       res.json({ 
         success: true, 
-        message: 'Configurações salvas com sucesso',
-        settings: {
-          autoDowngrade,
-          emailNotifications,
-          notificationDays,
-          gracePeriod
-        }
+        message: 'Configurações atualizadas com sucesso',
+        settings: updatedSettings
       });
     } catch (error) {
-      console.error('Erro ao salvar configurações de assinatura:', error);
-      res.status(500).json({ error: "Erro ao salvar configurações" });
+      console.error('Erro ao atualizar configurações de assinatura:', error);
+      res.status(500).json({ 
+        success: false,
+        message: "Erro ao atualizar configurações",
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
     }
   });
   
