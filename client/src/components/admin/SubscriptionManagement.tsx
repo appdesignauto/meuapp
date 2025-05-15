@@ -805,14 +805,14 @@ export default function SubscriptionManagement() {
                   value={statusFilter}
                   onValueChange={setStatusFilter}
                 >
-                  <SelectTrigger className="w-[150px]">
+                  <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    <SelectItem value="active">Ativos</SelectItem>
-                    <SelectItem value="expired">Expirados</SelectItem>
-                    <SelectItem value="trial">Em teste</SelectItem>
+                    <SelectItem value="all">Status: Todos</SelectItem>
+                    <SelectItem value="active">Status: Ativos</SelectItem>
+                    <SelectItem value="expired">Status: Expirados</SelectItem>
+                    <SelectItem value="trial">Status: Em teste</SelectItem>
                   </SelectContent>
                 </Select>
                 
@@ -820,14 +820,14 @@ export default function SubscriptionManagement() {
                   value={originFilter}
                   onValueChange={setOriginFilter}
                 >
-                  <SelectTrigger className="w-[150px]">
+                  <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Origem" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todas</SelectItem>
-                    <SelectItem value="hotmart">Hotmart</SelectItem>
-                    <SelectItem value="doppus">Doppus</SelectItem>
-                    <SelectItem value="manual">Manual</SelectItem>
+                    <SelectItem value="all">Origem: Todas</SelectItem>
+                    <SelectItem value="hotmart">Origem: Hotmart</SelectItem>
+                    <SelectItem value="doppus">Origem: Doppus</SelectItem>
+                    <SelectItem value="manual">Origem: Manual</SelectItem>
                   </SelectContent>
                 </Select>
                 
@@ -837,15 +837,15 @@ export default function SubscriptionManagement() {
                       value={planFilter}
                       onValueChange={setPlanFilter}
                     >
-                      <SelectTrigger className="w-[150px]">
+                      <SelectTrigger className="w-[180px]">
                         <SelectValue placeholder="Plano" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Todos os planos</SelectItem>
-                        <SelectItem value="mensal">Mensal</SelectItem>
-                        <SelectItem value="trimestral">Trimestral</SelectItem>
-                        <SelectItem value="anual">Anual</SelectItem>
-                        <SelectItem value="vitalicio">Vitalício</SelectItem>
+                        <SelectItem value="all">Plano: Todos</SelectItem>
+                        <SelectItem value="mensal">Plano: Mensal</SelectItem>
+                        <SelectItem value="trimestral">Plano: Trimestral</SelectItem>
+                        <SelectItem value="anual">Plano: Anual</SelectItem>
+                        <SelectItem value="vitalicio">Plano: Vitalício</SelectItem>
                       </SelectContent>
                     </Select>
                     
@@ -853,17 +853,17 @@ export default function SubscriptionManagement() {
                       value={dateFilter}
                       onValueChange={setDateFilter}
                     >
-                      <SelectTrigger className="w-[180px]">
+                      <SelectTrigger className="w-[200px]">
                         <SelectValue placeholder="Período de assinatura" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Qualquer data</SelectItem>
-                        <SelectItem value="today">Hoje</SelectItem>
-                        <SelectItem value="last7days">Últimos 7 dias</SelectItem>
-                        <SelectItem value="last30days">Últimos 30 dias</SelectItem>
-                        <SelectItem value="thisMonth">Este mês</SelectItem>
-                        <SelectItem value="lastMonth">Mês passado</SelectItem>
-                        <SelectItem value="custom">Período personalizado</SelectItem>
+                        <SelectItem value="all">Período: Qualquer data</SelectItem>
+                        <SelectItem value="today">Período: Hoje</SelectItem>
+                        <SelectItem value="last7days">Período: Últimos 7 dias</SelectItem>
+                        <SelectItem value="last30days">Período: Últimos 30 dias</SelectItem>
+                        <SelectItem value="thisMonth">Período: Este mês</SelectItem>
+                        <SelectItem value="lastMonth">Período: Mês passado</SelectItem>
+                        <SelectItem value="custom">Período: Personalizado</SelectItem>
                       </SelectContent>
                     </Select>
                     
