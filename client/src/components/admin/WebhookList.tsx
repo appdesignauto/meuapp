@@ -144,6 +144,7 @@ const WebhookList: React.FC = () => {
   const [selectedLog, setSelectedLog] = useState<WebhookLogDetails | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isReprocessing, setIsReprocessing] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const searchTimeoutRef = useRef<number | null>(null);
 
   // Função com debounce para atualizar a pesquisa
@@ -370,6 +371,10 @@ const WebhookList: React.FC = () => {
               variant="outline" 
               size="sm" 
               onClick={() => {
+                console.log("Botão Atualizar clicado");
+                // Ativar estado de atualização para feedback visual
+                setIsRefreshing(true);
+                
                 // Resetar filtros e estado
                 setPage(1);
                 setSearchText(''); // Limpar também o campo de texto de pesquisa
@@ -379,13 +384,28 @@ const WebhookList: React.FC = () => {
                   source: 'all',
                   search: '',
                 });
+                
                 // Invalidar e atualizar os dados sem redirecionamento
                 queryClient.invalidateQueries({ queryKey: ['/api/webhooks/logs'] });
-                refetch();
+                
+                // Forçar a atualização imediata com um pequeno delay
+                setTimeout(() => {
+                  refetch().finally(() => {
+                    // Desativar estado de atualização quando terminar
+                    setTimeout(() => setIsRefreshing(false), 500);
+                  });
+                }, 100);
+                
+                // Feedback visual de que algo aconteceu
+                toast({
+                  title: "Atualizando logs",
+                  description: "Os dados estão sendo recarregados...",
+                });
               }}
+              disabled={isRefreshing}
             >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Atualizar
+              <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+              {isRefreshing ? 'Atualizando...' : 'Atualizar'}
             </Button>
           </CardTitle>
         </CardHeader>

@@ -731,7 +731,7 @@ export default function SubscriptionManagement() {
         
         {/* Aba de Webhooks */}
         <TabsContent value="webhooks" className="space-y-6">
-          <WebhookList />
+          <WebhookList key="subscription-webhooks" />
         </TabsContent>
         
         {/* Aba de Configurações */}

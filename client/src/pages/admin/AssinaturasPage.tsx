@@ -310,7 +310,7 @@ export default function AssinaturasPage() {
               </div>
             </div>
           </div>
-          <WebhookList />
+          <WebhookList key="webhooks-panel" />
         </TabsContent>
 
         {/* Configurações */}
