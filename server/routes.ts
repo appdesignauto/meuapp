@@ -4757,69 +4757,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Endpoint para obter configurações de assinatura
-  app.get("/api/subscription-settings", isAdmin, async (req, res) => {
-    try {
-      console.log('Buscando configurações de assinatura');
-      
-      // Buscar configurações do banco de dados
-      const settings = await storage.getSubscriptionSettings();
-      
-      if (!settings) {
-        return res.status(404).json({ 
-          message: "Configurações não encontradas" 
-        });
-      }
-      
-      res.json(settings);
-    } catch (error) {
-      console.error('Erro ao buscar configurações de assinatura:', error);
-      res.status(500).json({ 
-        message: "Erro ao buscar configurações",
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
-      });
-    }
-  });
-  
-  // Endpoint para atualizar configurações de assinatura
-  app.put("/api/subscription-settings", isAdmin, async (req, res) => {
-    try {
-      console.log('Atualizando configurações de assinatura:', req.body);
-      
-      // Validar campos obrigatórios
-      const requiredFields = [
-        'autoDowngradeAfterExpiration',
-        'sendExpirationWarningEmails',
-        'graceHoursAfterExpiration',
-        'sendExpirationWarningDays',
-        'defaultSubscriptionDuration'
-      ];
-      
-      for (const field of requiredFields) {
-        if (req.body[field] === undefined) {
-          return res.status(400).json({ 
-            message: `Campo obrigatório ausente: ${field}` 
-          });
-        }
-      }
-      
-      // Atualizar no banco de dados
-      const updatedSettings = await storage.updateSubscriptionSettings(req.body);
-      
-      res.json({ 
-        success: true, 
-        message: 'Configurações atualizadas com sucesso',
-        settings: updatedSettings
-      });
-    } catch (error) {
-      console.error('Erro ao atualizar configurações de assinatura:', error);
-      res.status(500).json({ 
-        success: false,
-        message: "Erro ao atualizar configurações",
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
-      });
-    }
-  });
+  // Endpoints de configurações de assinatura foram movidos para a seção "ENDPOINTS DE CONFIGURAÇÕES DE ASSINATURAS"
   
   // Endpoint para listar usuários com assinaturas com filtros e paginação
   app.get("/api/admin/users", isAdmin, async (req, res) => {
