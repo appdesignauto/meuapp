@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { Badge } from '@/components/ui/badge';
@@ -139,9 +139,36 @@ const WebhookList: React.FC = () => {
     source: 'all', // 'all', 'hotmart', 'doppus'
     search: '',
   });
+  // Estado separado para o campo de pesquisa para evitar re-renderização a cada tecla
+  const [searchText, setSearchText] = useState('');
   const [selectedLog, setSelectedLog] = useState<WebhookLogDetails | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isReprocessing, setIsReprocessing] = useState(false);
+  const searchTimeoutRef = useRef<number | null>(null);
+
+  // Função com debounce para atualizar a pesquisa
+  const handleSearchChange = (value: string) => {
+    setSearchText(value);
+    
+    // Limpar o timeout anterior se existir
+    if (searchTimeoutRef.current) {
+      window.clearTimeout(searchTimeoutRef.current);
+    }
+    
+    // Criar um novo timeout de 500ms
+    searchTimeoutRef.current = window.setTimeout(() => {
+      setFilters(prev => ({ ...prev, search: value }));
+    }, 500);
+  };
+
+  // Limpar o timeout quando o componente for desmontado
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        window.clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Buscar logs de webhook
   const {
@@ -345,6 +372,7 @@ const WebhookList: React.FC = () => {
               onClick={() => {
                 // Resetar filtros e estado
                 setPage(1);
+                setSearchText(''); // Limpar também o campo de texto de pesquisa
                 setFilters({
                   status: 'all',
                   eventType: 'all',
@@ -371,8 +399,8 @@ const WebhookList: React.FC = () => {
                 </div>
                 <Input
                   placeholder="Buscar por transação, email ou erro..."
-                  value={filters.search}
-                  onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                  value={searchText}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   className="w-full pl-9"
                 />
               </div>
