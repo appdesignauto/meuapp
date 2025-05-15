@@ -35,6 +35,8 @@ type AdminLayoutProps = {
   children: ReactNode;
   title: string;
   backLink?: string;
+  navItems?: NavItem[];
+  actionButtons?: React.ReactNode;
 };
 
 type NavItem = {
@@ -42,18 +44,22 @@ type NavItem = {
   href: string;
   icon: React.ReactNode;
   badge?: string;
+  onClick?: () => void;
 };
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ 
   children, 
   title,
-  backLink
+  backLink,
+  navItems: customNavItems,
+  actionButtons
 }) => {
   const { user } = useAuth();
   const [location] = useLocation();
   const [collapsed, setCollapsed] = useState(false);
 
-  const navItems: NavItem[] = [
+  // Use os navItems personalizados ou os padrões
+  const navItems: NavItem[] = customNavItems || [
     {
       title: 'Dashboard',
       href: '/admin',
@@ -123,51 +129,96 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
           collapsed ? (
             <Tooltip key={item.href} delayDuration={0}>
               <TooltipTrigger asChild>
-                <Link
-                  href={item.href}
-                  className={cn(
-                    'flex items-center justify-center p-2.5 my-1 rounded-md w-10 h-10 mx-auto',
-                    location === item.href || location.startsWith(`${item.href}/`)
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-blue-700'
-                  )}
-                >
-                  {item.icon}
-                  {item.badge && (
-                    <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-red-500"></span>
-                  )}
-                </Link>
+                {item.onClick ? (
+                  <button
+                    onClick={item.onClick}
+                    className={cn(
+                      'flex items-center justify-center p-2.5 my-1 rounded-md w-10 h-10 mx-auto',
+                      location === item.href || location.startsWith(`${item.href}/`)
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-blue-700'
+                    )}
+                  >
+                    {item.icon}
+                    {item.badge && (
+                      <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-red-500"></span>
+                    )}
+                  </button>
+                ) : (
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      'flex items-center justify-center p-2.5 my-1 rounded-md w-10 h-10 mx-auto',
+                      location === item.href || location.startsWith(`${item.href}/`)
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-blue-700'
+                    )}
+                  >
+                    {item.icon}
+                    {item.badge && (
+                      <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-red-500"></span>
+                    )}
+                  </Link>
+                )}
               </TooltipTrigger>
               <TooltipContent side="right">
                 {item.title}
               </TooltipContent>
             </Tooltip>
           ) : (
-            <Link 
-              key={item.href} 
-              href={item.href}
-              className={cn(
-                'flex items-center px-3 py-2 text-sm font-medium rounded-md',
-                location === item.href || location.startsWith(`${item.href}/`)
-                  ? 'bg-blue-100 text-blue-800'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-blue-700'
-              )}
-            >
-              <div className={cn(
-                'flex items-center justify-center w-10 h-6',
-                location === item.href || location.startsWith(`${item.href}/`)
-                  ? 'text-blue-800'
-                  : 'text-gray-500'
-              )}>
-                {item.icon}
-              </div>
-              <span className="ml-2 truncate">{item.title}</span>
-              {item.badge && (
-                <span className="ml-auto px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-800">
-                  {item.badge}
-                </span>
-              )}
-            </Link>
+            item.onClick ? (
+              <button 
+                key={item.href}
+                onClick={item.onClick}
+                className={cn(
+                  'flex items-center px-3 py-2 text-sm font-medium rounded-md w-full text-left',
+                  location === item.href || location.startsWith(`${item.href}/`)
+                    ? 'bg-blue-100 text-blue-800'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-blue-700'
+                )}
+              >
+                <div className={cn(
+                  'flex items-center justify-center w-10 h-6',
+                  location === item.href || location.startsWith(`${item.href}/`)
+                    ? 'text-blue-800'
+                    : 'text-gray-500'
+                )}>
+                  {item.icon}
+                </div>
+                <span className="ml-2 truncate">{item.title}</span>
+                {item.badge && (
+                  <span className="ml-auto px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-800">
+                    {item.badge}
+                  </span>
+                )}
+              </button>
+            ) : (
+              <Link 
+                key={item.href} 
+                href={item.href}
+                className={cn(
+                  'flex items-center px-3 py-2 text-sm font-medium rounded-md',
+                  location === item.href || location.startsWith(`${item.href}/`)
+                    ? 'bg-blue-100 text-blue-800'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-blue-700'
+                )}
+              >
+                <div className={cn(
+                  'flex items-center justify-center w-10 h-6',
+                  location === item.href || location.startsWith(`${item.href}/`)
+                    ? 'text-blue-800'
+                    : 'text-gray-500'
+                )}>
+                  {item.icon}
+                </div>
+                <span className="ml-2 truncate">{item.title}</span>
+                {item.badge && (
+                  <span className="ml-auto px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-800">
+                    {item.badge}
+                  </span>
+                )}
+              </Link>
+            )
           )
         ))}
       </nav>
@@ -277,7 +328,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
               )}
               <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
             </div>
-            <div className="flex items-center">
+            <div className="flex items-center space-x-3">
+              {actionButtons}
               <Button variant="outline" size="sm" asChild className="flex items-center gap-1 text-blue-700 border-blue-200 hover:bg-blue-50 hover:text-blue-800">
                 <Link href="/">
                   Ver site <ExternalLink className="h-3.5 w-3.5 ml-1" />
