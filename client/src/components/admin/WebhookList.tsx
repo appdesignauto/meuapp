@@ -320,8 +320,11 @@ const WebhookList: React.FC = () => {
       <Card>
         <CardHeader className="px-6 pt-6 pb-4">
           <CardTitle className="text-xl flex justify-between items-center">
-            <span>Logs de Webhooks da Hotmart</span>
-            <Button variant="outline" size="sm" onClick={() => refetch()}>
+            <span>Logs de Webhooks</span>
+            <Button variant="outline" size="sm" onClick={() => {
+              setPage(1);
+              refetch();
+            }}>
               <RefreshCw className="h-4 w-4 mr-2" />
               Atualizar
             </Button>
