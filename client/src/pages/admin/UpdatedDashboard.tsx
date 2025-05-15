@@ -999,11 +999,11 @@ const AdminDashboard = () => {
               onClick={() => setActiveTab('stats')}
               className={`flex items-center w-full px-4 py-2 rounded-lg transition-all duration-200 ${
                 activeTab === 'stats' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
-              } ${!sidebarOpen ? 'lg:justify-center lg:px-0' : ''}`}
+              } ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
               title="Visão Geral"
             >
-              <LayoutDashboard className={`${sidebarOpen ? 'w-4 h-4' : 'w-5 h-5 mx-auto'}`} />
-              {sidebarOpen && <span className="ml-2 truncate text-sm">Visão Geral</span>}
+              <LayoutDashboard className={`${sidebarOpen ? 'w-5 h-5' : 'w-5 h-5 mx-auto'}`} />
+              {sidebarOpen && <span className="ml-3 truncate">Visão Geral</span>}
             </button>
 
 
