@@ -27,7 +27,6 @@ import DesignerProfile from "@/pages/DesignerProfile";
 import PlanosPage from "@/pages/PlanosPage";
 import ProfilePage from "@/pages/profile-page";
 import UpdatedDashboard from "@/pages/admin/UpdatedDashboard";
-import UnifiedAdminDashboard from "@/pages/admin/UnifiedAdminDashboard";
 import LogoUploadPage from "@/pages/admin/LogoUploadPage";
 import TestSubscriptionSettingsPage from "@/pages/admin/TestSubscriptionSettingsPage";
 import StorageTestPage from "@/pages/admin/StorageTestPage";
@@ -234,16 +233,6 @@ function AppRoutes() {
       {/* Rotas Administrativas */}
       <ProtectedRoute 
         path="/admin" 
-        component={UnifiedAdminDashboard} 
-        roles={['admin', 'designer_adm']} 
-      />
-      <ProtectedRoute 
-        path="/admin/unified/:tab" 
-        component={UnifiedAdminDashboard} 
-        roles={['admin', 'designer_adm']} 
-      />
-      <ProtectedRoute 
-        path="/admin/classic" 
         component={UpdatedDashboard} 
         roles={['admin', 'designer_adm']} 
       />

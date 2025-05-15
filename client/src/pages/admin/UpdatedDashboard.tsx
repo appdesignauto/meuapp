@@ -4,7 +4,6 @@ import { Link, useLocation } from 'wouter';
 import AnalyticsSettings from '@/components/admin/AnalyticsSettings';
 import ReportsManagement from '@/components/admin/ReportsManagement';
 import SubscriptionManagement from '@/components/admin/SubscriptionManagement';
-import { AdminLayout } from '@/components/layout/AdminLayout';
 import {
   LayoutGrid,
   Image,
@@ -125,33 +124,6 @@ const AdminDashboard = () => {
   const [isMultiFormOpen, setIsMultiFormOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const queryClient = useQueryClient();
-  
-  // Converte activeTab para título da página
-  const getPageTitle = () => {
-    switch(activeTab) {
-      case 'arts': return 'Artes e Designs';
-      case 'categories': return 'Categorias';
-      case 'formats': return 'Formatos';
-      case 'fileTypes': return 'Tipos de Arquivo';
-      case 'users': return 'Usuários';
-      case 'collections': return 'Coleções';
-      case 'community': return 'Comunidade';
-      case 'stats': return 'Visão Geral';
-      case 'settings': return 'Configurações';
-      case 'coursesList': return 'Gerenciamento de Cursos';
-      case 'subscriptions': return 'Gerenciamento de Assinaturas';
-      case 'modules': return 'Módulos dos Cursos';
-      case 'lessons': return 'Aulas dos Cursos';
-      case 'coursesConfig': return 'Configurações de Cursos';
-      case 'courseStats': return 'Estatísticas dos Cursos';
-      case 'comments': return 'Gerenciamento de Comentários';
-      case 'popups': return 'Gerenciamento de Popups';
-      case 'reports': return 'Gerenciamento de Denúncias';
-      case 'ferramentas': return 'Ferramentas';
-      case 'analytics': return 'Analytics';
-      default: return 'Painel Administrativo';
-    }
-  };
 
   // Estados para cursos
   const [isCourseDialogOpen, setIsCourseDialogOpen] = useState(false);
