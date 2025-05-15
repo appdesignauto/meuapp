@@ -527,7 +527,7 @@ const WebhookList: React.FC = () => {
                       
                       <div>
                         <span className="text-sm font-medium text-muted-foreground block">Processado:</span>
-                        <span className="text-sm">{log.status === 'processed' || log.status === 'approved' ? 'Sim' : 'Não'}</span>
+                        <span className="text-sm">{log.status === 'processed' ? 'Sim' : 'Não'}</span>
                       </div>
                     </div>
                   </div>

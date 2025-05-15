@@ -1287,6 +1287,7 @@ export const webhookLogs = pgTable("webhookLogs", {
   source: text("source").default("hotmart"), // 'hotmart', 'doppus', 'manual', 'outro'
   retryCount: integer("retryCount").default(0),
   transactionId: text("transactionId"),
+  email: text("email"), // Email associado ao webhook (da payload ou do usuário)
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 });
