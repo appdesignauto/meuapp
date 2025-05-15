@@ -5778,6 +5778,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Endpoint para listar logs de webhook (com paginação e filtros)
   app.get('/api/webhooks/logs', isAdmin, async (req, res) => {
     try {
+      console.log('DEBUG /api/webhooks/logs - Endpoint chamado');
+      
+      // Verificar registros diretamente
+      try {
+        const rawCount = await db.select({ count: count() }).from(schema.webhookLogs);
+        console.log('DEBUG /api/webhooks/logs - Total de registros na tabela:', rawCount[0]?.count || 0);
+      } catch (countErr) {
+        console.error('DEBUG /api/webhooks/logs - Erro ao contar registros:', countErr);
+      }
+      
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
       
@@ -5787,7 +5797,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         search: req.query.search as string
       };
       
+      console.log('DEBUG /api/webhooks/logs - Parâmetros da requisição:', { page, limit, filters });
+      
       const result = await storage.getWebhookLogs(page, limit, filters);
+      
+      console.log('DEBUG /api/webhooks/logs - Resultado:', {
+        totalCount: result.totalCount,
+        logsLength: result.logs.length,
+        firstLog: result.logs[0] ? {
+          id: result.logs[0].id,
+          eventType: result.logs[0].eventType,
+          status: result.logs[0].status,
+        } : 'Nenhum log retornado'
+      });
       
       return res.json({
         logs: result.logs,
