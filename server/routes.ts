@@ -5647,8 +5647,238 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Implementada em reports-v2.ts para resolver problemas de ORM
   app.use('/api/reports-v2', reportsV2Router);
   
-
+  // Endpoints para gerenciamento de webhooks da Hotmart
   
+  // Endpoint para recebimento de webhooks da Hotmart
+  app.post('/api/webhooks/hotmart', async (req, res) => {
+    try {
+      // 1. Verificar se requisição é válida
+      // A Hotmart sempre envia no formato application/json
+      if (!req.is('application/json')) {
+        return res.status(400).json({ success: false, message: 'Formato inválido' });
+      }
+      
+      // 2. Registrar o webhook recebido no banco de dados
+      const payload = req.body;
+      const sourceIp = req.ip;
+      const eventType = payload?.event || 'UNKNOWN';
+      
+      // Verificações de segurança básicas
+      const hotmartSecret = process.env.HOTMART_SECRET;
+      if (!hotmartSecret) {
+        console.error('Erro: HOTMART_SECRET não configurado');
+        
+        // Mesmo com erro, continuar processando mas registrar status de erro
+        await storage.createWebhookLog({
+          eventType,
+          payloadData: JSON.stringify(payload),
+          status: 'error',
+          errorMessage: 'Chave secreta Hotmart não configurada',
+          sourceIp,
+          transactionId: payload?.data?.transaction?.code
+        });
+        
+        return res.status(500).json({ success: false, message: 'Erro de configuração (chave)' });
+      }
+      
+      // 3. Processar o webhook baseado no tipo de evento
+      let userId = null;
+      let status = 'received';
+      let errorMessage = null;
+      
+      try {
+        // Extrair dados importantes
+        const transactionCode = payload?.data?.transaction?.code;
+        const productId = payload?.data?.product?.id;
+        const buyerEmail = payload?.data?.buyer?.email;
+        
+        if (eventType === 'PURCHASE_APPROVED') {
+          // Buscar usuário pelo e-mail
+          const user = await storage.getUserByEmail(buyerEmail);
+          
+          if (user) {
+            userId = user.id;
+            
+            // Implementar atualização de assinatura do usuário
+            // Exemplo: conceder acesso premium
+            // TO-DO: implementar lógica específica para cada tipo de produto
+            
+            status = 'processed';
+          } else {
+            status = 'pending';
+            errorMessage = 'Usuário não encontrado com o e-mail: ' + buyerEmail;
+          }
+        } else if (eventType === 'PURCHASE_REFUNDED' || eventType === 'PURCHASE_CANCELED') {
+          // Buscar usuário pelo e-mail
+          const buyerEmail = payload?.data?.buyer?.email;
+          const user = await storage.getUserByEmail(buyerEmail);
+          
+          if (user) {
+            userId = user.id;
+            
+            // Implementar remoção de acesso premium
+            // TO-DO: implementar lógica específica
+            
+            status = 'processed';
+          } else {
+            status = 'pending';
+            errorMessage = 'Usuário não encontrado com o e-mail: ' + buyerEmail;
+          }
+        } else {
+          // Outros tipos de eventos
+          status = 'received';
+        }
+      } catch (processingError) {
+        status = 'error';
+        errorMessage = `Erro ao processar webhook: ${processingError.message}`;
+        console.error('Erro ao processar webhook Hotmart:', processingError);
+      }
+      
+      // 4. Registrar log completo do webhook
+      const webhookLog = await storage.createWebhookLog({
+        eventType,
+        payloadData: JSON.stringify(payload),
+        status,
+        errorMessage,
+        userId,
+        sourceIp,
+        transactionId: payload?.data?.transaction?.code
+      });
+      
+      // 5. Responder com sucesso (sempre responder 200 para a Hotmart)
+      return res.status(200).json({ 
+        success: true, 
+        message: 'Webhook processado',
+        logId: webhookLog.id
+      });
+    } catch (error) {
+      console.error('Erro grave ao processar webhook Hotmart:', error);
+      
+      // Tente registrar o erro, se possível
+      try {
+        await storage.createWebhookLog({
+          eventType: 'ERROR',
+          payloadData: JSON.stringify(req.body),
+          status: 'error',
+          errorMessage: `Erro grave: ${error.message}`,
+          sourceIp: req.ip
+        });
+      } catch (logError) {
+        console.error('Não foi possível registrar o erro no log:', logError);
+      }
+      
+      // Sempre retornar 200 para a Hotmart não reenviar webhooks
+      return res.status(200).json({ 
+        success: false, 
+        message: 'Erro interno no processamento do webhook' 
+      });
+    }
+  });
+  
+  // Endpoint para listar logs de webhook (com paginação e filtros)
+  app.get('/api/webhooks/logs', isAdmin, async (req, res) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      
+      const filters = {
+        status: req.query.status as string,
+        eventType: req.query.eventType as string,
+        search: req.query.search as string
+      };
+      
+      const result = await storage.getWebhookLogs(page, limit, filters);
+      
+      return res.json({
+        logs: result.logs,
+        totalCount: result.totalCount,
+        page,
+        limit,
+        totalPages: Math.ceil(result.totalCount / limit)
+      });
+    } catch (error) {
+      console.error('Erro ao listar logs de webhook:', error);
+      return res.status(500).json({ 
+        message: 'Erro ao listar logs de webhook', 
+        error: error.message 
+      });
+    }
+  });
+  
+  // Endpoint para obter detalhes de um log específico
+  app.get('/api/webhooks/logs/:id', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'ID inválido' });
+      }
+      
+      const log = await storage.getWebhookLogById(id);
+      
+      if (!log) {
+        return res.status(404).json({ message: 'Log não encontrado' });
+      }
+      
+      // Se tiver dados de usuário associados, buscar informações adicionais
+      let userData = null;
+      if (log.userId) {
+        userData = await storage.getUserById(log.userId);
+      }
+      
+      return res.json({
+        log,
+        userData: userData ? {
+          id: userData.id,
+          username: userData.username,
+          email: userData.email,
+          name: userData.name,
+          nivelacesso: userData.nivelacesso,
+          dataassinatura: userData.dataassinatura,
+          dataexpiracao: userData.dataexpiracao
+        } : null
+      });
+    } catch (error) {
+      console.error(`Erro ao obter detalhes do log #${req.params.id}:`, error);
+      return res.status(500).json({ 
+        message: 'Erro ao obter detalhes do log', 
+        error: error.message 
+      });
+    }
+  });
+  
+  // Endpoint para reprocessar um webhook
+  app.post('/api/webhooks/logs/:id/reprocess', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'ID inválido' });
+      }
+      
+      const success = await storage.reprocessWebhook(id);
+      
+      if (success) {
+        return res.json({ 
+          success: true, 
+          message: 'Webhook reprocessado com sucesso' 
+        });
+      } else {
+        return res.json({ 
+          success: false, 
+          message: 'Não foi possível reprocessar o webhook' 
+        });
+      }
+    } catch (error) {
+      console.error(`Erro ao reprocessar webhook #${req.params.id}:`, error);
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Erro ao reprocessar webhook', 
+        error: error.message 
+      });
+    }
+  });
+
   // Registrar rota para calcular posição do post na paginação
   registerPostPositionRoute(app);
 
