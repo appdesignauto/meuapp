@@ -50,7 +50,8 @@ import {
   TrendingDown,
   Plus,
   Save,
-  RefreshCw
+  RefreshCw,
+  Eye
 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -228,7 +229,7 @@ const SubscriptionManagement = () => {
       
       // Também atualiza as estatísticas
       queryClient.invalidateQueries({
-        queryKey: ['/api/admin/subscription-stats']
+        queryKey: ['/api/subscriptions/stats']
       });
       
       setIsEditDialogOpen(false);
@@ -265,7 +266,7 @@ const SubscriptionManagement = () => {
       
       // Também atualiza as estatísticas
       queryClient.invalidateQueries({
-        queryKey: ['/api/admin/subscription-stats']
+        queryKey: ['/api/subscriptions/stats']
       });
       
       setIsConfirmDialogOpen(false);
