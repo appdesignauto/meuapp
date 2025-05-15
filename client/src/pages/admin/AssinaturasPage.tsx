@@ -76,6 +76,9 @@ export default function AssinaturasPage() {
           churnRate: 0,
           averageLTV: 0,
           averageRetention: 0,
+          mrr: 0,
+          averageValue: 0,
+          annualRevenue: 0,
           subscriptionsBySource: []
         };
       }

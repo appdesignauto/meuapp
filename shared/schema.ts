@@ -1364,4 +1364,10 @@ export interface SubscriptionStats {
   expiringIn7Days: number;
   expiringIn30Days: number;
   byOrigin: Record<string, number>;
+  churnRate: number;
+  averageRetention: number;
+  averageLTV: number;
+  mrr: number;
+  averageValue: number;
+  annualRevenue: number;
 }
