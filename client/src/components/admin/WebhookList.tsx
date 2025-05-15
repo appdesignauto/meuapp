@@ -344,13 +344,17 @@ const WebhookList: React.FC = () => {
           {/* Filtros */}
           <div className="flex flex-wrap gap-4 mb-4">
             <div className="flex-1 min-w-[200px]">
-              <Input
-                placeholder="Buscar por transação ou erro..."
-                value={filters.search}
-                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                className="w-full"
-                prefix={<Search className="h-4 w-4 mr-2 opacity-50" />}
-              />
+              <div className="relative w-full">
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                  <Search className="h-4 w-4 opacity-50" />
+                </div>
+                <Input
+                  placeholder="Buscar por transação ou erro..."
+                  value={filters.search}
+                  onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                  className="w-full pl-9"
+                />
+              </div>
             </div>
             <div className="w-[150px]">
               <Select
