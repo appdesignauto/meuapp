@@ -116,23 +116,23 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   const NavLinks = () => (
     <nav className="space-y-1 mt-4">
       {navItems.map((item) => (
-        <Link key={item.href} href={item.href}>
-          <a
-            className={cn(
-              'flex items-center px-4 py-2.5 text-sm font-medium rounded-lg',
-              location === item.href || location.startsWith(`${item.href}/`)
-                ? 'bg-primary text-primary-foreground'
-                : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
-            )}
-          >
-            {item.icon}
-            <span className="ml-3">{item.title}</span>
-            {item.badge && (
-              <span className="ml-auto px-2 py-0.5 text-xs rounded-full bg-primary/20 text-primary dark:bg-primary/30">
-                {item.badge}
-              </span>
-            )}
-          </a>
+        <Link 
+          key={item.href} 
+          href={item.href}
+          className={cn(
+            'flex items-center px-4 py-2.5 text-sm font-medium rounded-lg',
+            location === item.href || location.startsWith(`${item.href}/`)
+              ? 'bg-primary text-primary-foreground'
+              : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
+          )}
+        >
+          {item.icon}
+          <span className="ml-3">{item.title}</span>
+          {item.badge && (
+            <span className="ml-auto px-2 py-0.5 text-xs rounded-full bg-primary/20 text-primary dark:bg-primary/30">
+              {item.badge}
+            </span>
+          )}
         </Link>
       ))}
     </nav>

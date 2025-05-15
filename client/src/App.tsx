@@ -279,6 +279,18 @@ function AppRoutes() {
         }}
         roles={['admin']}
       />
+      <ProtectedRoute
+        path="/admin/assinaturas"
+        component={() => {
+          const AssinaturasPage = lazy(() => import("@/pages/admin/AssinaturasPage"));
+          return (
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+              <AssinaturasPage />
+            </Suspense>
+          );
+        }}
+        roles={['admin']}
+      />
       <ProtectedRoute 
         path="/admin/:page" 
         component={UpdatedDashboard}
