@@ -17,6 +17,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import {
   Form,
   FormControl,
   FormDescription,
@@ -129,9 +135,24 @@ export default function SubscriptionSettings() {
   useEffect(() => {
     if (settings) {
       form.reset({
+        // Campos Hotmart
         webhookUrl: settings.webhookUrl || '',
         webhookSecretKey: settings.webhookSecretKey || '',
         hotmartEnvironment: settings.hotmartEnvironment || 'sandbox',
+        hotmartClientId: settings.hotmartClientId || '',
+        hotmartClientSecret: settings.hotmartClientSecret || '',
+        hotmartBasicPlanId: settings.hotmartBasicPlanId || '',
+        hotmartProPlanId: settings.hotmartProPlanId || '',
+        hotmartWebhookUrl: settings.hotmartWebhookUrl || '',
+        
+        // Campos Doppus
+        doppusApiKey: settings.doppusApiKey || '',
+        doppusSecretKey: settings.doppusSecretKey || '',
+        doppusBasicPlanId: settings.doppusBasicPlanId || '',
+        doppusProPlanId: settings.doppusProPlanId || '',
+        doppusWebhookUrl: settings.doppusWebhookUrl || '',
+        
+        // Campos de configuração geral
         graceHoursAfterExpiration: settings.graceHoursAfterExpiration || 48,
         sendExpirationWarningDays: settings.sendExpirationWarningDays || 3,
         defaultSubscriptionDuration: settings.defaultSubscriptionDuration || 12,
