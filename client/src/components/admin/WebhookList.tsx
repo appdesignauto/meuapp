@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useLocation } from 'wouter';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -113,6 +114,7 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
 // Componente principal
 const WebhookList: React.FC = () => {
   const { toast } = useToast();
+  const [location, setLocation] = useLocation();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [filters, setFilters] = useState({
@@ -325,19 +327,8 @@ const WebhookList: React.FC = () => {
               variant="outline" 
               size="sm" 
               onClick={() => {
-                // Resetar todos os filtros e página
-                setFilters({
-                  status: 'all',
-                  eventType: 'all',
-                  source: 'all',
-                  search: '',
-                });
-                setPage(1);
-                
-                // Forçar a atualização dos dados
-                setTimeout(() => {
-                  refetch();
-                }, 100);
+                // Resetamos o estado de forma mais direta
+                window.location.href = '/admin/assinaturas?tab=webhooks';
               }}
             >
               <RefreshCw className="h-4 w-4 mr-2" />
