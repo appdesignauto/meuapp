@@ -247,7 +247,7 @@ const WebhookList: React.FC = () => {
           <PaginationItem>
             <PaginationPrevious
               onClick={() => setPage(prev => Math.max(prev - 1, 1))}
-              disabled={page === 1}
+              className={page === 1 ? "pointer-events-none opacity-50" : ""}
             />
           </PaginationItem>
           
@@ -261,7 +261,7 @@ const WebhookList: React.FC = () => {
                 return (
                   <React.Fragment key={`ellipsis-${p}`}>
                     <PaginationItem>
-                      <PaginationLink disabled>...</PaginationLink>
+                      <PaginationLink className="pointer-events-none opacity-50">...</PaginationLink>
                     </PaginationItem>
                     <PaginationItem>
                       <PaginationLink
@@ -290,7 +290,7 @@ const WebhookList: React.FC = () => {
           <PaginationItem>
             <PaginationNext
               onClick={() => setPage(prev => (prev < totalPages ? prev + 1 : prev))}
-              disabled={page === totalPages}
+              className={page === totalPages ? "pointer-events-none opacity-50" : ""}
             />
           </PaginationItem>
         </PaginationContent>
