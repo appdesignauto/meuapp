@@ -2,15 +2,6 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import { addMonths, format } from 'date-fns';
-import { pt } from 'date-fns/locale';
-import { 
-  BadgeDollarSign, 
-  Wallet, 
-  CircleDollarSign, 
-  BarChart3, 
-  CalendarClock 
-} from 'lucide-react';
 import WebhookList from './WebhookList';
 import SubscriptionTrends from './SubscriptionTrends';
 import {
@@ -50,6 +41,11 @@ import {
   Calendar,
   Edit,
   Trash2,
+  BadgeDollarSign,
+  Wallet,
+  CircleDollarSign,
+  BarChart3,
+  CalendarClock,
   Clock,
   User,
   Users,
@@ -71,6 +67,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { format, addDays, addMonths, addYears, parseISO } from 'date-fns';
 import { pt } from 'date-fns/locale';
+
 import {
   Card,
   CardContent,
