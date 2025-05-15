@@ -754,17 +754,23 @@ export default function SubscriptionManagement() {
               
               <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
                 <Button 
-                  variant="outline" 
+                  variant={showAdvancedFilters || planFilter !== 'all' || dateFilter !== 'all' ? "default" : "outline"}
                   size="sm" 
                   onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
                   className="flex items-center gap-1"
                 >
                   <SlidersHorizontal className="h-4 w-4" />
                   Filtros Avançados
+                  {(planFilter !== 'all' || dateFilter !== 'all') && (
+                    <Badge variant="secondary" className="ml-1 font-normal text-xs">
+                      {(planFilter !== 'all' && dateFilter !== 'all') ? '2' :
+                       (planFilter !== 'all' || dateFilter !== 'all') ? '1' : ''}
+                    </Badge>
+                  )}
                   {showAdvancedFilters ? (
-                    <ChevronLeft className="h-4 w-4" />
+                    <ChevronLeft className="h-4 w-4 ml-1" />
                   ) : (
-                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight className="h-4 w-4 ml-1" />
                   )}
                 </Button>
                 
@@ -863,39 +869,86 @@ export default function SubscriptionManagement() {
                     
                     {dateFilter === 'custom' && (
                       <div className="flex items-center gap-2">
-                        <Popover>
+                        <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                           <PopoverTrigger asChild>
                             <Button variant="outline" size="sm" className="flex items-center gap-1">
                               <Calendar className="h-4 w-4" />
-                              {fromDate ? format(fromDate, 'dd/MM/yyyy') : 'Data inicial'}
+                              {fromDate && toDate ? 
+                                `${format(fromDate, 'dd/MM/yyyy')} até ${format(toDate, 'dd/MM/yyyy')}` : 
+                                fromDate ? 
+                                  `A partir de ${format(fromDate, 'dd/MM/yyyy')}` : 
+                                  toDate ? 
+                                    `Até ${format(toDate, 'dd/MM/yyyy')}` : 
+                                    'Selecionar período'}
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className="p-0" align="start">
-                            <CalendarComponent
-                              mode="single"
-                              selected={fromDate}
-                              onSelect={setFromDate}
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
-                        
-                        <span>até</span>
-                        
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button variant="outline" size="sm" className="flex items-center gap-1">
-                              <Calendar className="h-4 w-4" />
-                              {toDate ? format(toDate, 'dd/MM/yyyy') : 'Data final'}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="p-0" align="start">
-                            <CalendarComponent
-                              mode="single"
-                              selected={toDate}
-                              onSelect={setToDate}
-                              initialFocus
-                            />
+                          <PopoverContent className="p-4 w-auto" align="start">
+                            <div className="space-y-4">
+                              <div className="grid gap-2">
+                                <div className="flex items-center justify-between">
+                                  <Label htmlFor="from">De</Label>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="h-7 px-2"
+                                    onClick={() => setFromDate(undefined)}
+                                    disabled={!fromDate}
+                                  >
+                                    <X className="h-4 w-4 text-muted-foreground" />
+                                  </Button>
+                                </div>
+                                <CalendarComponent
+                                  mode="single"
+                                  selected={fromDate}
+                                  onSelect={setFromDate}
+                                  disabled={(date) => toDate ? date > toDate : false}
+                                  initialFocus
+                                />
+                              </div>
+                              
+                              <div className="grid gap-2">
+                                <div className="flex items-center justify-between">
+                                  <Label htmlFor="to">Até</Label>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="h-7 px-2"
+                                    onClick={() => setToDate(undefined)}
+                                    disabled={!toDate}
+                                  >
+                                    <X className="h-4 w-4 text-muted-foreground" />
+                                  </Button>
+                                </div>
+                                <CalendarComponent
+                                  mode="single"
+                                  selected={toDate}
+                                  onSelect={setToDate}
+                                  disabled={(date) => fromDate ? date < fromDate : false}
+                                  initialFocus
+                                />
+                              </div>
+                              
+                              <div className="flex justify-end gap-2">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => {
+                                    setFromDate(undefined);
+                                    setToDate(undefined);
+                                    setIsCalendarOpen(false);
+                                  }}
+                                >
+                                  Cancelar
+                                </Button>
+                                <Button 
+                                  size="sm"
+                                  onClick={() => setIsCalendarOpen(false)}
+                                  disabled={!fromDate && !toDate}
+                                >
+                                  Aplicar
+                                </Button>
+                              </div>
+                            </div>
                           </PopoverContent>
                         </Popover>
                       </div>
