@@ -1659,7 +1659,7 @@ export default function SubscriptionManagement() {
               <p className="text-sm">
                 <span className="font-medium">{
                   // Calcular a quantidade de registros após aplicar os filtros
-                  usersData?.users.filter(user => {
+                  usersData?.users?.filter((user) => {
                     // Status
                     if (statusFilter !== 'all') {
                       if (statusFilter === 'active' && user.planstatus !== 'active') return false;
