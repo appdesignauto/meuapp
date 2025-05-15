@@ -3361,15 +3361,23 @@ export class DatabaseStorage implements IStorage {
     search?: string;
   }): Promise<{ logs: schema.WebhookLog[], totalCount: number }> {
     try {
+      // Log para depuração - valores recebidos
+      console.log('DEBUG getWebhookLogs - Filtros recebidos:', {
+        page, limit, filters,
+        status: filters?.status,
+        eventType: filters?.eventType,
+        search: filters?.search
+      });
+      
       let query = db.select().from(schema.webhookLogs);
       
       // Aplicar filtros
       if (filters) {
-        if (filters.status) {
+        if (filters.status && filters.status !== 'all') {
           query = query.where(eq(schema.webhookLogs.status, filters.status));
         }
         
-        if (filters.eventType) {
+        if (filters.eventType && filters.eventType !== 'all') {
           query = query.where(eq(schema.webhookLogs.eventType, filters.eventType));
         }
         
@@ -3392,6 +3400,13 @@ export class DatabaseStorage implements IStorage {
         .orderBy(desc(schema.webhookLogs.createdAt))
         .limit(limit)
         .offset((page - 1) * limit);
+      
+      // Log para depuração - resultados
+      console.log('DEBUG getWebhookLogs - Resultados:', {
+        totalCount: Number(totalCount[0]?.count || 0),
+        logCount: logs.length,
+        primeiroLog: logs[0] ? { id: logs[0].id, tipo: logs[0].eventType } : 'Nenhum log encontrado'
+      });
       
       return {
         logs,
