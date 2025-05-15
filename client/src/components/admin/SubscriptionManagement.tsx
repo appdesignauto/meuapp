@@ -415,8 +415,6 @@ export default function SubscriptionManagement() {
   
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-bold mb-6">Gerenciamento de Assinaturas</h2>
-      
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="grid w-full grid-cols-4 mb-6">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>

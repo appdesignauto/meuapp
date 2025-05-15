@@ -3993,7 +3993,6 @@ const AdminDashboard = () => {
               <div className="bg-white p-6 rounded-lg shadow-sm">
                 <div className="flex flex-col space-y-6">
                   <div>
-                    <h2 className="text-2xl font-bold tracking-tight mb-2">Gerenciamento de Assinaturas</h2>
                     <p className="text-muted-foreground">
                       Gerencie assinaturas, webhooks e configurações relacionadas a pagamentos.
                     </p>
