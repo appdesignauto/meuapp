@@ -51,9 +51,24 @@ import * as z from 'zod';
 
 // Esquema de validação com Zod
 const subscriptionSettingsSchema = z.object({
+  // Campos Hotmart
   webhookUrl: z.string().url({ message: 'A URL do webhook deve ser uma URL válida' }).optional().or(z.literal('')),
   webhookSecretKey: z.string().optional(),
   hotmartEnvironment: z.enum(['sandbox', 'production']),
+  hotmartClientId: z.string().optional().or(z.literal('')),
+  hotmartClientSecret: z.string().optional().or(z.literal('')),
+  hotmartBasicPlanId: z.string().optional().or(z.literal('')),
+  hotmartProPlanId: z.string().optional().or(z.literal('')),
+  hotmartWebhookUrl: z.string().url({ message: 'A URL do webhook Hotmart deve ser uma URL válida' }).optional().or(z.literal('')),
+  
+  // Campos Doppus
+  doppusApiKey: z.string().optional().or(z.literal('')),
+  doppusSecretKey: z.string().optional().or(z.literal('')),
+  doppusBasicPlanId: z.string().optional().or(z.literal('')),
+  doppusProPlanId: z.string().optional().or(z.literal('')),
+  doppusWebhookUrl: z.string().url({ message: 'A URL do webhook Doppus deve ser uma URL válida' }).optional().or(z.literal('')),
+  
+  // Configurações gerais
   graceHoursAfterExpiration: z.coerce.number().int().min(0).max(720),
   sendExpirationWarningDays: z.coerce.number().int().min(0).max(30),
   defaultSubscriptionDuration: z.coerce.number().int().min(1).max(36),
@@ -81,9 +96,24 @@ export default function SubscriptionSettings() {
   const form = useForm<SubscriptionSettingsForm>({
     resolver: zodResolver(subscriptionSettingsSchema),
     defaultValues: {
+      // Campos Hotmart
       webhookUrl: '',
       webhookSecretKey: '',
       hotmartEnvironment: 'sandbox',
+      hotmartClientId: '',
+      hotmartClientSecret: '',
+      hotmartBasicPlanId: '',
+      hotmartProPlanId: '',
+      hotmartWebhookUrl: '',
+      
+      // Campos Doppus
+      doppusApiKey: '',
+      doppusSecretKey: '',
+      doppusBasicPlanId: '',
+      doppusProPlanId: '',
+      doppusWebhookUrl: '',
+      
+      // Campos gerais
       graceHoursAfterExpiration: 48,
       sendExpirationWarningDays: 3,
       defaultSubscriptionDuration: 12,

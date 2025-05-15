@@ -1284,6 +1284,7 @@ export const webhookLogs = pgTable("webhookLogs", {
   errorMessage: text("errorMessage"),
   userId: integer("userId").references(() => users.id),
   sourceIp: text("sourceIp"),
+  source: text("source").default("hotmart"), // 'hotmart', 'doppus', 'manual', 'outro'
   retryCount: integer("retryCount").default(0),
   transactionId: text("transactionId"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
@@ -1310,6 +1311,14 @@ export const subscriptionSettings = pgTable("subscriptionSettings", {
   hotmartClientSecret: text("hotmartClientSecret"),
   hotmartBasicPlanId: text("hotmartBasicPlanId"),
   hotmartProPlanId: text("hotmartProPlanId"),
+  hotmartWebhookUrl: text("hotmartWebhookUrl"),
+  
+  // Campos para integração da Doppus
+  doppusApiKey: text("doppusApiKey"),
+  doppusSecretKey: text("doppusSecretKey"),
+  doppusBasicPlanId: text("doppusBasicPlanId"),
+  doppusProPlanId: text("doppusProPlanId"),
+  doppusWebhookUrl: text("doppusWebhookUrl"),
   
   // Campos para configurações de comportamento
   defaultSubscriptionDuration: integer("defaultSubscriptionDuration").default(12).notNull(),
