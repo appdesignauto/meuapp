@@ -2,6 +2,15 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { addMonths, format } from 'date-fns';
+import { pt } from 'date-fns/locale';
+import { 
+  BadgeDollarSign, 
+  Wallet, 
+  CircleDollarSign, 
+  BarChart3, 
+  CalendarClock 
+} from 'lucide-react';
 import WebhookList from './WebhookList';
 import SubscriptionTrends from './SubscriptionTrends';
 import {
@@ -469,6 +478,125 @@ export default function SubscriptionManagement() {
                   icon={BarChart4}
                   description={`${Math.round((subscriptionStats.hotmartCount / (subscriptionStats.total || 1)) * 100)}% das assinaturas`}
                 />
+              </div>
+              
+              {/* Indicadores financeiros */}
+              <h3 className="text-lg font-semibold mb-3 mt-6">Indicadores Financeiros</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Receita Mensal (MRR)</CardTitle>
+                    <BadgeDollarSign className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {isLoadingStats ? (
+                        <div className="h-6 w-20 bg-muted animate-pulse rounded"></div>
+                      ) : (
+                        `R$ ${(subscriptionStats?.mrr || 0).toLocaleString('pt-BR')}`
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Receita mensal recorrente
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Valor Médio</CardTitle>
+                    <Wallet className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {isLoadingStats ? (
+                        <div className="h-6 w-16 bg-muted animate-pulse rounded"></div>
+                      ) : (
+                        `R$ ${(subscriptionStats?.averageValue || 0).toLocaleString('pt-BR')}`
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Valor médio por assinatura
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Projeção Anual</CardTitle>
+                    <CircleDollarSign className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {isLoadingStats ? (
+                        <div className="h-6 w-24 bg-muted animate-pulse rounded"></div>
+                      ) : (
+                        `R$ ${(subscriptionStats?.annualRevenue || 0).toLocaleString('pt-BR')}`
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Projeção de receita anual
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                {/* Segunda linha de métricas financeiras */}
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Taxa de Churn</CardTitle>
+                    <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {isLoadingStats ? (
+                        <div className="h-6 w-16 bg-muted animate-pulse rounded"></div>
+                      ) : (
+                        `${(subscriptionStats?.churnRate || 0).toFixed(1)}%`
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Taxa de cancelamento
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Retenção Média</CardTitle>
+                    <CalendarClock className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {isLoadingStats ? (
+                        <div className="h-6 w-16 bg-muted animate-pulse rounded"></div>
+                      ) : (
+                        `${subscriptionStats?.averageRetention || 0} dias`
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Tempo médio de permanência
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Valor do Cliente (LTV)</CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {isLoadingStats ? (
+                        <div className="h-6 w-24 bg-muted animate-pulse rounded"></div>
+                      ) : (
+                        `R$ ${(subscriptionStats?.averageLTV || 0).toLocaleString('pt-BR')}`
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Valor médio ao longo da vida
+                    </p>
+                  </CardContent>
+                </Card>
               </div>
               
               {/* Estatísticas adicionais */}
