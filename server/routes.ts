@@ -5071,6 +5071,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Rota para webhook do Doppus
+  app.post("/api/webhooks/doppus", async (req, res) => {
+    try {
+      // Obter o IP de origem para registro
+      const sourceIp = req.ip || req.connection.remoteAddress || 'unknown';
+      console.log("Webhook Doppus recebido de IP:", sourceIp);
+      
+      // Extrai assinatura de segurança do webhook Doppus no cabeçalho da requisição
+      const signature = req.headers['x-doppus-signature'];
+      const eventType = req.headers['x-doppus-event'] || 'unknown';
+      
+      // Em ambiente de produção, validar a assinatura do Doppus
+      // const doppusSecret = process.env.DOPPUS_SECRET_KEY;
+      // if (!signature /* || !validarAssinatura(signature, req.body, doppusSecret) */) {
+      //   console.error("Assinatura de webhook inválida ou não fornecida");
+      //   return res.status(403).json({
+      //     success: false,
+      //     message: "Acesso não autorizado: assinatura de webhook inválida"
+      //   });
+      // }
+      
+      // Validação básica do webhook
+      if (!req.body || !req.body.data || !req.body.event) {
+        console.error("Formato de webhook Doppus inválido:", req.body);
+        
+        // Registrar o webhook mesmo com formato inválido
+        await storage.createWebhookLog({
+          eventType: 'FORMAT_ERROR',
+          payloadData: JSON.stringify(req.body),
+          status: 'error',
+          source: 'doppus',
+          errorMessage: "Formato de webhook inválido",
+          sourceIp
+        });
+        
+        return res.status(400).json({ 
+          success: false, 
+          message: "Webhook inválido: formato incorreto" 
+        });
+      }
+      
+      // Para fins de demonstração, vamos apenas registrar o webhook
+      console.log("Evento Doppus recebido:", eventType);
+      
+      // Extrair transactionId do payload
+      const transactionId = req.body.data?.transaction?.code || null;
+      
+      // Registrar o webhook no banco de dados
+      const webhookLog = await storage.createWebhookLog({
+        eventType: req.body.event,
+        payloadData: JSON.stringify(req.body),
+        status: 'received',
+        source: 'doppus',
+        errorMessage: null,
+        sourceIp,
+        transactionId
+      });
+      
+      // Em uma implementação completa, processaríamos o webhook aqui
+      // const result = await SubscriptionService.processDoppusWebhook(req.body);
+      
+      res.json({ 
+        success: true, 
+        message: "Webhook Doppus recebido com sucesso",
+        logId: webhookLog.id
+      });
+    } catch (error) {
+      console.error("Erro ao processar webhook do Doppus:", error);
+      
+      // Tente registrar o erro, se possível
+      try {
+        await storage.createWebhookLog({
+          eventType: 'ERROR',
+          payloadData: JSON.stringify(req.body),
+          status: 'error',
+          source: 'doppus',
+          errorMessage: `Erro grave: ${error.message}`,
+          sourceIp: req.ip
+        });
+      } catch (logError) {
+        console.error('Não foi possível registrar o erro no log:', logError);
+      }
+      
+      res.status(500).json({ 
+        success: false, 
+        message: "Erro ao processar webhook", 
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
   // Rota para testar rebaixamento de usuário específico (com verificação Hotmart)
   // Temporariamente removida restrição isAdmin para testes
   app.post("/api/test/downgradeUser/:userId", async (req, res) => {
