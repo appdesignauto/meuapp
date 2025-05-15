@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import WebhookList from '@/components/admin/WebhookList';
 import SubscriptionManagement from '@/components/admin/SubscriptionManagement';
+import SubscriptionSettings from '@/components/admin/SubscriptionSettings';
 import { 
   Card, 
   CardContent, 
@@ -322,98 +323,8 @@ export default function AssinaturasPage() {
               </div>
             </div>
           </div>
-
-          <div className="space-y-6">
-            {/* Configurações de Integrações */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Integrações com Plataformas</CardTitle>
-                <CardDescription>
-                  Configure as integrações com plataformas de pagamento e assinaturas
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="grid w-full items-center gap-2">
-                    <h3 className="text-sm font-medium leading-none">Hotmart</h3>
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm text-muted-foreground">
-                        Status: <ExtendedBadge variant="success">Conectado</ExtendedBadge>
-                      </p>
-                      <Button variant="outline" size="sm">Configurar Webhook</Button>
-                    </div>
-                    <Separator />
-                  </div>
-
-                  <div className="grid w-full items-center gap-2">
-                    <h3 className="text-sm font-medium leading-none">Doppus</h3>
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm text-muted-foreground">
-                        Status: <ExtendedBadge variant="outline">Não configurado</ExtendedBadge>
-                      </p>
-                      <Button variant="outline" size="sm">Configurar Webhook</Button>
-                    </div>
-                    <Separator />
-                  </div>
-
-                  <div className="grid w-full items-center gap-2">
-                    <h3 className="text-sm font-medium leading-none">Outros Sistemas</h3>
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm text-muted-foreground">
-                        Adicione webhooks de outros sistemas de pagamento
-                      </p>
-                      <Button variant="outline" size="sm">Adicionar</Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Configurações de Notificações */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Notificações Automáticas</CardTitle>
-                <CardDescription>
-                  Configure notificações automáticas para eventos de assinaturas
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-medium">Notificação de expiração</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Enviar notificação quando uma assinatura estiver próxima de expirar
-                      </p>
-                    </div>
-                    <Button variant="outline" size="sm">Configurar</Button>
-                  </div>
-                  <Separator />
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-medium">Agradecimento por renovação</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Mensagem de agradecimento quando uma assinatura for renovada
-                      </p>
-                    </div>
-                    <Button variant="outline" size="sm">Configurar</Button>
-                  </div>
-                  <Separator />
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-medium">Alerta de cancelamento</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Alerta para equipe quando uma assinatura for cancelada
-                      </p>
-                    </div>
-                    <Button variant="outline" size="sm">Configurar</Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          
+          <SubscriptionSettings />
         </TabsContent>
       </Tabs>
     </AdminLayout>
