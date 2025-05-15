@@ -242,6 +242,10 @@ export interface IStorage {
   createWebhookLog(log: schema.InsertWebhookLog): Promise<schema.WebhookLog>;
   updateWebhookLog(id: number, updates: Partial<schema.WebhookLog>): Promise<schema.WebhookLog | undefined>;
   reprocessWebhook(id: number): Promise<boolean>;
+  
+  // Subscription settings methods
+  getSubscriptionSettings(): Promise<schema.SubscriptionSetting | undefined>;
+  updateSubscriptionSettings(settings: Partial<schema.InsertSubscriptionSetting>): Promise<schema.SubscriptionSetting>;
 }
 
 interface ArtFilters {
@@ -3552,6 +3556,52 @@ export class DatabaseStorage implements IStorage {
       });
       
       return false;
+    }
+  }
+
+  // Métodos de configurações de assinaturas
+  async getSubscriptionSettings(): Promise<schema.SubscriptionSetting | undefined> {
+    try {
+      const [settings] = await db.select().from(schema.subscriptionSettings);
+      return settings;
+    } catch (error) {
+      console.error("Erro ao buscar configurações de assinaturas:", error);
+      return undefined;
+    }
+  }
+
+  async updateSubscriptionSettings(settings: Partial<schema.InsertSubscriptionSetting>): Promise<schema.SubscriptionSetting> {
+    try {
+      // Buscar as configurações existentes
+      const existingSettings = await this.getSubscriptionSettings();
+      
+      if (existingSettings) {
+        // Atualizar configurações existentes
+        const [updated] = await db.update(schema.subscriptionSettings)
+          .set({
+            ...settings,
+            updatedAt: new Date()
+          })
+          .where(eq(schema.subscriptionSettings.id, existingSettings.id))
+          .returning();
+        
+        return updated;
+      } else {
+        // Criar configurações iniciais
+        const [newSettings] = await db.insert(schema.subscriptionSettings)
+          .values({
+            ...settings,
+            hotmartEnvironment: settings.hotmartEnvironment || 'sandbox',
+            graceHoursAfterExpiration: settings.graceHoursAfterExpiration || 48,
+            sendExpirationWarningDays: settings.sendExpirationWarningDays || 3
+          })
+          .returning();
+        
+        return newSettings;
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar configurações de assinaturas:", error);
+      throw new Error("Falha ao atualizar configurações de assinaturas");
     }
   }
 }
