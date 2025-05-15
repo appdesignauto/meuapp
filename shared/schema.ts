@@ -1274,3 +1274,27 @@ export type ReportType = typeof reportTypes.$inferSelect;
 export type InsertReportType = z.infer<typeof insertReportTypeSchema>;
 export type Report = typeof reports.$inferSelect;
 export type InsertReport = z.infer<typeof insertReportSchema>;
+
+// Schema para logs de webhooks
+export const webhookLogs = pgTable("webhookLogs", {
+  id: serial("id").primaryKey(),
+  eventType: text("eventType").notNull(),
+  payloadData: text("payloadData"),
+  status: text("status").notNull(),
+  errorMessage: text("errorMessage"),
+  userId: integer("userId").references(() => users.id),
+  sourceIp: text("sourceIp"),
+  retryCount: integer("retryCount").default(0),
+  transactionId: text("transactionId"),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export const insertWebhookLogSchema = createInsertSchema(webhookLogs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type WebhookLog = typeof webhookLogs.$inferSelect;
+export type InsertWebhookLog = z.infer<typeof insertWebhookLogSchema>;
