@@ -98,11 +98,14 @@ interface User {
   id: number;
   username: string;
   email: string;
+  name?: string | null;
   nivelacesso: number;
   planstatus: string;
   origemassinatura: string;
   tipoplano: string;
   planoexpiracao: string | null;
+  dataassinatura: string | null;
+  dataexpiracao: string | null;
   criadoem: string;
   atualizadoem: string;
 }
@@ -269,7 +272,7 @@ export default function SubscriptionManagement() {
     }
   });
   
-  // Consulta para usuários com filtragem
+  // Consulta para usuários com filtragem avançada
   const {
     data: usersData,
     isLoading: isLoadingUsers,
@@ -277,7 +280,7 @@ export default function SubscriptionManagement() {
     error: usersError,
     refetch: refetchUsers
   } = useQuery({
-    queryKey: ['/api/admin/users', page, pageSize, searchTerm, statusFilter, originFilter],
+    queryKey: ['/api/admin/users', page, pageSize, searchTerm, statusFilter, originFilter, planFilter, dateFilter, fromDate, toDate],
     queryFn: async () => {
       const params = new URLSearchParams({
         page: page.toString(),
@@ -287,6 +290,20 @@ export default function SubscriptionManagement() {
       if (searchTerm) params.append('search', searchTerm);
       if (statusFilter !== 'all') params.append('status', statusFilter);
       if (originFilter !== 'all') params.append('origin', originFilter);
+      if (planFilter !== 'all') params.append('plan', planFilter);
+      
+      // Adicionar filtros de data
+      if (dateFilter !== 'all') {
+        params.append('dateFilter', dateFilter);
+        
+        if (dateFilter === 'custom' && fromDate) {
+          params.append('fromDate', format(fromDate, 'yyyy-MM-dd'));
+          
+          if (toDate) {
+            params.append('toDate', format(toDate, 'yyyy-MM-dd'));
+          }
+        }
+      }
       
       const response = await apiRequest('GET', `/api/admin/users?${params.toString()}`);
       return response.json();
@@ -1682,7 +1699,7 @@ export default function SubscriptionManagement() {
             <Button variant="outline" onClick={() => setShowExportDialog(false)}>
               Cancelar
             </Button>
-            <Button onClick={() => exportData(users || [])} disabled={exportFields.length === 0}>
+            <Button onClick={() => exportData(usersData?.users || [])} disabled={exportFields.length === 0}>
               <Download className="h-4 w-4 mr-2" />
               Exportar
             </Button>
@@ -1696,9 +1713,10 @@ export default function SubscriptionManagement() {
   function applyDateFilter(user: User) {
     if (dateFilter === 'all') return true;
     
-    const assinatura = user.dataassinatura ? new Date(user.dataassinatura) : null;
-    if (!assinatura) return false;
+    // Se não tiver data de assinatura, não passa no filtro de data
+    if (!user.dataassinatura) return false;
     
+    const assinatura = new Date(user.dataassinatura);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -1773,10 +1791,16 @@ export default function SubscriptionManagement() {
         // Criar objeto apenas com os campos selecionados
         const userData: Record<string, any> = {};
         exportFields.forEach(field => {
+          // Usar indexação para acessar propriedades de forma segura
           if (field === 'dataassinatura' || field === 'dataexpiracao') {
-            userData[field] = user[field] ? format(new Date(user[field]), 'dd/MM/yyyy') : '';
+            // TypeScript não permite indexação direta em tipos com propriedades conhecidas
+            // então usamos um type assertion para contornar isso
+            const value = user[field as keyof User];
+            userData[field] = value ? format(new Date(value as string), 'dd/MM/yyyy') : '';
           } else {
-            userData[field] = user[field] || '';
+            // Mesmo padrão para outras propriedades
+            const value = user[field as keyof User];
+            userData[field] = value || '';
           }
         });
         return userData;
