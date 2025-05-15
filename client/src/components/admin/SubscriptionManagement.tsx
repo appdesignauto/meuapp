@@ -1622,21 +1622,40 @@ export default function SubscriptionManagement() {
           
           {/* Resumo dos filtros */}
           <div className="bg-muted p-3 rounded-md text-sm mt-2">
-            <p className="font-medium mb-1">Filtros aplicados:</p>
-            <ul className="space-y-1 text-xs">
-              <li><span className="font-medium">Status:</span> {statusFilter === 'all' ? 'Todos' : 
-                statusFilter === 'active' ? 'Ativos' : 
-                statusFilter === 'expired' ? 'Expirados' : 'Em teste'}</li>
-              <li><span className="font-medium">Origem:</span> {originFilter === 'all' ? 'Todas' : 
-                originFilter === 'hotmart' ? 'Hotmart' : 
-                originFilter === 'doppus' ? 'Doppus' : 'Manual'}</li>
-              {planFilter !== 'all' && (
-                <li><span className="font-medium">Plano:</span> {planFilter === 'mensal' ? 'Mensal' : 
+            <p className="font-medium mb-2">Filtros aplicados:</p>
+            <ul className="space-y-2">
+              <li className="flex items-center gap-2">
+                <Badge variant="outline" className="font-semibold">Status</Badge>
+                <span className={statusFilter !== 'all' ? 'text-primary font-medium' : 'text-muted-foreground'}>
+                  {statusFilter === 'all' ? 'Todos' : 
+                  statusFilter === 'active' ? 'Ativos' : 
+                  statusFilter === 'expired' ? 'Expirados' : 'Em teste'}
+                </span>
+              </li>
+              
+              <li className="flex items-center gap-2">
+                <Badge variant="outline" className="font-semibold">Origem</Badge>
+                <span className={originFilter !== 'all' ? 'text-primary font-medium' : 'text-muted-foreground'}>
+                  {originFilter === 'all' ? 'Todas' : 
+                  originFilter === 'hotmart' ? 'Hotmart' : 
+                  originFilter === 'doppus' ? 'Doppus' : 'Manual'}
+                </span>
+              </li>
+              
+              <li className="flex items-center gap-2">
+                <Badge variant="outline" className="font-semibold">Plano</Badge>
+                <span className={planFilter !== 'all' ? 'text-primary font-medium' : 'text-muted-foreground'}>
+                  {planFilter === 'all' ? 'Todos' : 
+                  planFilter === 'mensal' ? 'Mensal' : 
                   planFilter === 'trimestral' ? 'Trimestral' : 
-                  planFilter === 'anual' ? 'Anual' : 'Vitalício'}</li>
-              )}
-              {dateFilter !== 'all' && (
-                <li><span className="font-medium">Período:</span> {
+                  planFilter === 'anual' ? 'Anual' : 'Vitalício'}
+                </span>
+              </li>
+              
+              <li className="flex items-center gap-2">
+                <Badge variant="outline" className="font-semibold">Período</Badge>
+                <span className={dateFilter !== 'all' ? 'text-primary font-medium' : 'text-muted-foreground'}>
+                  {dateFilter === 'all' ? 'Qualquer data' :
                   dateFilter === 'today' ? 'Hoje' :
                   dateFilter === 'last7days' ? 'Últimos 7 dias' :
                   dateFilter === 'last30days' ? 'Últimos 30 dias' :
@@ -1646,60 +1665,68 @@ export default function SubscriptionManagement() {
                     `${format(fromDate, 'dd/MM/yyyy')} até ${format(toDate, 'dd/MM/yyyy')}` : 
                     fromDate ? `A partir de ${format(fromDate, 'dd/MM/yyyy')}` : 
                     toDate ? `Até ${format(toDate, 'dd/MM/yyyy')}` : 'Personalizado') :
-                  'Qualquer data'
-                }</li>
-              )}
+                  'Qualquer data'}
+                </span>
+              </li>
+              
               {searchTerm && (
-                <li><span className="font-medium">Busca:</span> "{searchTerm}"</li>
+                <li className="flex items-center gap-2">
+                  <Badge variant="outline" className="font-semibold">Busca</Badge> 
+                  <span className="text-primary font-medium">"{searchTerm}"</span>
+                </li>
               )}
             </ul>
             
             {/* Contador de registros a serem exportados */}
-            <div className="mt-3 pt-2 border-t border-border text-center">
-              <p className="text-sm">
-                <span className="font-medium">{
-                  // Calcular a quantidade de registros após aplicar os filtros
-                  usersData?.users?.filter((user) => {
-                    // Status
-                    if (statusFilter !== 'all') {
-                      if (statusFilter === 'active' && user.planstatus !== 'active') return false;
-                      if (statusFilter === 'expired' && user.planstatus !== 'expired') return false;
-                      if (statusFilter === 'trial' && user.planstatus !== 'trial') return false;
-                    }
-                    
-                    // Origem
-                    if (originFilter !== 'all') {
-                      const userOrigin = user.origemassinatura?.toLowerCase() || '';
-                      if (originFilter === 'hotmart' && userOrigin !== 'hotmart') return false;
-                      if (originFilter === 'doppus' && userOrigin !== 'doppus') return false;
-                      if (originFilter === 'manual' && userOrigin !== 'manual') return false;
-                    }
-                    
-                    // Plano
-                    if (planFilter !== 'all') {
-                      const userPlan = user.tipoplano?.toLowerCase() || '';
-                      if (planFilter === 'mensal' && userPlan !== 'mensal') return false;
-                      if (planFilter === 'trimestral' && userPlan !== 'trimestral') return false;
-                      if (planFilter === 'anual' && userPlan !== 'anual') return false;
-                      if (planFilter === 'vitalicio' && userPlan !== 'vitalicio') return false;
-                    }
-                    
-                    // Data
-                    if (dateFilter !== 'all' && !applyDateFilter(user)) return false;
-                    
-                    // Busca
-                    if (searchTerm) {
-                      const termLower = searchTerm.toLowerCase();
-                      const nameMatch = user.name?.toLowerCase().includes(termLower) || false;
-                      const usernameMatch = user.username.toLowerCase().includes(termLower);
-                      const emailMatch = user.email.toLowerCase().includes(termLower);
+            <div className="mt-4 pt-3 border-t border-border text-center">
+              <p className="text-sm flex items-center justify-center gap-2">
+                <Badge variant="secondary" className="px-2 py-1">
+                  {(() => {
+                    // Calcular a quantidade de registros após aplicar os filtros
+                    const count = usersData?.users?.filter((user: User) => {
+                      // Status
+                      if (statusFilter !== 'all') {
+                        if (statusFilter === 'active' && user.planstatus !== 'active') return false;
+                        if (statusFilter === 'expired' && user.planstatus !== 'expired') return false;
+                        if (statusFilter === 'trial' && user.planstatus !== 'trial') return false;
+                      }
                       
-                      if (!nameMatch && !usernameMatch && !emailMatch) return false;
-                    }
-                    
-                    return true;
-                  }).length || 0
-                } registros</span> serão exportados
+                      // Origem
+                      if (originFilter !== 'all') {
+                        const userOrigin = user.origemassinatura?.toLowerCase() || '';
+                        if (originFilter === 'hotmart' && userOrigin !== 'hotmart') return false;
+                        if (originFilter === 'doppus' && userOrigin !== 'doppus') return false;
+                        if (originFilter === 'manual' && userOrigin !== 'manual') return false;
+                      }
+                      
+                      // Plano
+                      if (planFilter !== 'all') {
+                        const userPlan = user.tipoplano?.toLowerCase() || '';
+                        if (planFilter === 'mensal' && userPlan !== 'mensal') return false;
+                        if (planFilter === 'trimestral' && userPlan !== 'trimestral') return false;
+                        if (planFilter === 'anual' && userPlan !== 'anual') return false;
+                        if (planFilter === 'vitalicio' && userPlan !== 'vitalicio') return false;
+                      }
+                      
+                      // Data
+                      if (dateFilter !== 'all' && !applyDateFilter(user)) return false;
+                      
+                      // Busca
+                      if (searchTerm) {
+                        const termLower = searchTerm.toLowerCase();
+                        const nameMatch = user.name?.toLowerCase().includes(termLower) || false;
+                        const usernameMatch = user.username.toLowerCase().includes(termLower);
+                        const emailMatch = user.email.toLowerCase().includes(termLower);
+                        
+                        if (!nameMatch && !usernameMatch && !emailMatch) return false;
+                      }
+                      
+                      return true;
+                    }).length || 0;
+                    return count;
+                  })()}
+                </Badge>
+                <span>registros serão exportados com os filtros selecionados</span>
               </p>
             </div>
           </div>
