@@ -602,6 +602,12 @@ const WebhookList: React.FC = () => {
                       <span className="text-sm ml-2 font-medium">{selectedLog.log.sourceIp}</span>
                     </div>
                     <div>
+                      <span className="text-sm text-muted-foreground">Email:</span>
+                      <span className="text-sm ml-2 font-medium">
+                        {selectedLog.log.email || 'Não disponível'}
+                      </span>
+                    </div>
+                    <div>
                       <span className="text-sm text-muted-foreground">Data de Criação:</span>
                       <span className="text-sm ml-2 font-medium">
                         {formatDate(selectedLog.log.createdAt)}
