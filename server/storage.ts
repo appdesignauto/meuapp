@@ -65,7 +65,7 @@ import {
 } from "@shared/schema";
 
 import { db } from "./db";
-import { eq, like, desc, and, or, isNull, sql } from "drizzle-orm";
+import { eq, like, desc, and, or, isNull, sql, count } from "drizzle-orm";
 import { 
   reports, 
   reportTypes 
@@ -231,6 +231,17 @@ export interface IStorage {
   getReportById(id: number): Promise<Report | undefined>;
   createReport(report: InsertReport): Promise<Report>;
   updateReport(id: number, updates: Partial<Report>): Promise<Report | undefined>;
+
+  // Webhook logs methods
+  getWebhookLogs(page: number, limit: number, filters?: {
+    status?: string;
+    eventType?: string;
+    search?: string;
+  }): Promise<{ logs: schema.WebhookLog[], totalCount: number }>;
+  getWebhookLogById(id: number): Promise<schema.WebhookLog | undefined>;
+  createWebhookLog(log: schema.InsertWebhookLog): Promise<schema.WebhookLog>;
+  updateWebhookLog(id: number, updates: Partial<schema.WebhookLog>): Promise<schema.WebhookLog | undefined>;
+  reprocessWebhook(id: number): Promise<boolean>;
 }
 
 interface ArtFilters {
@@ -3340,6 +3351,170 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error(`Erro ao atualizar denúncia #${id}:`, error);
       return undefined;
+    }
+  }
+
+  // Webhook Logs Methods
+  async getWebhookLogs(page: number, limit: number, filters?: {
+    status?: string;
+    eventType?: string;
+    search?: string;
+  }): Promise<{ logs: schema.WebhookLog[], totalCount: number }> {
+    try {
+      let query = db.select().from(schema.webhookLogs);
+      
+      // Aplicar filtros
+      if (filters) {
+        if (filters.status) {
+          query = query.where(eq(schema.webhookLogs.status, filters.status));
+        }
+        
+        if (filters.eventType) {
+          query = query.where(eq(schema.webhookLogs.eventType, filters.eventType));
+        }
+        
+        if (filters.search) {
+          query = query.where(
+            or(
+              like(schema.webhookLogs.eventType, `%${filters.search}%`),
+              like(schema.webhookLogs.payloadData || '', `%${filters.search}%`),
+              like(schema.webhookLogs.transactionId || '', `%${filters.search}%`)
+            )
+          );
+        }
+      }
+      
+      // Contar total
+      const totalCount = await db.select({ count: count() }).from(query.as('subquery'));
+      
+      // Aplicar paginação
+      const logs = await query
+        .orderBy(desc(schema.webhookLogs.createdAt))
+        .limit(limit)
+        .offset((page - 1) * limit);
+      
+      return {
+        logs,
+        totalCount: Number(totalCount[0]?.count || 0)
+      };
+    } catch (error) {
+      console.error('Erro ao buscar logs de webhook:', error);
+      return { logs: [], totalCount: 0 };
+    }
+  }
+
+  async getWebhookLogById(id: number): Promise<schema.WebhookLog | undefined> {
+    try {
+      const [log] = await db.select()
+        .from(schema.webhookLogs)
+        .where(eq(schema.webhookLogs.id, id));
+      
+      return log;
+    } catch (error) {
+      console.error(`Erro ao buscar log de webhook #${id}:`, error);
+      return undefined;
+    }
+  }
+
+  async createWebhookLog(log: schema.InsertWebhookLog): Promise<schema.WebhookLog> {
+    try {
+      const [newLog] = await db.insert(schema.webhookLogs)
+        .values(log)
+        .returning();
+      
+      return newLog;
+    } catch (error) {
+      console.error('Erro ao criar log de webhook:', error);
+      throw new Error('Não foi possível criar o log de webhook.');
+    }
+  }
+
+  async updateWebhookLog(id: number, updates: Partial<schema.WebhookLog>): Promise<schema.WebhookLog | undefined> {
+    try {
+      const [result] = await db.update(schema.webhookLogs)
+        .set({
+          ...updates,
+          updatedAt: new Date()
+        })
+        .where(eq(schema.webhookLogs.id, id))
+        .returning();
+      
+      return result;
+    } catch (error) {
+      console.error(`Erro ao atualizar log de webhook #${id}:`, error);
+      return undefined;
+    }
+  }
+
+  async reprocessWebhook(id: number): Promise<boolean> {
+    try {
+      const webhookLog = await this.getWebhookLogById(id);
+      
+      if (!webhookLog) {
+        console.error(`Log de webhook #${id} não encontrado para reprocessamento`);
+        return false;
+      }
+      
+      // Atualizar status e contador de tentativas
+      await this.updateWebhookLog(id, {
+        status: 'pending',
+        retryCount: (webhookLog.retryCount || 0) + 1,
+        errorMessage: null
+      });
+      
+      // Aqui será implementada a lógica para reprocessar o webhook de acordo
+      // com o tipo de evento. Por enquanto, simulamos sucesso.
+      const eventData = webhookLog.payloadData ? JSON.parse(webhookLog.payloadData) : null;
+      
+      if (!eventData) {
+        await this.updateWebhookLog(id, {
+          status: 'error',
+          errorMessage: 'Dados do payload não encontrados ou inválidos'
+        });
+        return false;
+      }
+      
+      // Processar de acordo com o tipo de evento
+      if (webhookLog.eventType === 'PURCHASE_APPROVED') {
+        // Implementar lógica de processamento de compra aprovada
+        // Por exemplo, atualizar assinatura de usuário
+        
+        // Simulando sucesso para demonstração
+        await this.updateWebhookLog(id, {
+          status: 'processed',
+          errorMessage: null
+        });
+        
+        return true;
+      } else if (webhookLog.eventType === 'PURCHASE_CANCELED' || webhookLog.eventType === 'PURCHASE_REFUNDED') {
+        // Implementar lógica de processamento de cancelamento/reembolso
+        
+        // Simulando sucesso para demonstração
+        await this.updateWebhookLog(id, {
+          status: 'processed',
+          errorMessage: null
+        });
+        
+        return true;
+      } else {
+        // Evento não reconhecido
+        await this.updateWebhookLog(id, {
+          status: 'error',
+          errorMessage: `Tipo de evento não suportado: ${webhookLog.eventType}`
+        });
+        
+        return false;
+      }
+    } catch (error) {
+      console.error(`Erro ao reprocessar webhook #${id}:`, error);
+      
+      // Atualizar status para erro
+      await this.updateWebhookLog(id, {
+        status: 'error',
+        errorMessage: `Erro ao reprocessar: ${error.message}`
+      });
+      
+      return false;
     }
   }
 }
