@@ -1336,3 +1336,22 @@ export const insertSubscriptionSettingsSchema = createInsertSchema(subscriptionS
 
 export type SubscriptionSetting = typeof subscriptionSettings.$inferSelect;
 export type InsertSubscriptionSetting = z.infer<typeof insertSubscriptionSettingsSchema>;
+
+// Interfaces para estatísticas e tendências de assinaturas
+export interface SubscriptionTrendData {
+  date: string;
+  total: number;
+  active: number;
+  expired: number;
+  growth: number;
+}
+
+export interface SubscriptionStats {
+  total: number;
+  active: number;
+  expired: number;
+  trial: number;
+  expiringIn7Days: number;
+  expiringIn30Days: number;
+  byOrigin: Record<string, number>;
+}

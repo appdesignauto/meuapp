@@ -246,6 +246,10 @@ export interface IStorage {
   // Subscription settings methods
   getSubscriptionSettings(): Promise<schema.SubscriptionSetting | undefined>;
   updateSubscriptionSettings(settings: Partial<schema.InsertSubscriptionSetting>): Promise<schema.SubscriptionSetting>;
+  
+  // Subscription statistics methods
+  getSubscriptionStats(): Promise<schema.SubscriptionStats>;
+  getSubscriptionTrends(months: number): Promise<schema.SubscriptionTrendData[]>;
 }
 
 interface ArtFilters {
@@ -3624,6 +3628,225 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error("Erro ao atualizar configurações de assinaturas:", error);
       throw new Error("Falha ao atualizar configurações de assinaturas");
+    }
+  }
+
+  // Implementação das novas estatísticas e tendências
+  async getSubscriptionStats(): Promise<schema.SubscriptionStats> {
+    try {
+      // Obter total de usuários com assinatura (exceto free)
+      const [totalResult] = await db
+        .select({ count: count() })
+        .from(schema.users)
+        .where(not(eq(schema.users.nivelacesso, 'free')));
+      
+      // Obter usuários com assinatura ativa
+      const [activeResult] = await db
+        .select({ count: count() })
+        .from(schema.users)
+        .where(
+          and(
+            not(eq(schema.users.nivelacesso, 'free')),
+            or(
+              isNull(schema.users.dataexpiracao),
+              sql`${schema.users.dataexpiracao} > NOW()`,
+              eq(schema.users.acessovitalicio, true)
+            )
+          )
+        );
+      
+      // Obter usuários com assinatura expirada
+      const [expiredResult] = await db
+        .select({ count: count() })
+        .from(schema.users)
+        .where(
+          and(
+            not(eq(schema.users.nivelacesso, 'free')),
+            not(eq(schema.users.acessovitalicio, true)),
+            not(isNull(schema.users.dataexpiracao)),
+            sql`${schema.users.dataexpiracao} <= NOW()`
+          )
+        );
+      
+      // Obter usuários em teste
+      const [trialResult] = await db
+        .select({ count: count() })
+        .from(schema.users)
+        .where(eq(schema.users.tipoplano, 'trial'));
+      
+      // Obter usuários com assinatura expirando em 7 dias
+      const [expiringIn7DaysResult] = await db
+        .select({ count: count() })
+        .from(schema.users)
+        .where(
+          and(
+            not(eq(schema.users.nivelacesso, 'free')),
+            not(eq(schema.users.acessovitalicio, true)),
+            not(isNull(schema.users.dataexpiracao)),
+            sql`${schema.users.dataexpiracao} > NOW()`,
+            sql`${schema.users.dataexpiracao} <= NOW() + INTERVAL '7 days'`
+          )
+        );
+      
+      // Obter usuários com assinatura expirando em 30 dias
+      const [expiringIn30DaysResult] = await db
+        .select({ count: count() })
+        .from(schema.users)
+        .where(
+          and(
+            not(eq(schema.users.nivelacesso, 'free')),
+            not(eq(schema.users.acessovitalicio, true)),
+            not(isNull(schema.users.dataexpiracao)),
+            sql`${schema.users.dataexpiracao} > NOW()`,
+            sql`${schema.users.dataexpiracao} <= NOW() + INTERVAL '30 days'`
+          )
+        );
+      
+      // Obter contagem por origem de assinatura
+      const originResults = await db
+        .select({
+          origin: schema.users.origemassinatura,
+          count: count()
+        })
+        .from(schema.users)
+        .where(
+          and(
+            not(eq(schema.users.nivelacesso, 'free')),
+            not(isNull(schema.users.origemassinatura))
+          )
+        )
+        .groupBy(schema.users.origemassinatura);
+      
+      // Formatar resultados por origem
+      const byOrigin: Record<string, number> = {};
+      originResults.forEach(result => {
+        if (result.origin) {
+          byOrigin[result.origin] = Number(result.count);
+        }
+      });
+      
+      // Adicionar valores padrão para origens sem dados
+      const defaultOrigins = ['hotmart', 'doppus', 'manual'];
+      defaultOrigins.forEach(origin => {
+        if (!(origin in byOrigin)) {
+          byOrigin[origin] = 0;
+        }
+      });
+      
+      return {
+        total: Number(totalResult.count),
+        active: Number(activeResult.count),
+        expired: Number(expiredResult.count),
+        trial: Number(trialResult.count),
+        expiringIn7Days: Number(expiringIn7DaysResult.count),
+        expiringIn30Days: Number(expiringIn30DaysResult.count),
+        byOrigin
+      };
+    } catch (error) {
+      console.error("Erro ao buscar estatísticas de assinaturas:", error);
+      // Retornar estatísticas zeradas em caso de erro
+      return {
+        total: 0,
+        active: 0,
+        expired: 0,
+        trial: 0,
+        expiringIn7Days: 0,
+        expiringIn30Days: 0,
+        byOrigin: { hotmart: 0, doppus: 0, manual: 0 }
+      };
+    }
+  }
+
+  async getSubscriptionTrends(months: number): Promise<schema.SubscriptionTrendData[]> {
+    try {
+      // Limitar o número de meses para evitar consultas muito pesadas
+      const limit = Math.min(Math.max(1, months), 24);
+      
+      // Gerar uma série de datas (último dia de cada mês) para os meses solicitados
+      const dates = [];
+      const today = new Date();
+      
+      for (let i = 0; i < limit; i++) {
+        const date = new Date(today);
+        date.setMonth(date.getMonth() - i);
+        date.setDate(1); // Primeiro dia do mês
+        date.setHours(0, 0, 0, 0);
+        dates.push(date);
+      }
+      
+      // Ordenar datas do mais antigo para o mais recente
+      dates.sort((a, b) => a.getTime() - b.getTime());
+      
+      const result: schema.SubscriptionTrendData[] = [];
+      let previousTotal = 0;
+      
+      // Para cada data, calcular o número de assinaturas ativas e expiradas
+      for (let i = 0; i < dates.length; i++) {
+        const date = dates[i];
+        const nextMonth = new Date(date);
+        nextMonth.setMonth(nextMonth.getMonth() + 1);
+        
+        // Formatar data para SQL
+        const dateStr = date.toISOString().split('T')[0];
+        
+        // Contar total de assinaturas (exceto free) até aquela data
+        const [totalResult] = await db
+          .select({ count: count() })
+          .from(schema.users)
+          .where(
+            and(
+              not(eq(schema.users.nivelacesso, 'free')),
+              sql`${schema.users.criadoem} < ${nextMonth.toISOString()}`
+            )
+          );
+        
+        // Contar assinaturas ativas naquela data
+        const [activeResult] = await db
+          .select({ count: count() })
+          .from(schema.users)
+          .where(
+            and(
+              not(eq(schema.users.nivelacesso, 'free')),
+              sql`${schema.users.criadoem} < ${nextMonth.toISOString()}`,
+              or(
+                isNull(schema.users.dataexpiracao),
+                sql`${schema.users.dataexpiracao} > ${date.toISOString()}`,
+                eq(schema.users.acessovitalicio, true)
+              )
+            )
+          );
+        
+        // Contar assinaturas expiradas naquela data
+        const [expiredResult] = await db
+          .select({ count: count() })
+          .from(schema.users)
+          .where(
+            and(
+              not(eq(schema.users.nivelacesso, 'free')),
+              not(eq(schema.users.acessovitalicio, true)),
+              not(isNull(schema.users.dataexpiracao)),
+              sql`${schema.users.criadoem} < ${nextMonth.toISOString()}`,
+              sql`${schema.users.dataexpiracao} <= ${date.toISOString()}`
+            )
+          );
+        
+        const total = Number(totalResult.count);
+        const growth = i === 0 ? 0 : ((total - previousTotal) / previousTotal) * 100;
+        previousTotal = total;
+        
+        result.push({
+          date: dateStr,
+          total,
+          active: Number(activeResult.count),
+          expired: Number(expiredResult.count),
+          growth: Math.round(growth * 100) / 100 // Arredondar para 2 casas decimais
+        });
+      }
+      
+      return result;
+    } catch (error) {
+      console.error("Erro ao buscar tendências de assinaturas:", error);
+      return [];
     }
   }
 }
