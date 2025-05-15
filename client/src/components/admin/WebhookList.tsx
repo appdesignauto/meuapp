@@ -321,10 +321,25 @@ const WebhookList: React.FC = () => {
         <CardHeader className="px-6 pt-6 pb-4">
           <CardTitle className="text-xl flex justify-between items-center">
             <span>Logs de Webhooks</span>
-            <Button variant="outline" size="sm" onClick={() => {
-              setPage(1);
-              refetch();
-            }}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => {
+                // Resetar todos os filtros e página
+                setFilters({
+                  status: 'all',
+                  eventType: 'all',
+                  source: 'all',
+                  search: '',
+                });
+                setPage(1);
+                
+                // Forçar a atualização dos dados
+                setTimeout(() => {
+                  refetch();
+                }, 100);
+              }}
+            >
               <RefreshCw className="h-4 w-4 mr-2" />
               Atualizar
             </Button>
