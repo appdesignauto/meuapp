@@ -453,66 +453,159 @@ const SubscriptionManagement = () => {
     <div className="space-y-6">
       <h2 className="text-xl font-bold mb-6">Gerenciamento de Assinaturas</h2>
       
-      {/* Dashboard de Estatísticas */}
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-4">Visão Geral</h3>
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid w-full grid-cols-4 mb-6">
+          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+          <TabsTrigger value="subscriptions">Assinaturas</TabsTrigger>
+          <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
+          <TabsTrigger value="settings">Configurações</TabsTrigger>
+        </TabsList>
         
-        {isLoadingStats ? (
-          <div className="flex justify-center items-center py-6">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-          </div>
-        ) : isErrorStats ? (
-          <div className="p-4 bg-red-50 rounded-md">
-            <p className="text-sm text-red-600">
-              {statsError instanceof Error ? statsError.message : 'Erro ao carregar estatísticas'}
-            </p>
-          </div>
-        ) : subscriptionStats ? (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <StatCard 
-                title="Total de Assinantes" 
-                value={subscriptionStats.total}
-                icon={Users}
-                description="Todos os usuários com assinatura"
-              />
-              
-              <StatCard 
-                title="Assinaturas Ativas" 
-                value={subscriptionStats.active}
-                icon={UserCheck}
-                trend={subscriptionStats.active > subscriptionStats.total/2 ? 'up' : 'down'}
-                description={`${Math.round((subscriptionStats.active / subscriptionStats.total) * 100)}% do total`}
-              />
-              
-              <StatCard 
-                title="Expirando em 7 dias" 
-                value={subscriptionStats.expiringIn7Days}
-                icon={Clock}
-                trend={subscriptionStats.expiringIn7Days > 0 ? 'down' : 'none'}
-                description="Assinaturas próximas do fim"
-              />
-              
-              <StatCard 
-                title="Hotmart" 
-                value={subscriptionStats.hotmartCount}
-                icon={BarChart4}
-                description={`${Math.round((subscriptionStats.hotmartCount / subscriptionStats.total) * 100)}% das assinaturas`}
-              />
+        {/* Aba de Visão Geral */}
+        <TabsContent value="overview" className="space-y-6">
+          {isLoadingStats ? (
+            <div className="flex justify-center items-center py-6">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
             </div>
+          ) : isErrorStats ? (
+            <div className="p-4 bg-red-50 rounded-md">
+              <p className="text-sm text-red-600">
+                {statsError instanceof Error ? statsError.message : 'Erro ao carregar estatísticas'}
+              </p>
+            </div>
+          ) : subscriptionStats ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <StatCard 
+                  title="Total de Assinantes" 
+                  value={subscriptionStats.total}
+                  icon={Users}
+                  description="Todos os usuários com assinatura"
+                />
+                
+                <StatCard 
+                  title="Assinaturas Ativas" 
+                  value={subscriptionStats.active}
+                  icon={UserCheck}
+                  trend={subscriptionStats.active > subscriptionStats.total/2 ? 'up' : 'down'}
+                  description={`${Math.round((subscriptionStats.active / (subscriptionStats.total || 1)) * 100)}% do total`}
+                />
+                
+                <StatCard 
+                  title="Expirando em 7 dias" 
+                  value={subscriptionStats.expiringIn7Days}
+                  icon={Clock}
+                  trend={subscriptionStats.expiringIn7Days > 0 ? 'down' : 'none'}
+                  description="Assinaturas próximas do fim"
+                />
+                
+                <StatCard 
+                  title="Hotmart" 
+                  value={subscriptionStats.hotmartCount}
+                  icon={BarChart4}
+                  description={`${Math.round((subscriptionStats.hotmartCount / (subscriptionStats.total || 1)) * 100)}% das assinaturas`}
+                />
+              </div>
+              
+              {/* Estatísticas adicionais */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Origens de Assinatura</CardTitle>
+                    <CardDescription>Distribuição de assinantes por origem</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Hotmart</span>
+                        <span className="font-medium">{subscriptionStats.hotmartCount}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div 
+                          className="bg-blue-600 h-2.5 rounded-full" 
+                          style={{ width: `${Math.round((subscriptionStats.hotmartCount / (subscriptionStats.total || 1)) * 100)}%` }}
+                        ></div>
+                      </div>
+                      
+                      <div className="flex justify-between mt-3">
+                        <span>Doppus</span>
+                        <span className="font-medium">{subscriptionStats.doppusCount}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div 
+                          className="bg-emerald-600 h-2.5 rounded-full" 
+                          style={{ width: `${Math.round((subscriptionStats.doppusCount / (subscriptionStats.total || 1)) * 100)}%` }}
+                        ></div>
+                      </div>
+                      
+                      <div className="flex justify-between mt-3">
+                        <span>Manual</span>
+                        <span className="font-medium">{subscriptionStats.manualCount}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div 
+                          className="bg-amber-600 h-2.5 rounded-full" 
+                          style={{ width: `${Math.round((subscriptionStats.manualCount / (subscriptionStats.total || 1)) * 100)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Status das Assinaturas</CardTitle>
+                    <CardDescription>Distribuição por status atual</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Ativas</span>
+                        <span className="font-medium">{subscriptionStats.active}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div 
+                          className="bg-green-600 h-2.5 rounded-full" 
+                          style={{ width: `${Math.round((subscriptionStats.active / (subscriptionStats.total || 1)) * 100)}%` }}
+                        ></div>
+                      </div>
+                      
+                      <div className="flex justify-between mt-3">
+                        <span>Expiradas</span>
+                        <span className="font-medium">{subscriptionStats.expired}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div 
+                          className="bg-red-600 h-2.5 rounded-full" 
+                          style={{ width: `${Math.round((subscriptionStats.expired / (subscriptionStats.total || 1)) * 100)}%` }}
+                        ></div>
+                      </div>
+                      
+                      <div className="flex justify-between mt-3">
+                        <span>Em Teste</span>
+                        <span className="font-medium">{subscriptionStats.trialCount}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div 
+                          className="bg-blue-400 h-2.5 rounded-full" 
+                          style={{ width: `${Math.round((subscriptionStats.trialCount / (subscriptionStats.total || 1)) * 100)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </>
+          ) : null}
+        </TabsContent>
+        
+        {/* Aba de Assinaturas */}
+        <TabsContent value="subscriptions" className="space-y-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-4">
+            <h3 className="text-lg font-semibold">Lista de Assinantes</h3>
             
-            {/* Mais estatísticas ou gráficos podem ser adicionados aqui */}
-          </>
-        ) : null}
-      </div>
-      
-      {/* Lista de Assinantes */}
-      <div>
-        <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-4">
-          <h3 className="text-lg font-semibold">Lista de Assinantes</h3>
-          
-          <div className="flex flex-col sm:flex-row gap-2">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex items-center gap-2">
               <Select
                 value={statusFilter}
                 onValueChange={setStatusFilter}
