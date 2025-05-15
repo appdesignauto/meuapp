@@ -101,6 +101,13 @@ interface SubscriptionStats {
   hotmartCount: number;
   doppusCount: number;
   manualCount: number;
+  // Métricas financeiras
+  mrr: number;  // Receita Mensal Recorrente
+  averageValue: number;  // Valor médio por assinatura
+  annualRevenue: number;  // Projeção de receita anual
+  churnRate: number;  // Taxa de cancelamento
+  averageRetention: number;  // Tempo médio de permanência (dias)
+  averageLTV: number;  // Lifetime Value (valor médio ao longo da vida)
   subscriptionsByPlan: {
     [key: string]: number;
   };
