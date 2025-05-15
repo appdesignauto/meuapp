@@ -42,7 +42,8 @@ import {
   Sparkles,
   Cog,
   GalleryHorizontal,
-  Wrench
+  Wrench,
+  FileVideo
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -105,40 +106,26 @@ const UnifiedAdminDashboard = ({ params }: { params?: { tab?: string } } = {}) =
         { label: "Tipos de Arquivo", value: "tipos-arquivo", icon: <FileText size={20} /> },
       ]
     },
-    { 
-      label: "Comunidade", 
-      value: "comunidade", 
-      icon: <MessageSquare size={20} /> 
-    },
-    { 
-      label: "Cursos", 
-      value: "cursos", 
-      icon: <BookOpen size={20} /> 
-    },
-    { 
-      label: "Ferramentas", 
-      value: "ferramentas", 
-      icon: <Wrench size={20} /> 
-    },
-    { 
-      label: "Usuários", 
-      value: "usuarios", 
-      icon: <Users size={20} /> 
-    },
     {
-      label: "Análise",
-      value: "analise",
-      icon: <Activity size={20} />,
+      label: "Usuários",
+      value: "usuarios-grupo",
+      icon: <Users size={20} />,
       expanded: false,
       children: [
-        { label: "Estatísticas", value: "estatisticas", icon: <Activity size={20} /> },
-        { label: "Logs", value: "logs", icon: <Database size={20} /> },
+        { label: "Gerenciar Usuários", value: "usuarios", icon: <Users size={20} /> },
       ]
     },
-    { 
-      label: "Denúncias", 
-      value: "denuncias", 
-      icon: <ShieldAlert size={20} /> 
+    {
+      label: "Cursos",
+      value: "cursos-grupo",
+      icon: <BookOpen size={20} />,
+      expanded: false,
+      children: [
+        { label: "Gerenciar Cursos", value: "cursos", icon: <BookOpen size={20} /> },
+        { label: "Módulos", value: "modulos", icon: <LayoutGrid size={20} /> },
+        { label: "Aulas", value: "aulas", icon: <FileVideo size={20} /> },
+        { label: "Configurações", value: "cursos-config", icon: <Settings size={20} /> },
+      ]
     },
     {
       label: "Marketing",
@@ -149,6 +136,44 @@ const UnifiedAdminDashboard = ({ params }: { params?: { tab?: string } } = {}) =
         { label: "Popups", value: "popups", icon: <Bell size={20} /> },
         { label: "Depoimentos", value: "depoimentos", icon: <CheckSquare size={20} /> },
         { label: "Planos", value: "planos", icon: <FileCheck size={20} /> },
+      ]
+    },
+    {
+      label: "Reports",
+      value: "reports-grupo",
+      icon: <ShieldAlert size={20} />,
+      expanded: false,
+      children: [
+        { label: "Denúncias", value: "denuncias", icon: <ShieldAlert size={20} /> },
+      ]
+    },
+    {
+      label: "Ferramentas",
+      value: "ferramentas-grupo",
+      icon: <Wrench size={20} />,
+      expanded: false,
+      children: [
+        { label: "Gerenciar Ferramentas", value: "ferramentas", icon: <Wrench size={20} /> },
+      ]
+    },
+    {
+      label: "Configurações",
+      value: "configuracoes-grupo",
+      icon: <Settings size={20} />,
+      expanded: false,
+      children: [
+        { label: "Configurações do Site", value: "configuracoes", icon: <Settings size={20} /> },
+        { label: "Comunidade", value: "comunidade", icon: <MessageSquare size={20} /> },
+      ]
+    },
+    {
+      label: "Análise",
+      value: "analise",
+      icon: <Activity size={20} />,
+      expanded: false,
+      children: [
+        { label: "Estatísticas", value: "estatisticas", icon: <Activity size={20} /> },
+        { label: "Logs", value: "logs", icon: <Database size={20} /> },
       ]
     },
     {
