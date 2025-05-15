@@ -118,6 +118,7 @@ const WebhookList: React.FC = () => {
   const [filters, setFilters] = useState({
     status: 'all',
     eventType: 'all',
+    source: 'all', // 'all', 'hotmart', 'doppus'
     search: '',
   });
   const [selectedLog, setSelectedLog] = useState<WebhookLogDetails | null>(null);
@@ -377,6 +378,22 @@ const WebhookList: React.FC = () => {
                 </SelectContent>
               </Select>
             </div>
+            
+            <div className="w-[150px]">
+              <Select
+                value={filters.source}
+                onValueChange={(value) => setFilters(prev => ({ ...prev, source: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Fonte" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas</SelectItem>
+                  <SelectItem value="hotmart">Hotmart</SelectItem>
+                  <SelectItem value="doppus">Doppus</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Tabela */}
@@ -388,6 +405,7 @@ const WebhookList: React.FC = () => {
                     <TableHead className="w-[80px]">ID</TableHead>
                     <TableHead>Evento</TableHead>
                     <TableHead>Transação</TableHead>
+                    <TableHead>Fonte</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Data</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
