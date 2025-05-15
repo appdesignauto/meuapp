@@ -343,9 +343,7 @@ const WebhookList: React.FC = () => {
               variant="outline" 
               size="sm" 
               onClick={() => {
-                // Usar o hook do wouter para atualizar a página
-                // Reseta também o estado local e dispara uma nova consulta
-                queryClient.invalidateQueries({ queryKey: ['/api/webhooks/logs'] });
+                // Resetar filtros e estado
                 setPage(1);
                 setFilters({
                   status: 'all',
@@ -353,8 +351,9 @@ const WebhookList: React.FC = () => {
                   source: 'all',
                   search: '',
                 });
-                // Atualizar a URL (parâmetro forçando refresh)
-                setLocation(`/admin/assinaturas?tab=webhooks&refresh=${Date.now()}`);
+                // Invalidar e atualizar os dados sem redirecionamento
+                queryClient.invalidateQueries({ queryKey: ['/api/webhooks/logs'] });
+                refetch();
               }}
             >
               <RefreshCw className="h-4 w-4 mr-2" />
