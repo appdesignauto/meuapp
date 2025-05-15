@@ -1653,6 +1653,55 @@ export default function SubscriptionManagement() {
                 <li><span className="font-medium">Busca:</span> "{searchTerm}"</li>
               )}
             </ul>
+            
+            {/* Contador de registros a serem exportados */}
+            <div className="mt-3 pt-2 border-t border-border text-center">
+              <p className="text-sm">
+                <span className="font-medium">{
+                  // Calcular a quantidade de registros após aplicar os filtros
+                  usersData?.users.filter(user => {
+                    // Status
+                    if (statusFilter !== 'all') {
+                      if (statusFilter === 'active' && user.planstatus !== 'active') return false;
+                      if (statusFilter === 'expired' && user.planstatus !== 'expired') return false;
+                      if (statusFilter === 'trial' && user.planstatus !== 'trial') return false;
+                    }
+                    
+                    // Origem
+                    if (originFilter !== 'all') {
+                      const userOrigin = user.origemassinatura?.toLowerCase() || '';
+                      if (originFilter === 'hotmart' && userOrigin !== 'hotmart') return false;
+                      if (originFilter === 'doppus' && userOrigin !== 'doppus') return false;
+                      if (originFilter === 'manual' && userOrigin !== 'manual') return false;
+                    }
+                    
+                    // Plano
+                    if (planFilter !== 'all') {
+                      const userPlan = user.tipoplano?.toLowerCase() || '';
+                      if (planFilter === 'mensal' && userPlan !== 'mensal') return false;
+                      if (planFilter === 'trimestral' && userPlan !== 'trimestral') return false;
+                      if (planFilter === 'anual' && userPlan !== 'anual') return false;
+                      if (planFilter === 'vitalicio' && userPlan !== 'vitalicio') return false;
+                    }
+                    
+                    // Data
+                    if (dateFilter !== 'all' && !applyDateFilter(user)) return false;
+                    
+                    // Busca
+                    if (searchTerm) {
+                      const termLower = searchTerm.toLowerCase();
+                      const nameMatch = user.name?.toLowerCase().includes(termLower) || false;
+                      const usernameMatch = user.username.toLowerCase().includes(termLower);
+                      const emailMatch = user.email.toLowerCase().includes(termLower);
+                      
+                      if (!nameMatch && !usernameMatch && !emailMatch) return false;
+                    }
+                    
+                    return true;
+                  }).length || 0
+                } registros</span> serão exportados
+              </p>
+            </div>
           </div>
           
           <div className="grid gap-4 py-4">
@@ -1854,7 +1903,7 @@ export default function SubscriptionManagement() {
     }
     
     // Aplicar todos os filtros ativos aos dados antes de exportar
-    const filteredUsers = users
+    const filteredData = users
       .filter(user => {
         // Aplicar filtro de status
         if (statusFilter !== 'all') {
@@ -1894,26 +1943,6 @@ export default function SubscriptionManagement() {
         }
         
         return true;
-      });
-        const matchesStatus = statusFilter === 'all' || 
-          (statusFilter === 'active' && user.planstatus === 'active') ||
-          (statusFilter === 'expired' && user.planstatus === 'expired') ||
-          (statusFilter === 'trial' && user.planstatus === 'trial');
-          
-        const matchesOrigin = originFilter === 'all' || 
-          user.origemassinatura === originFilter;
-          
-        const matchesPlan = planFilter === 'all' || 
-          user.tipoplano === planFilter;
-          
-        const matchesDate = applyDateFilter(user);
-          
-        const matchesSearch = !searchTerm || 
-          user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (user.name && user.name.toLowerCase().includes(searchTerm.toLowerCase()));
-          
-        return matchesStatus && matchesOrigin && matchesPlan && matchesDate && matchesSearch;
       })
       .map(user => {
         // Criar objeto apenas com os campos selecionados
@@ -1921,8 +1950,6 @@ export default function SubscriptionManagement() {
         exportFields.forEach(field => {
           // Usar indexação para acessar propriedades de forma segura
           if (field === 'dataassinatura' || field === 'dataexpiracao') {
-            // TypeScript não permite indexação direta em tipos com propriedades conhecidas
-            // então usamos um type assertion para contornar isso
             const value = user[field as keyof User];
             userData[field] = value ? format(new Date(value as string), 'dd/MM/yyyy') : '';
           } else {
