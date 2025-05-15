@@ -1235,14 +1235,14 @@ const AdminDashboard = () => {
               open={sidebarOpen ? undefined : false}
             >
               <CollapsibleTrigger 
-                className={`flex items-center w-full px-5 py-2.5 text-gray-700 font-medium hover:bg-gray-50 rounded-lg transition-all duration-200 ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+                className={`flex items-center w-full px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded-lg transition-all duration-200 ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
                 title="Reports"
               >
-                <FlagIcon className={`${sidebarOpen ? 'w-5 h-5' : 'w-6 h-6 mx-auto'}`} />
+                <FlagIcon className={`${sidebarOpen ? 'w-4 h-4' : 'w-5 h-5 mx-auto'}`} />
                 {sidebarOpen && (
                   <>
-                    <span className="ml-3 truncate">Reports</span>
-                    <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+                    <span className="ml-2 truncate text-sm">Reports</span>
+                    <ChevronDown className="w-3 h-3 ml-auto transition-transform duration-200 ui-open:rotate-180" />
                   </>
                 )}
               </CollapsibleTrigger>
@@ -1267,14 +1267,14 @@ const AdminDashboard = () => {
               open={sidebarOpen ? undefined : false}
             >
               <CollapsibleTrigger 
-                className={`flex items-center w-full px-5 py-2.5 text-gray-700 font-medium hover:bg-gray-50 rounded-lg transition-all duration-200 ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+                className={`flex items-center w-full px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded-lg transition-all duration-200 ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
                 title="Ferramentas"
               >
-                <Wrench className={`${sidebarOpen ? 'w-5 h-5' : 'w-6 h-6 mx-auto'}`} />
+                <Wrench className={`${sidebarOpen ? 'w-4 h-4' : 'w-5 h-5 mx-auto'}`} />
                 {sidebarOpen && (
                   <>
-                    <span className="ml-3 truncate">Ferramentas</span>
-                    <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+                    <span className="ml-2 truncate text-sm">Ferramentas</span>
+                    <ChevronDown className="w-3 h-3 ml-auto transition-transform duration-200 ui-open:rotate-180" />
                   </>
                 )}
               </CollapsibleTrigger>
@@ -1299,14 +1299,14 @@ const AdminDashboard = () => {
               open={sidebarOpen ? undefined : false}
             >
               <CollapsibleTrigger 
-                className={`flex items-center w-full px-5 py-2.5 text-gray-700 font-medium hover:bg-gray-50 rounded-lg transition-all duration-200 ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+                className={`flex items-center w-full px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded-lg transition-all duration-200 ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
                 title="Configurações"
               >
-                <Settings className={`${sidebarOpen ? 'w-5 h-5' : 'w-6 h-6 mx-auto'}`} />
+                <Settings className={`${sidebarOpen ? 'w-4 h-4' : 'w-5 h-5 mx-auto'}`} />
                 {sidebarOpen && (
                   <>
-                    <span className="ml-3 truncate">Configurações</span>
-                    <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+                    <span className="ml-2 truncate text-sm">Configurações</span>
+                    <ChevronDown className="w-3 h-3 ml-auto transition-transform duration-200 ui-open:rotate-180" />
                   </>
                 )}
               </CollapsibleTrigger>
