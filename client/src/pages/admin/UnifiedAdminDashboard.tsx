@@ -42,8 +42,7 @@ import {
   Sparkles,
   Cog,
   GalleryHorizontal,
-  MessageCircle,
-  Tool
+  Wrench
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -101,7 +100,7 @@ const UnifiedAdminDashboard = ({ params }: { params?: { tab?: string } } = {}) =
       children: [
         { label: "Artes", value: "artes", icon: <ImageIcon size={20} /> },
         { label: "Categorias", value: "categorias", icon: <Tag size={20} /> },
-        { label: "Coleções", value: "colecoes", icon: <LayoutGrid size={20} /> },
+        { label: "Coleções", value: "colecoes", icon: <GalleryHorizontal size={20} /> },
         { label: "Formatos", value: "formatos", icon: <LayoutGrid size={20} /> },
         { label: "Tipos de Arquivo", value: "tipos-arquivo", icon: <FileText size={20} /> },
       ]
@@ -119,7 +118,7 @@ const UnifiedAdminDashboard = ({ params }: { params?: { tab?: string } } = {}) =
     { 
       label: "Ferramentas", 
       value: "ferramentas", 
-      icon: <ScrollText size={20} /> 
+      icon: <Wrench size={20} /> 
     },
     { 
       label: "Usuários", 
