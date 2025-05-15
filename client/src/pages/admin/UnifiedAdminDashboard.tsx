@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useLocation, navigate } from "wouter";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import SubscriptionTrends from "@/components/admin/SubscriptionTrends";
 import SubscriptionManagement from "@/components/admin/SubscriptionManagement";
@@ -67,8 +68,21 @@ type MenuItem = {
 };
 
 // Componente principal do Dashboard Unificado
-const UnifiedAdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState("overview");
+const UnifiedAdminDashboard = ({ params }: { params?: { tab?: string } } = {}) => {
+  const [location] = useLocation();
+  // Extrair o parâmetro tab da URL se estiver no formato /admin/unified/:tab
+  const tabFromPath = location.startsWith('/admin/unified/') ? location.replace('/admin/unified/', '') : null;
+  
+  // Usar o parâmetro da URL como tab ativa, se disponível
+  const [activeTab, setActiveTab] = useState(params?.tab || tabFromPath || "overview");
+  
+  // Atualizar activeTab quando a URL mudar
+  useEffect(() => {
+    const tabFromPathUpdate = location.startsWith('/admin/unified/') ? location.replace('/admin/unified/', '') : null;
+    if (params?.tab || tabFromPathUpdate) {
+      setActiveTab(params?.tab || tabFromPathUpdate || "overview");
+    }
+  }, [location, params]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([
     {
