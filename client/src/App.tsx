@@ -28,6 +28,7 @@ import PlanosPage from "@/pages/PlanosPage";
 import ProfilePage from "@/pages/profile-page";
 import UpdatedDashboard from "@/pages/admin/UpdatedDashboard";
 import LogoUploadPage from "@/pages/admin/LogoUploadPage";
+import TestSubscriptionSettingsPage from "@/pages/admin/TestSubscriptionSettingsPage";
 import StorageTestPage from "@/pages/admin/StorageTestPage";
 import AddArtMultiFormatPage from "@/pages/admin/AddArtMultiFormat";
 import GerenciarCursosPage from "@/pages/admin/GerenciarCursos";
@@ -249,6 +250,11 @@ function AppRoutes() {
         path="/admin/add-art-multi" 
         component={AddArtMultiFormatPage}
         roles={['admin', 'designer_adm']} 
+      />
+      <ProtectedRoute 
+        path="/admin/test-subscription-settings" 
+        component={TestSubscriptionSettingsPage}
+        roles={['admin']} 
       />
       <ProtectedRoute 
         path="/admin/gerenciar-cursos" 
