@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import WebhookList from './WebhookList';
+import SubscriptionTrends from './SubscriptionTrends';
 import {
   Table,
   TableBody,
@@ -557,6 +558,11 @@ export default function SubscriptionManagement() {
                     </div>
                   </CardContent>
                 </Card>
+              </div>
+              
+              {/* Componente de Tendências de Assinaturas */}
+              <div className="mt-8">
+                <SubscriptionTrends />
               </div>
             </>
           ) : null}
