@@ -5901,6 +5901,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // =========== ENDPOINTS DE CONFIGURAÇÕES DE ASSINATURAS ===========
+  
+  // Endpoint para obter as configurações de assinaturas
+  app.get('/api/subscription-settings', isAdmin, async (req, res) => {
+    try {
+      const settings = await storage.getSubscriptionSettings();
+      
+      // Se não existir configurações, retornamos um objeto vazio mas com status 200
+      res.status(200).json(settings || {});
+    } catch (error) {
+      console.error('Erro ao buscar configurações de assinaturas:', error);
+      
+      res.status(500).json({ 
+        success: false,
+        message: 'Erro ao buscar configurações de assinaturas', 
+        error: error.message 
+      });
+    }
+  });
+  
+  // Endpoint para atualizar as configurações de assinaturas
+  app.put('/api/subscription-settings', isAdmin, async (req, res) => {
+    try {
+      // Validar dados de entrada se necessário
+      const updatedSettings = await storage.updateSubscriptionSettings(req.body);
+      
+      res.status(200).json({
+        success: true,
+        message: 'Configurações de assinaturas atualizadas com sucesso',
+        settings: updatedSettings
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar configurações de assinaturas:', error);
+      
+      res.status(500).json({ 
+        success: false,
+        message: 'Erro ao atualizar configurações de assinaturas', 
+        error: error.message 
+      });
+    }
+  });
+
   // Registrar rota para calcular posição do post na paginação
   registerPostPositionRoute(app);
 
