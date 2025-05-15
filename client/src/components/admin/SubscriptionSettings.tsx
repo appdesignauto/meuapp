@@ -49,7 +49,9 @@ import {
   Globe,
   Clock,
   BadgeDollarSign,
-  Bell
+  Bell,
+  CreditCard,
+  Copy
 } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -91,6 +93,7 @@ export default function SubscriptionSettings() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isUpdating, setIsUpdating] = useState(false);
+  const [activeTab, setActiveTab] = useState("geral");
 
   // Consulta para obter as configurações atuais
   const { data: settings, isLoading, error, isError } = useQuery({
@@ -130,6 +133,26 @@ export default function SubscriptionSettings() {
       notificationEmailTemplate: '',
     },
   });
+
+  // Função para copiar texto para a área de transferência
+  const copyToClipboard = (text: string, message: string) => {
+    navigator.clipboard.writeText(text).then(
+      () => {
+        toast({
+          title: "Copiado!",
+          description: message,
+          variant: "default",
+        });
+      },
+      (err) => {
+        toast({
+          title: "Erro ao copiar",
+          description: "Não foi possível copiar o texto para a área de transferência.",
+          variant: "destructive",
+        });
+      }
+    );
+  };
 
   // Atualizar valores do formulário quando os dados são carregados
   useEffect(() => {
@@ -199,308 +222,550 @@ export default function SubscriptionSettings() {
     updateSettingsMutation.mutate(data);
   };
 
+  // Mostrar estado de carregamento
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-8">
+      <div className="flex items-center justify-center p-6">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2">Carregando configurações...</span>
       </div>
     );
   }
 
-  if (isError) {
+  // Mostrar erro se houver problemas ao carregar
+  if (isError && error) {
     return (
-      <Card className="border-destructive">
+      <Card className="border-red-300">
         <CardHeader>
-          <CardTitle className="text-destructive flex items-center gap-2">
+          <CardTitle className="text-red-500 flex items-center gap-2">
             <AlertCircle className="h-5 w-5" />
             Erro ao carregar configurações
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p>Não foi possível carregar as configurações de assinaturas. {error?.message}</p>
-          <Button
-            variant="outline"
-            onClick={() => queryClient.invalidateQueries({ queryKey: ['/api/subscription-settings'] })}
-            className="mt-4"
-          >
-            <RefreshCw className="h-4 w-4 mr-2" /> Tentar novamente
+          <p>{error.message || "Não foi possível carregar as configurações de assinaturas."}</p>
+          <Button onClick={() => window.location.reload()} className="mt-4" variant="outline">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Tentar novamente
           </Button>
         </CardContent>
       </Card>
     );
   }
 
+  // Construir URL completa para o webhook
+  const siteUrl = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.host}` : '';
+  const hotmartWebhookFullUrl = `${siteUrl}/api/webhooks/hotmart`;
+  const doppusWebhookFullUrl = `${siteUrl}/api/webhooks/doppus`;
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        {/* Configurações de Webhook da Hotmart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Webhook className="h-5 w-5" />
-              Webhook da Hotmart
-            </CardTitle>
-            <CardDescription>
-              Configure a integração com a plataforma Hotmart para processar assinaturas automaticamente
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <FormField
-              control={form.control}
-              name="webhookUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>URL de Callback do Webhook</FormLabel>
-                  <FormControl>
-                    <Input placeholder="https://seu-site.com/api/webhooks/hotmart" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    URL que você deve cadastrar no painel da Hotmart para receber notificações
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        {/* Tabs de navegação */}
+        <Tabs defaultValue="geral" value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid grid-cols-4 mb-6">
+            <TabsTrigger value="geral">Geral</TabsTrigger>
+            <TabsTrigger value="hotmart">Hotmart</TabsTrigger>
+            <TabsTrigger value="doppus">Doppus</TabsTrigger>
+            <TabsTrigger value="notificacoes">Notificações</TabsTrigger>
+          </TabsList>
 
-            <FormField
-              control={form.control}
-              name="webhookSecretKey"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Chave de Segurança (Secret Key)</FormLabel>
-                  <FormControl>
-                    <div className="flex items-center gap-2">
-                      <Input type="password" placeholder="••••••••••••••••" {...field} />
-                      <Button type="button" variant="outline" size="icon" onClick={() => {
-                        const newKey = Array.from({ length: 24 }, () => Math.floor(Math.random() * 36).toString(36)).join('');
-                        form.setValue('webhookSecretKey', newKey);
-                      }}>
-                        <Key className="h-4 w-4" />
+          {/* Aba de configurações gerais */}
+          <TabsContent value="geral" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BadgeDollarSign className="h-5 w-5" />
+                  Comportamento de Assinaturas
+                </CardTitle>
+                <CardDescription>
+                  Configure o comportamento padrão para assinaturas e renovações
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="defaultSubscriptionDuration"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Duração Padrão de Assinatura (em meses)</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Número padrão de meses para assinaturas criadas manualmente
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="graceHoursAfterExpiration"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Período de Carência após Expiração (em horas)</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Horas adicionais de acesso após a expiração da assinatura
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex flex-col gap-4 mt-4">
+                  <FormField
+                    control={form.control}
+                    name="autoDowngradeAfterExpiration"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between p-3 border rounded-md">
+                        <div className="space-y-0.5">
+                          <FormLabel>Rebaixar Automaticamente</FormLabel>
+                          <FormDescription>
+                            Rebaixar usuários para nível "free" após expiração da assinatura
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="autoMapProductCodes"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between p-3 border rounded-md">
+                        <div className="space-y-0.5">
+                          <FormLabel>Mapeamento Automático de Produtos</FormLabel>
+                          <FormDescription>
+                            Mapear automaticamente códigos de produtos para planos na plataforma
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Aba de configuração da Hotmart */}
+          <TabsContent value="hotmart" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Webhook className="h-5 w-5" />
+                  Integração com Hotmart
+                </CardTitle>
+                <CardDescription>
+                  Configure a integração com a plataforma Hotmart para processar assinaturas automaticamente
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div className="border p-4 rounded-md bg-muted/30">
+                    <h3 className="text-sm font-medium mb-2">URL do Webhook</h3>
+                    <div className="flex items-center gap-2 mb-2">
+                      <code className="bg-muted p-2 rounded text-xs flex-1 overflow-x-auto">
+                        {hotmartWebhookFullUrl}
+                      </code>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => copyToClipboard(hotmartWebhookFullUrl, "URL do webhook copiada!")}
+                      >
+                        <Copy className="h-4 w-4" />
                       </Button>
                     </div>
-                  </FormControl>
-                  <FormDescription>
-                    Chave para validar autenticidade das requisições da Hotmart
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="hotmartEnvironment"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Ambiente da Hotmart</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o ambiente" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="sandbox">Sandbox (Testes)</SelectItem>
-                      <SelectItem value="production">Produção</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    Ambiente da Hotmart para processar os webhooks
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Comportamento de Assinaturas */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BadgeDollarSign className="h-5 w-5" />
-              Comportamento de Assinaturas
-            </CardTitle>
-            <CardDescription>
-              Configure o comportamento padrão para assinaturas e renovações
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <FormField
-              control={form.control}
-              name="defaultSubscriptionDuration"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Duração Padrão de Assinatura (em meses)</FormLabel>
-                  <FormControl>
-                    <Input type="number" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Número padrão de meses para assinaturas criadas manualmente
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="graceHoursAfterExpiration"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Período de Carência após Expiração (em horas)</FormLabel>
-                  <FormControl>
-                    <Input type="number" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Horas adicionais de acesso após a expiração da assinatura
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="flex flex-col gap-4 mt-4">
-              <FormField
-                control={form.control}
-                name="autoDowngradeAfterExpiration"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between p-3 border rounded-md">
-                    <div className="space-y-0.5">
-                      <FormLabel>Rebaixar Automaticamente</FormLabel>
-                      <FormDescription>
-                        Rebaixar usuários para nível "free" após expiração da assinatura
-                      </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="autoMapProductCodes"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between p-3 border rounded-md">
-                    <div className="space-y-0.5">
-                      <FormLabel>Mapeamento Automático de Produtos</FormLabel>
-                      <FormDescription>
-                        Mapear automaticamente códigos de produtos para planos na plataforma
-                      </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Notificações */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bell className="h-5 w-5" />
-              Notificações
-            </CardTitle>
-            <CardDescription>
-              Configure as notificações para assinantes
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <FormField
-              control={form.control}
-              name="sendExpirationWarningEmails"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between p-3 border rounded-md">
-                  <div className="space-y-0.5">
-                    <FormLabel>Enviar E-mails de Aviso</FormLabel>
-                    <FormDescription>
-                      Enviar avisos por e-mail antes da expiração da assinatura
-                    </FormDescription>
+                    <p className="text-xs text-muted-foreground">
+                      Cadastre esta URL no painel da Hotmart para receber notificações de eventos
+                    </p>
                   </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
-            <FormField
-              control={form.control}
-              name="sendExpirationWarningDays"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Dias de Antecedência para Aviso</FormLabel>
-                  <FormControl>
-                    <Input type="number" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Quantos dias antes da expiração enviar o aviso
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  <FormField
+                    control={form.control}
+                    name="webhookSecretKey"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Chave de Segurança do Webhook (HOTMART_SECRET)</FormLabel>
+                        <FormControl>
+                          <div className="flex items-center gap-2">
+                            <Input type="password" placeholder="••••••••••••••••" {...field} />
+                            <Button type="button" variant="outline" size="icon" onClick={() => {
+                              const newKey = Array.from({ length: 24 }, () => Math.floor(Math.random() * 36).toString(36)).join('');
+                              form.setValue('webhookSecretKey', newKey);
+                              form.trigger('webhookSecretKey');
+                            }} title="Gerar nova chave">
+                              <Key className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </FormControl>
+                        <FormDescription>
+                          Chave para validar autenticidade das requisições da Hotmart
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-            <FormField
-              control={form.control}
-              name="notificationEmailSubject"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Assunto do E-mail de Aviso</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Sua assinatura irá expirar em breve" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Assunto do e-mail enviado antes da expiração
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  <FormField
+                    control={form.control}
+                    name="hotmartEnvironment"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Ambiente da Hotmart</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione o ambiente" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="sandbox">Sandbox (Testes)</SelectItem>
+                            <SelectItem value="production">Produção</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          Ambiente da Hotmart para processar os webhooks
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-            <FormField
-              control={form.control}
-              name="notificationEmailTemplate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Template do E-mail</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Olá {{nome}}, sua assinatura expira em {{dias_restantes}} dias..."
-                      className="min-h-[150px]"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Template para e-mail de aviso de expiração. Variáveis disponíveis: {"{{nome}}"}, {"{{dias_restantes}}"}, {"{{data_expiracao}}"}
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </CardContent>
-        </Card>
+                <Separator className="my-6" />
+
+                <div className="space-y-4">
+                  <h3 className="text-sm font-medium">Credenciais da API</h3>
+                  
+                  <FormField
+                    control={form.control}
+                    name="hotmartClientId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Client ID (HOTMART_CLIENT_ID)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Insira o Client ID da Hotmart" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          ID do cliente para acessar a API da Hotmart
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="hotmartClientSecret"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Client Secret (HOTMART_CLIENT_SECRET)</FormLabel>
+                        <FormControl>
+                          <Input type="password" placeholder="••••••••••••••••" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Chave secreta para acessar a API da Hotmart
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <Separator className="my-6" />
+
+                <div className="space-y-4">
+                  <h3 className="text-sm font-medium">Mapeamento de Produtos</h3>
+                  
+                  <FormField
+                    control={form.control}
+                    name="hotmartBasicPlanId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>ID do Plano Básico</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ex: 1234567" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          ID do produto básico na Hotmart
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="hotmartProPlanId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>ID do Plano Premium/Pro</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ex: 7654321" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          ID do produto premium/pro na Hotmart
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Aba de configuração da Doppus */}
+          <TabsContent value="doppus" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  Integração com Doppus
+                </CardTitle>
+                <CardDescription>
+                  Configure a integração com a plataforma Doppus para processar assinaturas automaticamente
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div className="border p-4 rounded-md bg-muted/30">
+                    <h3 className="text-sm font-medium mb-2">URL do Webhook</h3>
+                    <div className="flex items-center gap-2 mb-2">
+                      <code className="bg-muted p-2 rounded text-xs flex-1 overflow-x-auto">
+                        {doppusWebhookFullUrl}
+                      </code>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => copyToClipboard(doppusWebhookFullUrl, "URL do webhook Doppus copiada!")}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Cadastre esta URL no painel da Doppus para receber notificações de eventos
+                    </p>
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="doppusWebhookUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>URL de Webhook registrada na Doppus</FormLabel>
+                        <FormControl>
+                          <Input placeholder="https://api.doppus.io/webhooks/..." {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          URL do webhook registrada no painel da Doppus
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <Separator className="my-6" />
+
+                <div className="space-y-4">
+                  <h3 className="text-sm font-medium">Credenciais da API</h3>
+                  
+                  <FormField
+                    control={form.control}
+                    name="doppusApiKey"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>API Key</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Insira a API Key da Doppus" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Chave de API fornecida pela Doppus
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="doppusSecretKey"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Secret Key</FormLabel>
+                        <FormControl>
+                          <Input type="password" placeholder="••••••••••••••••" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Chave secreta para validação de webhooks da Doppus
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <Separator className="my-6" />
+
+                <div className="space-y-4">
+                  <h3 className="text-sm font-medium">Mapeamento de Produtos</h3>
+                  
+                  <FormField
+                    control={form.control}
+                    name="doppusBasicPlanId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>ID do Plano Básico</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ex: basic-monthly" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          ID do produto básico na Doppus
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="doppusProPlanId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>ID do Plano Premium/Pro</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ex: premium-monthly" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          ID do produto premium/pro na Doppus
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Aba de configuração de notificações */}
+          <TabsContent value="notificacoes" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bell className="h-5 w-5" />
+                  Notificações
+                </CardTitle>
+                <CardDescription>
+                  Configure as notificações para assinantes
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="sendExpirationWarningEmails"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between p-3 border rounded-md">
+                      <div className="space-y-0.5">
+                        <FormLabel>Enviar E-mails de Aviso</FormLabel>
+                        <FormDescription>
+                          Enviar avisos por e-mail antes da expiração da assinatura
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="sendExpirationWarningDays"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Dias de Antecedência para Aviso</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Quantos dias antes da expiração enviar o aviso
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="notificationEmailSubject"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Assunto do E-mail de Aviso</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Sua assinatura irá expirar em breve" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Assunto do e-mail enviado antes da expiração
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="notificationEmailTemplate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Template do E-mail</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Olá {{nome}}, sua assinatura expira em {{dias_restantes}} dias..."
+                          className="min-h-[250px]"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Template para e-mail de aviso de expiração. Variáveis disponíveis: {"{{nome}}"}, {"{{dias_restantes}}"}, {"{{data_expiracao}}"}
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
 
         <div className="flex justify-end gap-4">
           <Button
