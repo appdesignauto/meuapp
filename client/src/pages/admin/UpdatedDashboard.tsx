@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
 import AnalyticsSettings from '@/components/admin/AnalyticsSettings';
 import ReportsManagement from '@/components/admin/ReportsManagement';
+import SubscriptionManagement from '@/components/admin/SubscriptionManagement';
 import {
   LayoutGrid,
   Image,
@@ -1007,16 +1008,16 @@ const AdminDashboard = () => {
             </button>
             
             {/* Assinaturas */}
-            <a
-              href="/admin/assinaturas"
+            <button
+              onClick={() => setActiveTab('subscriptions')}
               className={`flex items-center w-full px-4 py-2 rounded-lg transition-all duration-200 ${
-                location === '/admin/assinaturas' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                activeTab === 'subscriptions' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
               } ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
               title="Assinaturas"
             >
               <CreditCard className={`${sidebarOpen ? 'w-5 h-5' : 'w-5 h-5 mx-auto'}`} />
               {sidebarOpen && <span className="ml-3 truncate">Assinaturas</span>}
-            </a>
+            </button>
 
 
             {/* Usuários e Comunidade */}
@@ -1417,6 +1418,7 @@ const AdminDashboard = () => {
                 {activeTab === 'stats' && 'Visão Geral'}
                 {activeTab === 'settings' && 'Configurações'}
                 {activeTab === 'coursesList' && 'Gerenciamento de Cursos'}
+                {activeTab === 'subscriptions' && 'Gerenciamento de Assinaturas'}
                 {activeTab === 'modules' && 'Módulos dos Cursos'}
                 {activeTab === 'lessons' && 'Aulas dos Cursos'}
                 {activeTab === 'coursesConfig' && 'Configurações de Cursos'}
@@ -3984,6 +3986,23 @@ const AdminDashboard = () => {
             
             <TabsContent value="settings">
               <SiteSettings />
+            </TabsContent>
+            
+            {/* Gerenciamento de Assinaturas */}
+            <TabsContent value="subscriptions" className="mt-0">
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <div className="flex flex-col space-y-6">
+                  <div>
+                    <h2 className="text-2xl font-bold tracking-tight mb-2">Gerenciamento de Assinaturas</h2>
+                    <p className="text-muted-foreground">
+                      Gerencie assinaturas, webhooks e configurações relacionadas a pagamentos.
+                    </p>
+                  </div>
+                  <div className="grid gap-6">
+                    <SubscriptionManagement />
+                  </div>
+                </div>
+              </div>
             </TabsContent>
             
             {/* Gerenciamento de Ferramentas */}
