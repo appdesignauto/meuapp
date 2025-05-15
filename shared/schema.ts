@@ -1302,15 +1302,28 @@ export type InsertWebhookLog = z.infer<typeof insertWebhookLogSchema>;
 // Schema para configurações de assinaturas
 export const subscriptionSettings = pgTable("subscriptionSettings", {
   id: serial("id").primaryKey(),
-  hotmartWebhookUrl: text("hotmartWebhookUrl"),
-  hotmartWebhookSecret: text("hotmartWebhookSecret"),
+  // Campos para integração da Hotmart
+  webhookUrl: text("webhookUrl"),
+  webhookSecretKey: text("webhookSecretKey"),
   hotmartEnvironment: text("hotmartEnvironment").default("sandbox").notNull(),
   hotmartClientId: text("hotmartClientId"),
   hotmartClientSecret: text("hotmartClientSecret"),
   hotmartBasicPlanId: text("hotmartBasicPlanId"),
   hotmartProPlanId: text("hotmartProPlanId"),
+  
+  // Campos para configurações de comportamento
+  defaultSubscriptionDuration: integer("defaultSubscriptionDuration").default(12).notNull(),
   graceHoursAfterExpiration: integer("graceHoursAfterExpiration").default(48).notNull(),
+  autoDowngradeAfterExpiration: boolean("autoDowngradeAfterExpiration").default(true).notNull(),
+  autoMapProductCodes: boolean("autoMapProductCodes").default(true).notNull(),
+  
+  // Campos para configurações de notificações
   sendExpirationWarningDays: integer("sendExpirationWarningDays").default(3).notNull(),
+  sendExpirationWarningEmails: boolean("sendExpirationWarningEmails").default(true).notNull(),
+  notificationEmailSubject: text("notificationEmailSubject"),
+  notificationEmailTemplate: text("notificationEmailTemplate"),
+  
+  // Campos de controle
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 });
