@@ -1196,18 +1196,6 @@ const AdminDashboard = () => {
               </CollapsibleContent>
             </Collapsible>
             
-            {/* Analytics - Agora como um item principal no menu */}
-            <button
-              onClick={() => setActiveTab('analytics')}
-              className={`flex items-center w-full mb-1 py-2 rounded-lg transition-all duration-200 ${
-                activeTab === 'analytics' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
-              } ${sidebarOpen ? 'px-5 justify-start' : 'px-2 justify-center'}`}
-              title="Analytics"
-            >
-              <BarChart3 className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
-              {sidebarOpen && <span className="truncate text-sm">Analytics</span>}
-            </button>
-            
             {/* Marketing - Apenas Popups agora */}
             <Collapsible 
               className="rounded-lg overflow-hidden mb-1"
@@ -1365,6 +1353,16 @@ const AdminDashboard = () => {
                       <HardDrive className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
                       {sidebarOpen && <span className="truncate text-sm">Testar Armazenamento</span>}
                     </Link>
+                    <button
+                      onClick={() => setActiveTab('analytics')}
+                      className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
+                        activeTab === 'analytics' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                      } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
+                      title="Analytics"
+                    >
+                      <BarChart3 className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                      {sidebarOpen && <span className="truncate text-sm">Analytics</span>}
+                    </button>
                   </>
                 )}
               </CollapsibleContent>
