@@ -183,8 +183,20 @@ export default function SubscriptionManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [originFilter, setOriginFilter] = useState('all');
+  const [planFilter, setPlanFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('all');
+  const [fromDate, setFromDate] = useState<Date | undefined>(undefined);
+  const [toDate, setToDate] = useState<Date | undefined>(undefined);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  
+  // Estados para exportação
+  const [showExportDialog, setShowExportDialog] = useState(false);
+  const [exportFormat, setExportFormat] = useState('csv');
+  const [exportFields, setExportFields] = useState<string[]>([
+    'username', 'email', 'name', 'origemassinatura', 'tipoplano', 'dataassinatura', 'dataexpiracao'
+  ]);
   
   // Estados para diálogos
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
@@ -718,11 +730,53 @@ export default function SubscriptionManagement() {
         
         {/* Aba de Assinaturas */}
         <TabsContent value="subscriptions" className="space-y-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-4">
-            <h3 className="text-lg font-semibold">Lista de Assinantes</h3>
+          <div className="flex flex-col gap-4 mb-4">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+              <h3 className="text-lg font-semibold">Lista de Assinantes</h3>
+              
+              <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                  className="flex items-center gap-1"
+                >
+                  <SlidersHorizontal className="h-4 w-4" />
+                  Filtros Avançados
+                  {showAdvancedFilters ? (
+                    <ChevronLeft className="h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4" />
+                  )}
+                </Button>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="flex items-center gap-1">
+                      <Download className="h-4 w-4" />
+                      Exportar
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem onClick={() => {
+                      setExportFormat('csv');
+                      setShowExportDialog(true);
+                    }}>
+                      Exportar como CSV
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => {
+                      setExportFormat('excel');
+                      setShowExportDialog(true);
+                    }}>
+                      Exportar como Excel
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
             
             <div className="flex flex-col sm:flex-row gap-2">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Select
                   value={statusFilter}
                   onValueChange={setStatusFilter}
@@ -752,9 +806,87 @@ export default function SubscriptionManagement() {
                     <SelectItem value="manual">Manual</SelectItem>
                   </SelectContent>
                 </Select>
+                
+                {showAdvancedFilters && (
+                  <>
+                    <Select
+                      value={planFilter}
+                      onValueChange={setPlanFilter}
+                    >
+                      <SelectTrigger className="w-[150px]">
+                        <SelectValue placeholder="Plano" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos os planos</SelectItem>
+                        <SelectItem value="mensal">Mensal</SelectItem>
+                        <SelectItem value="trimestral">Trimestral</SelectItem>
+                        <SelectItem value="anual">Anual</SelectItem>
+                        <SelectItem value="vitalicio">Vitalício</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    
+                    <Select
+                      value={dateFilter}
+                      onValueChange={setDateFilter}
+                    >
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Período de assinatura" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Qualquer data</SelectItem>
+                        <SelectItem value="today">Hoje</SelectItem>
+                        <SelectItem value="last7days">Últimos 7 dias</SelectItem>
+                        <SelectItem value="last30days">Últimos 30 dias</SelectItem>
+                        <SelectItem value="thisMonth">Este mês</SelectItem>
+                        <SelectItem value="lastMonth">Mês passado</SelectItem>
+                        <SelectItem value="custom">Período personalizado</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    
+                    {dateFilter === 'custom' && (
+                      <div className="flex items-center gap-2">
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" size="sm" className="flex items-center gap-1">
+                              <Calendar className="h-4 w-4" />
+                              {fromDate ? format(fromDate, 'dd/MM/yyyy') : 'Data inicial'}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="p-0" align="start">
+                            <CalendarComponent
+                              mode="single"
+                              selected={fromDate}
+                              onSelect={setFromDate}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        
+                        <span>até</span>
+                        
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" size="sm" className="flex items-center gap-1">
+                              <Calendar className="h-4 w-4" />
+                              {toDate ? format(toDate, 'dd/MM/yyyy') : 'Data final'}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="p-0" align="start">
+                            <CalendarComponent
+                              mode="single"
+                              selected={toDate}
+                              onSelect={setToDate}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
               
-              <div className="relative">
+              <div className="relative flex-1">
                 <SearchIcon className="absolute top-1/2 left-3 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   type="search"
@@ -765,6 +897,39 @@ export default function SubscriptionManagement() {
                 />
               </div>
             </div>
+            
+            {showAdvancedFilters && (
+              <div className="flex items-center justify-between mt-2">
+                <div className="text-sm text-muted-foreground">
+                  Filtros ativos: {
+                    [
+                      statusFilter !== 'all' && `Status: ${statusFilter}`,
+                      originFilter !== 'all' && `Origem: ${originFilter}`,
+                      planFilter !== 'all' && `Plano: ${planFilter}`,
+                      dateFilter !== 'all' && `Período: ${dateFilter}`,
+                      searchTerm && `Busca: "${searchTerm}"`
+                    ].filter(Boolean).join(', ') || 'Nenhum'
+                  }
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setStatusFilter('all');
+                    setOriginFilter('all');
+                    setPlanFilter('all');
+                    setDateFilter('all');
+                    setFromDate(undefined);
+                    setToDate(undefined);
+                    setSearchTerm('');
+                  }}
+                  className="text-xs"
+                >
+                  <X className="h-3 w-3 mr-1" />
+                  Limpar filtros
+                </Button>
+              </div>
+            )}
           </div>
           
           {isLoadingUsers ? (
@@ -1373,6 +1538,344 @@ export default function SubscriptionManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* Diálogo de Exportação */}
+      <Dialog open={showExportDialog} onOpenChange={setShowExportDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Exportar Assinantes</DialogTitle>
+            <DialogDescription>
+              Selecione os campos que deseja incluir na exportação.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-2">
+              <Label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={exportFields.includes('username')}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setExportFields([...exportFields, 'username']);
+                    } else {
+                      setExportFields(exportFields.filter(f => f !== 'username'));
+                    }
+                  }}
+                />
+                Nome de Usuário
+              </Label>
+              <Label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={exportFields.includes('email')}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setExportFields([...exportFields, 'email']);
+                    } else {
+                      setExportFields(exportFields.filter(f => f !== 'email'));
+                    }
+                  }}
+                />
+                E-mail
+              </Label>
+              <Label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={exportFields.includes('name')}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setExportFields([...exportFields, 'name']);
+                    } else {
+                      setExportFields(exportFields.filter(f => f !== 'name'));
+                    }
+                  }}
+                />
+                Nome Completo
+              </Label>
+              <Label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={exportFields.includes('origemassinatura')}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setExportFields([...exportFields, 'origemassinatura']);
+                    } else {
+                      setExportFields(exportFields.filter(f => f !== 'origemassinatura'));
+                    }
+                  }}
+                />
+                Origem
+              </Label>
+              <Label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={exportFields.includes('tipoplano')}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setExportFields([...exportFields, 'tipoplano']);
+                    } else {
+                      setExportFields(exportFields.filter(f => f !== 'tipoplano'));
+                    }
+                  }}
+                />
+                Plano
+              </Label>
+              <Label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={exportFields.includes('dataassinatura')}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setExportFields([...exportFields, 'dataassinatura']);
+                    } else {
+                      setExportFields(exportFields.filter(f => f !== 'dataassinatura'));
+                    }
+                  }}
+                />
+                Data de Assinatura
+              </Label>
+              <Label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={exportFields.includes('dataexpiracao')}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setExportFields([...exportFields, 'dataexpiracao']);
+                    } else {
+                      setExportFields(exportFields.filter(f => f !== 'dataexpiracao'));
+                    }
+                  }}
+                />
+                Data de Expiração
+              </Label>
+            </div>
+            
+            <div className="flex justify-between items-center mt-2">
+              <div>
+                <p className="text-sm font-medium mb-1">Formato de exportação</p>
+                <Select
+                  value={exportFormat}
+                  onValueChange={setExportFormat}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Selecione o formato" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="csv">CSV (.csv)</SelectItem>
+                    <SelectItem value="excel">Excel (.xls)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <Button
+                variant="ghost" 
+                size="sm"
+                onClick={() => setExportFields([
+                  'username', 'email', 'name', 'origemassinatura', 'tipoplano', 'dataassinatura', 'dataexpiracao'
+                ])}
+              >
+                Selecionar todos
+              </Button>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowExportDialog(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={() => exportData(users || [])} disabled={exportFields.length === 0}>
+              <Download className="h-4 w-4 mr-2" />
+              Exportar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
+  
+  // Função para aplicar filtros de data
+  function applyDateFilter(user: User) {
+    if (dateFilter === 'all') return true;
+    
+    const assinatura = user.dataassinatura ? new Date(user.dataassinatura) : null;
+    if (!assinatura) return false;
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    switch (dateFilter) {
+      case 'today':
+        return assinatura.toDateString() === today.toDateString();
+      case 'last7days':
+        const sevenDaysAgo = subDays(today, 7);
+        return assinatura >= sevenDaysAgo;
+      case 'last30days':
+        const thirtyDaysAgo = subDays(today, 30);
+        return assinatura >= thirtyDaysAgo;
+      case 'thisMonth':
+        return assinatura.getMonth() === today.getMonth() && 
+               assinatura.getFullYear() === today.getFullYear();
+      case 'lastMonth':
+        const lastMonth = subMonths(today, 1);
+        return assinatura.getMonth() === lastMonth.getMonth() && 
+               assinatura.getFullYear() === lastMonth.getFullYear();
+      case 'custom':
+        if (!fromDate) return false;
+        const fromDateStart = new Date(fromDate);
+        fromDateStart.setHours(0, 0, 0, 0);
+        
+        if (!toDate) return assinatura >= fromDateStart;
+        
+        const toDateEnd = new Date(toDate);
+        toDateEnd.setHours(23, 59, 59, 999);
+        
+        return assinatura >= fromDateStart && assinatura <= toDateEnd;
+      default:
+        return true;
+    }
+  }
+  
+  // Função para exportar dados
+  function exportData(users: User[]) {
+    if (!users || users.length === 0) {
+      toast({
+        title: "Erro ao exportar",
+        description: "Não há dados para exportar.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Filtrar os dados
+    const filteredData = users
+      .filter(user => {
+        // Aplicar filtros
+        const matchesStatus = statusFilter === 'all' || 
+          (statusFilter === 'active' && user.planstatus === 'active') ||
+          (statusFilter === 'expired' && user.planstatus === 'expired') ||
+          (statusFilter === 'trial' && user.planstatus === 'trial');
+          
+        const matchesOrigin = originFilter === 'all' || 
+          user.origemassinatura === originFilter;
+          
+        const matchesPlan = planFilter === 'all' || 
+          user.tipoplano === planFilter;
+          
+        const matchesDate = applyDateFilter(user);
+          
+        const matchesSearch = !searchTerm || 
+          user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (user.name && user.name.toLowerCase().includes(searchTerm.toLowerCase()));
+          
+        return matchesStatus && matchesOrigin && matchesPlan && matchesDate && matchesSearch;
+      })
+      .map(user => {
+        // Criar objeto apenas com os campos selecionados
+        const userData: Record<string, any> = {};
+        exportFields.forEach(field => {
+          if (field === 'dataassinatura' || field === 'dataexpiracao') {
+            userData[field] = user[field] ? format(new Date(user[field]), 'dd/MM/yyyy') : '';
+          } else {
+            userData[field] = user[field] || '';
+          }
+        });
+        return userData;
+      });
+    
+    if (filteredData.length === 0) {
+      toast({
+        title: "Erro ao exportar",
+        description: "Não há dados para exportar após aplicar os filtros.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Converter para CSV/Excel
+    if (exportFormat === 'csv') {
+      // Gerar CSV
+      const headers = exportFields.map(field => {
+        // Mapear nomes de campos para nomes mais amigáveis
+        const fieldNames: Record<string, string> = {
+          username: 'Nome de Usuário',
+          email: 'E-mail',
+          name: 'Nome Completo',
+          origemassinatura: 'Origem',
+          tipoplano: 'Plano',
+          dataassinatura: 'Data de Assinatura',
+          dataexpiracao: 'Data de Expiração'
+        };
+        return fieldNames[field] || field;
+      });
+      
+      let csv = headers.join(',') + '\n';
+      
+      filteredData.forEach(data => {
+        const row = exportFields.map(field => {
+          const value = data[field] || '';
+          // Escapar valores com vírgulas
+          return value.toString().includes(',') ? `"${value}"` : value;
+        });
+        csv += row.join(',') + '\n';
+      });
+      
+      // Criar o download
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `assinantes_${format(new Date(), 'dd-MM-yyyy')}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Exportação concluída",
+        description: `${filteredData.length} registros exportados com sucesso.`,
+        variant: "default"
+      });
+    } else {
+      // Para Excel, usamos CSV mas com outra extensão, já que é suficiente para abrir no Excel
+      const headers = exportFields.map(field => {
+        // Mapear nomes de campos para nomes mais amigáveis
+        const fieldNames: Record<string, string> = {
+          username: 'Nome de Usuário',
+          email: 'E-mail',
+          name: 'Nome Completo',
+          origemassinatura: 'Origem',
+          tipoplano: 'Plano',
+          dataassinatura: 'Data de Assinatura',
+          dataexpiracao: 'Data de Expiração'
+        };
+        return fieldNames[field] || field;
+      });
+      
+      let csv = headers.join('\t') + '\n';
+      
+      filteredData.forEach(data => {
+        const row = exportFields.map(field => data[field] || '');
+        csv += row.join('\t') + '\n';
+      });
+      
+      // Criar o download
+      const blob = new Blob([csv], { type: 'application/vnd.ms-excel' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `assinantes_${format(new Date(), 'dd-MM-yyyy')}.xls`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Exportação concluída",
+        description: `${filteredData.length} registros exportados com sucesso.`,
+        variant: "default"
+      });
+    }
+    
+    setShowExportDialog(false);
+  }
 }
