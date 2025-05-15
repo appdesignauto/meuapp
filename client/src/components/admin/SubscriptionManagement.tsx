@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -61,11 +61,15 @@ import {
   Eye,
   Settings,
   Webhook,
-  FileText
+  FileText,
+  Download,
+  Filter,
+  X,
+  SlidersHorizontal
 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { format, addDays, addMonths, addYears, parseISO } from 'date-fns';
+import { format, addDays, addMonths, addYears, parseISO, subDays, subMonths } from 'date-fns';
 import { pt } from 'date-fns/locale';
 
 import {
@@ -77,6 +81,18 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Switch } from '@/components/ui/switch';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 
 interface User {
   id: number;
