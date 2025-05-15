@@ -150,6 +150,64 @@ export default function SimpleFormMultiDialog({
           // Definir a aba inicial com base no formato que foi clicado
           setCurrentTab(editingArt.initialFormat);
         }
+        
+        // Como já recebemos as artes agrupadas do ArtsList, vamos processá-las diretamente
+        const groupArts = editingArt.groupArts;
+        
+        // Extrair os formatos das artes do grupo
+        const formatSlugs = groupArts.map(art => art.format);
+        console.log(`Formatos encontrados: ${formatSlugs.join(', ')}`);
+        
+        step1Form.setValue('selectedFormats', formatSlugs);
+        
+        // Usar o primeiro item do grupo para as informações globais
+        const primeiraArte = groupArts[0];
+        step1Form.setValue('categoryId', primeiraArte.categoryId?.toString() || '');
+        step1Form.setValue('globalFileType', primeiraArte.fileType || 'canva');
+        step1Form.setValue('isPremium', primeiraArte.isPremium || false);
+        step1Form.setValue('globalTitle', primeiraArte.title || '');
+        step1Form.setValue('globalDescription', primeiraArte.description || '');
+        
+        // Preencher os detalhes de cada formato
+        const initialDetails: Record<string, FormatValues> = {};
+        groupArts.forEach(art => {
+          initialDetails[art.format] = {
+            format: art.format,
+            fileType: art.fileType || 'canva',
+            title: art.title || '',
+            description: art.description || '',
+            imageUrl: art.imageUrl || '',
+            previewUrl: art.previewUrl || '',
+            editUrl: art.editUrl || '',
+          };
+          console.log(`Formato ${art.format} carregado: ${art.title}`);
+        });
+        
+        setFormatDetails(initialDetails);
+        
+        // Verificar quais formatos estão completos
+        const updatedFormatsComplete: Record<string, boolean> = {};
+        Object.entries(initialDetails).forEach(([formatSlug, details]) => {
+          const isComplete = !!(details.title && details.editUrl && details.imageUrl);
+          updatedFormatsComplete[formatSlug] = isComplete;
+        });
+        setFormatsComplete(updatedFormatsComplete);
+        
+        // Guardar as imagens
+        const imageMap: Record<string, string> = {};
+        groupArts.forEach(art => {
+          imageMap[art.format] = art.imageUrl || '';
+        });
+        setImages(imageMap);
+        
+        // Avançar direto para a etapa 2 (upload) depois de carregar os dados
+        console.log(`Avançando para etapa 2 após carregar dados do grupo`);
+        setTimeout(() => {
+          setStep(2);
+        }, 100);
+        
+        // Não prosseguir com a verificação HTTP já que temos todos os dados
+        return;
       }
       
       // Atualizar o formulário da etapa 1 com os dados da arte
@@ -551,6 +609,36 @@ export default function SimpleFormMultiDialog({
       // Verificar se estamos editando ou criando
       if (isEditing && editingArt) {
         // Adicionar ID da arte existente para edição
+        // Verificar primeiro se temos groupArts (modo de edição de grupo)
+        if (editingArt.groupArts && Array.isArray(editingArt.groupArts) && editingArt.groupArts.length > 0) {
+          // Se temos groupArts do ArtsList, usamos as informações do grupo diretamente
+          
+          // Obter o groupId a partir de qualquer uma das artes do grupo
+          const groupId = editingArt.groupArts[0].groupId;
+          
+          if (groupId) {
+            // Atualizar os dados formatados com o groupId
+            formattedData.groupId = groupId;
+            console.log(`Atualizando grupo de artes a partir de groupArts: ${groupId}`);
+            try {
+              response = await apiRequest('PUT', `/api/admin/arts/group/${groupId}`, formattedData);
+              const responseText = await response.clone().text();
+              console.log('Resposta da API (grupo existente):', responseText);
+            } catch (error) {
+              console.error('Erro ao atualizar grupo existente:', error);
+              toast({
+                title: "Erro na atualização",
+                description: `Falha ao atualizar o grupo de artes: ${error.message}`,
+                variant: "destructive",
+              });
+              setIsSubmitting(false);
+              return;
+            }
+            return; // Não continuar com o fluxo original
+          }
+        }
+        
+        // Verificação original para compatibilidade com código legado
         if (editingArt.groupId) {
           // Se tem groupId, atualizar o grupo inteiro
           formattedData.groupId = editingArt.groupId;
