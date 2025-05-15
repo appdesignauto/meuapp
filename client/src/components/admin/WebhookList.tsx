@@ -48,6 +48,7 @@ interface WebhookLog {
   eventType: string;
   payloadData: string;
   status: 'received' | 'processed' | 'pending' | 'error';
+  source: 'hotmart' | 'doppus' | null; // Fonte do webhook (Hotmart ou Doppus)
   errorMessage: string | null;
   userId: number | null;
   sourceIp: string;
