@@ -298,13 +298,15 @@ const ArtsList = () => {
         console.log(`Verificando grupo para arte ${art.id} usando endpoint check-group`);
         
         // Verificar o groupId e obter todas as artes do grupo
-        const checkResponse = await apiRequest('GET', `/api/admin/artes/${art.id}/check-group`);
+        // CORRIGIDO: Mudando de 'artes' para 'arts' para corresponder com o backend
+        const checkResponse = await apiRequest('GET', `/api/admin/arts/${art.id}/check-group`);
         const checkData = await checkResponse.json();
         
         if (checkData.groupId) {
           // Se confirmado que existe um grupo, buscamos todas as artes do grupo
           console.log(`Buscando artes do grupo: ${checkData.groupId}`);
-          const groupResponse = await apiRequest('GET', `/api/admin/artes/group/${checkData.groupId}`);
+          // CORRIGIDO: Mudando de 'artes' para 'arts' para corresponder com o backend
+          const groupResponse = await apiRequest('GET', `/api/admin/arts/group/${checkData.groupId}`);
           const groupData = await groupResponse.json();
           
           if (groupData && groupData.arts && groupData.arts.length > 0) {
