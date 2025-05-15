@@ -131,9 +131,9 @@ const SubscriptionManagement = () => {
     isError: isErrorStats,
     error: statsError
   } = useQuery({
-    queryKey: ['/api/admin/subscription-stats'],
+    queryKey: ['/api/subscriptions/stats'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/subscription-stats');
+      const response = await fetch('/api/subscriptions/stats');
       
       if (!response.ok) {
         throw new Error('Falha ao carregar estatísticas de assinaturas');

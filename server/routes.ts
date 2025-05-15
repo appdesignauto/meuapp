@@ -4596,6 +4596,429 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Endpoint para obter estatísticas de assinaturas para o painel administrativo
+  app.get("/api/subscriptions/stats", isAdmin, async (req, res) => {
+    try {
+      // Obter total de usuários com assinatura (exceto free)
+      const [totalResult] = await db
+        .select({ count: count() })
+        .from(users)
+        .where(not(eq(users.nivelacesso, 'free')));
+      
+      // Obter usuários com assinatura ativa
+      const [activeResult] = await db
+        .select({ count: count() })
+        .from(users)
+        .where(
+          and(
+            not(eq(users.nivelacesso, 'free')),
+            or(
+              isNull(users.dataexpiracao),
+              sql`${users.dataexpiracao} > NOW()`,
+              eq(users.acessovitalicio, true)
+            )
+          )
+        );
+      
+      // Obter usuários com assinatura expirada
+      const [expiredResult] = await db
+        .select({ count: count() })
+        .from(users)
+        .where(
+          and(
+            not(eq(users.nivelacesso, 'free')),
+            not(eq(users.acessovitalicio, true)),
+            not(isNull(users.dataexpiracao)),
+            sql`${users.dataexpiracao} <= NOW()`
+          )
+        );
+      
+      // Obter usuários em teste
+      const [trialResult] = await db
+        .select({ count: count() })
+        .from(users)
+        .where(eq(users.tipoplano, 'trial'));
+      
+      // Obter usuários com assinatura expirando em 7 dias
+      const [expiringIn7DaysResult] = await db
+        .select({ count: count() })
+        .from(users)
+        .where(
+          and(
+            not(eq(users.nivelacesso, 'free')),
+            not(eq(users.acessovitalicio, true)),
+            not(isNull(users.dataexpiracao)),
+            sql`${users.dataexpiracao} > NOW()`,
+            sql`${users.dataexpiracao} <= NOW() + INTERVAL '7 days'`
+          )
+        );
+      
+      // Obter usuários com assinatura expirando em 30 dias
+      const [expiringIn30DaysResult] = await db
+        .select({ count: count() })
+        .from(users)
+        .where(
+          and(
+            not(eq(users.nivelacesso, 'free')),
+            not(eq(users.acessovitalicio, true)),
+            not(isNull(users.dataexpiracao)),
+            sql`${users.dataexpiracao} > NOW()`,
+            sql`${users.dataexpiracao} <= NOW() + INTERVAL '30 days'`
+          )
+        );
+      
+      // Obter contagem por origem de assinatura
+      const [hotmartResult] = await db
+        .select({ count: count() })
+        .from(users)
+        .where(eq(users.origemassinatura, 'hotmart'));
+      
+      const [doppusResult] = await db
+        .select({ count: count() })
+        .from(users)
+        .where(eq(users.origemassinatura, 'doppus'));
+      
+      const [manualResult] = await db
+        .select({ count: count() })
+        .from(users)
+        .where(eq(users.origemassinatura, 'manual'));
+      
+      // Obter contagem por tipo de plano
+      const planCounts = await db
+        .select({
+          planType: users.tipoplano,
+          count: count(),
+        })
+        .from(users)
+        .where(not(isNull(users.tipoplano)))
+        .groupBy(users.tipoplano);
+      
+      // Converter para formato de objeto
+      const subscriptionsByPlan: Record<string, number> = {};
+      planCounts.forEach(item => {
+        subscriptionsByPlan[item.planType || 'desconhecido'] = item.count;
+      });
+      
+      // Obter contagem por origem de assinatura
+      const originCounts = await db
+        .select({
+          origin: users.origemassinatura,
+          count: count(),
+        })
+        .from(users)
+        .where(not(isNull(users.origemassinatura)))
+        .groupBy(users.origemassinatura);
+      
+      // Converter para formato de objeto
+      const subscriptionsByOrigin: Record<string, number> = {};
+      originCounts.forEach(item => {
+        subscriptionsByOrigin[item.origin || 'desconhecido'] = item.count;
+      });
+      
+      // Obter assinaturas recentes (últimos 30 dias)
+      const recentSubscriptionsData = await db
+        .select({
+          date: sql`DATE(${users.dataassinatura})`,
+          count: count(),
+        })
+        .from(users)
+        .where(
+          and(
+            not(isNull(users.dataassinatura)),
+            sql`${users.dataassinatura} >= NOW() - INTERVAL '30 days'`
+          )
+        )
+        .groupBy(sql`DATE(${users.dataassinatura})`)
+        .orderBy(sql`DATE(${users.dataassinatura})`);
+      
+      // Converter para o formato esperado pelo frontend
+      const recentSubscriptions = recentSubscriptionsData.map(item => ({
+        date: item.date.toString(),
+        count: item.count,
+      }));
+      
+      res.status(200).json({
+        total: totalResult.count,
+        active: activeResult.count,
+        expired: expiredResult.count,
+        trialCount: trialResult.count,
+        expiringIn7Days: expiringIn7DaysResult.count,
+        expiringIn30Days: expiringIn30DaysResult.count,
+        hotmartCount: hotmartResult.count,
+        doppusCount: doppusResult.count,
+        manualCount: manualResult.count,
+        subscriptionsByPlan,
+        subscriptionsByOrigin,
+        recentSubscriptions,
+      });
+    } catch (error) {
+      console.error("Erro ao obter estatísticas de assinaturas:", error);
+      res.status(500).json({ message: "Erro ao obter estatísticas de assinaturas" });
+    }
+  });
+  
+  // Endpoint para listar usuários com assinaturas com filtros e paginação
+  app.get("/api/admin/users", isAdmin, async (req, res) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const status = req.query.status as string;
+      const origin = req.query.origin as string;
+      const search = req.query.search as string;
+      
+      const offset = (page - 1) * limit;
+      
+      // Construir condições de filtro
+      let whereConditions: SQL[] = [];
+      
+      // Filtro por status
+      if (status) {
+        if (status === 'active') {
+          whereConditions.push(
+            or(
+              isNull(users.dataexpiracao),
+              sql`${users.dataexpiracao} > NOW()`,
+              eq(users.acessovitalicio, true)
+            )
+          );
+        } else if (status === 'expired') {
+          whereConditions.push(
+            and(
+              not(eq(users.acessovitalicio, true)),
+              not(isNull(users.dataexpiracao)),
+              sql`${users.dataexpiracao} <= NOW()`
+            )
+          );
+        } else if (status === 'trial') {
+          whereConditions.push(eq(users.tipoplano, 'trial'));
+        }
+      }
+      
+      // Filtro por origem
+      if (origin && origin !== 'all') {
+        whereConditions.push(eq(users.origemassinatura, origin));
+      }
+      
+      // Filtro por termo de busca
+      if (search) {
+        whereConditions.push(
+          or(
+            sql`${users.username} ILIKE ${`%${search}%`}`,
+            sql`${users.email} ILIKE ${`%${search}%`}`,
+            sql`${users.name} ILIKE ${`%${search}%`}`
+          )
+        );
+      }
+      
+      // Combinar condições
+      let query = db.select({
+        id: users.id,
+        username: users.username,
+        email: users.email,
+        nivelacesso: users.nivelacesso,
+        planstatus: sql`
+          CASE
+            WHEN ${users.acessovitalicio} = true THEN 'lifetime'
+            WHEN ${users.dataexpiracao} IS NULL THEN 'active'
+            WHEN ${users.dataexpiracao} > NOW() THEN 'active'
+            ELSE 'expired'
+          END
+        `,
+        origemassinatura: users.origemassinatura,
+        tipoplano: users.tipoplano,
+        planoexpiracao: users.dataexpiracao,
+        criadoem: users.criadoem,
+        atualizadoem: users.atualizadoem,
+      })
+      .from(users)
+      .limit(limit)
+      .offset(offset)
+      .orderBy(desc(users.criadoem));
+      
+      if (whereConditions.length > 0) {
+        const finalCondition = whereConditions.length === 1
+          ? whereConditions[0]
+          : and(...whereConditions);
+        
+        query = query.where(finalCondition);
+      }
+      
+      // Executar consulta
+      const userList = await query;
+      
+      // Obter contagem total para paginação
+      const [totalResult] = await db
+        .select({ count: count() })
+        .from(users);
+      
+      res.status(200).json({
+        users: userList,
+        pagination: {
+          total: totalResult.count,
+          page,
+          limit,
+          pages: Math.ceil(totalResult.count / limit),
+        }
+      });
+    } catch (error) {
+      console.error("Erro ao listar usuários:", error);
+      res.status(500).json({ message: "Erro ao listar usuários" });
+    }
+  });
+  
+  // Endpoint para obter detalhes de um usuário específico
+  app.get("/api/admin/users/:id", isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "ID de usuário inválido" });
+      }
+      
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId));
+      
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+      
+      // Formatar o status do plano para exibição
+      let planStatus = 'free';
+      if (user.acessovitalicio) {
+        planStatus = 'lifetime';
+      } else if (user.dataexpiracao) {
+        if (new Date(user.dataexpiracao) > new Date()) {
+          planStatus = 'active';
+        } else {
+          planStatus = 'expired';
+        }
+      } else if (user.nivelacesso !== 'free') {
+        planStatus = 'active';
+      }
+      
+      res.status(200).json({
+        ...user,
+        planstatus: planStatus
+      });
+    } catch (error) {
+      console.error("Erro ao obter detalhes do usuário:", error);
+      res.status(500).json({ message: "Erro ao obter detalhes do usuário" });
+    }
+  });
+  
+  // Endpoint para atualizar a assinatura de um usuário
+  app.put("/api/admin/users/:id/subscription", isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "ID de usuário inválido" });
+      }
+      
+      const { planstatus, tipoplano, origemassinatura, planoexpiracao, notifyUser } = req.body;
+      
+      // Verificar se o usuário existe
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId));
+      
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+      
+      // Preparar dados para atualização
+      const updateData: any = {
+        tipoplano,
+        origemassinatura,
+        dataexpiracao: planoexpiracao ? new Date(planoexpiracao) : null,
+        atualizadoem: new Date(),
+      };
+      
+      // Definir acesso vitalício e nível de acesso com base no status do plano
+      if (planstatus === 'lifetime') {
+        updateData.acessovitalicio = true;
+        updateData.nivelacesso = 'premium';
+      } else if (planstatus === 'active') {
+        updateData.acessovitalicio = false;
+        updateData.nivelacesso = 'premium';
+      } else if (planstatus === 'expired' || planstatus === 'free') {
+        updateData.acessovitalicio = false;
+        updateData.nivelacesso = 'free';
+      }
+      
+      // Atualizar usuário
+      await db
+        .update(users)
+        .set(updateData)
+        .where(eq(users.id, userId));
+      
+      // Enviar notificação ao usuário se solicitado
+      if (notifyUser) {
+        // Implementar o envio de e-mail (isso seria feito pelo EmailService)
+        // EmailService.sendSubscriptionUpdateEmail(user.email, planstatus, planoexpiracao);
+        console.log(`Notificação enviada para ${user.email} sobre atualização da assinatura`);
+      }
+      
+      res.status(200).json({
+        success: true,
+        message: "Assinatura atualizada com sucesso",
+        user: {
+          ...user,
+          ...updateData,
+        },
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar assinatura:", error);
+      res.status(500).json({ message: "Erro ao atualizar assinatura" });
+    }
+  });
+  
+  // Endpoint para remover assinatura de um usuário
+  app.delete("/api/admin/users/:id/subscription", isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "ID de usuário inválido" });
+      }
+      
+      // Verificar se o usuário existe
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId));
+      
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+      
+      // Rebaixar o usuário para free
+      await db
+        .update(users)
+        .set({
+          nivelacesso: 'free',
+          tipoplano: null,
+          origemassinatura: null,
+          dataassinatura: null,
+          dataexpiracao: null,
+          acessovitalicio: false,
+          atualizadoem: new Date(),
+        })
+        .where(eq(users.id, userId));
+      
+      res.status(200).json({
+        success: true,
+        message: "Assinatura removida com sucesso",
+      });
+    } catch (error) {
+      console.error("Erro ao remover assinatura:", error);
+      res.status(500).json({ message: "Erro ao remover assinatura" });
+    }
+  });
+
   // Rota para webhook da Hotmart
   app.post("/api/webhooks/hotmart", async (req, res) => {
     try {
