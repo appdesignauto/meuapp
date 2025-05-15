@@ -345,7 +345,26 @@ export function PopupContainer() {
       const storedSessionId = localStorage.getItem('popup_session_id') || sessionId;
       
       // Obter o path atual sem a "/" inicial para simplificar a correspondência
-      const currentPath = location === '/' ? 'home' : location.substring(1);
+      let currentPath = location === '/' ? 'home' : location.substring(1);
+      
+      // Tratar caminhos específicos para correspondência com o painel de configuração
+      if (currentPath.startsWith('painel/')) {
+        currentPath = 'painel';
+      }
+      
+      // Tratar outros paths específicos se necessário
+      if (currentPath.startsWith('artes/')) {
+        currentPath = 'artes';
+      } else if (currentPath.startsWith('categorias/')) {
+        currentPath = 'categorias';
+      } else if (currentPath.startsWith('designers/')) {
+        currentPath = 'designers';
+      } else if (currentPath.startsWith('ferramentas/')) {
+        currentPath = 'ferramentas';
+      } else if (currentPath.startsWith('comunidade/')) {
+        currentPath = 'comunidade';
+      }
+      
       console.log('Verificando popups para a página atual:', currentPath);
       
       const response = await apiRequest('GET', `/api/popups/active?sessionId=${storedSessionId}&currentPath=${currentPath}`);
