@@ -5766,6 +5766,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const filters = {
         status: req.query.status as string,
         eventType: req.query.eventType as string,
+        source: req.query.source as string,
         search: req.query.search as string
       };
       
