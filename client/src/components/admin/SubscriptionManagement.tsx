@@ -47,7 +47,7 @@ import {
   BarChart3,
   CalendarClock,
   Clock,
-  User,
+  User as UserIcon,
   Users,
   UserCheck,
   ChevronLeft,
@@ -1683,7 +1683,7 @@ export default function SubscriptionManagement() {
                 <Badge variant="secondary" className="px-2 py-1">
                   {(() => {
                     // Calcular a quantidade de registros após aplicar os filtros
-                    const count = usersData?.users?.filter((user: User) => {
+                    const count = usersData?.users?.filter((user) => {
                       // Status
                       if (statusFilter !== 'all') {
                         if (statusFilter === 'active' && user.planstatus !== 'active') return false;
