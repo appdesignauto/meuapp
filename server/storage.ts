@@ -3587,13 +3587,35 @@ export class DatabaseStorage implements IStorage {
         
         return updated;
       } else {
-        // Criar configurações iniciais
+        // Criar configurações iniciais com valores padrão
         const [newSettings] = await db.insert(schema.subscriptionSettings)
           .values({
             ...settings,
+            // Valores padrão para campos de integração
+            webhookUrl: settings.webhookUrl || null,
+            webhookSecretKey: settings.webhookSecretKey || null,
             hotmartEnvironment: settings.hotmartEnvironment || 'sandbox',
+            hotmartClientId: settings.hotmartClientId || null,
+            hotmartClientSecret: settings.hotmartClientSecret || null,
+            hotmartBasicPlanId: settings.hotmartBasicPlanId || null,
+            hotmartProPlanId: settings.hotmartProPlanId || null,
+            
+            // Valores padrão para campos de comportamento
+            defaultSubscriptionDuration: settings.defaultSubscriptionDuration || 12,
             graceHoursAfterExpiration: settings.graceHoursAfterExpiration || 48,
-            sendExpirationWarningDays: settings.sendExpirationWarningDays || 3
+            autoDowngradeAfterExpiration: settings.autoDowngradeAfterExpiration !== undefined ? 
+              settings.autoDowngradeAfterExpiration : true,
+            autoMapProductCodes: settings.autoMapProductCodes !== undefined ? 
+              settings.autoMapProductCodes : true,
+            
+            // Valores padrão para campos de notificações
+            sendExpirationWarningDays: settings.sendExpirationWarningDays || 3,
+            sendExpirationWarningEmails: settings.sendExpirationWarningEmails !== undefined ? 
+              settings.sendExpirationWarningEmails : true,
+            notificationEmailSubject: settings.notificationEmailSubject || 
+              'Sua assinatura do DesignAuto irá expirar em breve',
+            notificationEmailTemplate: settings.notificationEmailTemplate || 
+              'Olá {{nome}}, \n\nSua assinatura do DesignAuto irá expirar em {{dias_restantes}} dias ({{data_expiracao}}). \n\nPara continuar tendo acesso a todos os recursos premium, por favor renove sua assinatura.\n\nAtenciosamente,\nEquipe DesignAuto'
           })
           .returning();
         
