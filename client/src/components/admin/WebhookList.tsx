@@ -420,6 +420,15 @@ const WebhookList: React.FC = () => {
                         {log.transactionId || <span className="text-muted-foreground italic">N/A</span>}
                       </TableCell>
                       <TableCell>
+                        {log.source ? (
+                          <Badge variant="outline" className={log.source === 'hotmart' ? 'bg-blue-50' : 'bg-purple-50'}>
+                            {log.source === 'hotmart' ? 'Hotmart' : 'Doppus'}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground italic">N/A</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
                         <StatusBadge status={log.status} />
                       </TableCell>
                       <TableCell>{formatDate(log.createdAt)}</TableCell>
@@ -497,6 +506,18 @@ const WebhookList: React.FC = () => {
                       <span className="text-sm text-muted-foreground">Status:</span>
                       <span className="ml-2">
                         <StatusBadge status={selectedLog.log.status} />
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-muted-foreground">Fonte:</span>
+                      <span className="ml-2">
+                        {selectedLog.log.source ? (
+                          <Badge variant="outline" className={selectedLog.log.source === 'hotmart' ? 'bg-blue-50' : 'bg-purple-50'}>
+                            {selectedLog.log.source === 'hotmart' ? 'Hotmart' : 'Doppus'}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground italic">N/A</span>
+                        )}
                       </span>
                     </div>
                     <div>
