@@ -5952,6 +5952,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // =========== ENDPOINTS DE ESTATÍSTICAS DE ASSINATURAS ===========
+
+  // Endpoint para obter estatísticas gerais de assinaturas (versão de teste - sem verificação de admin)
+  app.get('/api/test/subscription-stats', async (req, res) => {
+    try {
+      const stats = await storage.getSubscriptionStats();
+      res.status(200).json(stats);
+    } catch (error) {
+      console.error('Erro ao buscar estatísticas de assinaturas (teste):', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Erro ao buscar estatísticas de assinaturas', 
+        error: error.message 
+      });
+    }
+  });
+
+  // Endpoint para obter estatísticas gerais de assinaturas
+  app.get('/api/subscription-stats', isAdmin, async (req, res) => {
+    try {
+      const stats = await storage.getSubscriptionStats();
+      res.status(200).json(stats);
+    } catch (error) {
+      console.error('Erro ao buscar estatísticas de assinaturas:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Erro ao buscar estatísticas de assinaturas', 
+        error: error.message 
+      });
+    }
+  });
+
+  // Endpoint para obter tendências de assinaturas (versão de teste - sem verificação de admin)
+  app.get('/api/test/subscription-trends', async (req, res) => {
+    try {
+      const months = req.query.months ? parseInt(req.query.months as string) : 6;
+      const trends = await storage.getSubscriptionTrends(months);
+      res.status(200).json(trends);
+    } catch (error) {
+      console.error('Erro ao buscar tendências de assinaturas (teste):', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Erro ao buscar tendências de assinaturas', 
+        error: error.message 
+      });
+    }
+  });
+
+  // Endpoint para obter tendências de assinaturas
+  app.get('/api/subscription-trends', isAdmin, async (req, res) => {
+    try {
+      const months = req.query.months ? parseInt(req.query.months as string) : 6;
+      const trends = await storage.getSubscriptionTrends(months);
+      res.status(200).json(trends);
+    } catch (error) {
+      console.error('Erro ao buscar tendências de assinaturas:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Erro ao buscar tendências de assinaturas', 
+        error: error.message 
+      });
+    }
+  });
+
   // Registrar rota para calcular posição do post na paginação
   registerPostPositionRoute(app);
 
