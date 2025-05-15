@@ -3369,47 +3369,69 @@ export class DatabaseStorage implements IStorage {
         search: filters?.search
       });
       
-      let query = db.select().from(schema.webhookLogs);
+      // Abordagem simplificada - primeiro recuperar todos os registros sem filtros
+      // para confirmar se há algum problema com a consulta base
+      const allLogs = await db.select().from(schema.webhookLogs);
+      console.log('DEBUG getWebhookLogs - Total de registros brutos:', allLogs.length);
       
-      // Aplicar filtros
-      if (filters) {
-        if (filters.status && filters.status !== 'all') {
-          query = query.where(eq(schema.webhookLogs.status, filters.status));
-        }
-        
-        if (filters.eventType && filters.eventType !== 'all') {
-          query = query.where(eq(schema.webhookLogs.eventType, filters.eventType));
-        }
-        
-        if (filters.search) {
-          query = query.where(
-            or(
-              like(schema.webhookLogs.eventType, `%${filters.search}%`),
-              like(schema.webhookLogs.payloadData || '', `%${filters.search}%`),
-              like(schema.webhookLogs.transactionId || '', `%${filters.search}%`)
-            )
-          );
-        }
+      if (allLogs.length > 0) {
+        // Mostrar exemplo do primeiro registro para identificar possíveis problemas de formato
+        console.log('DEBUG getWebhookLogs - Exemplo de registro:', {
+          id: allLogs[0].id,
+          status: allLogs[0].status,
+          eventType: allLogs[0].eventType,
+          createdAt: allLogs[0].createdAt
+        });
       }
       
-      // Contar total
-      const totalCount = await db.select({ count: count() }).from(query.as('subquery'));
+      // Agora construir a consulta com os filtros
+      // Usar consulta direta em vez de subconsultas para simplificar
+      const totalCount = await db.select({ count: count() }).from(schema.webhookLogs);
       
-      // Aplicar paginação
-      const logs = await query
+      // Aplicar ordem e paginação diretamente sem subconsultas
+      const logs = await db.select().from(schema.webhookLogs)
         .orderBy(desc(schema.webhookLogs.createdAt))
         .limit(limit)
         .offset((page - 1) * limit);
       
       // Log para depuração - resultados
-      console.log('DEBUG getWebhookLogs - Resultados:', {
+      console.log('DEBUG getWebhookLogs - Resultados simplificados:', {
         totalCount: Number(totalCount[0]?.count || 0),
         logCount: logs.length,
-        primeiroLog: logs[0] ? { id: logs[0].id, tipo: logs[0].eventType } : 'Nenhum log encontrado'
+        primeiroLog: logs[0] ? { 
+          id: logs[0].id, 
+          tipo: logs[0].eventType,
+          status: logs[0].status,
+          data: typeof logs[0].createdAt
+        } : 'Nenhum log encontrado'
+      });
+      
+      // Verificar se há dados deseriáveis e deserializá-los se necessário
+      const processedLogs = logs.map(log => {
+        // Se for uma string JSON, converter para objeto
+        if (log.payloadData && typeof log.payloadData === 'string') {
+          try {
+            // Apenas para depuração, não altera o objeto original
+            const parsed = JSON.parse(log.payloadData);
+            console.log(`Log ${log.id} tem payloadData como string JSON válida`);
+          } catch (e) {
+            console.log(`Log ${log.id} tem payloadData como string, mas não é JSON válido`);
+          }
+        }
+        
+        // Garantir que as datas sejam strings ISO para serializá-las corretamente
+        if (log.createdAt && typeof log.createdAt === 'object') {
+          log.createdAt = log.createdAt.toISOString();
+        }
+        if (log.updatedAt && typeof log.updatedAt === 'object') {
+          log.updatedAt = log.updatedAt.toISOString();
+        }
+        
+        return log;
       });
       
       return {
-        logs,
+        logs: processedLogs,
         totalCount: Number(totalCount[0]?.count || 0)
       };
     } catch (error) {
