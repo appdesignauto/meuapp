@@ -1210,95 +1210,114 @@ const AdminDashboard = () => {
             
             {/* Marketing - Apenas Popups agora */}
             <Collapsible 
-              className="bg-gray-50 rounded-lg py-1 mb-1"
+              className="rounded-lg overflow-hidden mb-1"
               defaultOpen={['popups'].includes(activeTab)}
+              open={sidebarOpen ? undefined : false}
             >
-              <CollapsibleTrigger className={`flex items-center w-full py-2.5 text-gray-700 font-medium ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}>
-                <BellRing className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+              <CollapsibleTrigger 
+                className={`flex items-center w-full px-5 py-2.5 text-gray-700 font-medium hover:bg-gray-50 rounded-lg transition-all duration-200 ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+                title="Marketing"
+              >
+                <BellRing className={`${sidebarOpen ? 'w-5 h-5' : 'w-6 h-6 mx-auto'}`} />
                 {sidebarOpen && (
                   <>
-                    <span>Marketing</span>
+                    <span className="ml-3 truncate">Marketing</span>
                     <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
                   </>
                 )}
               </CollapsibleTrigger>
-              <CollapsibleContent className={`${sidebarOpen ? 'pl-4' : 'pl-0'} space-y-1 pt-1 pb-2`}>
+              <CollapsibleContent className={`mt-1 ${sidebarOpen ? 'pl-5' : 'flex flex-col items-center'} space-y-1`}>
                 <button
                   onClick={() => setActiveTab('popups')}
-                  className={`flex items-center w-full py-2.5 rounded-md ${
-                    activeTab === 'popups' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
+                  className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
+                    activeTab === 'popups' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
                   title="Gerenciar Popups"
                 >
-                  <BellRing className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-                  {sidebarOpen && <span>Gerenciar Popups</span>}
+                  <BellRing className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                  {sidebarOpen && <span className="truncate text-sm">Gerenciar Popups</span>}
                 </button>
               </CollapsibleContent>
             </Collapsible>
             
             {/* Reports */}
-            <Collapsible className="w-full">
-              <CollapsibleTrigger className={`flex items-center w-full py-2.5 text-gray-700 font-medium ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}>
-                <FlagIcon className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+            <Collapsible 
+              className="rounded-lg overflow-hidden mb-1"
+              defaultOpen={['reports'].includes(activeTab)}
+              open={sidebarOpen ? undefined : false}
+            >
+              <CollapsibleTrigger 
+                className={`flex items-center w-full px-5 py-2.5 text-gray-700 font-medium hover:bg-gray-50 rounded-lg transition-all duration-200 ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+                title="Reports"
+              >
+                <FlagIcon className={`${sidebarOpen ? 'w-5 h-5' : 'w-6 h-6 mx-auto'}`} />
                 {sidebarOpen && (
                   <>
-                    <span>Reports</span>
+                    <span className="ml-3 truncate">Reports</span>
                     <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
                   </>
                 )}
               </CollapsibleTrigger>
-              <CollapsibleContent className={`${sidebarOpen ? 'pl-4' : 'pl-0'} space-y-1 pt-1 pb-2`}>
+              <CollapsibleContent className={`mt-1 ${sidebarOpen ? 'pl-5' : 'flex flex-col items-center'} space-y-1`}>
                 <button
                   onClick={() => setActiveTab('reports')}
-                  className={`flex items-center w-full py-2.5 rounded-md ${
-                    activeTab === 'reports' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
+                  className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
+                    activeTab === 'reports' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
                   title="Gerenciar Reports"
                 >
-                  <FlagIcon className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-                  {sidebarOpen && <span>Gerenciar Reports</span>}
+                  <FlagIcon className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                  {sidebarOpen && <span className="truncate text-sm">Gerenciar Reports</span>}
                 </button>
               </CollapsibleContent>
             </Collapsible>
             
             {/* Ferramentas */}
             <Collapsible 
-              className="bg-gray-50 rounded-lg py-1 mb-1"
+              className="rounded-lg overflow-hidden mb-1"
               defaultOpen={['ferramentas'].includes(activeTab)}
+              open={sidebarOpen ? undefined : false}
             >
-              <CollapsibleTrigger className={`flex items-center w-full py-2.5 text-gray-700 font-medium ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}>
-                <Wrench className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+              <CollapsibleTrigger 
+                className={`flex items-center w-full px-5 py-2.5 text-gray-700 font-medium hover:bg-gray-50 rounded-lg transition-all duration-200 ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+                title="Ferramentas"
+              >
+                <Wrench className={`${sidebarOpen ? 'w-5 h-5' : 'w-6 h-6 mx-auto'}`} />
                 {sidebarOpen && (
                   <>
-                    <span>Ferramentas</span>
+                    <span className="ml-3 truncate">Ferramentas</span>
                     <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
                   </>
                 )}
               </CollapsibleTrigger>
-              <CollapsibleContent className={`${sidebarOpen ? 'pl-4' : 'pl-0'} space-y-1 pt-1 pb-2`}>
+              <CollapsibleContent className={`mt-1 ${sidebarOpen ? 'pl-5' : 'flex flex-col items-center'} space-y-1`}>
                 <button
                   onClick={() => setActiveTab('ferramentas')}
-                  className={`flex items-center w-full py-2.5 rounded-md ${
-                    activeTab === 'ferramentas' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
+                  className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
+                    activeTab === 'ferramentas' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
                   title="Gerenciar Ferramentas"
                 >
-                  <Wrench className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-                  {sidebarOpen && <span>Gerenciar Ferramentas</span>}
+                  <Wrench className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                  {sidebarOpen && <span className="truncate text-sm">Gerenciar Ferramentas</span>}
                 </button>
               </CollapsibleContent>
             </Collapsible>
             
             {/* Configurações */}
             <Collapsible 
-              className="bg-gray-50 rounded-lg py-1 mb-1"
+              className="rounded-lg overflow-hidden mb-1"
               defaultOpen={['settings', 'collections'].includes(activeTab)}
+              open={sidebarOpen ? undefined : false}
             >
-              <CollapsibleTrigger className={`flex items-center w-full py-2.5 text-gray-700 font-medium ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}>
-                <Settings className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+              <CollapsibleTrigger 
+                className={`flex items-center w-full px-5 py-2.5 text-gray-700 font-medium hover:bg-gray-50 rounded-lg transition-all duration-200 ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+                title="Configurações"
+              >
+                <Settings className={`${sidebarOpen ? 'w-5 h-5' : 'w-6 h-6 mx-auto'}`} />
                 {sidebarOpen && (
                   <>
-                    <span>Configurações</span>
+                    <span className="ml-3 truncate">Configurações</span>
                     <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
                   </>
                 )}
