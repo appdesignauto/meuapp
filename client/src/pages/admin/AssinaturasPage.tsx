@@ -272,7 +272,7 @@ export default function AssinaturasPage() {
                   {isLoadingStats ? (
                     <div className="h-6 w-20 bg-muted animate-pulse rounded"></div>
                   ) : (
-                    `R$ ${((dashboardStats?.active || 0) * 97).toLocaleString('pt-BR')}`
+                    `R$ ${(dashboardStats?.mrr || 0).toLocaleString('pt-BR')}`
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -291,7 +291,7 @@ export default function AssinaturasPage() {
                   {isLoadingStats ? (
                     <div className="h-6 w-16 bg-muted animate-pulse rounded"></div>
                   ) : (
-                    `R$ ${(97).toLocaleString('pt-BR')}`
+                    `R$ ${(dashboardStats?.averageValue || 0).toLocaleString('pt-BR')}`
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -310,11 +310,69 @@ export default function AssinaturasPage() {
                   {isLoadingStats ? (
                     <div className="h-6 w-24 bg-muted animate-pulse rounded"></div>
                   ) : (
-                    `R$ ${((dashboardStats?.active || 0) * 97 * 12).toLocaleString('pt-BR')}`
+                    `R$ ${(dashboardStats?.annualRevenue || 0).toLocaleString('pt-BR')}`
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Projeção de receita anual
+                </p>
+              </CardContent>
+            </Card>
+            
+            {/* Segunda linha de métricas financeiras */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Taxa de Churn</CardTitle>
+                <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {isLoadingStats ? (
+                    <div className="h-6 w-16 bg-muted animate-pulse rounded"></div>
+                  ) : (
+                    `${(dashboardStats?.churnRate || 0).toFixed(1)}%`
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Taxa de cancelamento
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Retenção Média</CardTitle>
+                <CalendarClock className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {isLoadingStats ? (
+                    <div className="h-6 w-16 bg-muted animate-pulse rounded"></div>
+                  ) : (
+                    `${dashboardStats?.averageRetention || 0} dias`
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Tempo médio de permanência
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Valor do Cliente (LTV)</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {isLoadingStats ? (
+                    <div className="h-6 w-24 bg-muted animate-pulse rounded"></div>
+                  ) : (
+                    `R$ ${(dashboardStats?.averageLTV || 0).toLocaleString('pt-BR')}`
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Valor médio ao longo da vida
                 </p>
               </CardContent>
             </Card>
