@@ -1298,3 +1298,28 @@ export const insertWebhookLogSchema = createInsertSchema(webhookLogs).omit({
 
 export type WebhookLog = typeof webhookLogs.$inferSelect;
 export type InsertWebhookLog = z.infer<typeof insertWebhookLogSchema>;
+
+// Schema para configurações de assinaturas
+export const subscriptionSettings = pgTable("subscriptionSettings", {
+  id: serial("id").primaryKey(),
+  hotmartWebhookUrl: text("hotmartWebhookUrl"),
+  hotmartWebhookSecret: text("hotmartWebhookSecret"),
+  hotmartEnvironment: text("hotmartEnvironment").default("sandbox").notNull(),
+  hotmartClientId: text("hotmartClientId"),
+  hotmartClientSecret: text("hotmartClientSecret"),
+  hotmartBasicPlanId: text("hotmartBasicPlanId"),
+  hotmartProPlanId: text("hotmartProPlanId"),
+  graceHoursAfterExpiration: integer("graceHoursAfterExpiration").default(48).notNull(),
+  sendExpirationWarningDays: integer("sendExpirationWarningDays").default(3).notNull(),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export const insertSubscriptionSettingsSchema = createInsertSchema(subscriptionSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type SubscriptionSetting = typeof subscriptionSettings.$inferSelect;
+export type InsertSubscriptionSetting = z.infer<typeof insertSubscriptionSettingsSchema>;
