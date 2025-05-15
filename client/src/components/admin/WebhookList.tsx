@@ -141,11 +141,7 @@ const WebhookList: React.FC = () => {
   // Buscar detalhes de um log específico
   const handleViewDetails = async (id: number) => {
     try {
-      const response = await fetch(`/api/webhooks/logs/${id}`);
-      
-      if (!response.ok) {
-        throw new Error('Erro ao buscar detalhes do log');
-      }
+      const response = await apiRequest('GET', `/api/webhooks/logs/${id}`);
       
       const data = await response.json();
       setSelectedLog(data);
