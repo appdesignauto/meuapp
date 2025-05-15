@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useLocation, navigate } from "wouter";
+import { useLocation } from "wouter";
+import { Link } from "wouter";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import SubscriptionTrends from "@/components/admin/SubscriptionTrends";
 import SubscriptionManagement from "@/components/admin/SubscriptionManagement";
@@ -175,6 +176,12 @@ const UnifiedAdminDashboard = ({ params }: { params?: { tab?: string } } = {}) =
     newMenuItems[index].expanded = !newMenuItems[index].expanded;
     setMenuItems(newMenuItems);
   };
+  
+  // Função para gerenciar cliques nos itens de menu
+  const handleMenuItemClick = (tabId: string) => {
+    setActiveTab(tabId);
+    // A navegação vai ocorrer com os componentes Link no lugar dos botões
+  };
 
   // Renderizar o conteúdo baseado na aba selecionada
   const renderTabContent = () => {
@@ -318,38 +325,41 @@ const UnifiedAdminDashboard = ({ params }: { params?: { tab?: string } } = {}) =
                   {item.expanded && (
                     <div className="ml-4 space-y-1">
                       {item.children.map((child) => (
-                        <Button
-                          key={child.value}
-                          variant="ghost"
-                          className={cn(
-                            "w-full justify-start",
-                            activeTab === child.value && "bg-accent"
-                          )}
-                          onClick={() => setActiveTab(child.value)}
-                        >
-                          <div className="flex items-center">
-                            {child.icon}
-                            <span className="ml-2">{child.label}</span>
-                          </div>
-                        </Button>
+                        <Link href={`/admin/unified/${child.value}`} key={child.value}>
+                          <Button
+                            variant="ghost"
+                            className={cn(
+                              "w-full justify-start",
+                              activeTab === child.value && "bg-accent"
+                            )}
+                            onClick={() => setActiveTab(child.value)}
+                          >
+                            <div className="flex items-center">
+                              {child.icon}
+                              <span className="ml-2">{child.label}</span>
+                            </div>
+                          </Button>
+                        </Link>
                       ))}
                     </div>
                   )}
                 </div>
               ) : (
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    "w-full justify-start",
-                    activeTab === item.value && "bg-accent"
-                  )}
-                  onClick={() => setActiveTab(item.value)}
-                >
-                  <div className="flex items-center">
-                    {item.icon}
-                    <span className="ml-2">{item.label}</span>
-                  </div>
-                </Button>
+                <Link href={`/admin/unified/${item.value}`}>
+                  <Button
+                    variant="ghost"
+                    className={cn(
+                      "w-full justify-start",
+                      activeTab === item.value && "bg-accent"
+                    )}
+                    onClick={() => setActiveTab(item.value)}
+                  >
+                    <div className="flex items-center">
+                      {item.icon}
+                      <span className="ml-2">{item.label}</span>
+                    </div>
+                  </Button>
+                </Link>
               )}
             </div>
           ))}
