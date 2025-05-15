@@ -238,6 +238,11 @@ function AppRoutes() {
         roles={['admin', 'designer_adm']} 
       />
       <ProtectedRoute 
+        path="/admin/unified/:tab" 
+        component={UnifiedAdminDashboard} 
+        roles={['admin', 'designer_adm']} 
+      />
+      <ProtectedRoute 
         path="/admin/classic" 
         component={UpdatedDashboard} 
         roles={['admin', 'designer_adm']} 

@@ -170,40 +170,54 @@ const UnifiedAdminDashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <SubscriptionTrends />
             <div className="col-span-full md:col-span-2 space-y-6">
-              <StatsTab />
+              <CourseStatisticsPanel />
             </div>
           </div>
         );
       case "arts":
-        return <ArtsTab />;
+        return <ArtsList />;
       case "categories":
-        return <CategoriesTab />;
-      case "collections":
-        return <CollectionsTab />;
+        return <CategoriesList />;
       case "formats":
-        return <FormatosTab />;
+        return <FormatsList />;
       case "fileTypes":
-        return <FileTypesTab />;
+        return <FileTypesList />;
       case "community":
-        return <CommunityTab />;
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold">Comunidade</h2>
+            <p className="text-muted-foreground">Este componente será carregado do painel existente.</p>
+          </div>
+        );
       case "courses":
-        return <CoursesTab />;
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold">Cursos</h2>
+            <p className="text-muted-foreground">Este componente será carregado do painel existente.</p>
+          </div>
+        );
       case "tools":
-        return <FerramentasTab />;
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold">Ferramentas</h2>
+            <p className="text-muted-foreground">Este componente será carregado do painel existente.</p>
+          </div>
+        );
       case "users":
-        return <UsersTab />;
-      case "stats":
-        return <StatsTab />;
-      case "logs":
-        return <LogsTab />;
+        return <UserManagement />;
+      case "comments":
+        return <CommentsManagement />;
       case "reports-management":
-        return <ReportsTab />;
+        return <ReportsManagement />;
       case "popups":
-        return <PopupsTab />;
+        return <PopupManagement />;
       case "testimonials":
-        return <TestimonialsTab />;
-      case "plans":
-        return <PlanosTab />;
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold">Depoimentos</h2>
+            <p className="text-muted-foreground">Este componente será carregado do painel existente.</p>
+          </div>
+        );
       case "subscription-overview":
         return (
           <div className="grid grid-cols-1 gap-6">
@@ -249,9 +263,9 @@ const UnifiedAdminDashboard = () => {
           </div>
         );
       case "site-settings":
-        return <SiteSettingsTab />;
-      case "app-config":
-        return <ConfigTab />;
+        return <SiteSettings />;
+      case "analytics":
+        return <AnalyticsSettings />;
       default:
         return (
           <div className="flex items-center justify-center h-64 text-muted-foreground">
@@ -330,23 +344,35 @@ const UnifiedAdminDashboard = () => {
     );
   };
 
-  // Renderizar menu em versão móvel
-  const renderMobileSidebar = () => {
-    return (
-      <Sheet>
-        <SheetTrigger asChild>
-          <Button variant="outline" size="icon" className="md:hidden">
-            <Layers size={20} />
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="left">
-          <SheetHeader>
-            <SheetTitle>Menu Administrativo</SheetTitle>
-          </SheetHeader>
-          {renderSidebarMenu()}
-        </SheetContent>
-      </Sheet>
-    );
+  // Mapear as abas para os navItems
+  const getNavItems = () => {
+    const navItems = menuItems.flatMap(item => {
+      if (item.children) {
+        return item.children.map(child => ({
+          title: child.label,
+          href: `/admin/unified/${child.value}`,
+          icon: child.icon,
+          onClick: () => setActiveTab(child.value)
+        }));
+      } else {
+        return [{
+          title: item.label,
+          href: `/admin/unified/${item.value}`,
+          icon: item.icon,
+          onClick: () => setActiveTab(item.value)
+        }];
+      }
+    });
+    
+    // Adicione um link de volta para o painel clássico
+    navItems.push({
+      title: 'Painel Clássico',
+      href: '/admin/classic',
+      icon: <ChevronRight size={20} />,
+      onClick: () => window.location.href = '/admin/classic'
+    });
+    
+    return navItems;
   };
 
   return (
@@ -356,15 +382,20 @@ const UnifiedAdminDashboard = () => {
         menuItems.flatMap(item => item.children || []).find(child => child.value === activeTab)?.label ||
         "Painel Administrativo"
       }
-      sidebar={renderSidebarMenu()}
-      mobileSidebar={renderMobileSidebar()}
+      navItems={getNavItems()}
       actionButtons={
         <>
-          {activeTab === "categories" && (
-            <CreateCategoryForm />
+          {activeTab === "subscription-management" && (
+            <Button variant="default" size="sm">
+              <UserCog className="mr-1 h-4 w-4" />
+              Nova Assinatura
+            </Button>
           )}
-          {activeTab === "arts" && (
-            <CreateArtForm />
+          {activeTab === "webhooks" && (
+            <Button variant="default" size="sm">
+              <Webhook className="mr-1 h-4 w-4" />
+              Testar Webhook
+            </Button>
           )}
         </>
       }
