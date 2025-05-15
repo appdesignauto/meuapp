@@ -259,7 +259,7 @@ function AppRoutes() {
       />
       
       {/* Rota alternativa sem proteção para teste */}
-      <Route path="/test-settings">
+      <Route path="/test-subscription-settings">
         <TestSubscriptionSettingsPage />
       </Route>
       <ProtectedRoute 
