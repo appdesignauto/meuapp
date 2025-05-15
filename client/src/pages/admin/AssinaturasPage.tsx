@@ -38,7 +38,9 @@ import {
   CalendarClock,
   BadgeDollarSign,
   Wallet,
-  CircleDollarSign
+  CircleDollarSign,
+  UserCheck,
+  LineChart
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -73,6 +75,7 @@ export default function AssinaturasPage() {
           conversionRate: 0,
           churnRate: 0,
           averageLTV: 0,
+          averageRetention: 0,
           subscriptionsBySource: []
         };
       }
@@ -253,6 +256,128 @@ export default function AssinaturasPage() {
             </Card>
           </div>
 
+          {/* Indicadores financeiros */}
+          <h3 className="text-lg font-semibold mb-3 mt-6">Indicadores Financeiros</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Receita Mensal (MRR)</CardTitle>
+                <BadgeDollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {isLoadingStats ? (
+                    <div className="h-6 w-20 bg-muted animate-pulse rounded"></div>
+                  ) : (
+                    `R$ ${((dashboardStats?.active || 0) * 97).toLocaleString('pt-BR')}`
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Receita mensal recorrente
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Valor Médio</CardTitle>
+                <Wallet className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {isLoadingStats ? (
+                    <div className="h-6 w-16 bg-muted animate-pulse rounded"></div>
+                  ) : (
+                    `R$ ${(97).toLocaleString('pt-BR')}`
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Valor médio por assinatura
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Projeção Anual</CardTitle>
+                <CircleDollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {isLoadingStats ? (
+                    <div className="h-6 w-24 bg-muted animate-pulse rounded"></div>
+                  ) : (
+                    `R$ ${((dashboardStats?.active || 0) * 97 * 12).toLocaleString('pt-BR')}`
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Projeção de receita anual
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Métricas de retenção */}
+          <h3 className="text-lg font-semibold mb-3">Métricas de Retenção</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Taxa de Churn</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {isLoadingStats ? (
+                    <div className="h-6 w-16 bg-muted animate-pulse rounded"></div>
+                  ) : (
+                    `${(dashboardStats?.churnRate || 0).toFixed(1)}%`
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Taxa de cancelamento mensal
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Tempo de Permanência</CardTitle>
+                <CalendarClock className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {isLoadingStats ? (
+                    <div className="h-6 w-16 bg-muted animate-pulse rounded"></div>
+                  ) : (
+                    `${dashboardStats?.averageRetention || 0} dias`
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Tempo médio de permanência
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Taxa de Renovação</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {isLoadingStats ? (
+                    <div className="h-6 w-16 bg-muted animate-pulse rounded"></div>
+                  ) : (
+                    `${((100 - (dashboardStats?.churnRate || 0))).toFixed(1)}%`
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Percentual de assinaturas renovadas
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+          
           {/* Origem das assinaturas */}
           <h3 className="text-lg font-semibold mb-3">Origem das Assinaturas</h3>
           <Card>
