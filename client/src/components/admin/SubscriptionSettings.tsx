@@ -442,7 +442,7 @@ export default function SubscriptionSettings() {
                     />
                   </FormControl>
                   <FormDescription>
-                    Template para e-mail de aviso de expiração. Variáveis disponíveis: {{nome}}, {{dias_restantes}}, {{data_expiracao}}
+                    Template para e-mail de aviso de expiração. Variáveis disponíveis: {"{{nome}}"}, {"{{dias_restantes}}"}, {"{{data_expiracao}}"}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
