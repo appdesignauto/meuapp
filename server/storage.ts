@@ -3366,6 +3366,7 @@ export class DatabaseStorage implements IStorage {
   async getWebhookLogs(page: number, limit: number, filters?: {
     status?: string;
     eventType?: string;
+    source?: string;
     search?: string;
   }): Promise<{ logs: schema.WebhookLog[], totalCount: number }> {
     try {
@@ -3374,30 +3375,53 @@ export class DatabaseStorage implements IStorage {
         page, limit, filters,
         status: filters?.status,
         eventType: filters?.eventType,
+        source: filters?.source,
         search: filters?.search
       });
       
-      // Abordagem simplificada - primeiro recuperar todos os registros sem filtros
-      // para confirmar se há algum problema com a consulta base
-      const allLogs = await db.select().from(schema.webhookLogs);
-      console.log('DEBUG getWebhookLogs - Total de registros brutos:', allLogs.length);
+      // Construir as condições de filtro
+      let conditions = [];
       
-      if (allLogs.length > 0) {
-        // Mostrar exemplo do primeiro registro para identificar possíveis problemas de formato
-        console.log('DEBUG getWebhookLogs - Exemplo de registro:', {
-          id: allLogs[0].id,
-          status: allLogs[0].status,
-          eventType: allLogs[0].eventType,
-          createdAt: allLogs[0].createdAt
-        });
+      if (filters?.status && filters.status !== 'all') {
+        conditions.push(eq(schema.webhookLogs.status, filters.status as any));
       }
       
-      // Agora construir a consulta com os filtros
-      // Usar consulta direta em vez de subconsultas para simplificar
-      const totalCount = await db.select({ count: count() }).from(schema.webhookLogs);
+      if (filters?.eventType && filters.eventType !== 'all') {
+        conditions.push(eq(schema.webhookLogs.eventType, filters.eventType));
+      }
       
-      // Aplicar ordem e paginação diretamente sem subconsultas
-      const logs = await db.select().from(schema.webhookLogs)
+      if (filters?.source && filters.source !== 'all') {
+        conditions.push(eq(schema.webhookLogs.source, filters.source as any));
+      }
+      
+      if (filters?.search && filters.search.trim()) {
+        const search = `%${filters.search.trim()}%`;
+        conditions.push(
+          or(
+            like(schema.webhookLogs.eventType, search),
+            like(schema.webhookLogs.payloadData, search),
+            like(schema.webhookLogs.transactionId || '', search)
+          )
+        );
+      }
+      
+      // Construir query base
+      let query = db.select().from(schema.webhookLogs);
+      
+      // Aplicar filtros se houver
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+      
+      // Contar total de registros com os filtros aplicados
+      const countQuery = db.select({ count: count() }).from(schema.webhookLogs);
+      if (conditions.length > 0) {
+        countQuery.where(and(...conditions));
+      }
+      const totalCount = await countQuery;
+      
+      // Aplicar ordem e paginação
+      const logs = await query
         .orderBy(desc(schema.webhookLogs.createdAt))
         .limit(limit)
         .offset((page - 1) * limit);
