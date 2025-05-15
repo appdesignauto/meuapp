@@ -5875,6 +5875,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // =========== ENDPOINTS DE CONFIGURAÇÕES DE ASSINATURAS ===========
   
+  // Endpoint para testes - sem verificação de admin (temporário)
+  app.get('/api/test/subscription-settings', async (req, res) => {
+    try {
+      const settings = await storage.getSubscriptionSettings();
+      res.status(200).json(settings || {});
+    } catch (error) {
+      console.error('Erro ao buscar configurações de assinaturas (teste):', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Erro ao buscar configurações de assinaturas', 
+        error: error.message 
+      });
+    }
+  });
+
   // Endpoint para obter as configurações de assinaturas
   app.get('/api/subscription-settings', isAdmin, async (req, res) => {
     try {
@@ -5893,6 +5908,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Endpoint para testes - atualização sem verificação de admin (temporário)
+  app.put('/api/test/subscription-settings', async (req, res) => {
+    try {
+      // Validar dados de entrada se necessário
+      const updatedSettings = await storage.updateSubscriptionSettings(req.body);
+      
+      res.status(200).json({
+        success: true,
+        message: 'Configurações de assinaturas atualizadas com sucesso (teste)',
+        settings: updatedSettings
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar configurações de assinaturas (teste):', error);
+      
+      res.status(500).json({ 
+        success: false,
+        message: 'Erro ao atualizar configurações de assinaturas', 
+        error: error.message 
+      });
+    }
+  });
+
   // Endpoint para atualizar as configurações de assinaturas
   app.put('/api/subscription-settings', isAdmin, async (req, res) => {
     try {

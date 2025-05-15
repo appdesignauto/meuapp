@@ -22,7 +22,8 @@ export default function TestSubscriptionSettingsPage() {
     setError(null);
     
     try {
-      const response = await apiRequest('GET', '/api/subscription-settings');
+      // Usando o endpoint de teste sem verificação de admin
+      const response = await apiRequest('GET', '/api/test/subscription-settings');
       const data = await response.json();
       
       setSettings(data);
@@ -66,7 +67,8 @@ export default function TestSubscriptionSettingsPage() {
         notificationEmailTemplate: '<p>Template de teste</p>'
       };
       
-      const response = await apiRequest('PUT', '/api/subscription-settings', testData);
+      // Usando a rota de teste também para salvar
+      const response = await apiRequest('PUT', '/api/test/subscription-settings', testData);
       const data = await response.json();
       
       console.log("Resposta da API:", data);
