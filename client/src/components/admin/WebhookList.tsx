@@ -433,66 +433,106 @@ const WebhookList: React.FC = () => {
             </div>
           </div>
 
-          {/* Tabela */}
+          {/* Layout de Cartões */}
           {data && data.logs.length > 0 ? (
-            <div className="border rounded-md">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[80px]">ID</TableHead>
-                    <TableHead>Evento</TableHead>
-                    <TableHead>Transação</TableHead>
-                    <TableHead>Fonte</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Data</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.logs.map((log) => (
-                    <TableRow key={log.id}>
-                      <TableCell className="font-medium">{log.id}</TableCell>
-                      <TableCell>{log.eventType}</TableCell>
-                      <TableCell>
-                        {log.transactionId || <span className="text-muted-foreground italic">N/A</span>}
-                      </TableCell>
-                      <TableCell>
-                        {log.source ? (
-                          <Badge variant="outline" className={log.source === 'hotmart' ? 'bg-blue-50' : 'bg-purple-50'}>
-                            {log.source === 'hotmart' ? 'Hotmart' : 'Doppus'}
-                          </Badge>
-                        ) : (
-                          <span className="text-muted-foreground italic">N/A</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <StatusBadge status={log.status} />
-                      </TableCell>
-                      <TableCell>{formatDate(log.createdAt)}</TableCell>
-                      <TableCell className="text-right">
+            <div className="space-y-4">
+              {data.logs.map((log) => (
+                <div 
+                  key={log.id} 
+                  className={`border rounded-lg p-4 transition-colors ${log.status === 'error' ? 'bg-red-50 border-red-200' : 'bg-card hover:bg-accent/10'}`}
+                >
+                  {/* Cabeçalho do Cartão com Fonte */}
+                  <div className="flex justify-between items-center mb-3">
+                    <div>
+                      {log.source ? (
+                        <Badge variant="outline" className={log.source === 'hotmart' ? 'bg-blue-50' : 'bg-purple-50'}>
+                          {log.source === 'hotmart' ? 'Hotmart' : 'Doppus'}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground italic">Fonte desconhecida</span>
+                      )}
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => handleViewDetails(log.id)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      {log.status === 'error' || log.status === 'pending' ? (
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          onClick={() => handleViewDetails(log.id)}
-                          className="mr-1"
+                          onClick={() => handleReprocess(log.id)}
+                          disabled={isReprocessing}
+                          className="h-8 w-8 p-0"
                         >
-                          <Eye className="h-4 w-4" />
+                          <RefreshCw className={`h-4 w-4 ${isReprocessing ? 'animate-spin' : ''}`} />
                         </Button>
-                        {log.status === 'error' || log.status === 'pending' ? (
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => handleReprocess(log.id)}
-                            disabled={isReprocessing}
-                          >
-                            <RefreshCw className={`h-4 w-4 ${isReprocessing ? 'animate-spin' : ''}`} />
-                          </Button>
-                        ) : null}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                      ) : null}
+                    </div>
+                  </div>
+                  
+                  {/* Conteúdo do Cartão */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {/* Coluna Esquerda */}
+                    <div className="space-y-2">
+                      <div>
+                        <span className="text-sm font-medium text-muted-foreground block">Email:</span>
+                        <span className="text-sm font-medium">{log.email || 'Não disponível'}</span>
+                      </div>
+                      
+                      <div>
+                        <span className="text-sm font-medium text-muted-foreground block">Data:</span>
+                        <span className="text-sm">{formatDate(log.createdAt)}</span>
+                      </div>
+                      
+                      {log.errorMessage && (
+                        <div>
+                          <span className="text-sm font-medium text-destructive block">Erro:</span>
+                          <span className="text-sm text-destructive">{log.errorMessage}</span>
+                        </div>
+                      )}
+                      
+                      <Button 
+                        variant="link" 
+                        size="sm" 
+                        className="h-auto p-0 text-xs text-muted-foreground"
+                        onClick={() => handleViewDetails(log.id)}
+                      >
+                        Ver payload completo
+                      </Button>
+                    </div>
+                    
+                    {/* Coluna Direita */}
+                    <div className="space-y-2">
+                      <div>
+                        <span className="text-sm font-medium text-muted-foreground block">Status:</span>
+                        <StatusBadge status={log.status} />
+                      </div>
+                      
+                      <div>
+                        <span className="text-sm font-medium text-muted-foreground block">Evento:</span>
+                        <span className="text-sm">{log.eventType}</span>
+                      </div>
+                      
+                      {log.transactionId && (
+                        <div>
+                          <span className="text-sm font-medium text-muted-foreground block">Transação:</span>
+                          <span className="text-sm">{log.transactionId}</span>
+                        </div>
+                      )}
+                      
+                      <div>
+                        <span className="text-sm font-medium text-muted-foreground block">Processado:</span>
+                        <span className="text-sm">{log.status === 'processed' || log.status === 'approved' ? 'Sim' : 'Não'}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
             <div className="py-6 text-center text-muted-foreground border rounded-md">
