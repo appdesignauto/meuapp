@@ -3400,7 +3400,8 @@ export class DatabaseStorage implements IStorage {
           or(
             like(schema.webhookLogs.eventType, search),
             like(schema.webhookLogs.payloadData, search),
-            like(schema.webhookLogs.transactionId || '', search)
+            like(schema.webhookLogs.transactionId || '', search),
+            like(schema.webhookLogs.email || '', search)
           )
         );
       }

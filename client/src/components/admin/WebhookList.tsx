@@ -371,7 +371,7 @@ const WebhookList: React.FC = () => {
                   <Search className="h-4 w-4 opacity-50" />
                 </div>
                 <Input
-                  placeholder="Buscar por transação ou erro..."
+                  placeholder="Buscar por transação, email ou erro..."
                   value={filters.search}
                   onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
                   className="w-full pl-9"
