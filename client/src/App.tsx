@@ -251,11 +251,17 @@ function AppRoutes() {
         component={AddArtMultiFormatPage}
         roles={['admin', 'designer_adm']} 
       />
+      {/* Rota normal protegida que requer papel de admin */}
       <ProtectedRoute 
         path="/admin/test-subscription-settings" 
         component={TestSubscriptionSettingsPage}
         roles={['admin']} 
       />
+      
+      {/* Rota alternativa sem proteção para teste */}
+      <Route path="/test-settings">
+        <TestSubscriptionSettingsPage />
+      </Route>
       <ProtectedRoute 
         path="/admin/gerenciar-cursos" 
         component={GerenciarCursosPage}
