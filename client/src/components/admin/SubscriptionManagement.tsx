@@ -1612,13 +1612,49 @@ export default function SubscriptionManagement() {
       
       {/* Diálogo de Exportação */}
       <Dialog open={showExportDialog} onOpenChange={setShowExportDialog}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Exportar Assinantes</DialogTitle>
             <DialogDescription>
-              Selecione os campos que deseja incluir na exportação.
+              Selecione os campos que deseja incluir na exportação. Os filtros atualmente aplicados serão considerados.
             </DialogDescription>
           </DialogHeader>
+          
+          {/* Resumo dos filtros */}
+          <div className="bg-muted p-3 rounded-md text-sm mt-2">
+            <p className="font-medium mb-1">Filtros aplicados:</p>
+            <ul className="space-y-1 text-xs">
+              <li><span className="font-medium">Status:</span> {statusFilter === 'all' ? 'Todos' : 
+                statusFilter === 'active' ? 'Ativos' : 
+                statusFilter === 'expired' ? 'Expirados' : 'Em teste'}</li>
+              <li><span className="font-medium">Origem:</span> {originFilter === 'all' ? 'Todas' : 
+                originFilter === 'hotmart' ? 'Hotmart' : 
+                originFilter === 'doppus' ? 'Doppus' : 'Manual'}</li>
+              {planFilter !== 'all' && (
+                <li><span className="font-medium">Plano:</span> {planFilter === 'mensal' ? 'Mensal' : 
+                  planFilter === 'trimestral' ? 'Trimestral' : 
+                  planFilter === 'anual' ? 'Anual' : 'Vitalício'}</li>
+              )}
+              {dateFilter !== 'all' && (
+                <li><span className="font-medium">Período:</span> {
+                  dateFilter === 'today' ? 'Hoje' :
+                  dateFilter === 'last7days' ? 'Últimos 7 dias' :
+                  dateFilter === 'last30days' ? 'Últimos 30 dias' :
+                  dateFilter === 'thisMonth' ? 'Este mês' :
+                  dateFilter === 'lastMonth' ? 'Mês passado' :
+                  dateFilter === 'custom' ? (fromDate && toDate ? 
+                    `${format(fromDate, 'dd/MM/yyyy')} até ${format(toDate, 'dd/MM/yyyy')}` : 
+                    fromDate ? `A partir de ${format(fromDate, 'dd/MM/yyyy')}` : 
+                    toDate ? `Até ${format(toDate, 'dd/MM/yyyy')}` : 'Personalizado') :
+                  'Qualquer data'
+                }</li>
+              )}
+              {searchTerm && (
+                <li><span className="font-medium">Busca:</span> "{searchTerm}"</li>
+              )}
+            </ul>
+          </div>
+          
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-2">
               <Label className="flex items-center gap-2">
@@ -1817,10 +1853,48 @@ export default function SubscriptionManagement() {
       return;
     }
     
-    // Filtrar os dados
-    const filteredData = users
+    // Aplicar todos os filtros ativos aos dados antes de exportar
+    const filteredUsers = users
       .filter(user => {
-        // Aplicar filtros
+        // Aplicar filtro de status
+        if (statusFilter !== 'all') {
+          if (statusFilter === 'active' && user.planstatus !== 'active') return false;
+          if (statusFilter === 'expired' && user.planstatus !== 'expired') return false;
+          if (statusFilter === 'trial' && user.planstatus !== 'trial') return false;
+        }
+        
+        // Aplicar filtro de origem
+        if (originFilter !== 'all') {
+          const userOrigin = user.origemassinatura?.toLowerCase() || '';
+          if (originFilter === 'hotmart' && userOrigin !== 'hotmart') return false;
+          if (originFilter === 'doppus' && userOrigin !== 'doppus') return false;
+          if (originFilter === 'manual' && userOrigin !== 'manual') return false;
+        }
+        
+        // Aplicar filtro de plano
+        if (planFilter !== 'all') {
+          const userPlan = user.tipoplano?.toLowerCase() || '';
+          if (planFilter === 'mensal' && userPlan !== 'mensal') return false;
+          if (planFilter === 'trimestral' && userPlan !== 'trimestral') return false;
+          if (planFilter === 'anual' && userPlan !== 'anual') return false;
+          if (planFilter === 'vitalicio' && userPlan !== 'vitalicio') return false;
+        }
+        
+        // Aplicar filtro de data
+        if (dateFilter !== 'all' && !applyDateFilter(user)) return false;
+        
+        // Aplicar filtro de busca
+        if (searchTerm) {
+          const termLower = searchTerm.toLowerCase();
+          const nameMatch = user.name?.toLowerCase().includes(termLower) || false;
+          const usernameMatch = user.username.toLowerCase().includes(termLower);
+          const emailMatch = user.email.toLowerCase().includes(termLower);
+          
+          if (!nameMatch && !usernameMatch && !emailMatch) return false;
+        }
+        
+        return true;
+      });
         const matchesStatus = statusFilter === 'all' || 
           (statusFilter === 'active' && user.planstatus === 'active') ||
           (statusFilter === 'expired' && user.planstatus === 'expired') ||
