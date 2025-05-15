@@ -1317,18 +1317,9 @@ const AdminDashboard = () => {
                   title="Configurações do Site"
                 >
                   <Settings className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
-                  {sidebarOpen && <span className="truncate text-sm">Configurações do Site</span>}
+                  {sidebarOpen && <span className="truncate">Configurações do Site</span>}
                 </button>
-                <button
-                  onClick={() => setActiveTab('collections')}
-                  className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
-                    activeTab === 'collections' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
-                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
-                  title="Coleções"
-                >
-                  <ListChecks className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
-                  {sidebarOpen && <span className="truncate text-sm">Coleções</span>}
-                </button>
+
                 {user?.role === 'admin' && (
                   <>
                     <Link 
@@ -1339,7 +1330,7 @@ const AdminDashboard = () => {
                       ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
                     >
                       <Image className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
-                      {sidebarOpen && <span className="truncate text-sm">Gerenciar Logo</span>}
+                      {sidebarOpen && <span className="truncate">Gerenciar Logo</span>}
                     </Link>
                     <Link 
                       href="/admin/storage-test"
@@ -1349,7 +1340,7 @@ const AdminDashboard = () => {
                       ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
                     >
                       <HardDrive className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
-                      {sidebarOpen && <span className="truncate text-sm">Testar Armazenamento</span>}
+                      {sidebarOpen && <span className="truncate">Testar Armazenamento</span>}
                     </Link>
                     <button
                       onClick={() => setActiveTab('analytics')}
@@ -1359,7 +1350,7 @@ const AdminDashboard = () => {
                       title="Analytics"
                     >
                       <BarChart3 className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
-                      {sidebarOpen && <span className="truncate text-sm">Analytics</span>}
+                      {sidebarOpen && <span className="truncate">Analytics</span>}
                     </button>
                   </>
                 )}
