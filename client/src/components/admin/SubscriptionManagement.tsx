@@ -867,7 +867,7 @@ export default function SubscriptionManagement() {
                 </div>
                 
                 <div className="pt-4">
-                  <Button>
+                  <Button onClick={() => handleSaveSettings()}>
                     <Save className="w-4 h-4 mr-2" /> Salvar configurações
                   </Button>
                 </div>

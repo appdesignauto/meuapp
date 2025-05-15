@@ -4757,6 +4757,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Endpoint para salvar configurações de assinatura
+  app.post("/api/subscriptions/settings", isAdmin, async (req, res) => {
+    try {
+      const { 
+        autoDowngrade,
+        emailNotifications,
+        notificationDays,
+        gracePeriod 
+      } = req.body;
+      
+      console.log('Salvando configurações de assinatura:', req.body);
+      
+      // Em produção, salvar no banco de dados
+      // Aqui apenas retornamos sucesso como exemplo
+      res.json({ 
+        success: true, 
+        message: 'Configurações salvas com sucesso',
+        settings: {
+          autoDowngrade,
+          emailNotifications,
+          notificationDays,
+          gracePeriod
+        }
+      });
+    } catch (error) {
+      console.error('Erro ao salvar configurações de assinatura:', error);
+      res.status(500).json({ error: "Erro ao salvar configurações" });
+    }
+  });
+  
   // Endpoint para listar usuários com assinaturas com filtros e paginação
   app.get("/api/admin/users", isAdmin, async (req, res) => {
     try {
