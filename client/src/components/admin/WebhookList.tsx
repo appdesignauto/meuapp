@@ -130,23 +130,12 @@ const WebhookList: React.FC = () => {
     error,
     refetch
   } = useQuery<WebhookLogsResponse>({
-    queryKey: ['/api/webhooks/logs', page, limit, filters],
-    queryFn: () => {
-      const searchParams = new URLSearchParams();
-      searchParams.append('page', page.toString());
-      searchParams.append('limit', limit.toString());
-      
-      if (filters.status) searchParams.append('status', filters.status);
-      if (filters.eventType) searchParams.append('eventType', filters.eventType);
-      if (filters.search) searchParams.append('search', filters.search);
-      
-      return fetch(`/api/webhooks/logs?${searchParams.toString()}`).then(res => {
-        if (!res.ok) {
-          throw new Error('Erro ao buscar logs de webhook');
-        }
-        return res.json();
-      });
-    },
+    queryKey: ['/api/webhooks/logs', {
+      page,
+      limit,
+      ...filters
+    }],
+    // Usar o queryFn padrão do sistema que está configurado no queryClient
   });
 
   // Buscar detalhes de um log específico

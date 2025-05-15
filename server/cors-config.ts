@@ -5,6 +5,7 @@ import type { CorsOptions, CorsRequest } from 'cors';
 // Lista de origens permitidas
 const ALLOWED_ORIGINS = [
   'http://localhost:5000',
+  'http://127.0.0.1:5000', // Adicionado para permitir requisições locais
   'https://designauto.com.br',
   'https://www.designauto.com.br',
   'https://app.designauto.com.br',
@@ -26,6 +27,7 @@ const REPLIT_DOMAINS = [
 // Lista de domínios confiáveis para cookies
 export const TRUSTED_DOMAINS = [
   'localhost',
+  '127.0.0.1', // Adicionado para permitir requisições locais
   'designauto.com.br',
   'www.designauto.com.br',
   'app.designauto.com.br',
@@ -59,12 +61,12 @@ export function configureCors(app: Express): void {
         callback(null, true);
       }
       else {
-        console.warn(`Origem não permitida: ${origin}`);
         if (process.env.NODE_ENV === 'development') {
-          // Em desenvolvimento, permitir todas as origens
+          // Em desenvolvimento, permitir todas as origens silenciosamente
           callback(null, true);
         } else {
-          // Em produção, negar origens não permitidas
+          // Em produção, mostrar aviso e negar origens não permitidas
+          console.warn(`Origem não permitida: ${origin}`);
           callback(new Error('CORS não permitido para esta origem'), false);
         }
       }
