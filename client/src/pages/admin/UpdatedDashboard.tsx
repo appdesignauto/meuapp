@@ -1322,46 +1322,48 @@ const AdminDashboard = () => {
                   </>
                 )}
               </CollapsibleTrigger>
-              <CollapsibleContent className={`${sidebarOpen ? 'pl-4' : 'pl-0'} space-y-1 pt-1 pb-2`}>
+              <CollapsibleContent className={`mt-1 ${sidebarOpen ? 'pl-5' : 'flex flex-col items-center'} space-y-1`}>
                 <button
                   onClick={() => setActiveTab('settings')}
-                  className={`flex items-center w-full py-2.5 rounded-md ${
-                    activeTab === 'settings' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
+                  className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
+                    activeTab === 'settings' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
                   title="Configurações do Site"
                 >
-                  <Settings className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-                  {sidebarOpen && <span>Configurações do Site</span>}
+                  <Settings className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                  {sidebarOpen && <span className="truncate text-sm">Configurações do Site</span>}
                 </button>
                 <button
                   onClick={() => setActiveTab('collections')}
-                  className={`flex items-center w-full py-2.5 rounded-md ${
-                    activeTab === 'collections' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
+                  className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
+                    activeTab === 'collections' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
                   title="Coleções"
                 >
-                  <ListChecks className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-                  {sidebarOpen && <span>Coleções</span>}
+                  <ListChecks className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                  {sidebarOpen && <span className="truncate text-sm">Coleções</span>}
                 </button>
                 {user?.role === 'admin' && (
                   <>
                     <Link 
                       href="/admin/logo-upload"
                       title="Gerenciar Logo"
-                      className={`flex items-center w-full py-2.5 rounded-md text-gray-600 hover:bg-gray-100 
-                      ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
+                      className={`flex items-center w-full py-2 rounded-md transition-all duration-200
+                      text-gray-600 hover:bg-gray-50 
+                      ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
                     >
-                      <Image className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-                      {sidebarOpen && <span>Gerenciar Logo</span>}
+                      <Image className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                      {sidebarOpen && <span className="truncate text-sm">Gerenciar Logo</span>}
                     </Link>
                     <Link 
                       href="/admin/storage-test"
                       title="Testar Armazenamento"
-                      className={`flex items-center w-full py-2.5 rounded-md text-gray-600 hover:bg-gray-100 
-                      ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
+                      className={`flex items-center w-full py-2 rounded-md transition-all duration-200
+                      text-gray-600 hover:bg-gray-50 
+                      ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
                     >
-                      <HardDrive className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-                      {sidebarOpen && <span>Testar Armazenamento</span>}
+                      <HardDrive className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                      {sidebarOpen && <span className="truncate text-sm">Testar Armazenamento</span>}
                     </Link>
                   </>
                 )}
