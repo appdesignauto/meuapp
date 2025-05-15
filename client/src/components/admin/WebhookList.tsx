@@ -54,6 +54,7 @@ interface WebhookLog {
   userId: number | null;
   sourceIp: string;
   transactionId: string | null;
+  email: string | null;
   createdAt: string;
   updatedAt: string;
 }
