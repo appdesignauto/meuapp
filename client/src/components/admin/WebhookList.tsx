@@ -355,7 +355,7 @@ const WebhookList: React.FC = () => {
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="all">Todos os status</SelectItem>
                   <SelectItem value="processed">Processados</SelectItem>
                   <SelectItem value="received">Recebidos</SelectItem>
                   <SelectItem value="pending">Pendentes</SelectItem>
@@ -372,12 +372,14 @@ const WebhookList: React.FC = () => {
                   <SelectValue placeholder="Tipo de Evento" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="all">Todos os eventos</SelectItem>
                   <SelectItem value="PURCHASE_APPROVED">Compra Aprovada</SelectItem>
                   <SelectItem value="PURCHASE_REFUNDED">Reembolso</SelectItem>
                   <SelectItem value="PURCHASE_CANCELED">Cancelamento</SelectItem>
                   <SelectItem value="SUBSCRIPTION_CANCELED">Assinatura Cancelada</SelectItem>
                   <SelectItem value="SUBSCRIPTION_REACTIVATED">Assinatura Reativada</SelectItem>
+                  <SelectItem value="purchase_approved">Compra Aprovada (Doppus)</SelectItem>
+                  <SelectItem value="subscription_canceled">Assinatura Cancelada (Doppus)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -391,7 +393,7 @@ const WebhookList: React.FC = () => {
                   <SelectValue placeholder="Fonte" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
+                  <SelectItem value="all">Todas as fontes</SelectItem>
                   <SelectItem value="hotmart">Hotmart</SelectItem>
                   <SelectItem value="doppus">Doppus</SelectItem>
                 </SelectContent>
