@@ -41,7 +41,9 @@ import {
   ShieldAlert,
   Sparkles,
   Cog,
-  GalleryHorizontal
+  GalleryHorizontal,
+  MessageCircle,
+  Tool
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -86,30 +88,81 @@ const UnifiedAdminDashboard = ({ params }: { params?: { tab?: string } } = {}) =
   }, [location, params]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([
-    {
-      label: "Dashboard",
-      value: "overview",
-      icon: <Home size={20} />,
+    { 
+      label: "Dashboard", 
+      value: "dashboard", 
+      icon: <Home size={20} /> 
     },
-    // Itens individuais baseados na imagem enviada
-    { label: "Artes", value: "arts", icon: <ImageIcon size={20} /> },
-    { label: "Categorias", value: "categories", icon: <Tag size={20} /> },
-    { label: "Coleções", value: "collections", icon: <GalleryHorizontal size={20} /> },
-    { label: "Formatos", value: "formats", icon: <LayoutGrid size={20} /> },
-    { label: "Tipos de Arquivo", value: "fileTypes", icon: <FileText size={20} /> },
-    { label: "Comunidade", value: "community", icon: <MessageSquare size={20} /> },
-    { label: "Cursos", value: "courses", icon: <BookOpen size={20} /> },
-    { label: "Ferramentas", value: "tools", icon: <ScrollText size={20} /> },
-    { label: "Usuários", value: "users", icon: <Users size={20} /> },
-    { label: "Estatísticas", value: "stats", icon: <Activity size={20} /> },
-    { label: "Logs", value: "logs", icon: <Database size={20} /> },
-    { label: "Denúncias", value: "reports-management", icon: <ShieldAlert size={20} /> },
-    { label: "Popups", value: "popups", icon: <Bell size={20} /> },
-    { label: "Depoimentos", value: "testimonials", icon: <CheckSquare size={20} /> },
-    { label: "Planos", value: "plans", icon: <FileCheck size={20} /> },
-    { label: "Visão Geral", value: "subscription-overview", icon: <Sparkles size={20} /> },
-    { label: "Gerenciar", value: "subscription-management", icon: <UserCog size={20} /> },
-    { label: "Webhooks", value: "webhooks", icon: <Webhook size={20} /> },
+    {
+      label: "Conteúdo",
+      value: "conteudo",
+      icon: <Layers size={20} />,
+      expanded: false,
+      children: [
+        { label: "Artes", value: "artes", icon: <ImageIcon size={20} /> },
+        { label: "Categorias", value: "categorias", icon: <Tag size={20} /> },
+        { label: "Coleções", value: "colecoes", icon: <LayoutGrid size={20} /> },
+        { label: "Formatos", value: "formatos", icon: <LayoutGrid size={20} /> },
+        { label: "Tipos de Arquivo", value: "tipos-arquivo", icon: <FileText size={20} /> },
+      ]
+    },
+    { 
+      label: "Comunidade", 
+      value: "comunidade", 
+      icon: <MessageSquare size={20} /> 
+    },
+    { 
+      label: "Cursos", 
+      value: "cursos", 
+      icon: <BookOpen size={20} /> 
+    },
+    { 
+      label: "Ferramentas", 
+      value: "ferramentas", 
+      icon: <ScrollText size={20} /> 
+    },
+    { 
+      label: "Usuários", 
+      value: "usuarios", 
+      icon: <Users size={20} /> 
+    },
+    {
+      label: "Análise",
+      value: "analise",
+      icon: <Activity size={20} />,
+      expanded: false,
+      children: [
+        { label: "Estatísticas", value: "estatisticas", icon: <Activity size={20} /> },
+        { label: "Logs", value: "logs", icon: <Database size={20} /> },
+      ]
+    },
+    { 
+      label: "Denúncias", 
+      value: "denuncias", 
+      icon: <ShieldAlert size={20} /> 
+    },
+    {
+      label: "Marketing",
+      value: "marketing",
+      icon: <Bell size={20} />,
+      expanded: false,
+      children: [
+        { label: "Popups", value: "popups", icon: <Bell size={20} /> },
+        { label: "Depoimentos", value: "depoimentos", icon: <CheckSquare size={20} /> },
+        { label: "Planos", value: "planos", icon: <FileCheck size={20} /> },
+      ]
+    },
+    {
+      label: "Assinaturas",
+      value: "assinaturas",
+      icon: <CreditCard size={20} />,
+      expanded: false,
+      children: [
+        { label: "Visão Geral", value: "visao-geral", icon: <Sparkles size={20} /> },
+        { label: "Gerenciar", value: "gerenciar", icon: <UserCog size={20} /> },
+        { label: "Webhooks", value: "webhooks", icon: <Webhook size={20} /> },
+      ]
+    },
   ]);
 
   // Função para expandir/colapsar um item do menu
