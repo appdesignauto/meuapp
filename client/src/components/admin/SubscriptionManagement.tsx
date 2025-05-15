@@ -161,6 +161,48 @@ export default function SubscriptionManagement() {
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   
+  // Estados para configurações de assinatura
+  const [autoDowngrade, setAutoDowngrade] = useState(true);
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [notificationDays, setNotificationDays] = useState<string[]>(['7', '3', '1']);
+  const [gracePeriod, setGracePeriod] = useState('3');
+  
+  // Mutation para salvar configurações
+  const saveSettingsMutation = useMutation({
+    mutationFn: async (settings: {
+      autoDowngrade: boolean;
+      emailNotifications: boolean;
+      notificationDays: string[];
+      gracePeriod: string;
+    }) => {
+      const response = await apiRequest('POST', '/api/subscriptions/settings', settings);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Configurações salvas",
+        description: "As configurações de assinatura foram salvas com sucesso.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao salvar configurações",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Função para salvar configurações
+  const handleSaveSettings = () => {
+    saveSettingsMutation.mutate({
+      autoDowngrade,
+      emailNotifications,
+      notificationDays,
+      gracePeriod
+    });
+  };
+  
   // Form estados para edição
   const [formData, setFormData] = useState({
     tipoplano: '',
@@ -816,7 +858,11 @@ export default function SubscriptionManagement() {
                       <Label htmlFor="auto-downgrade" className="font-medium">Rebaixamento automático</Label>
                       <p className="text-sm text-muted-foreground">Rebaixar automaticamente usuários com assinaturas expiradas</p>
                     </div>
-                    <Switch id="auto-downgrade" defaultChecked />
+                    <Switch 
+                      id="auto-downgrade" 
+                      checked={autoDowngrade}
+                      onCheckedChange={setAutoDowngrade}
+                    />
                   </div>
                 </div>
                 
@@ -826,7 +872,11 @@ export default function SubscriptionManagement() {
                       <Label htmlFor="email-notifications" className="font-medium">Notificações por email</Label>
                       <p className="text-sm text-muted-foreground">Enviar email quando uma assinatura estiver próxima da expiração</p>
                     </div>
-                    <Switch id="email-notifications" defaultChecked />
+                    <Switch 
+                      id="email-notifications" 
+                      checked={emailNotifications}
+                      onCheckedChange={setEmailNotifications}
+                    />
                   </div>
                 </div>
                 
@@ -835,15 +885,51 @@ export default function SubscriptionManagement() {
                   <p className="text-sm text-muted-foreground">Enviar lembretes automáticos antes da expiração</p>
                   <div className="flex items-center gap-4 mt-2">
                     <div className="flex items-center gap-2">
-                      <input type="checkbox" id="expiry-7" className="rounded" defaultChecked />
+                      <input 
+                        type="checkbox" 
+                        id="expiry-7" 
+                        className="rounded"
+                        checked={notificationDays.includes('7')}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setNotificationDays([...notificationDays, '7']);
+                          } else {
+                            setNotificationDays(notificationDays.filter(day => day !== '7'));
+                          }
+                        }}
+                      />
                       <label htmlFor="expiry-7">7 dias antes</label>
                     </div>
                     <div className="flex items-center gap-2">
-                      <input type="checkbox" id="expiry-3" className="rounded" defaultChecked />
+                      <input 
+                        type="checkbox" 
+                        id="expiry-3" 
+                        className="rounded"
+                        checked={notificationDays.includes('3')}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setNotificationDays([...notificationDays, '3']);
+                          } else {
+                            setNotificationDays(notificationDays.filter(day => day !== '3'));
+                          }
+                        }}
+                      />
                       <label htmlFor="expiry-3">3 dias antes</label>
                     </div>
                     <div className="flex items-center gap-2">
-                      <input type="checkbox" id="expiry-1" className="rounded" defaultChecked />
+                      <input 
+                        type="checkbox" 
+                        id="expiry-1" 
+                        className="rounded"
+                        checked={notificationDays.includes('1')}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setNotificationDays([...notificationDays, '1']);
+                          } else {
+                            setNotificationDays(notificationDays.filter(day => day !== '1'));
+                          }
+                        }}
+                      />
                       <label htmlFor="expiry-1">1 dia antes</label>
                     </div>
                   </div>
@@ -852,7 +938,10 @@ export default function SubscriptionManagement() {
                 <div className="space-y-2">
                   <Label className="font-medium">Período de tolerância após expiração</Label>
                   <p className="text-sm text-muted-foreground">Manter o acesso premium por um período após a expiração</p>
-                  <Select defaultValue="3">
+                  <Select 
+                    value={gracePeriod}
+                    onValueChange={setGracePeriod}
+                  >
                     <SelectTrigger className="w-full max-w-xs">
                       <SelectValue placeholder="Selecione o período" />
                     </SelectTrigger>
