@@ -1,274 +1,251 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
 import { 
-  ResponsiveContainer, 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend,
-  Area,
-  AreaChart
-} from 'recharts';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Skeleton } from '@/components/ui/skeleton';
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
 import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
-import { Loader2, TrendingUp, TrendingDown, AlertCircle } from 'lucide-react';
+  BarChart3, 
+  Users, 
+  CreditCard, 
+  ArrowUpRight, 
+  TrendingUp, 
+  TrendingDown,
+  CalendarClock,
+  BadgeDollarSign,
+  Wallet,
+  CircleDollarSign,
+  RefreshCw
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ExtendedBadge } from '@/components/ui/badge-extensions';
+import { Separator } from '@/components/ui/separator';
 
-// Tipagem para os dados de tendência
-interface SubscriptionTrendData {
-  date: string;
-  total: number;
-  active: number;
-  expired: number;
-  growth: number;
-}
+export default function SubscriptionTrends() {
+  const [dateFilter, setDateFilter] = useState<string>('30');
 
-const SubscriptionTrends = () => {
-  const [timeRange, setTimeRange] = useState('6');
-  
-  // Consulta para obter dados de tendências
-  const { 
-    data: trendData,
-    isLoading: isLoadingTrends,
-    isError: isErrorTrends,
-    error: trendsError
-  } = useQuery<SubscriptionTrendData[]>({
-    queryKey: ['/api/subscription-trends', timeRange],
+  // Busca dados para o dashboard
+  const { data: dashboardStats, isLoading: isLoadingStats } = useQuery({
+    queryKey: ['/api/subscriptions/stats', dateFilter],
     queryFn: async () => {
-      const response = await apiRequest(
-        'GET', 
-        `/api/subscription-trends?months=${timeRange}`
-      );
-      return response.json();
+      try {
+        const response = await fetch(`/api/subscriptions/stats?days=${dateFilter}`);
+        if (!response.ok) throw new Error('Falha ao carregar estatísticas');
+        return await response.json();
+      } catch (error) {
+        console.error('Erro ao carregar estatísticas:', error);
+        // Retornamos uma estrutura vazia mas com os campos necessários
+        return {
+          totalSubscribers: 0,
+          activeSubscriptions: 0,
+          expiringSubscriptions: 0,
+          revenueMetrics: { 
+            currentMonth: 0, 
+            previousMonth: 0,
+            trend: 0
+          },
+          conversionRate: 0,
+          churnRate: 0,
+          averageLTV: 0,
+          subscriptionsBySource: []
+        };
+      }
     }
   });
-  
-  // Formatação dos dados para melhor exibição
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
-  };
-  
-  // Calcular crescimento total no período
-  const calculateOverallGrowth = () => {
-    if (!trendData || trendData.length < 2) return 0;
-    
-    const firstMonth = trendData[0];
-    const lastMonth = trendData[trendData.length - 1];
-    
-    if (firstMonth.total === 0) return 100;
-    
-    return ((lastMonth.total - firstMonth.total) / firstMonth.total) * 100;
-  };
-  
-  const overallGrowth = trendData ? calculateOverallGrowth() : 0;
-  
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h3 className="text-lg font-semibold">Tendências de Assinaturas</h3>
-          <p className="text-sm text-muted-foreground">
-            Acompanhe a evolução das assinaturas ao longo do tempo
-          </p>
-        </div>
-        <Select
-          value={timeRange}
-          onValueChange={(value) => setTimeRange(value)}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Período" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="3">Últimos 3 meses</SelectItem>
-            <SelectItem value="6">Últimos 6 meses</SelectItem>
-            <SelectItem value="12">Último ano</SelectItem>
-            <SelectItem value="24">Últimos 2 anos</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      
-      {isLoadingTrends ? (
-        <div className="w-full py-12">
-          <div className="flex flex-col items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
-            <p className="text-sm text-muted-foreground">Carregando dados de tendências...</p>
+    <div>
+      <div className="mb-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800">Dashboard de Assinaturas</h2>
+            <p className="text-gray-500 mt-1">Visão consolidada de métricas e desempenho de assinaturas</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Select value={dateFilter} onValueChange={setDateFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Período" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7">Últimos 7 dias</SelectItem>
+                <SelectItem value="30">Últimos 30 dias</SelectItem>
+                <SelectItem value="90">Últimos 90 dias</SelectItem>
+                <SelectItem value="365">Último ano</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button variant="outline" size="icon">
+              <RefreshCw className="h-4 w-4" />
+            </Button>
           </div>
         </div>
-      ) : isErrorTrends ? (
-        <Card className="border-red-200">
-          <CardContent className="pt-6">
-            <div className="flex items-center space-x-2 text-red-600">
-              <AlertCircle className="h-5 w-5" />
-              <span>Erro ao carregar dados de tendências</span>
+      </div>
+
+      {/* Cards principais */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Assinantes Ativos</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {isLoadingStats ? (
+                <div className="h-6 w-16 bg-muted animate-pulse rounded"></div>
+              ) : (
+                dashboardStats?.activeSubscriptions || 0
+              )}
             </div>
-            <p className="text-sm text-muted-foreground mt-2">
-              {trendsError instanceof Error ? trendsError.message : 'Tente novamente mais tarde.'}
+            <p className="text-xs text-muted-foreground">
+              <ExtendedBadge variant={dashboardStats?.revenueMetrics?.trend > 0 ? "success" : "destructive"} className="mr-1">
+                {dashboardStats?.revenueMetrics?.trend > 0 ? <ArrowUpRight className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                {Math.abs(dashboardStats?.revenueMetrics?.trend || 0)}%
+              </ExtendedBadge>
+              em relação ao mês anterior
             </p>
           </CardContent>
         </Card>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Crescimento no Período
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center">
-                  {overallGrowth > 0 ? (
-                    <TrendingUp className="h-5 w-5 text-green-500 mr-2" />
-                  ) : (
-                    <TrendingDown className="h-5 w-5 text-red-500 mr-2" />
-                  )}
-                  <span className={`text-2xl font-bold ${
-                    overallGrowth > 0 ? 'text-green-500' : 'text-red-500'
-                  }`}>
-                    {overallGrowth.toFixed(1)}%
-                  </span>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Receita Mensal</CardTitle>
+            <BadgeDollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {isLoadingStats ? (
+                <div className="h-6 w-16 bg-muted animate-pulse rounded"></div>
+              ) : (
+                `R$ ${(dashboardStats?.revenueMetrics?.currentMonth || 0).toLocaleString('pt-BR')}`
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              <ExtendedBadge variant={dashboardStats?.revenueMetrics?.trend > 0 ? "success" : "destructive"} className="mr-1">
+                {dashboardStats?.revenueMetrics?.trend > 0 ? <ArrowUpRight className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                {Math.abs(dashboardStats?.revenueMetrics?.trend || 0)}%
+              </ExtendedBadge>
+              em relação ao mês anterior
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Próximas Expirações</CardTitle>
+            <CalendarClock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {isLoadingStats ? (
+                <div className="h-6 w-16 bg-muted animate-pulse rounded"></div>
+              ) : (
+                dashboardStats?.expiringSubscriptions || 0
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Assinaturas a expirar nos próximos 30 dias
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Métricas financeiras */}
+      <h3 className="text-lg font-semibold mb-3">Métricas Financeiras</h3>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">LTV Médio</CardTitle>
+            <Wallet className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {isLoadingStats ? (
+                <div className="h-6 w-16 bg-muted animate-pulse rounded"></div>
+              ) : (
+                `R$ ${(dashboardStats?.averageLTV || 0).toLocaleString('pt-BR')}`
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Valor do tempo de vida do cliente
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Taxa de Conversão</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {isLoadingStats ? (
+                <div className="h-6 w-16 bg-muted animate-pulse rounded"></div>
+              ) : (
+                `${(dashboardStats?.conversionRate || 0).toFixed(1)}%`
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Visitantes convertidos em assinantes
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Taxa de Churn</CardTitle>
+            <CircleDollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {isLoadingStats ? (
+                <div className="h-6 w-16 bg-muted animate-pulse rounded"></div>
+              ) : (
+                `${(dashboardStats?.churnRate || 0).toFixed(1)}%`
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Taxa de cancelamento mensal
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Origem das assinaturas */}
+      <h3 className="text-lg font-semibold mb-3">Origem das Assinaturas</h3>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="space-y-4">
+            {isLoadingStats ? (
+              <>
+                <div className="h-6 bg-muted animate-pulse rounded mb-2"></div>
+                <div className="h-6 bg-muted animate-pulse rounded mb-2"></div>
+                <div className="h-6 bg-muted animate-pulse rounded"></div>
+              </>
+            ) : (
+              dashboardStats?.subscriptionsBySource?.map((source: any) => (
+                <div key={source.name} className="flex items-center">
+                  <div className="w-1/4 font-medium">{source.name}</div>
+                  <div className="w-3/4">
+                    <div className="flex items-center">
+                      <div 
+                        className="h-2 bg-primary rounded" 
+                        style={{ width: `${source.percentage}%` }}
+                      ></div>
+                      <span className="ml-2 text-sm text-muted-foreground">
+                        {source.count} ({source.percentage}%)
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Total de Assinantes
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {trendData && trendData.length > 0 ? trendData[trendData.length - 1].total : 0}
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Assinantes Ativos
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {trendData && trendData.length > 0 ? trendData[trendData.length - 1].active : 0}
-                </div>
-              </CardContent>
-            </Card>
+              )) || []
+            )}
           </div>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Evolução de Assinaturas</CardTitle>
-              <CardDescription>
-                Comparativo entre assinaturas ativas e expiradas ao longo do tempo
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="growth" className="w-full">
-                <TabsList className="mb-4">
-                  <TabsTrigger value="growth">Crescimento</TabsTrigger>
-                  <TabsTrigger value="total">Total e Ativos</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="growth">
-                  <div className="h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart
-                        data={trendData?.map(item => ({
-                          ...item,
-                          date: formatDate(item.date)
-                        }))}
-                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                        <XAxis dataKey="date" />
-                        <YAxis domain={['auto', 'auto']} unit="%" />
-                        <Tooltip 
-                          formatter={(value: number) => [`${value.toFixed(1)}%`, 'Crescimento']}
-                          labelFormatter={(label) => `Data: ${label}`}
-                        />
-                        <Legend />
-                        <Line 
-                          type="monotone" 
-                          dataKey="growth" 
-                          name="Taxa de Crescimento" 
-                          stroke="#10b981" 
-                          strokeWidth={2}
-                          dot={{ r: 4 }}
-                          activeDot={{ r: 6 }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="total">
-                  <div className="h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart
-                        data={trendData?.map(item => ({
-                          ...item,
-                          date: formatDate(item.date)
-                        }))}
-                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                        <XAxis dataKey="date" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Area 
-                          type="monotone" 
-                          dataKey="total" 
-                          name="Total de Assinantes" 
-                          stackId="1"
-                          stroke="#6366f1" 
-                          fill="#6366f1"
-                          fillOpacity={0.3}
-                        />
-                        <Area 
-                          type="monotone" 
-                          dataKey="active" 
-                          name="Assinantes Ativos" 
-                          stackId="2"
-                          stroke="#10b981" 
-                          fill="#10b981"
-                          fillOpacity={0.3}
-                        />
-                        <Area 
-                          type="monotone" 
-                          dataKey="expired" 
-                          name="Assinaturas Expiradas" 
-                          stackId="3"
-                          stroke="#f43f5e" 
-                          fill="#f43f5e"
-                          fillOpacity={0.3}
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-        </>
-      )}
+        </CardContent>
+      </Card>
     </div>
   );
-};
-
-export default SubscriptionTrends;
+}
