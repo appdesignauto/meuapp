@@ -1005,6 +1005,18 @@ const AdminDashboard = () => {
               <LayoutDashboard className={`${sidebarOpen ? 'w-5 h-5' : 'w-5 h-5 mx-auto'}`} />
               {sidebarOpen && <span className="ml-3 truncate">Visão Geral</span>}
             </button>
+            
+            {/* Assinaturas */}
+            <a
+              href="/admin/assinaturas"
+              className={`flex items-center w-full px-4 py-2 rounded-lg transition-all duration-200 ${
+                location === '/admin/assinaturas' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
+              } ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+              title="Assinaturas"
+            >
+              <CreditCard className={`${sidebarOpen ? 'w-5 h-5' : 'w-5 h-5 mx-auto'}`} />
+              {sidebarOpen && <span className="ml-3 truncate">Assinaturas</span>}
+            </a>
 
 
             {/* Usuários e Comunidade */}
