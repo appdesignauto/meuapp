@@ -115,8 +115,8 @@ const WebhookList: React.FC = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [filters, setFilters] = useState({
-    status: '',
-    eventType: '',
+    status: 'all',
+    eventType: 'all',
     search: '',
   });
   const [selectedLog, setSelectedLog] = useState<WebhookLogDetails | null>(null);
@@ -350,7 +350,7 @@ const WebhookList: React.FC = () => {
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="processed">Processados</SelectItem>
                   <SelectItem value="received">Recebidos</SelectItem>
                   <SelectItem value="pending">Pendentes</SelectItem>
@@ -367,7 +367,7 @@ const WebhookList: React.FC = () => {
                   <SelectValue placeholder="Tipo de Evento" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="PURCHASE_APPROVED">Compra Aprovada</SelectItem>
                   <SelectItem value="PURCHASE_REFUNDED">Reembolso</SelectItem>
                   <SelectItem value="PURCHASE_CANCELED">Cancelamento</SelectItem>
