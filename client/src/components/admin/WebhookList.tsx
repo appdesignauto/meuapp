@@ -91,24 +91,39 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
     | null
     | undefined = 'default';
   
+  let displayText = status;
+  
   switch (status) {
     case 'processed':
       variant = 'default'; // verde
+      displayText = 'completo';
       break;
     case 'received':
       variant = 'secondary'; // cinza
+      displayText = 'recebido';
       break;
     case 'pending':
       variant = 'outline'; // outline
+      displayText = 'aguardando';
       break;
     case 'error':
       variant = 'destructive'; // vermelho
+      displayText = 'erro';
+      break;
+    case 'approved':
+      variant = 'default'; // verde
+      displayText = 'aprovado';
+      break;
+    case 'waiting':
+      variant = 'outline'; // outline
+      displayText = 'esperando';
       break;
     default:
       variant = 'outline';
+      displayText = status;
   }
   
-  return <Badge variant={variant}>{status}</Badge>;
+  return <Badge variant={variant}>{displayText}</Badge>;
 };
 
 // Componente principal
