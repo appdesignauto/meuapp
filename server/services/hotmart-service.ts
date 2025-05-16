@@ -177,7 +177,16 @@ export class HotmartService {
           throw new Error(`Erro ao obter token Hotmart: ${response.status} ${errorMessage}`);
         }
         
-        return response;
+        const data = await response.json();
+        console.log('Resposta da API Hotmart recebida com sucesso:', JSON.stringify(data).substring(0, 100) + '...');
+        
+        // Armazena o token e calcula a expiração (subtraindo 5 minutos por segurança)
+        this.accessToken = data.access_token;
+        this.tokenExpiration = now + (data.expires_in * 1000) - (5 * 60 * 1000);
+        
+        console.log('Token da Hotmart obtido com sucesso!');
+        
+        return this.accessToken;
       } catch (fetchError) {
         console.error('Erro na requisição para a API Hotmart:', fetchError);
         // Verifica se é um erro de rede ou DNS
