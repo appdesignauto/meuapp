@@ -5124,12 +5124,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Client Secret é obrigatório" });
       }
       
-      // Atualizar valor na tabela de configurações
-      await db.execute(sql`
-        UPDATE "integrationSettings" 
-        SET "value" = ${clientSecret}, "updatedAt" = NOW() 
+      // Verificar se o registro já existe
+      const existingRecord = await db.execute(sql`
+        SELECT id FROM "integrationSettings"
         WHERE "provider" = 'hotmart' AND "key" = 'clientSecret'
       `);
+      
+      if (existingRecord.rows.length === 0) {
+        // Se não existir, criar um novo registro
+        await db.execute(sql`
+          INSERT INTO "integrationSettings" 
+          (provider, key, value, description, "isActive", "createdAt", "updatedAt")
+          VALUES ('hotmart', 'clientSecret', ${clientSecret}, 'Client Secret da API da Hotmart', true, NOW(), NOW())
+        `);
+      } else {
+        // Se existir, atualizar o valor
+        await db.execute(sql`
+          UPDATE "integrationSettings" 
+          SET "value" = ${clientSecret}, "updatedAt" = NOW() 
+          WHERE "provider" = 'hotmart' AND "key" = 'clientSecret'
+        `);
+      }
       
       console.log("Client Secret da Hotmart atualizado por:", req.user?.username);
       
