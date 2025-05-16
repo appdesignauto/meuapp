@@ -6627,6 +6627,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+  
+  // Endpoint de teste para verificar conexão com a API da Hotmart
+  app.get('/api/test-hotmart-connection', isAdmin, async (req, res) => {
+    try {
+      console.log('Testando conexão com a API da Hotmart...');
+      
+      // Testa conexão com a API usando o token fixo configurado
+      const result = await HotmartService.testConnection();
+      
+      console.log('Resultado do teste de conexão:', result);
+      
+      // Retorna resultado detalhado para o frontend
+      res.status(200).json({ 
+        ...result,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Erro ao testar conexão com a Hotmart:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Erro ao testar conexão com a Hotmart', 
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
 
   // Registrar rota para calcular posição do post na paginação
   registerPostPositionRoute(app);
