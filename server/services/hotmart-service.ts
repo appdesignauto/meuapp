@@ -25,7 +25,8 @@ export class HotmartService {
     if (useSandbox) {
       this.baseUrl = 'https://sandbox.hotmart.com';
     } else {
-      this.baseUrl = 'https://developers.hotmart.com';
+      // Atualizado conforme documentação da Hotmart para ambiente de produção
+      this.baseUrl = 'https://api-hot-connect.hotmart.com';
     }
     
     console.log(`HotmartService inicializado no ambiente: ${useSandbox ? 'Sandbox' : 'Produção'} (URL: ${this.baseUrl})`);
@@ -104,47 +105,80 @@ export class HotmartService {
           'Authorization': `Basic ${basicAuth}`
         };
         
-        // No ambiente de produção, com Basic Auth, apenas precisamos do grant_type
+        // Em produção usamos apenas o grant_type no body, já que a autenticação vai pelo header
         requestBody = new URLSearchParams({
           'grant_type': 'client_credentials'
         }).toString();
+
+        // Vamos logar informações mais detalhadas para diagnóstico
+        console.log(`Credenciais usadas - ClientId: ${this.clientId.substring(0, 4)}..., ClientSecret: ${this.clientSecret.substring(0, 4)}...`);
+        console.log(`Basic Auth token (primeiros 15 caracteres): ${basicAuth.substring(0, 15)}...`);
       }
       
       console.log(`Usando URL de autenticação: ${tokenUrl}`);
       console.log(`Headers incluem Authorization Basic: ${headers['Authorization'] ? 'Sim' : 'Não'}`);
       
-      const response = await fetch(tokenUrl, {
-        method: 'POST',
-        headers: headers,
-        body: requestBody
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.text();
+      try {
+        console.log(`Fazendo requisição para ${tokenUrl} com body: ${requestBody}`);
+        const response = await fetch(tokenUrl, {
+          method: 'POST',
+          headers: headers,
+          body: requestBody
+        });
         
-        // Log detalhado para depuração do erro
-        console.error(`Erro na resposta da Hotmart: Status ${response.status}, Headers:`, response.headers);
-        console.error(`Corpo da resposta (primeiros 500 caracteres):`, errorData.substring(0, 500));
-        
-        // Tenta extrair mensagens úteis do HTML quando a resposta não é JSON
-        let errorMessage = errorData;
-        if (errorData.includes('<!DOCTYPE html>')) {
-          console.log('Resposta em formato HTML detectada, tentando extrair mensagem de erro...');
+        if (!response.ok) {
+          const errorData = await response.text();
           
-          // Simplificando a mensagem de erro para HTML
-          errorMessage = 'A API retornou uma página HTML em vez de JSON. Isso geralmente indica um erro no endpoint ou autenticação.';
+          // Log detalhado para depuração do erro
+          console.error(`Erro na resposta da Hotmart: Status ${response.status}`);
+          console.error(`Headers da resposta:`, [...response.headers.entries()].map(h => `${h[0]}: ${h[1]}`).join(', '));
+          console.error(`Corpo da resposta (primeiros 500 caracteres):`, errorData.substring(0, 500));
           
-          // Verifica se há mensagens de erro específicas no HTML
-          if (errorData.includes('404 Not Found')) {
-            errorMessage += ' Endpoint não encontrado (404).';
-          } else if (errorData.includes('403 Forbidden')) {
-            errorMessage += ' Acesso negado (403). Verifique as credenciais.';
-          } else if (errorData.includes('401 Unauthorized')) {
-            errorMessage += ' Não autorizado (401). Credenciais inválidas.';
+          // Tenta extrair mensagens úteis do HTML quando a resposta não é JSON
+          let errorMessage = errorData;
+          if (errorData.includes('<!DOCTYPE html>')) {
+            console.log('Resposta em formato HTML detectada, tentando extrair mensagem de erro...');
+            
+            // Simplificando a mensagem de erro para HTML
+            errorMessage = 'A API retornou uma página HTML em vez de JSON. Isso geralmente indica um erro no endpoint ou autenticação.';
+            
+            // Verifica se há mensagens de erro específicas no HTML
+            if (errorData.includes('404 Not Found')) {
+              errorMessage += ' Endpoint não encontrado (404).';
+            } else if (errorData.includes('403 Forbidden')) {
+              errorMessage += ' Acesso negado (403). Verifique as credenciais.';
+            } else if (errorData.includes('401 Unauthorized')) {
+              errorMessage += ' Não autorizado (401). Credenciais inválidas.';
+            }
           }
+          
+          // Se a resposta contém JSON mesmo com código de erro, tenta extrair a mensagem
+          try {
+            if (response.headers.get('content-type')?.includes('application/json')) {
+              const jsonError = JSON.parse(errorData);
+              if (jsonError.error_description) {
+                errorMessage = jsonError.error_description;
+              } else if (jsonError.message) {
+                errorMessage = jsonError.message;
+              }
+            }
+          } catch (jsonParseError) {
+            console.error('Erro ao analisar JSON de erro:', jsonParseError);
+          }
+          
+          throw new Error(`Erro ao obter token Hotmart: ${response.status} ${errorMessage}`);
         }
         
-        throw new Error(`Erro ao obter token Hotmart: ${response.status} ${errorMessage}`);
+        return response;
+      } catch (fetchError) {
+        console.error('Erro na requisição para a API Hotmart:', fetchError);
+        // Verifica se é um erro de rede ou DNS
+        const message = fetchError instanceof Error ? fetchError.message : String(fetchError);
+        if (message.includes('ENOTFOUND') || message.includes('getaddrinfo')) {
+          throw new Error(`Erro de conexão: Não foi possível conectar ao servidor ${this.baseUrl}. Verifique a URL e sua conexão com a internet.`);
+        }
+        // Repassa o erro original
+        throw fetchError;
       }
       
       const data = await response.json();
