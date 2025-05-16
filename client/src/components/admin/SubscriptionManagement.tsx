@@ -478,10 +478,11 @@ export default function SubscriptionManagement() {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6">
+        <TabsList className="grid w-full grid-cols-4 mb-6">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="subscriptions">Assinaturas</TabsTrigger>
           <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
+          <TabsTrigger value="configuracoes">Configurações</TabsTrigger>
         </TabsList>
         
         {/* Aba de Visão Geral */}
@@ -1115,222 +1116,15 @@ export default function SubscriptionManagement() {
         
         {/* Aba de Webhooks e Configurações */}
         <TabsContent value="webhooks" className="space-y-6">
-          {/* Sub-abas para Webhooks e Configurações */}
-          <Tabs defaultValue="webhook-logs" className="w-full">
-            <TabsList className="w-full mb-4">
-              <TabsTrigger value="webhook-logs">Logs de Webhook</TabsTrigger>
-              <TabsTrigger value="configuracoes">Configurações</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="webhook-logs" className="space-y-4">
-              <WebhookList key="subscription-webhooks" />
-            </TabsContent>
-            
-            <TabsContent value="configuracoes" className="space-y-4">
-              <SubscriptionSettings />
-            </TabsContent>
-          </Tabs>
+          <WebhookList key="subscription-webhooks" />
         </TabsContent>
         
-        {/* Aba de Configurações Básicas */}
-        <TabsContent value="settings" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Configurações de Assinatura</CardTitle>
-              <CardDescription>Gerencie as configurações gerais de assinaturas</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label htmlFor="auto-downgrade" className="font-medium">Rebaixamento automático</Label>
-                      <p className="text-sm text-muted-foreground">Rebaixar automaticamente usuários com assinaturas expiradas</p>
-                    </div>
-                    <Switch 
-                      id="auto-downgrade" 
-                      checked={autoDowngrade}
-                      onCheckedChange={setAutoDowngrade}
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label htmlFor="email-notifications" className="font-medium">Notificações por email</Label>
-                      <p className="text-sm text-muted-foreground">Enviar email quando uma assinatura estiver próxima da expiração</p>
-                    </div>
-                    <Switch 
-                      id="email-notifications" 
-                      checked={emailNotifications}
-                      onCheckedChange={setEmailNotifications}
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label className="font-medium">Dias para notificação de expiração</Label>
-                  <p className="text-sm text-muted-foreground">Enviar lembretes automáticos antes da expiração</p>
-                  <div className="flex items-center gap-4 mt-2">
-                    <div className="flex items-center gap-2">
-                      <input 
-                        type="checkbox" 
-                        id="expiry-7" 
-                        className="rounded"
-                        checked={notificationDays.includes('7')}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setNotificationDays([...notificationDays, '7']);
-                          } else {
-                            setNotificationDays(notificationDays.filter(day => day !== '7'));
-                          }
-                        }}
-                      />
-                      <label htmlFor="expiry-7">7 dias antes</label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input 
-                        type="checkbox" 
-                        id="expiry-3" 
-                        className="rounded"
-                        checked={notificationDays.includes('3')}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setNotificationDays([...notificationDays, '3']);
-                          } else {
-                            setNotificationDays(notificationDays.filter(day => day !== '3'));
-                          }
-                        }}
-                      />
-                      <label htmlFor="expiry-3">3 dias antes</label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input 
-                        type="checkbox" 
-                        id="expiry-1" 
-                        className="rounded"
-                        checked={notificationDays.includes('1')}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setNotificationDays([...notificationDays, '1']);
-                          } else {
-                            setNotificationDays(notificationDays.filter(day => day !== '1'));
-                          }
-                        }}
-                      />
-                      <label htmlFor="expiry-1">1 dia antes</label>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label className="font-medium">Período de tolerância após expiração</Label>
-                  <p className="text-sm text-muted-foreground">Manter o acesso premium por um período após a expiração</p>
-                  <Select 
-                    value={gracePeriod}
-                    onValueChange={setGracePeriod}
-                  >
-                    <SelectTrigger className="w-full max-w-xs">
-                      <SelectValue placeholder="Selecione o período" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">Sem período de tolerância</SelectItem>
-                      <SelectItem value="1">1 dia</SelectItem>
-                      <SelectItem value="3">3 dias</SelectItem>
-                      <SelectItem value="7">7 dias</SelectItem>
-                      <SelectItem value="14">14 dias</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="pt-4">
-                  <Button onClick={() => handleSaveSettings()}>
-                    <Save className="w-4 h-4 mr-2" /> Salvar configurações
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Opções de Assinatura</CardTitle>
-              <CardDescription>Personalize as opções disponíveis</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="font-medium">Tipos de plano disponíveis</Label>
-                  <p className="text-sm text-muted-foreground">Gerencie os tipos de plano que podem ser atribuídos aos usuários</p>
-                  
-                  <div className="border rounded-md p-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span>Premium Mensal</span>
-                        <Button variant="ghost" size="sm" className="h-7 text-red-500 hover:text-red-700">
-                          <Trash2 className="w-3.5 h-3.5 mr-1" /> Remover
-                        </Button>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span>Premium Anual</span>
-                        <Button variant="ghost" size="sm" className="h-7 text-red-500 hover:text-red-700">
-                          <Trash2 className="w-3.5 h-3.5 mr-1" /> Remover
-                        </Button>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span>Vitalício</span>
-                        <Button variant="ghost" size="sm" className="h-7 text-red-500 hover:text-red-700">
-                          <Trash2 className="w-3.5 h-3.5 mr-1" /> Remover
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    <div className="border-t mt-4 pt-4">
-                      <Button variant="outline" size="sm">
-                        <Plus className="w-3.5 h-3.5 mr-1" /> Adicionar plano
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label className="font-medium">Origens de assinatura disponíveis</Label>
-                  <p className="text-sm text-muted-foreground">Gerencie as origens de assinatura que podem ser atribuídas</p>
-                  
-                  <div className="border rounded-md p-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span>Hotmart</span>
-                        <Button variant="ghost" size="sm" className="h-7 text-red-500 hover:text-red-700">
-                          <Trash2 className="w-3.5 h-3.5 mr-1" /> Remover
-                        </Button>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span>Doppus</span>
-                        <Button variant="ghost" size="sm" className="h-7 text-red-500 hover:text-red-700">
-                          <Trash2 className="w-3.5 h-3.5 mr-1" /> Remover
-                        </Button>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span>Manual</span>
-                        <Button variant="ghost" size="sm" className="h-7 text-red-500 hover:text-red-700">
-                          <Trash2 className="w-3.5 h-3.5 mr-1" /> Remover
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    <div className="border-t mt-4 pt-4">
-                      <Button variant="outline" size="sm">
-                        <Plus className="w-3.5 h-3.5 mr-1" /> Adicionar origem
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Nova aba de Configurações no nível principal */}
+        <TabsContent value="configuracoes" className="space-y-6">
+          <SubscriptionSettings />
         </TabsContent>
+        
+
       </Tabs>
       
       {/* Dialog para visualizar detalhes do usuário */}
