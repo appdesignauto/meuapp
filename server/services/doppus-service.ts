@@ -514,51 +514,229 @@ class DoppusService {
    * Testa a conexão com a API da Doppus
    * @returns Resultado do teste com status de sucesso
    */
-  public async testConnection(): Promise<{ success: boolean; message?: string }> {
+  public async testConnection(): Promise<{ success: boolean; message?: string; details?: any }> {
     try {
-      console.log('Iniciando teste de conexão com a API da Doppus...');
+      console.log('===== INICIANDO TESTE DE CONEXÃO COM A DOPPUS =====');
+      console.log('Data e hora:', new Date().toISOString());
       
-      // Primeiro passo: Obter um token de acesso
-      const token = await this.getAccessToken();
-      
-      if (!token) {
-        return {
-          success: false,
-          message: 'Não foi possível obter token de acesso da API da Doppus'
-        };
-      }
-      
-      console.log('Token de acesso obtido com sucesso. Testando endpoint de produtos...');
-      
-      // Segundo passo: Testar algum endpoint básico para confirmar que o token funciona
-      const response = await fetch(`${this.baseUrl}/products`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      try {
+        // Consultar diretamente o banco de dados para obter as credenciais da Doppus
+        console.log('PASSO 1: Consultando credenciais diretamente no banco de dados...');
+        const { pool } = await import('../db');
+        
+        // Verificar se a tabela subscriptionSettings existe
+        const tableCheckResult = await pool.query(`
+          SELECT EXISTS (
+            SELECT FROM information_schema.tables 
+            WHERE table_schema = 'public'
+            AND table_name = 'subscriptionSettings'
+          );
+        `);
+        
+        const tableExists = tableCheckResult.rows[0].exists;
+        if (!tableExists) {
+          console.error('✗ Tabela subscriptionSettings não existe no banco de dados');
+          return {
+            success: false,
+            message: 'Tabela de configurações de assinaturas não encontrada. Contate o suporte técnico.',
+            details: { error: 'Tabela subscriptionSettings não existe' }
+          };
         }
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
+        
+        // Consultar coluna por coluna para identificar exatamente onde está o problema
+        const columnsResult = await pool.query(`
+          SELECT 
+            column_name 
+          FROM 
+            information_schema.columns 
+          WHERE 
+            table_schema = 'public' 
+            AND table_name = 'subscriptionSettings';
+        `);
+        
+        const columns = columnsResult.rows.map(row => row.column_name);
+        console.log('Colunas encontradas na tabela subscriptionSettings:', columns);
+        
+        const hasDoppusClientId = columns.includes('doppusClientId');
+        const hasDoppusClientSecret = columns.includes('doppusClientSecret');
+        const hasDoppusSecretKey = columns.includes('doppusSecretKey');
+        
+        if (!hasDoppusClientId || !hasDoppusClientSecret) {
+          console.error('✗ Colunas necessárias não existem na tabela subscriptionSettings');
+          return {
+            success: false,
+            message: 'Estrutura da tabela de configurações incompleta. Contate o suporte técnico.',
+            details: { 
+              error: 'Colunas necessárias não encontradas',
+              missing: {
+                doppusClientId: !hasDoppusClientId,
+                doppusClientSecret: !hasDoppusClientSecret,
+                doppusSecretKey: !hasDoppusSecretKey
+              }
+            }
+          };
+        }
+        
+        // Consultar as credenciais da Doppus diretamente
+        console.log('Consultando credenciais da Doppus...');
+        const credentialsResult = await pool.query(`
+          SELECT 
+            "doppusClientId", 
+            "doppusClientSecret", 
+            "doppusSecretKey"
+          FROM 
+            "subscriptionSettings" 
+          LIMIT 1;
+        `);
+        
+        if (credentialsResult.rows.length === 0) {
+          console.error('✗ Nenhuma configuração encontrada na tabela subscriptionSettings');
+          return {
+            success: false,
+            message: 'Configurações de assinatura não encontradas. Configure as credenciais da Doppus primeiro.',
+            details: { error: 'Nenhum registro na tabela subscriptionSettings' }
+          };
+        }
+        
+        const credentials = credentialsResult.rows[0];
+        console.log('Credenciais encontradas:', {
+          clientId: credentials.doppusClientId ? `${credentials.doppusClientId.substring(0, 4)}...${credentials.doppusClientId.slice(-4)}` : null,
+          clientSecret: credentials.doppusClientSecret ? 'definido' : null,
+          secretKey: credentials.doppusSecretKey ? 'definido' : null
+        });
+        
+        if (!credentials.doppusClientId || !credentials.doppusClientSecret) {
+          console.error('✗ Credenciais da Doppus incompletas');
+          return {
+            success: false,
+            message: 'Credenciais da Doppus incompletas. Configure Client ID e Client Secret.',
+            details: { 
+              error: 'Credenciais incompletas',
+              missing: {
+                clientId: !credentials.doppusClientId,
+                clientSecret: !credentials.doppusClientSecret
+              }
+            }
+          };
+        }
+        
+        // Tentar obter token de acesso
+        console.log('PASSO 2: Solicitando token de acesso da Doppus...');
+        console.log(`Enviando requisição para ${this.baseUrl}/token`);
+        
+        const tokenResponse = await fetch(`${this.baseUrl}/token`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: new URLSearchParams({
+            'grant_type': 'client_credentials',
+            'client_id': credentials.doppusClientId,
+            'client_secret': credentials.doppusClientSecret
+          })
+        });
+        
+        console.log('Resposta recebida. Status:', tokenResponse.status);
+        
+        if (!tokenResponse.ok) {
+          const errorText = await tokenResponse.text();
+          console.error('✗ Erro na resposta da API:', errorText);
+          
+          let errorMsg = `Erro ao obter token de acesso (HTTP ${tokenResponse.status})`;
+          if (tokenResponse.status === 401) {
+            errorMsg = 'Credenciais inválidas. Verifique se o Client ID e Client Secret estão corretos.';
+          } else if (tokenResponse.status === 400) {
+            errorMsg = 'Requisição inválida. Verifique se as credenciais estão no formato correto.';
+          } else if (tokenResponse.status === 404) {
+            errorMsg = 'Endpoint de autenticação não encontrado. Verifique a URL da API.';
+          }
+          
+          return {
+            success: false,
+            message: errorMsg,
+            details: { 
+              stage: 'token', 
+              status: tokenResponse.status, 
+              error: errorText,
+              clientIdUsed: credentials.doppusClientId.substring(0, 4) + '...' + credentials.doppusClientId.slice(-4)
+            }
+          };
+        }
+        
+        const tokenData = await tokenResponse.json();
+        
+        if (!tokenData.access_token) {
+          console.error('✗ Token não encontrado na resposta:', tokenData);
+          return {
+            success: false,
+            message: 'Token de acesso não retornado pela API da Doppus',
+            details: { stage: 'token', response: tokenData }
+          };
+        }
+        
+        const token = tokenData.access_token;
+        console.log('✓ Token de acesso obtido com sucesso:', token.substring(0, 10) + '...');
+        
+        // Testar se o token funciona fazendo uma requisição para um endpoint básico
+        console.log('PASSO 3: Testando token com endpoint de produtos...');
+        const apiResponse = await fetch(`${this.baseUrl}/products`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        console.log('Resposta recebida. Status:', apiResponse.status);
+        
+        if (!apiResponse.ok) {
+          const errorText = await apiResponse.text();
+          console.error('✗ Erro ao acessar endpoint de produtos:', errorText);
+          return {
+            success: false,
+            message: `Erro ao acessar endpoint de produtos: Status ${apiResponse.status}`,
+            details: { stage: 'endpoint', status: apiResponse.status, error: errorText }
+          };
+        }
+        
+        console.log('✓ Teste de conexão com a API da Doppus concluído com sucesso');
+        
         return {
-          success: false,
-          message: `Falha ao acessar endpoint de produtos: ${response.status} ${errorText}`
+          success: true,
+          message: 'Conexão com a API da Doppus estabelecida com sucesso!',
+          details: { 
+            timestamp: new Date().toISOString(),
+            credentials: {
+              clientId: credentials.doppusClientId.substring(0, 4) + '...' + credentials.doppusClientId.slice(-4),
+              hasClientSecret: !!credentials.doppusClientSecret,
+              hasSecretKey: !!credentials.doppusSecretKey
+            }
+          }
         };
+      } catch (innerError) {
+        console.error('✗ Erro no teste de conexão:', innerError);
+        throw innerError; // rethrow para ser capturado pelo catch externo
       }
-      
-      console.log('Teste de conexão com a API da Doppus concluído com sucesso');
-      
-      return {
-        success: true,
-        message: 'Conexão com a API da Doppus estabelecida com sucesso'
-      };
     } catch (error) {
-      console.error('Erro no teste de conexão com a Doppus:', error);
+      console.error('ERRO FINAL no teste de conexão com a Doppus:', error);
+      
+      // Extrair uma mensagem amigável do erro
+      let friendlyMessage = 'Falha na conexão com a Doppus';
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      if (errorMessage.includes('Falha na autenticação')) {
+        friendlyMessage = 'Falha na autenticação. Verifique se o Client ID e Client Secret estão corretos.';
+      } else if (errorMessage.includes('fetch')) {
+        friendlyMessage = 'Não foi possível conectar ao servidor da Doppus. Verifique sua conexão com a internet.';
+      }
       
       return {
         success: false,
-        message: 'Erro na conexão: ' + (error instanceof Error ? error.message : String(error))
+        message: friendlyMessage,
+        details: { 
+          error: errorMessage,
+          timestamp: new Date().toISOString()
+        }
       };
     }
   }
