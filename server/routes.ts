@@ -5338,14 +5338,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Não enviar valores sensíveis, apenas indicar se estão definidos
         const isSensitive = ['secret', 'clientSecret'].includes(setting.key);
+        const isDefined = !!setting.value && setting.value.length > 0;
         
+        // Para campos sensíveis, armazenar também o valor real para devolução
+        // quando solicitado explicitamente nos endpoints específicos
         acc[setting.provider][setting.key] = {
-          value: isSensitive ? (setting.value ? '••••••••' : '') : setting.value,
+          value: isSensitive ? (isDefined ? '••••••••' : '') : setting.value,
           description: setting.description,
           isActive: setting.isActive,
           updatedAt: setting.updatedAt,
-          isDefined: !!setting.value && setting.value.length > 0
+          isDefined: isDefined,
+          // Adicionar último caracteres para facilitar identificação
+          lastChars: isDefined && setting.value.length > 4 ? 
+            setting.value.slice(-4) : ''
         };
+        
+        // Registrar no console para debug que os valores estão sendo processados
+        if (setting.provider === 'hotmart' && isDefined) {
+          console.log(`Configuração ${setting.provider}.${setting.key} encontrada com valor (últimos 4 caracteres): ${setting.value.slice(-4)}`);
+        }
         
         return acc;
       }, {});
