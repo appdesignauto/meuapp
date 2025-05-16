@@ -492,12 +492,28 @@ export default function AssinaturasPage() {
           <div className="mb-6 mt-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-gray-800">Logs de Webhooks</h2>
-                <p className="text-gray-500 mt-1">Monitore e gerencie webhooks recebidos de plataformas de pagamento</p>
+                <h2 className="text-2xl font-bold text-gray-800">Integrações & Webhooks</h2>
+                <p className="text-gray-500 mt-1">Gerencie integrações externas e monitore webhooks recebidos</p>
               </div>
             </div>
           </div>
-          <WebhookList key="webhooks-panel" />
+          
+          {/* Seção de Mapeamento de Produtos Hotmart */}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold mb-4">Mapeamento de Produtos Hotmart</h3>
+            <p className="text-gray-500 mb-4">Configure quais produtos da Hotmart correspondem a cada tipo de plano no DesignAuto</p>
+            <HotmartProductMapping />
+          </div>
+          
+          {/* Separador visual */}
+          <Separator className="my-8" />
+          
+          {/* Seção de Logs de Webhooks */}
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold mb-4">Logs de Webhooks</h3>
+            <p className="text-gray-500 mb-4">Monitore notificações e eventos recebidos das plataformas de pagamento</p>
+            <WebhookList key="webhooks-panel" />
+          </div>
         </TabsContent>
 
         {/* Configurações */}
