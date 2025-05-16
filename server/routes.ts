@@ -5214,6 +5214,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Atualizar API Key da Doppus
+  app.post("/api/integrations/doppus/apikey", isAdmin, async (req, res) => {
+    try {
+      const { apiKey } = req.body;
+      
+      if (!apiKey) {
+        return res.status(400).json({ message: "API Key é obrigatória" });
+      }
+      
+      // Atualizar valor na tabela de configurações
+      await db.execute(sql`
+        UPDATE "integrationSettings" 
+        SET "value" = ${apiKey}, "updatedAt" = NOW() 
+        WHERE "provider" = 'doppus' AND "key" = 'apiKey'
+      `);
+      
+      console.log("API Key da Doppus atualizada por:", req.user?.username);
+      
+      return res.status(200).json({ 
+        success: true, 
+        message: "API Key da Doppus atualizada com sucesso" 
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar API Key da Doppus:", error);
+      return res.status(500).json({ 
+        success: false, 
+        message: "Erro ao atualizar API Key da Doppus" 
+      });
+    }
+  });
+  
   // Obter configurações atuais das integrações
   app.get("/api/integrations/settings", isAdmin, async (req, res) => {
     try {
