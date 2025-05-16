@@ -52,6 +52,7 @@ async function testAnnualPlanWebhook() {
   
   try {
     console.log("Enviando payload:", JSON.stringify(payload, null, 2));
+    console.log("Usando token:", HOTMART_TOKEN);
     
     // Envia a requisição POST para o endpoint de webhook
     const response = await fetch(`${BASE_URL}/api/webhooks/hotmart`, {

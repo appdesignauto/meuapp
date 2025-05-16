@@ -6263,34 +6263,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Endpoint para recebimento de webhooks da Hotmart
   app.post('/api/webhooks/hotmart', async (req, res) => {
     try {
+      console.log("Webhook da Hotmart recebido");
+
       // 1. Verificar se requisição é válida
       // A Hotmart sempre envia no formato application/json
       if (!req.is('application/json')) {
         return res.status(400).json({ success: false, message: 'Formato inválido' });
       }
       
-      // 2. Registrar o webhook recebido no banco de dados
+      // 2. Verificar token de autenticação
+      const hotmartSecret = process.env.HOTMART_SECRET;
+      const receivedToken = req.header('X-Hotmart-Hottok') || req.header('X-Hotmart-Webhook-Token');
+      
+      if (!hotmartSecret) {
+        console.error('Erro: HOTMART_SECRET não configurado');
+        return res.status(500).json({ success: false, message: 'Erro de configuração (chave)' });
+      }
+      
+      if (!receivedToken || receivedToken !== hotmartSecret) {
+        console.log("Token de webhook inválido ou não fornecido");
+        return res.status(403).json({ success: false, message: 'Acesso não autorizado: token de webhook inválido' });
+      }
+      
+      // 3. Registrar o webhook recebido no banco de dados
       const payload = req.body;
       const sourceIp = req.ip;
       const eventType = payload?.event || 'UNKNOWN';
-      
-      // Verificações de segurança básicas
-      const hotmartSecret = process.env.HOTMART_SECRET;
-      if (!hotmartSecret) {
-        console.error('Erro: HOTMART_SECRET não configurado');
-        
-        // Mesmo com erro, continuar processando mas registrar status de erro
-        await storage.createWebhookLog({
-          eventType,
-          payloadData: JSON.stringify(payload),
-          status: 'error',
-          errorMessage: 'Chave secreta Hotmart não configurada',
-          sourceIp,
-          transactionId: payload?.data?.transaction?.code
-        });
-        
-        return res.status(500).json({ success: false, message: 'Erro de configuração (chave)' });
-      }
       
       // 3. Processar o webhook baseado no tipo de evento
       let userId = null;
