@@ -478,10 +478,11 @@ export default function SubscriptionManagement() {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6">
+        <TabsList className="grid w-full grid-cols-4 mb-6">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="subscriptions">Assinaturas</TabsTrigger>
           <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
+          <TabsTrigger value="settings">Configurações</TabsTrigger>
         </TabsList>
         
         {/* Aba de Visão Geral */}
@@ -1113,51 +1114,49 @@ export default function SubscriptionManagement() {
           )}
         </TabsContent>
         
-        {/* Aba de Webhooks */}
+        {/* Aba de Webhooks e Configurações */}
         <TabsContent value="webhooks" className="space-y-6">
-          <WebhookList key="subscription-webhooks" />
-        </TabsContent>
-        
-        {/* Aba de Configurações com integração das configurações de assinatura */}
-        <TabsContent value="settings" className="space-y-6">
-          {/* Sub-abas para configurações gerais e configurações de assinatura */}
-          <Tabs defaultValue="site-config" className="w-full">
+          {/* Sub-abas para Webhooks e Configurações */}
+          <Tabs defaultValue="webhook-logs" className="w-full">
             <TabsList className="w-full mb-4">
-              <TabsTrigger value="site-config">Configurações do Site</TabsTrigger>
-              <TabsTrigger value="assinatura-config">Configurações de Assinatura</TabsTrigger>
+              <TabsTrigger value="webhook-logs">Logs de Webhook</TabsTrigger>
+              <TabsTrigger value="configuracoes">Configurações</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="site-config" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Configurações Básicas de Assinatura</CardTitle>
-                  <CardDescription>Gerencie as configurações gerais de assinaturas</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <Label htmlFor="auto-downgrade" className="font-medium">Rebaixamento automático</Label>
-                          <p className="text-sm text-muted-foreground">Rebaixar automaticamente usuários com assinaturas expiradas</p>
-                        </div>
-                        <Switch 
-                          id="auto-downgrade" 
-                          checked={autoDowngrade}
-                          onCheckedChange={setAutoDowngrade}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+            <TabsContent value="webhook-logs" className="space-y-4">
+              <WebhookList key="subscription-webhooks" />
             </TabsContent>
             
-            <TabsContent value="assinatura-config" className="space-y-4">
+            <TabsContent value="configuracoes" className="space-y-4">
               <SubscriptionSettings />
             </TabsContent>
           </Tabs>
         </TabsContent>
+        
+        {/* Aba de Configurações Básicas */}
+        <TabsContent value="settings" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Configurações de Assinatura</CardTitle>
+              <CardDescription>Gerencie as configurações gerais de assinaturas</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="auto-downgrade" className="font-medium">Rebaixamento automático</Label>
+                      <p className="text-sm text-muted-foreground">Rebaixar automaticamente usuários com assinaturas expiradas</p>
+                    </div>
+                    <Switch 
+                      id="auto-downgrade" 
+                      checked={autoDowngrade}
+                      onCheckedChange={setAutoDowngrade}
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div>
                       <Label htmlFor="email-notifications" className="font-medium">Notificações por email</Label>

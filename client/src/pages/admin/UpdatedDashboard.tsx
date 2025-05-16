@@ -4,6 +4,7 @@ import { Link, useLocation } from 'wouter';
 import AnalyticsSettings from '@/components/admin/AnalyticsSettings';
 import ReportsManagement from '@/components/admin/ReportsManagement';
 import SubscriptionManagement from '@/components/admin/SubscriptionManagement';
+import SubscriptionSettings from '@/components/admin/SubscriptionSettings';
 import {
   LayoutGrid,
   Image,
@@ -3985,20 +3986,7 @@ const AdminDashboard = () => {
             </TabsContent>
             
             <TabsContent value="settings">
-              <Tabs defaultValue="site-config" className="w-full">
-                <TabsList className="w-full mb-4">
-                  <TabsTrigger value="site-config">Configurações do Site</TabsTrigger>
-                  <TabsTrigger value="assinatura-config">Configurações de Assinatura</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="site-config" className="space-y-4">
-                  <SiteSettings />
-                </TabsContent>
-                
-                <TabsContent value="assinatura-config" className="space-y-4">
-                  <SubscriptionSettings />
-                </TabsContent>
-              </Tabs>
+              <SiteSettings />
             </TabsContent>
             
             {/* Gerenciamento de Assinaturas */}
