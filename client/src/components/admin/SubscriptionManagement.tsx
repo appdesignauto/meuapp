@@ -890,7 +890,22 @@ export default function SubscriptionManagement() {
   
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="visaoGeral" className="w-full">
+      <Tabs 
+        defaultValue="visaoGeral" 
+        className="w-full"
+        onValueChange={(value) => {
+          if (value === "configIntegracoes") {
+            setActiveTab("integrations");
+            fetchProductMappings();
+          } else if (value === "webhooks") {
+            setActiveTab("webhooks");
+          } else if (value === "assinaturas") {
+            setActiveTab("subscriptions");
+          } else {
+            setActiveTab("overview");
+          }
+        }}
+      >
         <TabsList className="grid w-full grid-cols-4 mb-6">
           <TabsTrigger value="visaoGeral">Visão Geral</TabsTrigger>
           <TabsTrigger value="assinaturas">Assinaturas</TabsTrigger>
