@@ -409,6 +409,30 @@ export default function SubscriptionManagement() {
     }
   });
   
+  // Consulta para obter configurações de integração
+  const {
+    data: integrationData,
+    isLoading: isIntegrationsLoading,
+    isError: isIntegrationsError,
+    error: integrationsError
+  } = useQuery<IntegrationSettings>({
+    queryKey: ['/api/integrations/settings'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/integrations/settings');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setIntegrationSettings(data);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao carregar configurações de integração",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
   // Consulta para usuários com filtragem avançada
   const {
     data: usersData,
