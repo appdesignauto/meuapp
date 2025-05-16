@@ -5693,44 +5693,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Verificar se a configuração já existe no banco
-      const existingSettings = await pool.query(
-        `SELECT * FROM "integrationSettings" WHERE provider = 'doppus' AND key = 'clientId'`
-      );
-
       const currentDate = new Date();
-      let result;
+      let integrationsResult, subscriptionResult;
 
-      if (existingSettings.rows.length > 0) {
-        // Atualizar configuração existente
-        result = await pool.query(
-          `UPDATE "integrationSettings" 
-           SET value = $1, "updatedAt" = $2
-           WHERE provider = 'doppus' AND key = 'clientId'
-           RETURNING *`,
-          [clientId, currentDate]
+      // Importar o pool para consultas diretas ao banco de dados
+      const { pool } = await import('./db');
+
+      // 1. Atualizar na tabela integrationSettings
+      try {
+        // Verificar se a configuração já existe no banco
+        const existingSettings = await pool.query(
+          `SELECT * FROM "integrationSettings" WHERE provider = 'doppus' AND key = 'clientId'`
         );
-      } else {
-        // Criar nova configuração
-        result = await pool.query(
-          `INSERT INTO "integrationSettings" (provider, key, value, description, "isActive", "createdAt", "updatedAt")
-           VALUES ('doppus', 'clientId', $1, 'Client ID para autenticação OAuth2 com a Doppus', true, $2, $2)
-           RETURNING *`,
-          [clientId, currentDate]
-        );
+
+        if (existingSettings.rows.length > 0) {
+          // Atualizar configuração existente
+          integrationsResult = await pool.query(
+            `UPDATE "integrationSettings" 
+             SET value = $1, "updatedAt" = $2
+             WHERE provider = 'doppus' AND key = 'clientId'
+             RETURNING *`,
+            [clientId, currentDate]
+          );
+        } else {
+          // Criar nova configuração
+          integrationsResult = await pool.query(
+            `INSERT INTO "integrationSettings" (provider, key, value, description, "isActive", "createdAt", "updatedAt")
+             VALUES ('doppus', 'clientId', $1, 'Client ID para autenticação OAuth2 com a Doppus', true, $2, $2)
+             RETURNING *`,
+            [clientId, currentDate]
+          );
+        }
+        console.log("Client ID atualizado na tabela integrationSettings");
+      } catch (integrationError) {
+        console.error("Erro ao atualizar Client ID na tabela integrationSettings:", integrationError);
       }
 
-      const updatedSetting = result.rows[0];
+      // 2. IMPORTANTE: Atualizar também na tabela subscriptionSettings (usada pelo DoppusService)
+      try {
+        subscriptionResult = await pool.query(
+          `UPDATE "subscriptionSettings" 
+           SET "doppusClientId" = $1, "updatedAt" = $2
+           RETURNING *`,
+          [clientId, currentDate]
+        );
+        console.log("Client ID atualizado na tabela subscriptionSettings");
+      } catch (subscriptionError) {
+        console.error("Erro ao atualizar Client ID na tabela subscriptionSettings:", subscriptionError);
+        return res.status(500).json({ 
+          success: false, 
+          message: "Erro ao atualizar Client ID nas configurações de assinatura" 
+        });
+      }
+
+      const updatedSetting = integrationsResult?.rows[0] || {};
       
       // Formatando o valor da mesma forma que é feito no endpoint GET
       const updatedValue = {
         isDefined: true,
         value: '••••••••',
-        description: updatedSetting.description,
-        isActive: updatedSetting.isActive,
-        updatedAt: updatedSetting.updatedAt,
-        realValue: updatedSetting.value,
-        lastChars: updatedSetting.value.slice(-4)
+        description: updatedSetting.description || 'Client ID para autenticação OAuth2 com a Doppus',
+        isActive: updatedSetting.isActive || true,
+        updatedAt: updatedSetting.updatedAt || currentDate,
+        realValue: clientId,
+        lastChars: clientId.slice(-4)
       };
 
       return res.status(200).json({ 
@@ -5759,44 +5785,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Verificar se a configuração já existe no banco
-      const existingSettings = await pool.query(
-        `SELECT * FROM "integrationSettings" WHERE provider = 'doppus' AND key = 'clientSecret'`
-      );
+      // Importar o pool para consultas diretas ao banco de dados
+      const { pool } = await import('./db');
 
       const currentDate = new Date();
-      let result;
+      let integrationsResult, subscriptionResult;
 
-      if (existingSettings.rows.length > 0) {
-        // Atualizar configuração existente
-        result = await pool.query(
-          `UPDATE "integrationSettings" 
-           SET value = $1, "updatedAt" = $2
-           WHERE provider = 'doppus' AND key = 'clientSecret'
-           RETURNING *`,
-          [clientSecret, currentDate]
+      // 1. Atualizar na tabela integrationSettings
+      try {
+        // Verificar se a configuração já existe no banco
+        const existingSettings = await pool.query(
+          `SELECT * FROM "integrationSettings" WHERE provider = 'doppus' AND key = 'clientSecret'`
         );
-      } else {
-        // Criar nova configuração
-        result = await pool.query(
-          `INSERT INTO "integrationSettings" (provider, key, value, description, "isActive", "createdAt", "updatedAt")
-           VALUES ('doppus', 'clientSecret', $1, 'Client Secret para autenticação OAuth2 com a Doppus', true, $2, $2)
-           RETURNING *`,
-          [clientSecret, currentDate]
-        );
+
+        if (existingSettings.rows.length > 0) {
+          // Atualizar configuração existente
+          integrationsResult = await pool.query(
+            `UPDATE "integrationSettings" 
+             SET value = $1, "updatedAt" = $2
+             WHERE provider = 'doppus' AND key = 'clientSecret'
+             RETURNING *`,
+            [clientSecret, currentDate]
+          );
+        } else {
+          // Criar nova configuração
+          integrationsResult = await pool.query(
+            `INSERT INTO "integrationSettings" (provider, key, value, description, "isActive", "createdAt", "updatedAt")
+             VALUES ('doppus', 'clientSecret', $1, 'Client Secret para autenticação OAuth2 com a Doppus', true, $2, $2)
+             RETURNING *`,
+            [clientSecret, currentDate]
+          );
+        }
+        console.log("Client Secret atualizado na tabela integrationSettings");
+      } catch (integrationError) {
+        console.error("Erro ao atualizar Client Secret na tabela integrationSettings:", integrationError);
       }
 
-      const updatedSetting = result.rows[0];
+      // 2. IMPORTANTE: Atualizar também na tabela subscriptionSettings (usada pelo DoppusService)
+      try {
+        subscriptionResult = await pool.query(
+          `UPDATE "subscriptionSettings" 
+           SET "doppusClientSecret" = $1, "updatedAt" = $2
+           RETURNING *`,
+          [clientSecret, currentDate]
+        );
+        console.log("Client Secret atualizado na tabela subscriptionSettings");
+      } catch (subscriptionError) {
+        console.error("Erro ao atualizar Client Secret na tabela subscriptionSettings:", subscriptionError);
+        return res.status(500).json({ 
+          success: false, 
+          message: "Erro ao atualizar Client Secret nas configurações de assinatura" 
+        });
+      }
+
+      const updatedSetting = integrationsResult?.rows[0] || {};
       
       // Formatando o valor da mesma forma que é feito no endpoint GET
       const updatedValue = {
         isDefined: true,
         value: '••••••••',
-        description: updatedSetting.description,
-        isActive: updatedSetting.isActive,
-        updatedAt: updatedSetting.updatedAt,
-        realValue: updatedSetting.value,
-        lastChars: updatedSetting.value.slice(-4)
+        description: updatedSetting.description || 'Client Secret para autenticação OAuth2 com a Doppus',
+        isActive: updatedSetting.isActive || true,
+        updatedAt: updatedSetting.updatedAt || currentDate,
+        realValue: clientSecret,
+        lastChars: clientSecret.slice(-4)
       };
 
       return res.status(200).json({ 
