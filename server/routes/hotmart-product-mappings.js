@@ -35,7 +35,7 @@ router.get('/:id', async (req, res) => {
 // Criar um novo mapeamento
 router.post('/', async (req, res) => {
   try {
-    const { productName, planType, durationDays, isLifetime } = req.body;
+    const { productId, offerId, productName, planType, durationDays, isLifetime } = req.body;
     
     // Validação simples
     if (!productName || !planType) {
@@ -53,6 +53,8 @@ router.post('/', async (req, res) => {
     // Inserir o novo mapeamento
     const [newMapping] = await db.insert(hotmartProductMappings)
       .values({
+        productId: productId || '',
+        offerId: offerId || '',
         productName,
         planType,
         durationDays: isLifetime ? 0 : durationDays,
@@ -71,7 +73,7 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { productName, planType, durationDays, isLifetime } = req.body;
+    const { productId, offerId, productName, planType, durationDays, isLifetime } = req.body;
     
     // Validação simples
     if (!productName || !planType) {
@@ -98,6 +100,8 @@ router.put('/:id', async (req, res) => {
     // Atualizar o mapeamento
     const [updatedMapping] = await db.update(hotmartProductMappings)
       .set({
+        productId: productId || existing.productId || '',
+        offerId: offerId || existing.offerId || '',
         productName,
         planType,
         durationDays: isLifetime ? 0 : durationDays,
