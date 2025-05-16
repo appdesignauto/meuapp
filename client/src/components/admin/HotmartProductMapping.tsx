@@ -59,6 +59,16 @@ interface ProductMapping {
   updatedAt: string;
 }
 
+// Tipo para o formulário, que deve ter campos compatíveis
+interface MappingFormData {
+  productId: string;
+  offerId: string;
+  productName: string;
+  planType: string;
+  durationDays: number | null;
+  isLifetime: boolean;
+}
+
 interface HotmartProductMappingProps {
   standalone?: boolean;
 }
@@ -118,11 +128,25 @@ export default function HotmartProductMapping({ standalone = false }: HotmartPro
 
   // Função para abrir o diálogo de edição de mapeamento
   const openEditMappingDialog = (mapping: ProductMapping) => {
+    // Determinar o tipo de plano com base nos dados existentes
+    let planType = mapping.planType;
+    
+    // Converter tipos de plano legados para os novos formatos
+    if (mapping.isLifetime) {
+      planType = 'premium_lifetime';
+    } else if (mapping.planType === 'premium' && mapping.durationDays === 30) {
+      planType = 'premium_30';
+    } else if (mapping.planType === 'premium' && mapping.durationDays === 180) {
+      planType = 'premium_180';
+    } else if (mapping.planType === 'premium' && mapping.durationDays === 365) {
+      planType = 'premium_365';
+    }
+    
     setMappingFormData({
       productId: mapping.productId,
-      offerId: mapping.offerId,
+      offerId: mapping.offerId || '',
       productName: mapping.productName,
-      planType: mapping.planType,
+      planType: planType,
       durationDays: mapping.durationDays || 30,
       isLifetime: mapping.isLifetime
     });
@@ -143,10 +167,22 @@ export default function HotmartProductMapping({ standalone = false }: HotmartPro
         return;
       }
       
-      const payload = {
-        ...mappingFormData,
-        durationDays: mappingFormData.isLifetime ? 0 : mappingFormData.durationDays
+      // Preparar payload com valores ajustados
+      let payload = {
+        ...mappingFormData
       };
+      
+      // Ajustar isLifetime e durationDays com base no tipo de plano
+      if (payload.planType === 'premium_lifetime') {
+        payload.isLifetime = true;
+        payload.durationDays = null; // Usar null para vitalício 
+      } else {
+        payload.isLifetime = false;
+        // Garantir que a duração corresponda ao tipo de plano
+        if (payload.planType === 'premium_30') payload.durationDays = 30;
+        if (payload.planType === 'premium_180') payload.durationDays = 180;
+        if (payload.planType === 'premium_365') payload.durationDays = 365;
+      }
       
       let response;
       
@@ -489,16 +525,8 @@ export default function HotmartProductMapping({ standalone = false }: HotmartPro
               </Select>
             </div>
             
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="isLifetime"
-                checked={mappingFormData.isLifetime}
-                onCheckedChange={(checked) => setMappingFormData({ ...mappingFormData, isLifetime: checked })}
-              />
-              <Label htmlFor="isLifetime">Acesso vitalício</Label>
-            </div>
-            
-            {!mappingFormData.isLifetime && (
+            {/* Campo de duração em dias - apenas exibido se não for premium_lifetime */}
+            {mappingFormData.planType !== 'premium_lifetime' && (
               <div className="grid gap-2">
                 <Label htmlFor="durationDays">Duração (dias)</Label>
                 <Input
@@ -508,7 +536,19 @@ export default function HotmartProductMapping({ standalone = false }: HotmartPro
                   placeholder="Ex: 30"
                   value={mappingFormData.durationDays}
                   onChange={(e) => setMappingFormData({ ...mappingFormData, durationDays: parseInt(e.target.value) || 0 })}
+                  disabled={
+                    mappingFormData.planType === 'premium_30' || 
+                    mappingFormData.planType === 'premium_180' || 
+                    mappingFormData.planType === 'premium_365'
+                  }
                 />
+                <p className="text-xs text-muted-foreground">
+                  {(mappingFormData.planType === 'premium_30' || 
+                    mappingFormData.planType === 'premium_180' || 
+                    mappingFormData.planType === 'premium_365') 
+                    ? 'Duração definida automaticamente pelo tipo de plano' 
+                    : 'Duração personalizada em dias'}
+                </p>
               </div>
             )}
           </div>
