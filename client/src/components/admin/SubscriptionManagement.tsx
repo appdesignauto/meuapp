@@ -532,7 +532,9 @@ export default function SubscriptionManagement() {
   const [doppusClientSecretInput, setDoppusClientSecretInput] = useState('');
   const [doppusApiKeyInput, setDoppusApiKeyInput] = useState('');
   
-  // Diálogo de API Key da Doppus
+  // Diálogos da Doppus
+  const [isDoppusClientIdDialogOpen, setIsDoppusClientIdDialogOpen] = useState(false);
+  const [isDoppusClientSecretDialogOpen, setIsDoppusClientSecretDialogOpen] = useState(false);
   const [isDoppusApiKeyDialogOpen, setIsDoppusApiKeyDialogOpen] = useState(false);
   
   // Estados para configuração de assinatura
@@ -724,6 +726,82 @@ export default function SubscriptionManagement() {
     }
   });
   
+  const updateDoppusClientIdMutation = useMutation({
+    mutationFn: async (newClientId: string) => {
+      const response = await apiRequest('POST', '/api/integrations/doppus/clientid', { clientId: newClientId });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Client ID atualizado",
+        description: "O Client ID da Doppus foi atualizado com sucesso.",
+      });
+      
+      // Atualizar o estado local com o valor retornado da API
+      if (data.updatedValue && integrationSettings?.doppus) {
+        setIntegrationSettings((prev) => {
+          if (!prev) return prev;
+          
+          return {
+            ...prev,
+            doppus: {
+              ...prev.doppus,
+              clientId: data.updatedValue
+            }
+          };
+        });
+      }
+      
+      setIsDoppusClientIdDialogOpen(false);
+      setDoppusClientIdInput('');
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao atualizar Client ID",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  const updateDoppusClientSecretMutation = useMutation({
+    mutationFn: async (newClientSecret: string) => {
+      const response = await apiRequest('POST', '/api/integrations/doppus/clientsecret', { clientSecret: newClientSecret });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Client Secret atualizado",
+        description: "O Client Secret da Doppus foi atualizado com sucesso.",
+      });
+      
+      // Atualizar o estado local com o valor retornado da API
+      if (data.updatedValue && integrationSettings?.doppus) {
+        setIntegrationSettings((prev) => {
+          if (!prev) return prev;
+          
+          return {
+            ...prev,
+            doppus: {
+              ...prev.doppus,
+              clientSecret: data.updatedValue
+            }
+          };
+        });
+      }
+      
+      setIsDoppusClientSecretDialogOpen(false);
+      setDoppusClientSecretInput('');
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao atualizar Client Secret",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
   const updateDoppusApiKeyMutation = useMutation({
     mutationFn: async (newApiKey: string) => {
       const response = await apiRequest('POST', '/api/integrations/doppus/apikey', { apiKey: newApiKey });
@@ -3251,6 +3329,98 @@ export default function SubscriptionManagement() {
         </DialogContent>
       </Dialog>
       
+      {/* Diálogo para atualizar o Client ID da Doppus */}
+      <Dialog open={isDoppusClientIdDialogOpen} onOpenChange={setIsDoppusClientIdDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Atualizar Client ID da Doppus</DialogTitle>
+            <DialogDescription>
+              Insira o novo Client ID para autenticação OAuth2 com a Doppus.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="doppusClientId">Client ID</Label>
+              <Input
+                id="doppusClientId"
+                value={doppusClientIdInput}
+                onChange={(e) => setDoppusClientIdInput(e.target.value)}
+                placeholder="Insira o Client ID da Doppus"
+                className="w-full"
+              />
+              <p className="text-sm text-muted-foreground">
+                O Client ID é utilizado para autenticação OAuth2 com a Doppus.
+              </p>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDoppusClientIdDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={() => updateDoppusClientIdMutation.mutate(doppusClientIdInput)}
+              disabled={!doppusClientIdInput.trim() || updateDoppusClientIdMutation.isPending}
+              type="button"
+            >
+              {updateDoppusClientIdMutation.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4 mr-2" />
+              )}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo para atualizar o Client Secret da Doppus */}
+      <Dialog open={isDoppusClientSecretDialogOpen} onOpenChange={setIsDoppusClientSecretDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Atualizar Client Secret da Doppus</DialogTitle>
+            <DialogDescription>
+              Insira o novo Client Secret para autenticação OAuth2 com a Doppus.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="doppusClientSecret">Client Secret</Label>
+              <Input
+                id="doppusClientSecret"
+                value={doppusClientSecretInput}
+                onChange={(e) => setDoppusClientSecretInput(e.target.value)}
+                placeholder="Insira o Client Secret da Doppus"
+                className="w-full"
+              />
+              <p className="text-sm text-muted-foreground">
+                O Client Secret é utilizado para autenticação OAuth2 com a Doppus.
+              </p>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDoppusClientSecretDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={() => updateDoppusClientSecretMutation.mutate(doppusClientSecretInput)}
+              disabled={!doppusClientSecretInput.trim() || updateDoppusClientSecretMutation.isPending}
+              type="button"
+            >
+              {updateDoppusClientSecretMutation.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4 mr-2" />
+              )}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Diálogo para atualizar a API Key da Doppus */}
       <Dialog open={isDoppusApiKeyDialogOpen} onOpenChange={setIsDoppusApiKeyDialogOpen}>
         <DialogContent className="max-w-md">
