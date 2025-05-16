@@ -322,7 +322,7 @@ class DoppusService {
       await db.update(users)
         .set({
           nivelacesso: 'free',
-          updatedat: new Date()
+          atualizadoem: new Date()
         })
         .where(eq(users.id, userResult.id));
       
@@ -370,7 +370,7 @@ class DoppusService {
       await db.update(users)
         .set({
           nivelacesso: 'free',
-          updatedat: new Date()
+          atualizadoem: new Date()
         })
         .where(eq(users.id, userResult.id));
       
@@ -418,7 +418,7 @@ class DoppusService {
       await db.update(users)
         .set({
           nivelacesso: 'free',
-          updatedat: new Date()
+          atualizadoem: new Date()
         })
         .where(eq(users.id, userResult.id));
       
