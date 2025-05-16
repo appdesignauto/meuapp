@@ -99,10 +99,13 @@ export class HotmartService {
         // Configuração para ambiente de produção
         // A Hotmart tem diferentes endpoints e headers para ambiente de produção
         tokenUrl = `${this.baseUrl}/security/oauth/token`;
+        
+        // Usar o token Basic exato fornecido pelo usuário
+        // IMPORTANTE: Valor fixo específico para esse app
         headers = {
           'Content-Type': 'application/x-www-form-urlencoded',
           'Accept': 'application/json',
-          'Authorization': `Basic ${basicAuth}`
+          'Authorization': 'Basic YThiNjdmYzAtMDFlOC00OWRiLWJlYWYtYzY3NDZmNTYzMDM3OmY0ZDlmNTUxLTUxNjUtNDY3MC1hY2FjLTAzZjVkN2M3NWRmZQ=='
         };
         
         // Em produção usamos apenas o grant_type no body, já que a autenticação vai pelo header
@@ -120,6 +123,10 @@ export class HotmartService {
       
       try {
         console.log(`Fazendo requisição para ${tokenUrl} com body: ${requestBody}`);
+        
+        // Adicionar log completo dos headers para diagnóstico
+        console.log("Headers completos da requisição:", JSON.stringify(headers));
+        
         const response = await fetch(tokenUrl, {
           method: 'POST',
           headers: headers,
