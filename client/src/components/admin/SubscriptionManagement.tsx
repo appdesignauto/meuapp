@@ -430,14 +430,29 @@ export default function SubscriptionManagement() {
       const response = await apiRequest('POST', '/api/integrations/doppus/secret', { secret: newSecret });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: "Chave atualizada",
         description: "A chave secreta da Doppus foi atualizada com sucesso.",
       });
+      
+      // Atualizar o estado local com o valor retornado da API
+      if (data.updatedValue && integrationSettings?.doppus) {
+        setIntegrationSettings((prev) => {
+          if (!prev) return prev;
+          
+          return {
+            ...prev,
+            doppus: {
+              ...prev.doppus,
+              secret: data.updatedValue
+            }
+          };
+        });
+      }
+      
       setIsDoppusSecretDialogOpen(false);
       setDoppusSecretInput('');
-      queryClient.invalidateQueries({ queryKey: ['/api/integrations/settings'] });
     },
     onError: (error: Error) => {
       toast({
@@ -453,14 +468,29 @@ export default function SubscriptionManagement() {
       const response = await apiRequest('POST', '/api/integrations/doppus/apikey', { apiKey: newApiKey });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: "API Key atualizada",
         description: "A API Key da Doppus foi atualizada com sucesso.",
       });
+      
+      // Atualizar o estado local com o valor retornado da API
+      if (data.updatedValue && integrationSettings?.doppus) {
+        setIntegrationSettings((prev) => {
+          if (!prev) return prev;
+          
+          return {
+            ...prev,
+            doppus: {
+              ...prev.doppus,
+              apiKey: data.updatedValue
+            }
+          };
+        });
+      }
+      
       setIsDoppusApiKeyDialogOpen(false);
       setDoppusApiKeyInput('');
-      queryClient.invalidateQueries({ queryKey: ['/api/integrations/settings'] });
     },
     onError: (error: Error) => {
       toast({

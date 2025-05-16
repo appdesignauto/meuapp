@@ -5294,9 +5294,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Chave secreta da Doppus atualizada por:", req.user?.username);
       
+      // Retornar o valor atualizado para o frontend poder atualizar a exibição
       return res.status(200).json({ 
         success: true, 
-        message: "Chave secreta da Doppus atualizada com sucesso" 
+        message: "Chave secreta da Doppus atualizada com sucesso",
+        updatedValue: {
+          key: "secret",
+          value: "••••••••", // Valor mascarado para exibição
+          provider: "doppus",
+          realValue: secret, // Valor real para ser usado pelo frontend
+          lastChars: secret.length > 4 ? secret.slice(-4) : "",
+          isDefined: true,
+          isActive: true,
+          updatedAt: new Date()
+        }
       });
     } catch (error) {
       console.error("Erro ao atualizar chave secreta da Doppus:", error);
@@ -5340,9 +5351,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("API Key da Doppus atualizada por:", req.user?.username);
       
+      // Retornar o valor atualizado para o frontend poder atualizar a exibição
       return res.status(200).json({ 
         success: true, 
-        message: "API Key da Doppus atualizada com sucesso" 
+        message: "API Key da Doppus atualizada com sucesso",
+        updatedValue: {
+          key: "apiKey",
+          value: "••••••••", // Valor mascarado para exibição
+          provider: "doppus",
+          realValue: apiKey, // Valor real para ser usado pelo frontend
+          lastChars: apiKey.length > 4 ? apiKey.slice(-4) : "",
+          isDefined: true,
+          isActive: true,
+          updatedAt: new Date()
+        }
       });
     } catch (error) {
       console.error("Erro ao atualizar API Key da Doppus:", error);
