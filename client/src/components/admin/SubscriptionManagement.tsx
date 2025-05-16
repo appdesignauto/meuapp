@@ -41,6 +41,8 @@ import {
   SearchIcon,
   Calendar,
   Edit,
+  Eye,
+  EyeOff,
   Trash2,
   BadgeDollarSign,
   Wallet,
@@ -59,9 +61,8 @@ import {
   Plus,
   Save,
   RefreshCw,
-  Eye,
   Settings,
-  Webhook,
+  X,
   FileText,
   Copy,
   Download,
@@ -215,6 +216,13 @@ export default function SubscriptionManagement() {
   const [isHotmartClientIdDialogOpen, setIsHotmartClientIdDialogOpen] = useState(false);
   const [isHotmartClientSecretDialogOpen, setIsHotmartClientSecretDialogOpen] = useState(false);
   const [isDoppusSecretDialogOpen, setIsDoppusSecretDialogOpen] = useState(false);
+  
+  // Estados para mostrar/ocultar as chaves salvas
+  const [showHotmartSecret, setShowHotmartSecret] = useState(false);
+  const [showHotmartClientId, setShowHotmartClientId] = useState(false);
+  const [showHotmartClientSecret, setShowHotmartClientSecret] = useState(false);
+  const [showDoppusSecret, setShowDoppusSecret] = useState(false);
+  
   const [hotmartSecretInput, setHotmartSecretInput] = useState('');
   const [hotmartClientIdInput, setHotmartClientIdInput] = useState('');
   const [hotmartClientSecretInput, setHotmartClientSecretInput] = useState('');
@@ -1272,12 +1280,22 @@ export default function SubscriptionManagement() {
                       <div className="flex mt-1.5">
                         <Input 
                           id="hotmartSecretKey" 
-                          type="password" 
+                          type={showHotmartSecret ? "text" : "password"}
                           placeholder="Insira a chave secreta da Hotmart" 
-                          value="●●●●●●●●●●●●●●●●"
+                          value={integrationSettings?.hotmart?.secret?.isDefined ? 
+                                 (showHotmartSecret ? integrationSettings?.hotmart?.secret?.realValue || "" : "●●●●●●●●●●●●●●●●") : 
+                                 ""}
                           readOnly
                           className="flex-1 rounded-r-none bg-muted"
                         />
+                        <Button 
+                          type="button"
+                          variant="outline"
+                          className="px-3 border-r-0 rounded-none"
+                          onClick={() => setShowHotmartSecret(!showHotmartSecret)}
+                        >
+                          {showHotmartSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
                         <Button 
                           type="button" 
                           variant="secondary" 
