@@ -6648,6 +6648,232 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Rotas para gerenciamento de mapeamentos de produtos Hotmart
+  
+  // Obter todos os mapeamentos de produtos
+  app.get('/api/hotmart/product-mappings', isAdmin, async (req, res) => {
+    try {
+      // Buscar todos os mapeamentos da tabela
+      const mappings = await db.select().from(schema.hotmartProductMappings).orderBy(schema.hotmartProductMappings.productName);
+      
+      res.status(200).json({ 
+        success: true,
+        mappings
+      });
+    } catch (error) {
+      console.error('Erro ao buscar mapeamentos de produtos da Hotmart:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Erro ao buscar mapeamentos de produtos', 
+        error: error.message 
+      });
+    }
+  });
+  
+  // Adicionar novo mapeamento de produto
+  app.post('/api/hotmart/product-mappings', isAdmin, async (req, res) => {
+    try {
+      const { productName, planType, durationDays, isLifetime } = req.body;
+      
+      if (!productName || !planType) {
+        return res.status(400).json({ 
+          success: false,
+          message: 'Nome do produto e tipo de plano são obrigatórios'
+        });
+      }
+      
+      // Verificar se já existe um mapeamento com o mesmo nome de produto
+      const existingMapping = await db.select().from(schema.hotmartProductMappings)
+        .where(eq(schema.hotmartProductMappings.productName, productName))
+        .limit(1);
+      
+      if (existingMapping.length > 0) {
+        return res.status(400).json({ 
+          success: false,
+          message: 'Já existe um mapeamento para este produto'
+        });
+      }
+      
+      // Criar novo mapeamento
+      const [newMapping] = await db.insert(schema.hotmartProductMappings)
+        .values({
+          productName,
+          planType,
+          durationDays: isLifetime ? null : durationDays,
+          isLifetime: !!isLifetime
+        })
+        .returning();
+      
+      console.log(`Novo mapeamento de produto Hotmart criado por ${req.user?.username}:`, newMapping);
+      
+      res.status(201).json({ 
+        success: true,
+        message: 'Mapeamento de produto criado com sucesso',
+        mapping: newMapping
+      });
+    } catch (error) {
+      console.error('Erro ao criar mapeamento de produto da Hotmart:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Erro ao criar mapeamento de produto', 
+        error: error.message 
+      });
+    }
+  });
+  
+  // Atualizar mapeamento de produto existente
+  app.put('/api/hotmart/product-mappings/:id', isAdmin, async (req, res) => {
+    try {
+      const mappingId = parseInt(req.params.id);
+      const { productName, planType, durationDays, isLifetime } = req.body;
+      
+      if (!productName || !planType) {
+        return res.status(400).json({ 
+          success: false,
+          message: 'Nome do produto e tipo de plano são obrigatórios'
+        });
+      }
+      
+      // Verificar se o mapeamento existe
+      const existingMapping = await db.select().from(schema.hotmartProductMappings)
+        .where(eq(schema.hotmartProductMappings.id, mappingId))
+        .limit(1);
+      
+      if (existingMapping.length === 0) {
+        return res.status(404).json({ 
+          success: false,
+          message: 'Mapeamento não encontrado'
+        });
+      }
+      
+      // Verificar se o novo nome já existe em outro mapeamento
+      if (productName !== existingMapping[0].productName) {
+        const duplicateProduct = await db.select().from(schema.hotmartProductMappings)
+          .where(eq(schema.hotmartProductMappings.productName, productName))
+          .limit(1);
+        
+        if (duplicateProduct.length > 0) {
+          return res.status(400).json({ 
+            success: false,
+            message: 'Já existe outro mapeamento com este nome de produto'
+          });
+        }
+      }
+      
+      // Atualizar o mapeamento
+      const [updatedMapping] = await db.update(schema.hotmartProductMappings)
+        .set({
+          productName,
+          planType,
+          durationDays: isLifetime ? null : durationDays,
+          isLifetime: !!isLifetime,
+          updatedAt: new Date()
+        })
+        .where(eq(schema.hotmartProductMappings.id, mappingId))
+        .returning();
+      
+      console.log(`Mapeamento de produto Hotmart atualizado por ${req.user?.username}:`, updatedMapping);
+      
+      res.status(200).json({ 
+        success: true,
+        message: 'Mapeamento de produto atualizado com sucesso',
+        mapping: updatedMapping
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar mapeamento de produto da Hotmart:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Erro ao atualizar mapeamento de produto', 
+        error: error.message 
+      });
+    }
+  });
+  
+  // Alternar estado ativo/inativo de um mapeamento
+  app.patch('/api/hotmart/product-mappings/:id/toggle', isAdmin, async (req, res) => {
+    try {
+      const mappingId = parseInt(req.params.id);
+      
+      // Verificar se o mapeamento existe
+      const existingMapping = await db.select().from(schema.hotmartProductMappings)
+        .where(eq(schema.hotmartProductMappings.id, mappingId))
+        .limit(1);
+      
+      if (existingMapping.length === 0) {
+        return res.status(404).json({ 
+          success: false,
+          message: 'Mapeamento não encontrado'
+        });
+      }
+      
+      // Inverter o status atual
+      const currentStatus = existingMapping[0].isActive;
+      
+      // Atualizar o status
+      const [updatedMapping] = await db.update(schema.hotmartProductMappings)
+        .set({
+          isActive: !currentStatus,
+          updatedAt: new Date()
+        })
+        .where(eq(schema.hotmartProductMappings.id, mappingId))
+        .returning();
+      
+      console.log(`Status do mapeamento de produto Hotmart alterado por ${req.user?.username}:`, 
+                 `ID ${mappingId}, Novo status: ${!currentStatus ? 'ativo' : 'inativo'}`);
+      
+      res.status(200).json({ 
+        success: true,
+        message: `Mapeamento ${!currentStatus ? 'ativado' : 'desativado'} com sucesso`,
+        mapping: updatedMapping
+      });
+    } catch (error) {
+      console.error('Erro ao alternar status do mapeamento de produto:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Erro ao alternar status do mapeamento', 
+        error: error.message 
+      });
+    }
+  });
+  
+  // Excluir mapeamento de produto
+  app.delete('/api/hotmart/product-mappings/:id', isAdmin, async (req, res) => {
+    try {
+      const mappingId = parseInt(req.params.id);
+      
+      // Verificar se o mapeamento existe
+      const existingMapping = await db.select().from(schema.hotmartProductMappings)
+        .where(eq(schema.hotmartProductMappings.id, mappingId))
+        .limit(1);
+      
+      if (existingMapping.length === 0) {
+        return res.status(404).json({ 
+          success: false,
+          message: 'Mapeamento não encontrado'
+        });
+      }
+      
+      // Excluir o mapeamento
+      await db.delete(schema.hotmartProductMappings)
+        .where(eq(schema.hotmartProductMappings.id, mappingId));
+      
+      console.log(`Mapeamento de produto Hotmart excluído por ${req.user?.username}:`, 
+                 `ID ${mappingId}, Produto: ${existingMapping[0].productName}`);
+      
+      res.status(200).json({ 
+        success: true,
+        message: 'Mapeamento de produto excluído com sucesso'
+      });
+    } catch (error) {
+      console.error('Erro ao excluir mapeamento de produto:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Erro ao excluir mapeamento de produto', 
+        error: error.message 
+      });
+    }
+  });
+  
   // Endpoint de teste para verificar conexão com a API da Hotmart
   app.get('/api/test-hotmart-connection', isAdmin, async (req, res) => {
     try {

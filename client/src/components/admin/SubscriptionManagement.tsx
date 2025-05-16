@@ -128,6 +128,18 @@ interface SecretKeyInfo {
   realValue?: string;
 }
 
+// Interface para mapeamento de produtos da Hotmart
+interface ProductMapping {
+  id: number;
+  productName: string;
+  planType: string;
+  durationDays: number | null;
+  isLifetime: boolean;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Interface principal para configurações de integração
 interface IntegrationSettings {
   hotmart?: {
