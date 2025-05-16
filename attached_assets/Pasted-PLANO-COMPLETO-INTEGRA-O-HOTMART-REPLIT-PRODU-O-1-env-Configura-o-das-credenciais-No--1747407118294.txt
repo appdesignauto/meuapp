@@ -1,0 +1,153 @@
+PLANO COMPLETO: INTEGRAÇÃO HOTMART + REPLIT (PRODUÇÃO)
+📁 1. .env — Configuração das credenciais
+No Replit, adicione no arquivo .env:
+
+env
+Copiar
+Editar
+HOTMART_SECRET=seu_hottok_da_hotmart
+HOTMART_CLIENT_ID=seu_client_id
+HOTMART_CLIENT_SECRET=seu_client_secret
+❌ Não coloque URL de webhook nem Basic Auth no .env
+
+🧠 2. utils/hotmart.js — Função para obter token da API
+js
+Copiar
+Editar
+// utils/hotmart.js
+const axios = require("axios");
+
+async function getHotmartToken() {
+  const basicAuth = Buffer.from(
+    `${process.env.HOTMART_CLIENT_ID}:${process.env.HOTMART_CLIENT_SECRET}`
+  ).toString("base64");
+
+  try {
+    const response = await axios.post(
+      "https://api-hot-connect.hotmart.com/security/oauth/token",
+      "grant_type=client_credentials",
+      {
+        headers: {
+          Authorization: `Basic ${basicAuth}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      }
+    );
+    return response.data.access_token;
+  } catch (err) {
+    console.error("Erro ao obter token da Hotmart:", err.response?.data || err.message);
+    throw new Error("Falha ao gerar token da Hotmart");
+  }
+}
+
+module.exports = { getHotmartToken };
+🌐 3. routes/webhook.js — Rota para receber notificações
+js
+Copiar
+Editar
+// routes/webhook.js
+const express = require("express");
+const crypto = require("crypto");
+const router = express.Router();
+const db = require("../db"); // ajuste ao seu banco
+const { logWebhook } = require("../utils/logger");
+
+router.post("/hotmart", express.json(), async (req, res) => {
+  try {
+    const receivedSignature = req.headers["x-hotmart-hottok"];
+    const body = JSON.stringify(req.body);
+    const calculatedSignature = crypto
+      .createHmac("sha256", process.env.HOTMART_SECRET)
+      .update(body)
+      .digest("hex");
+
+    if (receivedSignature !== calculatedSignature) {
+      return res.status(403).send("Assinatura inválida");
+    }
+
+    const payload = req.body;
+    const email = payload?.buyer?.email;
+    const status = payload?.subscription?.status;
+    const hotmart_id = payload?.subscription?.purchase?.id;
+
+    await logWebhook("hotmart", payload); // opcional para histórico
+
+    if (!email) return res.status(400).send("E-mail ausente");
+
+    if (status === "active") {
+      await db.query(
+        "UPDATE users SET plan = 'premium', plan_expiration = NOW() + interval '30 days', hotmart_purchase_id = $2 WHERE email = $1",
+        [email, hotmart_id]
+      );
+    } else if (["canceled", "expired", "refunded"].includes(status)) {
+      await db.query(
+        "UPDATE users SET plan = 'free', plan_expiration = NULL WHERE email = $1",
+        [email]
+      );
+    }
+
+    res.send("OK");
+  } catch (err) {
+    console.error("Erro no webhook Hotmart:", err);
+    res.status(500).send("Erro interno");
+  }
+});
+
+module.exports = router;
+📊 4. utils/logger.js — Logger opcional para auditoria
+js
+Copiar
+Editar
+const fs = require("fs");
+const path = require("path");
+
+function logWebhook(origin, payload) {
+  const logPath = path.join(__dirname, "..", "webhook-logs.json");
+  const logs = fs.existsSync(logPath) ? JSON.parse(fs.readFileSync(logPath)) : [];
+  logs.push({ origin, timestamp: new Date().toISOString(), payload });
+  fs.writeFileSync(logPath, JSON.stringify(logs, null, 2));
+}
+
+module.exports = { logWebhook };
+🛠️ 5. server.js — Entradas no servidor principal
+js
+Copiar
+Editar
+const express = require("express");
+require("dotenv").config();
+
+const app = express();
+const port = process.env.PORT || 3000;
+
+const webhookRoutes = require("./routes/webhook");
+app.use("/webhook", webhookRoutes);
+
+app.get("/", (req, res) => res.send("DesignAuto API rodando 🚀"));
+app.listen(port, () => console.log(`Servidor rodando na porta ${port}`));
+🧪 6. Painel → Botão "Testar Conexão com Hotmart"
+Acione manualmente a função getHotmartToken() do hotmart.js. Se receber token com sucesso, está funcionando.
+
+Exemplo:
+
+js
+Copiar
+Editar
+const { getHotmartToken } = require("./utils/hotmart");
+
+app.get("/testar-hotmart", async (req, res) => {
+  try {
+    const token = await getHotmartToken();
+    res.send(`Token gerado com sucesso: ${token.slice(0, 15)}...`);
+  } catch (err) {
+    res.status(500).send("Falha na conexão com a Hotmart");
+  }
+});
+✅ 7. Checklist final para produção
+Etapa	Status
+🔐 Variáveis de ambiente definidas	✅
+🌐 URL do webhook cadastrada na Hotmart	✅
+🧠 Token sendo gerado com sucesso	✅
+🔁 Webhooks validados com Hottok	✅
+📦 Banco de dados atualizando planos	✅
+📊 Logs sendo gravados (opcional)	✅
+⚙️ Sandbox desativado no ambiente de produção	✅

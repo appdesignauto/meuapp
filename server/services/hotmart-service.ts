@@ -39,12 +39,10 @@ export class HotmartService {
   static async testConnection(): Promise<{ success: boolean; message: string; details?: any }> {
     console.log('Testando conexão com a API da Hotmart...');
     console.log(`Ambiente: ${this.baseUrl.includes('sandbox') ? 'Sandbox' : 'Produção'}`);
-    console.log(`Client ID: ${this.clientId.substring(0, 10)}...`);
-    console.log(`Client Secret: ${this.clientSecret.substring(0, 10)}...`);
     
     try {
-      // Teste 1: Obter token de acesso
-      console.log('Passo 1: Tentando obter token de acesso...');
+      // Passo 1: Tentar obter token de acesso
+      console.log('Passo 1: Obtendo token de acesso...');
       const token = await this.getAccessToken();
       
       if (!token) {
@@ -54,77 +52,47 @@ export class HotmartService {
         };
       }
       
-      console.log(`Token obtido com sucesso! (primeiros 10 caracteres): ${token.substring(0, 10)}...`);
+      console.log(`Token obtido com sucesso! ${token.substring(0, 10)}...`);
       
-      // Teste 2: Fazer uma chamada simples para verificar o token
-      console.log('Passo 2: Testando chamada simples à API...');
-      try {
-        const testUrl = `${this.baseUrl}/payments/api/v1/sales?max_results=1`;
-        console.log(`URL de teste: ${testUrl}`);
-        
-        const response = await fetch(testUrl, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json'
+      // Passo 2: Fazer uma chamada simples para verificar o token
+      console.log('Passo 2: Testando acesso à API...');
+      
+      // URL para listar 1 venda (endpoint básico)
+      const testUrl = `${this.baseUrl}/payments/api/v1/sales?max_results=1`;
+      
+      const response = await fetch(testUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        return {
+          success: true,
+          message: "✅ Conexão com a API da Hotmart estabelecida com sucesso!",
+          details: {
+            token_preview: token.substring(0, 10) + "...",
+            environment: this.baseUrl.includes('sandbox') ? 'Sandbox' : 'Produção'
           }
-        });
-        
-        const responseStatus = response.status;
-        console.log(`Status da resposta: ${responseStatus}`);
-        
-        // Captura o texto da resposta para análise
+        };
+      } else {
         const responseText = await response.text();
-        console.log(`Corpo da resposta (primeiros 200 caracteres): ${responseText.substring(0, 200)}`);
-        
-        let responseData;
-        try {
-          // Tenta parsear a resposta como JSON
-          responseData = JSON.parse(responseText);
-        } catch (e) {
-          responseData = { rawResponse: responseText };
-        }
-        
-        if (response.ok) {
-          return {
-            success: true,
-            message: "✅ Conexão com a API da Hotmart estabelecida com sucesso!",
-            details: {
-              token: token.substring(0, 15) + "...",
-              endpoint: testUrl,
-              status: responseStatus,
-              data: responseData
-            }
-          };
-        } else {
-          // Se conseguimos token mas a API retornou erro
-          return {
-            success: false,
-            message: `Token obtido com sucesso, mas a API retornou erro: ${responseStatus}. Isso pode indicar problemas com permissões ou escopo do token.`,
-            details: {
-              token: token.substring(0, 15) + "...",
-              endpoint: testUrl,
-              status: responseStatus,
-              error: responseData
-            }
-          };
-        }
-      } catch (apiError) {
-        // Erro ao chamar a API
-        console.error("Erro ao chamar API da Hotmart:", apiError);
         return {
           success: false,
-          message: `Token obtido com sucesso, mas ocorreu um erro ao testar a API: ${apiError instanceof Error ? apiError.message : 'Erro desconhecido'}`,
-          details: { 
-            token: token.substring(0, 15) + "...",
-            error: apiError instanceof Error ? apiError.message : 'Erro desconhecido'
+          message: `Token obtido com sucesso, mas a API retornou erro ${response.status}. Verifique as permissões da aplicação.`,
+          details: {
+            status: response.status,
+            error: responseText.substring(0, 100)
           }
         };
       }
     } catch (error) {
-      // Erro ao obter token
+      // Qualquer erro durante o processo
       console.error("Erro ao testar conexão com a Hotmart:", error);
       const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
+      
       return { 
         success: false, 
         message: `❌ Falha na conexão com a API da Hotmart: ${errorMessage}`,
@@ -151,113 +119,68 @@ export class HotmartService {
     }
     
     try {
-      // Log para debug
-      console.log(`[getAccessToken] Tentando obter token da Hotmart no URL: ${this.baseUrl}, ambiente: ${this.baseUrl.includes('sandbox') ? 'Sandbox' : 'Produção'}`);
+      console.log(`[getAccessToken] Tentando obter token da Hotmart no ambiente: ${this.baseUrl.includes('sandbox') ? 'Sandbox' : 'Produção'}`);
       
-      let tokenUrl = '';
-      let headers = {};
-      let requestBody = '';
-      
-      // Cria o Basic Auth token
+      // Cria o Basic Auth token (ClientID:ClientSecret em base64)
       const basicAuth = Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64');
       
-      // Configuração unificada para ambos ambientes
-      if (this.baseUrl.includes('sandbox')) {
-        tokenUrl = `${this.baseUrl}/oauth/token`;
-      } else {
-        tokenUrl = `${this.baseUrl}/security/oauth/token`;
-      }
+      // Define a URL do token baseada no ambiente
+      const tokenUrl = this.baseUrl.includes('sandbox') 
+        ? `${this.baseUrl}/oauth/token`
+        : `${this.baseUrl}/security/oauth/token`;
       
-      // TENTATIVA ALTERNATIVA: Enviando Basic Auth no header
-      headers = {
+      // Define os headers com Basic Auth
+      const headers = {
+        'Authorization': `Basic ${basicAuth}`,
         'Content-Type': 'application/x-www-form-urlencoded',
-        'Accept': 'application/json',
-        'Authorization': `Basic ${basicAuth}`
+        'Accept': 'application/json'
       };
       
-      // Corpo contém apenas grant_type=client_credentials
-      requestBody = 'grant_type=client_credentials';
+      // Corpo da requisição com APENAS grant_type=client_credentials
+      const requestBody = 'grant_type=client_credentials';
       
-      console.log(`[getAccessToken] TENTATIVA #1: Basic Auth no header + grant_type no body`);
-      console.log(`[getAccessToken] Token URL: ${tokenUrl}`);
-      console.log(`[getAccessToken] Credenciais - ClientId: ${this.clientId.substring(0, 4)}..., ClientSecret: ${this.clientSecret.substring(0, 4)}...`);
-      console.log(`[getAccessToken] Basic Auth token (primeiros 10 caracteres): ${basicAuth.substring(0, 10)}...`);
-      console.log(`[getAccessToken] Corpo da requisição: ${requestBody}`);
+      console.log(`[getAccessToken] URL: ${tokenUrl}`);
+      console.log(`[getAccessToken] BasicAuth: ${basicAuth.substring(0, 10)}...`);
       
       try {
-        // Log detalhado das informações da requisição para diagnóstico
-        console.log(`[getAccessToken] Iniciando requisição para ${tokenUrl}`);
-        console.log(`[getAccessToken] Headers: ${JSON.stringify(headers)}`);
-        console.log(`[getAccessToken] Body: ${requestBody}`);
-        
+        // Fazendo requisição para obter o token
         const response = await fetch(tokenUrl, {
           method: 'POST',
           headers: headers,
           body: requestBody
         });
         
-        // Obter dados da resposta
         const responseStatus = response.status;
-        const responseHeaders = Object.fromEntries(response.headers.entries());
         const responseText = await response.text();
         
-        console.log(`[getAccessToken] Resposta recebida - Status: ${responseStatus}`);
-        console.log(`[getAccessToken] Headers da resposta: ${JSON.stringify(responseHeaders)}`);
-        console.log(`[getAccessToken] Corpo da resposta (até 300 chars): ${responseText.substring(0, 300)}`);
+        // Log básico da resposta para diagnóstico
+        console.log(`[getAccessToken] Resposta - Status: ${responseStatus}`);
         
         if (!response.ok) {
-          // Tenta extrair mensagens úteis do texto de resposta
-          let errorMessage = responseText;
-          
-          // Tenta processar resposta JSON para erro
-          try {
-            if (responseHeaders['content-type']?.includes('application/json')) {
-              const jsonError = JSON.parse(responseText);
-              if (jsonError.error_description) {
-                errorMessage = jsonError.error_description;
-              } else if (jsonError.message) {
-                errorMessage = jsonError.message;
-              }
-            }
-          } catch (jsonParseError) {
-            console.error('[getAccessToken] Erro ao analisar JSON de erro:', jsonParseError);
-          }
-          
-          console.error(`[getAccessToken] Erro na resposta Hotmart: Status ${responseStatus} - ${errorMessage}`);
-          throw new Error(`Erro ao obter token Hotmart: ${responseStatus} ${errorMessage}`);
+          console.error(`[getAccessToken] Erro na resposta: ${responseText.substring(0, 200)}`);
+          throw new Error(`Falha na autenticação com a Hotmart: ${responseStatus}`);
         }
         
         // Processa resposta bem-sucedida
         try {
           const data = JSON.parse(responseText);
-          console.log('[getAccessToken] Resposta da API processada com sucesso:', 
-            JSON.stringify({
-              token_type: data.token_type,
-              expires_in: data.expires_in,
-              access_token: data.access_token ? `${data.access_token.substring(0, 15)}...` : 'indefinido'
-            }));
           
           // Armazena o token e calcula a expiração (subtraindo 5 minutos por segurança)
           this.accessToken = data.access_token;
           this.tokenExpiration = now + (data.expires_in * 1000) - (5 * 60 * 1000);
           
-          console.log('[getAccessToken] Token da Hotmart obtido com sucesso!');
+          console.log(`[getAccessToken] Token obtido com sucesso! Token: ${this.accessToken.substring(0, 15)}...`);
           return this.accessToken;
         } catch (parseError) {
-          console.error('[getAccessToken] Erro ao processar resposta JSON:', parseError);
-          throw new Error(`Resposta inválida da API Hotmart: ${responseText}`);
+          console.error('[getAccessToken] Erro ao processar resposta JSON');
+          throw new Error(`Resposta inválida da API Hotmart`);
         }
       } catch (fetchError) {
-        console.error('[getAccessToken] Erro na requisição para a API Hotmart:', fetchError);
-        // Verificações específicas para erros de rede
-        const message = fetchError instanceof Error ? fetchError.message : String(fetchError);
-        if (message.includes('ENOTFOUND') || message.includes('getaddrinfo')) {
-          throw new Error(`Erro de conexão: Não foi possível conectar ao servidor ${this.baseUrl}. Verifique a URL e sua conexão com a internet.`);
-        }
-        throw fetchError;
+        console.error('[getAccessToken] Erro na requisição:', fetchError);
+        throw new Error(`Erro de conexão com API da Hotmart`);
       }
     } catch (error) {
-      console.error('[getAccessToken] Erro ao autenticar na API da Hotmart:', error);
+      console.error('[getAccessToken] Falha na autenticação:', error);
       throw error;
     }
   }
