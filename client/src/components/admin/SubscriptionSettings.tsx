@@ -51,7 +51,15 @@ import {
   BadgeDollarSign,
   Bell,
   CreditCard,
-  Copy
+  Copy,
+  XCircle,
+  Mail,
+  Lock,
+  Code,
+  FileText,
+  UserPlus,
+  LayoutDashboard,
+  KeyRound
 } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
