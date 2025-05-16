@@ -1,15 +1,20 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
+import { useToast } from '@/hooks/use-toast';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -18,44 +23,49 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { useForm } from 'react-hook-form';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { useToast } from "@/hooks/use-toast";
-import { 
-  Plus, 
-  Loader2, 
-  Trash2, 
-  Edit, 
-  Database, 
-  InformationCircle 
-} from "lucide-react";
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Loader2, Plus, Trash2, FileEdit, Info, Check, X } from 'lucide-react';
 
-// Interface para o mapeamento de produtos
 interface ProductMapping {
   id: number;
   productName: string;
   planType: string;
-  durationDays: number;
+  durationDays: number | null;
   isLifetime: boolean;
-  createdAt?: Date;
-  updatedAt?: Date;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export function HotmartProductMapping() {
-  // Estados para gerenciamento dos mapeamentos
+interface HotmartProductMappingProps {
+  standalone?: boolean;
+}
+
+export default function HotmartProductMapping({ standalone = false }: HotmartProductMappingProps) {
+  const { toast } = useToast();
   const [productMappings, setProductMappings] = useState<ProductMapping[]>([]);
   const [isLoadingMappings, setIsLoadingMappings] = useState(false);
-  const [showProductMappingDialog, setShowProductMappingDialog] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [mappingToDelete, setMappingToDelete] = useState<ProductMapping | null>(null);
+  const [showMappingDialog, setShowMappingDialog] = useState(false);
   const [editingMapping, setEditingMapping] = useState<ProductMapping | null>(null);
   const [mappingFormData, setMappingFormData] = useState({
     productName: '',
@@ -64,13 +74,10 @@ export function HotmartProductMapping() {
     isLifetime: false
   });
 
-  const { toast } = useToast();
-
-  // Função para buscar os mapeamentos existentes
+  // Buscar mapeamentos de produtos ao carregar o componente
   const fetchProductMappings = useCallback(async () => {
     try {
       setIsLoadingMappings(true);
-      
       const response = await fetch('/api/integrations/hotmart/product-mappings');
       
       if (!response.ok) {
@@ -91,326 +98,378 @@ export function HotmartProductMapping() {
     }
   }, [toast]);
 
-  // Carrega os mapeamentos ao inicializar o componente
-  useEffect(() => {
-    fetchProductMappings();
-  }, [fetchProductMappings]);
-
   // Função para abrir o diálogo de adição de mapeamento
   const openAddMappingDialog = () => {
-    setEditingMapping(null);
     setMappingFormData({
       productName: '',
       planType: 'premium',
       durationDays: 30,
       isLifetime: false
     });
-    setShowProductMappingDialog(true);
+    setEditingMapping(null);
+    setShowMappingDialog(true);
   };
 
-  // Função para editar um mapeamento existente
-  const handleEditMapping = (mapping: ProductMapping) => {
-    setEditingMapping(mapping);
+  // Função para abrir o diálogo de edição de mapeamento
+  const openEditMappingDialog = (mapping: ProductMapping) => {
     setMappingFormData({
       productName: mapping.productName,
       planType: mapping.planType,
-      durationDays: mapping.durationDays,
+      durationDays: mapping.durationDays || 30,
       isLifetime: mapping.isLifetime
     });
-    setShowProductMappingDialog(true);
+    setEditingMapping(mapping);
+    setShowMappingDialog(true);
   };
 
-  // Função para confirmar a exclusão de um mapeamento
-  const confirmDeleteMapping = (mapping: ProductMapping) => {
-    setMappingToDelete(mapping);
-    setShowDeleteDialog(true);
-  };
-
-  // Função para adicionar um novo mapeamento
-  const handleAddMapping = async () => {
+  // Função para salvar um mapeamento (novo ou existente)
+  const handleSaveMapping = async () => {
     try {
-      const response = await fetch('/api/integrations/hotmart/product-mappings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(mappingFormData)
-      });
-
-      if (!response.ok) {
-        throw new Error('Falha ao adicionar mapeamento');
+      const payload = {
+        ...mappingFormData,
+        durationDays: mappingFormData.isLifetime ? 0 : mappingFormData.durationDays
+      };
+      
+      let response;
+      
+      if (editingMapping) {
+        // Atualizar mapeamento existente
+        response = await fetch(`/api/integrations/hotmart/product-mappings/${editingMapping.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+      } else {
+        // Criar novo mapeamento
+        response = await fetch('/api/integrations/hotmart/product-mappings', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
       }
-
-      // Recarregar a lista de mapeamentos
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Falha ao salvar mapeamento');
+      }
+      
+      // Atualizar lista de mapeamentos
       await fetchProductMappings();
       
-      // Fechar o diálogo e limpar o formulário
-      setShowProductMappingDialog(false);
-      setMappingFormData({
-        productName: '',
-        planType: 'premium',
-        durationDays: 30,
-        isLifetime: false
-      });
-
-      toast({
-        title: "Mapeamento adicionado",
-        description: `O mapeamento para "${mappingFormData.productName}" foi adicionado com sucesso.`,
-      });
-    } catch (error) {
-      console.error('Erro ao adicionar mapeamento:', error);
-      toast({
-        title: "Erro ao adicionar mapeamento",
-        description: "Não foi possível adicionar o mapeamento de produto.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Função para atualizar um mapeamento existente
-  const handleUpdateMapping = async () => {
-    if (!editingMapping) return;
-
-    try {
-      const response = await fetch(`/api/integrations/hotmart/product-mappings/${editingMapping.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(mappingFormData)
-      });
-
-      if (!response.ok) {
-        throw new Error('Falha ao atualizar mapeamento');
-      }
-
-      // Recarregar a lista de mapeamentos
-      await fetchProductMappings();
+      // Fechar o diálogo
+      setShowMappingDialog(false);
       
-      // Fechar o diálogo e limpar o estado de edição
-      setShowProductMappingDialog(false);
-      setEditingMapping(null);
-
+      // Exibir mensagem de sucesso
       toast({
-        title: "Mapeamento atualizado",
-        description: `O mapeamento para "${mappingFormData.productName}" foi atualizado com sucesso.`,
+        title: editingMapping ? "Mapeamento atualizado" : "Mapeamento criado",
+        description: editingMapping
+          ? "O mapeamento de produto foi atualizado com sucesso."
+          : "Um novo mapeamento de produto foi criado com sucesso.",
+        variant: "default",
       });
-    } catch (error) {
-      console.error('Erro ao atualizar mapeamento:', error);
+    } catch (error: any) {
+      console.error('Erro ao salvar mapeamento:', error);
       toast({
-        title: "Erro ao atualizar mapeamento",
-        description: "Não foi possível atualizar o mapeamento de produto.",
+        title: "Erro ao salvar mapeamento",
+        description: error.message || "Não foi possível salvar o mapeamento de produto.",
         variant: "destructive",
       });
     }
   };
 
   // Função para excluir um mapeamento
-  const handleDeleteMapping = async () => {
-    if (!mappingToDelete) return;
-
+  const handleDeleteMapping = async (mapping: ProductMapping) => {
+    if (!confirm(`Tem certeza que deseja excluir o mapeamento para "${mapping.productName}"?`)) {
+      return;
+    }
+    
     try {
-      const response = await fetch(`/api/integrations/hotmart/product-mappings/${mappingToDelete.id}`, {
+      const response = await fetch(`/api/integrations/hotmart/product-mappings/${mapping.id}`, {
         method: 'DELETE'
       });
-
+      
       if (!response.ok) {
-        throw new Error('Falha ao excluir mapeamento');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Falha ao excluir mapeamento');
       }
-
-      // Fechar o diálogo de confirmação
-      setShowDeleteDialog(false);
-      setMappingToDelete(null);
-
-      // Atualizar a lista de mapeamentos
+      
+      // Atualizar lista de mapeamentos
       await fetchProductMappings();
       
+      // Exibir mensagem de sucesso
       toast({
         title: "Mapeamento excluído",
-        description: `O mapeamento para "${mappingToDelete.productName}" foi excluído com sucesso.`,
+        description: "O mapeamento de produto foi excluído com sucesso.",
+        variant: "default",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao excluir mapeamento:', error);
       toast({
         title: "Erro ao excluir mapeamento",
-        description: "Não foi possível excluir o mapeamento de produto.",
+        description: error.message || "Não foi possível excluir o mapeamento de produto.",
         variant: "destructive",
       });
     }
   };
 
-  return (
-    <div>
-      <div className="border rounded-lg p-4">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-md font-semibold">Mapeamento de Produtos Hotmart</h3>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={openAddMappingDialog}
-          >
+  // Função para ativar/desativar um mapeamento
+  const handleToggleMappingStatus = async (mapping: ProductMapping) => {
+    try {
+      const response = await fetch(`/api/integrations/hotmart/product-mappings/${mapping.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...mapping,
+          isActive: !mapping.isActive
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Falha ao alterar status do mapeamento');
+      }
+      
+      // Atualizar lista de mapeamentos
+      await fetchProductMappings();
+      
+      // Exibir mensagem de sucesso
+      toast({
+        title: "Status alterado",
+        description: `O mapeamento agora está ${!mapping.isActive ? 'ativo' : 'inativo'}.`,
+        variant: "default",
+      });
+    } catch (error: any) {
+      console.error('Erro ao alterar status do mapeamento:', error);
+      toast({
+        title: "Erro ao alterar status",
+        description: error.message || "Não foi possível alterar o status do mapeamento.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Carregar mapeamentos ao montar o componente
+  useEffect(() => {
+    fetchProductMappings();
+  }, [fetchProductMappings]);
+
+  // Renderizar card ou conteúdo direto com base na prop standalone
+  const renderContent = () => (
+    <div className="space-y-4">
+      <div className="flex items-end justify-between mb-4">
+        <div>
+          <p className="text-sm text-muted-foreground max-w-prose">
+            Configure como os produtos da Hotmart serão convertidos em assinaturas no DesignAuto.
+            O sistema utilizará estes mapeamentos ao processar notificações de compra.
+          </p>
+        </div>
+        <Button onClick={openAddMappingDialog} size="sm">
+          <Plus className="h-4 w-4 mr-2" />
+          Adicionar mapeamento
+        </Button>
+      </div>
+      
+      {isLoadingMappings ? (
+        <div className="flex justify-center items-center py-10">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : productMappings.length === 0 ? (
+        <div className="bg-muted/50 border rounded-md p-6 text-center">
+          <div className="text-muted-foreground mb-2">
+            Nenhum mapeamento configurado
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Adicione mapeamentos para que o sistema saiba como converter as compras da Hotmart em assinaturas.
+          </p>
+          <Button onClick={openAddMappingDialog} variant="outline" size="sm">
             <Plus className="h-4 w-4 mr-2" />
-            Adicionar
+            Configurar Mapeamento
           </Button>
         </div>
-        
-        {isLoadingMappings ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : productMappings.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <Database className="h-10 w-10 mx-auto mb-2 opacity-30" />
-            <p>Nenhum mapeamento de produto configurado</p>
-            <p className="text-xs mt-1">Adicione mapeamentos para conectar produtos Hotmart com planos DesignAuto</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {productMappings.map((mapping) => (
-              <div key={mapping.id} className="border rounded-md p-3 flex justify-between items-center">
-                <div>
-                  <div className="font-medium">{mapping.productName}</div>
-                  <div className="text-sm text-muted-foreground">
-                    Plano: {mapping.planType === 'premium' ? 'Premium' : mapping.planType} • 
+      ) : (
+        <div className="border rounded-lg overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[250px]">Produto Hotmart</TableHead>
+                <TableHead>Plano no DesignAuto</TableHead>
+                <TableHead>Duração</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {productMappings.map((mapping) => (
+                <TableRow key={mapping.id}>
+                  <TableCell className="font-medium">
+                    {mapping.productName}
+                  </TableCell>
+                  <TableCell>
+                    {mapping.planType === 'premium' ? 'Premium' : 
+                     mapping.planType === 'pro' ? 'Profissional' : 
+                     mapping.planType === 'basic' ? 'Básico' : mapping.planType}
+                  </TableCell>
+                  <TableCell>
                     {mapping.isLifetime ? (
-                      <span className="text-green-600 ml-1">Vitalício</span>
+                      <span className="text-sm bg-purple-500/20 text-purple-700 dark:text-purple-300 px-2 py-1 rounded-full">
+                        Vitalício
+                      </span>
                     ) : (
-                      <span className="ml-1">Duração: {mapping.durationDays} dias</span>
+                      <span>{mapping.durationDays} dias</span>
                     )}
-                  </div>
-                </div>
-                <div className="flex space-x-2">
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => handleEditMapping(mapping)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="sm"
-                    className="text-red-500 hover:text-red-600"
-                    onClick={() => confirmDeleteMapping(mapping)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-        
-        <div className="mt-4 text-xs text-muted-foreground">
-          <InformationCircle className="h-4 w-4 inline-block mr-1" />
-          Os mapeamentos definem qual plano do DesignAuto será atribuído quando um cliente comprar um produto específico na Hotmart.
+                  </TableCell>
+                  <TableCell>
+                    {mapping.isActive ? (
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-700 dark:text-green-300">
+                        <Check className="w-3 h-3 mr-1" />
+                        Ativo
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+                        <X className="w-3 h-3 mr-1" />
+                        Inativo
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleToggleMappingStatus(mapping)}
+                        title={mapping.isActive ? "Desativar" : "Ativar"}
+                      >
+                        {mapping.isActive ? (
+                          <X className="h-4 w-4 text-gray-500" />
+                        ) : (
+                          <Check className="h-4 w-4 text-green-500" />
+                        )}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => openEditMappingDialog(mapping)}
+                        title="Editar"
+                      >
+                        <FileEdit className="h-4 w-4 text-gray-500" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteMapping(mapping)}
+                        title="Excluir"
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
-      </div>
+      )}
 
-      {/* Modal de Adição/Edição de Mapeamento */}
-      <Dialog open={showProductMappingDialog} onOpenChange={setShowProductMappingDialog}>
-        <DialogContent className="sm:max-w-[425px]">
+      {/* Diálogo para adicionar/editar mapeamento */}
+      <Dialog open={showMappingDialog} onOpenChange={setShowMappingDialog}>
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>{editingMapping ? 'Editar Mapeamento' : 'Adicionar Mapeamento'}</DialogTitle>
+            <DialogTitle>
+              {editingMapping ? "Editar mapeamento" : "Adicionar mapeamento"}
+            </DialogTitle>
             <DialogDescription>
-              Mapeie produtos da Hotmart para planos específicos no DesignAuto.
+              {editingMapping 
+                ? "Atualize os detalhes do mapeamento de produto da Hotmart."
+                : "Configure como um produto da Hotmart será mapeado no sistema."}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label htmlFor="productName">Nome do Produto Hotmart</Label>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="productName">Nome do Produto na Hotmart</Label>
               <Input
                 id="productName"
-                value={mappingFormData.productName}
-                onChange={(e) => setMappingFormData({...mappingFormData, productName: e.target.value})}
                 placeholder="Ex: Curso Design Auto"
+                value={mappingFormData.productName}
+                onChange={(e) => setMappingFormData({ ...mappingFormData, productName: e.target.value })}
               />
+              <p className="text-xs text-muted-foreground">
+                Digite o nome exato do produto como aparece na Hotmart
+              </p>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="planType">Tipo de Plano</Label>
-              <Select 
-                value={mappingFormData.planType} 
-                onValueChange={(value) => setMappingFormData({...mappingFormData, planType: value})}
+            <div className="grid gap-2">
+              <Label htmlFor="planType">Tipo de Plano no DesignAuto</Label>
+              <Select
+                value={mappingFormData.planType}
+                onValueChange={(value) => setMappingFormData({ ...mappingFormData, planType: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger id="planType">
                   <SelectValue placeholder="Selecione o tipo de plano" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="basic">Básico</SelectItem>
                   <SelectItem value="premium">Premium</SelectItem>
-                  <SelectItem value="designer">Designer</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="pro">Profissional</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Assinatura Vitalícia</Label>
-                <Switch 
-                  checked={mappingFormData.isLifetime}
-                  onCheckedChange={(checked) => setMappingFormData({...mappingFormData, isLifetime: checked})}
-                />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Se ativado, o acesso nunca expirará.
-              </p>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="isLifetime"
+                checked={mappingFormData.isLifetime}
+                onCheckedChange={(checked) => setMappingFormData({ ...mappingFormData, isLifetime: checked })}
+              />
+              <Label htmlFor="isLifetime">Acesso vitalício</Label>
             </div>
             
             {!mappingFormData.isLifetime && (
-              <div className="space-y-2">
-                <Label htmlFor="durationDays">Duração (em dias)</Label>
+              <div className="grid gap-2">
+                <Label htmlFor="durationDays">Duração (dias)</Label>
                 <Input
                   id="durationDays"
                   type="number"
                   min="1"
+                  placeholder="Ex: 30"
                   value={mappingFormData.durationDays}
-                  onChange={(e) => setMappingFormData({
-                    ...mappingFormData, 
-                    durationDays: parseInt(e.target.value) || 30
-                  })}
+                  onChange={(e) => setMappingFormData({ ...mappingFormData, durationDays: parseInt(e.target.value) || 0 })}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Duração da assinatura após a compra do produto.
-                </p>
               </div>
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowProductMappingDialog(false)}>
+            <Button variant="outline" onClick={() => setShowMappingDialog(false)}>
               Cancelar
             </Button>
-            <Button 
-              onClick={editingMapping ? handleUpdateMapping : handleAddMapping}
-              disabled={!mappingFormData.productName}
-            >
-              {editingMapping ? 'Atualizar' : 'Adicionar'}
+            <Button onClick={handleSaveMapping}>
+              {editingMapping ? "Salvar alterações" : "Adicionar mapeamento"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Modal de Confirmação de Exclusão */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir o mapeamento para "{mappingToDelete?.productName}"?
-              Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteMapping} className="bg-red-500 hover:bg-red-600">
-              Excluir
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
+
+  // Determinar se renderizar como card ou conteúdo direto
+  if (standalone) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Mapeamento de Produtos Hotmart</CardTitle>
+          <CardDescription>Configure como os produtos da Hotmart são mapeados no sistema</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {renderContent()}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return renderContent();
 }

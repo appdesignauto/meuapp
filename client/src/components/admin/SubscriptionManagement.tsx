@@ -269,15 +269,12 @@ export default function SubscriptionManagement() {
     timestamp: Date;
   } | null>(null);
   
-  // Os estados para gerenciamento de mapeamentos foram movidos para baixo
-  // para evitar duplicação
+  // Removendo estados duplicados para utilizar apenas os declarados mais abaixo
   
   // Função para buscar os mapeamentos de produtos Hotmart
   const fetchProductMappings = useCallback(async () => {
     try {
-      if (setIsLoadingMappings) {
-        setIsLoadingMappings(true);
-      }
+      setIsLoadingMappings(true);
       const response = await fetch('/api/integrations/hotmart/product-mappings');
       
       if (!response.ok) {
@@ -285,9 +282,7 @@ export default function SubscriptionManagement() {
       }
       
       const data = await response.json();
-      if (setProductMappings) {
-        setProductMappings(data);
-      }
+      setProductMappings(data);
     } catch (error) {
       console.error('Erro ao carregar mapeamentos:', error);
       toast({
@@ -296,11 +291,9 @@ export default function SubscriptionManagement() {
         variant: "destructive",
       });
     } finally {
-      if (setIsLoadingMappings) {
-        setIsLoadingMappings(false);
-      }
+      setIsLoadingMappings(false);
     }
-  }, [toast, setIsLoadingMappings, setProductMappings]);
+  }, [toast]);
 
   // Função para abrir o diálogo de adição de mapeamento
   const openAddMappingDialog = () => {
