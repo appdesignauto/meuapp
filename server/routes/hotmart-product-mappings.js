@@ -42,12 +42,13 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Nome do produto e tipo de plano são obrigatórios' });
     }
     
-    // Verificar se já existe um mapeamento com este nome de produto
+    // Verificar se já existe um mapeamento com esta combinação de produto e oferta
     const [existing] = await db.select().from(hotmartProductMappings)
-      .where(eq(hotmartProductMappings.productName, productName));
+      .where(eq(hotmartProductMappings.productId, productId))
+      .where(eq(hotmartProductMappings.offerId, offerId));
       
     if (existing) {
-      return res.status(409).json({ error: 'Já existe um mapeamento para este produto' });
+      return res.status(409).json({ error: 'Já existe um mapeamento para esta combinação de produto e oferta' });
     }
     
     // Inserir o novo mapeamento
@@ -88,13 +89,14 @@ router.put('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Mapeamento não encontrado' });
     }
     
-    // Verificar se outro mapeamento já usa este nome de produto
+    // Verificar se outro mapeamento já usa esta combinação de produto e oferta
     const [duplicate] = await db.select().from(hotmartProductMappings)
-      .where(eq(hotmartProductMappings.productName, productName))
+      .where(eq(hotmartProductMappings.productId, productId))
+      .where(eq(hotmartProductMappings.offerId, offerId))
       .where(e => e.ne(hotmartProductMappings.id, parseInt(id)));
       
     if (duplicate) {
-      return res.status(409).json({ error: 'Já existe outro mapeamento para este produto' });
+      return res.status(409).json({ error: 'Já existe outro mapeamento para esta combinação de produto e oferta' });
     }
     
     // Atualizar o mapeamento
