@@ -5681,6 +5681,138 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Endpoint para atualizar o Client ID da Doppus
+  app.post("/api/integrations/doppus/clientid", isAdmin, async (req, res) => {
+    try {
+      const { clientId } = req.body;
+      
+      if (!clientId || typeof clientId !== 'string') {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Client ID inválido" 
+        });
+      }
+
+      // Verificar se a configuração já existe no banco
+      const existingSettings = await pool.query(
+        `SELECT * FROM "integrationSettings" WHERE provider = 'doppus' AND key = 'clientId'`
+      );
+
+      const currentDate = new Date();
+      let result;
+
+      if (existingSettings.rows.length > 0) {
+        // Atualizar configuração existente
+        result = await pool.query(
+          `UPDATE "integrationSettings" 
+           SET value = $1, "updatedAt" = $2
+           WHERE provider = 'doppus' AND key = 'clientId'
+           RETURNING *`,
+          [clientId, currentDate]
+        );
+      } else {
+        // Criar nova configuração
+        result = await pool.query(
+          `INSERT INTO "integrationSettings" (provider, key, value, description, "isActive", "createdAt", "updatedAt")
+           VALUES ('doppus', 'clientId', $1, 'Client ID para autenticação OAuth2 com a Doppus', true, $2, $2)
+           RETURNING *`,
+          [clientId, currentDate]
+        );
+      }
+
+      const updatedSetting = result.rows[0];
+      
+      // Formatando o valor da mesma forma que é feito no endpoint GET
+      const updatedValue = {
+        isDefined: true,
+        value: '••••••••',
+        description: updatedSetting.description,
+        isActive: updatedSetting.isActive,
+        updatedAt: updatedSetting.updatedAt,
+        realValue: updatedSetting.value,
+        lastChars: updatedSetting.value.slice(-4)
+      };
+
+      return res.status(200).json({ 
+        success: true, 
+        message: "Client ID da Doppus atualizado com sucesso",
+        updatedValue
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar Client ID da Doppus:", error);
+      return res.status(500).json({ 
+        success: false, 
+        message: "Erro ao atualizar Client ID da Doppus" 
+      });
+    }
+  });
+
+  // Endpoint para atualizar o Client Secret da Doppus
+  app.post("/api/integrations/doppus/clientsecret", isAdmin, async (req, res) => {
+    try {
+      const { clientSecret } = req.body;
+      
+      if (!clientSecret || typeof clientSecret !== 'string') {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Client Secret inválido" 
+        });
+      }
+
+      // Verificar se a configuração já existe no banco
+      const existingSettings = await pool.query(
+        `SELECT * FROM "integrationSettings" WHERE provider = 'doppus' AND key = 'clientSecret'`
+      );
+
+      const currentDate = new Date();
+      let result;
+
+      if (existingSettings.rows.length > 0) {
+        // Atualizar configuração existente
+        result = await pool.query(
+          `UPDATE "integrationSettings" 
+           SET value = $1, "updatedAt" = $2
+           WHERE provider = 'doppus' AND key = 'clientSecret'
+           RETURNING *`,
+          [clientSecret, currentDate]
+        );
+      } else {
+        // Criar nova configuração
+        result = await pool.query(
+          `INSERT INTO "integrationSettings" (provider, key, value, description, "isActive", "createdAt", "updatedAt")
+           VALUES ('doppus', 'clientSecret', $1, 'Client Secret para autenticação OAuth2 com a Doppus', true, $2, $2)
+           RETURNING *`,
+          [clientSecret, currentDate]
+        );
+      }
+
+      const updatedSetting = result.rows[0];
+      
+      // Formatando o valor da mesma forma que é feito no endpoint GET
+      const updatedValue = {
+        isDefined: true,
+        value: '••••••••',
+        description: updatedSetting.description,
+        isActive: updatedSetting.isActive,
+        updatedAt: updatedSetting.updatedAt,
+        realValue: updatedSetting.value,
+        lastChars: updatedSetting.value.slice(-4)
+      };
+
+      return res.status(200).json({ 
+        success: true, 
+        message: "Client Secret da Doppus atualizado com sucesso",
+        updatedValue
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar Client Secret da Doppus:", error);
+      return res.status(500).json({ 
+        success: false, 
+        message: "Erro ao atualizar Client Secret da Doppus" 
+      });
+    }
+  });
+
   // Rota para webhook do Doppus
   app.post("/api/webhooks/doppus", async (req, res) => {
     try {
