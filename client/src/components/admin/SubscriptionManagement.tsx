@@ -1346,7 +1346,43 @@ export default function SubscriptionManagement() {
                     </div>
 
                     <div className="pt-4">
-                      <Button variant="outline" className="w-full sm:w-auto">
+                      <Button 
+                        variant="outline" 
+                        className="w-full sm:w-auto"
+                        onClick={() => {
+                          toast({
+                            title: "Testando conexão...",
+                            description: "Verificando conexão com a API da Hotmart"
+                          });
+                          
+                          // Testar conexão com a API Hotmart
+                          fetch('/api/integrations/hotmart/test-connection')
+                            .then(response => response.json())
+                            .then(data => {
+                              if (data.success) {
+                                toast({
+                                  title: "Conexão bem-sucedida!",
+                                  description: "A conexão com a API da Hotmart está funcionando corretamente.",
+                                  variant: "default",
+                                });
+                              } else {
+                                toast({
+                                  title: "Erro na conexão",
+                                  description: data.message || "Não foi possível conectar à API da Hotmart. Verifique as credenciais.",
+                                  variant: "destructive",
+                                });
+                              }
+                            })
+                            .catch(error => {
+                              toast({
+                                title: "Erro na conexão",
+                                description: "Ocorreu um erro ao tentar conectar com a API da Hotmart. Verifique o console para mais detalhes.",
+                                variant: "destructive",
+                              });
+                              console.error("Erro ao testar conexão com Hotmart:", error);
+                            });
+                        }}
+                      >
                         <RefreshCw className="w-4 h-4 mr-2" />
                         Testar Conexão com Hotmart
                       </Button>

@@ -3,6 +3,9 @@ import fetch from 'node-fetch';
 /**
  * Serviço para integração com a API da Hotmart
  * Permite verificar o status de assinaturas e processamento de webhooks
+ * 
+ * Implementa funções para teste de conexão, verificação de assinaturas
+ * e processamento de webhooks da Hotmart.
  */
 export class HotmartService {
   private static clientId: string;
@@ -24,6 +27,28 @@ export class HotmartService {
     }
     
     console.log(`HotmartService inicializado no ambiente: ${useSandbox ? 'Sandbox' : 'Produção'}`);
+  }
+
+  /**
+   * Testa a conexão com a API da Hotmart usando as credenciais configuradas
+   * @returns Objeto indicando se a conexão foi bem-sucedida
+   */
+  static async testConnection(): Promise<{ success: boolean; message?: string }> {
+    try {
+      // Tenta obter um token de acesso para verificar se as credenciais estão funcionando
+      const token = await this.getAccessToken();
+      return { 
+        success: true, 
+        message: "Conexão com a API da Hotmart estabelecida com sucesso" 
+      };
+    } catch (error) {
+      console.error("Erro ao testar conexão com a Hotmart:", error);
+      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
+      return { 
+        success: false, 
+        message: `Falha na conexão com a API da Hotmart: ${errorMessage}` 
+      };
+    }
   }
 
   /**
