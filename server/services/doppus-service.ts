@@ -8,7 +8,7 @@
  */
 
 import { db } from '../db';
-import { users, subscriptions } from '../../shared/schema';
+import { users, subscriptions, doppusProductMappings } from '../../shared/schema';
 import { eq, and, not, isNull } from 'drizzle-orm';
 import fetch from 'node-fetch';
 import crypto from 'crypto';
@@ -188,6 +188,15 @@ class DoppusService {
       console.log(`Processando webhook da Doppus: ${event}`);
       console.log('Dados do webhook:', JSON.stringify(data, null, 2));
       
+      // Registrar detalhes do produto para diagnóstico
+      if (data.product) {
+        console.log(`Produto recebido: ${data.product.name || 'sem nome'} (${data.product.code || 'sem código'})`);
+        
+        if (data.product.plan) {
+          console.log(`Plano recebido: ${data.product.plan.name || 'sem nome'} (${data.product.plan.code || 'sem código'})`);
+        }
+      }
+      
       switch (event) {
         case 'PAYMENT_APPROVED':
           return await this.handlePaymentApproved(data);
@@ -211,6 +220,59 @@ class DoppusService {
     }
   }
   
+  /**
+   * Busca o mapeamento de produto no banco de dados
+   * @param productCode Código do produto na Doppus
+   * @param planCode Código do plano na Doppus (opcional)
+   * @returns Mapeamento encontrado ou null
+   */
+  private async getProductMapping(productCode: string, planCode?: string): Promise<any> {
+    try {
+      console.log(`Buscando mapeamento para produto ${productCode}${planCode ? ` e plano ${planCode}` : ''}`);
+      
+      // Se temos tanto o código do produto quanto do plano, buscamos pela combinação exata
+      if (planCode) {
+        const [mapping] = await db
+          .select()
+          .from(doppusProductMappings)
+          .where(
+            and(
+              eq(doppusProductMappings.productId, productCode),
+              eq(doppusProductMappings.planId, planCode),
+              eq(doppusProductMappings.isActive, true)
+            )
+          );
+          
+        if (mapping) {
+          console.log(`Mapeamento encontrado pelo produto ${productCode} e plano ${planCode}`);
+          return mapping;
+        }
+      }
+      
+      // Se não encontrou pelo plano ou se o plano não foi fornecido, busca apenas pelo código do produto
+      const [mapping] = await db
+        .select()
+        .from(doppusProductMappings)
+        .where(
+          and(
+            eq(doppusProductMappings.productId, productCode),
+            eq(doppusProductMappings.isActive, true)
+          )
+        );
+        
+      if (mapping) {
+        console.log(`Mapeamento encontrado pelo produto ${productCode}`);
+        return mapping;
+      }
+      
+      console.log(`Nenhum mapeamento encontrado para produto ${productCode}`);
+      return null;
+    } catch (error) {
+      console.error('Erro ao buscar mapeamento de produto:', error);
+      return null;
+    }
+  }
+
   /**
    * Processa um evento de pagamento aprovado da Doppus
    */
@@ -238,31 +300,44 @@ class DoppusService {
       
       // Extrair código do produto e verificar o tipo de plano
       const productCode = data.product?.code;
+      const planCode = data.product?.plan?.code;
       
       if (productCode) {
-        // Aqui podemos implementar a lógica para mapear códigos de produto da Doppus para tipos de plano
-        // Exemplo:
-        switch (productCode) {
-          case 'PREMIUM_MENSAL':
+        // Buscar mapeamento no banco de dados
+        const mapping = await this.getProductMapping(productCode, planCode);
+        
+        if (mapping) {
+          // Usar valores do mapeamento
+          planType = mapping.planType;
+          durationDays = mapping.durationDays || 30;
+          isLifetime = mapping.isLifetime;
+          
+          console.log(`Usando mapeamento do banco: ${planType}, ${durationDays} dias, vitalício: ${isLifetime}`);
+        } else {
+          // Fallback para mapeamento padrão se não encontrar no banco
+          console.log('Nenhum mapeamento encontrado, usando valores padrão');
+          
+          // Tentar identificar o tipo de plano com base no nome do produto
+          const productName = (data.product?.name || '').toLowerCase();
+          
+          if (productName.includes('mensal') || productName.includes('30 dias')) {
             planType = 'premium_30';
             durationDays = 30;
-            break;
-          case 'PREMIUM_SEMESTRAL':
+          } else if (productName.includes('semestral') || productName.includes('180 dias') || productName.includes('6 meses')) {
             planType = 'premium_180';
             durationDays = 180;
-            break;
-          case 'PREMIUM_ANUAL':
+          } else if (productName.includes('anual') || productName.includes('365 dias') || productName.includes('1 ano')) {
             planType = 'premium_365';
             durationDays = 365;
-            break;
-          case 'PREMIUM_VITALICIO':
+          } else if (productName.includes('vitalicio') || productName.includes('lifetime') || productName.includes('para sempre')) {
             planType = 'premium_lifetime';
             isLifetime = true;
-            durationDays = 99999; // Valor muito alto para representar vitalício
-            break;
-          default:
-            planType = 'premium';
+            durationDays = null;
+          } else {
+            // Valores padrão
+            planType = 'premium_30';
             durationDays = 30;
+          }
         }
       }
       
