@@ -5338,10 +5338,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Não enviar valores sensíveis como texto puro, mas incluir propriedade realValue
         // para que o frontend possa mostrar quando explicitamente solicitado
-        const isSensitive = ['secret', 'clientSecret'].includes(setting.key);
+        const isSensitive = ['secret', 'clientSecret', 'clientId', 'apiKey'].includes(setting.key);
         const isDefined = !!setting.value && setting.value.length > 0;
         const maskedValue = isDefined ? '••••••••' : '';
         
+        // Criar o objeto no formato exato que o frontend espera
+        // O componente SubscriptionManagement.tsx espera uma estrutura específica
         acc[setting.provider][setting.key] = {
           value: isSensitive ? maskedValue : setting.value,
           description: setting.description,
@@ -5357,11 +5359,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Registrar no console para debug que os valores estão sendo processados
         if (setting.provider === 'hotmart' && isDefined) {
-          console.log(`Configuração ${setting.provider}.${setting.key} encontrada com valor (últimos 4 caracteres): ${setting.value.slice(-4)}`);
+          console.log(`Configuração ${setting.provider}.${setting.key} encontrada com valor (últimos 4 caracteres): ${setting.value.slice(-4)}, realValue definido: ${!!setting.value}`);
         }
         
         return acc;
       }, {});
+      
+      // Verificar se temos todas as entradas necessárias para Hotmart e Doppus
+      // O componente frontend espera certas chaves, mesmo que vazias
+      if (!formattedSettings.hotmart) {
+        formattedSettings.hotmart = {};
+      }
+      
+      if (!formattedSettings.doppus) {
+        formattedSettings.doppus = {};
+      }
+      
+      // Garantir que todas as chaves esperadas existam
+      const requiredHotmartKeys = ['secret', 'clientId', 'clientSecret'];
+      const requiredDoppusKeys = ['secret', 'apiKey'];
+      
+      for (const key of requiredHotmartKeys) {
+        if (!formattedSettings.hotmart[key]) {
+          formattedSettings.hotmart[key] = {
+            isDefined: false,
+            value: '',
+            realValue: '',
+            lastChars: '',
+            isActive: true,
+            description: '',
+            updatedAt: null
+          };
+        }
+      }
+      
+      for (const key of requiredDoppusKeys) {
+        if (!formattedSettings.doppus[key]) {
+          formattedSettings.doppus[key] = {
+            isDefined: false,
+            value: '',
+            realValue: '',
+            lastChars: '',
+            isActive: true,
+            description: '',
+            updatedAt: null
+          };
+        }
+      }
+      
+      console.log("Enviando configurações de integração formatadas com chaves:", 
+        Object.keys(formattedSettings.hotmart).join(', '), 
+        "/ Doppus:", 
+        Object.keys(formattedSettings.doppus).join(', ')
+      );
       
       return res.status(200).json(formattedSettings);
     } catch (error) {
