@@ -3,7 +3,8 @@
  * Esta tabela armazenará os mapeamentos entre produtos da Doppus e planos no DesignAuto
  */
 
-import { Pool } from 'pg';
+import pkg from 'pg';
+const { Pool } = pkg;
 import { config } from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
