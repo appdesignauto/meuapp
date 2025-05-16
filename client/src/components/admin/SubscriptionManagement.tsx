@@ -1241,7 +1241,7 @@ export default function SubscriptionManagement() {
                         <Input 
                           id="hotmartWebhookUrl" 
                           placeholder="https://seusite.com.br/api/webhooks/hotmart" 
-                          value={`${window.location.origin}/api/webhooks/hotmart`}
+                          value="https://designauto.com.br/webhook/hotmart"
                           readOnly
                           className="flex-1 rounded-r-none bg-muted"
                         />
@@ -1430,7 +1430,7 @@ export default function SubscriptionManagement() {
                         <Input 
                           id="doppusWebhookUrl" 
                           placeholder="https://seusite.com.br/api/webhooks/doppus" 
-                          value={`https://designauto.com.br/webhook/doppus`}
+                          value="https://designauto.com.br/webhook/doppus"
                           readOnly
                           className="flex-1 rounded-r-none bg-muted"
                         />
