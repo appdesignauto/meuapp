@@ -478,11 +478,10 @@ export default function SubscriptionManagement() {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 mb-6">
+        <TabsList className="grid w-full grid-cols-3 mb-6">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="subscriptions">Assinaturas</TabsTrigger>
           <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
-          <TabsTrigger value="configuracoes">Configurações</TabsTrigger>
         </TabsList>
         
         {/* Aba de Visão Geral */}
@@ -1118,12 +1117,6 @@ export default function SubscriptionManagement() {
         <TabsContent value="webhooks" className="space-y-6">
           <WebhookList key="subscription-webhooks" />
         </TabsContent>
-        
-        {/* Nova aba de Configurações no nível principal */}
-        <TabsContent value="configuracoes" className="space-y-6">
-          <SubscriptionSettings />
-        </TabsContent>
-        
 
       </Tabs>
       
