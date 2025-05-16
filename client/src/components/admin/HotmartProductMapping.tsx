@@ -73,7 +73,7 @@ export default function HotmartProductMapping({ standalone = false }: HotmartPro
     productId: '',
     offerId: '',
     productName: '',
-    planType: 'premium',
+    planType: 'premium_30',
     durationDays: 30,
     isLifetime: false
   });
@@ -108,7 +108,7 @@ export default function HotmartProductMapping({ standalone = false }: HotmartPro
       productId: '',
       offerId: '',
       productName: '',
-      planType: 'premium',
+      planType: 'premium_30',
       durationDays: 30,
       isLifetime: false
     });
@@ -337,9 +337,13 @@ export default function HotmartProductMapping({ standalone = false }: HotmartPro
                     {mapping.productName}
                   </TableCell>
                   <TableCell>
-                    {mapping.planType === 'premium' ? 'Premium' : 
-                     mapping.planType === 'pro' ? 'Profissional' : 
-                     mapping.planType === 'basic' ? 'Básico' : mapping.planType}
+                    {mapping.planType === 'premium_30' ? 'Premium Mensal' : 
+                     mapping.planType === 'premium_180' ? 'Premium Semestral' : 
+                     mapping.planType === 'premium_365' ? 'Premium Anual' : 
+                     mapping.planType === 'premium_lifetime' ? 'Premium Vitalício' :
+                     mapping.planType === 'premium' ? 'Premium (Legado)' : 
+                     mapping.planType === 'pro' ? 'Profissional (Legado)' : 
+                     mapping.planType === 'basic' ? 'Básico (Legado)' : mapping.planType}
                   </TableCell>
                   <TableCell>
                     {mapping.isLifetime ? (
@@ -459,15 +463,28 @@ export default function HotmartProductMapping({ standalone = false }: HotmartPro
               <Label htmlFor="planType">Tipo de Plano no DesignAuto</Label>
               <Select
                 value={mappingFormData.planType}
-                onValueChange={(value) => setMappingFormData({ ...mappingFormData, planType: value })}
+                onValueChange={(value) => {
+                  // Configurar a duração com base no tipo de plano
+                  let newDurationDays = mappingFormData.durationDays;
+                  if (value === 'premium_30') newDurationDays = 30;
+                  if (value === 'premium_180') newDurationDays = 180;
+                  if (value === 'premium_365') newDurationDays = 365;
+                  
+                  setMappingFormData({ 
+                    ...mappingFormData, 
+                    planType: value,
+                    durationDays: newDurationDays
+                  });
+                }}
               >
                 <SelectTrigger id="planType">
                   <SelectValue placeholder="Selecione o tipo de plano" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="basic">Básico</SelectItem>
-                  <SelectItem value="premium">Premium</SelectItem>
-                  <SelectItem value="pro">Profissional</SelectItem>
+                  <SelectItem value="premium_30">Premium Mensal (30 dias)</SelectItem>
+                  <SelectItem value="premium_180">Premium Semestral (180 dias)</SelectItem>
+                  <SelectItem value="premium_365">Premium Anual (365 dias)</SelectItem>
+                  <SelectItem value="premium_lifetime">Premium Vitalício</SelectItem>
                 </SelectContent>
               </Select>
             </div>
