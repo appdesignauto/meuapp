@@ -133,6 +133,11 @@ interface IntegrationSettings {
     secret?: SecretKeyInfo;
     clientId?: SecretKeyInfo;
     clientSecret?: SecretKeyInfo;
+    useSandbox?: {
+      isDefined: boolean;
+      value: string;
+      realValue?: string;
+    };
   };
   doppus?: {
     secret?: SecretKeyInfo;
@@ -267,6 +272,9 @@ export default function SubscriptionManagement() {
   const [showHotmartClientSecret, setShowHotmartClientSecret] = useState(false);
   const [showDoppusSecret, setShowDoppusSecret] = useState(false);
   const [showDoppusApiKey, setShowDoppusApiKey] = useState(false);
+  
+  // Estado para controlar o ambiente da Hotmart (sandbox/produção)
+  const [isHotmartSandbox, setIsHotmartSandbox] = useState(true);
   
   const [hotmartSecretInput, setHotmartSecretInput] = useState('');
   const [hotmartClientIdInput, setHotmartClientIdInput] = useState('');
@@ -501,6 +509,53 @@ export default function SubscriptionManagement() {
     }
   });
   
+  // Mutação para alternar o ambiente da Hotmart (sandbox/produção)
+  const toggleHotmartEnvironmentMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/integrations/hotmart/toggle-environment', {});
+      return response.json();
+    },
+    onSuccess: (data) => {
+      // Atualizar o estado local com o novo valor
+      const newEnvironment = data.updatedValue.value === 'true' ? 'Sandbox' : 'Produção';
+      
+      toast({
+        title: "Ambiente atualizado",
+        description: `O ambiente da Hotmart foi alterado para ${newEnvironment}.`,
+      });
+      
+      // Atualizar o estado local
+      setIsHotmartSandbox(data.updatedValue.value === 'true');
+      
+      // Atualizar estado das configurações
+      if (data.updatedValue && integrationSettings?.hotmart) {
+        setIntegrationSettings((prev) => {
+          if (!prev) return prev;
+          
+          return {
+            ...prev,
+            hotmart: {
+              ...prev.hotmart,
+              useSandbox: data.updatedValue
+            }
+          };
+        });
+      }
+      
+      // Invalida a consulta para atualizar dados de integração
+      queryClient.invalidateQueries({
+        queryKey: ['/api/integrations/settings']
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao alternar ambiente",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
   // Função para salvar configurações
   const handleSaveSettings = () => {
     saveSettingsMutation.mutate({
@@ -552,6 +607,11 @@ export default function SubscriptionManagement() {
   useEffect(() => {
     if (integrationData) {
       setIntegrationSettings(integrationData);
+      
+      // Atualizar o estado do ambiente Sandbox baseado nos dados retornados
+      if (integrationData.hotmart?.useSandbox) {
+        setIsHotmartSandbox(integrationData.hotmart.useSandbox.value === 'true');
+      }
     }
   }, [integrationData]);
   
