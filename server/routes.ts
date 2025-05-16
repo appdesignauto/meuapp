@@ -5640,45 +5640,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const signature = req.headers['x-doppus-signature'] as string;
       const eventType = req.headers['x-doppus-event'] as string || 'unknown';
       
-      // Em ambiente de produção, validar a assinatura do Doppus
-      // const doppusSecret = process.env.DOPPUS_SECRET_KEY;
-      // if (!signature /* || !validarAssinatura(signature, req.body, doppusSecret) */) {
-      //   console.error("Assinatura de webhook inválida ou não fornecida");
-      //   return res.status(403).json({
-      //     success: false,
-      //     message: "Acesso não autorizado: assinatura de webhook inválida"
-      //   });
-      // }
-      
-      // Validação básica do webhook
-      if (!req.body || !req.body.data || !req.body.event) {
-        console.error("Formato de webhook Doppus inválido:", req.body);
-        
-        // Registrar o webhook mesmo com formato inválido
-        await storage.createWebhookLog({
-          eventType: 'FORMAT_ERROR',
-          payloadData: JSON.stringify(req.body),
-          status: 'error',
-          source: 'doppus',
-          errorMessage: "Formato de webhook inválido",
-          sourceIp
-        });
-        
-        return res.status(400).json({ 
-          success: false, 
-          message: "Webhook inválido: formato incorreto" 
-        });
-      }
-      
-      // Para fins de demonstração, vamos apenas registrar o webhook
-      console.log("Evento Doppus recebido:", eventType);
-      
-      // Extrair transactionId do payload
-      const transactionId = req.body.data?.transaction?.code || null;
-      
-      // Registrar o webhook no banco de dados
+      // Registrar o webhook no banco de dados primeiro para garantir que não perdemos dados
+      const transactionId = req.body?.data?.transaction?.code || null;
       const webhookLog = await storage.createWebhookLog({
-        eventType: req.body.event,
+        eventType: req.body?.event || eventType,
         payloadData: JSON.stringify(req.body),
         status: 'received',
         source: 'doppus',
@@ -5687,14 +5652,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
         transactionId
       });
       
-      // Em uma implementação completa, processaríamos o webhook aqui
-      // const result = await SubscriptionService.processDoppusWebhook(req.body);
+      // Validação básica do webhook
+      if (!req.body || !req.body.data || !req.body.event) {
+        console.error("Formato de webhook Doppus inválido:", req.body);
+        
+        // Atualizar o log com erro
+        await storage.updateWebhookLog(webhookLog.id, {
+          status: 'error',
+          errorMessage: "Formato de webhook inválido"
+        });
+        
+        return res.status(400).json({ 
+          success: false, 
+          message: "Webhook inválido: formato incorreto" 
+        });
+      }
       
-      res.json({ 
-        success: true, 
-        message: "Webhook Doppus recebido com sucesso",
-        logId: webhookLog.id
-      });
+      // Validar a assinatura do webhook se fornecida
+      if (signature) {
+        try {
+          const payloadString = JSON.stringify(req.body);
+          const isValid = await DoppusService.validateWebhookSignature(signature, payloadString);
+          
+          if (!isValid) {
+            console.error("Assinatura de webhook Doppus inválida");
+            
+            // Atualizar o log com erro
+            await storage.updateWebhookLog(webhookLog.id, {
+              status: 'error',
+              errorMessage: "Assinatura inválida"
+            });
+            
+            return res.status(403).json({
+              success: false,
+              message: "Acesso não autorizado: assinatura de webhook inválida"
+            });
+          }
+        } catch (error) {
+          console.error("Erro ao validar assinatura Doppus:", error);
+          
+          await storage.updateWebhookLog(webhookLog.id, {
+            status: 'error',
+            errorMessage: `Erro ao validar assinatura: ${error instanceof Error ? error.message : String(error)}`
+          });
+          
+          return res.status(500).json({
+            success: false,
+            message: "Erro ao validar assinatura do webhook"
+          });
+        }
+      }
+      
+      // Processar o webhook usando o serviço Doppus
+      console.log("Evento Doppus recebido:", eventType);
+      console.log("Processando webhook com o serviço Doppus...");
+      
+      try {
+        // Processar o webhook usando o serviço
+        const result = await DoppusService.processWebhook(req.body);
+        
+        // Atualizar o log com sucesso
+        await storage.updateWebhookLog(webhookLog.id, {
+          status: 'processed',
+          processingResult: JSON.stringify(result)
+        });
+        
+        // Log do resultado para monitoramento
+        console.log("Resultado do processamento do webhook Doppus:", result);
+        
+        res.json({ 
+          success: true, 
+          message: "Webhook Doppus processado com sucesso", 
+          result 
+        });
+      } catch (processingError) {
+        console.error("Erro ao processar evento Doppus:", processingError);
+        
+        // Atualizar o log com erro de processamento
+        await storage.updateWebhookLog(webhookLog.id, {
+          status: 'error',
+          errorMessage: processingError instanceof Error ? processingError.message : String(processingError)
+        });
+        
+        res.status(500).json({
+          success: false,
+          message: "Erro ao processar evento Doppus",
+          error: processingError instanceof Error ? processingError.message : String(processingError)
+        });
+      }
     } catch (error) {
       console.error("Erro ao processar webhook do Doppus:", error);
       

@@ -1,121 +1,90 @@
 /**
- * Script para testar o endpoint de webhook do Doppus
- * 
- * Este script simula eventos do Doppus, enviando payloads para o endpoint /api/webhooks/doppus
- * Útil para testar localmente a integração sem precisar configurar na plataforma Doppus
- * 
- * Uso:
- * 1. Execute este script após iniciar o servidor:
- *    node test-doppus-webhook.js [evento]
- * 
- * 2. Os eventos disponíveis são:
- *    - approved: Simula uma aprovação de compra
- *    - canceled: Simula um cancelamento de assinatura
- *    - refunded: Simula um reembolso
- *    - expired: Simula uma expiração de assinatura
- * 
- * 3. Por padrão, usa o email example@test.com como cliente
- *    Para testar com outro email, defina a variável de ambiente TEST_EMAIL
+ * Script para testar a integração Doppus
+ * Este script simula um webhook da Doppus para testar a funcionalidade de processamento
  */
 
 import fetch from 'node-fetch';
+import { createHmac } from 'crypto';
 
-// Email de teste - pode ser substituído por variável de ambiente
-const TEST_EMAIL = process.env.TEST_EMAIL || 'example@test.com';
-// URL do servidor - ajuste conforme necessário
-const SERVER_URL = process.env.SERVER_URL || 'http://localhost:5000';
+// Configurações
+// Use a URL do Replit para testes em ambiente de produção
+const WEBHOOK_URL = process.env.REPLIT_URL 
+  ? `https://${process.env.REPLIT_URL}/api/webhooks/doppus` 
+  : 'https://e1b8508c-921c-4d22-af73-1cb8fd7145e2-00-121uwb868mg4j.spock.replit.dev/api/webhooks/doppus';
+const DOPPUS_SECRET_KEY = process.env.DOPPUS_SECRET_KEY || 'f8bb3a727ac70b8217d01407febd0dc6';
 
-function createTestPayload(eventType) {
-  const transactionId = `doppus-test-${Date.now()}`;
-  const now = new Date().toISOString();
-  
-  // Estrutura base do payload
-  const payload = {
-    event: eventType,
-    data: {
-      transaction: {
-        code: transactionId,
-        date: now,
-        status: 'completed',
-        paymentType: 'credit_card'
-      },
-      subscription: {
-        plan: 'PRO',
-        startDate: now,
-        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      customer: {
-        email: TEST_EMAIL,
-        name: 'Cliente Teste Doppus',
-        document: '12345678900'
-      }
+console.log('URL do webhook:', WEBHOOK_URL);
+
+// Exemplo de payload de teste (baseado no formato da Doppus)
+// Este payload simula um evento de compra aprovada
+const payload = {
+  event: 'purchase.success',
+  timestamp: new Date().toISOString(),
+  data: {
+    customer: {
+      name: 'Cliente Teste',
+      email: 'cliente.teste@example.com',
+      phone: '+5511987654321'
+    },
+    transaction: {
+      code: 'DOPPUS-' + Math.floor(Math.random() * 10000),
+      payment_method: 'credit_card',
+      installments: 1,
+      status: 'approved'
+    },
+    subscription: {
+      plan_id: 'premium_30',  // ID do plano no DesignAuto
+      plan_name: 'Premium Mensal',
+      price: 39.90,
+      currency: 'BRL',
+      duration_days: 30,
+      is_trial: false
     }
-  };
-  
-  // Ajustes específicos para cada tipo de evento
-  switch(eventType) {
-    case 'approved':
-      payload.event = 'purchase_approved';
-      break;
-    case 'canceled':
-      payload.event = 'subscription_canceled';
-      payload.data.subscription.status = 'canceled';
-      payload.data.cancelReason = 'Cliente solicitou';
-      break;
-    case 'refunded':
-      payload.event = 'purchase_refunded';
-      payload.data.refundReason = 'Cliente insatisfeito';
-      break;
-    case 'expired':
-      payload.event = 'subscription_expired';
-      payload.data.subscription.status = 'expired';
-      break;
-    default:
-      throw new Error(`Tipo de evento desconhecido: ${eventType}`);
   }
-  
-  return payload;
+};
+
+// Gera assinatura HMAC para o webhook
+function generateSignature(body, secret) {
+  const hmac = createHmac('sha256', secret);
+  hmac.update(JSON.stringify(body));
+  return hmac.digest('hex');
 }
 
-async function sendTestWebhook(payload) {
-  const webhookEndpoint = `${SERVER_URL}/api/webhooks/doppus`;
+// Função para enviar o webhook simulado
+async function sendTestWebhook() {
+  console.log('🔄 Enviando webhook de teste para Doppus...');
   
   try {
-    const response = await fetch(webhookEndpoint, {
+    const signature = generateSignature(payload, DOPPUS_SECRET_KEY);
+    
+    const response = await fetch(WEBHOOK_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Doppus-Signature': 'test-signature',
+        'X-Doppus-Signature': signature,
         'X-Doppus-Event': payload.event
       },
       body: JSON.stringify(payload)
     });
     
-    const result = await response.text();
+    const result = await response.json();
     
-    console.log(`Status: ${response.status}`);
-    console.log(`Resposta: ${result}`);
+    console.log('✅ Webhook enviado com sucesso!');
+    console.log('📊 Código de status:', response.status);
+    console.log('📝 Resposta:', JSON.stringify(result, null, 2));
     
-    return { status: response.status, response: result };
+    return { status: response.status, data: result };
   } catch (error) {
-    console.error('Erro ao enviar webhook:', error.message);
-    throw error;
+    console.error('❌ Erro ao enviar webhook:', error);
+    return { status: 'error', error: error.message };
   }
 }
 
-// Função principal auto-executável
-(async function() {
-  try {
-    const eventType = process.argv[2] || 'approved';
-    console.log(`Enviando evento ${eventType} do Doppus para o email ${TEST_EMAIL}...`);
-    
-    const payload = createTestPayload(eventType);
-    console.log('Payload:', JSON.stringify(payload, null, 2));
-    
-    const result = await sendTestWebhook(payload);
-    console.log('Webhook enviado com sucesso!');
-  } catch (error) {
-    console.error('Erro:', error.message);
-    process.exit(1);
-  }
-})();
+// Executa o teste de webhook
+sendTestWebhook()
+  .then(() => {
+    console.log('🏁 Teste concluído!');
+  })
+  .catch(error => {
+    console.error('🔥 Erro durante o teste:', error);
+  });
