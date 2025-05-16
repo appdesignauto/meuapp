@@ -82,42 +82,31 @@ export class HotmartService {
       // Cria o Basic Auth token
       const basicAuth = Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64');
       
+      // Configuração unificada para ambos ambientes
       if (this.baseUrl.includes('sandbox')) {
-        // Configuração para ambiente sandbox
         tokenUrl = `${this.baseUrl}/oauth/token`;
-        headers = {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Accept': 'application/json'
-        };
-        
-        requestBody = new URLSearchParams({
-          'grant_type': 'client_credentials',
-          'client_id': this.clientId,
-          'client_secret': this.clientSecret
-        }).toString();
       } else {
-        // Configuração para ambiente de produção
-        // A Hotmart tem diferentes endpoints e headers para ambiente de produção
         tokenUrl = `${this.baseUrl}/security/oauth/token`;
-        
-        // Usar credenciais com abordagem mais segura seguindo a documentação da API
-        headers = {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Accept': 'application/json'
-        };
-        
-        // Adicionando as credenciais diretamente ao corpo da requisição
-        requestBody = new URLSearchParams({
-          'grant_type': 'client_credentials',
-          'client_id': this.clientId,
-          'client_secret': this.clientSecret
-        }).toString();
-        
-        console.log('Usando método alternativo com credentials no body para ambiente de produção');
-
-        // Vamos logar informações mais detalhadas para diagnóstico (parciais para segurança)
-        console.log(`Credenciais usadas - ClientId: ${this.clientId.substring(0, 4)}..., ClientSecret: ${this.clientSecret.substring(0, 4)}...`);
       }
+      
+      // Usar método de autenticação Basic Auth no header + parâmetros no corpo
+      // Esta é a forma mais comum de autenticação OAuth2 para client credentials
+      headers = {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json',
+        'Authorization': `Basic ${basicAuth}`
+      };
+      
+      // Corpo da requisição contém apenas o grant_type
+      requestBody = new URLSearchParams({
+        'grant_type': 'client_credentials'
+      }).toString();
+      
+      console.log(`Usando método de autenticação Basic Auth para ambiente: ${this.baseUrl.includes('sandbox') ? 'Sandbox' : 'Produção'}`);
+      console.log(`Token URL: ${tokenUrl}`);
+      console.log(`Credenciais usadas - ClientId: ${this.clientId.substring(0, 4)}..., ClientSecret: ${this.clientSecret.substring(0, 4)}...`);
+      console.log(`Basic Auth token (primeiros 10 caracteres): ${basicAuth.substring(0, 10)}...`);
+      
       
       console.log(`Usando URL de autenticação: ${tokenUrl}`);
       console.log(`Headers incluem Authorization Basic: ${headers['Authorization'] ? 'Sim' : 'Não'}`);
