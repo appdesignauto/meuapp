@@ -121,30 +121,22 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 
+// Definindo interface para chaves com informações de segurança
+interface SecretKeyInfo {
+  isDefined: boolean;
+  realValue?: string;
+}
+
+// Interface principal para configurações de integração
 interface IntegrationSettings {
   hotmart?: {
-    secret?: {
-      isDefined: boolean;
-      realValue?: string;
-    };
-    clientId?: {
-      isDefined: boolean;
-      realValue?: string;
-    };
-    clientSecret?: {
-      isDefined: boolean;
-      realValue?: string;
-    };
+    secret?: SecretKeyInfo;
+    clientId?: SecretKeyInfo;
+    clientSecret?: SecretKeyInfo;
   };
   doppus?: {
-    secret?: {
-      isDefined: boolean;
-      realValue?: string;
-    };
-    apiKey?: {
-      isDefined: boolean;
-      realValue?: string;
-    };
+    secret?: SecretKeyInfo;
+    apiKey?: SecretKeyInfo;
   };
 }
 
