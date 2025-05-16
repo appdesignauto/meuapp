@@ -506,14 +506,16 @@ export default function SubscriptionManagement() {
   });
   const [isHotmartClientSecretDialogOpen, setIsHotmartClientSecretDialogOpen] = useState(false);
   const [isDoppusSecretDialogOpen, setIsDoppusSecretDialogOpen] = useState(false);
-  const [isDoppusApiKeyDialogOpen, setIsDoppusApiKeyDialogOpen] = useState(false);
+  const [isDoppusClientIdDialogOpen, setIsDoppusClientIdDialogOpen] = useState(false);
+  const [isDoppusClientSecretDialogOpen, setIsDoppusClientSecretDialogOpen] = useState(false);
   
   // Estados para mostrar/ocultar as chaves salvas
   const [showHotmartSecret, setShowHotmartSecret] = useState(false);
   const [showHotmartClientId, setShowHotmartClientId] = useState(false);
   const [showHotmartClientSecret, setShowHotmartClientSecret] = useState(false);
   const [showDoppusSecret, setShowDoppusSecret] = useState(false);
-  const [showDoppusApiKey, setShowDoppusApiKey] = useState(false);
+  const [showDoppusClientId, setShowDoppusClientId] = useState(false);
+  const [showDoppusClientSecret, setShowDoppusClientSecret] = useState(false);
   
   // Estado para controlar o ambiente da Hotmart (sandbox/produção)
   const [isHotmartSandbox, setIsHotmartSandbox] = useState(true);
@@ -522,7 +524,8 @@ export default function SubscriptionManagement() {
   const [hotmartClientIdInput, setHotmartClientIdInput] = useState('');
   const [hotmartClientSecretInput, setHotmartClientSecretInput] = useState('');
   const [doppusSecretInput, setDoppusSecretInput] = useState('');
-  const [doppusApiKeyInput, setDoppusApiKeyInput] = useState('');
+  const [doppusClientIdInput, setDoppusClientIdInput] = useState('');
+  const [doppusClientSecretInput, setDoppusClientSecretInput] = useState('');
   
   // Estados para configuração de assinatura
   const [autoDowngrade, setAutoDowngrade] = useState(true);

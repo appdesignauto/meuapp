@@ -70,11 +70,15 @@ const subscriptionSettingsSchema = z.object({
   hotmartWebhookUrl: z.string().url({ message: 'A URL do webhook Hotmart deve ser uma URL válida' }).optional().or(z.literal('')),
   
   // Campos Doppus
-  doppusApiKey: z.string().optional().or(z.literal('')),
+  doppusClientId: z.string().optional().or(z.literal('')),
+  doppusClientSecret: z.string().optional().or(z.literal('')),
   doppusSecretKey: z.string().optional().or(z.literal('')),
   doppusBasicPlanId: z.string().optional().or(z.literal('')),
   doppusProPlanId: z.string().optional().or(z.literal('')),
   doppusWebhookUrl: z.string().url({ message: 'A URL do webhook Doppus deve ser uma URL válida' }).optional().or(z.literal('')),
+  
+  // Para compatibilidade
+  doppusApiKey: z.string().optional().or(z.literal('')),
   
   // Configurações gerais
   graceHoursAfterExpiration: z.coerce.number().int().min(0).max(720),
