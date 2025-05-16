@@ -48,7 +48,11 @@ import multiArtRouter from './routes/multi-art'; // Rota para artes multi-format
 import testCreateGroupRouter from './routes/test-create-group'; // Rota de teste para criar grupos
 import videoaulasRouter from './routes/videoaulas-routes'; // Rotas para as videoaulas
 import courseRouter from './routes/course-routes'; // Rotas para gerenciamento de módulos e aulas
-import hotmartProductMappingsRouter from './routes/hotmart-product-mappings'; // Rotas para mapeamento de produtos Hotmart
+// Importar roteador de mapeamentos de produtos Hotmart 
+// Usando dynamic import para compatibilidade entre CommonJS e ES modules
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const hotmartProductMappingsRouter = require('./routes/hotmart-product-mappings');
 import manifestRouter from './routes/manifest-route'; // Rota para o manifest.json do PWA
 import appConfigRouter from './routes/app-config-routes'; // Rotas para configuração do PWA
 import imageProxyRouter from './routes/image-proxy'; // Proxy para imagens do Supabase
@@ -6239,6 +6243,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Rotas para gerenciamento de analytics
   app.use('/api/analytics', analyticsRouter);
+  
+  // Rotas para mapeamentos de produtos Hotmart
+  app.use('/api/integrations/hotmart/product-mappings', hotmartProductMappingsRouter);
   
   // Rotas para o sistema de comunidade
   app.use(communityRouter);
