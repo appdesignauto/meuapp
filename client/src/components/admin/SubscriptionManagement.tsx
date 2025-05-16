@@ -298,6 +298,18 @@ export default function SubscriptionManagement() {
   // Estados para configurações das integrações
   const [isHotmartSecretDialogOpen, setIsHotmartSecretDialogOpen] = useState(false);
   const [isHotmartClientIdDialogOpen, setIsHotmartClientIdDialogOpen] = useState(false);
+  
+  // Estados para mapeamento de produtos Hotmart
+  const [productMappings, setProductMappings] = useState<ProductMapping[]>([]);
+  const [isLoadingMappings, setIsLoadingMappings] = useState(false);
+  const [showProductMappingDialog, setShowProductMappingDialog] = useState(false);
+  const [editingMapping, setEditingMapping] = useState<ProductMapping | null>(null);
+  const [mappingFormData, setMappingFormData] = useState({
+    productName: '',
+    planType: 'premium',
+    durationDays: 30,
+    isLifetime: false
+  });
   const [isHotmartClientSecretDialogOpen, setIsHotmartClientSecretDialogOpen] = useState(false);
   const [isDoppusSecretDialogOpen, setIsDoppusSecretDialogOpen] = useState(false);
   const [isDoppusApiKeyDialogOpen, setIsDoppusApiKeyDialogOpen] = useState(false);
@@ -2577,6 +2589,135 @@ export default function SubscriptionManagement() {
       </Dialog>
       
       {/* Diálogo para atualizar a chave secreta da Hotmart */}
+      {/* Diálogo para adicionar/editar mapeamento de produto Hotmart */}
+      <Dialog open={showProductMappingDialog} onOpenChange={setShowProductMappingDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {editingMapping ? 'Editar Mapeamento de Produto' : 'Adicionar Mapeamento de Produto'}
+            </DialogTitle>
+            <DialogDescription>
+              {editingMapping 
+                ? 'Atualize as configurações do mapeamento entre produto Hotmart e plano DesignAuto'
+                : 'Configure como um produto da Hotmart será convertido em assinatura no DesignAuto'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="productName">Nome do Produto na Hotmart:</Label>
+              <Input
+                id="productName"
+                name="productName"
+                placeholder="Ex: DesignAuto Premium"
+                value={mappingFormData.productName}
+                onChange={handleMappingFormChange}
+              />
+              <p className="text-sm text-muted-foreground mt-1">
+                Use exatamente o mesmo nome do produto que aparece na Hotmart
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="planType">Tipo de Plano no DesignAuto:</Label>
+              <Select
+                value={mappingFormData.planType}
+                onValueChange={(value) => 
+                  setMappingFormData({...mappingFormData, planType: value})
+                }
+              >
+                <SelectTrigger id="planType">
+                  <SelectValue placeholder="Selecione o tipo de plano" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="premium">Premium</SelectItem>
+                  <SelectItem value="pro">Pro</SelectItem>
+                  <SelectItem value="basic">Básico</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-muted-foreground mt-1">
+                Nível de acesso que será concedido ao assinante
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="isLifetime" 
+                  checked={mappingFormData.isLifetime}
+                  onCheckedChange={(checked) => 
+                    setMappingFormData({...mappingFormData, isLifetime: checked as boolean})
+                  }
+                />
+                <Label htmlFor="isLifetime">
+                  Plano Vitalício
+                </Label>
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                Se marcado, a assinatura nunca expirará
+              </p>
+            </div>
+            
+            {!mappingFormData.isLifetime && (
+              <div className="space-y-2">
+                <Label htmlFor="durationDays">Duração (em dias):</Label>
+                <Input
+                  id="durationDays"
+                  name="durationDays"
+                  type="number"
+                  min={1}
+                  placeholder="Ex: 30, 90, 365"
+                  value={mappingFormData.durationDays}
+                  onChange={handleMappingFormChange}
+                />
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setMappingFormData({...mappingFormData, durationDays: 30})}
+                  >
+                    1 mês
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setMappingFormData({...mappingFormData, durationDays: 90})}
+                  >
+                    3 meses
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setMappingFormData({...mappingFormData, durationDays: 180})}
+                  >
+                    6 meses
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setMappingFormData({...mappingFormData, durationDays: 365})}
+                  >
+                    1 ano
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowProductMappingDialog(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSubmitMapping}>
+              <Save className="h-4 w-4 mr-2" />
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
       <Dialog open={isHotmartSecretDialogOpen} onOpenChange={setIsHotmartSecretDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
