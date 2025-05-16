@@ -37,9 +37,14 @@ router.post('/', async (req, res) => {
   try {
     const { productId, offerId, productName, planType, durationDays, isLifetime } = req.body;
     
-    // Validação simples
+    // Validação ampliada
     if (!productName || !planType) {
       return res.status(400).json({ error: 'Nome do produto e tipo de plano são obrigatórios' });
+    }
+    
+    // Validar que offerId não esteja vazio ao cadastrar planos
+    if (productId && !offerId) {
+      return res.status(400).json({ error: 'ID da Oferta é obrigatório para diferenciar planos do mesmo produto' });
     }
     
     // Verificar se já existe um mapeamento com esta combinação de produto e oferta
