@@ -76,6 +76,10 @@ export class HotmartService {
       
       let tokenUrl = '';
       let headers = {};
+      let requestBody = '';
+      
+      // Cria o Basic Auth token
+      const basicAuth = Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64');
       
       if (this.baseUrl.includes('sandbox')) {
         // Configuração para ambiente sandbox
@@ -84,23 +88,30 @@ export class HotmartService {
           'Content-Type': 'application/x-www-form-urlencoded',
           'Accept': 'application/json'
         };
+        
+        requestBody = new URLSearchParams({
+          'grant_type': 'client_credentials',
+          'client_id': this.clientId,
+          'client_secret': this.clientSecret
+        }).toString();
       } else {
         // Configuração para ambiente de produção
         // A Hotmart tem diferentes endpoints e headers para ambiente de produção
         tokenUrl = `${this.baseUrl}/security/oauth/token`;
         headers = {
           'Content-Type': 'application/x-www-form-urlencoded',
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'Authorization': `Basic ${basicAuth}`
         };
+        
+        // No ambiente de produção, com Basic Auth, apenas precisamos do grant_type
+        requestBody = new URLSearchParams({
+          'grant_type': 'client_credentials'
+        }).toString();
       }
       
       console.log(`Usando URL de autenticação: ${tokenUrl}`);
-      
-      const requestBody = new URLSearchParams({
-        'grant_type': 'client_credentials',
-        'client_id': this.clientId,
-        'client_secret': this.clientSecret
-      }).toString();
+      console.log(`Headers incluem Authorization Basic: ${headers['Authorization'] ? 'Sim' : 'Não'}`);
       
       const response = await fetch(tokenUrl, {
         method: 'POST',
@@ -113,9 +124,27 @@ export class HotmartService {
         
         // Log detalhado para depuração do erro
         console.error(`Erro na resposta da Hotmart: Status ${response.status}, Headers:`, response.headers);
-        console.error(`Corpo da resposta:`, errorData);
+        console.error(`Corpo da resposta (primeiros 500 caracteres):`, errorData.substring(0, 500));
         
-        throw new Error(`Erro ao obter token Hotmart: ${response.status} ${errorData}`);
+        // Tenta extrair mensagens úteis do HTML quando a resposta não é JSON
+        let errorMessage = errorData;
+        if (errorData.includes('<!DOCTYPE html>')) {
+          console.log('Resposta em formato HTML detectada, tentando extrair mensagem de erro...');
+          
+          // Simplificando a mensagem de erro para HTML
+          errorMessage = 'A API retornou uma página HTML em vez de JSON. Isso geralmente indica um erro no endpoint ou autenticação.';
+          
+          // Verifica se há mensagens de erro específicas no HTML
+          if (errorData.includes('404 Not Found')) {
+            errorMessage += ' Endpoint não encontrado (404).';
+          } else if (errorData.includes('403 Forbidden')) {
+            errorMessage += ' Acesso negado (403). Verifique as credenciais.';
+          } else if (errorData.includes('401 Unauthorized')) {
+            errorMessage += ' Não autorizado (401). Credenciais inválidas.';
+          }
+        }
+        
+        throw new Error(`Erro ao obter token Hotmart: ${response.status} ${errorMessage}`);
       }
       
       const data = await response.json();

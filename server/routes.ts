@@ -5284,11 +5284,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const useSandbox = credentials.useSandbox === 'true';
       
       console.log(`Teste de conexão - usando ambiente: ${useSandbox ? 'Sandbox' : 'Produção'}`);
+      console.log(`Credenciais utilizadas - Client ID: ${credentials.clientId.substring(0, 5)}... | Client Secret: ${credentials.clientSecret.substring(0, 5)}...`);
       
       // Inicializar o serviço com as credenciais
       HotmartService.initialize(credentials.clientId, credentials.clientSecret, useSandbox);
       
       // Testar a conexão
+      console.log('Iniciando teste de conexão com a API da Hotmart...');
       const result = await HotmartService.testConnection();
       
       // Retornar o resultado
