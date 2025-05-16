@@ -5572,12 +5572,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Webhook da Hotmart recebido");
       
       // Verificar token de segurança no cabeçalho da requisição
-      const token = req.headers['x-hotmart-webhook-token'] || req.query.token;
+      // Aceitar múltiplos formatos do cabeçalho para maior compatibilidade
+      const token = 
+        req.headers['x-hotmart-webhook-token'] || 
+        req.headers['X-Hotmart-Webhook-Token'] || 
+        req.headers['x-hotmart-hottok'] || 
+        req.headers['X-Hotmart-Hottok'] ||
+        req.query.token;
+        
+      console.log("Token recebido no cabeçalho:", token);
+      console.log("Cabeçalhos recebidos:", Object.keys(req.headers).join(', '));
+      
       const hotmartSecret = process.env.HOTMART_SECRET;
       
       // Validar o token de segurança
       if (!token || token !== hotmartSecret) {
-        console.error("Token de webhook inválido ou não fornecido");
+        console.error(`Token de webhook inválido ou não fornecido. Token recebido: "${token}", esperado: "${hotmartSecret.slice(0, 3)}..."`);
         return res.status(403).json({
           success: false,
           message: "Acesso não autorizado: token de webhook inválido"
@@ -6258,42 +6268,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Implementada em reports-v2.ts para resolver problemas de ORM
   app.use('/api/reports-v2', reportsV2Router);
   
-  // Endpoints para gerenciamento de webhooks da Hotmart
+  // Nota: Este endpoint é uma duplicata da implementação melhorada acima
+  // Removendo para evitar conflitos de rota
   
-  // Endpoint para recebimento de webhooks da Hotmart
-  app.post('/api/webhooks/hotmart', async (req, res) => {
-    try {
-      console.log("Webhook da Hotmart recebido");
-
-      // 1. Verificar se requisição é válida
-      // A Hotmart sempre envia no formato application/json
-      if (!req.is('application/json')) {
-        return res.status(400).json({ success: false, message: 'Formato inválido' });
-      }
-      
-      // 2. Verificar token de autenticação
-      const hotmartSecret = process.env.HOTMART_SECRET;
-      const receivedToken = req.header('X-Hotmart-Hottok') || req.header('X-Hotmart-Webhook-Token');
-      
-      if (!hotmartSecret) {
-        console.error('Erro: HOTMART_SECRET não configurado');
-        return res.status(500).json({ success: false, message: 'Erro de configuração (chave)' });
-      }
-      
-      if (!receivedToken || receivedToken !== hotmartSecret) {
-        console.log("Token de webhook inválido ou não fornecido");
-        return res.status(403).json({ success: false, message: 'Acesso não autorizado: token de webhook inválido' });
-      }
-      
-      // 3. Registrar o webhook recebido no banco de dados
-      const payload = req.body;
-      const sourceIp = req.ip;
-      const eventType = payload?.event || 'UNKNOWN';
-      
-      // 3. Processar o webhook baseado no tipo de evento
-      let userId = null;
-      let status = 'received';
-      let errorMessage = null;
+  // Endpoints para gerenciamento de webhooks da Hotmart
       
       try {
         // Extrair dados importantes
