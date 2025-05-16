@@ -153,6 +153,11 @@ interface StatCardProps {
 
 function StatCard({ title, value, icon: Icon, description, trend }: StatCardProps) {
   const formatValue = (val: number): string => {
+    // Prevenir erros com valores undefined/null
+    if (val === undefined || val === null) {
+      return '0';
+    }
+    
     // Formata valores monetários com "R$" e 2 casas decimais
     if (title.includes('Receita') || title.includes('Valor') || title.includes('LTV')) {
       return `R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
