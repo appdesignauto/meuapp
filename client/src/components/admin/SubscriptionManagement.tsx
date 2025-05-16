@@ -315,11 +315,28 @@ export default function SubscriptionManagement() {
       const response = await apiRequest('POST', '/api/integrations/hotmart/secret', { secret: newSecret });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: "Chave atualizada",
         description: "A chave secreta da Hotmart foi atualizada com sucesso.",
       });
+      
+      // Atualizar o estado local se a resposta contiver o valor atualizado
+      if (data.updatedValue && integrationSettings?.hotmart) {
+        // Atualiza diretamente o valor no estado
+        setIntegrationSettings((prev) => {
+          if (!prev) return prev;
+          
+          return {
+            ...prev,
+            hotmart: {
+              ...prev.hotmart,
+              secret: data.updatedValue
+            }
+          };
+        });
+      }
+      
       setIsHotmartSecretDialogOpen(false);
       setHotmartSecretInput('');
     },
@@ -337,11 +354,27 @@ export default function SubscriptionManagement() {
       const response = await apiRequest('POST', '/api/integrations/hotmart/client-id', { clientId: newClientId });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: "Client ID atualizado",
         description: "O Client ID da Hotmart foi atualizado com sucesso.",
       });
+      
+      // Atualizar o estado local com o valor retornado da API
+      if (data.updatedValue && integrationSettings?.hotmart) {
+        setIntegrationSettings((prev) => {
+          if (!prev) return prev;
+          
+          return {
+            ...prev,
+            hotmart: {
+              ...prev.hotmart,
+              clientId: data.updatedValue
+            }
+          };
+        });
+      }
+      
       setIsHotmartClientIdDialogOpen(false);
       setHotmartClientIdInput('');
     },
@@ -359,11 +392,27 @@ export default function SubscriptionManagement() {
       const response = await apiRequest('POST', '/api/integrations/hotmart/client-secret', { clientSecret: newClientSecret });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: "Client Secret atualizado",
         description: "O Client Secret da Hotmart foi atualizado com sucesso.",
       });
+      
+      // Atualizar o estado local com o valor retornado da API
+      if (data.updatedValue && integrationSettings?.hotmart) {
+        setIntegrationSettings((prev) => {
+          if (!prev) return prev;
+          
+          return {
+            ...prev,
+            hotmart: {
+              ...prev.hotmart,
+              clientSecret: data.updatedValue
+            }
+          };
+        });
+      }
+      
       setIsHotmartClientSecretDialogOpen(false);
       setHotmartClientSecretInput('');
     },

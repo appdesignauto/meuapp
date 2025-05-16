@@ -5056,9 +5056,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Chave secreta da Hotmart atualizada por:", req.user?.username);
       
+      // Retornar o valor atualizado para o frontend poder atualizar a exibição
       return res.status(200).json({ 
         success: true, 
-        message: "Chave secreta da Hotmart atualizada com sucesso" 
+        message: "Chave secreta da Hotmart atualizada com sucesso",
+        updatedValue: {
+          key: "secret",
+          value: "••••••••", // Valor mascarado para exibição
+          provider: "hotmart",
+          realValue: secret, // Valor real para ser usado pelo frontend
+          lastChars: secret.length > 4 ? secret.slice(-4) : "",
+          isDefined: true,
+          isActive: true,
+          updatedAt: new Date()
+        }
       });
     } catch (error) {
       console.error("Erro ao atualizar chave secreta da Hotmart:", error);
@@ -5102,9 +5113,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Client ID da Hotmart atualizado por:", req.user?.username);
       
+      // Retornar o valor atualizado para o frontend poder atualizar a exibição
       return res.status(200).json({ 
         success: true, 
-        message: "Client ID da Hotmart atualizado com sucesso" 
+        message: "Client ID da Hotmart atualizado com sucesso",
+        updatedValue: {
+          key: "clientId",
+          value: "••••••••", // Valor mascarado para exibição
+          provider: "hotmart",
+          realValue: clientId, // Valor real para ser usado pelo frontend
+          lastChars: clientId.length > 4 ? clientId.slice(-4) : "",
+          isDefined: true,
+          isActive: true,
+          updatedAt: new Date()
+        }
       });
     } catch (error) {
       console.error("Erro ao atualizar Client ID da Hotmart:", error);
@@ -5148,9 +5170,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Client Secret da Hotmart atualizado por:", req.user?.username);
       
+      // Retornar o valor atualizado para o frontend poder atualizar a exibição
       return res.status(200).json({ 
         success: true, 
-        message: "Client Secret da Hotmart atualizado com sucesso" 
+        message: "Client Secret da Hotmart atualizado com sucesso",
+        updatedValue: {
+          key: "clientSecret",
+          value: "••••••••", // Valor mascarado para exibição
+          provider: "hotmart",
+          realValue: clientSecret, // Valor real para ser usado pelo frontend
+          lastChars: clientSecret.length > 4 ? clientSecret.slice(-4) : "",
+          isDefined: true,
+          isActive: true,
+          updatedAt: new Date()
+        }
       });
     } catch (error) {
       console.error("Erro ao atualizar Client Secret da Hotmart:", error);
