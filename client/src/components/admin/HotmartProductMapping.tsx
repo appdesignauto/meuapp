@@ -79,7 +79,7 @@ export default function HotmartProductMapping({ standalone = false }: HotmartPro
   const [isLoadingMappings, setIsLoadingMappings] = useState(false);
   const [showMappingDialog, setShowMappingDialog] = useState(false);
   const [editingMapping, setEditingMapping] = useState<ProductMapping | null>(null);
-  const [mappingFormData, setMappingFormData] = useState({
+  const [mappingFormData, setMappingFormData] = useState<MappingFormData>({
     productId: '',
     offerId: '',
     productName: '',
@@ -500,16 +500,24 @@ export default function HotmartProductMapping({ standalone = false }: HotmartPro
               <Select
                 value={mappingFormData.planType}
                 onValueChange={(value) => {
-                  // Configurar a duração com base no tipo de plano
+                  // Configurar a duração e status vitalício com base no tipo de plano
                   let newDurationDays = mappingFormData.durationDays;
+                  let isLifetime = false;
+                  
                   if (value === 'premium_30') newDurationDays = 30;
                   if (value === 'premium_180') newDurationDays = 180;
                   if (value === 'premium_365') newDurationDays = 365;
                   
+                  if (value === 'premium_lifetime') {
+                    newDurationDays = null;
+                    isLifetime = true;
+                  }
+                  
                   setMappingFormData({ 
                     ...mappingFormData, 
                     planType: value,
-                    durationDays: newDurationDays
+                    durationDays: newDurationDays,
+                    isLifetime: isLifetime
                   });
                 }}
               >
