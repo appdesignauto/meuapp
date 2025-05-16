@@ -493,6 +493,56 @@ export default function SubscriptionSettings() {
                       </FormItem>
                     )}
                   />
+                  
+                  <div className="rounded-md border p-4 bg-muted/30">
+                    <h4 className="text-sm font-medium mb-2">Basic Token</h4>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      O Basic Token é necessário para autenticação na API da Hotmart em ambiente de produção. 
+                      Este token é gerado automaticamente a partir do Client ID e Client Secret.
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => {
+                        const clientId = form.getValues('hotmartClientId');
+                        const clientSecret = form.getValues('hotmartClientSecret');
+                        
+                        if (!clientId || !clientSecret) {
+                          toast({
+                            title: "Campos incompletos",
+                            description: "Preencha o Client ID e Client Secret para gerar o Basic Token",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+                        
+                        // Gera o Basic Token (Base64 de clientId:clientSecret)
+                        try {
+                          const basicToken = btoa(`${clientId}:${clientSecret}`);
+                          
+                          // Copia para o clipboard
+                          navigator.clipboard.writeText(basicToken).then(() => {
+                            toast({
+                              title: "Basic Token gerado",
+                              description: "O Basic Token foi copiado para a área de transferência: " + basicToken.substring(0, 10) + "...",
+                              variant: "default",
+                            });
+                          });
+                        } catch (error) {
+                          console.error("Erro ao gerar Basic Token:", error);
+                          toast({
+                            title: "Erro ao gerar Basic Token",
+                            description: "Não foi possível gerar o token. Verifique os campos.",
+                            variant: "destructive",
+                          });
+                        }
+                      }}
+                    >
+                      <KeyRound className="mr-2 h-4 w-4" />
+                      Gerar e Copiar Basic Token
+                    </Button>
+                  </div>
                 </div>
 
                 <Separator className="my-6" />
