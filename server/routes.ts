@@ -5021,6 +5021,172 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Rotas para gerenciamento de integrações (Hotmart/Doppus)
+  
+  // Atualizar chave secreta da Hotmart
+  app.post("/api/integrations/hotmart/secret", isAdmin, async (req, res) => {
+    try {
+      const { secret } = req.body;
+      
+      if (!secret) {
+        return res.status(400).json({ message: "Chave secreta é obrigatória" });
+      }
+      
+      // Atualizar valor na tabela de configurações
+      await db.execute(sql`
+        UPDATE "integrationSettings" 
+        SET "value" = ${secret}, "updatedAt" = NOW() 
+        WHERE "provider" = 'hotmart' AND "key" = 'secret'
+      `);
+      
+      console.log("Chave secreta da Hotmart atualizada por:", req.user?.username);
+      
+      return res.status(200).json({ 
+        success: true, 
+        message: "Chave secreta da Hotmart atualizada com sucesso" 
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar chave secreta da Hotmart:", error);
+      return res.status(500).json({ 
+        success: false, 
+        message: "Erro ao atualizar chave secreta da Hotmart" 
+      });
+    }
+  });
+  
+  // Atualizar Client ID da Hotmart
+  app.post("/api/integrations/hotmart/client-id", isAdmin, async (req, res) => {
+    try {
+      const { clientId } = req.body;
+      
+      if (!clientId) {
+        return res.status(400).json({ message: "Client ID é obrigatório" });
+      }
+      
+      // Atualizar valor na tabela de configurações
+      await db.execute(sql`
+        UPDATE "integrationSettings" 
+        SET "value" = ${clientId}, "updatedAt" = NOW() 
+        WHERE "provider" = 'hotmart' AND "key" = 'clientId'
+      `);
+      
+      console.log("Client ID da Hotmart atualizado por:", req.user?.username);
+      
+      return res.status(200).json({ 
+        success: true, 
+        message: "Client ID da Hotmart atualizado com sucesso" 
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar Client ID da Hotmart:", error);
+      return res.status(500).json({ 
+        success: false, 
+        message: "Erro ao atualizar Client ID da Hotmart" 
+      });
+    }
+  });
+  
+  // Atualizar Client Secret da Hotmart
+  app.post("/api/integrations/hotmart/client-secret", isAdmin, async (req, res) => {
+    try {
+      const { clientSecret } = req.body;
+      
+      if (!clientSecret) {
+        return res.status(400).json({ message: "Client Secret é obrigatório" });
+      }
+      
+      // Atualizar valor na tabela de configurações
+      await db.execute(sql`
+        UPDATE "integrationSettings" 
+        SET "value" = ${clientSecret}, "updatedAt" = NOW() 
+        WHERE "provider" = 'hotmart' AND "key" = 'clientSecret'
+      `);
+      
+      console.log("Client Secret da Hotmart atualizado por:", req.user?.username);
+      
+      return res.status(200).json({ 
+        success: true, 
+        message: "Client Secret da Hotmart atualizado com sucesso" 
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar Client Secret da Hotmart:", error);
+      return res.status(500).json({ 
+        success: false, 
+        message: "Erro ao atualizar Client Secret da Hotmart" 
+      });
+    }
+  });
+  
+  // Atualizar chave secreta da Doppus
+  app.post("/api/integrations/doppus/secret", isAdmin, async (req, res) => {
+    try {
+      const { secret } = req.body;
+      
+      if (!secret) {
+        return res.status(400).json({ message: "Chave secreta é obrigatória" });
+      }
+      
+      // Atualizar valor na tabela de configurações
+      await db.execute(sql`
+        UPDATE "integrationSettings" 
+        SET "value" = ${secret}, "updatedAt" = NOW() 
+        WHERE "provider" = 'doppus' AND "key" = 'secret'
+      `);
+      
+      console.log("Chave secreta da Doppus atualizada por:", req.user?.username);
+      
+      return res.status(200).json({ 
+        success: true, 
+        message: "Chave secreta da Doppus atualizada com sucesso" 
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar chave secreta da Doppus:", error);
+      return res.status(500).json({ 
+        success: false, 
+        message: "Erro ao atualizar chave secreta da Doppus" 
+      });
+    }
+  });
+  
+  // Obter configurações atuais das integrações
+  app.get("/api/integrations/settings", isAdmin, async (req, res) => {
+    try {
+      // Buscar todas as configurações de integração
+      const settings = await db.execute(sql`
+        SELECT provider, key, value, description, "isActive", "updatedAt"
+        FROM "integrationSettings"
+        ORDER BY provider, key
+      `);
+      
+      // Transformar em um objeto mais fácil de usar no frontend
+      const formattedSettings = settings.rows.reduce((acc, setting) => {
+        if (!acc[setting.provider]) {
+          acc[setting.provider] = {};
+        }
+        
+        // Não enviar valores sensíveis, apenas indicar se estão definidos
+        const isSensitive = ['secret', 'clientSecret'].includes(setting.key);
+        
+        acc[setting.provider][setting.key] = {
+          value: isSensitive ? (setting.value ? '••••••••' : '') : setting.value,
+          description: setting.description,
+          isActive: setting.isActive,
+          updatedAt: setting.updatedAt,
+          isDefined: !!setting.value && setting.value.length > 0
+        };
+        
+        return acc;
+      }, {});
+      
+      return res.status(200).json(formattedSettings);
+    } catch (error) {
+      console.error("Erro ao obter configurações de integrações:", error);
+      return res.status(500).json({ 
+        success: false, 
+        message: "Erro ao obter configurações de integrações" 
+      });
+    }
+  });
+
   // Rota para webhook da Hotmart
   app.post("/api/webhooks/hotmart", async (req, res) => {
     try {

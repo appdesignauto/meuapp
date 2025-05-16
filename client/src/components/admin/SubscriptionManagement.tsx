@@ -2033,6 +2033,190 @@ export default function SubscriptionManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* Diálogo para atualizar a chave secreta da Hotmart */}
+      <Dialog open={isHotmartSecretDialogOpen} onOpenChange={setIsHotmartSecretDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Atualizar Chave Secreta da Hotmart</DialogTitle>
+            <DialogDescription>
+              Insira a nova chave secreta para verificação dos webhooks da Hotmart.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="hotmartSecret">Chave Secreta (Hotmart Secret)</Label>
+              <Input
+                id="hotmartSecret"
+                value={hotmartSecretInput}
+                onChange={(e) => setHotmartSecretInput(e.target.value)}
+                placeholder="Insira a chave secreta da Hotmart"
+                className="w-full"
+              />
+              <p className="text-sm text-muted-foreground">
+                Esta chave é usada para verificar a autenticidade das notificações recebidas da Hotmart.
+              </p>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsHotmartSecretDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={() => updateHotmartSecretMutation.mutate(hotmartSecretInput)}
+              disabled={!hotmartSecretInput.trim() || updateHotmartSecretMutation.isPending}
+              type="button"
+            >
+              {updateHotmartSecretMutation.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4 mr-2" />
+              )}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Diálogo para atualizar o Client ID da Hotmart */}
+      <Dialog open={isHotmartClientIdDialogOpen} onOpenChange={setIsHotmartClientIdDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Atualizar Client ID da Hotmart</DialogTitle>
+            <DialogDescription>
+              Insira o novo Client ID para usar a API da Hotmart.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="hotmartClientId">Client ID</Label>
+              <Input
+                id="hotmartClientId"
+                value={hotmartClientIdInput}
+                onChange={(e) => setHotmartClientIdInput(e.target.value)}
+                placeholder="Insira o Client ID da API Hotmart"
+                className="w-full"
+              />
+              <p className="text-sm text-muted-foreground">
+                O Client ID é necessário para a API da Hotmart. Obtenha estas credenciais no painel Hotmart Developers.
+              </p>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsHotmartClientIdDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={() => updateHotmartClientIdMutation.mutate(hotmartClientIdInput)}
+              disabled={!hotmartClientIdInput.trim() || updateHotmartClientIdMutation.isPending}
+              type="button"
+            >
+              {updateHotmartClientIdMutation.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4 mr-2" />
+              )}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Diálogo para atualizar o Client Secret da Hotmart */}
+      <Dialog open={isHotmartClientSecretDialogOpen} onOpenChange={setIsHotmartClientSecretDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Atualizar Client Secret da Hotmart</DialogTitle>
+            <DialogDescription>
+              Insira o novo Client Secret para usar a API da Hotmart.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="hotmartClientSecret">Client Secret</Label>
+              <Input
+                id="hotmartClientSecret"
+                value={hotmartClientSecretInput}
+                onChange={(e) => setHotmartClientSecretInput(e.target.value)}
+                placeholder="Insira o Client Secret da API Hotmart"
+                className="w-full"
+              />
+              <p className="text-sm text-muted-foreground">
+                O Client Secret é necessário para a API da Hotmart. Mantenha esta informação confidencial.
+              </p>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsHotmartClientSecretDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={() => updateHotmartClientSecretMutation.mutate(hotmartClientSecretInput)}
+              disabled={!hotmartClientSecretInput.trim() || updateHotmartClientSecretMutation.isPending}
+              type="button"
+            >
+              {updateHotmartClientSecretMutation.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4 mr-2" />
+              )}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Diálogo para atualizar a chave secreta da Doppus */}
+      <Dialog open={isDoppusSecretDialogOpen} onOpenChange={setIsDoppusSecretDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Atualizar Chave Secreta da Doppus</DialogTitle>
+            <DialogDescription>
+              Insira a nova chave secreta para verificação dos webhooks da Doppus.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="doppusSecret">Chave Secreta (Doppus Secret)</Label>
+              <Input
+                id="doppusSecret"
+                value={doppusSecretInput}
+                onChange={(e) => setDoppusSecretInput(e.target.value)}
+                placeholder="Insira a chave secreta da Doppus"
+                className="w-full"
+              />
+              <p className="text-sm text-muted-foreground">
+                Esta chave é usada para verificar a autenticidade das notificações recebidas da Doppus.
+              </p>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDoppusSecretDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={() => updateDoppusSecretMutation.mutate(doppusSecretInput)}
+              disabled={!doppusSecretInput.trim() || updateDoppusSecretMutation.isPending}
+              type="button"
+            >
+              {updateDoppusSecretMutation.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4 mr-2" />
+              )}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
   
