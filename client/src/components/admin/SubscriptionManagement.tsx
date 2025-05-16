@@ -121,6 +121,14 @@ interface IntegrationSettings {
       isDefined: boolean;
       realValue?: string;
     };
+    clientId?: {
+      isDefined: boolean;
+      realValue?: string;
+    };
+    clientSecret?: {
+      isDefined: boolean;
+      realValue?: string;
+    };
   };
 }
 
@@ -509,8 +517,6 @@ export default function SubscriptionManagement() {
   });
   const [isHotmartClientSecretDialogOpen, setIsHotmartClientSecretDialogOpen] = useState(false);
   const [isDoppusSecretDialogOpen, setIsDoppusSecretDialogOpen] = useState(false);
-  const [isDoppusClientIdDialogOpen, setIsDoppusClientIdDialogOpen] = useState(false);
-  const [isDoppusClientSecretDialogOpen, setIsDoppusClientSecretDialogOpen] = useState(false);
   
   // Estados para mostrar/ocultar as chaves salvas
   const [showHotmartSecret, setShowHotmartSecret] = useState(false);
@@ -533,9 +539,9 @@ export default function SubscriptionManagement() {
   const [doppusApiKeyInput, setDoppusApiKeyInput] = useState('');
   
   // Diálogos da Doppus
+  const [isDoppusApiKeyDialogOpen, setIsDoppusApiKeyDialogOpen] = useState(false);
   const [isDoppusClientIdDialogOpen, setIsDoppusClientIdDialogOpen] = useState(false);
   const [isDoppusClientSecretDialogOpen, setIsDoppusClientSecretDialogOpen] = useState(false);
-  const [isDoppusApiKeyDialogOpen, setIsDoppusApiKeyDialogOpen] = useState(false);
   
   // Estados para configuração de assinatura
   const [autoDowngrade, setAutoDowngrade] = useState(true);
