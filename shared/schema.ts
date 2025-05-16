@@ -1338,7 +1338,8 @@ export const subscriptionSettings = pgTable("subscriptionSettings", {
   hotmartWebhookUrl: text("hotmartWebhookUrl"),
   
   // Campos para integração da Doppus
-  doppusApiKey: text("doppusApiKey"),
+  doppusClientId: text("doppusClientId"),
+  doppusClientSecret: text("doppusClientSecret"),
   doppusSecretKey: text("doppusSecretKey"),
   doppusBasicPlanId: text("doppusBasicPlanId"),
   doppusProPlanId: text("doppusProPlanId"),

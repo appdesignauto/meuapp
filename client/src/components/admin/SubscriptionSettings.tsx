@@ -647,15 +647,32 @@ export default function SubscriptionSettings() {
                   
                   <FormField
                     control={form.control}
-                    name="doppusApiKey"
+                    name="doppusClientId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>API Key</FormLabel>
+                        <FormLabel>Client ID</FormLabel>
                         <FormControl>
-                          <Input placeholder="Insira a API Key da Doppus" {...field} />
+                          <Input placeholder="Insira o Client ID da Doppus" {...field} />
                         </FormControl>
                         <FormDescription>
-                          Chave de API fornecida pela Doppus
+                          Client ID fornecido pela Doppus (ex: 619f23648b96ee0ef30214921f3f9b01)
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="doppusClientSecret"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Client Secret</FormLabel>
+                        <FormControl>
+                          <Input type="password" placeholder="••••••••••••••••" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Client Secret fornecido pela Doppus
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
