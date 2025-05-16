@@ -17,6 +17,7 @@ import { AdminLayout } from '@/components/layout/AdminLayout';
 import WebhookList from '@/components/admin/WebhookList';
 import SubscriptionManagement from '@/components/admin/SubscriptionManagement';
 import SubscriptionSettings from '@/components/admin/SubscriptionSettings';
+import HotmartProductMapping from '@/components/admin/HotmartProductMapping';
 import { 
   Card, 
   CardContent, 
