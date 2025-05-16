@@ -766,7 +766,7 @@ export default function SubscriptionSettings() {
                     {doppusConnectionStatus && (
                       <div className={`mt-2 text-sm flex items-center ${doppusConnectionStatus.success ? 'text-green-500' : 'text-red-500'}`}>
                         {doppusConnectionStatus.success ? (
-                          <CheckCircle className="mr-1 h-4 w-4" />
+                          <CheckCircle2 className="mr-1 h-4 w-4" />
                         ) : (
                           <XCircle className="mr-1 h-4 w-4" />
                         )}
