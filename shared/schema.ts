@@ -872,6 +872,29 @@ export const insertHotmartProductMappingSchema = createInsertSchema(hotmartProdu
 export type HotmartProductMapping = typeof hotmartProductMappings.$inferSelect;
 export type InsertHotmartProductMapping = z.infer<typeof insertHotmartProductMappingSchema>;
 
+// Mapeamento de produtos Doppus para planos no DesignAuto
+export const doppusProductMappings = pgTable("doppusProductMappings", {
+  id: serial("id").primaryKey(),
+  productId: text("productId").notNull(), // ID do produto na Doppus
+  planId: text("planId").notNull().unique(), // ID do plano na Doppus
+  productName: text("productName").notNull(), // Nome do produto/plano na Doppus (informativo)
+  planType: text("planType").notNull(), // 'premium_30', 'premium_180', 'premium_365', 'premium_lifetime' no DesignAuto
+  durationDays: integer("durationDays"), // Número de dias de acesso (nulo se for vitalício)
+  isLifetime: boolean("isLifetime").default(false), // Indica se o acesso é vitalício
+  isActive: boolean("isActive").default(true), // Se este mapeamento está ativo
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export const insertDoppusProductMappingSchema = createInsertSchema(doppusProductMappings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type DoppusProductMapping = typeof doppusProductMappings.$inferSelect;
+export type InsertDoppusProductMapping = z.infer<typeof insertDoppusProductMappingSchema>;
+
 export const popupViewsRelations = relations(popupViews, ({ one }) => ({
   popup: one(popups, {
     fields: [popupViews.popupId],
