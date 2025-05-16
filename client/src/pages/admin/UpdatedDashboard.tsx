@@ -3986,7 +3986,20 @@ const AdminDashboard = () => {
             </TabsContent>
             
             <TabsContent value="settings">
-              <SiteSettings />
+              <Tabs defaultValue="site-config" className="w-full">
+                <TabsList className="w-full mb-4">
+                  <TabsTrigger value="site-config">Configurações do Site</TabsTrigger>
+                  <TabsTrigger value="assinatura-config">Configurações de Assinatura</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="site-config" className="space-y-4">
+                  <SiteSettings />
+                </TabsContent>
+                
+                <TabsContent value="assinatura-config" className="space-y-4">
+                  <SubscriptionSettings />
+                </TabsContent>
+              </Tabs>
             </TabsContent>
             
             {/* Gerenciamento de Assinaturas */}

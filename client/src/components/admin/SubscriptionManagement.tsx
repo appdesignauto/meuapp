@@ -1114,49 +1114,51 @@ export default function SubscriptionManagement() {
           )}
         </TabsContent>
         
-        {/* Aba de Webhooks e Configurações */}
+        {/* Aba de Webhooks */}
         <TabsContent value="webhooks" className="space-y-6">
-          {/* Sub-abas para Webhooks e Configurações */}
-          <Tabs defaultValue="webhook-logs" className="w-full">
+          <WebhookList key="subscription-webhooks" />
+        </TabsContent>
+        
+        {/* Aba de Configurações com integração das configurações de assinatura */}
+        <TabsContent value="settings" className="space-y-6">
+          {/* Sub-abas para configurações gerais e configurações de assinatura */}
+          <Tabs defaultValue="site-config" className="w-full">
             <TabsList className="w-full mb-4">
-              <TabsTrigger value="webhook-logs">Logs de Webhook</TabsTrigger>
-              <TabsTrigger value="configuracoes">Configurações</TabsTrigger>
+              <TabsTrigger value="site-config">Configurações do Site</TabsTrigger>
+              <TabsTrigger value="assinatura-config">Configurações de Assinatura</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="webhook-logs" className="space-y-4">
-              <WebhookList key="subscription-webhooks" />
+            <TabsContent value="site-config" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Configurações Básicas de Assinatura</CardTitle>
+                  <CardDescription>Gerencie as configurações gerais de assinaturas</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label htmlFor="auto-downgrade" className="font-medium">Rebaixamento automático</Label>
+                          <p className="text-sm text-muted-foreground">Rebaixar automaticamente usuários com assinaturas expiradas</p>
+                        </div>
+                        <Switch 
+                          id="auto-downgrade" 
+                          checked={autoDowngrade}
+                          onCheckedChange={setAutoDowngrade}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
             
-            <TabsContent value="configuracoes" className="space-y-4">
+            <TabsContent value="assinatura-config" className="space-y-4">
               <SubscriptionSettings />
             </TabsContent>
           </Tabs>
         </TabsContent>
-        
-        {/* Aba de Configurações Básicas */}
-        <TabsContent value="settings" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Configurações de Assinatura</CardTitle>
-              <CardDescription>Gerencie as configurações gerais de assinaturas</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label htmlFor="auto-downgrade" className="font-medium">Rebaixamento automático</Label>
-                      <p className="text-sm text-muted-foreground">Rebaixar automaticamente usuários com assinaturas expiradas</p>
-                    </div>
-                    <Switch 
-                      id="auto-downgrade" 
-                      checked={autoDowngrade}
-                      onCheckedChange={setAutoDowngrade}
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div>
                       <Label htmlFor="email-notifications" className="font-medium">Notificações por email</Label>
