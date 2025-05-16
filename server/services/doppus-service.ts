@@ -42,19 +42,31 @@ class DoppusService {
     }
     
     try {
-      // Buscar as configurações da tabela subscriptionSettings
-      const [settings] = await db.execute(
+      console.log('Buscando credenciais da Doppus na tabela subscriptionSettings...');
+      
+      // Buscar as configurações da tabela subscriptionSettings usando pool direto
+      // para evitar problemas com Drizzle
+      const { pool } = await import('../db');
+      
+      const settingsResult = await pool.query(
         `SELECT "doppusClientId", "doppusClientSecret", "doppusSecretKey" FROM "subscriptionSettings" LIMIT 1`
       );
       
-      if (!settings.rows || settings.rows.length === 0) {
+      if (!settingsResult.rows || settingsResult.rows.length === 0) {
+        console.error('Nenhuma configuração da Doppus encontrada na tabela subscriptionSettings');
         throw new Error('Configurações da Doppus não encontradas');
       }
       
-      const row = settings.rows[0];
+      const row = settingsResult.rows[0];
+      
+      console.log('Credenciais encontradas:', {
+        clientId: row.doppusClientId ? `${row.doppusClientId.substring(0, 4)}...` : 'não definido',
+        clientSecret: row.doppusClientSecret ? 'definido' : 'não definido',
+        secretKey: row.doppusSecretKey ? 'definido' : 'não definido'
+      });
       
       if (!row.doppusClientId || !row.doppusClientSecret) {
-        throw new Error('Credenciais da Doppus não configuradas');
+        throw new Error('Credenciais da Doppus (Client ID ou Client Secret) não configuradas');
       }
       
       this.credentials = {
@@ -75,7 +87,11 @@ class DoppusService {
    */
   private async getAccessToken(): Promise<string> {
     try {
+      console.log('Solicitando token de acesso da Doppus...');
       const credentials = await this.getCredentials();
+      
+      console.log(`Enviando requisição de autenticação para ${this.baseUrl}/token`);
+      console.log('Client ID utilizado:', credentials.clientId.substring(0, 4) + '...');
       
       const response = await fetch(`${this.baseUrl}/token`, {
         method: 'POST',
@@ -89,17 +105,36 @@ class DoppusService {
         })
       });
       
+      console.log('Resposta recebida. Status:', response.status);
+      
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Erro ao obter token de acesso: ${response.status} ${errorText}`);
+        console.error('Erro completo da API:', errorText);
+        
+        // Construir uma mensagem de erro mais informativa
+        let errorMsg = `Erro ao obter token de acesso (HTTP ${response.status})`;
+        
+        if (response.status === 401) {
+          errorMsg = 'Credenciais inválidas. Verifique o Client ID e Client Secret.';
+        } else if (response.status === 400) {
+          errorMsg = 'Requisição inválida. Verifique se as credenciais estão no formato correto.';
+        } else if (response.status === 404) {
+          errorMsg = 'Endpoint de autenticação não encontrado. Verifique a URL da API.';
+        } else if (response.status === 500) {
+          errorMsg = 'Erro interno no servidor da Doppus. Tente novamente mais tarde.';
+        }
+        
+        throw new Error(errorMsg + ` (${errorText})`);
       }
       
       const data = await response.json();
       
       if (!data.access_token) {
+        console.error('Resposta sem token de acesso:', JSON.stringify(data));
         throw new Error('Token de acesso não retornado pela API da Doppus');
       }
       
+      console.log('Token de acesso obtido com sucesso!');
       return data.access_token;
     } catch (error) {
       console.error('Erro ao obter token de acesso da Doppus:', error);
