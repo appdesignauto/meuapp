@@ -2126,6 +2126,78 @@ export default function SubscriptionManagement() {
                     </div>
 
                     <div>
+                      <Label htmlFor="doppusClientId">Client ID</Label>
+                      <div className="flex mt-1.5">
+                        <Input 
+                          id="doppusClientId" 
+                          type={showDoppusClientId ? "text" : "password"}
+                          placeholder="Insira o Client ID da Doppus" 
+                          value={integrationSettings?.doppus?.clientId?.isDefined ? 
+                                 (showDoppusClientId ? integrationSettings?.doppus?.clientId?.realValue || "" : "●●●●●●●●●●●●●●●●") : 
+                                 ""}
+                          readOnly
+                          className="flex-1 rounded-r-none bg-muted"
+                        />
+                        <Button 
+                          type="button"
+                          variant="outline"
+                          className="px-3 border-r-0 rounded-none"
+                          onClick={() => setShowDoppusClientId(!showDoppusClientId)}
+                        >
+                          {showDoppusClientId ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                        <Button 
+                          type="button" 
+                          variant="secondary" 
+                          className="rounded-l-none"
+                          onClick={() => setIsDoppusClientIdDialogOpen(true)}
+                        >
+                          <Edit className="w-4 h-4 mr-2" />
+                          Editar
+                        </Button>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Client ID da Doppus para autenticação OAuth2.
+                      </p>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="doppusClientSecret">Client Secret</Label>
+                      <div className="flex mt-1.5">
+                        <Input 
+                          id="doppusClientSecret" 
+                          type={showDoppusClientSecret ? "text" : "password"}
+                          placeholder="Insira o Client Secret da Doppus" 
+                          value={integrationSettings?.doppus?.clientSecret?.isDefined ? 
+                                 (showDoppusClientSecret ? integrationSettings?.doppus?.clientSecret?.realValue || "" : "●●●●●●●●●●●●●●●●") : 
+                                 ""}
+                          readOnly
+                          className="flex-1 rounded-r-none bg-muted"
+                        />
+                        <Button 
+                          type="button"
+                          variant="outline"
+                          className="px-3 border-r-0 rounded-none"
+                          onClick={() => setShowDoppusClientSecret(!showDoppusClientSecret)}
+                        >
+                          {showDoppusClientSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                        <Button 
+                          type="button" 
+                          variant="secondary" 
+                          className="rounded-l-none"
+                          onClick={() => setIsDoppusClientSecretDialogOpen(true)}
+                        >
+                          <Edit className="w-4 h-4 mr-2" />
+                          Editar
+                        </Button>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Client Secret da Doppus para autenticação OAuth2.
+                      </p>
+                    </div>
+
+                    <div>
                       <Label htmlFor="doppusApiKey">API Key</Label>
                       <div className="flex mt-1.5">
                         <Input 
