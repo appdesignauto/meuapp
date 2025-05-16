@@ -1219,13 +1219,7 @@ export default function SubscriptionManagement() {
                           type="button" 
                           variant="secondary" 
                           className="rounded-l-none"
-                          onClick={() => {
-                            toast({
-                              title: "Atualizar Client ID",
-                              description: "Use o painel de configurações de assinaturas para atualizar o Client ID.",
-                              duration: 3000,
-                            });
-                          }}
+                          onClick={() => setIsHotmartClientIdDialogOpen(true)}
                         >
                           <Edit className="w-4 h-4 mr-2" />
                           Editar
@@ -1251,13 +1245,7 @@ export default function SubscriptionManagement() {
                           type="button" 
                           variant="secondary" 
                           className="rounded-l-none"
-                          onClick={() => {
-                            toast({
-                              title: "Atualizar Client Secret",
-                              description: "Use o painel de configurações de assinaturas para atualizar o Client Secret.",
-                              duration: 3000,
-                            });
-                          }}
+                          onClick={() => setIsHotmartClientSecretDialogOpen(true)}
                         >
                           <Edit className="w-4 h-4 mr-2" />
                           Editar
