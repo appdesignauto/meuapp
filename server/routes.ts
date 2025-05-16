@@ -5116,6 +5116,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Testar conexão com a API da Hotmart
+  app.get("/api/integrations/hotmart/test-connection", isAdmin, async (req, res) => {
+    try {
+      // Buscar as credenciais da Hotmart do banco de dados
+      const settings = await db.execute(sql`
+        SELECT key, value
+        FROM "integrationSettings"
+        WHERE "provider" = 'hotmart' AND "key" IN ('clientId', 'clientSecret')
+      `);
+      
+      // Converter o resultado em um objeto para facilitar o acesso
+      const credentials = settings.rows.reduce((acc, setting) => {
+        acc[setting.key] = setting.value;
+        return acc;
+      }, {} as Record<string, string>);
+      
+      // Verificar se as credenciais estão configuradas
+      if (!credentials.clientId || !credentials.clientSecret) {
+        return res.status(400).json({
+          success: false,
+          message: "Credenciais da Hotmart não configuradas. Configure o Client ID e Client Secret primeiro."
+        });
+      }
+      
+      // Importar o serviço da Hotmart
+      const { HotmartService } = await import('./services/hotmart-service');
+      
+      // Inicializar o serviço com as credenciais
+      HotmartService.initialize(credentials.clientId, credentials.clientSecret, false);  // false = ambiente de produção
+      
+      // Testar a conexão
+      const result = await HotmartService.testConnection();
+      
+      // Retornar o resultado
+      return res.status(200).json(result);
+    } catch (error) {
+      console.error("Erro ao testar conexão com a Hotmart:", error);
+      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
+      
+      return res.status(500).json({
+        success: false,
+        message: `Erro ao testar conexão com a Hotmart: ${errorMessage}`
+      });
+    }
+  });
+  
   // Atualizar chave secreta da Doppus
   app.post("/api/integrations/doppus/secret", isAdmin, async (req, res) => {
     try {
