@@ -133,6 +133,16 @@ export default function HotmartProductMapping({ standalone = false }: HotmartPro
   // Função para salvar um mapeamento (novo ou existente)
   const handleSaveMapping = async () => {
     try {
+      // Validar campos obrigatórios
+      if (!mappingFormData.productId || !mappingFormData.productName) {
+        toast({
+          title: "Campos obrigatórios",
+          description: "ID do Produto e Nome do Produto são obrigatórios.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       const payload = {
         ...mappingFormData,
         durationDays: mappingFormData.isLifetime ? 0 : mappingFormData.durationDays
@@ -305,7 +315,9 @@ export default function HotmartProductMapping({ standalone = false }: HotmartPro
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[250px]">Produto Hotmart</TableHead>
+                <TableHead className="w-[180px]">ID do Produto</TableHead>
+                <TableHead className="w-[180px]">ID da Oferta</TableHead>
+                <TableHead>Nome do Produto</TableHead>
                 <TableHead>Plano no DesignAuto</TableHead>
                 <TableHead>Duração</TableHead>
                 <TableHead>Status</TableHead>
@@ -315,6 +327,12 @@ export default function HotmartProductMapping({ standalone = false }: HotmartPro
             <TableBody>
               {productMappings.map((mapping) => (
                 <TableRow key={mapping.id}>
+                  <TableCell className="font-mono text-xs">
+                    {mapping.productId}
+                  </TableCell>
+                  <TableCell className="font-mono text-xs">
+                    {mapping.offerId}
+                  </TableCell>
                   <TableCell className="font-medium">
                     {mapping.productName}
                   </TableCell>
@@ -399,6 +417,32 @@ export default function HotmartProductMapping({ standalone = false }: HotmartPro
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
+              <Label htmlFor="productId">ID do Produto na Hotmart</Label>
+              <Input
+                id="productId"
+                placeholder="Ex: 1234567"
+                value={mappingFormData.productId}
+                onChange={(e) => setMappingFormData({ ...mappingFormData, productId: e.target.value })}
+              />
+              <p className="text-xs text-muted-foreground">
+                Digite o ID do produto na Hotmart (encontrado no URL do produto no painel Hotmart)
+              </p>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="offerId">ID da Oferta na Hotmart</Label>
+              <Input
+                id="offerId"
+                placeholder="Ex: ABCDEF123"
+                value={mappingFormData.offerId}
+                onChange={(e) => setMappingFormData({ ...mappingFormData, offerId: e.target.value })}
+              />
+              <p className="text-xs text-muted-foreground">
+                Digite o ID da oferta específica do produto (encontrado no webhook da Hotmart)
+              </p>
+            </div>
+
+            <div className="grid gap-2">
               <Label htmlFor="productName">Nome do Produto na Hotmart</Label>
               <Input
                 id="productName"
@@ -407,7 +451,7 @@ export default function HotmartProductMapping({ standalone = false }: HotmartPro
                 onChange={(e) => setMappingFormData({ ...mappingFormData, productName: e.target.value })}
               />
               <p className="text-xs text-muted-foreground">
-                Digite o nome exato do produto como aparece na Hotmart
+                Digite o nome do produto/oferta (apenas para fins de identificação)
               </p>
             </div>
             
