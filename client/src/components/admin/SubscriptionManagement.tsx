@@ -1486,6 +1486,36 @@ export default function SubscriptionManagement() {
                   <CardDescription>Configure as integrações com a plataforma Hotmart</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
+                  {/* Toggle de ambiente Sandbox/Produção para Hotmart */}
+                  <div className="space-y-2 border p-4 rounded-md bg-muted/30">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-base font-medium">Ambiente da API</h3>
+                        <p className="text-sm text-muted-foreground">Determina qual ambiente da API da Hotmart será utilizado</p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch 
+                          checked={isHotmartSandbox}
+                          onCheckedChange={() => {
+                            toggleHotmartEnvironmentMutation.mutate();
+                          }}
+                          disabled={toggleHotmartEnvironmentMutation.isPending}
+                        />
+                        <span className="text-sm font-medium">
+                          {isHotmartSandbox ? 'Sandbox' : 'Produção'}
+                        </span>
+                        {toggleHotmartEnvironmentMutation.isPending && (
+                          <Loader2 className="h-4 w-4 animate-spin ml-2" />
+                        )}
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {isHotmartSandbox 
+                        ? 'Sandbox: Ambiente de testes da Hotmart. As transações não são reais.' 
+                        : 'Produção: Ambiente real da Hotmart. As transações são reais e processadas.'}
+                    </p>
+                  </div>
+                  
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="hotmartWebhookUrl">URL do Webhook</Label>
