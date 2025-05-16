@@ -6268,99 +6268,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Implementada em reports-v2.ts para resolver problemas de ORM
   app.use('/api/reports-v2', reportsV2Router);
   
-  // Nota: Este endpoint é uma duplicata da implementação melhorada acima
-  // Removendo para evitar conflitos de rota
+  // Nota: A implementação do endpoint de webhook da Hotmart foi unificada na versão acima
+  // Removendo código duplicado para evitar conflitos de rotas
   
-  // Endpoints para gerenciamento de webhooks da Hotmart
-      
-      try {
-        // Extrair dados importantes
-        const transactionCode = payload?.data?.transaction?.code;
-        const productId = payload?.data?.product?.id;
-        const buyerEmail = payload?.data?.buyer?.email;
-        
-        if (eventType === 'PURCHASE_APPROVED') {
-          // Buscar usuário pelo e-mail
-          const user = await storage.getUserByEmail(buyerEmail);
-          
-          if (user) {
-            userId = user.id;
-            
-            // Implementar atualização de assinatura do usuário
-            // Exemplo: conceder acesso premium
-            // TO-DO: implementar lógica específica para cada tipo de produto
-            
-            status = 'processed';
-          } else {
-            status = 'pending';
-            errorMessage = 'Usuário não encontrado com o e-mail: ' + buyerEmail;
-          }
-        } else if (eventType === 'PURCHASE_REFUNDED' || eventType === 'PURCHASE_CANCELED') {
-          // Buscar usuário pelo e-mail
-          const buyerEmail = payload?.data?.buyer?.email;
-          const user = await storage.getUserByEmail(buyerEmail);
-          
-          if (user) {
-            userId = user.id;
-            
-            // Implementar remoção de acesso premium
-            // TO-DO: implementar lógica específica
-            
-            status = 'processed';
-          } else {
-            status = 'pending';
-            errorMessage = 'Usuário não encontrado com o e-mail: ' + buyerEmail;
-          }
-        } else {
-          // Outros tipos de eventos
-          status = 'received';
-        }
-      } catch (processingError) {
-        status = 'error';
-        errorMessage = `Erro ao processar webhook: ${processingError.message}`;
-        console.error('Erro ao processar webhook Hotmart:', processingError);
-      }
-      
-      // 4. Registrar log completo do webhook
-      const webhookLog = await storage.createWebhookLog({
-        eventType,
-        payloadData: JSON.stringify(payload),
-        status,
-        errorMessage,
-        userId,
-        sourceIp,
-        transactionId: payload?.data?.transaction?.code
-      });
-      
-      // 5. Responder com sucesso (sempre responder 200 para a Hotmart)
-      return res.status(200).json({ 
-        success: true, 
-        message: 'Webhook processado',
-        logId: webhookLog.id
-      });
-    } catch (error) {
-      console.error('Erro grave ao processar webhook Hotmart:', error);
-      
-      // Tente registrar o erro, se possível
-      try {
-        await storage.createWebhookLog({
-          eventType: 'ERROR',
-          payloadData: JSON.stringify(req.body),
-          status: 'error',
-          errorMessage: `Erro grave: ${error.message}`,
-          sourceIp: req.ip
-        });
-      } catch (logError) {
-        console.error('Não foi possível registrar o erro no log:', logError);
-      }
-      
-      // Sempre retornar 200 para a Hotmart não reenviar webhooks
-      return res.status(200).json({ 
-        success: false, 
-        message: 'Erro interno no processamento do webhook' 
-      });
-    }
-  });
+  // Endpoints adicionais para gerenciamento de webhooks da Hotmart
   
   // Endpoint para listar logs de webhook (com paginação e filtros)
   app.get('/api/webhooks/logs', isAdmin, async (req, res) => {
