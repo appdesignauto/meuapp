@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import WebhookList from './WebhookList';
 import SubscriptionSettings from './SubscriptionSettings';
 import HotmartProductMapping from './HotmartProductMapping';
+import DoppusProductMapping from './DoppusProductMapping';
 import SubscriptionTrends from './SubscriptionTrends';
 import {
   Table,
