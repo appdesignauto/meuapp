@@ -23,7 +23,7 @@ export class HotmartService {
     
     // Define a URL base de acordo com o ambiente (sandbox ou produção)
     if (!useSandbox) {
-      this.baseUrl = 'https://api-sec-vlc.hotmart.com';
+      this.baseUrl = 'https://developers.hotmart.com';
     }
     
     console.log(`HotmartService inicializado no ambiente: ${useSandbox ? 'Sandbox' : 'Produção'}`);
