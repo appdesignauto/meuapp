@@ -37,6 +37,7 @@ import {
   AlertCircle,
   Loader2,
   CheckCircle2,
+  CheckCircle,
   XCircle,
   SearchIcon,
   Calendar,
@@ -232,6 +233,29 @@ function StatCard({ title, value, icon: Icon, description, trend }: StatCardProp
 export default function SubscriptionManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Estado para armazenar o status da última conexão com a Hotmart
+  const [lastConnectionStatus, setLastConnectionStatus] = useState<{
+    success: boolean;
+    message?: string;
+    timestamp: Date;
+  } | null>(null);
+  
+  // Carrega o status de conexão do localStorage ao inicializar
+  useEffect(() => {
+    const savedStatus = localStorage.getItem('hotmartLastConnectionStatus');
+    if (savedStatus) {
+      try {
+        const parsed = JSON.parse(savedStatus);
+        setLastConnectionStatus({
+          ...parsed,
+          timestamp: new Date(parsed.timestamp)
+        });
+      } catch (error) {
+        console.error('Erro ao carregar status de conexão do localStorage:', error);
+      }
+    }
+  }, []);
   
   // Estados para filtros
   const [searchTerm, setSearchTerm] = useState('');
@@ -1657,7 +1681,31 @@ export default function SubscriptionManagement() {
                       </p>
                     </div>
 
-                    <div className="pt-4">
+                    <div className="pt-4 space-y-3">
+                      {/* Status da Conexão */}
+                      {lastConnectionStatus && (
+                        <div className={`text-sm p-2 rounded-md flex items-start ${lastConnectionStatus.success ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                          {lastConnectionStatus.success ? (
+                            <CheckCircle className="h-4 w-4 mr-2 mt-0.5 shrink-0 text-green-600" />
+                          ) : (
+                            <XCircle className="h-4 w-4 mr-2 mt-0.5 shrink-0 text-red-600" />
+                          )}
+                          <div>
+                            <div className="font-medium">
+                              {lastConnectionStatus.success ? 'Conexão bem-sucedida' : 'Falha na conexão'}
+                            </div>
+                            <div className="text-xs mt-1 opacity-80">
+                              Última verificação: {lastConnectionStatus.timestamp.toLocaleString('pt-BR')}
+                            </div>
+                            {!lastConnectionStatus.success && lastConnectionStatus.message && (
+                              <div className="text-xs mt-1">
+                                Motivo: {lastConnectionStatus.message}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      
                       <Button 
                         variant="outline" 
                         className="w-full sm:w-auto"
@@ -1671,27 +1719,62 @@ export default function SubscriptionManagement() {
                           fetch('/api/integrations/hotmart/test-connection')
                             .then(response => response.json())
                             .then(data => {
+                              // Salvar resultado da conexão
+                              setLastConnectionStatus({
+                                success: data.success,
+                                message: data.message || (data.success ? undefined : "Erro não especificado"),
+                                timestamp: new Date()
+                              });
+                              
                               if (data.success) {
                                 toast({
                                   title: "Conexão bem-sucedida!",
                                   description: "A conexão com a API da Hotmart está funcionando corretamente.",
                                   variant: "default",
                                 });
+                                
+                                // Salvar no localStorage para persistir entre sessões
+                                localStorage.setItem('hotmartLastConnectionStatus', JSON.stringify({
+                                  success: true,
+                                  message: data.message,
+                                  timestamp: new Date().toISOString()
+                                }));
                               } else {
                                 toast({
                                   title: "Erro na conexão",
                                   description: data.message || "Não foi possível conectar à API da Hotmart. Verifique as credenciais.",
                                   variant: "destructive",
                                 });
+                                
+                                // Salvar no localStorage para persistir entre sessões
+                                localStorage.setItem('hotmartLastConnectionStatus', JSON.stringify({
+                                  success: false,
+                                  message: data.message || "Não foi possível conectar à API da Hotmart",
+                                  timestamp: new Date().toISOString()
+                                }));
                               }
                             })
                             .catch(error => {
+                              // Atualizar status da conexão em caso de erro
+                              setLastConnectionStatus({
+                                success: false,
+                                message: "Erro de rede ao conectar com a API",
+                                timestamp: new Date()
+                              });
+                              
                               toast({
                                 title: "Erro na conexão",
                                 description: "Ocorreu um erro ao tentar conectar com a API da Hotmart. Verifique o console para mais detalhes.",
                                 variant: "destructive",
                               });
                               console.error("Erro ao testar conexão com Hotmart:", error);
+                              
+                              // Salvar no localStorage para persistir entre sessões
+                              localStorage.setItem('hotmartLastConnectionStatus', JSON.stringify({
+                                success: false,
+                                message: "Erro de rede ao conectar com a API",
+                                timestamp: new Date().toISOString()
+                              }));
                             });
                         }}
                       >
