@@ -53,6 +53,7 @@ import courseRouter from './routes/course-routes'; // Rotas para gerenciamento d
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const hotmartProductMappingsRouter = require('./routes/hotmart-product-mappings');
+const doppusProductMappingsRouter = require('./routes/doppus-product-mappings');
 import manifestRouter from './routes/manifest-route'; // Rota para o manifest.json do PWA
 import appConfigRouter from './routes/app-config-routes'; // Rotas para configuração do PWA
 import imageProxyRouter from './routes/image-proxy'; // Proxy para imagens do Supabase
@@ -6304,6 +6305,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Rotas para mapeamentos de produtos Hotmart
   app.use('/api/integrations/hotmart/product-mappings', hotmartProductMappingsRouter);
+  app.use('/api/integrations/doppus/product-mappings', doppusProductMappingsRouter);
   
   // Rotas para o sistema de comunidade
   app.use(communityRouter);
