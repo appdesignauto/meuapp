@@ -129,6 +129,8 @@ export default function SubscriptionSettings() {
       hotmartWebhookUrl: '',
       
       // Campos Doppus
+      doppusClientId: '',
+      doppusClientSecret: '',
       doppusSecretKey: '',
       doppusBasicPlanId: '',
       doppusProPlanId: '',
@@ -181,6 +183,8 @@ export default function SubscriptionSettings() {
         hotmartWebhookUrl: settings.hotmartWebhookUrl || '',
         
         // Campos Doppus
+        doppusClientId: settings.doppusClientId || '',
+        doppusClientSecret: settings.doppusClientSecret || '',
         doppusSecretKey: settings.doppusSecretKey || '',
         doppusBasicPlanId: settings.doppusBasicPlanId || '',
         doppusProPlanId: settings.doppusProPlanId || '',
