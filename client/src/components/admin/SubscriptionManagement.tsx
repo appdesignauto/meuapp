@@ -269,6 +269,183 @@ export default function SubscriptionManagement() {
     timestamp: Date;
   } | null>(null);
   
+  // Os estados para gerenciamento de mapeamentos foram movidos para baixo
+  // para evitar duplicação
+  
+  // Função para buscar os mapeamentos de produtos Hotmart
+  const fetchProductMappings = useCallback(async () => {
+    try {
+      if (setIsLoadingMappings) {
+        setIsLoadingMappings(true);
+      }
+      const response = await fetch('/api/integrations/hotmart/product-mappings');
+      
+      if (!response.ok) {
+        throw new Error('Falha ao buscar mapeamentos de produtos');
+      }
+      
+      const data = await response.json();
+      if (setProductMappings) {
+        setProductMappings(data);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar mapeamentos:', error);
+      toast({
+        title: "Erro ao carregar mapeamentos",
+        description: "Não foi possível carregar os mapeamentos de produtos Hotmart.",
+        variant: "destructive",
+      });
+    } finally {
+      if (setIsLoadingMappings) {
+        setIsLoadingMappings(false);
+      }
+    }
+  }, [toast, setIsLoadingMappings, setProductMappings]);
+
+  // Função para abrir o diálogo de adição de mapeamento
+  const openAddMappingDialog = () => {
+    setMappingFormData({
+      productName: '',
+      planType: 'premium',
+      durationDays: 30,
+      isLifetime: false
+    });
+    setEditingMapping(null);
+    setShowProductMappingDialog(true);
+  };
+
+  // Função para abrir o diálogo de edição de mapeamento
+  const openEditMappingDialog = (mapping: ProductMapping) => {
+    setMappingFormData({
+      productName: mapping.productName,
+      planType: mapping.planType,
+      durationDays: mapping.durationDays || 30,
+      isLifetime: mapping.isLifetime
+    });
+    setEditingMapping(mapping);
+    setShowProductMappingDialog(true);
+  };
+
+  // Função para processar alterações no formulário de mapeamento
+  const handleMappingFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type } = e.target;
+    
+    if (type === 'number') {
+      setMappingFormData({
+        ...mappingFormData,
+        [name]: parseInt(value, 10)
+      });
+    } else {
+      setMappingFormData({
+        ...mappingFormData,
+        [name]: value
+      });
+    }
+  };
+
+  // Função para enviar o formulário de mapeamento
+  const handleSubmitMapping = async () => {
+    try {
+      const endpoint = editingMapping 
+        ? `/api/integrations/hotmart/product-mappings/${editingMapping.id}` 
+        : '/api/integrations/hotmart/product-mappings';
+      
+      const method = editingMapping ? 'PUT' : 'POST';
+      
+      const response = await fetch(endpoint, {
+        method,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(mappingFormData)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Falha ao salvar mapeamento');
+      }
+      
+      // Atualizar a lista de mapeamentos
+      await fetchProductMappings();
+      
+      // Fechar o diálogo
+      setShowProductMappingDialog(false);
+      
+      toast({
+        title: editingMapping ? "Mapeamento atualizado" : "Mapeamento adicionado",
+        description: editingMapping 
+          ? "O mapeamento de produto foi atualizado com sucesso." 
+          : "Um novo mapeamento de produto foi adicionado.",
+      });
+    } catch (error) {
+      console.error('Erro ao salvar mapeamento:', error);
+      toast({
+        title: "Erro ao salvar mapeamento",
+        description: "Não foi possível salvar o mapeamento de produto.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Função para alternar o status de um mapeamento (ativo/inativo)
+  const handleToggleMappingStatus = async (mapping: ProductMapping) => {
+    try {
+      const response = await fetch(`/api/integrations/hotmart/product-mappings/${mapping.id}/toggle-status`, {
+        method: 'PUT'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Falha ao alterar status');
+      }
+      
+      // Atualizar a lista de mapeamentos
+      await fetchProductMappings();
+      
+      toast({
+        title: "Status alterado",
+        description: `O mapeamento para "${mapping.productName}" foi ${mapping.isActive ? 'desativado' : 'ativado'}.`,
+      });
+    } catch (error) {
+      console.error('Erro ao alterar status:', error);
+      toast({
+        title: "Erro ao alterar status",
+        description: "Não foi possível alterar o status do mapeamento.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Função para excluir um mapeamento
+  const handleDeleteMapping = async (mapping: ProductMapping) => {
+    if (!window.confirm(`Tem certeza que deseja excluir o mapeamento para "${mapping.productName}"?`)) {
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/integrations/hotmart/product-mappings/${mapping.id}`, {
+        method: 'DELETE'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Falha ao excluir mapeamento');
+      }
+      
+      // Atualizar a lista de mapeamentos
+      await fetchProductMappings();
+      
+      toast({
+        title: "Mapeamento excluído",
+        description: `O mapeamento para "${mapping.productName}" foi excluído com sucesso.`,
+      });
+    } catch (error) {
+      console.error('Erro ao excluir mapeamento:', error);
+      toast({
+        title: "Erro ao excluir mapeamento",
+        description: "Não foi possível excluir o mapeamento de produto.",
+        variant: "destructive",
+      });
+    }
+  };
+  
   // Carrega o status de conexão do localStorage ao inicializar
   useEffect(() => {
     const savedStatus = localStorage.getItem('hotmartLastConnectionStatus');
@@ -284,6 +461,13 @@ export default function SubscriptionManagement() {
       }
     }
   }, []);
+  
+  // Carrega os mapeamentos de produtos quando a aba de integrações é selecionada
+  useEffect(() => {
+    if (activeTab === "configIntegracoes") {
+      fetchProductMappings();
+    }
+  }, [activeTab, fetchProductMappings]);
   
   // Estados para filtros
   const [searchTerm, setSearchTerm] = useState('');
