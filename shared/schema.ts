@@ -852,11 +852,13 @@ export const popupsRelations = relations(popups, ({ one, many }) => ({
 // Schema para mapeamento de produtos da Hotmart
 export const hotmartProductMappings = pgTable("hotmartProductMappings", {
   id: serial("id").primaryKey(),
-  productName: text("productName").notNull().unique(),
-  planType: text("planType").notNull(), // 'premium', 'pro', 'basic', etc.
+  productId: text("productId").notNull(), // ID do produto na Hotmart
+  offerId: text("offerId").notNull().unique(), // ID da oferta na Hotmart
+  productName: text("productName").notNull(), // Nome do produto/oferta na Hotmart (informativo)
+  planType: text("planType").notNull(), // 'premium', 'pro', 'basic', etc. no DesignAuto
   durationDays: integer("durationDays"), // Número de dias de acesso (nulo se for vitalício)
   isLifetime: boolean("isLifetime").default(false), // Indica se o acesso é vitalício
-  isActive: boolean("isActive").default(true),
+  isActive: boolean("isActive").default(true), // Se este mapeamento está ativo
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 });

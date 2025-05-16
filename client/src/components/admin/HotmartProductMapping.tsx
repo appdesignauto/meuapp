@@ -48,6 +48,8 @@ import { Loader2, Plus, Trash2, FileEdit, Info, Check, X } from 'lucide-react';
 
 interface ProductMapping {
   id: number;
+  productId: string;
+  offerId: string;
   productName: string;
   planType: string;
   durationDays: number | null;
@@ -68,6 +70,8 @@ export default function HotmartProductMapping({ standalone = false }: HotmartPro
   const [showMappingDialog, setShowMappingDialog] = useState(false);
   const [editingMapping, setEditingMapping] = useState<ProductMapping | null>(null);
   const [mappingFormData, setMappingFormData] = useState({
+    productId: '',
+    offerId: '',
     productName: '',
     planType: 'premium',
     durationDays: 30,
@@ -101,6 +105,8 @@ export default function HotmartProductMapping({ standalone = false }: HotmartPro
   // Função para abrir o diálogo de adição de mapeamento
   const openAddMappingDialog = () => {
     setMappingFormData({
+      productId: '',
+      offerId: '',
       productName: '',
       planType: 'premium',
       durationDays: 30,
@@ -113,6 +119,8 @@ export default function HotmartProductMapping({ standalone = false }: HotmartPro
   // Função para abrir o diálogo de edição de mapeamento
   const openEditMappingDialog = (mapping: ProductMapping) => {
     setMappingFormData({
+      productId: mapping.productId,
+      offerId: mapping.offerId,
       productName: mapping.productName,
       planType: mapping.planType,
       durationDays: mapping.durationDays || 30,
