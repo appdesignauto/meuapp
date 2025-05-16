@@ -107,6 +107,7 @@ import CategoriesList from '@/components/admin/CategoriesList';
 import UserManagement from '@/components/admin/UserManagement';
 import CommunityManagement from './community/CommunityManagement';
 import SiteSettings from '@/components/admin/SiteSettings';
+import SubscriptionSettings from '@/components/admin/SubscriptionSettings';
 import CommentsManagement from '@/components/admin/CommentsManagement';
 import FormatsList from '@/components/admin/FormatsList';
 import CourseStatisticsPanel from '@/components/admin/CourseStatisticsPanel';
