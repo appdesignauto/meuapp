@@ -57,8 +57,9 @@ export class HotmartService {
       // Passo 2: Fazer uma chamada simples para verificar o token
       console.log('Passo 2: Testando acesso à API...');
       
-      // URL para listar 1 venda (endpoint básico)
+      // URL para listar 1 venda (endpoint no formato HotConnect)
       const testUrl = `${this.baseUrl}/payments/api/v1/sales?max_results=1`;
+      console.log(`Usando URL de teste: ${testUrl}`);
       
       const response = await fetch(testUrl, {
         method: 'GET',

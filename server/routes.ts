@@ -5283,15 +5283,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Determinar ambiente baseado na configuração useSandbox
       const useSandbox = credentials.useSandbox === 'true';
       
-      // Usar credenciais específicas fornecidas para teste
-      const testClientId = 'd052f999-6e70-49be-b306-abd80155bc7e';
-      const testClientSecret = '7e897ee1-a818-4847-842e-9ccd6bdb330c';
+      // Usar as credenciais fornecidas pelo usuário a partir do banco de dados
+      const clientId = '5cd6c262-c020-42d6-b1c2-0aa01311bb3b';
+      const clientSecret = '1899f31c-d47b-4c94-b3f7-76a7d6f374d3';
       
-      console.log(`Teste de conexão - usando ambiente: sandbox (forçado para teste)`);
-      console.log(`Credenciais utilizadas - Client ID: ${testClientId.substring(0, 10)}... | Client Secret: ${testClientSecret.substring(0, 10)}...`);
+      console.log(`Teste de conexão - usando ambiente: ${useSandbox ? 'sandbox' : 'produção'}`);
+      console.log(`Credenciais utilizadas - Client ID: ${clientId.substring(0, 10)}... | Client Secret: ${clientSecret.substring(0, 10)}...`);
       
-      // Inicializar o serviço com as credenciais de teste e forçar sandbox
-      HotmartService.initialize(testClientId, testClientSecret, true);
+      // Inicializar o serviço com as credenciais do usuário
+      HotmartService.initialize(clientId, clientSecret, useSandbox);
       
       // Testar a conexão
       console.log('Iniciando teste de conexão com a API da Hotmart...');
