@@ -63,6 +63,7 @@ import {
   Settings,
   Webhook,
   FileText,
+  Copy,
   Download,
   Filter,
   X,
@@ -1265,7 +1266,7 @@ export default function SubscriptionManagement() {
 
                     <div className="pt-4">
                       <Button variant="outline" className="w-full sm:w-auto">
-                        <RefreshCcw className="w-4 h-4 mr-2" />
+                        <RefreshCw className="w-4 h-4 mr-2" />
                         Testar Conexão com Hotmart
                       </Button>
                     </div>
@@ -1438,7 +1439,7 @@ export default function SubscriptionManagement() {
 
                     <div className="pt-4">
                       <Button variant="outline" className="w-full sm:w-auto">
-                        <RefreshCcw className="w-4 h-4 mr-2" />
+                        <RefreshCw className="w-4 h-4 mr-2" />
                         Testar Conexão com Doppus
                       </Button>
                     </div>
