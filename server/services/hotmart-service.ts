@@ -34,22 +34,101 @@ export class HotmartService {
 
   /**
    * Testa a conexão com a API da Hotmart usando as credenciais configuradas
-   * @returns Objeto indicando se a conexão foi bem-sucedida
+   * @returns Objeto detalhado indicando se a conexão foi bem-sucedida e informações adicionais
    */
-  static async testConnection(): Promise<{ success: boolean; message?: string }> {
+  static async testConnection(): Promise<{ success: boolean; message: string; details?: any }> {
+    console.log('Testando conexão com a API da Hotmart...');
+    console.log(`Ambiente: ${this.baseUrl.includes('sandbox') ? 'Sandbox' : 'Produção'}`);
+    console.log(`Client ID: ${this.clientId.substring(0, 10)}...`);
+    console.log(`Client Secret: ${this.clientSecret.substring(0, 10)}...`);
+    
     try {
-      // Tenta obter um token de acesso para verificar se as credenciais estão funcionando
+      // Teste 1: Obter token de acesso
+      console.log('Passo 1: Tentando obter token de acesso...');
       const token = await this.getAccessToken();
-      return { 
-        success: true, 
-        message: "Conexão com a API da Hotmart estabelecida com sucesso" 
-      };
+      
+      if (!token) {
+        return {
+          success: false,
+          message: "Não foi possível obter o token de acesso. Verifique suas credenciais."
+        };
+      }
+      
+      console.log(`Token obtido com sucesso! (primeiros 10 caracteres): ${token.substring(0, 10)}...`);
+      
+      // Teste 2: Fazer uma chamada simples para verificar o token
+      console.log('Passo 2: Testando chamada simples à API...');
+      try {
+        const testUrl = `${this.baseUrl}/payments/api/v1/sales?max_results=1`;
+        console.log(`URL de teste: ${testUrl}`);
+        
+        const response = await fetch(testUrl, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json'
+          }
+        });
+        
+        const responseStatus = response.status;
+        console.log(`Status da resposta: ${responseStatus}`);
+        
+        // Captura o texto da resposta para análise
+        const responseText = await response.text();
+        console.log(`Corpo da resposta (primeiros 200 caracteres): ${responseText.substring(0, 200)}`);
+        
+        let responseData;
+        try {
+          // Tenta parsear a resposta como JSON
+          responseData = JSON.parse(responseText);
+        } catch (e) {
+          responseData = { rawResponse: responseText };
+        }
+        
+        if (response.ok) {
+          return {
+            success: true,
+            message: "✅ Conexão com a API da Hotmart estabelecida com sucesso!",
+            details: {
+              token: token.substring(0, 15) + "...",
+              endpoint: testUrl,
+              status: responseStatus,
+              data: responseData
+            }
+          };
+        } else {
+          // Se conseguimos token mas a API retornou erro
+          return {
+            success: false,
+            message: `Token obtido com sucesso, mas a API retornou erro: ${responseStatus}. Isso pode indicar problemas com permissões ou escopo do token.`,
+            details: {
+              token: token.substring(0, 15) + "...",
+              endpoint: testUrl,
+              status: responseStatus,
+              error: responseData
+            }
+          };
+        }
+      } catch (apiError) {
+        // Erro ao chamar a API
+        console.error("Erro ao chamar API da Hotmart:", apiError);
+        return {
+          success: false,
+          message: `Token obtido com sucesso, mas ocorreu um erro ao testar a API: ${apiError instanceof Error ? apiError.message : 'Erro desconhecido'}`,
+          details: { 
+            token: token.substring(0, 15) + "...",
+            error: apiError instanceof Error ? apiError.message : 'Erro desconhecido'
+          }
+        };
+      }
     } catch (error) {
+      // Erro ao obter token
       console.error("Erro ao testar conexão com a Hotmart:", error);
       const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
       return { 
         success: false, 
-        message: `Falha na conexão com a API da Hotmart: ${errorMessage}` 
+        message: `❌ Falha na conexão com a API da Hotmart: ${errorMessage}`,
+        details: { error: errorMessage }
       };
     }
   }
