@@ -252,6 +252,95 @@ export default function SubscriptionManagement() {
     }
   });
   
+  // Mutações para atualizar chaves de integração
+  const updateHotmartSecretMutation = useMutation({
+    mutationFn: async (newSecret: string) => {
+      const response = await apiRequest('POST', '/api/integrations/hotmart/secret', { secret: newSecret });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Chave atualizada",
+        description: "A chave secreta da Hotmart foi atualizada com sucesso.",
+      });
+      setIsHotmartSecretDialogOpen(false);
+      setHotmartSecretInput('');
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao atualizar chave",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  const updateHotmartClientIdMutation = useMutation({
+    mutationFn: async (newClientId: string) => {
+      const response = await apiRequest('POST', '/api/integrations/hotmart/client-id', { clientId: newClientId });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Client ID atualizado",
+        description: "O Client ID da Hotmart foi atualizado com sucesso.",
+      });
+      setIsHotmartClientIdDialogOpen(false);
+      setHotmartClientIdInput('');
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao atualizar Client ID",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  const updateHotmartClientSecretMutation = useMutation({
+    mutationFn: async (newClientSecret: string) => {
+      const response = await apiRequest('POST', '/api/integrations/hotmart/client-secret', { clientSecret: newClientSecret });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Client Secret atualizado",
+        description: "O Client Secret da Hotmart foi atualizado com sucesso.",
+      });
+      setIsHotmartClientSecretDialogOpen(false);
+      setHotmartClientSecretInput('');
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao atualizar Client Secret",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  const updateDoppusSecretMutation = useMutation({
+    mutationFn: async (newSecret: string) => {
+      const response = await apiRequest('POST', '/api/integrations/doppus/secret', { secret: newSecret });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Chave atualizada",
+        description: "A chave secreta da Doppus foi atualizada com sucesso.",
+      });
+      setIsDoppusSecretDialogOpen(false);
+      setDoppusSecretInput('');
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao atualizar chave",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
   // Função para salvar configurações
   const handleSaveSettings = () => {
     saveSettingsMutation.mutate({
@@ -2430,92 +2519,5 @@ export default function SubscriptionManagement() {
     setShowExportDialog(false);
   }
   
-  // Mutações para atualizar chaves de integração
-  const updateHotmartSecretMutation = useMutation({
-    mutationFn: async (newSecret: string) => {
-      const response = await apiRequest('POST', '/api/integrations/hotmart/secret', { secret: newSecret });
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Chave atualizada",
-        description: "A chave secreta da Hotmart foi atualizada com sucesso.",
-      });
-      setIsHotmartSecretDialogOpen(false);
-      setHotmartSecretInput('');
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Erro ao atualizar chave",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  });
   
-  const updateHotmartClientIdMutation = useMutation({
-    mutationFn: async (newClientId: string) => {
-      const response = await apiRequest('POST', '/api/integrations/hotmart/client-id', { clientId: newClientId });
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Client ID atualizado",
-        description: "O Client ID da Hotmart foi atualizado com sucesso.",
-      });
-      setIsHotmartClientIdDialogOpen(false);
-      setHotmartClientIdInput('');
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Erro ao atualizar Client ID",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  });
-  
-  const updateHotmartClientSecretMutation = useMutation({
-    mutationFn: async (newClientSecret: string) => {
-      const response = await apiRequest('POST', '/api/integrations/hotmart/client-secret', { clientSecret: newClientSecret });
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Client Secret atualizado",
-        description: "O Client Secret da Hotmart foi atualizado com sucesso.",
-      });
-      setIsHotmartClientSecretDialogOpen(false);
-      setHotmartClientSecretInput('');
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Erro ao atualizar Client Secret",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  });
-  
-  const updateDoppusSecretMutation = useMutation({
-    mutationFn: async (newSecret: string) => {
-      const response = await apiRequest('POST', '/api/integrations/doppus/secret', { secret: newSecret });
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Chave atualizada",
-        description: "A chave secreta da Doppus foi atualizada com sucesso.",
-      });
-      setIsDoppusSecretDialogOpen(false);
-      setDoppusSecretInput('');
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Erro ao atualizar chave",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  });
 }
