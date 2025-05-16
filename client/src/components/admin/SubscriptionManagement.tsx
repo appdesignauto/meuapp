@@ -3322,5 +3322,83 @@ export default function SubscriptionManagement() {
     setShowExportDialog(false);
   }
   
-  
+  return (
+    <div className="space-y-6">
+      <Tabs 
+        defaultValue="visaoGeral" 
+        className="w-full"
+        onValueChange={(value) => {
+          setActiveTab(value);
+        }}
+      >
+        <TabsList className="grid grid-cols-4 w-full mb-4">
+          <TabsTrigger value="visaoGeral">Visão Geral</TabsTrigger>
+          <TabsTrigger value="gerenciarAssinaturas">Gerenciar Assinaturas</TabsTrigger>
+          <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
+          <TabsTrigger value="configIntegracoes">Configurações</TabsTrigger>
+        </TabsList>
+        
+        {/* Visão Geral - Dashboard e métricas */}
+        <TabsContent value="visaoGeral">
+          <SubscriptionTrends />
+        </TabsContent>
+        
+        {/* Gerenciamento de Assinaturas */}
+        <TabsContent value="gerenciarAssinaturas">
+          <Card>
+            <CardHeader>
+              <CardTitle>Gerenciar Assinaturas</CardTitle>
+              <CardDescription>
+                Visualize, filtre e gerencie todas as assinaturas de usuários.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {/* Lista de assinaturas com filtros e funcionalidades de gerenciamento */}
+              <div className="space-y-4">
+                {/* Tabela de assinantes seria inserida aqui */}
+                <p className="text-muted-foreground">Lista de assinaturas carregando...</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        {/* Visualização de Webhooks */}
+        <TabsContent value="webhooks">
+          <Card>
+            <CardHeader>
+              <CardTitle>Webhooks</CardTitle>
+              <CardDescription>
+                Histórico de eventos de Webhook recebidos da Hotmart e outros provedores.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <WebhookList />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        {/* Configurações de Integração */}
+        <TabsContent value="configIntegracoes">
+          <Card>
+            <CardHeader>
+              <CardTitle>Configurações de Integração</CardTitle>
+              <CardDescription>
+                Configure as integrações com plataformas de pagamento e assinatura.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SubscriptionSettings />
+              <div className="mt-8">
+                <h3 className="text-lg font-medium mb-4">Mapeamento de Produtos Hotmart</h3>
+                <HotmartProductMapping />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+      
+      {/* Diálogos e modais */}
+      {/* Estes diálogos seriam utilizados para edição, visualização, etc. */}
+    </div>
+  );
 }
