@@ -5633,9 +5633,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const sourceIp = req.ip || req.connection.remoteAddress || 'unknown';
       console.log("Webhook Doppus recebido de IP:", sourceIp);
       
+      // Importar o serviço da Doppus
+      const DoppusService = (await import('./services/doppus-service')).default;
+      
       // Extrai assinatura de segurança do webhook Doppus no cabeçalho da requisição
-      const signature = req.headers['x-doppus-signature'];
-      const eventType = req.headers['x-doppus-event'] || 'unknown';
+      const signature = req.headers['x-doppus-signature'] as string;
+      const eventType = req.headers['x-doppus-event'] as string || 'unknown';
       
       // Em ambiente de produção, validar a assinatura do Doppus
       // const doppusSecret = process.env.DOPPUS_SECRET_KEY;

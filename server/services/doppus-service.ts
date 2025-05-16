@@ -244,7 +244,7 @@ class DoppusService {
           dataassinatura: startDate,
           dataexpiracao: endDate,
           acessovitalicio: isLifetime,
-          updatedat: new Date()
+          atualizadoem: new Date()
         })
         .where(eq(users.id, userResult.id));
       
