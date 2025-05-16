@@ -127,7 +127,7 @@ class DoppusService {
         throw new Error(errorMsg + ` (${errorText})`);
       }
       
-      const data = await response.json();
+      const data = await response.json() as { access_token?: string };
       
       if (!data.access_token) {
         console.error('Resposta sem token de acesso:', JSON.stringify(data));
@@ -135,7 +135,7 @@ class DoppusService {
       }
       
       console.log('Token de acesso obtido com sucesso!');
-      return data.access_token;
+      return data.access_token as string;
     } catch (error) {
       console.error('Erro ao obter token de acesso da Doppus:', error);
       throw new Error('Falha na autenticação com a Doppus: ' + (error instanceof Error ? error.message : String(error)));
@@ -332,7 +332,7 @@ class DoppusService {
           } else if (productName.includes('vitalicio') || productName.includes('lifetime') || productName.includes('para sempre')) {
             planType = 'premium_lifetime';
             isLifetime = true;
-            durationDays = null;
+            durationDays = 36500; // Aproximadamente 100 anos
           } else {
             // Valores padrão
             planType = 'premium_30';
@@ -738,7 +738,7 @@ class DoppusService {
           };
         }
         
-        const tokenData = await tokenResponse.json();
+        const tokenData = await tokenResponse.json() as { access_token?: string };
         
         if (!tokenData.access_token) {
           console.error('✗ Token não encontrado na resposta:', tokenData);
