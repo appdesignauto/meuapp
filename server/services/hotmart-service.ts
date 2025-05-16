@@ -131,9 +131,16 @@ export class HotmartService {
       let tokenUrl;
       if (this.baseUrl.includes('sandbox')) {
         tokenUrl = 'https://sandbox-api-sec.hotmart.com/security/oauth/token';
+        console.log("[DIAGNÓSTICO] Ambiente detectado: SANDBOX");
       } else {
         tokenUrl = 'https://api-sec.hotmart.com/security/oauth/token';
+        console.log("[DIAGNÓSTICO] Ambiente detectado: PRODUÇÃO");
       }
+      
+      // Log extra para diagnóstico
+      console.log(`[DIAGNÓSTICO DETALHADO] ClientID: ${this.clientId}`);
+      console.log(`[DIAGNÓSTICO DETALHADO] ClientSecret (primeiros 5 caracteres): ${this.clientSecret.substring(0, 5)}`);
+      console.log(`[DIAGNÓSTICO DETALHADO] BaseURL: ${this.baseUrl}`);
       
       console.log(`[getAccessToken] Usando URL para token: ${tokenUrl}`);
       
