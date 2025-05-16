@@ -61,7 +61,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
     },
     {
       title: 'Assinaturas',
-      href: '/admin/assinaturas',
+      href: '/admin/dashboard?tab=subscriptions',
       icon: <CreditCard className="h-5 w-5" />,
     },
     {
