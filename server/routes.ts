@@ -5143,8 +5143,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Importar o serviço da Hotmart
       const { HotmartService } = await import('./services/hotmart-service');
       
+      // Determinar ambiente - usar produção para domínio designauto.com.br
+      const isProduction = req.hostname.includes('designauto.com.br');
+      
       // Inicializar o serviço com as credenciais
-      HotmartService.initialize(credentials.clientId, credentials.clientSecret, false);  // false = ambiente de produção
+      HotmartService.initialize(credentials.clientId, credentials.clientSecret, !isProduction);
       
       // Testar a conexão
       const result = await HotmartService.testConnection();
@@ -5153,11 +5156,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(200).json(result);
     } catch (error) {
       console.error("Erro ao testar conexão com a Hotmart:", error);
-      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
+      let errorMessage = "Erro desconhecido";
+      
+      // Extrai uma mensagem de erro amigável para o usuário
+      if (error instanceof Error) {
+        if (error.message.includes('404')) {
+          errorMessage = "Não foi possível conectar à API da Hotmart. Verifique se as credenciais estão corretas.";
+        } else if (error.message.includes('401')) {
+          errorMessage = "Credenciais da Hotmart inválidas. Verifique o Client ID e Client Secret.";
+        } else if (error.message.includes('403')) {
+          errorMessage = "Sem permissão para acessar a API da Hotmart. Verifique as permissões das credenciais.";
+        } else if (error.message.includes('500')) {
+          errorMessage = "Erro interno no servidor da Hotmart. Tente novamente mais tarde.";
+        } else if (error.message.includes('timeout')) {
+          errorMessage = "Tempo limite excedido na conexão com a Hotmart. Verifique sua conexão com a internet.";
+        } else {
+          // Se não for nenhum dos casos acima, usa a mensagem original, mas formatada
+          errorMessage = "Falha na conexão: " + error.message.replace(/^Error: /, '');
+        }
+      }
       
       return res.status(500).json({
         success: false,
-        message: `Erro ao testar conexão com a Hotmart: ${errorMessage}`
+        message: errorMessage
       });
     }
   });

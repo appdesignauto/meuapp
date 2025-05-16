@@ -1298,12 +1298,22 @@ export default function SubscriptionManagement() {
                       <div className="flex mt-1.5">
                         <Input 
                           id="hotmartClientId" 
-                          type="password" 
+                          type={showHotmartClientId ? "text" : "password"} 
                           placeholder="Insira o Client ID da API Hotmart" 
-                          value="●●●●●●●●●●●●●●●●"
+                          value={integrationSettings?.hotmart?.clientId?.isDefined ? 
+                                 (showHotmartClientId ? integrationSettings?.hotmart?.clientId?.realValue || "" : "●●●●●●●●●●●●●●●●") : 
+                                 ""}
                           readOnly
                           className="flex-1 rounded-r-none bg-muted"
                         />
+                        <Button 
+                          type="button"
+                          variant="outline"
+                          className="px-3 border-r-0 rounded-none"
+                          onClick={() => setShowHotmartClientId(!showHotmartClientId)}
+                        >
+                          {showHotmartClientId ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
                         <Button 
                           type="button" 
                           variant="secondary" 
@@ -1324,12 +1334,22 @@ export default function SubscriptionManagement() {
                       <div className="flex mt-1.5">
                         <Input 
                           id="hotmartClientSecret" 
-                          type="password" 
+                          type={showHotmartClientSecret ? "text" : "password"}
                           placeholder="Insira o Client Secret da API Hotmart" 
-                          value="●●●●●●●●●●●●●●●●"
+                          value={integrationSettings?.hotmart?.clientSecret?.isDefined ? 
+                                 (showHotmartClientSecret ? integrationSettings?.hotmart?.clientSecret?.realValue || "" : "●●●●●●●●●●●●●●●●") : 
+                                 ""}
                           readOnly
                           className="flex-1 rounded-r-none bg-muted"
                         />
+                        <Button 
+                          type="button"
+                          variant="outline"
+                          className="px-3 border-r-0 rounded-none"
+                          onClick={() => setShowHotmartClientSecret(!showHotmartClientSecret)}
+                        >
+                          {showHotmartClientSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
                         <Button 
                           type="button" 
                           variant="secondary" 
