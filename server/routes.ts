@@ -5336,19 +5336,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           acc[setting.provider] = {};
         }
         
-        // Não enviar valores sensíveis, apenas indicar se estão definidos
+        // Não enviar valores sensíveis como texto puro, mas incluir propriedade realValue
+        // para que o frontend possa mostrar quando explicitamente solicitado
         const isSensitive = ['secret', 'clientSecret'].includes(setting.key);
         const isDefined = !!setting.value && setting.value.length > 0;
+        const maskedValue = isDefined ? '••••••••' : '';
         
-        // Para campos sensíveis, armazenar também o valor real para devolução
-        // quando solicitado explicitamente nos endpoints específicos
         acc[setting.provider][setting.key] = {
-          value: isSensitive ? (isDefined ? '••••••••' : '') : setting.value,
+          value: isSensitive ? maskedValue : setting.value,
           description: setting.description,
           isActive: setting.isActive,
           updatedAt: setting.updatedAt,
           isDefined: isDefined,
-          // Adicionar último caracteres para facilitar identificação
+          // Adicionar valor real para o frontend poder exibir quando solicitado
+          realValue: setting.value,
+          // Adicionar últimos caracteres para facilitar identificação
           lastChars: isDefined && setting.value.length > 4 ? 
             setting.value.slice(-4) : ''
         };
