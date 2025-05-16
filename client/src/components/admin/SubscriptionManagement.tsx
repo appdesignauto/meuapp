@@ -2495,6 +2495,52 @@ export default function SubscriptionManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* Diálogo para atualizar a API Key da Doppus */}
+      <Dialog open={isDoppusApiKeyDialogOpen} onOpenChange={setIsDoppusApiKeyDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Atualizar API Key da Doppus</DialogTitle>
+            <DialogDescription>
+              Insira a nova API Key para integração com a Doppus.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="doppusApiKey">API Key</Label>
+              <Input
+                id="doppusApiKey"
+                value={doppusApiKeyInput}
+                onChange={(e) => setDoppusApiKeyInput(e.target.value)}
+                placeholder="Insira a API Key da Doppus"
+                className="w-full"
+              />
+              <p className="text-sm text-muted-foreground">
+                Esta chave é utilizada para acessar a API da Doppus e obter informações de assinaturas.
+              </p>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDoppusApiKeyDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={() => updateDoppusApiKeyMutation.mutate(doppusApiKeyInput)}
+              disabled={!doppusApiKeyInput.trim() || updateDoppusApiKeyMutation.isPending}
+              type="button"
+            >
+              {updateDoppusApiKeyMutation.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4 mr-2" />
+              )}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
   
