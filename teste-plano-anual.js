@@ -6,7 +6,8 @@
 import fetch from 'node-fetch';
 
 // Token personalizado da Hotmart configurado no sistema
-const HOTMART_TOKEN = "azjZzEUU43jb4zN4NqEUrvRu1MO1XQ1167719";
+// Usando o token real que está configurado no ambiente
+const HOTMART_TOKEN = process.env.HOTMART_SECRET;
 
 // Configuração da URL base
 const BASE_URL = process.env.REPLIT_DOMAIN 
