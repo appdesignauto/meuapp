@@ -5032,12 +5032,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Chave secreta é obrigatória" });
       }
       
-      // Atualizar valor na tabela de configurações
-      await db.execute(sql`
-        UPDATE "integrationSettings" 
-        SET "value" = ${secret}, "updatedAt" = NOW() 
+      // Verificar se o registro já existe
+      const existingRecord = await db.execute(sql`
+        SELECT id FROM "integrationSettings"
         WHERE "provider" = 'hotmart' AND "key" = 'secret'
       `);
+      
+      if (existingRecord.rows.length === 0) {
+        // Se não existir, criar um novo registro
+        await db.execute(sql`
+          INSERT INTO "integrationSettings" 
+          (provider, key, value, description, "isActive", "createdAt", "updatedAt")
+          VALUES ('hotmart', 'secret', ${secret}, 'Chave secreta para validação de webhooks da Hotmart', true, NOW(), NOW())
+        `);
+      } else {
+        // Se existir, atualizar o valor
+        await db.execute(sql`
+          UPDATE "integrationSettings" 
+          SET "value" = ${secret}, "updatedAt" = NOW() 
+          WHERE "provider" = 'hotmart' AND "key" = 'secret'
+        `);
+      }
       
       console.log("Chave secreta da Hotmart atualizada por:", req.user?.username);
       
@@ -5063,12 +5078,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Client ID é obrigatório" });
       }
       
-      // Atualizar valor na tabela de configurações
-      await db.execute(sql`
-        UPDATE "integrationSettings" 
-        SET "value" = ${clientId}, "updatedAt" = NOW() 
+      // Verificar se o registro já existe
+      const existingRecord = await db.execute(sql`
+        SELECT id FROM "integrationSettings"
         WHERE "provider" = 'hotmart' AND "key" = 'clientId'
       `);
+      
+      if (existingRecord.rows.length === 0) {
+        // Se não existir, criar um novo registro
+        await db.execute(sql`
+          INSERT INTO "integrationSettings" 
+          (provider, key, value, description, "isActive", "createdAt", "updatedAt")
+          VALUES ('hotmart', 'clientId', ${clientId}, 'Client ID da API da Hotmart', true, NOW(), NOW())
+        `);
+      } else {
+        // Se existir, atualizar o valor
+        await db.execute(sql`
+          UPDATE "integrationSettings" 
+          SET "value" = ${clientId}, "updatedAt" = NOW() 
+          WHERE "provider" = 'hotmart' AND "key" = 'clientId'
+        `);
+      }
       
       console.log("Client ID da Hotmart atualizado por:", req.user?.username);
       
