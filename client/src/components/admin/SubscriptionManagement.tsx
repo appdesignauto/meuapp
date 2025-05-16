@@ -105,9 +105,18 @@ interface IntegrationSettings {
       isDefined: boolean;
       realValue?: string;
     };
+    useSandbox?: {
+      isDefined: boolean;
+      value: string;
+      realValue?: string;
+    };
   };
   doppus?: {
     secret?: {
+      isDefined: boolean;
+      realValue?: string;
+    };
+    apiKey?: {
       isDefined: boolean;
       realValue?: string;
     };
@@ -140,36 +149,6 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 interface SecretKeyInfo {
   isDefined: boolean;
   realValue?: string;
-}
-
-// Interface para mapeamento de produtos da Hotmart
-interface ProductMapping {
-  id: number;
-  productName: string;
-  planType: string;
-  durationDays: number | null;
-  isLifetime: boolean;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-// Interface principal para configurações de integração
-interface IntegrationSettings {
-  hotmart?: {
-    secret?: SecretKeyInfo;
-    clientId?: SecretKeyInfo;
-    clientSecret?: SecretKeyInfo;
-    useSandbox?: {
-      isDefined: boolean;
-      value: string;
-      realValue?: string;
-    };
-  };
-  doppus?: {
-    secret?: SecretKeyInfo;
-    apiKey?: SecretKeyInfo;
-  };
 }
 
 interface User {
@@ -516,6 +495,7 @@ export default function SubscriptionManagement() {
   const [showDoppusSecret, setShowDoppusSecret] = useState(false);
   const [showDoppusClientId, setShowDoppusClientId] = useState(false);
   const [showDoppusClientSecret, setShowDoppusClientSecret] = useState(false);
+  const [showDoppusApiKey, setShowDoppusApiKey] = useState(false);
   
   // Estado para controlar o ambiente da Hotmart (sandbox/produção)
   const [isHotmartSandbox, setIsHotmartSandbox] = useState(true);
@@ -526,6 +506,10 @@ export default function SubscriptionManagement() {
   const [doppusSecretInput, setDoppusSecretInput] = useState('');
   const [doppusClientIdInput, setDoppusClientIdInput] = useState('');
   const [doppusClientSecretInput, setDoppusClientSecretInput] = useState('');
+  const [doppusApiKeyInput, setDoppusApiKeyInput] = useState('');
+  
+  // Diálogo de API Key da Doppus
+  const [isDoppusApiKeyDialogOpen, setIsDoppusApiKeyDialogOpen] = useState(false);
   
   // Estados para configuração de assinatura
   const [autoDowngrade, setAutoDowngrade] = useState(true);
