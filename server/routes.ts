@@ -6636,13 +6636,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Inicializar o serviço da Hotmart se as credenciais estiverem disponíveis
   if (process.env.HOTMART_CLIENT_ID && process.env.HOTMART_CLIENT_SECRET) {
-    const useSandbox = true; // Usar sandbox para desenvolvimento/teste
-    HotmartService.initialize(
-      process.env.HOTMART_CLIENT_ID,
-      process.env.HOTMART_CLIENT_SECRET,
-      useSandbox
-    );
-    console.log('Serviço da Hotmart inicializado com sucesso no modo Sandbox');
+    try {
+      // Buscar configuração de ambiente no banco de dados
+      const sandboxConfig = await db.execute(sql`
+        SELECT value FROM "integrationSettings"
+        WHERE "provider" = 'hotmart' AND "key" = 'useSandbox'
+      `);
+      
+      // Determinar o ambiente a ser usado
+      let useSandbox = true; // Valor padrão se não existir configuração
+      if (sandboxConfig.rows.length > 0) {
+        useSandbox = sandboxConfig.rows[0].value === 'true';
+      }
+      
+      // Inicializar o serviço com as credenciais e configuração de ambiente
+      HotmartService.initialize(
+        process.env.HOTMART_CLIENT_ID,
+        process.env.HOTMART_CLIENT_SECRET,
+        useSandbox
+      );
+      console.log(`Serviço da Hotmart inicializado com sucesso no modo ${useSandbox ? 'Sandbox' : 'Produção'}`);
+    } catch (error) {
+      console.error('Erro ao inicializar serviço da Hotmart:', error);
+      // Fallback para sandbox em caso de erro
+      HotmartService.initialize(
+        process.env.HOTMART_CLIENT_ID,
+        process.env.HOTMART_CLIENT_SECRET,
+        true
+      );
+      console.log('Serviço da Hotmart inicializado com fallback para modo Sandbox devido a erro');
+    }
   } else {
     console.log('Credenciais da Hotmart não encontradas. A verificação de renovações na Hotmart não estará disponível.');
   }
