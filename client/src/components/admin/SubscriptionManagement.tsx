@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import WebhookList from './WebhookList';
+import SubscriptionSettings from './SubscriptionSettings';
 import SubscriptionTrends from './SubscriptionTrends';
 import {
   Table,
@@ -1113,12 +1114,26 @@ export default function SubscriptionManagement() {
           )}
         </TabsContent>
         
-        {/* Aba de Webhooks */}
+        {/* Aba de Webhooks e Configurações */}
         <TabsContent value="webhooks" className="space-y-6">
-          <WebhookList key="subscription-webhooks" />
+          {/* Sub-abas para Webhooks e Configurações */}
+          <Tabs defaultValue="webhook-logs" className="w-full">
+            <TabsList className="w-full mb-4">
+              <TabsTrigger value="webhook-logs">Logs de Webhook</TabsTrigger>
+              <TabsTrigger value="configuracoes">Configurações</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="webhook-logs" className="space-y-4">
+              <WebhookList key="subscription-webhooks" />
+            </TabsContent>
+            
+            <TabsContent value="configuracoes" className="space-y-4">
+              <SubscriptionSettings />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
         
-        {/* Aba de Configurações */}
+        {/* Aba de Configurações Básicas */}
         <TabsContent value="settings" className="space-y-6">
           <Card>
             <CardHeader>

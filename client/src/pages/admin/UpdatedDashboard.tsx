@@ -3999,23 +3999,9 @@ const AdminDashboard = () => {
                     </p>
                   </div>
                   
-                  {/* Abas para navegação entre listas e configurações de assinaturas */}
-                  <Tabs defaultValue="lista" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 mb-6">
-                      <TabsTrigger value="lista">Lista de Assinaturas</TabsTrigger>
-                      <TabsTrigger value="configuracoes">Configurações</TabsTrigger>
-                    </TabsList>
-                    
-                    <TabsContent value="lista" className="space-y-4">
-                      <div className="grid gap-6">
-                        <SubscriptionManagement />
-                      </div>
-                    </TabsContent>
-                    
-                    <TabsContent value="configuracoes" className="space-y-4">
-                      <SubscriptionSettings />
-                    </TabsContent>
-                  </Tabs>
+                  <div className="grid gap-6">
+                    <SubscriptionManagement />
+                  </div>
                 </div>
               </div>
             </TabsContent>
