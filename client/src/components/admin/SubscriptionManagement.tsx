@@ -1250,7 +1250,7 @@ export default function SubscriptionManagement() {
                           variant="secondary" 
                           className="rounded-l-none"
                           onClick={() => {
-                            navigator.clipboard.writeText(`${window.location.origin}/api/webhooks/hotmart`);
+                            navigator.clipboard.writeText(`https://designauto.com.br/webhook/hotmart`);
                             toast({
                               title: "URL copiada!",
                               description: "URL do webhook copiada para a área de transferência.",
@@ -1430,7 +1430,7 @@ export default function SubscriptionManagement() {
                         <Input 
                           id="doppusWebhookUrl" 
                           placeholder="https://seusite.com.br/api/webhooks/doppus" 
-                          value={`${window.location.origin}/api/webhooks/doppus`}
+                          value={`https://designauto.com.br/webhook/doppus`}
                           readOnly
                           className="flex-1 rounded-r-none bg-muted"
                         />
@@ -1439,7 +1439,7 @@ export default function SubscriptionManagement() {
                           variant="secondary" 
                           className="rounded-l-none"
                           onClick={() => {
-                            navigator.clipboard.writeText(`${window.location.origin}/api/webhooks/doppus`);
+                            navigator.clipboard.writeText(`https://designauto.com.br/webhook/doppus`);
                             toast({
                               title: "URL copiada!",
                               description: "URL do webhook copiada para a área de transferência.",
