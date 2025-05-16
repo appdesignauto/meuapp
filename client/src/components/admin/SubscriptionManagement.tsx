@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -259,6 +259,9 @@ export default function SubscriptionManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
+  // Estado para controlar a aba ativa
+  const [activeTab, setActiveTab] = useState("visaoGeral");
+
   // Estado para armazenar o status da última conexão com a Hotmart
   const [lastConnectionStatus, setLastConnectionStatus] = useState<{
     success: boolean;
