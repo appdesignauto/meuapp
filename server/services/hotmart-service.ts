@@ -197,16 +197,6 @@ export class HotmartService {
         // Repassa o erro original
         throw fetchError;
       }
-      
-      const data = await response.json();
-      
-      // Armazena o token e calcula a expiração (subtraindo 5 minutos por segurança)
-      this.accessToken = data.access_token;
-      this.tokenExpiration = now + (data.expires_in * 1000) - (5 * 60 * 1000);
-      
-      console.log('Token da Hotmart obtido com sucesso!');
-      
-      return this.accessToken;
     } catch (error) {
       console.error('Erro ao autenticar na API da Hotmart:', error);
       throw error;
