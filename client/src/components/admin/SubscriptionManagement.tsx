@@ -2161,8 +2161,97 @@ export default function SubscriptionManagement() {
                       </p>
                     </div>
 
+                    {/* Exibir o status da última conexão com a Doppus */}
+                    {lastDoppusConnectionStatus && (
+                      <div className={`text-sm p-2 mt-4 rounded-md flex items-start ${lastDoppusConnectionStatus.success ? 'bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-900' : 'bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-900'}`}>
+                        {lastDoppusConnectionStatus.success ? (
+                          <CheckCircle2 className="h-5 w-5 mr-2 flex-shrink-0" />
+                        ) : (
+                          <XCircle className="h-5 w-5 mr-2 flex-shrink-0" />
+                        )}
+                        <div className="space-y-1">
+                          <div className="font-medium">
+                            {lastDoppusConnectionStatus.success ? 'Conexão bem-sucedida' : 'Falha na conexão'}
+                          </div>
+                          <div className="text-xs opacity-90">
+                            Última verificação: {lastDoppusConnectionStatus.timestamp.toLocaleString('pt-BR')}
+                          </div>
+                          {!lastDoppusConnectionStatus.success && lastDoppusConnectionStatus.message && (
+                            <div className="text-xs italic">
+                              Motivo: {lastDoppusConnectionStatus.message}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     <div className="pt-4">
-                      <Button variant="outline" className="w-full sm:w-auto">
+                      <Button 
+                        variant="outline" 
+                        className="w-full sm:w-auto"
+                        onClick={() => {
+                          fetch('/api/integrations/doppus/test-connection')
+                            .then(response => response.json())
+                            .then(data => {
+                              // Salvar resultado da conexão
+                              setLastDoppusConnectionStatus({
+                                success: data.success,
+                                message: data.message || (data.success ? undefined : "Erro não especificado"),
+                                timestamp: new Date()
+                              });
+                              
+                              if (data.success) {
+                                toast({
+                                  title: "Conexão bem-sucedida!",
+                                  description: "A conexão com a API da Doppus está funcionando corretamente.",
+                                  variant: "default",
+                                });
+                                
+                                // Salvar no localStorage para persistir entre sessões
+                                localStorage.setItem('doppusLastConnectionStatus', JSON.stringify({
+                                  success: true,
+                                  message: data.message,
+                                  timestamp: new Date().toISOString()
+                                }));
+                              } else {
+                                toast({
+                                  title: "Erro na conexão",
+                                  description: data.message || "Não foi possível conectar à API da Doppus. Verifique as credenciais.",
+                                  variant: "destructive",
+                                });
+                                
+                                // Salvar no localStorage para persistir entre sessões
+                                localStorage.setItem('doppusLastConnectionStatus', JSON.stringify({
+                                  success: false,
+                                  message: data.message || "Não foi possível conectar à API da Doppus",
+                                  timestamp: new Date().toISOString()
+                                }));
+                              }
+                            })
+                            .catch(error => {
+                              // Atualizar status da conexão em caso de erro
+                              setLastDoppusConnectionStatus({
+                                success: false,
+                                message: "Erro de rede ao conectar com a API",
+                                timestamp: new Date()
+                              });
+                              
+                              toast({
+                                title: "Erro na conexão",
+                                description: "Ocorreu um erro ao tentar conectar com a API da Doppus. Verifique o console para mais detalhes.",
+                                variant: "destructive",
+                              });
+                              console.error("Erro ao testar conexão com Doppus:", error);
+                              
+                              // Salvar no localStorage para persistir entre sessões
+                              localStorage.setItem('doppusLastConnectionStatus', JSON.stringify({
+                                success: false,
+                                message: "Erro de rede ao conectar com a API",
+                                timestamp: new Date().toISOString()
+                              }));
+                            });
+                        }}
+                      >
                         <RefreshCw className="w-4 h-4 mr-2" />
                         Testar Conexão com Doppus
                       </Button>
