@@ -250,6 +250,13 @@ export default function SubscriptionManagement() {
     timestamp: Date;
   } | null>(null);
   
+  // Estado para armazenar o status da última conexão com a Doppus
+  const [lastDoppusConnectionStatus, setLastDoppusConnectionStatus] = useState<{
+    success: boolean;
+    message?: string;
+    timestamp: Date;
+  } | null>(null);
+  
   // Removendo estados duplicados para utilizar apenas os declarados mais abaixo
   
   // Função para buscar os mapeamentos de produtos Hotmart
@@ -420,7 +427,7 @@ export default function SubscriptionManagement() {
     }
   };
   
-  // Carrega o status de conexão do localStorage ao inicializar
+  // Carrega o status de conexão da Hotmart do localStorage ao inicializar
   useEffect(() => {
     const savedStatus = localStorage.getItem('hotmartLastConnectionStatus');
     if (savedStatus) {
@@ -432,6 +439,22 @@ export default function SubscriptionManagement() {
         });
       } catch (error) {
         console.error('Erro ao carregar status de conexão do localStorage:', error);
+      }
+    }
+  }, []);
+  
+  // Carrega o status de conexão da Doppus do localStorage ao inicializar
+  useEffect(() => {
+    const savedStatus = localStorage.getItem('doppusLastConnectionStatus');
+    if (savedStatus) {
+      try {
+        const parsed = JSON.parse(savedStatus);
+        setLastDoppusConnectionStatus({
+          ...parsed,
+          timestamp: new Date(parsed.timestamp)
+        });
+      } catch (error) {
+        console.error('Erro ao carregar status de conexão da Doppus do localStorage:', error);
       }
     }
   }, []);
