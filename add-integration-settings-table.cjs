@@ -2,10 +2,9 @@
  * Script para criar a tabela integrationSettings no banco de dados
  * Esta tabela armazenará as configurações das integrações externas como Hotmart e Doppus
  */
-import pkg from 'pg';
-const { Pool } = pkg;
-import { drizzle } from 'drizzle-orm/node-postgres';
-import { sql } from 'drizzle-orm';
+const { Pool } = require('pg');
+const { drizzle } = require('drizzle-orm/node-postgres');
+const { sql } = require('drizzle-orm');
 
 // Função para obter o banco de dados
 async function getDatabase() {
