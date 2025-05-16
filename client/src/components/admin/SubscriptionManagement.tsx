@@ -785,6 +785,13 @@ export default function SubscriptionManagement() {
     }
   });
   
+  // Função para salvar a API Key da Doppus
+  const handleSaveDoppusApiKey = () => {
+    if (doppusApiKeyInput.trim()) {
+      updateDoppusApiKeyMutation.mutate(doppusApiKeyInput);
+    }
+  };
+
   // Função para salvar configurações
   const handleSaveSettings = () => {
     saveSettingsMutation.mutate({
