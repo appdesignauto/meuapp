@@ -210,7 +210,17 @@ export default function SubscriptionManagement() {
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   
-  // Estados para configurações de assinatura
+  // Estados para configurações das integrações
+  const [isHotmartSecretDialogOpen, setIsHotmartSecretDialogOpen] = useState(false);
+  const [isHotmartClientIdDialogOpen, setIsHotmartClientIdDialogOpen] = useState(false);
+  const [isHotmartClientSecretDialogOpen, setIsHotmartClientSecretDialogOpen] = useState(false);
+  const [isDoppusSecretDialogOpen, setIsDoppusSecretDialogOpen] = useState(false);
+  const [hotmartSecretInput, setHotmartSecretInput] = useState('');
+  const [hotmartClientIdInput, setHotmartClientIdInput] = useState('');
+  const [hotmartClientSecretInput, setHotmartClientSecretInput] = useState('');
+  const [doppusSecretInput, setDoppusSecretInput] = useState('');
+  
+  // Estados para configuração de assinatura
   const [autoDowngrade, setAutoDowngrade] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [notificationDays, setNotificationDays] = useState<string[]>(['7', '3', '1']);
@@ -1183,13 +1193,7 @@ export default function SubscriptionManagement() {
                           type="button" 
                           variant="secondary" 
                           className="rounded-l-none"
-                          onClick={() => {
-                            toast({
-                              title: "Atualizar chave secreta",
-                              description: "Use o painel de configurações de assinaturas para atualizar a chave secreta.",
-                              duration: 3000,
-                            });
-                          }}
+                          onClick={() => setIsHotmartSecretDialogOpen(true)}
                         >
                           <Edit className="w-4 h-4 mr-2" />
                           Editar
