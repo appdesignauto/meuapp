@@ -67,13 +67,37 @@ import {
   Copy,
   Download,
   Filter,
-  X,
-  SlidersHorizontal
+  SlidersHorizontal,
+  MoreHorizontal
 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { format, addDays, addMonths, addYears, parseISO, subDays, subMonths } from 'date-fns';
 import { pt } from 'date-fns/locale';
+
+// Interface para as configurações de integração
+interface IntegrationSettings {
+  hotmart?: {
+    secret?: {
+      isDefined: boolean;
+      realValue?: string;
+    };
+    clientId?: {
+      isDefined: boolean;
+      realValue?: string;
+    };
+    clientSecret?: {
+      isDefined: boolean;
+      realValue?: string;
+    };
+  };
+  doppus?: {
+    secret?: {
+      isDefined: boolean;
+      realValue?: string;
+    };
+  };
+}
 
 import {
   Card,
@@ -233,6 +257,9 @@ export default function SubscriptionManagement() {
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [notificationDays, setNotificationDays] = useState<string[]>(['7', '3', '1']);
   const [gracePeriod, setGracePeriod] = useState('3');
+  
+  // Estado para configurações de integração
+  const [integrationSettings, setIntegrationSettings] = useState<IntegrationSettings | null>(null);
   
   // Mutation para salvar configurações
   const saveSettingsMutation = useMutation({
