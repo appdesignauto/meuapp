@@ -121,6 +121,33 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 
+interface IntegrationSettings {
+  hotmart?: {
+    secret?: {
+      isDefined: boolean;
+      realValue?: string;
+    };
+    clientId?: {
+      isDefined: boolean;
+      realValue?: string;
+    };
+    clientSecret?: {
+      isDefined: boolean;
+      realValue?: string;
+    };
+  };
+  doppus?: {
+    secret?: {
+      isDefined: boolean;
+      realValue?: string;
+    };
+    apiKey?: {
+      isDefined: boolean;
+      realValue?: string;
+    };
+  };
+}
+
 interface User {
   id: number;
   username: string;
@@ -240,17 +267,20 @@ export default function SubscriptionManagement() {
   const [isHotmartClientIdDialogOpen, setIsHotmartClientIdDialogOpen] = useState(false);
   const [isHotmartClientSecretDialogOpen, setIsHotmartClientSecretDialogOpen] = useState(false);
   const [isDoppusSecretDialogOpen, setIsDoppusSecretDialogOpen] = useState(false);
+  const [isDoppusApiKeyDialogOpen, setIsDoppusApiKeyDialogOpen] = useState(false);
   
   // Estados para mostrar/ocultar as chaves salvas
   const [showHotmartSecret, setShowHotmartSecret] = useState(false);
   const [showHotmartClientId, setShowHotmartClientId] = useState(false);
   const [showHotmartClientSecret, setShowHotmartClientSecret] = useState(false);
   const [showDoppusSecret, setShowDoppusSecret] = useState(false);
+  const [showDoppusApiKey, setShowDoppusApiKey] = useState(false);
   
   const [hotmartSecretInput, setHotmartSecretInput] = useState('');
   const [hotmartClientIdInput, setHotmartClientIdInput] = useState('');
   const [hotmartClientSecretInput, setHotmartClientSecretInput] = useState('');
   const [doppusSecretInput, setDoppusSecretInput] = useState('');
+  const [doppusApiKeyInput, setDoppusApiKeyInput] = useState('');
   
   // Estados para configuração de assinatura
   const [autoDowngrade, setAutoDowngrade] = useState(true);
@@ -366,10 +396,34 @@ export default function SubscriptionManagement() {
       });
       setIsDoppusSecretDialogOpen(false);
       setDoppusSecretInput('');
+      queryClient.invalidateQueries({ queryKey: ['/api/integrations/settings'] });
     },
     onError: (error: Error) => {
       toast({
         title: "Erro ao atualizar chave",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  const updateDoppusApiKeyMutation = useMutation({
+    mutationFn: async (newApiKey: string) => {
+      const response = await apiRequest('POST', '/api/integrations/doppus/apikey', { apiKey: newApiKey });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "API Key atualizada",
+        description: "A API Key da Doppus foi atualizada com sucesso.",
+      });
+      setIsDoppusApiKeyDialogOpen(false);
+      setDoppusApiKeyInput('');
+      queryClient.invalidateQueries({ queryKey: ['/api/integrations/settings'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao atualizar API Key",
         description: error.message,
         variant: "destructive",
       });
@@ -420,18 +474,26 @@ export default function SubscriptionManagement() {
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/integrations/settings');
       return response.json();
-    },
-    onSuccess: (data) => {
-      setIntegrationSettings(data);
-    },
-    onError: (error: Error) => {
+    }
+  });
+  
+  // Efeito para atualizar o estado quando os dados de integração mudarem
+  useEffect(() => {
+    if (integrationData) {
+      setIntegrationSettings(integrationData);
+    }
+  }, [integrationData]);
+  
+  // Efeito para mostrar erro de integração
+  useEffect(() => {
+    if (isIntegrationsError && integrationsError instanceof Error) {
       toast({
         title: "Erro ao carregar configurações de integração",
-        description: error.message,
+        description: integrationsError.message,
         variant: "destructive",
       });
     }
-  });
+  }, [isIntegrationsError, integrationsError, toast]);
   
   // Consulta para usuários com filtragem avançada
   const {
@@ -1586,25 +1648,30 @@ export default function SubscriptionManagement() {
                       <div className="flex mt-1.5">
                         <Input 
                           id="doppusSecretKey" 
-                          type="password" 
+                          type={showDoppusSecret ? "text" : "password"}
                           placeholder="Insira a chave secreta da Doppus" 
-                          value=""
-                          className="flex-1 rounded-r-none"
+                          value={integrationSettings?.doppus?.secret?.isDefined ? 
+                                 (showDoppusSecret ? integrationSettings?.doppus?.secret?.realValue || "" : "●●●●●●●●●●●●●●●●") : 
+                                 ""}
+                          readOnly
+                          className="flex-1 rounded-r-none bg-muted"
                         />
+                        <Button 
+                          type="button"
+                          variant="outline"
+                          className="px-3 border-r-0 rounded-none"
+                          onClick={() => setShowDoppusSecret(!showDoppusSecret)}
+                        >
+                          {showDoppusSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
                         <Button 
                           type="button" 
                           variant="secondary" 
                           className="rounded-l-none"
-                          onClick={() => {
-                            toast({
-                              title: "Salvar chave secreta",
-                              description: "Chave secreta da Doppus salva com sucesso.",
-                              duration: 3000,
-                            });
-                          }}
+                          onClick={() => setIsDoppusSecretDialogOpen(true)}
                         >
-                          <Save className="w-4 h-4 mr-2" />
-                          Salvar
+                          <Edit className="w-4 h-4 mr-2" />
+                          Editar
                         </Button>
                       </div>
                       <p className="text-sm text-muted-foreground mt-2">
@@ -1617,25 +1684,30 @@ export default function SubscriptionManagement() {
                       <div className="flex mt-1.5">
                         <Input 
                           id="doppusApiKey" 
-                          type="password" 
+                          type={showDoppusApiKey ? "text" : "password"}
                           placeholder="Insira a API Key da Doppus" 
-                          value=""
-                          className="flex-1 rounded-r-none"
+                          value={integrationSettings?.doppus?.apiKey?.isDefined ? 
+                                 (showDoppusApiKey ? integrationSettings?.doppus?.apiKey?.realValue || "" : "●●●●●●●●●●●●●●●●") : 
+                                 ""}
+                          readOnly
+                          className="flex-1 rounded-r-none bg-muted"
                         />
+                        <Button 
+                          type="button"
+                          variant="outline"
+                          className="px-3 border-r-0 rounded-none"
+                          onClick={() => setShowDoppusApiKey(!showDoppusApiKey)}
+                        >
+                          {showDoppusApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
                         <Button 
                           type="button" 
                           variant="secondary" 
                           className="rounded-l-none"
-                          onClick={() => {
-                            toast({
-                              title: "Salvar API Key",
-                              description: "API Key da Doppus salva com sucesso.",
-                              duration: 3000,
-                            });
-                          }}
+                          onClick={() => setIsDoppusApiKeyDialogOpen(true)}
                         >
-                          <Save className="w-4 h-4 mr-2" />
-                          Salvar
+                          <Edit className="w-4 h-4 mr-2" />
+                          Editar
                         </Button>
                       </div>
                       <p className="text-sm text-muted-foreground mt-2">
