@@ -478,16 +478,16 @@ export default function SubscriptionManagement() {
   
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="overview" className="w-full">
+      <Tabs defaultValue="visaoGeral" className="w-full">
         <TabsList className="grid w-full grid-cols-4 mb-6">
-          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-          <TabsTrigger value="subscriptions">Assinaturas</TabsTrigger>
+          <TabsTrigger value="visaoGeral">Visão Geral</TabsTrigger>
+          <TabsTrigger value="assinaturas">Assinaturas</TabsTrigger>
           <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
           <TabsTrigger value="configIntegracoes">Integrações</TabsTrigger>
         </TabsList>
         
         {/* Aba de Visão Geral */}
-        <TabsContent value="overview" className="space-y-6">
+        <TabsContent value="visaoGeral" className="space-y-6">
           {isLoadingStats ? (
             <div className="flex justify-center items-center py-6">
               <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
@@ -749,7 +749,7 @@ export default function SubscriptionManagement() {
         </TabsContent>
         
         {/* Aba de Assinaturas */}
-        <TabsContent value="subscriptions" className="space-y-6">
+        <TabsContent value="assinaturas" className="space-y-6">
           <div className="flex flex-col gap-4 mb-4">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
               <h3 className="text-lg font-semibold">Lista de Assinantes</h3>
