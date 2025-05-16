@@ -22,11 +22,13 @@ export class HotmartService {
     this.clientSecret = clientSecret;
     
     // Define a URL base de acordo com o ambiente (sandbox ou produção)
-    if (!useSandbox) {
+    if (useSandbox) {
+      this.baseUrl = 'https://sandbox.hotmart.com';
+    } else {
       this.baseUrl = 'https://developers.hotmart.com';
     }
     
-    console.log(`HotmartService inicializado no ambiente: ${useSandbox ? 'Sandbox' : 'Produção'}`);
+    console.log(`HotmartService inicializado no ambiente: ${useSandbox ? 'Sandbox' : 'Produção'} (URL: ${this.baseUrl})`);
   }
 
   /**
@@ -69,20 +71,50 @@ export class HotmartService {
     }
     
     try {
-      const response = await fetch(`${this.baseUrl}/oauth/token`, {
-        method: 'POST',
-        headers: {
+      // Log para debug
+      console.log(`Tentando obter token da Hotmart no URL: ${this.baseUrl}, ambiente: ${this.baseUrl.includes('sandbox') ? 'Sandbox' : 'Produção'}`);
+      
+      let tokenUrl = '';
+      let headers = {};
+      
+      if (this.baseUrl.includes('sandbox')) {
+        // Configuração para ambiente sandbox
+        tokenUrl = `${this.baseUrl}/oauth/token`;
+        headers = {
           'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          'grant_type': 'client_credentials',
-          'client_id': this.clientId,
-          'client_secret': this.clientSecret
-        })
+          'Accept': 'application/json'
+        };
+      } else {
+        // Configuração para ambiente de produção
+        // A Hotmart tem diferentes endpoints e headers para ambiente de produção
+        tokenUrl = `${this.baseUrl}/security/oauth/token`;
+        headers = {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'application/json'
+        };
+      }
+      
+      console.log(`Usando URL de autenticação: ${tokenUrl}`);
+      
+      const requestBody = new URLSearchParams({
+        'grant_type': 'client_credentials',
+        'client_id': this.clientId,
+        'client_secret': this.clientSecret
+      }).toString();
+      
+      const response = await fetch(tokenUrl, {
+        method: 'POST',
+        headers: headers,
+        body: requestBody
       });
       
       if (!response.ok) {
         const errorData = await response.text();
+        
+        // Log detalhado para depuração do erro
+        console.error(`Erro na resposta da Hotmart: Status ${response.status}, Headers:`, response.headers);
+        console.error(`Corpo da resposta:`, errorData);
+        
         throw new Error(`Erro ao obter token Hotmart: ${response.status} ${errorData}`);
       }
       
@@ -91,6 +123,8 @@ export class HotmartService {
       // Armazena o token e calcula a expiração (subtraindo 5 minutos por segurança)
       this.accessToken = data.access_token;
       this.tokenExpiration = now + (data.expires_in * 1000) - (5 * 60 * 1000);
+      
+      console.log('Token da Hotmart obtido com sucesso!');
       
       return this.accessToken;
     } catch (error) {
