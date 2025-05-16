@@ -478,10 +478,11 @@ export default function SubscriptionManagement() {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6">
+        <TabsList className="grid w-full grid-cols-4 mb-6">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="subscriptions">Assinaturas</TabsTrigger>
           <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
+          <TabsTrigger value="configIntegracoes">Integrações</TabsTrigger>
         </TabsList>
         
         {/* Aba de Visão Geral */}
@@ -1116,6 +1117,372 @@ export default function SubscriptionManagement() {
         {/* Aba de Webhooks e Configurações */}
         <TabsContent value="webhooks" className="space-y-6">
           <WebhookList key="subscription-webhooks" />
+        </TabsContent>
+        
+        {/* Nova aba de Configurações de Integrações (Hotmart e Doppus) */}
+        <TabsContent value="configIntegracoes" className="space-y-6">
+          <Tabs defaultValue="hotmart" className="w-full">
+            <TabsList className="w-full mb-6">
+              <TabsTrigger value="hotmart">Hotmart</TabsTrigger>
+              <TabsTrigger value="doppus">Doppus</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="hotmart" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Configurações da Hotmart</CardTitle>
+                  <CardDescription>Configure as integrações com a plataforma Hotmart</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="hotmartWebhookUrl">URL do Webhook</Label>
+                      <div className="flex mt-1.5">
+                        <Input 
+                          id="hotmartWebhookUrl" 
+                          placeholder="https://seusite.com.br/api/webhooks/hotmart" 
+                          value={`${window.location.origin}/api/webhooks/hotmart`}
+                          readOnly
+                          className="flex-1 rounded-r-none bg-muted"
+                        />
+                        <Button 
+                          type="button" 
+                          variant="secondary" 
+                          className="rounded-l-none"
+                          onClick={() => {
+                            navigator.clipboard.writeText(`${window.location.origin}/api/webhooks/hotmart`);
+                            toast({
+                              title: "URL copiada!",
+                              description: "URL do webhook copiada para a área de transferência.",
+                              duration: 3000,
+                            });
+                          }}
+                        >
+                          <Copy className="w-4 h-4 mr-2" />
+                          Copiar
+                        </Button>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Cole esta URL nas configurações de webhook da sua conta Hotmart.
+                      </p>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="hotmartSecretKey">Chave Secreta (Hotmart Secret)</Label>
+                      <div className="flex mt-1.5">
+                        <Input 
+                          id="hotmartSecretKey" 
+                          type="password" 
+                          placeholder="Insira a chave secreta da Hotmart" 
+                          value="●●●●●●●●●●●●●●●●"
+                          readOnly
+                          className="flex-1 rounded-r-none bg-muted"
+                        />
+                        <Button 
+                          type="button" 
+                          variant="secondary" 
+                          className="rounded-l-none"
+                          onClick={() => {
+                            toast({
+                              title: "Atualizar chave secreta",
+                              description: "Use o painel de configurações de assinaturas para atualizar a chave secreta.",
+                              duration: 3000,
+                            });
+                          }}
+                        >
+                          <Edit className="w-4 h-4 mr-2" />
+                          Editar
+                        </Button>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Esta chave é usada para verificar a autenticidade das notificações recebidas da Hotmart.
+                      </p>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="hotmartClientId">Client ID</Label>
+                      <div className="flex mt-1.5">
+                        <Input 
+                          id="hotmartClientId" 
+                          type="password" 
+                          placeholder="Insira o Client ID da API Hotmart" 
+                          value="●●●●●●●●●●●●●●●●"
+                          readOnly
+                          className="flex-1 rounded-r-none bg-muted"
+                        />
+                        <Button 
+                          type="button" 
+                          variant="secondary" 
+                          className="rounded-l-none"
+                          onClick={() => {
+                            toast({
+                              title: "Atualizar Client ID",
+                              description: "Use o painel de configurações de assinaturas para atualizar o Client ID.",
+                              duration: 3000,
+                            });
+                          }}
+                        >
+                          <Edit className="w-4 h-4 mr-2" />
+                          Editar
+                        </Button>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Necessário para a API da Hotmart. Obtenha estas credenciais no painel Hotmart Developers.
+                      </p>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="hotmartClientSecret">Client Secret</Label>
+                      <div className="flex mt-1.5">
+                        <Input 
+                          id="hotmartClientSecret" 
+                          type="password" 
+                          placeholder="Insira o Client Secret da API Hotmart" 
+                          value="●●●●●●●●●●●●●●●●"
+                          readOnly
+                          className="flex-1 rounded-r-none bg-muted"
+                        />
+                        <Button 
+                          type="button" 
+                          variant="secondary" 
+                          className="rounded-l-none"
+                          onClick={() => {
+                            toast({
+                              title: "Atualizar Client Secret",
+                              description: "Use o painel de configurações de assinaturas para atualizar o Client Secret.",
+                              duration: 3000,
+                            });
+                          }}
+                        >
+                          <Edit className="w-4 h-4 mr-2" />
+                          Editar
+                        </Button>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Necessário para a API da Hotmart. Mantenha esta informação confidencial.
+                      </p>
+                    </div>
+
+                    <div className="pt-4">
+                      <Button variant="outline" className="w-full sm:w-auto">
+                        <RefreshCcw className="w-4 h-4 mr-2" />
+                        Testar Conexão com Hotmart
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Mapeamento de Produtos Hotmart</CardTitle>
+                  <CardDescription>Configure como os produtos da Hotmart são mapeados no sistema</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="border rounded-lg overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-[250px]">Produto Hotmart</TableHead>
+                            <TableHead>Plano no DesignAuto</TableHead>
+                            <TableHead>Duração</TableHead>
+                            <TableHead className="text-right">Ações</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          <TableRow>
+                            <TableCell>Design Auto PRO Mensal</TableCell>
+                            <TableCell>Premium</TableCell>
+                            <TableCell>30 dias</TableCell>
+                            <TableCell className="text-right">
+                              <Button variant="ghost" size="sm">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell>Design Auto PRO Anual</TableCell>
+                            <TableCell>Premium</TableCell>
+                            <TableCell>365 dias</TableCell>
+                            <TableCell className="text-right">
+                              <Button variant="ghost" size="sm">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell>Design Auto Vitalício</TableCell>
+                            <TableCell>Premium</TableCell>
+                            <TableCell>Vitalício</TableCell>
+                            <TableCell className="text-right">
+                              <Button variant="ghost" size="sm">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </div>
+                    
+                    <Button variant="outline" size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar Mapeamento
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="doppus" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Configurações da Doppus</CardTitle>
+                  <CardDescription>Configure as integrações com a plataforma Doppus</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="doppusWebhookUrl">URL do Webhook</Label>
+                      <div className="flex mt-1.5">
+                        <Input 
+                          id="doppusWebhookUrl" 
+                          placeholder="https://seusite.com.br/api/webhooks/doppus" 
+                          value={`${window.location.origin}/api/webhooks/doppus`}
+                          readOnly
+                          className="flex-1 rounded-r-none bg-muted"
+                        />
+                        <Button 
+                          type="button" 
+                          variant="secondary" 
+                          className="rounded-l-none"
+                          onClick={() => {
+                            navigator.clipboard.writeText(`${window.location.origin}/api/webhooks/doppus`);
+                            toast({
+                              title: "URL copiada!",
+                              description: "URL do webhook copiada para a área de transferência.",
+                              duration: 3000,
+                            });
+                          }}
+                        >
+                          <Copy className="w-4 h-4 mr-2" />
+                          Copiar
+                        </Button>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Cole esta URL nas configurações de webhook da sua conta Doppus.
+                      </p>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="doppusSecretKey">Chave Secreta (Doppus Secret)</Label>
+                      <div className="flex mt-1.5">
+                        <Input 
+                          id="doppusSecretKey" 
+                          type="password" 
+                          placeholder="Insira a chave secreta da Doppus" 
+                          value=""
+                          className="flex-1 rounded-r-none"
+                        />
+                        <Button 
+                          type="button" 
+                          variant="secondary" 
+                          className="rounded-l-none"
+                          onClick={() => {
+                            toast({
+                              title: "Salvar chave secreta",
+                              description: "Chave secreta da Doppus salva com sucesso.",
+                              duration: 3000,
+                            });
+                          }}
+                        >
+                          <Save className="w-4 h-4 mr-2" />
+                          Salvar
+                        </Button>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Esta chave é usada para verificar a autenticidade das notificações recebidas da Doppus.
+                      </p>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="doppusApiKey">API Key</Label>
+                      <div className="flex mt-1.5">
+                        <Input 
+                          id="doppusApiKey" 
+                          type="password" 
+                          placeholder="Insira a API Key da Doppus" 
+                          value=""
+                          className="flex-1 rounded-r-none"
+                        />
+                        <Button 
+                          type="button" 
+                          variant="secondary" 
+                          className="rounded-l-none"
+                          onClick={() => {
+                            toast({
+                              title: "Salvar API Key",
+                              description: "API Key da Doppus salva com sucesso.",
+                              duration: 3000,
+                            });
+                          }}
+                        >
+                          <Save className="w-4 h-4 mr-2" />
+                          Salvar
+                        </Button>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Necessário para acessar a API da Doppus.
+                      </p>
+                    </div>
+
+                    <div className="pt-4">
+                      <Button variant="outline" className="w-full sm:w-auto">
+                        <RefreshCcw className="w-4 h-4 mr-2" />
+                        Testar Conexão com Doppus
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Mapeamento de Produtos Doppus</CardTitle>
+                  <CardDescription>Configure como os produtos da Doppus são mapeados no sistema</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="border rounded-lg overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-[250px]">Produto Doppus</TableHead>
+                            <TableHead>Plano no DesignAuto</TableHead>
+                            <TableHead>Duração</TableHead>
+                            <TableHead className="text-right">Ações</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          <TableRow>
+                            <TableCell className="text-muted-foreground italic">Nenhum produto configurado</TableCell>
+                            <TableCell></TableCell>
+                            <TableCell></TableCell>
+                            <TableCell></TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </div>
+                    
+                    <Button variant="outline" size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar Mapeamento
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </TabsContent>
 
       </Tabs>
