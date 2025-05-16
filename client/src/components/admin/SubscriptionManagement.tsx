@@ -1845,55 +1845,109 @@ export default function SubscriptionManagement() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="border rounded-lg overflow-hidden">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className="w-[250px]">Produto Hotmart</TableHead>
-                            <TableHead>Plano no DesignAuto</TableHead>
-                            <TableHead>Duração</TableHead>
-                            <TableHead className="text-right">Ações</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          <TableRow>
-                            <TableCell>Design Auto PRO Mensal</TableCell>
-                            <TableCell>Premium</TableCell>
-                            <TableCell>30 dias</TableCell>
-                            <TableCell className="text-right">
-                              <Button variant="ghost" size="sm">
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                          <TableRow>
-                            <TableCell>Design Auto PRO Anual</TableCell>
-                            <TableCell>Premium</TableCell>
-                            <TableCell>365 dias</TableCell>
-                            <TableCell className="text-right">
-                              <Button variant="ghost" size="sm">
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                          <TableRow>
-                            <TableCell>Design Auto Vitalício</TableCell>
-                            <TableCell>Premium</TableCell>
-                            <TableCell>Vitalício</TableCell>
-                            <TableCell className="text-right">
-                              <Button variant="ghost" size="sm">
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        </TableBody>
-                      </Table>
+                    <div className="flex items-end justify-between mb-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground max-w-prose">
+                          Configure como os produtos da Hotmart serão convertidos em assinaturas no DesignAuto.
+                          O sistema utilizará estes mapeamentos ao processar notificações de compra.
+                        </p>
+                      </div>
+                      <Button onClick={openAddMappingDialog} size="sm">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Adicionar mapeamento
+                      </Button>
                     </div>
                     
-                    <Button variant="outline" size="sm">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Adicionar Mapeamento
-                    </Button>
+                    {isLoadingMappings ? (
+                      <div className="flex justify-center items-center py-10">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      </div>
+                    ) : productMappings.length === 0 ? (
+                      <div className="bg-muted/50 border rounded-md p-6 text-center">
+                        <div className="text-muted-foreground mb-2">
+                          Nenhum mapeamento configurado
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Adicione mapeamentos para que o sistema saiba como converter as compras da Hotmart em assinaturas.
+                        </p>
+                        <Button onClick={openAddMappingDialog} variant="outline" size="sm">
+                          <Plus className="h-4 w-4 mr-2" />
+                          Configurar Mapeamento
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="border rounded-lg overflow-hidden">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="w-[250px]">Produto Hotmart</TableHead>
+                              <TableHead>Plano no DesignAuto</TableHead>
+                              <TableHead>Duração</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead className="text-right">Ações</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {productMappings.map((mapping) => (
+                              <TableRow key={mapping.id}>
+                                <TableCell className="font-medium">
+                                  {mapping.productName}
+                                </TableCell>
+                                <TableCell>
+                                  {mapping.planType.charAt(0).toUpperCase() + mapping.planType.slice(1)}
+                                </TableCell>
+                                <TableCell>
+                                  {mapping.isLifetime ? (
+                                    <Badge variant="secondary">Vitalício</Badge>
+                                  ) : (
+                                    `${mapping.durationDays} dias`
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  {mapping.isActive ? (
+                                    <Badge className="bg-green-500">Ativo</Badge>
+                                  ) : (
+                                    <Badge variant="outline">Inativo</Badge>
+                                  )}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <div className="flex items-center justify-end gap-2">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => openEditMappingDialog(mapping)}
+                                      title="Editar"
+                                    >
+                                      <Edit className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleToggleMappingStatus(mapping)}
+                                      title={mapping.isActive ? "Desativar" : "Ativar"}
+                                    >
+                                      {mapping.isActive ? (
+                                        <XCircle className="h-4 w-4 text-destructive" />
+                                      ) : (
+                                        <CheckCircle className="h-4 w-4 text-green-500" />
+                                      )}
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleDeleteMapping(mapping)}
+                                      title="Excluir"
+                                    >
+                                      <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
