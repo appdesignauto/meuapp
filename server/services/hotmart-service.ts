@@ -23,7 +23,7 @@ export class HotmartService {
     
     // Define a URL base de acordo com o ambiente (sandbox ou produção)
     if (useSandbox) {
-      this.baseUrl = 'https://sandbox.hotmart.com';
+      this.baseUrl = 'https://sandbox-api-hot-connect.hotmart.com';
     } else {
       // Atualizado conforme documentação da Hotmart para ambiente de produção
       this.baseUrl = 'https://api-hot-connect.hotmart.com';
@@ -124,10 +124,9 @@ export class HotmartService {
       // Cria o Basic Auth token (ClientID:ClientSecret em base64)
       const basicAuth = Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64');
       
-      // Define a URL do token baseada no ambiente
-      const tokenUrl = this.baseUrl.includes('sandbox') 
-        ? `${this.baseUrl}/oauth/token`
-        : `${this.baseUrl}/security/oauth/token`;
+      // Define a URL do token baseada no ambiente (seguindo documentação oficial da Hotmart)
+      // O endpoint é o mesmo tanto para sandbox quanto para produção na API HotConnect
+      const tokenUrl = `${this.baseUrl}/security/oauth/token`;
       
       // Define os headers com Basic Auth
       const headers = {
