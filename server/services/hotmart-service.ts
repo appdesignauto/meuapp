@@ -124,9 +124,9 @@ export class HotmartService {
       // Cria o Basic Auth token (ClientID:ClientSecret em base64)
       const basicAuth = Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64');
       
-      // Define a URL do token baseada no ambiente (seguindo documentação oficial da Hotmart)
-      // O endpoint é o mesmo tanto para sandbox quanto para produção na API HotConnect
-      const tokenUrl = `${this.baseUrl}/security/oauth/token`;
+      // Define a URL do token exatamente conforme o plano de integração fornecido
+      // Este é o endpoint oficial para obtenção de token na API HotConnect
+      const tokenUrl = 'https://api-hot-connect.hotmart.com/security/oauth/token';
       
       // Define os headers com Basic Auth
       const headers = {
