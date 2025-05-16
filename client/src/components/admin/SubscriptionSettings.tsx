@@ -85,8 +85,7 @@ const subscriptionSettingsSchema = z.object({
   doppusProPlanId: z.string().optional().or(z.literal('')),
   doppusWebhookUrl: z.string().url({ message: 'A URL do webhook Doppus deve ser uma URL válida' }).optional().or(z.literal('')),
   
-  // Para compatibilidade
-  doppusApiKey: z.string().optional().or(z.literal('')),
+  // Campo doppusApiKey removido conforme solicitado
   
   // Configurações gerais
   graceHoursAfterExpiration: z.coerce.number().int().min(0).max(720),
@@ -130,7 +129,6 @@ export default function SubscriptionSettings() {
       hotmartWebhookUrl: '',
       
       // Campos Doppus
-      doppusApiKey: '',
       doppusSecretKey: '',
       doppusBasicPlanId: '',
       doppusProPlanId: '',
@@ -183,7 +181,6 @@ export default function SubscriptionSettings() {
         hotmartWebhookUrl: settings.hotmartWebhookUrl || '',
         
         // Campos Doppus
-        doppusApiKey: settings.doppusApiKey || '',
         doppusSecretKey: settings.doppusSecretKey || '',
         doppusBasicPlanId: settings.doppusBasicPlanId || '',
         doppusProPlanId: settings.doppusProPlanId || '',
