@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import WebhookList from './WebhookList';
+import SubscriptionSettings from './SubscriptionSettings';
+import SubscriptionTrends from './SubscriptionTrends';
 import {
   Table,
   TableBody,
@@ -46,31 +48,52 @@ import {
   BarChart3,
   CalendarClock,
   Clock,
-  UserCheck,
-  User,
-  UserMinus,
+  User as UserIcon,
   Users,
-  CreditCard,
-  DollarSign,
+  UserCheck,
+  ChevronLeft,
+  ChevronRight,
   BarChart4,
-  LineChart,
   TrendingUp,
-  ArrowRight,
-  Download,
+  TrendingDown,
+  Plus,
+  Save,
+  RefreshCw,
+  Eye,
+  Settings,
+  Webhook,
   FileText,
-  Filter
+  Download,
+  Filter,
+  X,
+  SlidersHorizontal
 } from 'lucide-react';
-import SubscriptionTrends from './SubscriptionTrends';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { format } from 'date-fns';
-import { pt } from 'date-fns/locale';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Textarea } from '@/components/ui/textarea';
+import { format, addDays, addMonths, addYears, parseISO, subDays, subMonths } from 'date-fns';
+import { pt } from 'date-fns/locale';
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Switch } from '@/components/ui/switch';
-import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 
 interface User {
   id: number;
@@ -86,32 +109,6 @@ interface User {
   dataexpiracao: string | null;
   criadoem: string;
   atualizadoem: string;
-}
-
-interface SubscriptionDetail {
-  id: number;
-  userId: number;
-  planId: string;
-  planName: string;
-  planType: string;
-  status: string;
-  origin: string;
-  startDate: string;
-  endDate: string | null;
-  price: number;
-  currency: string;
-  transactionId: string | null;
-  paymentMethod: string | null;
-  user: {
-    username: string;
-    email: string;
-    name: string | null;
-  }
-}
-
-interface SubscriptionDetailResponse {
-  detail: SubscriptionDetail | null;
-  error: string | null;
 }
 
 interface SubscriptionStats {
@@ -152,50 +149,28 @@ interface StatCardProps {
 }
 
 function StatCard({ title, value, icon: Icon, description, trend }: StatCardProps) {
-  const formatValue = (val: number): string => {
-    // Prevenir erros com valores undefined/null
-    if (val === undefined || val === null) {
-      return '0';
-    }
-    
-    // Formata valores monetários com "R$" e 2 casas decimais
-    if (title.includes('Receita') || title.includes('Valor') || title.includes('LTV')) {
-      return `R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    }
-    
-    // Formata percentuais
-    if (title.includes('Taxa') || title.includes('Conversão')) {
-      return `${val.toFixed(1)}%`;
-    }
-    
-    // Formata dias
-    if (title.includes('Retenção')) {
-      return `${Math.round(val)} dias`;
-    }
-    
-    // Formata números inteiros
-    return val.toLocaleString('pt-BR');
-  };
-  
   return (
     <Card>
       <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <p className="text-2xl font-bold">{formatValue(value)}</p>
-            {description && <p className="text-xs text-muted-foreground">{description}</p>}
+        <div className="flex justify-between items-start">
+          <div>
+            <p className="text-sm font-medium text-muted-foreground mb-1">{title}</p>
+            <h4 className="text-2xl font-bold">{value.toLocaleString()}</h4>
+            {description && <p className="text-xs text-muted-foreground mt-1">{description}</p>}
           </div>
-          <div className="p-2 rounded-full bg-background/80">
-            <Icon className="w-5 h-5 text-muted-foreground" />
+          <div className="rounded-full p-2 bg-primary/10">
+            <Icon className="h-5 w-5 text-primary" />
           </div>
         </div>
-        {trend && (
-          <div className="mt-4 flex items-center text-xs">
-            {trend === 'up' && <TrendingUp className="w-3 h-3 mr-1 text-green-500" />}
-            {trend === 'down' && <TrendingUp className="w-3 h-3 mr-1 text-red-500 rotate-180" />}
-            <span className={trend === 'up' ? 'text-green-500' : trend === 'down' ? 'text-red-500' : ''}>
-              {trend === 'up' ? 'Tendência positiva' : trend === 'down' ? 'Tendência negativa' : 'Estável'}
+        {trend && trend !== 'none' && (
+          <div className="mt-3 flex items-center text-xs">
+            {trend === 'up' ? (
+              <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
+            ) : (
+              <TrendingDown className="h-3 w-3 text-red-500 mr-1" />
+            )}
+            <span className={trend === 'up' ? 'text-green-500' : 'text-red-500'}>
+              {trend === 'up' ? 'Positivo' : 'Atenção'}
             </span>
           </div>
         )}
@@ -234,34 +209,60 @@ export default function SubscriptionManagement() {
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   
-  // Estados para configurações
+  // Estados para configurações de assinatura
+  const [autoDowngrade, setAutoDowngrade] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [notificationDays, setNotificationDays] = useState<string[]>(['7', '3', '1']);
-  const [autoDowngrade, setAutoDowngrade] = useState(true);
-  const [graceHours, setGraceHours] = useState('24');
+  const [gracePeriod, setGracePeriod] = useState('3');
   
-  // Consulta para estatísticas de assinatura
-  const {
-    data: subscriptionStats = {
-      total: 0,
-      active: 0,
-      expired: 0,
-      trialCount: 0,
-      expiringIn7Days: 0,
-      expiringIn30Days: 0,
-      hotmartCount: 0,
-      doppusCount: 0,
-      manualCount: 0,
-      mrr: 0,
-      averageValue: 0,
-      annualRevenue: 0,
-      churnRate: 0,
-      averageRetention: 0,
-      averageLTV: 0,
-      subscriptionsByPlan: {},
-      subscriptionsByOrigin: {},
-      recentSubscriptions: []
+  // Mutation para salvar configurações
+  const saveSettingsMutation = useMutation({
+    mutationFn: async (settings: {
+      autoDowngrade: boolean;
+      emailNotifications: boolean;
+      notificationDays: string[];
+      gracePeriod: string;
+    }) => {
+      const response = await apiRequest('POST', '/api/subscriptions/settings', settings);
+      return response.json();
     },
+    onSuccess: () => {
+      toast({
+        title: "Configurações salvas",
+        description: "As configurações de assinatura foram salvas com sucesso.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao salvar configurações",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Função para salvar configurações
+  const handleSaveSettings = () => {
+    saveSettingsMutation.mutate({
+      autoDowngrade,
+      emailNotifications,
+      notificationDays,
+      gracePeriod
+    });
+  };
+  
+  // Form estados para edição
+  const [formData, setFormData] = useState({
+    tipoplano: '',
+    origemassinatura: '',
+    planstatus: '',
+    planoexpiracao: '',
+    observacaoadmin: ''
+  });
+  
+  // Consulta para estatísticas
+  const {
+    data: subscriptionStats,
     isLoading: isLoadingStats,
     isError: isErrorStats,
     error: statsError
@@ -275,7 +276,7 @@ export default function SubscriptionManagement() {
   
   // Consulta para usuários com filtragem avançada
   const {
-    data: usersData = { users: [], totalCount: 0 },
+    data: usersData,
     isLoading: isLoadingUsers,
     isError: isErrorUsers,
     error: usersError,
@@ -308,68 +309,164 @@ export default function SubscriptionManagement() {
       
       const response = await apiRequest('GET', `/api/admin/users?${params.toString()}`);
       return response.json();
-    }
+    },
+    refetchOnWindowFocus: false
   });
   
-  // Consulta para detalhes de uma assinatura específica
+  // Consulta para detalhes do usuário
   const {
-    data: subscriptionDetail,
-    isLoading: isLoadingDetail,
+    data: userDetail,
+    isLoading: isLoadingDetail, 
     isError: isErrorDetail,
-    error: detailError,
-    refetch: refetchDetail
-  } = useQuery<SubscriptionDetailResponse>({
-    queryKey: ['/api/subscriptions/detail', selectedUserId],
+    error: detailError
+  } = useQuery({
+    queryKey: ['/api/admin/users', selectedUserId],
     queryFn: async () => {
-      if (!selectedUserId) return { detail: null, error: null };
-      const response = await apiRequest('GET', `/api/subscriptions/detail/${selectedUserId}`);
+      if (!selectedUserId) throw new Error('ID de usuário não selecionado');
+      const response = await apiRequest('GET', `/api/admin/users/${selectedUserId}`);
       return response.json();
     },
-    enabled: !!selectedUserId && isViewDialogOpen,
+    enabled: selectedUserId !== null,
+    refetchOnWindowFocus: false
   });
   
-  // Mutação para atualizar status da assinatura
-  const updateStatusMutation = useMutation({
-    mutationFn: async ({ userId, status }: { userId: number, status: string }) => {
-      const response = await apiRequest('POST', `/api/subscriptions/update-status`, {
-        userId,
-        status
-      });
+  // Mutação para atualizar assinaturas
+  const updateSubscriptionMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest('PATCH', `/api/admin/users/${selectedUserId}/subscription`, data);
       return response.json();
     },
     onSuccess: () => {
       toast({
-        title: "Status atualizado",
-        description: "O status da assinatura foi atualizado com sucesso.",
+        title: 'Assinatura atualizada com sucesso',
+        description: 'Os dados da assinatura foram atualizados',
+        variant: 'default',
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/subscriptions/stats'] });
-      setIsConfirmDialogOpen(false);
+      
+      // Invalida consultas para atualizar dados
+      queryClient.invalidateQueries({
+        queryKey: ['/api/admin/users']
+      });
+      
+      // Também atualiza as estatísticas
+      queryClient.invalidateQueries({
+        queryKey: ['/api/subscriptions/stats']
+      });
+      
       setIsEditDialogOpen(false);
     },
     onError: (error: Error) => {
       toast({
-        title: "Erro ao atualizar status",
+        title: 'Erro ao atualizar assinatura',
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     }
   });
   
-  // Função para exibir badge colorido de acordo com o status
+  // Mutação para remover assinaturas
+  const removeSubscriptionMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('DELETE', `/api/admin/users/${selectedUserId}/subscription`);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Assinatura removida com sucesso',
+        description: 'A assinatura foi removida e o usuário foi rebaixado',
+        variant: 'default',
+      });
+      
+      // Invalida consultas para atualizar dados
+      queryClient.invalidateQueries({
+        queryKey: ['/api/admin/users']
+      });
+      
+      // Também atualiza as estatísticas
+      queryClient.invalidateQueries({
+        queryKey: ['/api/subscriptions/stats']
+      });
+      
+      setIsConfirmDialogOpen(false);
+      setIsViewDialogOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro ao remover assinatura',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  });
+  
+  // Efeito para preencher o formulário quando o usuário é selecionado
+  useEffect(() => {
+    if (userDetail) {
+      setFormData({
+        tipoplano: userDetail.tipoplano || '',
+        origemassinatura: userDetail.origemassinatura || '',
+        planstatus: userDetail.planstatus || '',
+        planoexpiracao: userDetail.planoexpiracao || '',
+        observacaoadmin: userDetail.observacaoadmin || ''
+      });
+    }
+  }, [userDetail]);
+  
+  // Funções de manipulação
+  const handleViewUser = (id: number) => {
+    setSelectedUserId(id);
+    setIsViewDialogOpen(true);
+  };
+  
+  const handleEditUser = (id: number) => {
+    setSelectedUserId(id);
+    setIsEditDialogOpen(true);
+  };
+  
+  const handleDeleteUser = (id: number) => {
+    setSelectedUserId(id);
+    setIsConfirmDialogOpen(true);
+  };
+  
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateSubscriptionMutation.mutate(formData);
+  };
+  
+  const handleExtendSubscription = (months: number) => {
+    if (!userDetail?.planoexpiracao) {
+      toast({
+        title: 'Erro ao estender assinatura',
+        description: 'Data de expiração não encontrada',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    const currentExpDate = userDetail.planoexpiracao ? new Date(userDetail.planoexpiracao) : new Date();
+    const newExpDate = addMonths(currentExpDate, months);
+    
+    setFormData({
+      ...formData,
+      planoexpiracao: format(newExpDate, 'yyyy-MM-dd')
+    });
+  };
+  
   const getStatusBadge = (status: string) => {
-    switch (status?.toLowerCase()) {
+    switch(status?.toLowerCase()) {
       case 'active':
       case 'ativo':
-      case 'ativa':
-        return <Badge variant="outline" className="border-green-500 text-green-500">{status}</Badge>;
+        return <Badge className="bg-green-500">{status}</Badge>;
       case 'expired':
       case 'expirado':
-      case 'expirada':
-        return <Badge variant="outline" className="border-red-500 text-red-500">{status}</Badge>;
-      case 'pending':
-      case 'pendente':
-        return <Badge variant="outline" className="border-yellow-500 text-yellow-500">{status}</Badge>;
+        return <Badge variant="destructive">{status}</Badge>;
       case 'trial':
       case 'teste':
         return <Badge variant="outline" className="border-blue-500 text-blue-500">{status}</Badge>;
@@ -390,27 +487,17 @@ export default function SubscriptionManagement() {
         {/* Aba de Visão Geral */}
         <TabsContent value="overview" className="space-y-6">
           {isLoadingStats ? (
-            <div className="flex justify-center items-center h-64">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <div className="flex justify-center items-center py-6">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
             </div>
           ) : isErrorStats ? (
-            <div className="flex flex-col items-center justify-center h-64 text-center">
-              <AlertCircle className="h-10 w-10 text-destructive mb-4" />
-              <h3 className="text-lg font-medium">Erro ao carregar estatísticas</h3>
-              <p className="text-sm text-muted-foreground mt-2">
-                {statsError instanceof Error ? statsError.message : 'Ocorreu um erro desconhecido'}
+            <div className="p-4 bg-red-50 rounded-md">
+              <p className="text-sm text-red-600">
+                {statsError instanceof Error ? statsError.message : 'Erro ao carregar estatísticas'}
               </p>
-              <Button 
-                variant="outline" 
-                className="mt-4"
-                onClick={() => queryClient.invalidateQueries({ queryKey: ['/api/subscriptions/stats'] })}
-              >
-                Tentar novamente
-              </Button>
             </div>
-          ) : (
+          ) : subscriptionStats ? (
             <>
-              {/* Estatísticas gerais */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <StatCard 
                   title="Total de Assinantes" 
@@ -444,298 +531,549 @@ export default function SubscriptionManagement() {
               </div>
               
               {/* Indicadores financeiros */}
-              <h3 className="text-xl font-semibold mb-4">Indicadores Financeiros</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <StatCard 
-                  title="Receita Mensal (MRR)" 
-                  value={subscriptionStats.mrr}
-                  icon={BadgeDollarSign}
-                  description="Receita mensal recorrente"
-                />
+              <h3 className="text-lg font-semibold mb-3 mt-6">Indicadores Financeiros</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Receita Mensal (MRR)</CardTitle>
+                    <BadgeDollarSign className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {isLoadingStats ? (
+                        <div className="h-6 w-20 bg-muted animate-pulse rounded"></div>
+                      ) : (
+                        `R$ ${(subscriptionStats?.mrr || 0).toLocaleString('pt-BR')}`
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Receita mensal recorrente
+                    </p>
+                  </CardContent>
+                </Card>
                 
-                <StatCard 
-                  title="Valor Médio" 
-                  value={subscriptionStats.averageValue}
-                  icon={CreditCard}
-                  description="Ticket médio por assinatura"
-                />
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Valor Médio</CardTitle>
+                    <Wallet className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {isLoadingStats ? (
+                        <div className="h-6 w-16 bg-muted animate-pulse rounded"></div>
+                      ) : (
+                        `R$ ${(subscriptionStats?.averageValue || 0).toLocaleString('pt-BR')}`
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Valor médio por assinatura
+                    </p>
+                  </CardContent>
+                </Card>
                 
-                <StatCard 
-                  title="Receita Anual (Proj.)" 
-                  value={subscriptionStats.annualRevenue}
-                  icon={CircleDollarSign}
-                  description="Projeção de receita anual"
-                />
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Projeção Anual</CardTitle>
+                    <CircleDollarSign className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {isLoadingStats ? (
+                        <div className="h-6 w-24 bg-muted animate-pulse rounded"></div>
+                      ) : (
+                        `R$ ${(subscriptionStats?.annualRevenue || 0).toLocaleString('pt-BR')}`
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Projeção de receita anual
+                    </p>
+                  </CardContent>
+                </Card>
                 
-                <StatCard 
-                  title="Taxa de Cancelamento" 
-                  value={subscriptionStats.churnRate}
-                  icon={UserMinus}
-                  trend={subscriptionStats.churnRate > 5 ? 'down' : 'up'}
-                  description="Churn rate mensal"
-                />
+                {/* Segunda linha de métricas financeiras */}
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Taxa de Churn</CardTitle>
+                    <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {isLoadingStats ? (
+                        <div className="h-6 w-16 bg-muted animate-pulse rounded"></div>
+                      ) : (
+                        `${(subscriptionStats?.churnRate || 0).toFixed(1)}%`
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Taxa de cancelamento
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Retenção Média</CardTitle>
+                    <CalendarClock className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {isLoadingStats ? (
+                        <div className="h-6 w-16 bg-muted animate-pulse rounded"></div>
+                      ) : (
+                        `${subscriptionStats?.averageRetention || 0} dias`
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Tempo médio de permanência
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Valor do Cliente (LTV)</CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {isLoadingStats ? (
+                        <div className="h-6 w-24 bg-muted animate-pulse rounded"></div>
+                      ) : (
+                        `R$ ${(subscriptionStats?.averageLTV || 0).toLocaleString('pt-BR')}`
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Valor médio ao longo da vida
+                    </p>
+                  </CardContent>
+                </Card>
               </div>
               
-              {/* Gráficos e tendências */}
-              <SubscriptionTrends />
+              {/* Estatísticas adicionais */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Origens de Assinatura</CardTitle>
+                    <CardDescription>Distribuição de assinantes por origem</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Hotmart</span>
+                        <span className="font-medium">{subscriptionStats.hotmartCount}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div 
+                          className="bg-blue-600 h-2.5 rounded-full" 
+                          style={{ width: `${Math.round((subscriptionStats.hotmartCount / (subscriptionStats.total || 1)) * 100)}%` }}
+                        ></div>
+                      </div>
+                      
+                      <div className="flex justify-between mt-3">
+                        <span>Doppus</span>
+                        <span className="font-medium">{subscriptionStats.doppusCount}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div 
+                          className="bg-emerald-600 h-2.5 rounded-full" 
+                          style={{ width: `${Math.round((subscriptionStats.doppusCount / (subscriptionStats.total || 1)) * 100)}%` }}
+                        ></div>
+                      </div>
+                      
+                      <div className="flex justify-between mt-3">
+                        <span>Manual</span>
+                        <span className="font-medium">{subscriptionStats.manualCount}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div 
+                          className="bg-amber-600 h-2.5 rounded-full" 
+                          style={{ width: `${Math.round((subscriptionStats.manualCount / (subscriptionStats.total || 1)) * 100)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Status das Assinaturas</CardTitle>
+                    <CardDescription>Distribuição por status atual</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Ativas</span>
+                        <span className="font-medium">{subscriptionStats.active}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div 
+                          className="bg-green-600 h-2.5 rounded-full" 
+                          style={{ width: `${Math.round((subscriptionStats.active / (subscriptionStats.total || 1)) * 100)}%` }}
+                        ></div>
+                      </div>
+                      
+                      <div className="flex justify-between mt-3">
+                        <span>Expiradas</span>
+                        <span className="font-medium">{subscriptionStats.expired}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div 
+                          className="bg-red-600 h-2.5 rounded-full" 
+                          style={{ width: `${Math.round((subscriptionStats.expired / (subscriptionStats.total || 1)) * 100)}%` }}
+                        ></div>
+                      </div>
+                      
+                      <div className="flex justify-between mt-3">
+                        <span>Em Teste</span>
+                        <span className="font-medium">{subscriptionStats.trialCount}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div 
+                          className="bg-blue-400 h-2.5 rounded-full" 
+                          style={{ width: `${Math.round((subscriptionStats.trialCount / (subscriptionStats.total || 1)) * 100)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              {/* Componente de Tendências de Assinaturas */}
+              <div className="mt-8">
+                <SubscriptionTrends />
+              </div>
             </>
-          )}
+          ) : null}
         </TabsContent>
         
-        {/* Aba de Lista de Assinaturas */}
+        {/* Aba de Assinaturas */}
         <TabsContent value="subscriptions" className="space-y-6">
-          <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
-            <div className="relative flex-1">
-              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por nome, email ou username..."
-                className="pl-9"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+          <div className="flex flex-col gap-4 mb-4">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+              <h3 className="text-lg font-semibold">Lista de Assinantes</h3>
+              
+              <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
+                <Button 
+                  variant={showAdvancedFilters || planFilter !== 'all' || dateFilter !== 'all' ? "default" : "outline"}
+                  size="sm" 
+                  onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                  className="flex items-center gap-1"
+                >
+                  <SlidersHorizontal className="h-4 w-4" />
+                  Filtros Avançados
+                  {(planFilter !== 'all' || dateFilter !== 'all') && (
+                    <Badge variant="secondary" className="ml-1 font-normal text-xs">
+                      {(planFilter !== 'all' && dateFilter !== 'all') ? '2' :
+                       (planFilter !== 'all' || dateFilter !== 'all') ? '1' : ''}
+                    </Badge>
+                  )}
+                  {showAdvancedFilters ? (
+                    <ChevronLeft className="h-4 w-4 ml-1" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  )}
+                </Button>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="flex items-center gap-1">
+                      <Download className="h-4 w-4" />
+                      Exportar
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem onClick={() => {
+                      setExportFormat('csv');
+                      setShowExportDialog(true);
+                    }}>
+                      Exportar como CSV
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => {
+                      setExportFormat('excel');
+                      setShowExportDialog(true);
+                    }}>
+                      Exportar como Excel
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-              >
-                <Filter className="h-4 w-4 mr-2" />
-                Filtros
-              </Button>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <Select
+                  value={statusFilter}
+                  onValueChange={setStatusFilter}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Status: Todos</SelectItem>
+                    <SelectItem value="active">Status: Ativos</SelectItem>
+                    <SelectItem value="expired">Status: Expirados</SelectItem>
+                    <SelectItem value="trial">Status: Em teste</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <Select
+                  value={originFilter}
+                  onValueChange={setOriginFilter}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Origem" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Origem: Todas</SelectItem>
+                    <SelectItem value="hotmart">Origem: Hotmart</SelectItem>
+                    <SelectItem value="doppus">Origem: Doppus</SelectItem>
+                    <SelectItem value="manual">Origem: Manual</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                {showAdvancedFilters && (
+                  <>
+                    <Select
+                      value={planFilter}
+                      onValueChange={setPlanFilter}
+                    >
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Plano" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Plano: Todos</SelectItem>
+                        <SelectItem value="mensal">Plano: Mensal</SelectItem>
+                        <SelectItem value="trimestral">Plano: Trimestral</SelectItem>
+                        <SelectItem value="anual">Plano: Anual</SelectItem>
+                        <SelectItem value="vitalicio">Plano: Vitalício</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    
+                    <Select
+                      value={dateFilter}
+                      onValueChange={setDateFilter}
+                    >
+                      <SelectTrigger className="w-[200px]">
+                        <SelectValue placeholder="Período de assinatura" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Período: Qualquer data</SelectItem>
+                        <SelectItem value="today">Período: Hoje</SelectItem>
+                        <SelectItem value="last7days">Período: Últimos 7 dias</SelectItem>
+                        <SelectItem value="last30days">Período: Últimos 30 dias</SelectItem>
+                        <SelectItem value="thisMonth">Período: Este mês</SelectItem>
+                        <SelectItem value="lastMonth">Período: Mês passado</SelectItem>
+                        <SelectItem value="custom">Período: Personalizado</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    
+                    {dateFilter === 'custom' && (
+                      <div className="flex items-center gap-2">
+                        <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" size="sm" className="flex items-center gap-1">
+                              <Calendar className="h-4 w-4" />
+                              {fromDate && toDate ? 
+                                `${format(fromDate, 'dd/MM/yyyy')} até ${format(toDate, 'dd/MM/yyyy')}` : 
+                                fromDate ? 
+                                  `A partir de ${format(fromDate, 'dd/MM/yyyy')}` : 
+                                  toDate ? 
+                                    `Até ${format(toDate, 'dd/MM/yyyy')}` : 
+                                    'Selecionar período'}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="p-4 w-auto" align="start">
+                            <div className="space-y-4">
+                              <div className="grid gap-2">
+                                <div className="flex items-center justify-between">
+                                  <Label htmlFor="from">De</Label>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="h-7 px-2"
+                                    onClick={() => setFromDate(undefined)}
+                                    disabled={!fromDate}
+                                  >
+                                    <X className="h-4 w-4 text-muted-foreground" />
+                                  </Button>
+                                </div>
+                                <CalendarComponent
+                                  mode="single"
+                                  selected={fromDate}
+                                  onSelect={setFromDate}
+                                  disabled={(date) => toDate ? date > toDate : false}
+                                  initialFocus
+                                />
+                              </div>
+                              
+                              <div className="grid gap-2">
+                                <div className="flex items-center justify-between">
+                                  <Label htmlFor="to">Até</Label>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="h-7 px-2"
+                                    onClick={() => setToDate(undefined)}
+                                    disabled={!toDate}
+                                  >
+                                    <X className="h-4 w-4 text-muted-foreground" />
+                                  </Button>
+                                </div>
+                                <CalendarComponent
+                                  mode="single"
+                                  selected={toDate}
+                                  onSelect={setToDate}
+                                  disabled={(date) => fromDate ? date < fromDate : false}
+                                  initialFocus
+                                />
+                              </div>
+                              
+                              <div className="flex justify-end gap-2">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => {
+                                    setFromDate(undefined);
+                                    setToDate(undefined);
+                                    setIsCalendarOpen(false);
+                                  }}
+                                >
+                                  Cancelar
+                                </Button>
+                                <Button 
+                                  size="sm"
+                                  onClick={() => setIsCalendarOpen(false)}
+                                  disabled={!fromDate && !toDate}
+                                >
+                                  Aplicar
+                                </Button>
+                              </div>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
               
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowExportDialog(true)}
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Exportar
-              </Button>
+              <div className="relative flex-1">
+                <SearchIcon className="absolute top-1/2 left-3 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  type="search"
+                  placeholder="Buscar assinantes..."
+                  className="pl-10"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
             </div>
+            
+            {showAdvancedFilters && (
+              <div className="flex items-center justify-between mt-2">
+                <div className="text-sm text-muted-foreground">
+                  Filtros ativos: {
+                    [
+                      statusFilter !== 'all' && `Status: ${statusFilter}`,
+                      originFilter !== 'all' && `Origem: ${originFilter}`,
+                      planFilter !== 'all' && `Plano: ${planFilter}`,
+                      dateFilter !== 'all' && `Período: ${dateFilter}`,
+                      searchTerm && `Busca: "${searchTerm}"`
+                    ].filter(Boolean).join(', ') || 'Nenhum'
+                  }
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setStatusFilter('all');
+                    setOriginFilter('all');
+                    setPlanFilter('all');
+                    setDateFilter('all');
+                    setFromDate(undefined);
+                    setToDate(undefined);
+                    setSearchTerm('');
+                  }}
+                  className="text-xs"
+                >
+                  <X className="h-3 w-3 mr-1" />
+                  Limpar filtros
+                </Button>
+              </div>
+            )}
           </div>
           
-          {/* Filtros avançados */}
-          {showAdvancedFilters && (
-            <div className="bg-card border rounded-md p-4 mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div>
-                <Label className="text-sm font-medium">Status</Label>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="mt-2">
-                    <SelectValue placeholder="Todos os status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os status</SelectItem>
-                    <SelectItem value="active">Ativo</SelectItem>
-                    <SelectItem value="expired">Expirado</SelectItem>
-                    <SelectItem value="pending">Pendente</SelectItem>
-                    <SelectItem value="trial">Teste</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Label className="text-sm font-medium">Origem</Label>
-                <Select value={originFilter} onValueChange={setOriginFilter}>
-                  <SelectTrigger className="mt-2">
-                    <SelectValue placeholder="Todas as origens" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas as origens</SelectItem>
-                    <SelectItem value="hotmart">Hotmart</SelectItem>
-                    <SelectItem value="doppus">Doppus</SelectItem>
-                    <SelectItem value="manual">Manual</SelectItem>
-                    <SelectItem value="other">Outra</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Label className="text-sm font-medium">Plano</Label>
-                <Select value={planFilter} onValueChange={setPlanFilter}>
-                  <SelectTrigger className="mt-2">
-                    <SelectValue placeholder="Todos os planos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os planos</SelectItem>
-                    <SelectItem value="basic">Básico</SelectItem>
-                    <SelectItem value="pro">Profissional</SelectItem>
-                    <SelectItem value="enterprise">Empresarial</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Label className="text-sm font-medium">Período</Label>
-                <Select value={dateFilter} onValueChange={setDateFilter}>
-                  <SelectTrigger className="mt-2">
-                    <SelectValue placeholder="Qualquer período" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Qualquer período</SelectItem>
-                    <SelectItem value="today">Hoje</SelectItem>
-                    <SelectItem value="last7days">Últimos 7 dias</SelectItem>
-                    <SelectItem value="last30days">Últimos 30 dias</SelectItem>
-                    <SelectItem value="last90days">Últimos 90 dias</SelectItem>
-                    <SelectItem value="expiring7days">Expirando em 7 dias</SelectItem>
-                    <SelectItem value="expiring30days">Expirando em 30 dias</SelectItem>
-                    <SelectItem value="expired">Expiradas</SelectItem>
-                    <SelectItem value="custom">Período personalizado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              {dateFilter === 'custom' && (
-                <div className="md:col-span-4 flex flex-col sm:flex-row gap-4">
-                  <div className="flex-1">
-                    <Label className="text-sm font-medium">De</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="w-full mt-2 justify-start text-left font-normal"
-                        >
-                          {fromDate ? (
-                            format(fromDate, 'dd/MM/yyyy', { locale: pt })
-                          ) : (
-                            <span className="text-muted-foreground">Selecione a data inicial</span>
-                          )}
-                          <Calendar className="ml-auto h-4 w-4" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <CalendarComponent
-                          mode="single"
-                          selected={fromDate}
-                          onSelect={setFromDate}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  
-                  <div className="flex-1">
-                    <Label className="text-sm font-medium">Até</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="w-full mt-2 justify-start text-left font-normal"
-                        >
-                          {toDate ? (
-                            format(toDate, 'dd/MM/yyyy', { locale: pt })
-                          ) : (
-                            <span className="text-muted-foreground">Selecione a data final</span>
-                          )}
-                          <Calendar className="ml-auto h-4 w-4" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <CalendarComponent
-                          mode="single"
-                          selected={toDate}
-                          onSelect={setToDate}
-                          initialFocus
-                          disabled={(date) => 
-                            fromDate ? date < fromDate : false
-                          }
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-          
           {isLoadingUsers ? (
-            <div className="flex justify-center items-center h-64">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <div className="flex justify-center items-center py-6">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
             </div>
           ) : isErrorUsers ? (
-            <div className="flex flex-col items-center justify-center h-64 text-center">
-              <AlertCircle className="h-10 w-10 text-destructive mb-4" />
-              <h3 className="text-lg font-medium">Erro ao carregar assinaturas</h3>
-              <p className="text-sm text-muted-foreground mt-2">
+            <div className="p-4 bg-red-50 rounded-md">
+              <div className="flex items-center gap-2 text-red-700 mb-2">
+                <AlertCircle className="w-5 h-5" />
+                <p className="font-medium">Erro ao carregar assinantes</p>
+              </div>
+              <p className="text-sm text-red-600">
                 {usersError instanceof Error ? usersError.message : 'Ocorreu um erro desconhecido'}
               </p>
-              <Button 
-                variant="outline" 
-                className="mt-4"
-                onClick={() => refetchUsers()}
-              >
-                Tentar novamente
-              </Button>
             </div>
-          ) : usersData.users.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 text-center">
-              <FileText className="h-10 w-10 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium">Nenhuma assinatura encontrada</h3>
-              <p className="text-sm text-muted-foreground mt-2">
-                Nenhum resultado para os filtros aplicados. Tente outros critérios de busca.
-              </p>
+          ) : usersData?.users.length === 0 ? (
+            <div className="text-center py-6">
+              <p className="text-muted-foreground">Nenhum assinante encontrado com os filtros selecionados.</p>
             </div>
           ) : (
             <>
               <div className="rounded-md border">
                 <Table>
+                  <TableCaption>Lista de usuários assinantes</TableCaption>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Usuário</TableHead>
-                      <TableHead>Origem</TableHead>
+                      <TableHead>Email</TableHead>
                       <TableHead>Plano</TableHead>
-                      <TableHead>Data de Início</TableHead>
-                      <TableHead>Expira em</TableHead>
+                      <TableHead>Origem</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Ações</TableHead>
+                      <TableHead>Expira em</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {usersData.users.map((user) => (
+                    {usersData.users.map((user: User) => (
                       <TableRow key={user.id}>
-                        <TableCell className="font-medium">
-                          <div>
-                            <div className="font-medium">{user.username}</div>
-                            <div className="text-xs text-muted-foreground truncate max-w-[200px]">{user.email}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="capitalize">{user.origemassinatura || 'N/A'}</Badge>
-                        </TableCell>
-                        <TableCell>{user.tipoplano || 'Free'}</TableCell>
-                        <TableCell>
-                          {user.dataassinatura 
-                            ? format(new Date(user.dataassinatura), 'dd/MM/yyyy', { locale: pt }) 
-                            : 'N/A'}
-                        </TableCell>
-                        <TableCell>
-                          {user.dataexpiracao 
-                            ? format(new Date(user.dataexpiracao), 'dd/MM/yyyy', { locale: pt }) 
-                            : 'N/A'}
-                        </TableCell>
+                        <TableCell className="font-medium">{user.username}</TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>{user.tipoplano || '-'}</TableCell>
+                        <TableCell>{user.origemassinatura || '-'}</TableCell>
                         <TableCell>{getStatusBadge(user.planstatus)}</TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2">
+                          {user.planoexpiracao 
+                            ? format(new Date(user.planoexpiracao), 'dd/MM/yyyy', { locale: pt })
+                            : '-'
+                          }
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
                             <Button
-                              variant="ghost"
+                              variant="ghost" 
                               size="icon"
-                              onClick={() => {
-                                setSelectedUserId(user.id);
-                                setIsViewDialogOpen(true);
-                              }}
+                              onClick={() => handleViewUser(user.id)}
                             >
-                              <SearchIcon className="h-4 w-4" />
+                              <Eye className="w-4 h-4" />
                             </Button>
-                            <Button
-                              variant="ghost"
+                            <Button 
+                              variant="ghost" 
                               size="icon"
-                              onClick={() => {
-                                setSelectedUserId(user.id);
-                                setIsEditDialogOpen(true);
-                              }}
+                              onClick={() => handleEditUser(user.id)}
                             >
-                              <Edit className="h-4 w-4" />
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="text-red-500 hover:text-red-700"
+                              onClick={() => handleDeleteUser(user.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
                         </TableCell>
@@ -746,324 +1084,543 @@ export default function SubscriptionManagement() {
               </div>
               
               {/* Paginação */}
-              <div className="flex items-center justify-between pt-4">
-                <div className="text-sm text-muted-foreground">
-                  Mostrando <span className="font-medium">{usersData.users.length}</span> de{" "}
-                  <span className="font-medium">{usersData.totalCount}</span> registros
+              {usersData.totalPages > 1 && (
+                <div className="flex justify-between items-center mt-4">
+                  <div className="text-sm text-muted-foreground">
+                    Mostrando {usersData.users.length} de {usersData.total} assinantes
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage(prev => Math.max(1, prev - 1))}
+                      disabled={page <= 1}
+                    >
+                      <ChevronLeft className="w-4 h-4 mr-1" /> Anterior
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage(prev => Math.min(usersData.totalPages, prev + 1))}
+                      disabled={page >= usersData.totalPages}
+                    >
+                      Próxima <ChevronRight className="w-4 h-4 ml-1" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPage(Math.max(1, page - 1))}
-                    disabled={page === 1}
-                  >
-                    Anterior
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPage(page + 1)}
-                    disabled={usersData.users.length < pageSize}
-                  >
-                    Próxima
-                  </Button>
-                </div>
-              </div>
+              )}
             </>
           )}
         </TabsContent>
         
         {/* Aba de Webhooks */}
         <TabsContent value="webhooks" className="space-y-6">
-          <WebhookList />
+          <WebhookList key="subscription-webhooks" />
         </TabsContent>
-      </Tabs>
-      
-      {/* Diálogo de Visualização */}
-      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Detalhes da Assinatura</DialogTitle>
-            <DialogDescription>
-              Informações detalhadas sobre esta assinatura
-            </DialogDescription>
-          </DialogHeader>
-          
-          {isLoadingDetail ? (
-            <div className="flex justify-center items-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : isErrorDetail ? (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <AlertCircle className="h-10 w-10 text-destructive mb-4" />
-              <h3 className="text-lg font-medium">Erro ao carregar detalhes</h3>
-              <p className="text-sm text-muted-foreground mt-2">
-                {detailError instanceof Error ? detailError.message : 'Ocorreu um erro desconhecido'}
-              </p>
-              <Button 
-                variant="outline" 
-                className="mt-4"
-                onClick={() => refetchDetail()}
-              >
-                Tentar novamente
-              </Button>
-            </div>
-          ) : !subscriptionDetail?.detail ? (
-            <div className="py-6 text-center">
-              <p className="text-muted-foreground">Nenhuma informação detalhada disponível</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+        
+        {/* Aba de Configurações com integração das configurações de assinatura */}
+        <TabsContent value="settings" className="space-y-6">
+          {/* Sub-abas para configurações gerais e configurações de assinatura */}
+          <Tabs defaultValue="site-config" className="w-full">
+            <TabsList className="w-full mb-4">
+              <TabsTrigger value="site-config">Configurações do Site</TabsTrigger>
+              <TabsTrigger value="assinatura-config">Configurações de Assinatura</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="site-config" className="space-y-4">
               <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Informações do Usuário</CardTitle>
+                <CardHeader>
+                  <CardTitle className="text-lg">Configurações Básicas de Assinatura</CardTitle>
+                  <CardDescription>Gerencie as configurações gerais de assinaturas</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Nome:</span>
-                      <span className="font-medium">{subscriptionDetail.detail.user.name || subscriptionDetail.detail.user.username}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Email:</span>
-                      <span className="font-medium">{subscriptionDetail.detail.user.email}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Username:</span>
-                      <span className="font-medium">{subscriptionDetail.detail.user.username}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Detalhes da Assinatura</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Plano:</span>
-                      <span className="font-medium">{subscriptionDetail.detail.planName}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Tipo:</span>
-                      <span className="font-medium">{subscriptionDetail.detail.planType}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Origem:</span>
-                      <span className="font-medium capitalize">{subscriptionDetail.detail.origin}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Status:</span>
-                      <span>{getStatusBadge(subscriptionDetail.detail.status)}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Datas</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Data de início:</span>
-                      <span className="font-medium">
-                        {format(new Date(subscriptionDetail.detail.startDate), 'dd/MM/yyyy', { locale: pt })}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Data de expiração:</span>
-                      <span className="font-medium">
-                        {subscriptionDetail.detail.endDate 
-                          ? format(new Date(subscriptionDetail.detail.endDate), 'dd/MM/yyyy', { locale: pt })
-                          : 'N/A'}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Informações de Pagamento</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Valor:</span>
-                      <span className="font-medium">
-                        {new Intl.NumberFormat('pt-BR', {
-                          style: 'currency',
-                          currency: subscriptionDetail.detail.currency || 'BRL'
-                        }).format(subscriptionDetail.detail.price)}
-                      </span>
-                    </div>
-                    {subscriptionDetail.detail.paymentMethod && (
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Método de pagamento:</span>
-                        <span className="font-medium">{subscriptionDetail.detail.paymentMethod}</span>
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label htmlFor="auto-downgrade" className="font-medium">Rebaixamento automático</Label>
+                          <p className="text-sm text-muted-foreground">Rebaixar automaticamente usuários com assinaturas expiradas</p>
+                        </div>
+                        <Switch 
+                          id="auto-downgrade" 
+                          checked={autoDowngrade}
+                          onCheckedChange={setAutoDowngrade}
+                        />
                       </div>
-                    )}
-                    {subscriptionDetail.detail.transactionId && (
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">ID da transação:</span>
-                        <span className="font-medium">{subscriptionDetail.detail.transactionId}</span>
-                      </div>
-                    )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
-            </div>
-          )}
-          
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setIsViewDialogOpen(false)}
-            >
-              Fechar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Diálogo de Edição */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Atualizar Assinatura</DialogTitle>
-            <DialogDescription>
-              Edite os detalhes da assinatura
-            </DialogDescription>
-          </DialogHeader>
-          
-          {isLoadingDetail ? (
-            <div className="flex justify-center items-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : isErrorDetail ? (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <AlertCircle className="h-10 w-10 text-destructive mb-4" />
-              <h3 className="text-lg font-medium">Erro ao carregar detalhes</h3>
-              <p className="text-sm text-muted-foreground mt-2">
-                {detailError instanceof Error ? detailError.message : 'Ocorreu um erro desconhecido'}
-              </p>
-              <Button 
-                variant="outline" 
-                className="mt-4"
-                onClick={() => refetchDetail()}
-              >
-                Tentar novamente
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-6 py-4">
-              <div className="grid grid-cols-1 gap-4">
+            </TabsContent>
+            
+            <TabsContent value="assinatura-config" className="space-y-4">
+              <SubscriptionSettings />
+            </TabsContent>
+          </Tabs>
+        </TabsContent>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="email-notifications" className="font-medium">Notificações por email</Label>
+                      <p className="text-sm text-muted-foreground">Enviar email quando uma assinatura estiver próxima da expiração</p>
+                    </div>
+                    <Switch 
+                      id="email-notifications" 
+                      checked={emailNotifications}
+                      onCheckedChange={setEmailNotifications}
+                    />
+                  </div>
+                </div>
+                
                 <div className="space-y-2">
-                  <Label htmlFor="status">Status da Assinatura</Label>
-                  <Select defaultValue={subscriptionDetail?.detail?.status || "active"}>
-                    <SelectTrigger id="status">
-                      <SelectValue placeholder="Selecione o status" />
+                  <Label className="font-medium">Dias para notificação de expiração</Label>
+                  <p className="text-sm text-muted-foreground">Enviar lembretes automáticos antes da expiração</p>
+                  <div className="flex items-center gap-4 mt-2">
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        id="expiry-7" 
+                        className="rounded"
+                        checked={notificationDays.includes('7')}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setNotificationDays([...notificationDays, '7']);
+                          } else {
+                            setNotificationDays(notificationDays.filter(day => day !== '7'));
+                          }
+                        }}
+                      />
+                      <label htmlFor="expiry-7">7 dias antes</label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        id="expiry-3" 
+                        className="rounded"
+                        checked={notificationDays.includes('3')}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setNotificationDays([...notificationDays, '3']);
+                          } else {
+                            setNotificationDays(notificationDays.filter(day => day !== '3'));
+                          }
+                        }}
+                      />
+                      <label htmlFor="expiry-3">3 dias antes</label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        id="expiry-1" 
+                        className="rounded"
+                        checked={notificationDays.includes('1')}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setNotificationDays([...notificationDays, '1']);
+                          } else {
+                            setNotificationDays(notificationDays.filter(day => day !== '1'));
+                          }
+                        }}
+                      />
+                      <label htmlFor="expiry-1">1 dia antes</label>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="font-medium">Período de tolerância após expiração</Label>
+                  <p className="text-sm text-muted-foreground">Manter o acesso premium por um período após a expiração</p>
+                  <Select 
+                    value={gracePeriod}
+                    onValueChange={setGracePeriod}
+                  >
+                    <SelectTrigger className="w-full max-w-xs">
+                      <SelectValue placeholder="Selecione o período" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="active">Ativo</SelectItem>
-                      <SelectItem value="expired">Expirado</SelectItem>
-                      <SelectItem value="pending">Pendente</SelectItem>
-                      <SelectItem value="trial">Teste</SelectItem>
+                      <SelectItem value="0">Sem período de tolerância</SelectItem>
+                      <SelectItem value="1">1 dia</SelectItem>
+                      <SelectItem value="3">3 dias</SelectItem>
+                      <SelectItem value="7">7 dias</SelectItem>
+                      <SelectItem value="14">14 dias</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 
+                <div className="pt-4">
+                  <Button onClick={() => handleSaveSettings()}>
+                    <Save className="w-4 h-4 mr-2" /> Salvar configurações
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Opções de Assinatura</CardTitle>
+              <CardDescription>Personalize as opções disponíveis</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="endDate">Data de Expiração</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        id="endDate"
-                        variant="outline"
-                        className="w-full justify-start text-left font-normal"
-                      >
-                        <Calendar className="mr-2 h-4 w-4" />
-                        <span>
-                          {subscriptionDetail?.detail?.endDate 
-                            ? format(new Date(subscriptionDetail.detail.endDate), 'PPP', { locale: pt })
-                            : 'Selecione uma data'}
-                        </span>
+                  <Label className="font-medium">Tipos de plano disponíveis</Label>
+                  <p className="text-sm text-muted-foreground">Gerencie os tipos de plano que podem ser atribuídos aos usuários</p>
+                  
+                  <div className="border rounded-md p-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span>Premium Mensal</span>
+                        <Button variant="ghost" size="sm" className="h-7 text-red-500 hover:text-red-700">
+                          <Trash2 className="w-3.5 h-3.5 mr-1" /> Remover
+                        </Button>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span>Premium Anual</span>
+                        <Button variant="ghost" size="sm" className="h-7 text-red-500 hover:text-red-700">
+                          <Trash2 className="w-3.5 h-3.5 mr-1" /> Remover
+                        </Button>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span>Vitalício</span>
+                        <Button variant="ghost" size="sm" className="h-7 text-red-500 hover:text-red-700">
+                          <Trash2 className="w-3.5 h-3.5 mr-1" /> Remover
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="border-t mt-4 pt-4">
+                      <Button variant="outline" size="sm">
+                        <Plus className="w-3.5 h-3.5 mr-1" /> Adicionar plano
                       </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <CalendarComponent
-                        mode="single"
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="font-medium">Origens de assinatura disponíveis</Label>
+                  <p className="text-sm text-muted-foreground">Gerencie as origens de assinatura que podem ser atribuídas</p>
+                  
+                  <div className="border rounded-md p-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span>Hotmart</span>
+                        <Button variant="ghost" size="sm" className="h-7 text-red-500 hover:text-red-700">
+                          <Trash2 className="w-3.5 h-3.5 mr-1" /> Remover
+                        </Button>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span>Doppus</span>
+                        <Button variant="ghost" size="sm" className="h-7 text-red-500 hover:text-red-700">
+                          <Trash2 className="w-3.5 h-3.5 mr-1" /> Remover
+                        </Button>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span>Manual</span>
+                        <Button variant="ghost" size="sm" className="h-7 text-red-500 hover:text-red-700">
+                          <Trash2 className="w-3.5 h-3.5 mr-1" /> Remover
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="border-t mt-4 pt-4">
+                      <Button variant="outline" size="sm">
+                        <Plus className="w-3.5 h-3.5 mr-1" /> Adicionar origem
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+      
+      {/* Dialog para visualizar detalhes do usuário */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Detalhes da Assinatura</DialogTitle>
+            <DialogDescription>
+              Informações detalhadas da assinatura do usuário.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {isLoadingDetail ? (
+            <div className="flex justify-center items-center py-10">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+            </div>
+          ) : isErrorDetail ? (
+            <div className="p-4 bg-red-50 rounded-md">
+              <div className="flex items-center gap-2 text-red-700">
+                <AlertCircle className="w-5 h-5" />
+                <p className="font-medium">Erro ao carregar detalhes</p>
+              </div>
+              <p className="mt-2 text-sm text-red-600">
+                {detailError instanceof Error ? detailError.message : 'Ocorreu um erro desconhecido'}
+              </p>
+            </div>
+          ) : userDetail ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">Nome de usuário</p>
+                  <p>{userDetail.username}</p>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">Email</p>
+                  <p>{userDetail.email}</p>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">Tipo de plano</p>
+                  <p>{userDetail.tipoplano || 'Não definido'}</p>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">Origem da assinatura</p>
+                  <p>{userDetail.origemassinatura || 'Não definida'}</p>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">Status do plano</p>
+                  <p>{getStatusBadge(userDetail.planstatus)}</p>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">Data de expiração</p>
+                  <p>{userDetail.planoexpiracao 
+                    ? format(new Date(userDetail.planoexpiracao), 'dd/MM/yyyy', { locale: pt })
+                    : 'Não definida'
+                  }</p>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">Data de criação</p>
+                  <p>{format(new Date(userDetail.criadoem), 'dd/MM/yyyy HH:mm', { locale: pt })}</p>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">Última atualização</p>
+                  <p>{format(new Date(userDetail.atualizadoem), 'dd/MM/yyyy HH:mm', { locale: pt })}</p>
                 </div>
               </div>
               
-              <div className="flex justify-between">
+              {userDetail.observacaoadmin && (
+                <div className="space-y-2 border-t pt-4">
+                  <p className="text-sm font-medium text-muted-foreground">Observações do administrador</p>
+                  <p className="text-sm whitespace-pre-line">{userDetail.observacaoadmin}</p>
+                </div>
+              )}
+              
+              <div className="border-t pt-4 flex justify-between">
+                <Button variant="outline" onClick={() => handleEditUser(userDetail.id)}>
+                  <Edit className="w-4 h-4 mr-2" /> Editar assinatura
+                </Button>
+                <Button variant="destructive" onClick={() => setIsConfirmDialogOpen(true)}>
+                  <Trash2 className="w-4 h-4 mr-2" /> Remover assinatura
+                </Button>
+              </div>
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Dialog para editar assinatura */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Editar Assinatura</DialogTitle>
+            <DialogDescription>
+              Edite os detalhes da assinatura do usuário.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {isLoadingDetail ? (
+            <div className="flex justify-center items-center py-10">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+            </div>
+          ) : isErrorDetail ? (
+            <div className="p-4 bg-red-50 rounded-md">
+              <div className="flex items-center gap-2 text-red-700">
+                <AlertCircle className="w-5 h-5" />
+                <p className="font-medium">Erro ao carregar detalhes</p>
+              </div>
+              <p className="mt-2 text-sm text-red-600">
+                {detailError instanceof Error ? detailError.message : 'Ocorreu um erro desconhecido'}
+              </p>
+            </div>
+          ) : userDetail ? (
+            <form onSubmit={handleSubmit}>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="tipoplano" className="text-right">
+                    Tipo de plano
+                  </Label>
+                  <div className="col-span-3">
+                    <Select
+                      name="tipoplano"
+                      value={formData.tipoplano}
+                      onValueChange={(value) => setFormData({...formData, tipoplano: value})}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Selecione o plano" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Premium Mensal">Premium Mensal</SelectItem>
+                        <SelectItem value="Premium Anual">Premium Anual</SelectItem>
+                        <SelectItem value="Vitalício">Vitalício</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="origemassinatura" className="text-right">
+                    Origem
+                  </Label>
+                  <div className="col-span-3">
+                    <Select
+                      name="origemassinatura"
+                      value={formData.origemassinatura}
+                      onValueChange={(value) => setFormData({...formData, origemassinatura: value})}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Selecione a origem" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Hotmart">Hotmart</SelectItem>
+                        <SelectItem value="Doppus">Doppus</SelectItem>
+                        <SelectItem value="Manual">Manual</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="planstatus" className="text-right">
+                    Status
+                  </Label>
+                  <div className="col-span-3">
+                    <Select
+                      name="planstatus"
+                      value={formData.planstatus}
+                      onValueChange={(value) => setFormData({...formData, planstatus: value})}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Selecione o status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Ativo</SelectItem>
+                        <SelectItem value="expired">Expirado</SelectItem>
+                        <SelectItem value="trial">Em teste</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="planoexpiracao" className="text-right">
+                    Data de expiração
+                  </Label>
+                  <div className="col-span-3">
+                    <div className="relative">
+                      <Input
+                        id="planoexpiracao"
+                        type="date"
+                        name="planoexpiracao"
+                        value={formData.planoexpiracao}
+                        onChange={handleFormChange}
+                      />
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleExtendSubscription(1)}
+                      >
+                        +1 mês
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleExtendSubscription(3)}
+                      >
+                        +3 meses
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleExtendSubscription(6)}
+                      >
+                        +6 meses
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleExtendSubscription(12)}
+                      >
+                        +1 ano
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="observacaoadmin" className="text-right align-top pt-2">
+                    Observações
+                  </Label>
+                  <Textarea
+                    id="observacaoadmin"
+                    name="observacaoadmin"
+                    className="col-span-3"
+                    value={formData.observacaoadmin}
+                    onChange={handleFormChange}
+                    placeholder="Notas internas sobre esta assinatura"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
                 <Button 
+                  type="button" 
                   variant="outline" 
                   onClick={() => setIsEditDialogOpen(false)}
                 >
                   Cancelar
                 </Button>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="destructive"
-                    onClick={() => {
-                      setIsEditDialogOpen(false);
-                      setIsConfirmDialogOpen(true);
-                    }}
-                  >
-                    Cancelar Assinatura
-                  </Button>
-                  <Button>Salvar Alterações</Button>
-                </div>
-              </div>
-            </div>
-          )}
+                <Button 
+                  type="submit"
+                  disabled={updateSubscriptionMutation.isPending}
+                >
+                  {updateSubscriptionMutation.isPending && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Salvar alterações
+                </Button>
+              </DialogFooter>
+            </form>
+          ) : null}
         </DialogContent>
       </Dialog>
       
-      {/* Diálogo de Confirmação */}
+      {/* Dialog para confirmar remoção */}
       <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Confirmar Ação</DialogTitle>
+            <DialogTitle>Remover assinatura</DialogTitle>
             <DialogDescription>
-              Tem certeza que deseja cancelar esta assinatura? Esta ação não pode ser desfeita.
+              Tem certeza que deseja remover a assinatura deste usuário? Esta ação irá rebaixar o usuário para o nível gratuito.
             </DialogDescription>
           </DialogHeader>
-          
-          <div className="py-4">
-            <p className="text-sm text-muted-foreground">
-              O usuário perderá acesso aos recursos premium imediatamente após o cancelamento.
-            </p>
-          </div>
-          
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button 
               variant="outline" 
               onClick={() => setIsConfirmDialogOpen(false)}
             >
-              Voltar
+              Cancelar
             </Button>
             <Button 
               variant="destructive"
-              onClick={() => {
-                if (selectedUserId) {
-                  updateStatusMutation.mutate({ userId: selectedUserId, status: 'expired' });
-                }
-              }}
-              disabled={updateStatusMutation.isPending}
+              onClick={() => removeSubscriptionMutation.mutate()}
+              disabled={removeSubscriptionMutation.isPending}
             >
-              {updateStatusMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Confirmar Cancelamento
+              {removeSubscriptionMutation.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Confirmar remoção
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1071,212 +1628,261 @@ export default function SubscriptionManagement() {
       
       {/* Diálogo de Exportação */}
       <Dialog open={showExportDialog} onOpenChange={setShowExportDialog}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Exportar Usuários</DialogTitle>
+            <DialogTitle>Exportar Assinantes</DialogTitle>
             <DialogDescription>
-              Configure os campos e formato para exportação
+              Selecione os campos que deseja incluir na exportação. Os filtros atualmente aplicados serão considerados.
             </DialogDescription>
           </DialogHeader>
           
-          <div className="py-4 space-y-6">
-            {/* Resumo de filtros ativos */}
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium">Filtros aplicados:</h4>
-              <div className="flex flex-wrap gap-2">
-                {statusFilter !== 'all' && (
-                  <Badge variant="secondary" className="flex items-center gap-1">
-                    Status: {statusFilter}
-                  </Badge>
-                )}
-                {originFilter !== 'all' && (
-                  <Badge variant="secondary" className="flex items-center gap-1">
-                    Origem: {originFilter}
-                  </Badge>
-                )}
-                {planFilter !== 'all' && (
-                  <Badge variant="secondary" className="flex items-center gap-1">
-                    Plano: {planFilter}
-                  </Badge>
-                )}
-                {dateFilter !== 'all' && (
-                  <Badge variant="secondary" className="flex items-center gap-1">
-                    Período: {dateFilter === 'custom' ? 'Personalizado' : dateFilter}
-                  </Badge>
-                )}
-                {searchTerm && (
-                  <Badge variant="secondary" className="flex items-center gap-1">
-                    Busca: {searchTerm}
-                  </Badge>
-                )}
-                {statusFilter === 'all' && originFilter === 'all' && planFilter === 'all' && 
-                 dateFilter === 'all' && !searchTerm && (
-                  <span className="text-sm text-muted-foreground">Nenhum filtro aplicado</span>
-                )}
-              </div>
+          {/* Resumo dos filtros */}
+          <div className="bg-muted p-3 rounded-md text-sm mt-2">
+            <p className="font-medium mb-2">Filtros aplicados:</p>
+            <ul className="space-y-2">
+              <li className="flex items-center gap-2">
+                <Badge variant="outline" className="font-semibold">Status</Badge>
+                <span className={statusFilter !== 'all' ? 'text-primary font-medium' : 'text-muted-foreground'}>
+                  {statusFilter === 'all' ? 'Todos' : 
+                  statusFilter === 'active' ? 'Ativos' : 
+                  statusFilter === 'expired' ? 'Expirados' : 'Em teste'}
+                </span>
+              </li>
+              
+              <li className="flex items-center gap-2">
+                <Badge variant="outline" className="font-semibold">Origem</Badge>
+                <span className={originFilter !== 'all' ? 'text-primary font-medium' : 'text-muted-foreground'}>
+                  {originFilter === 'all' ? 'Todas' : 
+                  originFilter === 'hotmart' ? 'Hotmart' : 
+                  originFilter === 'doppus' ? 'Doppus' : 'Manual'}
+                </span>
+              </li>
+              
+              <li className="flex items-center gap-2">
+                <Badge variant="outline" className="font-semibold">Plano</Badge>
+                <span className={planFilter !== 'all' ? 'text-primary font-medium' : 'text-muted-foreground'}>
+                  {planFilter === 'all' ? 'Todos' : 
+                  planFilter === 'mensal' ? 'Mensal' : 
+                  planFilter === 'trimestral' ? 'Trimestral' : 
+                  planFilter === 'anual' ? 'Anual' : 'Vitalício'}
+                </span>
+              </li>
+              
+              <li className="flex items-center gap-2">
+                <Badge variant="outline" className="font-semibold">Período</Badge>
+                <span className={dateFilter !== 'all' ? 'text-primary font-medium' : 'text-muted-foreground'}>
+                  {dateFilter === 'all' ? 'Qualquer data' :
+                  dateFilter === 'today' ? 'Hoje' :
+                  dateFilter === 'last7days' ? 'Últimos 7 dias' :
+                  dateFilter === 'last30days' ? 'Últimos 30 dias' :
+                  dateFilter === 'thisMonth' ? 'Este mês' :
+                  dateFilter === 'lastMonth' ? 'Mês passado' :
+                  dateFilter === 'custom' ? (fromDate && toDate ? 
+                    `${format(fromDate, 'dd/MM/yyyy')} até ${format(toDate, 'dd/MM/yyyy')}` : 
+                    fromDate ? `A partir de ${format(fromDate, 'dd/MM/yyyy')}` : 
+                    toDate ? `Até ${format(toDate, 'dd/MM/yyyy')}` : 'Personalizado') :
+                  'Qualquer data'}
+                </span>
+              </li>
+              
+              {searchTerm && (
+                <li className="flex items-center gap-2">
+                  <Badge variant="outline" className="font-semibold">Busca</Badge> 
+                  <span className="text-primary font-medium">"{searchTerm}"</span>
+                </li>
+              )}
+            </ul>
+            
+            {/* Contador de registros a serem exportados */}
+            <div className="mt-4 pt-3 border-t border-border text-center">
+              <p className="text-sm flex items-center justify-center gap-2">
+                <Badge variant="secondary" className="px-2 py-1">
+                  {(() => {
+                    // Calcular a quantidade de registros após aplicar os filtros
+                    const count = usersData?.users?.filter((user) => {
+                      // Status
+                      if (statusFilter !== 'all') {
+                        if (statusFilter === 'active' && user.planstatus !== 'active') return false;
+                        if (statusFilter === 'expired' && user.planstatus !== 'expired') return false;
+                        if (statusFilter === 'trial' && user.planstatus !== 'trial') return false;
+                      }
+                      
+                      // Origem
+                      if (originFilter !== 'all') {
+                        const userOrigin = user.origemassinatura?.toLowerCase() || '';
+                        if (originFilter === 'hotmart' && userOrigin !== 'hotmart') return false;
+                        if (originFilter === 'doppus' && userOrigin !== 'doppus') return false;
+                        if (originFilter === 'manual' && userOrigin !== 'manual') return false;
+                      }
+                      
+                      // Plano
+                      if (planFilter !== 'all') {
+                        const userPlan = user.tipoplano?.toLowerCase() || '';
+                        if (planFilter === 'mensal' && userPlan !== 'mensal') return false;
+                        if (planFilter === 'trimestral' && userPlan !== 'trimestral') return false;
+                        if (planFilter === 'anual' && userPlan !== 'anual') return false;
+                        if (planFilter === 'vitalicio' && userPlan !== 'vitalicio') return false;
+                      }
+                      
+                      // Data
+                      if (dateFilter !== 'all' && !applyDateFilter(user)) return false;
+                      
+                      // Busca
+                      if (searchTerm) {
+                        const termLower = searchTerm.toLowerCase();
+                        const nameMatch = user.name?.toLowerCase().includes(termLower) || false;
+                        const usernameMatch = user.username.toLowerCase().includes(termLower);
+                        const emailMatch = user.email.toLowerCase().includes(termLower);
+                        
+                        if (!nameMatch && !usernameMatch && !emailMatch) return false;
+                      }
+                      
+                      return true;
+                    }).length || 0;
+                    return count;
+                  })()}
+                </Badge>
+                <span>registros serão exportados com os filtros selecionados</span>
+              </p>
+            </div>
+          </div>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-2">
+              <Label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={exportFields.includes('username')}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setExportFields([...exportFields, 'username']);
+                    } else {
+                      setExportFields(exportFields.filter(f => f !== 'username'));
+                    }
+                  }}
+                />
+                Nome de Usuário
+              </Label>
+              <Label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={exportFields.includes('email')}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setExportFields([...exportFields, 'email']);
+                    } else {
+                      setExportFields(exportFields.filter(f => f !== 'email'));
+                    }
+                  }}
+                />
+                E-mail
+              </Label>
+              <Label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={exportFields.includes('name')}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setExportFields([...exportFields, 'name']);
+                    } else {
+                      setExportFields(exportFields.filter(f => f !== 'name'));
+                    }
+                  }}
+                />
+                Nome Completo
+              </Label>
+              <Label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={exportFields.includes('origemassinatura')}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setExportFields([...exportFields, 'origemassinatura']);
+                    } else {
+                      setExportFields(exportFields.filter(f => f !== 'origemassinatura'));
+                    }
+                  }}
+                />
+                Origem
+              </Label>
+              <Label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={exportFields.includes('tipoplano')}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setExportFields([...exportFields, 'tipoplano']);
+                    } else {
+                      setExportFields(exportFields.filter(f => f !== 'tipoplano'));
+                    }
+                  }}
+                />
+                Plano
+              </Label>
+              <Label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={exportFields.includes('dataassinatura')}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setExportFields([...exportFields, 'dataassinatura']);
+                    } else {
+                      setExportFields(exportFields.filter(f => f !== 'dataassinatura'));
+                    }
+                  }}
+                />
+                Data de Assinatura
+              </Label>
+              <Label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={exportFields.includes('dataexpiracao')}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setExportFields([...exportFields, 'dataexpiracao']);
+                    } else {
+                      setExportFields(exportFields.filter(f => f !== 'dataexpiracao'));
+                    }
+                  }}
+                />
+                Data de Expiração
+              </Label>
             </div>
             
-            <div className="space-y-4">
+            <div className="flex justify-between items-center mt-2">
               <div>
-                <Label htmlFor="export-format">Formato de Exportação</Label>
-                <Select value={exportFormat} onValueChange={setExportFormat}>
-                  <SelectTrigger id="export-format" className="mt-2">
+                <p className="text-sm font-medium mb-1">Formato de exportação</p>
+                <Select
+                  value={exportFormat}
+                  onValueChange={setExportFormat}
+                >
+                  <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Selecione o formato" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="csv">CSV (Excel)</SelectItem>
-                    <SelectItem value="json">JSON</SelectItem>
+                    <SelectItem value="csv">CSV (.csv)</SelectItem>
+                    <SelectItem value="excel">Excel (.xls)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               
-              <div>
-                <Label>Campos para Exportação</Label>
-                <div className="grid grid-cols-2 gap-3 mt-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="username"
-                      checked={exportFields.includes('username')} 
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setExportFields([...exportFields, 'username']);
-                        } else {
-                          setExportFields(exportFields.filter(f => f !== 'username'));
-                        }
-                      }}
-                    />
-                    <label htmlFor="username" className="text-sm">Username</label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="email"
-                      checked={exportFields.includes('email')} 
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setExportFields([...exportFields, 'email']);
-                        } else {
-                          setExportFields(exportFields.filter(f => f !== 'email'));
-                        }
-                      }}
-                    />
-                    <label htmlFor="email" className="text-sm">Email</label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="name"
-                      checked={exportFields.includes('name')} 
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setExportFields([...exportFields, 'name']);
-                        } else {
-                          setExportFields(exportFields.filter(f => f !== 'name'));
-                        }
-                      }}
-                    />
-                    <label htmlFor="name" className="text-sm">Nome</label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="origin"
-                      checked={exportFields.includes('origemassinatura')} 
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setExportFields([...exportFields, 'origemassinatura']);
-                        } else {
-                          setExportFields(exportFields.filter(f => f !== 'origemassinatura'));
-                        }
-                      }}
-                    />
-                    <label htmlFor="origin" className="text-sm">Origem</label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="plan"
-                      checked={exportFields.includes('tipoplano')} 
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setExportFields([...exportFields, 'tipoplano']);
-                        } else {
-                          setExportFields(exportFields.filter(f => f !== 'tipoplano'));
-                        }
-                      }}
-                    />
-                    <label htmlFor="plan" className="text-sm">Plano</label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="status"
-                      checked={exportFields.includes('planstatus')} 
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setExportFields([...exportFields, 'planstatus']);
-                        } else {
-                          setExportFields(exportFields.filter(f => f !== 'planstatus'));
-                        }
-                      }}
-                    />
-                    <label htmlFor="status" className="text-sm">Status</label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="startDate"
-                      checked={exportFields.includes('dataassinatura')} 
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setExportFields([...exportFields, 'dataassinatura']);
-                        } else {
-                          setExportFields(exportFields.filter(f => f !== 'dataassinatura'));
-                        }
-                      }}
-                    />
-                    <label htmlFor="startDate" className="text-sm">Data de Início</label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="endDate"
-                      checked={exportFields.includes('dataexpiracao')} 
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setExportFields([...exportFields, 'dataexpiracao']);
-                        } else {
-                          setExportFields(exportFields.filter(f => f !== 'dataexpiracao'));
-                        }
-                      }}
-                    />
-                    <label htmlFor="endDate" className="text-sm">Data de Expiração</label>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="text-sm text-center">
-                Total de registros a exportar: <span className="font-medium">{usersData.totalCount}</span>
-              </div>
+              <Button
+                variant="ghost" 
+                size="sm"
+                onClick={() => setExportFields([
+                  'username', 'email', 'name', 'origemassinatura', 'tipoplano', 'dataassinatura', 'dataexpiracao'
+                ])}
+              >
+                Selecionar todos
+              </Button>
             </div>
           </div>
-          
           <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setShowExportDialog(false)}
-            >
+            <Button variant="outline" onClick={() => setShowExportDialog(false)}>
               Cancelar
             </Button>
-            <Button 
-              onClick={() => {
-                // Filtragem e exportação
-                const filteredUsers = usersData.users.filter(user => 
-                  applyDateFilter(user)
-                );
-                
-                exportData(filteredUsers);
-                setShowExportDialog(false);
-                
-                toast({
-                  title: "Dados exportados com sucesso",
-                  description: `${filteredUsers.length} registros foram exportados`,
-                });
-              }}
-            >
+            <Button onClick={() => exportData(usersData?.users || [])} disabled={exportFields.length === 0}>
+              <Download className="h-4 w-4 mr-2" />
               Exportar
             </Button>
           </DialogFooter>
@@ -1285,102 +1891,213 @@ export default function SubscriptionManagement() {
     </div>
   );
   
+  // Função para aplicar filtros de data
   function applyDateFilter(user: User) {
     if (dateFilter === 'all') return true;
     
+    // Se não tiver data de assinatura, não passa no filtro de data
+    if (!user.dataassinatura) return false;
+    
+    const assinatura = new Date(user.dataassinatura);
     const today = new Date();
-    const startDate = user.dataassinatura ? new Date(user.dataassinatura) : null;
-    const endDate = user.dataexpiracao ? new Date(user.dataexpiracao) : null;
+    today.setHours(0, 0, 0, 0);
     
     switch (dateFilter) {
       case 'today':
-        return startDate ? startDate.toDateString() === today.toDateString() : false;
+        return assinatura.toDateString() === today.toDateString();
       case 'last7days':
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(today.getDate() - 7);
-        return startDate ? startDate >= sevenDaysAgo : false;
-      case 'expiring7days':
-        const in7Days = new Date();
-        in7Days.setDate(today.getDate() + 7);
-        return endDate ? endDate <= in7Days && endDate >= today : false;
+        const sevenDaysAgo = subDays(today, 7);
+        return assinatura >= sevenDaysAgo;
+      case 'last30days':
+        const thirtyDaysAgo = subDays(today, 30);
+        return assinatura >= thirtyDaysAgo;
+      case 'thisMonth':
+        return assinatura.getMonth() === today.getMonth() && 
+               assinatura.getFullYear() === today.getFullYear();
+      case 'lastMonth':
+        const lastMonth = subMonths(today, 1);
+        return assinatura.getMonth() === lastMonth.getMonth() && 
+               assinatura.getFullYear() === lastMonth.getFullYear();
+      case 'custom':
+        if (!fromDate) return false;
+        const fromDateStart = new Date(fromDate);
+        fromDateStart.setHours(0, 0, 0, 0);
+        
+        if (!toDate) return assinatura >= fromDateStart;
+        
+        const toDateEnd = new Date(toDate);
+        toDateEnd.setHours(23, 59, 59, 999);
+        
+        return assinatura >= fromDateStart && assinatura <= toDateEnd;
       default:
         return true;
     }
   }
   
+  // Função para exportar dados
   function exportData(users: User[]) {
-    const filteredData = users.map(user => {
-      const result: Record<string, any> = {};
-      
-      exportFields.forEach(field => {
-        if (field === 'dataassinatura' || field === 'dataexpiracao' || field === 'criadoem' || field === 'atualizadoem') {
-          result[field] = user[field as keyof User] 
-            ? format(new Date(user[field as keyof User] as string), 'dd/MM/yyyy', { locale: pt })
-            : '';
-        } else {
-          result[field] = user[field as keyof User] || '';
-        }
+    if (!users || users.length === 0) {
+      toast({
+        title: "Erro ao exportar",
+        description: "Não há dados para exportar.",
+        variant: "destructive"
       });
-      
-      return result;
-    });
-    
-    if (exportFormat === 'json') {
-      const jsonString = JSON.stringify(filteredData, null, 2);
-      const blob = new Blob([jsonString], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `usuarios_${format(new Date(), 'yyyyMMdd')}.json`;
-      document.body.appendChild(a);
-      a.click();
-      
-      URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } else {
-      // CSV Format
-      const headers = exportFields.map(field => {
-        const fieldMap: Record<string, string> = {
-          'username': 'Username',
-          'email': 'Email',
-          'name': 'Nome',
-          'origemassinatura': 'Origem',
-          'tipoplano': 'Plano',
-          'planstatus': 'Status',
-          'dataassinatura': 'Data de Início',
-          'dataexpiracao': 'Data de Expiração',
-          'criadoem': 'Data de Criação',
-          'atualizadoem': 'Última Atualização'
-        };
-        
-        return fieldMap[field] || field;
-      });
-      
-      let csvContent = headers.join(',') + '\n';
-      
-      filteredData.forEach(user => {
-        const row = exportFields.map(field => {
-          // Escapar aspas e conteúdo com vírgulas
-          const value = user[field]?.toString() || '';
-          return value.includes(',') || value.includes('"') ? 
-            `"${value.replace(/"/g, '""')}"` : value;
-        });
-        
-        csvContent += row.join(',') + '\n';
-      });
-      
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `usuarios_${format(new Date(), 'yyyyMMdd')}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      
-      URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      return;
     }
+    
+    // Aplicar todos os filtros ativos aos dados antes de exportar
+    const filteredData = users
+      .filter(user => {
+        // Aplicar filtro de status
+        if (statusFilter !== 'all') {
+          if (statusFilter === 'active' && user.planstatus !== 'active') return false;
+          if (statusFilter === 'expired' && user.planstatus !== 'expired') return false;
+          if (statusFilter === 'trial' && user.planstatus !== 'trial') return false;
+        }
+        
+        // Aplicar filtro de origem
+        if (originFilter !== 'all') {
+          const userOrigin = user.origemassinatura?.toLowerCase() || '';
+          if (originFilter === 'hotmart' && userOrigin !== 'hotmart') return false;
+          if (originFilter === 'doppus' && userOrigin !== 'doppus') return false;
+          if (originFilter === 'manual' && userOrigin !== 'manual') return false;
+        }
+        
+        // Aplicar filtro de plano
+        if (planFilter !== 'all') {
+          const userPlan = user.tipoplano?.toLowerCase() || '';
+          if (planFilter === 'mensal' && userPlan !== 'mensal') return false;
+          if (planFilter === 'trimestral' && userPlan !== 'trimestral') return false;
+          if (planFilter === 'anual' && userPlan !== 'anual') return false;
+          if (planFilter === 'vitalicio' && userPlan !== 'vitalicio') return false;
+        }
+        
+        // Aplicar filtro de data
+        if (dateFilter !== 'all' && !applyDateFilter(user)) return false;
+        
+        // Aplicar filtro de busca
+        if (searchTerm) {
+          const termLower = searchTerm.toLowerCase();
+          const nameMatch = user.name?.toLowerCase().includes(termLower) || false;
+          const usernameMatch = user.username.toLowerCase().includes(termLower);
+          const emailMatch = user.email.toLowerCase().includes(termLower);
+          
+          if (!nameMatch && !usernameMatch && !emailMatch) return false;
+        }
+        
+        return true;
+      })
+      .map(user => {
+        // Criar objeto apenas com os campos selecionados
+        const userData: Record<string, any> = {};
+        exportFields.forEach(field => {
+          // Usar indexação para acessar propriedades de forma segura
+          if (field === 'dataassinatura' || field === 'dataexpiracao') {
+            const value = user[field as keyof User];
+            userData[field] = value ? format(new Date(value as string), 'dd/MM/yyyy') : '';
+          } else {
+            // Mesmo padrão para outras propriedades
+            const value = user[field as keyof User];
+            userData[field] = value || '';
+          }
+        });
+        return userData;
+      });
+    
+    if (filteredData.length === 0) {
+      toast({
+        title: "Erro ao exportar",
+        description: "Não há dados para exportar após aplicar os filtros.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Converter para CSV/Excel
+    if (exportFormat === 'csv') {
+      // Gerar CSV
+      const headers = exportFields.map(field => {
+        // Mapear nomes de campos para nomes mais amigáveis
+        const fieldNames: Record<string, string> = {
+          username: 'Nome de Usuário',
+          email: 'E-mail',
+          name: 'Nome Completo',
+          origemassinatura: 'Origem',
+          tipoplano: 'Plano',
+          dataassinatura: 'Data de Assinatura',
+          dataexpiracao: 'Data de Expiração'
+        };
+        return fieldNames[field] || field;
+      });
+      
+      let csv = headers.join(',') + '\n';
+      
+      filteredData.forEach(data => {
+        const row = exportFields.map(field => {
+          const value = data[field] || '';
+          // Escapar valores com vírgulas
+          return value.toString().includes(',') ? `"${value}"` : value;
+        });
+        csv += row.join(',') + '\n';
+      });
+      
+      // Criar o download
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `assinantes_${format(new Date(), 'dd-MM-yyyy')}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Exportação concluída",
+        description: `${filteredData.length} registros exportados com sucesso.`,
+        variant: "default"
+      });
+    } else {
+      // Para Excel, usamos CSV mas com outra extensão, já que é suficiente para abrir no Excel
+      const headers = exportFields.map(field => {
+        // Mapear nomes de campos para nomes mais amigáveis
+        const fieldNames: Record<string, string> = {
+          username: 'Nome de Usuário',
+          email: 'E-mail',
+          name: 'Nome Completo',
+          origemassinatura: 'Origem',
+          tipoplano: 'Plano',
+          dataassinatura: 'Data de Assinatura',
+          dataexpiracao: 'Data de Expiração'
+        };
+        return fieldNames[field] || field;
+      });
+      
+      let csv = headers.join('\t') + '\n';
+      
+      filteredData.forEach(data => {
+        const row = exportFields.map(field => data[field] || '');
+        csv += row.join('\t') + '\n';
+      });
+      
+      // Criar o download
+      const blob = new Blob([csv], { type: 'application/vnd.ms-excel' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `assinantes_${format(new Date(), 'dd-MM-yyyy')}.xls`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Exportação concluída",
+        description: `${filteredData.length} registros exportados com sucesso.`,
+        variant: "default"
+      });
+    }
+    
+    setShowExportDialog(false);
   }
 }

@@ -4,7 +4,6 @@ import { Link, useLocation } from 'wouter';
 import AnalyticsSettings from '@/components/admin/AnalyticsSettings';
 import ReportsManagement from '@/components/admin/ReportsManagement';
 import SubscriptionManagement from '@/components/admin/SubscriptionManagement';
-import SubscriptionSettings from '@/components/admin/SubscriptionSettings';
 import {
   LayoutGrid,
   Image,
