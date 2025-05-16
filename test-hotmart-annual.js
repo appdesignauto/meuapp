@@ -1,84 +1,80 @@
 /**
- * Script de teste específico para o plano anual da Hotmart
+ * Script para testar o mapeamento de produto anual da Hotmart
  */
+import fetch from 'node-fetch';
 
-// Para testar com o plano anual, precisamos de um payload mais específico
-const payload = {
-  data: {
-    buyer: {
-      email: "example@test.com",
-      name: "Usuário de Teste Anual"
-    },
-    purchase: {
-      transaction: "test-annual-" + Date.now(),
-      offer: {
-        code: "aukjngrt"
-      },
-      product: {
-        id: "5381714"
-      }
-    },
-    subscription: {
-      plan: {
-        name: "Premium Anual"
-      },
-      end_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()
-    }
-  },
-  event: "PURCHASE_APPROVED"
-};
-
-// Função para obter a URL base do ambiente atual
-function getBaseUrl() {
-  return process.env.REPLIT_DOMAIN
+async function testAnnualPlan() {
+  // Obter a URL base do ambiente atual
+  const baseUrl = process.env.REPLIT_DOMAIN 
     ? `https://${process.env.REPLIT_DOMAIN}`
     : 'http://localhost:5000';
-}
 
-// Token usado para autenticação
-const token = 'afb3c81b-19a6-42f2-93b0-e3cd7def0b0c';
+  // Token de exemplo para teste
+  const token = 'afb3c81b-19a6-42f2-93b0-e3cd7def0b0c';
 
-// URL do webhook
-const url = `${getBaseUrl()}/api/webhooks/hotmart`;
+  // Criar payload de teste
+  const payload = {
+    data: {
+      buyer: {
+        email: "example@test.com",
+        name: "Usuário de Teste Anual"
+      },
+      purchase: {
+        transaction: "test-annual-" + Date.now(),
+        offer: {
+          code: "aukjngrt"  // ID da oferta anual que você cadastrou
+        },
+        product: {
+          id: "5381714"    // ID do produto que você cadastrou
+        }
+      },
+      subscription: {
+        plan: {
+          name: "Premium Anual"
+        },
+        end_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()
+      }
+    },
+    event: "PURCHASE_APPROVED"
+  };
 
-// Fazer a requisição usando fetch através de exec + curl
-const curlCommand = `curl -X POST "${url}" \\
-  -H "Content-Type: application/json" \\
-  -H "Authorization: Bearer ${token}" \\
-  -d '${JSON.stringify(payload)}'`;
+  console.log(`[Teste] Usando URL base: ${baseUrl}`);
+  console.log(`[Teste] Usando token: ${token}`);
+  console.log(`\n[Teste Webhook Hotmart] Payload:\n${JSON.stringify(payload, null, 2)}`);
+  console.log(`\n[Teste Webhook Hotmart] Enviando evento PURCHASE_APPROVED para plano anual...`);
 
-// Mostrar detalhes do que vamos enviar
-console.log("[Teste Anual] Enviando webhook para oferta:", payload.data.purchase.offer.code);
-console.log("[Teste Anual] ID do produto:", payload.data.purchase.product.id);
-console.log("[Teste Anual] Plano do usuário:", payload.data.subscription.plan.name);
-console.log("[Teste Anual] Data final:", payload.data.subscription.end_date);
-
-// Executar o comando curl
-require('child_process').exec(curlCommand, (error, stdout, stderr) => {
-  if (error) {
-    console.error(`Erro ao enviar webhook: ${error.message}`);
-    return;
-  }
-  if (stderr) {
-    console.error(`Stderr: ${stderr}`);
-  }
   try {
-    const response = JSON.parse(stdout);
-    console.log("[Teste Anual] Resposta do servidor:");
-    console.log(JSON.stringify(response, null, 2));
-    
-    if (response.success) {
-      console.log("\n✅ Webhook processado com sucesso!");
-      if (response.result && response.result.planType === "anual") {
-        console.log("✅ O mapeamento do plano anual está funcionando corretamente!");
+    // Enviar requisição para o endpoint de webhook da Hotmart
+    const response = await fetch(`${baseUrl}/api/webhooks/hotmart`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    // Obter resposta
+    const responseStatus = response.status;
+    const responseData = await response.json();
+
+    console.log(`\n[Teste Webhook Hotmart] Status: ${responseStatus}`);
+    console.log(`[Teste Webhook Hotmart] Resposta:\n${JSON.stringify(responseData, null, 2)}`);
+
+    // Verificar se o webhook foi processado com sucesso
+    if (responseStatus === 200 && responseData.success) {
+      console.log(`\n[Teste Webhook Hotmart] SUCESSO: Evento PURCHASE_APPROVED para plano anual processado corretamente!`);
+      if (responseData.result && responseData.result.planType === "anual") {
+        console.log(`✅ MAPEAMENTO CORRETO! O sistema identificou o plano como "anual" usando a oferta ${payload.data.purchase.offer.code}!`);
       } else {
-        console.log("❌ O mapeamento do plano não está correto! Verifique se a oferta está mapeada corretamente.");
+        console.log(`❌ MAPEAMENTO INCORRETO! O sistema identificou o plano como "${responseData.result?.planType}" mas deveria ser "anual"!`);
       }
     } else {
-      console.log("❌ Erro ao processar webhook:", response.message);
+      console.log(`\n[Teste Webhook Hotmart] ERRO: Falha ao processar evento PURCHASE_APPROVED.`);
     }
-  } catch (e) {
-    console.error("Erro ao analisar resposta:", e.message);
-    console.log("Resposta bruta:", stdout);
+  } catch (error) {
+    console.error(`\n[Teste Webhook Hotmart] ERRO: ${error.message}`);
   }
-});
+}
+
+testAnnualPlan();
