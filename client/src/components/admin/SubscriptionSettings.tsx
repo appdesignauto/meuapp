@@ -97,6 +97,8 @@ export default function SubscriptionSettings() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isTestingDoppusConnection, setIsTestingDoppusConnection] = useState(false);
+  const [doppusConnectionStatus, setDoppusConnectionStatus] = useState<{ success: boolean; timestamp?: Date; message?: string } | null>(null);
   const [activeTab, setActiveTab] = useState("geral");
 
   // Consulta para obter as configurações atuais
@@ -216,6 +218,48 @@ export default function SubscriptionSettings() {
       toast({
         title: "Erro ao salvar configurações",
         description: error.message || "Ocorreu um erro ao salvar as configurações. Tente novamente.",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Mutation para testar a conexão com a API da Doppus
+  const testDoppusConnectionMutation = useMutation({
+    mutationFn: async () => {
+      setIsTestingDoppusConnection(true);
+      try {
+        const response = await apiRequest('GET', '/api/integrations/doppus/test-connection');
+        const result = await response.json();
+        return result;
+      } finally {
+        setIsTestingDoppusConnection(false);
+      }
+    },
+    onSuccess: (data) => {
+      setDoppusConnectionStatus({
+        success: data.success,
+        message: data.message,
+        timestamp: new Date(),
+      });
+      
+      toast({
+        title: data.success ? "Conexão bem-sucedida" : "Falha na conexão",
+        description: data.message || (data.success ? 
+          "Conexão com a API da Doppus estabelecida com sucesso." : 
+          "Não foi possível conectar à API da Doppus."),
+        variant: data.success ? "default" : "destructive",
+      });
+    },
+    onError: (error) => {
+      setDoppusConnectionStatus({
+        success: false,
+        message: error.message || "Falha na conexão com a API da Doppus",
+        timestamp: new Date(),
+      });
+      
+      toast({
+        title: "Erro ao testar conexão",
+        description: error.message || "Ocorreu um erro ao testar a conexão com a API da Doppus.",
         variant: "destructive",
       });
     },
@@ -699,6 +743,42 @@ export default function SubscriptionSettings() {
                       </FormItem>
                     )}
                   />
+                  
+                  <div className="mt-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => testDoppusConnectionMutation.mutate()}
+                      disabled={isTestingDoppusConnection}
+                    >
+                      {isTestingDoppusConnection ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Testando...
+                        </>
+                      ) : (
+                        <>
+                          <span className="mr-2">Testar Conexão</span>
+                        </>
+                      )}
+                    </Button>
+                    
+                    {doppusConnectionStatus && (
+                      <div className={`mt-2 text-sm flex items-center ${doppusConnectionStatus.success ? 'text-green-500' : 'text-red-500'}`}>
+                        {doppusConnectionStatus.success ? (
+                          <CheckCircle className="mr-1 h-4 w-4" />
+                        ) : (
+                          <XCircle className="mr-1 h-4 w-4" />
+                        )}
+                        {doppusConnectionStatus.message}
+                        {doppusConnectionStatus.timestamp && (
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            {new Date(doppusConnectionStatus.timestamp).toLocaleTimeString()}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <Separator className="my-6" />
