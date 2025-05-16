@@ -6,7 +6,7 @@ import pkg from '@neondatabase/serverless';
 const { Pool } = pkg;
 import { drizzle } from 'drizzle-orm/neon-serverless';
 import { sql } from 'drizzle-orm';
-import * as schema from './shared/schema.js';
+import * as schema from './shared/schema.ts';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -49,6 +49,8 @@ async function createHotmartProductMappingsTable() {
       await db.execute(sql`
         CREATE TABLE "hotmartProductMappings" (
           "id" SERIAL PRIMARY KEY,
+          "productId" TEXT NOT NULL DEFAULT '',
+          "offerId" TEXT NOT NULL DEFAULT '',
           "productName" TEXT NOT NULL,
           "planType" TEXT NOT NULL,
           "durationDays" INTEGER,
