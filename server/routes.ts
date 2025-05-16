@@ -5194,14 +5194,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Alternar ambiente Sandbox/Produção da Hotmart
+  app.post("/api/integrations/hotmart/toggle-environment", isAdmin, async (req, res) => {
+    try {
+      // Buscar a configuração atual
+      const currentSetting = await db.execute(sql`
+        SELECT value FROM "integrationSettings"
+        WHERE "provider" = 'hotmart' AND "key" = 'useSandbox'
+      `);
+      
+      // Determinar o novo valor (inversão do atual)
+      let currentValue = true; // Valor padrão se não existir
+      if (currentSetting.rows.length > 0) {
+        currentValue = currentSetting.rows[0].value === 'true';
+      }
+      
+      const newValue = !currentValue;
+      
+      // Atualizar ou criar a configuração
+      if (currentSetting.rows.length === 0) {
+        // Se não existir, criar um novo registro
+        await db.execute(sql`
+          INSERT INTO "integrationSettings" 
+          (provider, key, value, description, "isActive", "createdAt", "updatedAt")
+          VALUES ('hotmart', 'useSandbox', ${String(newValue)}, 'Usar ambiente de sandbox da Hotmart', true, NOW(), NOW())
+        `);
+      } else {
+        // Se existir, atualizar o valor
+        await db.execute(sql`
+          UPDATE "integrationSettings" 
+          SET "value" = ${String(newValue)}, "updatedAt" = NOW() 
+          WHERE "provider" = 'hotmart' AND "key" = 'useSandbox'
+        `);
+      }
+      
+      console.log(`Ambiente da Hotmart alterado para ${newValue ? 'Sandbox' : 'Produção'} por: ${req.user?.username}`);
+      
+      // Retornar o valor atualizado
+      return res.status(200).json({ 
+        success: true, 
+        message: `Ambiente da Hotmart alterado para ${newValue ? 'Sandbox' : 'Produção'}`,
+        updatedValue: {
+          key: "useSandbox",
+          value: String(newValue),
+          provider: "hotmart",
+          realValue: String(newValue),
+          isDefined: true,
+          isActive: true,
+          updatedAt: new Date()
+        }
+      });
+    } catch (error) {
+      console.error("Erro ao alternar ambiente da Hotmart:", error);
+      return res.status(500).json({ 
+        success: false, 
+        message: "Erro ao alternar ambiente da Hotmart" 
+      });
+    }
+  });
+  
   // Testar conexão com a API da Hotmart
   app.get("/api/integrations/hotmart/test-connection", isAdmin, async (req, res) => {
     try {
-      // Buscar as credenciais da Hotmart do banco de dados
+      // Buscar as credenciais da Hotmart e configuração de ambiente do banco de dados
       const settings = await db.execute(sql`
         SELECT key, value
         FROM "integrationSettings"
-        WHERE "provider" = 'hotmart' AND "key" IN ('clientId', 'clientSecret')
+        WHERE "provider" = 'hotmart' AND "key" IN ('clientId', 'clientSecret', 'useSandbox')
       `);
       
       // Converter o resultado em um objeto para facilitar o acesso
@@ -5221,11 +5280,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Importar o serviço da Hotmart
       const { HotmartService } = await import('./services/hotmart-service');
       
-      // Determinar ambiente - usar produção para domínio designauto.com.br
-      const isProduction = req.hostname.includes('designauto.com.br');
+      // Determinar ambiente baseado na configuração useSandbox
+      const useSandbox = credentials.useSandbox === 'true';
+      
+      console.log(`Teste de conexão - usando ambiente: ${useSandbox ? 'Sandbox' : 'Produção'}`);
       
       // Inicializar o serviço com as credenciais
-      HotmartService.initialize(credentials.clientId, credentials.clientSecret, !isProduction);
+      HotmartService.initialize(credentials.clientId, credentials.clientSecret, useSandbox);
       
       // Testar a conexão
       const result = await HotmartService.testConnection();
