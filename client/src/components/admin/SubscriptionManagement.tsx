@@ -73,8 +73,21 @@ import {
 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from "@/components/ui/checkbox";
 import { format, addDays, addMonths, addYears, parseISO, subDays, subMonths } from 'date-fns';
 import { pt } from 'date-fns/locale';
+
+// Interface para mapeamento de produtos Hotmart
+interface ProductMapping {
+  id: number;
+  productName: string;
+  planType: string;
+  durationDays: number;
+  isLifetime: boolean;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 // Interface para as configurações de integração
 interface IntegrationSettings {
