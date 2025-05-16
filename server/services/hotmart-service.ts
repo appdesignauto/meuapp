@@ -165,12 +165,17 @@ export class HotmartService {
         const responseStatus = response.status;
         const responseText = await response.text();
         
-        // Log básico da resposta para diagnóstico
+        // Log detalhado da resposta para diagnóstico
         console.log(`[getAccessToken] Resposta - Status: ${responseStatus}`);
+        console.log(`[getAccessToken] Resposta completa: ${responseText}`);
         
         if (!response.ok) {
-          console.error(`[getAccessToken] Erro na resposta: ${responseText.substring(0, 200)}`);
-          throw new Error(`Falha na autenticação com a Hotmart: ${responseStatus}`);
+          console.error(`[getAccessToken] ERRO NA AUTENTICAÇÃO HOTMART`);
+          console.error(`[getAccessToken] Status: ${responseStatus}`);
+          console.error(`[getAccessToken] Resposta completa: ${responseText}`);
+          console.error(`[getAccessToken] Headers enviados: ${JSON.stringify(headers)}`);
+          console.error(`[getAccessToken] Body enviado: ${requestBody}`);
+          throw new Error(`Falha na autenticação com a Hotmart: ${responseStatus} - ${responseText}`);
         }
         
         // Processa resposta bem-sucedida

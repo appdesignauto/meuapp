@@ -5256,6 +5256,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Testar conexão com a API da Hotmart
   app.get("/api/integrations/hotmart/test-connection", isAdmin, async (req, res) => {
     try {
+      console.log("===== TESTE DE CONEXÃO COM HOTMART INICIADO =====");
+      console.log("Usuário:", req.user?.username);
+      
       // Buscar as credenciais da Hotmart e configuração de ambiente do banco de dados
       const settings = await db.execute(sql`
         SELECT key, value
@@ -5263,8 +5266,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         WHERE "provider" = 'hotmart' AND "key" IN ('clientId', 'clientSecret', 'useSandbox')
       `);
       
+      console.log("Configurações encontradas:", settings.rows.length);
+      
       // Converter o resultado em um objeto para facilitar o acesso
       const credentials = settings.rows.reduce((acc, setting) => {
+        console.log(`Configuração: ${setting.key} = ${setting.key === 'useSandbox' ? setting.value : '***' + (setting.value?.slice(-4) || '')}`);
         acc[setting.key] = setting.value;
         return acc;
       }, {} as Record<string, string>);
