@@ -5192,12 +5192,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Chave secreta é obrigatória" });
       }
       
-      // Atualizar valor na tabela de configurações
-      await db.execute(sql`
-        UPDATE "integrationSettings" 
-        SET "value" = ${secret}, "updatedAt" = NOW() 
+      // Verificar se o registro já existe
+      const existingRecord = await db.execute(sql`
+        SELECT id FROM "integrationSettings"
         WHERE "provider" = 'doppus' AND "key" = 'secret'
       `);
+      
+      if (existingRecord.rows.length === 0) {
+        // Se não existir, criar um novo registro
+        await db.execute(sql`
+          INSERT INTO "integrationSettings" 
+          (provider, key, value, description, "isActive", "createdAt", "updatedAt")
+          VALUES ('doppus', 'secret', ${secret}, 'Chave secreta para validação de webhooks da Doppus', true, NOW(), NOW())
+        `);
+      } else {
+        // Se existir, atualizar o valor
+        await db.execute(sql`
+          UPDATE "integrationSettings" 
+          SET "value" = ${secret}, "updatedAt" = NOW() 
+          WHERE "provider" = 'doppus' AND "key" = 'secret'
+        `);
+      }
       
       console.log("Chave secreta da Doppus atualizada por:", req.user?.username);
       
@@ -5223,12 +5238,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "API Key é obrigatória" });
       }
       
-      // Atualizar valor na tabela de configurações
-      await db.execute(sql`
-        UPDATE "integrationSettings" 
-        SET "value" = ${apiKey}, "updatedAt" = NOW() 
+      // Verificar se o registro já existe
+      const existingRecord = await db.execute(sql`
+        SELECT id FROM "integrationSettings"
         WHERE "provider" = 'doppus' AND "key" = 'apiKey'
       `);
+      
+      if (existingRecord.rows.length === 0) {
+        // Se não existir, criar um novo registro
+        await db.execute(sql`
+          INSERT INTO "integrationSettings" 
+          (provider, key, value, description, "isActive", "createdAt", "updatedAt")
+          VALUES ('doppus', 'apiKey', ${apiKey}, 'API Key da Doppus para acesso à API', true, NOW(), NOW())
+        `);
+      } else {
+        // Se existir, atualizar o valor
+        await db.execute(sql`
+          UPDATE "integrationSettings" 
+          SET "value" = ${apiKey}, "updatedAt" = NOW() 
+          WHERE "provider" = 'doppus' AND "key" = 'apiKey'
+        `);
+      }
       
       console.log("API Key da Doppus atualizada por:", req.user?.username);
       
