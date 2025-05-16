@@ -23,10 +23,10 @@ export class HotmartService {
     
     // Define a URL base de acordo com o ambiente (sandbox ou produção)
     if (useSandbox) {
-      this.baseUrl = 'https://sandbox-api-hotmart.com';
+      this.baseUrl = 'https://sandbox.hotmart.com';
     } else {
       // Atualizado conforme documentação da Hotmart para ambiente de produção
-      this.baseUrl = 'https://api-hotmart.com';
+      this.baseUrl = 'https://api.hotmart.com';
     }
     
     console.log(`HotmartService inicializado no ambiente: ${useSandbox ? 'Sandbox' : 'Produção'} (URL: ${this.baseUrl})`);
@@ -130,10 +130,10 @@ export class HotmartService {
       // A URL deve respeitar o ambiente selecionado (sandbox ou produção)
       let tokenUrl;
       if (this.baseUrl.includes('sandbox')) {
-        tokenUrl = 'https://sandbox-api-sec.hotmart.com/security/oauth/token';
+        tokenUrl = 'https://sandbox-api-sec-vlc.hotmart.com/security/oauth/token';
         console.log("[DIAGNÓSTICO] Ambiente detectado: SANDBOX");
       } else {
-        tokenUrl = 'https://api-sec.hotmart.com/security/oauth/token';
+        tokenUrl = 'https://api-sec-vlc.hotmart.com/security/oauth/token';
         console.log("[DIAGNÓSTICO] Ambiente detectado: PRODUÇÃO");
       }
       
