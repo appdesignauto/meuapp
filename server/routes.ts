@@ -5258,6 +5258,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("===== TESTE DE CONEXÃO COM HOTMART INICIADO =====");
       console.log("Usuário:", req.user?.username);
+      console.log("Data e hora do teste:", new Date().toISOString());
       
       // Buscar as credenciais da Hotmart e configuração de ambiente do banco de dados
       const settings = await db.execute(sql`
@@ -5301,10 +5302,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Testar a conexão
       console.log('Iniciando teste de conexão com a API da Hotmart...');
-      const result = await HotmartService.testConnection();
       
-      // Retornar o resultado
-      return res.status(200).json(result);
+      try {
+        const result = await HotmartService.testConnection();
+        console.log('Resultado do teste de conexão:', JSON.stringify(result));
+        return res.json(result);
+      } catch (error) {
+        console.error('ERRO CRÍTICO no teste de conexão:', error);
+        return res.status(500).json({
+          success: false,
+          message: `Erro ao testar conexão: ${error instanceof Error ? error.message : String(error)}`,
+          details: { error: String(error) }
+        });
+      }
     } catch (error) {
       console.error("Erro ao testar conexão com a Hotmart:", error);
       let errorMessage = "Erro desconhecido";
