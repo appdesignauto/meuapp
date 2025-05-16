@@ -474,6 +474,59 @@ class DoppusService {
       throw new Error('Falha ao verificar status: ' + (error instanceof Error ? error.message : String(error)));
     }
   }
+  
+  /**
+   * Testa a conexão com a API da Doppus
+   * @returns Resultado do teste com status de sucesso
+   */
+  public async testConnection(): Promise<{ success: boolean; message?: string }> {
+    try {
+      console.log('Iniciando teste de conexão com a API da Doppus...');
+      
+      // Primeiro passo: Obter um token de acesso
+      const token = await this.getAccessToken();
+      
+      if (!token) {
+        return {
+          success: false,
+          message: 'Não foi possível obter token de acesso da API da Doppus'
+        };
+      }
+      
+      console.log('Token de acesso obtido com sucesso. Testando endpoint de produtos...');
+      
+      // Segundo passo: Testar algum endpoint básico para confirmar que o token funciona
+      const response = await fetch(`${this.baseUrl}/products`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        return {
+          success: false,
+          message: `Falha ao acessar endpoint de produtos: ${response.status} ${errorText}`
+        };
+      }
+      
+      console.log('Teste de conexão com a API da Doppus concluído com sucesso');
+      
+      return {
+        success: true,
+        message: 'Conexão com a API da Doppus estabelecida com sucesso'
+      };
+    } catch (error) {
+      console.error('Erro no teste de conexão com a Doppus:', error);
+      
+      return {
+        success: false,
+        message: 'Erro na conexão: ' + (error instanceof Error ? error.message : String(error))
+      };
+    }
+  }
 }
 
 // Exportar uma instância única do serviço

@@ -5350,6 +5350,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Testar conexão com a API da Doppus
+  app.get("/api/integrations/doppus/test-connection", isAdmin, async (req, res) => {
+    try {
+      console.log("===== TESTE DE CONEXÃO COM DOPPUS INICIADO =====");
+      console.log("Usuário:", req.user?.username);
+      console.log("Data e hora do teste:", new Date().toISOString());
+      
+      // Importar o serviço da Doppus
+      const doppusService = await import('./services/doppus-service');
+      
+      // Testar a conexão
+      console.log('Iniciando teste de conexão com a API da Doppus...');
+      
+      try {
+        const result = await doppusService.default.testConnection();
+        console.log('Resultado do teste de conexão:', JSON.stringify(result));
+        return res.json(result);
+      } catch (error) {
+        console.error('ERRO CRÍTICO no teste de conexão:', error);
+        return res.status(500).json({
+          success: false,
+          message: `Erro ao testar conexão: ${error instanceof Error ? error.message : String(error)}`,
+          details: { error: String(error) }
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao testar conexão com a Doppus:", error);
+      let errorMessage = "Erro desconhecido";
+      
+      // Extrai uma mensagem de erro amigável para o usuário
+      if (error instanceof Error) {
+        if (error.message.includes('404')) {
+          errorMessage = "Não foi possível conectar à API da Doppus. Verifique se as credenciais estão corretas.";
+        } else if (error.message.includes('401')) {
+          errorMessage = "Credenciais da Doppus inválidas. Verifique o Client ID e Client Secret.";
+        } else if (error.message.includes('403')) {
+          errorMessage = "Sem permissão para acessar a API da Doppus. Verifique as permissões das credenciais.";
+        } else if (error.message.includes('500')) {
+          errorMessage = "Erro interno no servidor da Doppus. Tente novamente mais tarde.";
+        } else if (error.message.includes('timeout')) {
+          errorMessage = "Tempo limite excedido na conexão com a Doppus. Verifique sua conexão com a internet.";
+        } else {
+          // Se não for nenhum dos casos acima, usa a mensagem original, mas formatada
+          errorMessage = "Falha na conexão: " + error.message.replace(/^Error: /, '');
+        }
+      }
+      
+      return res.status(500).json({
+        success: false,
+        message: errorMessage
+      });
+    }
+  });
+  
   // Atualizar chave secreta da Doppus
   app.post("/api/integrations/doppus/secret", isAdmin, async (req, res) => {
     try {
