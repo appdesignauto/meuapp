@@ -11,7 +11,7 @@ const BASE_URL = process.env.REPLIT_DOMAIN
   : 'http://localhost:5000';
 
 // Token da Hotmart para autenticação do webhook
-const HOTMART_TOKEN = process.env.HOTMART_SECRET;
+const HOTMART_TOKEN = "azjZzEUU43jb4zN4NqEUrvRu1MO1XQ1167719";
 
 // Função para simular um webhook da Hotmart para o plano anual
 async function testAnnualPlanWebhook() {
