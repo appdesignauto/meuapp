@@ -23,10 +23,10 @@ export class HotmartService {
     
     // Define a URL base de acordo com o ambiente (sandbox ou produção)
     if (useSandbox) {
-      this.baseUrl = 'https://sandbox-api-hot-connect.hotmart.com';
+      this.baseUrl = 'https://sandbox-api-hotmart.com';
     } else {
       // Atualizado conforme documentação da Hotmart para ambiente de produção
-      this.baseUrl = 'https://api-hot-connect.hotmart.com';
+      this.baseUrl = 'https://api-hotmart.com';
     }
     
     console.log(`HotmartService inicializado no ambiente: ${useSandbox ? 'Sandbox' : 'Produção'} (URL: ${this.baseUrl})`);
@@ -57,8 +57,9 @@ export class HotmartService {
       // Passo 2: Fazer uma chamada simples para verificar o token
       console.log('Passo 2: Testando acesso à API...');
       
-      // URL para listar 1 venda (endpoint no formato HotConnect)
-      const testUrl = `${this.baseUrl}/payments/api/v1/sales?max_results=1`;
+      // URL para listar 1 venda (endpoint no formato da API Hotmart)
+      // Ajustamos o caminho para corresponder à API oficial Hotmart
+      const testUrl = `${this.baseUrl}/club/api/v1/sales?max_results=1`;
       console.log(`Usando URL de teste: ${testUrl}`);
       
       const response = await fetch(testUrl, {
@@ -125,16 +126,27 @@ export class HotmartService {
       // Cria o Basic Auth token (ClientID:ClientSecret em base64)
       const basicAuth = Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64');
       
-      // Define a URL do token exatamente conforme o plano de integração fornecido
-      // Este é o endpoint oficial para obtenção de token na API HotConnect
-      const tokenUrl = 'https://api-hot-connect.hotmart.com/security/oauth/token';
+      // Define a URL do token exatamente conforme a documentação oficial da Hotmart
+      // A URL deve respeitar o ambiente selecionado (sandbox ou produção)
+      let tokenUrl;
+      if (this.baseUrl.includes('sandbox')) {
+        tokenUrl = 'https://sandbox-api-sec.hotmart.com/security/oauth/token';
+      } else {
+        tokenUrl = 'https://api-sec.hotmart.com/security/oauth/token';
+      }
       
-      // Define os headers com Basic Auth
+      console.log(`[getAccessToken] Usando URL para token: ${tokenUrl}`);
+      
+      // Define os headers com Basic Auth para OAuth
       const headers = {
         'Authorization': `Basic ${basicAuth}`,
         'Content-Type': 'application/x-www-form-urlencoded',
         'Accept': 'application/json'
       };
+      
+      console.log(`[getAccessToken] Headers configurados com Basic Auth`);
+      console.log(`[getAccessToken] Client ID: ${this.clientId.substring(0, 10)}...`);
+      console.log(`[getAccessToken] Client Secret: ${this.clientSecret.substring(0, 5)}...`);
       
       // Corpo da requisição com APENAS grant_type=client_credentials
       const requestBody = 'grant_type=client_credentials';
@@ -195,7 +207,7 @@ export class HotmartService {
       const accessToken = await this.getAccessToken();
       
       // Buscar todas as assinaturas (purchases) do usuário pelo e-mail
-      const response = await fetch(`${this.baseUrl}/payments/api/v1/purchases?subscriber_email=${encodeURIComponent(email)}`, {
+      const response = await fetch(`${this.baseUrl}/club/api/v1/purchases?subscriber_email=${encodeURIComponent(email)}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
