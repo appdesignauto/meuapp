@@ -5413,26 +5413,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Chave secreta é obrigatória" });
       }
       
-      // Verificar se o registro já existe
-      const existingRecord = await db.execute(sql`
-        SELECT id FROM "integrationSettings"
-        WHERE "provider" = 'doppus' AND "key" = 'secret'
-      `);
-      
-      if (existingRecord.rows.length === 0) {
-        // Se não existir, criar um novo registro
-        await db.execute(sql`
-          INSERT INTO "integrationSettings" 
-          (provider, key, value, description, "isActive", "createdAt", "updatedAt")
-          VALUES ('doppus', 'secret', ${secret}, 'Chave secreta para validação de webhooks da Doppus', true, NOW(), NOW())
-        `);
-      } else {
-        // Se existir, atualizar o valor
-        await db.execute(sql`
-          UPDATE "integrationSettings" 
-          SET "value" = ${secret}, "updatedAt" = NOW() 
+      // 1. Atualizar na tabela integrationSettings
+      let integrationsResult;
+      try {
+        // Verificar se o registro já existe
+        const existingRecord = await db.execute(sql`
+          SELECT id FROM "integrationSettings"
           WHERE "provider" = 'doppus' AND "key" = 'secret'
         `);
+        
+        if (existingRecord.rows.length === 0) {
+          // Se não existir, criar um novo registro
+          integrationsResult = await db.execute(sql`
+            INSERT INTO "integrationSettings" 
+            (provider, key, value, description, "isActive", "createdAt", "updatedAt")
+            VALUES ('doppus', 'secret', ${secret}, 'Chave secreta para validação de webhooks da Doppus', true, NOW(), NOW())
+            RETURNING *
+          `);
+        } else {
+          // Se existir, atualizar o valor
+          integrationsResult = await db.execute(sql`
+            UPDATE "integrationSettings" 
+            SET "value" = ${secret}, "updatedAt" = NOW() 
+            WHERE "provider" = 'doppus' AND "key" = 'secret'
+            RETURNING *
+          `);
+        }
+        
+        console.log("Chave secreta da Doppus atualizada na tabela integrationSettings");
+      } catch (integrationError) {
+        console.error("Erro ao atualizar chave secreta na tabela integrationSettings:", integrationError);
+      }
+      
+      // 2. IMPORTANTE: Atualizar também na tabela subscriptionSettings (usada pelo DoppusService)
+      try {
+        // Importar o pool para consultas diretas ao banco de dados
+        const { pool } = await import('./db');
+        
+        const subscriptionResult = await pool.query(
+          `UPDATE "subscriptionSettings" 
+           SET "doppusSecretKey" = $1, "updatedAt" = $2
+           RETURNING *`,
+          [secret, new Date()]
+        );
+        console.log("Secret Key atualizada na tabela subscriptionSettings");
+      } catch (subscriptionError) {
+        console.error("Erro ao atualizar Secret Key na tabela subscriptionSettings:", subscriptionError);
+        return res.status(500).json({ 
+          success: false, 
+          message: "Erro ao atualizar Secret Key nas configurações de assinatura" 
+        });
       }
       
       console.log("Chave secreta da Doppus atualizada por:", req.user?.username);
