@@ -4,7 +4,9 @@
  * Este script envia um exemplo de webhook da Hotmart para testar a funcionalidade
  * sem depender de configurações complexas
  */
-const fetch = require('node-fetch');
+import fetch from 'node-fetch';
+import pg from 'pg';
+const { Pool } = pg;
 
 async function enviarWebhook() {
   try {
