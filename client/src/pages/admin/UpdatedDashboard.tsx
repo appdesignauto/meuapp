@@ -5,9 +5,6 @@ import AnalyticsSettings from '@/components/admin/AnalyticsSettings';
 import ReportsManagement from '@/components/admin/ReportsManagement';
 import SubscriptionManagement from '@/components/admin/SubscriptionManagement';
 import SubscriptionSettings from '@/components/admin/SubscriptionSettings';
-import FailedWebhooks from '@/components/admin/FailedWebhooks';
-import WebhookList from '@/components/admin/WebhookList';
-import WebhookDiagnosticsNew from '@/components/admin/WebhookDiagnosticsNew';
 import {
   LayoutGrid,
   Image,
@@ -15,7 +12,6 @@ import {
   ListChecks,
   MessageSquare,
   BarChart3,
-  Bell,
   Settings,
   Plus,
   Search,
@@ -1041,16 +1037,6 @@ const AdminDashboard = () => {
                   <CreditCard className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
                   {sidebarOpen && <span className="truncate text-sm">Gerenciar Assinaturas</span>}
                 </button>
-                <button
-                  onClick={() => setActiveTab('webhooks_section')}
-                  className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
-                    activeTab === 'webhooks_section' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
-                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
-                  title="Webhooks"
-                >
-                  <Bell className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
-                  {sidebarOpen && <span className="truncate text-sm">Webhooks</span>}
-                </button>
                 {/* O Diagnóstico de Webhooks agora é uma aba dentro da página de Webhooks */}
               </CollapsibleContent>
             </Collapsible>
@@ -1455,7 +1441,6 @@ const AdminDashboard = () => {
                 {activeTab === 'settings' && 'Configurações'}
                 {activeTab === 'coursesList' && 'Gerenciamento de Cursos'}
                 {activeTab === 'subscriptions' && 'Gerenciamento de Assinaturas'}
-                {activeTab === 'webhooks_section' && 'Gerenciamento de Webhooks'}
                 {activeTab === 'modules' && 'Módulos dos Cursos'}
                 {activeTab === 'lessons' && 'Aulas dos Cursos'}
                 {activeTab === 'coursesConfig' && 'Configurações de Cursos'}
@@ -4036,50 +4021,7 @@ const AdminDashboard = () => {
                   </div>
                   
                   <div className="grid gap-6">
-                    <Tabs defaultValue="management">
-                      <TabsList className="mb-4">
-                        <TabsTrigger value="management">Gerenciamento de Assinaturas</TabsTrigger>
-                        <TabsTrigger value="settings">Configurações</TabsTrigger>
-                      </TabsList>
-                      <TabsContent value="management">
-                        <SubscriptionManagement />
-                      </TabsContent>
-                      <TabsContent value="settings">
-                        <SubscriptionSettings />
-                      </TabsContent>
-                    </Tabs>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-            
-            {/* Seção de Webhooks */}
-            <TabsContent value="webhooks_section" className="mt-0">
-              <div className="bg-white p-6 rounded-lg shadow-sm">
-                <div className="flex flex-col space-y-6">
-                  <div>
-                    <p className="text-muted-foreground">
-                      Gerencie webhooks, acompanhe logs de integrações e solucione webhooks com falha.
-                    </p>
-                  </div>
-                  
-                  <div className="grid gap-6">
-                    <Tabs defaultValue="failed">
-                      <TabsList className="mb-4">
-                        <TabsTrigger value="logs">Logs de Webhooks</TabsTrigger>
-                        <TabsTrigger value="failed">Webhooks com Falha</TabsTrigger>
-                        <TabsTrigger value="diagnostic">Diagnóstico Avançado</TabsTrigger>
-                      </TabsList>
-                      <TabsContent value="logs">
-                        <WebhookList />
-                      </TabsContent>
-                      <TabsContent value="failed">
-                        <FailedWebhooks />
-                      </TabsContent>
-                      <TabsContent value="diagnostic">
-                        <WebhookDiagnosticsNew />
-                      </TabsContent>
-                    </Tabs>
+                    <SubscriptionManagement />
                   </div>
                 </div>
               </div>

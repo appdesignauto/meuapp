@@ -896,9 +896,11 @@ const CommentsManagement: React.FC = () => {
                       </>
                     )}
                   </Button>
-                  <Button type="button" variant="secondary" onClick={() => setIsDialogOpen(false)}>
-                    Fechar
-                  </Button>
+                  <DialogClose asChild>
+                    <Button type="button" variant="secondary">
+                      Fechar
+                    </Button>
+                  </DialogClose>
                 </div>
               </DialogFooter>
             </>

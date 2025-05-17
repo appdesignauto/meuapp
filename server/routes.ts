@@ -18,18 +18,13 @@ import path from "path";
 import fs from "fs";
 // Importar o router de diagnóstico de webhooks
 import webhookDiagnosticsRouter from "./routes/webhook-diagnostics.js";
-// Importar router de webhooks falhos
-import webhooksRouter from "./routes/webhooks";
 // Importações adicionais para o upload de imagem
 import uploadRouter from "./routes/upload-image";
 // Usando apenas Supabase Storage para armazenamento de imagens
 import { supabaseStorageService } from "./services/supabase-storage";
 import { SubscriptionService } from "./services/subscription-service";
 import { HotmartService } from "./services/hotmart-service";
-import { webhookService } from "./services/webhook-service";
 import uploadMemory from "./middlewares/upload";
-// Importação do middleware aprimorado de autenticação
-import { isAdminEnhanced } from './middlewares/auth';
 import sharp from "sharp";
 
 // Versão promisificada do scrypt
@@ -120,64 +115,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Setup authentication middleware and routes
   const { isAuthenticated, isPremium, isAdmin, isDesigner, hasRole } = setupAuth(app);
-  
-  // IMPORTANTE: Definindo rotas de webhook direto aqui para evitar problemas de autenticação
-  // Usando o middleware isAdminEnhanced que já foi importado no topo do arquivo
-  
-  app.get('/api/webhooks/failed', isAdminEnhanced, async (req, res) => {
-    try {
-      console.log('[DIRETO] Rota /api/webhooks/failed acessada por', req.user?.username);
-      const failedWebhooks = await webhookService.getFailedWebhooks();
-      res.json(failedWebhooks);
-    } catch (error) {
-      console.error('Erro ao buscar webhooks falhos:', error);
-      res.status(500).json({ error: 'Erro ao buscar webhooks falhos' });
-    }
-  });
-  
-  app.get('/api/webhooks/logs', isAdminEnhanced, async (req, res) => {
-    try {
-      console.log('[DIRETO] Rota /api/webhooks/logs acessada por', req.user?.username);
-      const logs = await webhookService.getWebhookLogs();
-      res.json(logs);
-    } catch (error) {
-      console.error('Erro ao buscar logs de webhook:', error);
-      res.status(500).json({ error: 'Erro ao buscar logs de webhook' });
-    }
-  });
-  
-  app.get('/api/webhooks/failed/:id', isAdminEnhanced, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const webhook = await webhookService.getFailedWebhookById(id);
-      
-      if (!webhook) {
-        return res.status(404).json({ error: 'Webhook não encontrado' });
-      }
-      
-      res.json(webhook);
-    } catch (error) {
-      console.error(`Erro ao buscar webhook falho ID ${req.params.id}:`, error);
-      res.status(500).json({ error: 'Erro ao buscar detalhes do webhook falho' });
-    }
-  });
-  
-  app.post('/api/webhooks/failed/:id/retry', isAdminEnhanced, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const result = await webhookService.retryFailedWebhook(id);
-      res.json(result);
-    } catch (error) {
-      console.error(`Erro ao reprocessar webhook ID ${req.params.id}:`, error);
-      res.status(500).json({ error: 'Erro ao reprocessar webhook' });
-    }
-  });
-  
-  // Importar roteador de webhooks original (para outras rotas)
-  const webhooksRouter = await import('./routes/webhooks').then(m => m.default);
-  
-  // Adicionar roteador de webhooks para as demais rotas não críticas
-  app.use('/api/webhooks', webhooksRouter);
   
   // Rota específica para testar solução de emergência para o usuário problemático (simulação)
   app.get('/api/debug/test-emergency-avatar-simulation/:username', isAdmin, async (req, res) => {
@@ -5837,51 +5774,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Evento Hotmart recebido:", req.body.event);
       
-      // Importar o serviço de webhooks para gerenciar o sistema de fallback
-      const { webhookService } = await import('./services/webhook-service');
+      // Processar o webhook usando o serviço
+      const result = await SubscriptionService.processHotmartWebhook(req.body);
       
-      try {
-        // Processar o webhook usando o serviço
-        const result = await SubscriptionService.processHotmartWebhook(req.body);
-        
-        // Log do resultado para monitoramento
-        console.log("Resultado do processamento do webhook:", result);
-        
-        // Atualizar o status do webhook no banco de dados para success
-        webhookStatus = result.success ? 'success' : 'error';
-        webhookError = result.success ? null : (result.message || 'Erro no processamento');
-      } catch (processingError) {
-        console.error("Erro ao processar webhook da Hotmart:", processingError);
-        
-        // Armazenar o webhook falho no sistema de fallback para reprocessamento posterior
-        try {
-          console.log("Armazenando webhook para reprocessamento posterior...");
-          
-          const failedWebhook = await webhookService.storeFailedWebhook(
-            webhookLogId,        // ID do log do webhook original
-            'hotmart',           // Fonte do webhook
-            req.body,            // Payload completo do webhook
-            processingError.message || 'Erro desconhecido ao processar webhook' // Mensagem de erro
-          );
-          
-          webhookStatus = 'error';
-          webhookError = `Erro ao processar: ${processingError.message}. Armazenado para reprocessamento (ID: ${failedWebhook.id})`;
-          
-          console.log(`Webhook armazenado para reprocessamento, ID: ${failedWebhook.id}`);
-        } catch (fallbackError) {
-          console.error("Erro ao armazenar webhook para reprocessamento:", fallbackError);
-          webhookStatus = 'error';
-          webhookError = `Erro ao processar: ${processingError.message}. Falha ao armazenar: ${fallbackError.message}`;
-        }
-        
-        // Retornamos 200 OK para Hotmart mesmo em caso de erro no processamento
-        // para evitar que eles reenviem o mesmo webhook várias vezes
-        return res.json({
-          success: false,
-          message: "Webhook recebido, mas ocorreu erro no processamento. Armazenado para reprocessamento posterior.",
-          error: processingError.message
-        });
-      }
+      // Log do resultado para monitoramento
+      console.log("Resultado do processamento do webhook:", result);
+      
+      // Atualizar o status do webhook no banco de dados para success
+      webhookStatus = result.success ? 'success' : 'error';
+      webhookError = result.success ? null : (result.message || 'Erro no processamento');
       
       if (webhookLogId) {
         try {
@@ -5918,9 +5819,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erro ao processar webhook da Hotmart:", error);
       
-      // Obter mensagem de erro formatada
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      
       // Se tivermos um ID de log, atualizar o status para error
       if (typeof webhookLogId !== 'undefined' && webhookLogId !== null) {
         try {
@@ -5929,72 +5827,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             UPDATE "webhookLogs" 
             SET "status" = 'error', "errorMessage" = $1, "updatedAt" = NOW()
             WHERE id = $2
-          `, [errorMessage, webhookLogId]);
+          `, [error instanceof Error ? error.message : String(error), webhookLogId]);
         } catch (updateError) {
           console.error("Erro ao atualizar status do webhook após falha:", updateError);
-        }
-        
-        // Registrar no sistema de fallback para reprocessamento posterior
-        try {
-          console.log(`[Webhook Fallback] Registrando webhook ID ${webhookLogId} no sistema de fallback`);
-          
-          // Registrar o webhook falho para reprocessamento posterior
-          await webhookService.registerFailedWebhook(
-            webhookLogId,
-            'hotmart',
-            req.body, // Payload completo do webhook
-            errorMessage
-          );
-          
-          console.log(`[Webhook Fallback] Webhook registrado para reprocessamento posterior`);
-        } catch (fallbackError) {
-          console.error("Erro ao registrar webhook no sistema de fallback:", fallbackError);
-        }
-      } else {
-        // Se não temos o webhookLogId, tentar registrar diretamente no sistema de fallback
-        try {
-          console.log(`[Webhook Fallback] Tentativa de registro direto no sistema de fallback (sem webhookLogId)`);
-          
-          // Primeiro registrar como webhook normal para obter um ID
-          const { pool } = await import('./db');
-          const insertResult = await pool.query(`
-            INSERT INTO "webhookLogs" (
-              "eventType", "payloadData", "status", "createdAt", "source", "sourceIp", "errorMessage"
-            ) VALUES ($1, $2, $3, NOW(), $4, $5, $6)
-            RETURNING id;
-          `, [
-            req.body.event || 'unknown',
-            JSON.stringify(req.body),
-            'error',
-            'hotmart',
-            req.ip,
-            errorMessage
-          ]);
-          
-          if (insertResult.rows && insertResult.rows.length > 0) {
-            const newWebhookLogId = insertResult.rows[0].id;
-            
-            // Agora registrar no sistema de fallback
-            await webhookService.registerFailedWebhook(
-              newWebhookLogId,
-              'hotmart',
-              req.body,
-              errorMessage
-            );
-            
-            console.log(`[Webhook Fallback] Webhook registrado diretamente no sistema de fallback com ID ${newWebhookLogId}`);
-          }
-        } catch (fallbackError) {
-          console.error("Erro ao registrar webhook diretamente no sistema de fallback:", fallbackError);
         }
       }
       
       res.status(500).json({ 
         success: false, 
         message: "Erro ao processar webhook", 
-        error: errorMessage,
-        fallbackRegistered: true,
-        webhookLogId
+        error: error instanceof Error ? error.message : String(error)
       });
     }
   });
@@ -6593,9 +6435,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Registrar rotas para diagnóstico avançado de webhooks (administradores)
   const webhookDiagnosticsRouter = (await import('./routes/webhook-diagnostics.js')).default;
   app.use('/api/webhook-diagnostics', webhookDiagnosticsRouter);
-  
-  // Registrar rotas para gerenciamento de webhooks falhos
-  app.use('/api/webhooks', webhooksRouter);
   
   // Configurar rota de diagnóstico direto do R2
   setupTestR2DirectRoute(app);
@@ -7757,126 +7596,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: 'Erro ao testar conexão com a Hotmart', 
         error: error instanceof Error ? error.message : 'Erro desconhecido',
         timestamp: new Date().toISOString()
-      });
-    }
-  });
-  
-  // ================ GERENCIAMENTO DE WEBHOOKS FALHOS ================
-  
-  // Listar webhooks falhos com filtros e paginação
-  app.get('/api/webhooks/failed', isAdmin, async (req, res) => {
-    try {
-      const status = req.query.status as string;
-      const source = req.query.source as string;
-      const limit = parseInt(req.query.limit as string) || 20;
-      const offset = parseInt(req.query.offset as string) || 0;
-      
-      const options = { 
-        status, 
-        source,
-        limit,
-        offset
-      };
-      
-      const failedWebhooks = await webhookService.listFailedWebhooks(options);
-      const stats = await webhookService.getFailedWebhooksStats();
-      
-      res.status(200).json({
-        webhooks: failedWebhooks,
-        stats,
-        pagination: {
-          limit,
-          offset,
-          totalCount: stats.total
-        }
-      });
-    } catch (error) {
-      console.error('Erro ao listar webhooks falhos:', error);
-      res.status(500).json({ 
-        success: false,
-        message: 'Erro ao listar webhooks falhos', 
-        error: error instanceof Error ? error.message : 'Erro desconhecido' 
-      });
-    }
-  });
-  
-  // Obter detalhes de um webhook falho específico
-  app.get('/api/webhooks/failed/:id', isAdmin, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const webhook = await webhookService.getFailedWebhook(id);
-      
-      if (!webhook) {
-        return res.status(404).json({
-          success: false,
-          message: 'Webhook falho não encontrado'
-        });
-      }
-      
-      res.status(200).json(webhook);
-    } catch (error) {
-      console.error(`Erro ao obter webhook falho ID ${req.params.id}:`, error);
-      res.status(500).json({ 
-        success: false,
-        message: 'Erro ao obter webhook falho', 
-        error: error instanceof Error ? error.message : 'Erro desconhecido' 
-      });
-    }
-  });
-  
-  // Endpoint para reprocessar um webhook falho
-  app.post('/api/webhooks/failed/:id/retry', isAdmin, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const webhook = await webhookService.getFailedWebhook(id);
-      
-      if (!webhook) {
-        return res.status(404).json({
-          success: false,
-          message: 'Webhook falho não encontrado'
-        });
-      }
-      
-      // Marcar webhook como em processamento e incrementar contador de tentativas
-      await webhookService.markWebhookAsProcessing(id);
-      
-      let result = { success: false, message: 'Erro desconhecido durante o reprocessamento' };
-      
-      // Processar o webhook de acordo com a origem
-      if (webhook.source === 'hotmart') {
-        // Reprocessar webhook da Hotmart
-        try {
-          result = await SubscriptionService.processHotmartWebhook(webhook.payload);
-        } catch (processingError) {
-          console.error(`Erro ao reprocessar webhook da Hotmart ID ${id}:`, processingError);
-          await webhookService.updateFailedWebhookStatus(id, 'failed');
-          throw processingError;
-        }
-      } else if (webhook.source === 'doppus') {
-        // Reprocessar webhook da Doppus (quando implementado)
-        result = { success: false, message: 'Reprocessamento de webhooks Doppus não implementado' };
-      } else {
-        result = { success: false, message: `Origem desconhecida: ${webhook.source}` };
-      }
-      
-      // Atualizar status com base no resultado
-      if (result.success) {
-        await webhookService.markWebhookAsResolved(id);
-      } else {
-        await webhookService.updateFailedWebhookStatus(id, 'failed');
-      }
-      
-      res.status(200).json({
-        success: result.success,
-        message: result.success ? 'Webhook reprocessado com sucesso' : result.message,
-        details: result
-      });
-    } catch (error) {
-      console.error(`Erro ao reprocessar webhook falho ID ${req.params.id}:`, error);
-      res.status(500).json({ 
-        success: false,
-        message: 'Erro ao reprocessar webhook falho', 
-        error: error instanceof Error ? error.message : 'Erro desconhecido' 
       });
     }
   });

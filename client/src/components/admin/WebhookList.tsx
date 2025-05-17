@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useLocation } from 'wouter';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Table,
   TableBody,
@@ -25,348 +27,610 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
+  DialogFooter,
 } from '@/components/ui/dialog';
-import { Loader2, FileText } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { queryClient, apiRequest, getQueryFn } from '@/lib/queryClient';
+import { Loader2, RefreshCw, Search, Eye, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
-type WebhookLog = {
+// Importamos o componente de diagnóstico avançado
+import WebhookDiagnosticsTab from './WebhookDiagnosticsNew';
+
+// Interface para o log de webhook
+interface WebhookLog {
   id: number;
   eventType: string;
-  status: string;
-  createdAt: string;
-  source: string;
   payloadData: string;
-};
+  status: 'received' | 'processed' | 'pending' | 'error';
+  source: 'hotmart' | 'doppus' | null; // Fonte do webhook (Hotmart ou Doppus)
+  errorMessage: string | null;
+  userId: number | null;
+  sourceIp: string;
+  transactionId: string | null;
+  email: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
 
-type LogsResponse = {
+// Interface para os detalhes do log de webhook
+interface WebhookLogDetails {
+  log: WebhookLog;
+  userData: {
+    id: number;
+    username: string;
+    email: string;
+    name: string;
+    nivelacesso: string;
+    dataassinatura: string | null;
+    dataexpiracao: string | null;
+  } | null;
+}
+
+// Interface para a resposta da API de logs de webhook
+interface WebhookLogsResponse {
   logs: WebhookLog[];
   totalCount: number;
-};
+  page: number;
+  limit: number;
+  totalPages: number;
+}
 
-export default function WebhookList() {
-  const [page, setPage] = useState(1);
-  const [selectedLog, setSelectedLog] = useState<WebhookLog | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { toast } = useToast();
-  const limit = 10;
+// Componente auxiliar para formatar o status do webhook
+const WebhookStatus: React.FC<{ status: string }> = ({ status }) => {
+  let variant: "default" | "secondary" | "destructive" | "outline" = "outline";
+  let displayText = status;
 
-  const { data, isLoading, isError, error } = useQuery<LogsResponse, Error>({
-    queryKey: ['/api/webhooks/logs', page],
-    queryFn: async () => {
-      try {
-        // Incluir credenciais nas requisições para garantir que cookies sejam enviados
-        const response = await fetch(`/api/webhooks/logs?page=${page}&limit=${limit}`, {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        });
-        
-        if (!response.ok) {
-          console.error('Resposta não ok:', await response.text());
-          throw new Error(`Erro ao buscar logs de webhook: ${response.status}`);
-        }
-        
-        // Tentar fazer parsing do JSON
-        const jsonData = await response.json();
-        console.log('Dados recebidos:', jsonData);
-        
-        // Se não houver logs no retorno, criar uma estrutura padrão com array vazio
-        if (!jsonData || !Array.isArray(jsonData)) {
-          console.warn('Resposta não contém um array de logs, usando array vazio');
-          return { logs: [], totalCount: 0 };
-        }
-        
-        // Formatar a resposta para o formato esperado pelo componente
-        return {
-          logs: jsonData,
-          totalCount: jsonData.length
-        };
-      } catch (err) {
-        console.error('Erro ao buscar logs de webhook:', err);
-        // Em caso de erro de autenticação 401, mostrar mensagem amigável
-        if (err.message && err.message.includes('401')) {
-          toast({
-            title: 'Erro de autenticação',
-            description: 'Sua sessão pode ter expirado. Tente fazer login novamente.',
-            variant: 'destructive',
-          });
-        }
-        // Retornar array vazio em vez de lançar erro para evitar tela de erro
-        return { logs: [], totalCount: 0 };
-      }
-    },
-    // Não falhar completamente em caso de erros, permitir recuperação
-    retry: 1,
-  });
-
-  const maxPage = data ? Math.ceil(data.totalCount / limit) : 1;
-
-  const handlePageChange = (newPage: number) => {
-    if (newPage > 0 && newPage <= maxPage) {
-      setPage(newPage);
-    }
-  };
-
-  const handleViewDetails = (log: WebhookLog) => {
-    setSelectedLog(log);
-    setIsDialogOpen(true);
-  };
-
-  const renderPagination = () => {
-    const pages = [];
-    const displayRange = 2;
-
-    // Botão anterior
-    pages.push(
-      <PaginationItem key="prev">
-        <PaginationPrevious 
-          href="#" 
-          onClick={(e) => {
-            e.preventDefault();
-            if (page > 1) handlePageChange(page - 1);
-          }} 
-          className={page <= 1 ? 'pointer-events-none opacity-50' : ''}
-        />
-      </PaginationItem>
-    );
-
-    // Primeira página sempre
-    if (page > displayRange + 1) {
-      pages.push(
-        <PaginationItem key={1}>
-          <PaginationLink 
-            href="#" 
-            onClick={(e) => {
-              e.preventDefault();
-              handlePageChange(1);
-            }}
-            isActive={page === 1}
-          >
-            1
-          </PaginationLink>
-        </PaginationItem>
-      );
-    }
-
-    // Ellipsis se necessário
-    if (page > displayRange + 2) {
-      pages.push(
-        <PaginationItem key="ellipsis1">
-          <span className="flex h-9 w-9 items-center justify-center">...</span>
-        </PaginationItem>
-      );
-    }
-
-    // Páginas ao redor da atual
-    for (let i = Math.max(1, page - displayRange); i <= Math.min(maxPage, page + displayRange); i++) {
-      pages.push(
-        <PaginationItem key={i}>
-          <PaginationLink 
-            href="#" 
-            onClick={(e) => {
-              e.preventDefault();
-              handlePageChange(i);
-            }}
-            isActive={page === i}
-          >
-            {i}
-          </PaginationLink>
-        </PaginationItem>
-      );
-    }
-
-    // Ellipsis se necessário
-    if (page < maxPage - displayRange - 1) {
-      pages.push(
-        <PaginationItem key="ellipsis2">
-          <span className="flex h-9 w-9 items-center justify-center">...</span>
-        </PaginationItem>
-      );
-    }
-
-    // Última página sempre
-    if (page < maxPage - displayRange) {
-      pages.push(
-        <PaginationItem key={maxPage}>
-          <PaginationLink 
-            href="#" 
-            onClick={(e) => {
-              e.preventDefault();
-              handlePageChange(maxPage);
-            }}
-            isActive={page === maxPage}
-          >
-            {maxPage}
-          </PaginationLink>
-        </PaginationItem>
-      );
-    }
-
-    // Botão próximo
-    pages.push(
-      <PaginationItem key="next">
-        <PaginationNext 
-          href="#" 
-          onClick={(e) => {
-            e.preventDefault();
-            if (page < maxPage) handlePageChange(page + 1);
-          }} 
-          className={page >= maxPage ? 'pointer-events-none opacity-50' : ''}
-        />
-      </PaginationItem>
-    );
-
-    return pages;
-  };
-
-  const formatPayload = (jsonString: string) => {
-    try {
-      const obj = JSON.parse(jsonString);
-      return JSON.stringify(obj, null, 2);
-    } catch {
-      return jsonString;
-    }
-  };
-
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'success':
-        return 'success';
-      case 'error':
-        return 'destructive';
-      case 'processing':
-        return 'warning';
-      default:
-        return 'default';
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center p-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+  switch (status) {
+    case 'processed':
+      variant = "default";
+      displayText = "Processado";
+      break;
+    case 'received':
+      variant = "secondary";
+      displayText = "Recebido";
+      break;
+    case 'pending':
+      variant = "outline";
+      displayText = "Pendente";
+      break;
+    case 'error':
+      variant = "destructive";
+      displayText = "Erro";
+      break;
   }
 
-  if (isError) {
+  return <Badge variant={variant}>{displayText}</Badge>;
+};
+
+// Componente auxiliar para formatar a fonte do webhook
+const WebhookSource: React.FC<{ source: string | null }> = ({ source }) => {
+  let variant: "default" | "secondary" | "destructive" | "outline" = "outline";
+  let displayText = source || "Desconhecido";
+
+  switch (source) {
+    case 'hotmart':
+      variant = "default";
+      displayText = "Hotmart";
+      break;
+    case 'doppus':
+      variant = "secondary";
+      displayText = "Doppus";
+      break;
+    default:
+      variant = "outline";
+      displayText = "Desconhecido";
+  }
+
+  return <Badge variant={variant}>{displayText}</Badge>;
+};
+
+// Componente principal de lista de webhooks
+const WebhookList: React.FC = () => {
+  const { toast } = useToast();
+  const [location, setLocation] = useLocation();
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [activeTab, setActiveTab] = useState('logs');
+  const [filters, setFilters] = useState({
+    status: 'all',
+    eventType: 'all',
+    source: 'all', // 'all', 'hotmart', 'doppus'
+    search: '',
+  });
+  
+  // Estado separado para o campo de pesquisa para evitar re-renderização a cada tecla
+  const [searchText, setSearchText] = useState('');
+  const [selectedLog, setSelectedLog] = useState<WebhookLogDetails | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isReprocessing, setIsReprocessing] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Construir query parameters
+  const queryParams = new URLSearchParams();
+  queryParams.append('page', page.toString());
+  queryParams.append('limit', limit.toString());
+  
+  if (filters.status !== 'all') {
+    queryParams.append('status', filters.status);
+  }
+  
+  if (filters.eventType !== 'all') {
+    queryParams.append('eventType', filters.eventType);
+  }
+  
+  if (filters.source !== 'all') {
+    queryParams.append('source', filters.source);
+  }
+  
+  if (filters.search) {
+    queryParams.append('search', filters.search);
+  }
+
+  // Buscar logs de webhook
+  const {
+    data,
+    isLoading,
+    refetch,
+  } = useQuery<WebhookLogsResponse>({
+    queryKey: ['/api/webhooks/logs', page, limit, filters.status, filters.eventType, filters.source, filters.search],
+    queryFn: getQueryFn({ on401: 'returnNull' }),
+  });
+
+  // Construir o URL para a consulta
+  const queryString = queryParams.toString();
+  const apiUrl = `/api/webhooks/logs${queryString ? `?${queryString}` : ''}`;
+
+  // Buscar detalhes de um log de webhook
+  const fetchLogDetails = async (logId: number) => {
+    try {
+      const response = await apiRequest('GET', `/api/webhooks/logs/${logId}`);
+      const data = await response.json();
+      setSelectedLog(data);
+      setIsDetailsOpen(true);
+    } catch (error) {
+      console.error('Erro ao buscar detalhes do log:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar os detalhes do log.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Reprocessar um webhook
+  const reprocessWebhook = async (logId: number) => {
+    if (isReprocessing) return;
+    
+    setIsReprocessing(true);
+    
+    try {
+      const response = await apiRequest('POST', `/api/webhooks/reprocess/${logId}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        toast({
+          title: 'Sucesso',
+          description: 'Webhook reprocessado com sucesso!',
+        });
+        
+        // Atualizar detalhes e lista
+        fetchLogDetails(logId);
+        refetch();
+      } else {
+        throw new Error(data.message || 'Falha ao reprocessar webhook');
+      }
+    } catch (error) {
+      console.error('Erro ao reprocessar webhook:', error);
+      toast({
+        title: 'Erro no reprocessamento',
+        description: error instanceof Error ? error.message : 'Não foi possível reprocessar o webhook.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsReprocessing(false);
+    }
+  };
+
+  // Função para lidar com a pesquisa com debounce
+  const handleSearchChange = (value: string) => {
+    setSearchText(value);
+    
+    if (searchTimerRef.current) {
+      clearTimeout(searchTimerRef.current);
+    }
+    
+    searchTimerRef.current = setTimeout(() => {
+      setFilters(prev => ({ ...prev, search: value }));
+      setPage(1); // Voltar para a primeira página
+    }, 500);
+  };
+
+  // Mostrar indicação de carregamento
+  if (isLoading && !data) {
     return (
-      <div className="p-6 bg-destructive/10 rounded-lg">
-        <h3 className="font-medium text-destructive mb-2">Erro ao carregar logs</h3>
-        <p className="text-destructive/80">{error?.message || 'Ocorreu um erro desconhecido.'}</p>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center">
+          <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+          <p className="text-lg text-muted-foreground">Carregando logs de webhook...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Logs de Webhooks</CardTitle>
-          <Badge variant="outline">
-            {data?.totalCount || 0} registro{data?.totalCount !== 1 ? 's' : ''}
-          </Badge>
-        </CardHeader>
-        <CardContent>
-          {data && data.logs.length > 0 ? (
-            <>
-              <div className="rounded-md border overflow-hidden mb-4">
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[80px]">ID</TableHead>
-                        <TableHead>Tipo</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Origem</TableHead>
-                        <TableHead>Data</TableHead>
-                        <TableHead className="text-right">Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {data.logs.map((log) => (
-                        <TableRow key={log.id}>
-                          <TableCell className="font-medium">{log.id}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline">
-                              {log.eventType}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={getStatusBadgeVariant(log.status)}>
-                              {log.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary">
-                              {log.source || 'Desconhecida'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{new Date(log.createdAt).toLocaleString()}</TableCell>
-                          <TableCell className="text-right">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleViewDetails(log)}
-                            >
-                              <FileText className="h-4 w-4 mr-2" />
-                              Detalhes
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+    <div className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="w-full mb-4">
+          <TabsTrigger value="logs">Logs de Webhooks</TabsTrigger>
+          <TabsTrigger value="diagnostics">Diagnóstico Avançado</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="logs">
+          <Card>
+            <CardHeader className="px-6 pt-6 pb-4">
+              <CardTitle className="text-xl flex justify-between items-center">
+                <span>Logs de Webhooks</span>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => {
+                    console.log("Botão Atualizar clicado");
+                    // Ativar estado de atualização para feedback visual
+                    setIsRefreshing(true);
+                    
+                    // Resetar filtros e estado
+                    setPage(1);
+                    setSearchText(''); // Limpar também o campo de texto de pesquisa
+                    setFilters({
+                      status: 'all',
+                      eventType: 'all',
+                      source: 'all',
+                      search: '',
+                    });
+                    
+                    // Invalidar e atualizar os dados sem redirecionamento
+                    queryClient.invalidateQueries({ queryKey: ['/api/webhooks/logs'] });
+                    
+                    // Forçar a atualização imediata com um pequeno delay
+                    setTimeout(() => {
+                      refetch().finally(() => {
+                        // Desativar estado de atualização quando terminar
+                        setTimeout(() => setIsRefreshing(false), 500);
+                      });
+                    }, 100);
+                    
+                    // Feedback visual de que algo aconteceu
+                    toast({
+                      title: "Atualizando logs",
+                      description: "Os dados estão sendo recarregados...",
+                    });
+                  }}
+                  disabled={isRefreshing}
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  {isRefreshing ? 'Atualizando...' : 'Atualizar'}
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-6">
+              {/* Filtros */}
+              <div className="flex flex-wrap gap-4 mb-4">
+                <div className="flex-1 min-w-[200px]">
+                  <div className="relative w-full">
+                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                      <Search className="h-4 w-4 opacity-50" />
+                    </div>
+                    <Input
+                      placeholder="Buscar por transação, email ou erro..."
+                      value={searchText}
+                      onChange={(e) => handleSearchChange(e.target.value)}
+                      className="w-full pl-9"
+                    />
+                  </div>
+                </div>
+                <div className="w-[150px]">
+                  <Select
+                    value={filters.status}
+                    onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os status</SelectItem>
+                      <SelectItem value="processed">Processados</SelectItem>
+                      <SelectItem value="received">Recebidos</SelectItem>
+                      <SelectItem value="pending">Pendentes</SelectItem>
+                      <SelectItem value="error">Erros</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="w-[200px]">
+                  <Select
+                    value={filters.eventType}
+                    onValueChange={(value) => setFilters(prev => ({ ...prev, eventType: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Tipo de Evento" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os eventos</SelectItem>
+                      <SelectItem value="PURCHASE_APPROVED">Compra Aprovada</SelectItem>
+                      <SelectItem value="PURCHASE_COMPLETE">Compra Completa</SelectItem>
+                      <SelectItem value="PURCHASE_CANCELED">Compra Cancelada</SelectItem>
+                      <SelectItem value="PURCHASE_REFUNDED">Compra Reembolsada</SelectItem>
+                      <SelectItem value="PURCHASE_CHARGEBACK">Chargeback</SelectItem>
+                      <SelectItem value="PURCHASE_DELAYED">Pagamento Atrasado</SelectItem>
+                      <SelectItem value="SUBSCRIPTION_CANCELLATION">Cancelamento de Assinatura</SelectItem>
+                      <SelectItem value="RECURRENCE_BILLED">Recorrência Cobrada</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="w-[150px]">
+                  <Select
+                    value={filters.source}
+                    onValueChange={(value) => setFilters(prev => ({ ...prev, source: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Fonte" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas as fontes</SelectItem>
+                      <SelectItem value="hotmart">Hotmart</SelectItem>
+                      <SelectItem value="doppus">Doppus</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
-              {maxPage > 1 && (
-                <Pagination>
-                  <PaginationContent>
-                    {renderPagination()}
-                  </PaginationContent>
-                </Pagination>
+              {/* Tabela de logs */}
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[60px]">ID</TableHead>
+                      <TableHead className="w-[140px]">Status</TableHead>
+                      <TableHead className="w-[170px]">Tipo de Evento</TableHead>
+                      <TableHead className="w-[120px]">Fonte</TableHead>
+                      <TableHead>Email / Transação</TableHead>
+                      <TableHead className="w-[180px]">Data</TableHead>
+                      <TableHead className="w-[100px] text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {data?.logs && data.logs.length > 0 ? (
+                      data.logs.map((log) => (
+                        <TableRow key={log.id}>
+                          <TableCell className="font-medium">{log.id}</TableCell>
+                          <TableCell><WebhookStatus status={log.status} /></TableCell>
+                          <TableCell>{log.eventType}</TableCell>
+                          <TableCell><WebhookSource source={log.source} /></TableCell>
+                          <TableCell>
+                            {log.email ? (
+                              <span className="font-medium text-primary">{log.email}</span>
+                            ) : log.transactionId ? (
+                              <span className="text-muted-foreground">{log.transactionId}</span>
+                            ) : (
+                              <span className="text-muted-foreground italic">Não informado</span>
+                            )}
+                            {log.status === 'error' && log.errorMessage && (
+                              <div className="flex items-center mt-1 text-xs text-destructive">
+                                <AlertTriangle className="h-3 w-3 mr-1" />
+                                {log.errorMessage.length > 50 
+                                  ? `${log.errorMessage.substring(0, 50)}...` 
+                                  : log.errorMessage}
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {format(new Date(log.createdAt), 'dd/MM/yyyy HH:mm:ss', { locale: ptBR })}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => fetchLogDetails(log.id)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={7} className="h-24 text-center">
+                          Nenhum log de webhook encontrado.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Paginação */}
+              {data && data.totalPages > 1 && (
+                <div className="mt-4 flex justify-center">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious 
+                          onClick={() => setPage(p => Math.max(1, p - 1))}
+                          className={page <= 1 ? 'pointer-events-none opacity-50' : ''}
+                        />
+                      </PaginationItem>
+                      
+                      {Array.from({ length: data.totalPages }).map((_, i) => {
+                        const pageNumber = i + 1;
+                        // Mostrar apenas 5 páginas ao redor da página atual
+                        if (
+                          pageNumber === 1 || 
+                          pageNumber === data.totalPages || 
+                          (pageNumber >= page - 2 && pageNumber <= page + 2)
+                        ) {
+                          return (
+                            <PaginationItem key={pageNumber}>
+                              <PaginationLink 
+                                isActive={page === pageNumber}
+                                onClick={() => setPage(pageNumber)}
+                              >
+                                {pageNumber}
+                              </PaginationLink>
+                            </PaginationItem>
+                          );
+                        } else if (
+                          (pageNumber === page - 3 && page > 3) || 
+                          (pageNumber === page + 3 && page < data.totalPages - 2)
+                        ) {
+                          return (
+                            <PaginationItem key={pageNumber}>
+                              <PaginationLink className="cursor-default">...</PaginationLink>
+                            </PaginationItem>
+                          );
+                        }
+                        return null;
+                      })}
+                      
+                      <PaginationItem>
+                        <PaginationNext 
+                          onClick={() => setPage(p => Math.min(data.totalPages, p + 1))}
+                          className={page >= data.totalPages ? 'pointer-events-none opacity-50' : ''}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="diagnostics">
+          <WebhookDiagnosticsTab />
+        </TabsContent>
+      </Tabs>
+
+      {/* Modal de detalhes do webhook */}
+      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          {selectedLog ? (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-xl flex items-center gap-2">
+                  Webhook #{selectedLog.log.id}
+                  <WebhookStatus status={selectedLog.log.status} />
+                  <WebhookSource source={selectedLog.log.source} />
+                </DialogTitle>
+                <DialogDescription>
+                  Detalhes do webhook recebido em {format(new Date(selectedLog.log.createdAt), 'dd/MM/yyyy HH:mm:ss', { locale: ptBR })}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h3 className="text-lg font-medium mb-2">Informações Básicas</h3>
+                  <div className="space-y-2">
+                    <div>
+                      <span className="font-medium">Tipo de Evento:</span> {selectedLog.log.eventType}
+                    </div>
+                    <div>
+                      <span className="font-medium">Transação ID:</span> {selectedLog.log.transactionId || 'Não informado'}
+                    </div>
+                    <div>
+                      <span className="font-medium">Email:</span> {selectedLog.log.email || 'Não informado'}
+                    </div>
+                    <div>
+                      <span className="font-medium">IP de Origem:</span> {selectedLog.log.sourceIp}
+                    </div>
+                    {selectedLog.log.status === 'error' && (
+                      <div>
+                        <span className="font-medium text-destructive">Erro:</span> 
+                        <p className="text-sm text-destructive mt-1">{selectedLog.log.errorMessage}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {selectedLog.userData && (
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Informações do Usuário</h3>
+                    <div className="space-y-2">
+                      <div>
+                        <span className="font-medium">Nome:</span> {selectedLog.userData.name}
+                      </div>
+                      <div>
+                        <span className="font-medium">Email:</span> {selectedLog.userData.email}
+                      </div>
+                      <div>
+                        <span className="font-medium">Usuário:</span> {selectedLog.userData.username}
+                      </div>
+                      <div>
+                        <span className="font-medium">Nível de Acesso:</span> {selectedLog.userData.nivelacesso}
+                      </div>
+                      <div>
+                        <span className="font-medium">Assinatura:</span> {selectedLog.userData.dataassinatura ? format(new Date(selectedLog.userData.dataassinatura), 'dd/MM/yyyy', { locale: ptBR }) : 'Não possui'}
+                      </div>
+                      <div>
+                        <span className="font-medium">Expiração:</span> {selectedLog.userData.dataexpiracao ? format(new Date(selectedLog.userData.dataexpiracao), 'dd/MM/yyyy', { locale: ptBR }) : 'Não aplicável'}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-4">
+                <h3 className="text-lg font-medium mb-2">Payload</h3>
+                <div className="bg-muted p-4 rounded-md overflow-x-auto">
+                  <pre className="text-xs text-muted-foreground whitespace-pre-wrap">
+                    {JSON.stringify(JSON.parse(selectedLog.log.payloadData), null, 2)}
+                  </pre>
+                </div>
+              </div>
+
+              <DialogFooter className="flex justify-between items-center mt-4">
+                <div>
+                  {selectedLog.log.status !== 'processed' && (
+                    <Button 
+                      variant="default" 
+                      onClick={() => reprocessWebhook(selectedLog.log.id)}
+                      disabled={isReprocessing}
+                    >
+                      {isReprocessing ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Reprocessando...
+                        </>
+                      ) : (
+                        'Reprocessar Webhook'
+                      )}
+                    </Button>
+                  )}
+                </div>
+                <Button variant="outline" onClick={() => setIsDetailsOpen(false)}>
+                  Fechar
+                </Button>
+              </DialogFooter>
             </>
           ) : (
-            <div className="py-12 text-center">
-              <p className="text-muted-foreground">Nenhum registro de webhook encontrado.</p>
+            <div className="flex justify-center items-center h-[200px]">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Detalhes do Webhook</DialogTitle>
-            <DialogDescription>
-              ID: {selectedLog?.id} | Tipo: {selectedLog?.eventType} | Data: {selectedLog && new Date(selectedLog.createdAt).toLocaleString()}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <h4 className="text-sm font-medium mb-1">Status</h4>
-              <Badge variant={selectedLog ? getStatusBadgeVariant(selectedLog.status) : 'default'}>
-                {selectedLog?.status}
-              </Badge>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium mb-1">Origem</h4>
-              <Badge variant="secondary">
-                {selectedLog?.source || 'Desconhecida'}
-              </Badge>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium mb-1">Payload</h4>
-              <pre className="bg-muted p-4 rounded-md text-xs overflow-x-auto">
-                {selectedLog && formatPayload(selectedLog.payloadData)}
-              </pre>
-            </div>
-          </div>
         </DialogContent>
       </Dialog>
     </div>
   );
-}
+};
+
+export default WebhookList;

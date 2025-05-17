@@ -1419,34 +1419,3 @@ export interface SubscriptionStats {
   averageRetention: number;  // Tempo médio de permanência (dias)
   averageLTV: number;  // Lifetime Value (valor médio ao longo da vida)
 }
-
-// Tabela para armazenar webhooks que falharam durante o processamento
-export const failedWebhooks = pgTable("failedWebhooks", {
-  id: serial("id").primaryKey(),
-  webhookLogId: integer("webhookLogId").references(() => webhookLogs.id),
-  source: text("source").notNull(), // "hotmart", "doppus", etc.
-  payload: jsonb("payload").notNull(),
-  errorMessage: text("errorMessage").notNull(),
-  retryCount: integer("retryCount").notNull().default(0),
-  lastRetryAt: timestamp("lastRetryAt"),
-  status: text("status").notNull().default("pending"), // "pending", "processing", "resolved", "failed"
-  createdAt: timestamp("createdAt").notNull().defaultNow(),
-  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
-});
-
-export const failedWebhooksRelations = relations(failedWebhooks, ({ one }) => ({
-  webhookLog: one(webhookLogs, {
-    fields: [failedWebhooks.webhookLogId],
-    references: [webhookLogs.id],
-  }),
-}));
-
-export const insertFailedWebhookSchema = createInsertSchema(failedWebhooks).omit({
-  id: true,
-  retryCount: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export type FailedWebhook = typeof failedWebhooks.$inferSelect;
-export type InsertFailedWebhook = z.infer<typeof insertFailedWebhookSchema>;

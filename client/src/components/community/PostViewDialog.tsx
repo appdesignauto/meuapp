@@ -625,14 +625,11 @@ export function PostViewDialog({ postId, open, onOpenChange }: PostViewDialogPro
           <DialogTitle>
             {postLoading ? "Carregando..." : post?.title || "Post da Comunidade"}
           </DialogTitle>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="absolute right-4 top-4"
-            onClick={() => onOpenChange(false)}
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          <DialogClose asChild>
+            <Button variant="ghost" size="icon" className="absolute right-4 top-4">
+              <X className="h-4 w-4" />
+            </Button>
+          </DialogClose>
         </DialogHeader>
         
         {renderPostContent()}
