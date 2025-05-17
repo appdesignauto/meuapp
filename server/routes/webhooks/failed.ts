@@ -11,27 +11,40 @@ import { eq } from 'drizzle-orm';
 // Verifica através de múltiplos métodos para evitar problemas com req.isAuthenticated()
 const checkAdminSafely = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    console.log('[AUTH DEBUG] Verificando autenticação para rota webhooks/failed');
+    console.log('[AUTH DEBUG] req.isAuthenticated existe:', !!req.isAuthenticated);
+    console.log('[AUTH DEBUG] req.user:', req.user ? `ID: ${req.user.id}, Nível: ${req.user.nivelacesso}` : 'não existe');
+    console.log('[AUTH DEBUG] req.session:', req.session ? 'existe' : 'não existe');
+    console.log('[AUTH DEBUG] req.session.passport:', req.session && req.session.passport ? 'existe' : 'não existe');
+    
     // Método 1: Verificar pelo método padrão req.isAuthenticated()
     if (req.isAuthenticated && req.isAuthenticated() && req.user?.nivelacesso === 'admin') {
+      console.log('[AUTH DEBUG] Autenticação bem-sucedida via req.isAuthenticated()');
       return next();
     }
     
     // Método 2: Verificar diretamente pela sessão se o método 1 falhar
     if (req.session && req.session.passport && req.session.passport.user) {
       const userId = req.session.passport.user;
+      console.log('[AUTH DEBUG] Tentando autenticação via sessão, userId:', userId);
+      
       const userRecord = await db.query.users.findFirst({
         where: eq(users.id, userId)
       });
       
+      console.log('[AUTH DEBUG] Usuário encontrado via sessão:', userRecord ? `ID: ${userRecord.id}, Nível: ${userRecord.nivelacesso}` : 'não encontrado');
+      
       if (userRecord && userRecord.nivelacesso === 'admin') {
+        console.log('[AUTH DEBUG] Autenticação bem-sucedida via sessão');
         return next();
       }
     }
     
     // Se nenhum método funcionar, retornar 401
+    console.log('[AUTH DEBUG] Autenticação falhou para webhooks/failed');
     return res.status(401).json({ error: 'Não autorizado. Apenas administradores podem acessar este recurso.' });
   } catch (error) {
-    console.error('Erro ao verificar permissões de admin:', error);
+    console.error('[AUTH DEBUG] Erro ao verificar permissões de admin:', error);
     return res.status(500).json({ error: 'Erro ao verificar permissões' });
   }
 };

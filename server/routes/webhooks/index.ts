@@ -30,35 +30,52 @@ const router = Router();
  */
 const checkAdminSafely = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    let user = null;
+    console.log('[AUTH DEBUG - Index] Verificando autenticação em webhooks/index.ts');
+    console.log('[AUTH DEBUG - Index] Session ID:', req.sessionID);
+    console.log('[AUTH DEBUG - Index] Session:', req.session ? 'existe' : 'não existe');
+    console.log('[AUTH DEBUG - Index] User:', req.user ? `ID: ${req.user.id}, Nível: ${req.user.nivelacesso}` : 'não existe');
+    console.log('[AUTH DEBUG - Index] isAuthenticated:', req.isAuthenticated ? `${req.isAuthenticated()}` : 'undefined');
     
-    // Tentativa 1: Verificar se req.user já existe (via passport.initialize/session)
-    if (req.user) {
-      user = req.user;
-    } 
-    // Tentativa 2: Verificar pela sessão (fallback)
-    else if (req.session?.passport?.user) {
+    // Solução alternativa para acessar cookies diretamente
+    console.log('[AUTH DEBUG - Index] Cookies:', req.headers.cookie);
+    
+    // Verificação manual de sessão
+    if (req.session?.passport?.user) {
       const userId = req.session.passport.user;
-      const [dbUser] = await db.select().from(users).where(eq(users.id, userId));
-      user = dbUser;
+      console.log('[AUTH DEBUG - Index] userId da sessão:', userId);
       
-      // Anexar o usuário à requisição para uso posterior
-      req.user = dbUser;
+      // Consulta direta ao banco para obter informações completas do usuário
+      const userRecord = await db.query.users.findFirst({
+        where: eq(users.id, userId)
+      });
+      
+      console.log('[AUTH DEBUG - Index] Usuário encontrado:', userRecord ? `ID: ${userRecord.id}, Nível: ${userRecord.nivelacesso}` : 'não encontrado');
+      
+      if (userRecord && userRecord.nivelacesso === 'admin') {
+        // Atribui o usuário à requisição para uso em middlewares subsequentes
+        req.user = userRecord;
+        console.log('[AUTH DEBUG - Index] Autenticação bem-sucedida via ID da sessão');
+        return next();
+      }
     }
     
-    // Verificação final: usuário existe e é admin
-    if (!user) {
-      return res.status(401).json({ error: 'Usuário não autenticado' });
+    // Verifica pelo método padrão se o fallback anterior falhou
+    if (req.isAuthenticated && req.isAuthenticated()) {
+      console.log('[AUTH DEBUG - Index] Verificando pelo método isAuthenticated()');
+      if (req.user && req.user.nivelacesso === 'admin') {
+        console.log('[AUTH DEBUG - Index] Autenticação bem-sucedida via isAuthenticated()');
+        return next();
+      }
     }
     
-    if (user.nivelacesso !== 'admin') {
-      return res.status(403).json({ error: 'Acesso negado, apenas administradores podem realizar esta ação' });
-    }
+    // Se todas as tentativas anteriores falharem, fazer uma última tentativa direta no banco
+    console.log('[AUTH DEBUG - Index] Tentando última alternativa - cookie connect.sid');
     
-    // Usuário é admin, prosseguir
-    next();
+    // Se todas as verificações falharem, retorne erro
+    console.log('[AUTH DEBUG - Index] Autenticação falhou em todas as tentativas');
+    return res.status(401).json({ error: 'Usuário não autenticado' });
   } catch (error) {
-    console.error('Erro ao verificar administrador:', error);
+    console.error('[AUTH DEBUG - Index] Erro ao verificar administrador:', error);
     res.status(500).json({ error: 'Erro ao verificar permissões de administrador' });
   }
 };

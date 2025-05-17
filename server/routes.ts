@@ -116,14 +116,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Importar roteador de webhooks
-  const webhooksRouter = await import('./routes/webhooks').then(m => m.default);
-  
-  // Adicionar roteador de webhooks
-  app.use('/api/webhooks', webhooksRouter);
-  
   // Setup authentication middleware and routes
   const { isAuthenticated, isPremium, isAdmin, isDesigner, hasRole } = setupAuth(app);
+  
+  // IMPORTANTE: Definindo rotas de webhook direto aqui para evitar problemas de autenticação
+  app.get('/api/webhooks/failed', isAdmin, async (req, res) => {
+    try {
+      console.log('[DIRETO] Rota /api/webhooks/failed acessada por', req.user?.username);
+      const failedWebhooks = await webhookService.getFailedWebhooks();
+      res.json(failedWebhooks);
+    } catch (error) {
+      console.error('Erro ao buscar webhooks falhos:', error);
+      res.status(500).json({ error: 'Erro ao buscar webhooks falhos' });
+    }
+  });
+  
+  app.get('/api/webhooks/logs', isAdmin, async (req, res) => {
+    try {
+      console.log('[DIRETO] Rota /api/webhooks/logs acessada por', req.user?.username);
+      const logs = await webhookService.getWebhookLogs();
+      res.json(logs);
+    } catch (error) {
+      console.error('Erro ao buscar logs de webhook:', error);
+      res.status(500).json({ error: 'Erro ao buscar logs de webhook' });
+    }
+  });
+  
+  app.get('/api/webhooks/failed/:id', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const webhook = await webhookService.getFailedWebhookById(id);
+      
+      if (!webhook) {
+        return res.status(404).json({ error: 'Webhook não encontrado' });
+      }
+      
+      res.json(webhook);
+    } catch (error) {
+      console.error(`Erro ao buscar webhook falho ID ${req.params.id}:`, error);
+      res.status(500).json({ error: 'Erro ao buscar detalhes do webhook falho' });
+    }
+  });
+  
+  app.post('/api/webhooks/failed/:id/retry', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const result = await webhookService.retryFailedWebhook(id);
+      res.json(result);
+    } catch (error) {
+      console.error(`Erro ao reprocessar webhook ID ${req.params.id}:`, error);
+      res.status(500).json({ error: 'Erro ao reprocessar webhook' });
+    }
+  });
+  
+  // Importar roteador de webhooks original (para outras rotas)
+  const webhooksRouter = await import('./routes/webhooks').then(m => m.default);
+  
+  // Adicionar roteador de webhooks para as demais rotas não críticas
+  app.use('/api/webhooks', webhooksRouter);
   
   // Rota específica para testar solução de emergência para o usuário problemático (simulação)
   app.get('/api/debug/test-emergency-avatar-simulation/:username', isAdmin, async (req, res) => {
