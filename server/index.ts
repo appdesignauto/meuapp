@@ -8,10 +8,22 @@ import { SubscriptionService } from "./services/subscription-service";
 import { validateR2Environment } from "./env-check";
 import { configureCors } from "./cors-config";
 
+// Importação dos routers de webhook
+import webhookHotmart from './routes/webhook-hotmart';
+import webhookDoppus from './routes/webhook-doppus';
+
 const app = express();
 
 // Configurar CORS para o domínio customizado
 configureCors(app);
+
+// Middleware para parse do body em formato JSON e URL encoded
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Registrar as rotas de webhook
+app.use('/webhook/hotmart', webhookHotmart);
+app.use('/webhook/doppus', webhookDoppus);
 
 // Middleware de debug para garantir que o body esteja sempre disponível
 app.use((req: Request, res: Response, next: NextFunction) => {

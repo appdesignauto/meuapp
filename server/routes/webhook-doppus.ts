@@ -1,5 +1,5 @@
-// webhook-doppus.js
-import express from 'express';
+// webhook-doppus.ts
+import express, { Request, Response } from 'express';
 import { createLogger } from '../utils/logger';
 import { pool } from '../db';
 
@@ -12,7 +12,7 @@ const logger = createLogger('webhook-doppus');
  * para evitar o problema onde a Doppus considera que o webhook falhou
  * quando há qualquer processamento adicional.
  */
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request, res: Response) => {
   try {
     // Extrair dados principais da requisição para log
     const body = req.body;
@@ -30,7 +30,7 @@ router.post('/', async (req, res) => {
       logger.error(`Erro ao processar webhook Doppus: ${error.message}`);
     });
     
-  } catch (error) {
+  } catch (error: any) {
     // Mesmo em caso de erro, retornamos 200 para prevenir retentativas da Doppus
     logger.error(`Erro ao processar webhook Doppus: ${error.message}`);
     res.status(200).json({ 
@@ -43,10 +43,10 @@ router.post('/', async (req, res) => {
 /**
  * Processa o webhook da Doppus em background após já ter respondido ao cliente
  */
-async function processDoppusWebhook(body, contentType) {
+async function processDoppusWebhook(body: any, contentType: string): Promise<void> {
   try {
     // Identificar formato do payload
-    let webhookData;
+    let webhookData: any;
     let eventType = 'desconhecido';
     
     // Detectar e normalizar o formato dos dados
@@ -85,7 +85,7 @@ async function processDoppusWebhook(body, contentType) {
     await logWebhook(webhookData, eventType);
     
     logger.info(`Webhook Doppus processado com sucesso. Tipo: ${eventType}`);
-  } catch (error) {
+  } catch (error: any) {
     logger.error(`Erro ao processar webhook Doppus em background: ${error.message}`);
   }
 }
@@ -93,7 +93,7 @@ async function processDoppusWebhook(body, contentType) {
 /**
  * Salva o log do webhook no banco de dados
  */
-async function logWebhook(payload, eventType) {
+async function logWebhook(payload: any, eventType: string): Promise<void> {
   try {
     // Salvar na tabela webhookLogs
     const query = `
@@ -115,7 +115,7 @@ async function logWebhook(payload, eventType) {
     ]);
     
     logger.debug('Webhook Doppus registrado no banco de dados');
-  } catch (error) {
+  } catch (error: any) {
     logger.error(`Erro ao salvar log do webhook: ${error.message}`);
   }
 }

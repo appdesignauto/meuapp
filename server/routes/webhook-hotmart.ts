@@ -1,5 +1,5 @@
-// webhook-hotmart.js
-import express from 'express';
+// webhook-hotmart.ts
+import express, { Request, Response } from 'express';
 import { createLogger } from '../utils/logger';
 import { pool } from '../db';
 import crypto from 'crypto';
@@ -12,7 +12,7 @@ const logger = createLogger('webhook-hotmart');
  * Esta implementação preserva a funcionalidade existente da Hotmart,
  * apenas movendo o código para um arquivo separado.
  */
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request, res: Response) => {
   try {
     const body = req.body;
     const hotmartSignature = req.headers['x-hotmart-hottok'];
@@ -45,7 +45,7 @@ router.post('/', async (req, res) => {
     // Retornar resposta de sucesso
     res.status(200).json({ status: 'success', message: 'Webhook processado com sucesso' });
     
-  } catch (error) {
+  } catch (error: any) {
     logger.error(`Erro ao processar webhook Hotmart: ${error.message}`);
     res.status(500).json({ error: 'Erro interno ao processar webhook' });
   }
@@ -54,7 +54,7 @@ router.post('/', async (req, res) => {
 /**
  * Salva o log do webhook no banco de dados
  */
-async function logWebhook(payload, eventType, signature) {
+async function logWebhook(payload: any, eventType: string, signature: string | string[] | undefined): Promise<void> {
   try {
     // Salvar na tabela webhookLogs
     const query = `
@@ -78,7 +78,7 @@ async function logWebhook(payload, eventType, signature) {
     ]);
     
     logger.debug('Webhook Hotmart registrado no banco de dados');
-  } catch (error) {
+  } catch (error: any) {
     logger.error(`Erro ao salvar log do webhook: ${error.message}`);
   }
 }
