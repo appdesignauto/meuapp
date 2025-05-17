@@ -38,7 +38,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { queryClient, apiRequest } from '@/lib/queryClient';
+import { queryClient, apiRequest, getQueryFn } from '@/lib/queryClient';
 import { Loader2, RefreshCw, Search, Eye, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
