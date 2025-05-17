@@ -1,4 +1,4 @@
-import type { Express, Request, Response, NextFunction } from "express";
+import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { arts, insertUserSchema, users, userFollows, categories, collections, views, downloads, favorites, communityPosts, communityComments, formats, fileTypes, testimonials, designerStats, subscriptions, siteSettings, insertSiteSettingsSchema, type User, emailVerificationCodes } from "@shared/schema";
@@ -5665,10 +5665,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Rota para webhook da Hotmart
-  app.post("/api/webhooks/hotmart", async (req, res) => {
+  // Rota para webhook da Hotmart - usando express.json() específico para esta rota
+  app.post("/api/webhooks/hotmart", express.json(), async (req, res) => {
     try {
       console.log("Webhook da Hotmart recebido");
+      // Log completo do corpo da requisição para diagnóstico
+      console.log("Corpo do webhook:", JSON.stringify(req.body, null, 2));
       
       // Verificar token de segurança no cabeçalho da requisição
       // Aceitar múltiplos formatos do cabeçalho para maior compatibilidade
@@ -5932,12 +5934,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Rota para webhook do Doppus
-  app.post("/api/webhooks/doppus", async (req, res) => {
+  // Rota para webhook do Doppus - usando express.json() específico para esta rota
+  app.post("/api/webhooks/doppus", express.json(), async (req, res) => {
     try {
       // Obter o IP de origem para registro
       const sourceIp = req.ip || req.connection.remoteAddress || 'unknown';
       console.log("Webhook Doppus recebido de IP:", sourceIp);
+      // Log completo do corpo da requisição para diagnóstico
+      console.log("Corpo do webhook Doppus:", JSON.stringify(req.body, null, 2));
       
       // Importar o serviço da Doppus
       const DoppusService = (await import('./services/doppus-service')).default;
