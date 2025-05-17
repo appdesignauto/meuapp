@@ -169,7 +169,7 @@ app.use((req, res, next) => {
     // Configurando webhook da Hotmart diretamente no index.ts para evitar problemas de sistema de módulos
     app.post('/webhook/hotmart', async (req, res) => {
       try {
-        console.log('⚡ Webhook da Hotmart recebido');
+        console.log('⚡ Webhook da Hotmart recebido no caminho exato configurado na plataforma Hotmart');
         
         // Extrair informações importantes do webhook
         let email = null;
@@ -195,6 +195,7 @@ app.use((req, res, next) => {
         const eventType = req.body?.event || 'UNKNOWN';
         
         // Salvar webhook diretamente no banco usando SQL
+        let webhookLogId = null;
         try {
           // Usando o módulo pg diretamente para evitar problemas com importações
           const { Client } = require('pg');
@@ -237,7 +238,7 @@ app.use((req, res, next) => {
           const values = [
             eventType,
             JSON.stringify(req.body),
-            'received',
+            'processing', // Mudamos para 'processing' enquanto processamos
             'hotmart',
             sourceIp,
             transactionId,
@@ -246,18 +247,73 @@ app.use((req, res, next) => {
           ];
           
           const result = await client.query(query, values);
-          await client.end();
+          webhookLogId = result.rows[0].id;
+          console.log('✅ Log de webhook criado com sucesso via SQL direto:', webhookLogId);
           
-          console.log('✅ Log de webhook criado com sucesso via SQL direto:', result.rows[0].id);
+          await client.end();
         } catch (logError) {
           console.error('❌ Erro ao criar log de webhook:', logError);
           console.error('Detalhes do erro:', logError);
         }
         
+        // Processar o webhook usando o SubscriptionService
+        let processResult = null;
+        try {
+          const { SubscriptionService } = require('./services/subscription-service');
+          processResult = await SubscriptionService.processHotmartWebhook(req.body);
+          console.log('✅ Webhook processado com sucesso:', processResult);
+          
+          // Atualizar o status do log para sucesso
+          if (webhookLogId) {
+            const { Client } = require('pg');
+            const client = new Client({
+              connectionString: process.env.DATABASE_URL
+            });
+            
+            await client.connect();
+            
+            await client.query(
+              `UPDATE "webhookLogs" SET status = 'success', "updatedAt" = NOW() WHERE id = $1`,
+              [webhookLogId]
+            );
+            
+            console.log(`Status do webhook ${webhookLogId} atualizado para success`);
+            
+            await client.end();
+          }
+        } catch (processError) {
+          console.error('❌ Erro ao processar webhook via SubscriptionService:', processError);
+          
+          // Atualizar o status do log para erro
+          if (webhookLogId) {
+            try {
+              const { Client } = require('pg');
+              const client = new Client({
+                connectionString: process.env.DATABASE_URL
+              });
+              
+              await client.connect();
+              
+              await client.query(
+                `UPDATE "webhookLogs" SET status = 'error', "errorMessage" = $1, "updatedAt" = NOW() WHERE id = $2`,
+                [processError.message || 'Erro desconhecido', webhookLogId]
+              );
+              
+              console.log(`Status do webhook ${webhookLogId} atualizado para error`);
+              
+              await client.end();
+            } catch (updateError) {
+              console.error('❌ Erro ao atualizar status do log de webhook:', updateError);
+            }
+          }
+        }
+        
         // Retornar 200 para confirmar recebimento do webhook
         return res.status(200).json({
           success: true,
-          message: 'Webhook processado com sucesso'
+          message: 'Webhook processado com sucesso',
+          result: processResult,
+          webhookLogId
         });
         
       } catch (error) {
