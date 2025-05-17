@@ -5686,8 +5686,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const hotmartSecret = process.env.HOTMART_SECRET;
       
+      // Registrar o webhook recebido no banco de dados
+      let webhookStatus = 'pending';
+      let webhookError = null;
+      let webhookLogId = null;
+      
+      try {
+        // Importar o pool para consultas diretas ao banco de dados
+        const { pool } = await import('./db');
+        
+        // Registrar o webhook no banco de dados
+        const insertWebhookQuery = `
+          INSERT INTO "webhookLogs" (
+            "eventType", "payloadData", "status", "createdAt", "source", "sourceIp"
+          ) VALUES ($1, $2, $3, NOW(), $4, $5)
+          RETURNING id;
+        `;
+        
+        const webhookLog = await pool.query(insertWebhookQuery, [
+          req.body.event || 'unknown',
+          JSON.stringify(req.body),
+          webhookStatus,
+          'hotmart',
+          req.ip
+        ]);
+        
+        if (webhookLog.rows && webhookLog.rows.length > 0) {
+          webhookLogId = webhookLog.rows[0].id;
+          console.log(`Webhook registrado com ID: ${webhookLogId}`);
+        }
+      } catch (dbError) {
+        console.error("Erro ao registrar webhook no banco de dados:", dbError);
+        // Continue o processamento mesmo se o registro falhar
+      }
+      
       // Validar o token de segurança
       if (!token || token !== hotmartSecret) {
+        webhookStatus = 'error';
+        webhookError = 'Token de webhook inválido ou não fornecido';
+        
+        // Atualizar o status do webhook no banco de dados
+        if (webhookLogId) {
+          try {
+            const { pool } = await import('./db');
+            await pool.query(`
+              UPDATE "webhookLogs" 
+              SET "status" = $1, "errorMessage" = $2 
+              WHERE id = $3
+            `, [webhookStatus, webhookError, webhookLogId]);
+          } catch (updateError) {
+            console.error("Erro ao atualizar status do webhook:", updateError);
+          }
+        }
+        
         console.error(`Token de webhook inválido ou não fornecido. Token recebido: "${token}", esperado: "${hotmartSecret.slice(0, 3)}..."`);
         return res.status(403).json({
           success: false,
@@ -5697,6 +5748,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Validação básica do webhook
       if (!req.body || !req.body.data || !req.body.event) {
+        webhookStatus = 'error';
+        webhookError = 'Formato de webhook inválido';
+        
+        // Atualizar o status do webhook no banco de dados
+        if (webhookLogId) {
+          try {
+            const { pool } = await import('./db');
+            await pool.query(`
+              UPDATE "webhookLogs" 
+              SET "status" = $1, "errorMessage" = $2 
+              WHERE id = $3
+            `, [webhookStatus, webhookError, webhookLogId]);
+          } catch (updateError) {
+            console.error("Erro ao atualizar status do webhook:", updateError);
+          }
+        }
+        
         console.error("Formato de webhook inválido:", req.body);
         return res.status(400).json({ 
           success: false, 
@@ -5712,13 +5780,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Log do resultado para monitoramento
       console.log("Resultado do processamento do webhook:", result);
       
+      // Atualizar o status do webhook no banco de dados para success
+      webhookStatus = result.success ? 'success' : 'error';
+      webhookError = result.success ? null : (result.message || 'Erro no processamento');
+      
+      if (webhookLogId) {
+        try {
+          const { pool } = await import('./db');
+          
+          // Extrair o email do comprador para facilitar buscas futuras
+          let buyerEmail = '';
+          try {
+            if (req.body.data && req.body.data.buyer && req.body.data.buyer.email) {
+              buyerEmail = req.body.data.buyer.email;
+            }
+          } catch (emailError) {
+            console.error("Erro ao extrair email do comprador:", emailError);
+          }
+          
+          await pool.query(`
+            UPDATE "webhookLogs" 
+            SET "status" = $1, "errorMessage" = $2, "email" = $3, "processedAt" = NOW(), "processed" = true
+            WHERE id = $4
+          `, [webhookStatus, webhookError, buyerEmail, webhookLogId]);
+          
+          console.log(`Status do webhook ${webhookLogId} atualizado para ${webhookStatus}`);
+        } catch (updateError) {
+          console.error("Erro ao atualizar status do webhook:", updateError);
+        }
+      }
+      
       res.json({ 
         success: true, 
         message: "Webhook processado com sucesso", 
-        result 
+        result,
+        webhookLogId
       });
     } catch (error) {
       console.error("Erro ao processar webhook da Hotmart:", error);
+      
+      // Se tivermos um ID de log, atualizar o status para error
+      if (typeof webhookLogId !== 'undefined' && webhookLogId !== null) {
+        try {
+          const { pool } = await import('./db');
+          await pool.query(`
+            UPDATE "webhookLogs" 
+            SET "status" = 'error', "errorMessage" = $1, "processedAt" = NOW(), "processed" = true
+            WHERE id = $2
+          `, [error instanceof Error ? error.message : String(error), webhookLogId]);
+        } catch (updateError) {
+          console.error("Erro ao atualizar status do webhook após falha:", updateError);
+        }
+      }
+      
       res.status(500).json({ 
         success: false, 
         message: "Erro ao processar webhook", 
