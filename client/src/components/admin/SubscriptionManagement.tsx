@@ -525,7 +525,7 @@ export default function SubscriptionManagement() {
   const [showDoppusSecret, setShowDoppusSecret] = useState(false);
   const [showDoppusClientId, setShowDoppusClientId] = useState(false);
   const [showDoppusClientSecret, setShowDoppusClientSecret] = useState(false);
-  const [showDoppusApiKey, setShowDoppusApiKey] = useState(false);
+  // Estado showDoppusApiKey removido pois não é mais necessário
   
   // Estado para controlar o ambiente da Hotmart (sandbox/produção)
   const [isHotmartSandbox, setIsHotmartSandbox] = useState(true);
@@ -536,10 +536,10 @@ export default function SubscriptionManagement() {
   const [doppusSecretInput, setDoppusSecretInput] = useState('');
   const [doppusClientIdInput, setDoppusClientIdInput] = useState('');
   const [doppusClientSecretInput, setDoppusClientSecretInput] = useState('');
-  const [doppusApiKeyInput, setDoppusApiKeyInput] = useState('');
+  // doppusApiKey removido conforme solicitado
   
   // Diálogos da Doppus
-  const [isDoppusApiKeyDialogOpen, setIsDoppusApiKeyDialogOpen] = useState(false);
+  // diálogo para API Key removido conforme solicitado
   const [isDoppusClientIdDialogOpen, setIsDoppusClientIdDialogOpen] = useState(false);
   const [isDoppusClientSecretDialogOpen, setIsDoppusClientSecretDialogOpen] = useState(false);
   
@@ -808,43 +808,8 @@ export default function SubscriptionManagement() {
     }
   });
 
-  const updateDoppusApiKeyMutation = useMutation({
-    mutationFn: async (newApiKey: string) => {
-      const response = await apiRequest('POST', '/api/integrations/doppus/apikey', { apiKey: newApiKey });
-      return response.json();
-    },
-    onSuccess: (data) => {
-      toast({
-        title: "API Key atualizada",
-        description: "A API Key da Doppus foi atualizada com sucesso.",
-      });
-      
-      // Atualizar o estado local com o valor retornado da API
-      if (data.updatedValue && integrationSettings?.doppus) {
-        setIntegrationSettings((prev) => {
-          if (!prev) return prev;
-          
-          return {
-            ...prev,
-            doppus: {
-              ...prev.doppus,
-              apiKey: data.updatedValue
-            }
-          };
-        });
-      }
-      
-      setIsDoppusApiKeyDialogOpen(false);
-      setDoppusApiKeyInput('');
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Erro ao atualizar API Key",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  });
+  // Mutação para API Key da Doppus removida
+  // Esta mutação não é mais necessária pois não usamos mais doppusApiKey
   
   // Mutação para alternar o ambiente da Hotmart (sandbox/produção)
   const toggleHotmartEnvironmentMutation = useMutation({
@@ -893,12 +858,8 @@ export default function SubscriptionManagement() {
     }
   });
   
-  // Função para salvar a API Key da Doppus
-  const handleSaveDoppusApiKey = () => {
-    if (doppusApiKeyInput.trim()) {
-      updateDoppusApiKeyMutation.mutate(doppusApiKeyInput);
-    }
-  };
+  // Função para salvar a API Key da Doppus foi removida
+  // Este trecho foi removido conforme solicitado, já que não usamos mais doppusApiKey
 
   // Função para salvar configurações
   const handleSaveSettings = () => {
@@ -2281,41 +2242,9 @@ export default function SubscriptionManagement() {
                       </p>
                     </div>
 
-                    <div>
-                      <Label htmlFor="doppusApiKey">API Key</Label>
-                      <div className="flex mt-1.5">
-                        <Input 
-                          id="doppusApiKey" 
-                          type={showDoppusApiKey ? "text" : "password"}
-                          placeholder="Insira a API Key da Doppus" 
-                          value={integrationSettings?.doppus?.apiKey?.isDefined ? 
-                                 (showDoppusApiKey ? integrationSettings?.doppus?.apiKey?.realValue || "" : "●●●●●●●●●●●●●●●●") : 
-                                 ""}
-                          readOnly
-                          className="flex-1 rounded-r-none bg-muted"
-                        />
-                        <Button 
-                          type="button"
-                          variant="outline"
-                          className="px-3 border-r-0 rounded-none"
-                          onClick={() => setShowDoppusApiKey(!showDoppusApiKey)}
-                        >
-                          {showDoppusApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </Button>
-                        <Button 
-                          type="button" 
-                          variant="secondary" 
-                          className="rounded-l-none"
-                          onClick={() => setIsDoppusApiKeyDialogOpen(true)}
-                        >
-                          <Edit className="w-4 h-4 mr-2" />
-                          Editar
-                        </Button>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-2">
-                        Necessário para acessar a API da Doppus.
-                      </p>
-                    </div>
+                    {/* Campo API Key removido conforme solicitado
+                     * Este campo não é mais necessário já que não usamos mais doppusApiKey 
+                     */}
 
                     {/* Exibir o status da última conexão com a Doppus */}
                     {lastDoppusConnectionStatus && (
@@ -3427,51 +3356,8 @@ export default function SubscriptionManagement() {
         </DialogContent>
       </Dialog>
 
-      {/* Diálogo para atualizar a API Key da Doppus */}
-      <Dialog open={isDoppusApiKeyDialogOpen} onOpenChange={setIsDoppusApiKeyDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Atualizar API Key da Doppus</DialogTitle>
-            <DialogDescription>
-              Insira a nova API Key para integração com a Doppus.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label htmlFor="doppusApiKey">API Key</Label>
-              <Input
-                id="doppusApiKey"
-                value={doppusApiKeyInput}
-                onChange={(e) => setDoppusApiKeyInput(e.target.value)}
-                placeholder="Insira a API Key da Doppus"
-                className="w-full"
-              />
-              <p className="text-sm text-muted-foreground">
-                Esta chave é utilizada para acessar a API da Doppus e obter informações de assinaturas.
-              </p>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDoppusApiKeyDialogOpen(false)}>
-              Cancelar
-            </Button>
-            <Button 
-              onClick={() => updateDoppusApiKeyMutation.mutate(doppusApiKeyInput)}
-              disabled={!doppusApiKeyInput.trim() || updateDoppusApiKeyMutation.isPending}
-              type="button"
-            >
-              {updateDoppusApiKeyMutation.isPending ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4 mr-2" />
-              )}
-              Salvar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Diálogo para API Key da Doppus removido */}
+      {/* Este diálogo foi removido conforme solicitado pois não precisamos mais do campo doppusApiKey */}
     </div>
   );
   
