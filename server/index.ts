@@ -7,6 +7,8 @@ import { createAdminUser } from "./init-admin";
 import { SubscriptionService } from "./services/subscription-service";
 import { validateR2Environment } from "./env-check";
 import { configureCors } from "./cors-config";
+// Importar configurações de webhook
+import { setupWebhookRoutes } from "./webhook-routes";
 
 const app = express();
 
@@ -140,6 +142,12 @@ app.use((req, res, next) => {
     console.log("Executando verificação inicial de assinaturas expiradas...");
     const initialDowngradedCount = await SubscriptionService.checkExpiredSubscriptions();
     console.log(`Verificação inicial concluída: ${initialDowngradedCount} usuários rebaixados para free`);
+    
+    // IMPORTANTE: Configurar rotas de webhook ANTES de qualquer fallback para o SPA
+    // Isso garante que webhooks da Hotmart e Doppus sejam processados corretamente
+    console.log("Configurando rotas de webhook dedicadas...");
+    setupWebhookRoutes(app);
+    console.log("Rotas de webhook configuradas com sucesso");
   } catch (error) {
     console.error("Erro ao inicializar banco de dados:", error);
   }

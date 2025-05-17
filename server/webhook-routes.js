@@ -7,6 +7,7 @@
 const express = require('express');
 const hotmartWebhookRouter = require('./routes/webhook-hotmart');
 const doppusWebhookRouter = require('./routes/webhook-doppus');
+const webhookDiagnosticsRouter = require('./routes/webhook-diagnostics');
 
 /**
  * Configura as rotas de webhook para o Express
@@ -32,7 +33,10 @@ function setupWebhookRoutes(app) {
     console.warn('⚠️ Rotas de webhook da Doppus não disponíveis:', error.message);
   }
   
-  // Rota de diagnóstico para webhooks
+  // Registrar rotas de diagnóstico para administradores
+  app.use('/api/webhook-diagnostics', webhookDiagnosticsRouter);
+  
+  // Rota de diagnóstico para verificação básica de webhooks (sem autenticação)
   app.get('/webhook/status', (req, res) => {
     res.json({
       status: 'online',
@@ -40,7 +44,8 @@ function setupWebhookRoutes(app) {
       routes: [
         { path: '/webhook/hotmart', status: 'configured' },
         { path: '/webhook/doppus', status: doppusWebhookRouter ? 'configured' : 'not_available' }
-      ]
+      ],
+      message: 'Os webhooks estão configurados e funcionando. Use o painel de Admin para diagnósticos avançados.'
     });
   });
   
