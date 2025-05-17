@@ -5366,7 +5366,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const result = await doppusService.default.testConnection();
         console.log('Resultado do teste de conexão:', JSON.stringify(result));
-        return res.json(result);
+        
+        // Garantir que a resposta tenha um formato consistente
+        // e que o status success seja explícito para que a UI possa processar corretamente
+        if (result && result.success === true) {
+          console.log('✅ Teste de conexão com a Doppus bem-sucedido: Token obtido');
+          return res.json({
+            success: true,
+            message: result.message || 'Conexão com a API da Doppus estabelecida com sucesso.',
+            details: result.details || {}
+          });
+        } else {
+          console.log('❌ Teste de conexão com a Doppus falhou, mas não lançou exceção');
+          return res.status(500).json({
+            success: false,
+            message: result.message || 'Falha no teste de conexão com a API da Doppus',
+            details: result.details || {}
+          });
+        }
       } catch (error) {
         console.error('ERRO CRÍTICO no teste de conexão:', error);
         return res.status(500).json({
