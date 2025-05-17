@@ -264,18 +264,27 @@ class DoppusService {
         data = payload.data;
         console.log('✅ Usando formato padrão: event + data');
       } 
-      // Caso 2: Novo formato com cliente e status diretamente no root
+      // Caso 2: Formato de maio/2025 com customer e items diretamente no root
+      else if (payload.customer && payload.items && Array.isArray(payload.items)) {
+        // Este é o formato exato que estamos recebendo da Doppus
+        // De acordo com o print compartilhado
+        event = 'PAYMENT_APPROVED';
+        data = payload; // Todo o payload é considerado como data
+        console.log('✅ Usando formato Doppus 2025: payload com customer e items');
+      }
+      // Caso 3: Novo formato com cliente e status diretamente no root
       else if (payload.customer && payload.status) {
         // Determinar o evento com base no status
         event = 'PAYMENT_APPROVED';
         data = payload; // Todo o payload é considerado como data
-        console.log('✅ Usando formato direto: payload como data');
+        console.log('✅ Usando formato direto: payload com customer e status');
       }
-      // Caso 3: Outro formato não reconhecido
+      // Caso 4: Outro formato não reconhecido
       else {
         console.error('❌ Formato de webhook não reconhecido - tentando extrair informações básicas');
-        event = payload.status?.code || 'unknown';
+        event = 'PAYMENT_APPROVED'; // Assumir pagamento aprovado como fallback
         data = payload;
+        console.log('⚠️ Usando evento padrão PAYMENT_APPROVED para formato desconhecido');
       }
       
       // Log para debug
@@ -402,11 +411,17 @@ class DoppusService {
       
       console.log(`👤 Cliente: ${data.customer.name} (${email})`);
       
+      // Extrair informações do CPF para diagnóstico, se disponível
+      if (data.customer?.doc && data.customer?.doc_type) {
+        console.log(`📄 Documento: ${data.customer.doc_type} - ${data.customer.doc}`);
+      }
+      
       // Extrair dados dos itens (no novo formato são arrays)
       let productCode: string | null = null;
       let productName: string | null = null;
       let offerCode: string | null = null;
       let offerName: string | null = null;
+      let itemValue: number | null = null;
       
       // Verificar se temos items no array
       if (data.items && Array.isArray(data.items) && data.items.length > 0) {
@@ -415,9 +430,14 @@ class DoppusService {
         productName = item.name;
         offerCode = item.offer;
         offerName = item.offer_name;
+        itemValue = item.value;
         
         console.log(`📦 Produto encontrado: ${productName} (${productCode})`);
         console.log(`🏷️ Oferta: ${offerName} (${offerCode})`);
+        
+        if (itemValue) {
+          console.log(`💲 Valor: ${itemValue}`);
+        }
       } else {
         console.warn('⚠️ Nenhum item encontrado no payload');
       }
@@ -433,6 +453,12 @@ class DoppusService {
         } catch (e) {
           console.error('❌ Erro ao converter data de expiração:', e);
         }
+      }
+      
+      // Para o formato específico de maio/2025, onde temos informações adicionais
+      // como tipo de documento (CPF) e endereço IP
+      if (data.customer?.ip_address) {
+        console.log(`🌐 IP do cliente: ${data.customer.ip_address}`);
       }
       
       // Transação
