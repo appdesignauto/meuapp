@@ -44,8 +44,10 @@ async function enviarWebhook() {
     console.log(`📧 Email do comprador: ${webhookData.data.buyer.email}`);
     console.log(`🆔 ID da transação: ${webhookData.data.purchase.transaction}`);
     
-    // URL do servidor local
-    const url = "http://localhost:5000/api/webhooks/hotmart";
+    // URL do servidor Replit
+    const replitUrl = "https://e1b8508c-921c-4d22-af73-1cb8fd7145e2-00-121uwb868mg4j.spock.replit.dev";
+    const url = `${replitUrl}/api/webhooks/hotmart`;
+    console.log(`🌐 URL do webhook: ${url}`);
     
     // Enviar a requisição
     const response = await fetch(url, {
