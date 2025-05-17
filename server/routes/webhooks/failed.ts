@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { webhookService } from '../../services/webhook-service';
-import { hotmartService } from '../../services/hotmart-service';
+import { HotmartService } from '../../services/hotmart-service';
 import { z } from 'zod';
 
 const router = Router();
@@ -118,7 +118,7 @@ router.post('/:id/retry', async (req, res) => {
       if (webhook.source === 'hotmart') {
         // Reprocessar webhook da Hotmart
         // Chamar o serviço da Hotmart para processar o webhook
-        result = await hotmartService.processWebhook(webhook.payload);
+        result = await HotmartService.processWebhook(webhook.payload);
         
         // Se chegou aqui, foi processado com sucesso
         await webhookService.markAsResolved(id, 'Webhook processado com sucesso no reprocessamento');

@@ -6498,6 +6498,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const webhookDiagnosticsRouter = (await import('./routes/webhook-diagnostics.js')).default;
   app.use('/api/webhook-diagnostics', webhookDiagnosticsRouter);
   
+  // Registrar rotas para gerenciamento de webhooks falhos
+  app.use('/api/webhooks', webhooksRouter);
+  
   // Configurar rota de diagnóstico direto do R2
   setupTestR2DirectRoute(app);
   
