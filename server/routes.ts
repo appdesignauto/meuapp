@@ -7600,6 +7600,126 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+  
+  // ================ GERENCIAMENTO DE WEBHOOKS FALHOS ================
+  
+  // Listar webhooks falhos com filtros e paginação
+  app.get('/api/webhooks/failed', isAdmin, async (req, res) => {
+    try {
+      const status = req.query.status as string;
+      const source = req.query.source as string;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const offset = parseInt(req.query.offset as string) || 0;
+      
+      const options = { 
+        status, 
+        source,
+        limit,
+        offset
+      };
+      
+      const failedWebhooks = await webhookService.listFailedWebhooks(options);
+      const stats = await webhookService.getFailedWebhooksStats();
+      
+      res.status(200).json({
+        webhooks: failedWebhooks,
+        stats,
+        pagination: {
+          limit,
+          offset,
+          totalCount: stats.total
+        }
+      });
+    } catch (error) {
+      console.error('Erro ao listar webhooks falhos:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Erro ao listar webhooks falhos', 
+        error: error instanceof Error ? error.message : 'Erro desconhecido' 
+      });
+    }
+  });
+  
+  // Obter detalhes de um webhook falho específico
+  app.get('/api/webhooks/failed/:id', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const webhook = await webhookService.getFailedWebhook(id);
+      
+      if (!webhook) {
+        return res.status(404).json({
+          success: false,
+          message: 'Webhook falho não encontrado'
+        });
+      }
+      
+      res.status(200).json(webhook);
+    } catch (error) {
+      console.error(`Erro ao obter webhook falho ID ${req.params.id}:`, error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Erro ao obter webhook falho', 
+        error: error instanceof Error ? error.message : 'Erro desconhecido' 
+      });
+    }
+  });
+  
+  // Endpoint para reprocessar um webhook falho
+  app.post('/api/webhooks/failed/:id/retry', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const webhook = await webhookService.getFailedWebhook(id);
+      
+      if (!webhook) {
+        return res.status(404).json({
+          success: false,
+          message: 'Webhook falho não encontrado'
+        });
+      }
+      
+      // Marcar webhook como em processamento e incrementar contador de tentativas
+      await webhookService.markWebhookAsProcessing(id);
+      
+      let result = { success: false, message: 'Erro desconhecido durante o reprocessamento' };
+      
+      // Processar o webhook de acordo com a origem
+      if (webhook.source === 'hotmart') {
+        // Reprocessar webhook da Hotmart
+        try {
+          result = await SubscriptionService.processHotmartWebhook(webhook.payload);
+        } catch (processingError) {
+          console.error(`Erro ao reprocessar webhook da Hotmart ID ${id}:`, processingError);
+          await webhookService.updateFailedWebhookStatus(id, 'failed');
+          throw processingError;
+        }
+      } else if (webhook.source === 'doppus') {
+        // Reprocessar webhook da Doppus (quando implementado)
+        result = { success: false, message: 'Reprocessamento de webhooks Doppus não implementado' };
+      } else {
+        result = { success: false, message: `Origem desconhecida: ${webhook.source}` };
+      }
+      
+      // Atualizar status com base no resultado
+      if (result.success) {
+        await webhookService.markWebhookAsResolved(id);
+      } else {
+        await webhookService.updateFailedWebhookStatus(id, 'failed');
+      }
+      
+      res.status(200).json({
+        success: result.success,
+        message: result.success ? 'Webhook reprocessado com sucesso' : result.message,
+        details: result
+      });
+    } catch (error) {
+      console.error(`Erro ao reprocessar webhook falho ID ${req.params.id}:`, error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Erro ao reprocessar webhook falho', 
+        error: error instanceof Error ? error.message : 'Erro desconhecido' 
+      });
+    }
+  });
 
   // Registrar rota para calcular posição do post na paginação
   registerPostPositionRoute(app);
