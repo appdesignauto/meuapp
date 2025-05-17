@@ -21,9 +21,9 @@ type SubscriptionStatus = 'active' | 'pending' | 'cancelled' | 'expired';
 
 // Interface para as credenciais da Doppus
 interface DoppusCredentials {
-  clientId: string;
-  clientSecret: string;
-  secretKey: string;
+  doppusClientId: string;
+  doppusClientSecret: string;
+  doppusSecretKey: string;
 }
 
 /**
@@ -70,9 +70,9 @@ class DoppusService {
       }
       
       this.credentials = {
-        clientId: row.doppusClientId,
-        clientSecret: row.doppusClientSecret,
-        secretKey: row.doppusSecretKey || ''
+        doppusClientId: row.doppusClientId,
+        doppusClientSecret: row.doppusClientSecret,
+        doppusSecretKey: row.doppusSecretKey || ''
       };
       
       return this.credentials;
@@ -91,7 +91,7 @@ class DoppusService {
       const credentials = await this.getCredentials();
       
       console.log(`Enviando requisição de autenticação para ${this.baseUrl}/token`);
-      console.log('Client ID utilizado:', credentials.clientId.substring(0, 4) + '...');
+      console.log('Client ID utilizado:', credentials.doppusClientId.substring(0, 4) + '...');
       
       const response = await fetch(`${this.baseUrl}/token`, {
         method: 'POST',
@@ -100,8 +100,8 @@ class DoppusService {
         },
         body: new URLSearchParams({
           'grant_type': 'client_credentials',
-          'client_id': credentials.clientId,
-          'client_secret': credentials.clientSecret
+          'client_id': credentials.doppusClientId,
+          'client_secret': credentials.doppusClientSecret
         })
       });
       
@@ -152,13 +152,13 @@ class DoppusService {
     try {
       const credentials = await this.getCredentials();
       
-      if (!credentials.secretKey) {
+      if (!credentials.doppusSecretKey) {
         console.warn('Secret Key da Doppus não configurada, pulando validação de assinatura');
         return true; // Em ambiente de desenvolvimento, podemos pular a validação
       }
       
       // Calcular HMAC usando SHA-256 e o Secret Key
-      const hmac = crypto.createHmac('sha256', credentials.secretKey);
+      const hmac = crypto.createHmac('sha256', credentials.doppusSecretKey);
       hmac.update(payload);
       const calculatedSignature = hmac.digest('hex');
       
