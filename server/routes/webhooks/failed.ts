@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { webhookService } from '../../services/webhook-service';
 import { HotmartService } from '../../services/hotmart-service';
 import { z } from 'zod';
+import { isAdmin } from '../../middlewares/auth';
 
 const router = Router();
 
@@ -18,7 +19,7 @@ const listParamsSchema = z.object({
  * @description Lista todos os webhooks que falharam durante o processamento
  * @access Admin
  */
-router.get('/', async (req, res) => {
+router.get('/', isAdmin, async (req, res) => {
   try {
     // Validar e converter parâmetros de consulta
     const validation = listParamsSchema.safeParse(req.query);
@@ -56,7 +57,7 @@ router.get('/', async (req, res) => {
  * @description Busca detalhes de um webhook falho específico
  * @access Admin
  */
-router.get('/:id', async (req, res) => {
+router.get('/:id', isAdmin, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     
@@ -85,7 +86,7 @@ router.get('/:id', async (req, res) => {
  * @description Tenta reprocessar um webhook que falhou anteriormente
  * @access Admin
  */
-router.post('/:id/retry', async (req, res) => {
+router.post('/:id/retry', isAdmin, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     
@@ -180,7 +181,7 @@ router.post('/:id/retry', async (req, res) => {
  * @description Retorna estatísticas sobre webhooks falhos
  * @access Admin
  */
-router.get('/stats', async (req, res) => {
+router.get('/stats', isAdmin, async (req, res) => {
   try {
     const stats = await webhookService.getWebhookStats();
     res.json(stats);
