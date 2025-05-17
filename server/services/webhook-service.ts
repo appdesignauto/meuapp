@@ -1,205 +1,202 @@
 import { db } from '../db';
-import { failedWebhooks, webhookLogs, InsertFailedWebhook } from '@shared/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { failedWebhooks, webhookLogs, insertFailedWebhookSchema, type FailedWebhook } from '@shared/schema';
+import { eq, desc, and, sql } from 'drizzle-orm';
+import { z } from 'zod';
 
-class WebhookService {
-  /**
-   * Registra um webhook que falhou durante o processamento
-   * @param {number} webhookLogId - ID do log do webhook relacionado
-   * @param {string} source - Origem do webhook ('hotmart', 'doppus', etc)
-   * @param {object} payload - Conteúdo completo do webhook que falhou
-   * @param {string} errorMessage - Mensagem de erro que causou a falha
-   * @returns {Promise<number>} ID do webhook falho registrado
-   */
-  async registerFailedWebhook(
-    webhookLogId: number,
-    source: string,
-    payload: object,
-    errorMessage: string
-  ): Promise<number> {
+export class WebhookService {
+  // Armazena um webhook que falhou durante o processamento
+  async storeFailedWebhook(webhookLogId: number, source: string, payload: any, errorMessage: string): Promise<FailedWebhook> {
     try {
-      console.log(`[WebhookService] Registrando webhook falho. Source: ${source}, Error: ${errorMessage}`);
+      const [webhook] = await db
+        .insert(failedWebhooks)
+        .values({
+          webhookLogId,
+          source,
+          payload,
+          errorMessage,
+          status: 'pending',
+          retryCount: 0
+        })
+        .returning();
       
-      const data: InsertFailedWebhook = {
-        webhookLogId,
-        source,
-        payload,
-        errorMessage,
-        status: 'pending'
-      };
-
-      const [result] = await db.insert(failedWebhooks).values(data).returning({ id: failedWebhooks.id });
-      
-      console.log(`[WebhookService] Webhook falho registrado com ID: ${result.id}`);
-      return result.id;
+      console.log(`Webhook falho armazenado com sucesso, ID: ${webhook.id}`);
+      return webhook;
     } catch (error) {
-      console.error('[WebhookService] Erro ao registrar webhook falho:', error);
-      throw error;
+      console.error('Erro ao armazenar webhook falho:', error);
+      throw new Error(`Erro ao armazenar webhook falho: ${error.message}`);
     }
   }
 
-  /**
-   * Lista todos os webhooks falhos
-   * @param {object} options - Opções de filtragem
-   * @returns {Promise<FailedWebhook[]>} Lista de webhooks falhos
-   */
-  async listFailedWebhooks(options: { 
+  // Busca webhooks falhos com opção de filtros
+  async getFailedWebhooks(options: { 
     status?: string, 
     source?: string,
-    limit?: number,
-    offset?: number
-  } = {}) {
+    limit?: number, 
+    offset?: number 
+  } = {}): Promise<{ webhooks: FailedWebhook[], stats: any }> {
     try {
       const { status, source, limit = 100, offset = 0 } = options;
       
-      let query = db.select().from(failedWebhooks);
+      // Construir condições de filtro
+      let conditions = [];
       
-      if (status) {
-        query = query.where(eq(failedWebhooks.status, status));
+      if (status && status !== 'all') {
+        conditions.push(eq(failedWebhooks.status, status));
       }
       
-      if (source) {
-        query = query.where(eq(failedWebhooks.source, source));
+      if (source && source !== 'all') {
+        conditions.push(eq(failedWebhooks.source, source));
       }
       
-      const webhooks = await query
+      // Consulta com filtros aplicados
+      const webhooks = await db
+        .select()
+        .from(failedWebhooks)
+        .where(conditions.length ? and(...conditions) : undefined)
         .orderBy(desc(failedWebhooks.createdAt))
         .limit(limit)
         .offset(offset);
       
-      return webhooks;
+      // Buscar estatísticas
+      const stats = await this.getWebhookStats();
+      
+      return { webhooks, stats };
     } catch (error) {
-      console.error('[WebhookService] Erro ao listar webhooks falhos:', error);
-      throw error;
+      console.error('Erro ao buscar webhooks falhos:', error);
+      throw new Error(`Erro ao buscar webhooks falhos: ${error.message}`);
     }
   }
 
-  /**
-   * Obtém um webhook falho pelo ID
-   * @param {number} id - ID do webhook falho
-   * @returns {Promise<FailedWebhook | null>} Webhook falho encontrado ou null
-   */
-  async getFailedWebhook(id: number) {
+  // Obter estatísticas de webhooks falhos
+  async getWebhookStats() {
+    try {
+      // Total de webhooks por status
+      const statusCounts = await db
+        .select({
+          status: failedWebhooks.status,
+          count: sql<number>`count(*)`,
+        })
+        .from(failedWebhooks)
+        .groupBy(failedWebhooks.status);
+      
+      // Total de webhooks por origem
+      const sourceCounts = await db
+        .select({
+          source: failedWebhooks.source,
+          count: sql<number>`count(*)`,
+        })
+        .from(failedWebhooks)
+        .groupBy(failedWebhooks.source);
+      
+      // Calcular totais
+      const stats = {
+        total: 0,
+        pending: 0,
+        processing: 0,
+        resolved: 0,
+        failed: 0,
+        bySource: {}
+      };
+      
+      statusCounts.forEach(item => {
+        stats[item.status] = item.count;
+        stats.total += item.count;
+      });
+      
+      sourceCounts.forEach(item => {
+        stats.bySource[item.source] = item.count;
+      });
+      
+      return stats;
+    } catch (error) {
+      console.error('Erro ao buscar estatísticas de webhooks:', error);
+      return {
+        total: 0,
+        pending: 0,
+        processing: 0,
+        resolved: 0,
+        failed: 0,
+        bySource: {}
+      };
+    }
+  }
+
+  // Obtém um webhook falho pelo ID
+  async getFailedWebhookById(id: number): Promise<FailedWebhook | undefined> {
     try {
       const [webhook] = await db
         .select()
         .from(failedWebhooks)
         .where(eq(failedWebhooks.id, id));
       
-      if (!webhook) {
-        return null;
-      }
-      
       return webhook;
     } catch (error) {
-      console.error(`[WebhookService] Erro ao obter webhook falho ID ${id}:`, error);
-      throw error;
+      console.error(`Erro ao buscar webhook falho ID ${id}:`, error);
+      throw new Error(`Erro ao buscar webhook falho: ${error.message}`);
     }
   }
 
-  /**
-   * Atualiza o status de um webhook falho
-   * @param {number} id - ID do webhook falho
-   * @param {string} status - Novo status ('pending', 'processing', 'resolved', 'failed')
-   * @returns {Promise<boolean>} Se a atualização foi bem sucedida
-   */
-  async updateFailedWebhookStatus(id: number, status: string): Promise<boolean> {
+  // Atualiza o status de um webhook falho
+  async updateFailedWebhookStatus(id: number, status: string, additionalData: any = {}): Promise<FailedWebhook> {
     try {
-      await db
+      const [webhook] = await db
         .update(failedWebhooks)
-        .set({ 
-          status, 
-          updatedAt: new Date() 
+        .set({
+          status,
+          updatedAt: new Date(),
+          ...additionalData
         })
-        .where(eq(failedWebhooks.id, id));
+        .where(eq(failedWebhooks.id, id))
+        .returning();
       
-      return true;
+      console.log(`Status do webhook ${id} atualizado para ${status}`);
+      return webhook;
     } catch (error) {
-      console.error(`[WebhookService] Erro ao atualizar status do webhook falho ID ${id}:`, error);
-      return false;
+      console.error(`Erro ao atualizar status do webhook ${id}:`, error);
+      throw new Error(`Erro ao atualizar status do webhook: ${error.message}`);
     }
   }
 
-  /**
-   * Marca um webhook falho como em processamento e incrementa o contador de tentativas
-   * @param {number} id - ID do webhook falho
-   * @returns {Promise<boolean>} Se a atualização foi bem sucedida
-   */
-  async markWebhookAsProcessing(id: number): Promise<boolean> {
+  // Incrementa a contagem de tentativas e atualiza o timestamp da última tentativa
+  async incrementRetryCount(id: number): Promise<FailedWebhook> {
     try {
-      await db
+      const webhook = await this.getFailedWebhookById(id);
+      if (!webhook) {
+        throw new Error(`Webhook ID ${id} não encontrado`);
+      }
+      
+      const retryCount = (webhook.retryCount || 0) + 1;
+      
+      const [updatedWebhook] = await db
         .update(failedWebhooks)
-        .set({ 
-          status: 'processing', 
+        .set({
+          retryCount,
           lastRetryAt: new Date(),
-          retryCount: db.raw('retry_count + 1'),
-          updatedAt: new Date() 
+          updatedAt: new Date()
         })
-        .where(eq(failedWebhooks.id, id));
+        .where(eq(failedWebhooks.id, id))
+        .returning();
       
-      return true;
+      return updatedWebhook;
     } catch (error) {
-      console.error(`[WebhookService] Erro ao marcar webhook como em processamento ID ${id}:`, error);
-      return false;
+      console.error(`Erro ao incrementar contador de tentativas para webhook ${id}:`, error);
+      throw new Error(`Erro ao atualizar contador de tentativas: ${error.message}`);
     }
   }
 
-  /**
-   * Marca um webhook falho como resolvido
-   * @param {number} id - ID do webhook falho
-   * @returns {Promise<boolean>} Se a atualização foi bem sucedida
-   */
-  async markWebhookAsResolved(id: number): Promise<boolean> {
-    try {
-      await db
-        .update(failedWebhooks)
-        .set({ 
-          status: 'resolved', 
-          updatedAt: new Date() 
-        })
-        .where(eq(failedWebhooks.id, id));
-      
-      return true;
-    } catch (error) {
-      console.error(`[WebhookService] Erro ao marcar webhook como resolvido ID ${id}:`, error);
-      return false;
-    }
+  // Marca um webhook como resolvido
+  async markAsResolved(id: number, message: string = 'Processado com sucesso'): Promise<FailedWebhook> {
+    return this.updateFailedWebhookStatus(id, 'resolved', { errorMessage: message });
   }
 
-  /**
-   * Obtém estatísticas dos webhooks falhos
-   * @returns {Promise<object>} Estatísticas dos webhooks falhos
-   */
-  async getFailedWebhooksStats() {
-    try {
-      const allWebhooks = await db.select().from(failedWebhooks);
-      
-      const pendingCount = allWebhooks.filter(w => w.status === 'pending').length;
-      const processingCount = allWebhooks.filter(w => w.status === 'processing').length;
-      const resolvedCount = allWebhooks.filter(w => w.status === 'resolved').length;
-      const failedCount = allWebhooks.filter(w => w.status === 'failed').length;
-      
-      const bySource = allWebhooks.reduce((acc, webhook) => {
-        const source = webhook.source;
-        if (!acc[source]) {
-          acc[source] = 0;
-        }
-        acc[source]++;
-        return acc;
-      }, {} as Record<string, number>);
-      
-      return {
-        total: allWebhooks.length,
-        pending: pendingCount,
-        processing: processingCount,
-        resolved: resolvedCount,
-        failed: failedCount,
-        bySource
-      };
-    } catch (error) {
-      console.error('[WebhookService] Erro ao obter estatísticas de webhooks falhos:', error);
-      throw error;
-    }
+  // Marca um webhook como em processamento
+  async markAsProcessing(id: number): Promise<FailedWebhook> {
+    return this.updateFailedWebhookStatus(id, 'processing');
+  }
+
+  // Marca um webhook como falho após tentativa de reprocessamento
+  async markAsFailed(id: number, errorMessage: string): Promise<FailedWebhook> {
+    return this.updateFailedWebhookStatus(id, 'failed', { errorMessage });
   }
 }
 

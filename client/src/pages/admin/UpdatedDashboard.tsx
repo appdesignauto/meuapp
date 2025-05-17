@@ -5,6 +5,7 @@ import AnalyticsSettings from '@/components/admin/AnalyticsSettings';
 import ReportsManagement from '@/components/admin/ReportsManagement';
 import SubscriptionManagement from '@/components/admin/SubscriptionManagement';
 import SubscriptionSettings from '@/components/admin/SubscriptionSettings';
+import FailedWebhooks from '@/components/admin/FailedWebhooks';
 import {
   LayoutGrid,
   Image,
@@ -4021,7 +4022,22 @@ const AdminDashboard = () => {
                   </div>
                   
                   <div className="grid gap-6">
-                    <SubscriptionManagement />
+                    <Tabs defaultValue="management">
+                      <TabsList className="mb-4">
+                        <TabsTrigger value="management">Gerenciamento de Assinaturas</TabsTrigger>
+                        <TabsTrigger value="webhooks">Webhooks com Falha</TabsTrigger>
+                        <TabsTrigger value="settings">Configurações</TabsTrigger>
+                      </TabsList>
+                      <TabsContent value="management">
+                        <SubscriptionManagement />
+                      </TabsContent>
+                      <TabsContent value="webhooks">
+                        <FailedWebhooks />
+                      </TabsContent>
+                      <TabsContent value="settings">
+                        <SubscriptionSettings />
+                      </TabsContent>
+                    </Tabs>
                   </div>
                 </div>
               </div>
