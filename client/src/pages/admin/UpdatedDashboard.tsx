@@ -1452,6 +1452,7 @@ const AdminDashboard = () => {
                 {activeTab === 'settings' && 'Configurações'}
                 {activeTab === 'coursesList' && 'Gerenciamento de Cursos'}
                 {activeTab === 'subscriptions' && 'Gerenciamento de Assinaturas'}
+                {activeTab === 'failed_webhooks' && 'Webhooks Falhos'}
                 {activeTab === 'modules' && 'Módulos dos Cursos'}
                 {activeTab === 'lessons' && 'Aulas dos Cursos'}
                 {activeTab === 'coursesConfig' && 'Configurações de Cursos'}
