@@ -50,12 +50,7 @@ import multiArtRouter from './routes/multi-art'; // Rota para artes multi-format
 import testCreateGroupRouter from './routes/test-create-group'; // Rota de teste para criar grupos
 import videoaulasRouter from './routes/videoaulas-routes'; // Rotas para as videoaulas
 import courseRouter from './routes/course-routes'; // Rotas para gerenciamento de módulos e aulas
-// Importar roteador de mapeamentos de produtos Hotmart 
-// Usando dynamic import para compatibilidade entre CommonJS e ES modules
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-const hotmartProductMappingsRouter = require('./routes/hotmart-product-mappings/index.js');
-const doppusProductMappingsRouter = require('./routes/doppus-product-mappings');
+// Importações removidas - serão tratadas diretamente no local de uso
 import manifestRouter from './routes/manifest-route'; // Rota para o manifest.json do PWA
 import appConfigRouter from './routes/app-config-routes'; // Rotas para configuração do PWA
 import imageProxyRouter from './routes/image-proxy'; // Proxy para imagens do Supabase
@@ -6617,9 +6612,282 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Rotas para gerenciamento de analytics
   app.use('/api/analytics', analyticsRouter);
   
-  // Rotas para mapeamentos de produtos Hotmart
-  app.use('/api/integrations/hotmart/product-mappings', hotmartProductMappingsRouter);
-  app.use('/api/integrations/doppus/product-mappings', doppusProductMappingsRouter);
+  // Rotas para mapeamentos de produtos Hotmart - implementação direta
+  // Implementação direta das rotas para evitar problemas de importação
+  
+  // === HOTMART PRODUCT MAPPINGS ===
+  
+  // Middleware para garantir que apenas admins possam acessar estas rotas
+  app.use('/api/integrations/hotmart/product-mappings', isAdmin);
+  app.use('/api/integrations/doppus/product-mappings', isAdmin);
+  
+  // Obter todos os mapeamentos Hotmart
+  app.get('/api/integrations/hotmart/product-mappings', async (req, res) => {
+    try {
+      const mappings = await db.execute(sql`
+        SELECT * FROM "hotmartProductMappings"
+        ORDER BY "createdAt" DESC
+      `);
+      
+      res.json(mappings.rows);
+    } catch (error) {
+      console.error('Erro ao buscar mapeamentos de produtos Hotmart:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erro ao buscar mapeamentos de produtos Hotmart',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
+  
+  // Criar novo mapeamento Hotmart
+  app.post('/api/integrations/hotmart/product-mappings', async (req, res) => {
+    try {
+      const result = await db.execute(sql`
+        INSERT INTO "hotmartProductMappings" (
+          "productId", "offerId", "productName", "planType", "durationDays", "isLifetime"
+        ) VALUES (
+          ${req.body.productId || ''},
+          ${req.body.offerId || ''},
+          ${req.body.productName || 'Produto Padrão'},
+          ${req.body.planType || 'premium'},
+          ${req.body.durationDays || 30},
+          ${!!req.body.isLifetime}
+        )
+        RETURNING *
+      `);
+      
+      res.status(201).json(result.rows[0]);
+    } catch (error) {
+      console.error('Erro ao criar mapeamento de produto Hotmart:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erro ao criar mapeamento de produto Hotmart',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
+  
+  // Obter mapeamento específico Hotmart
+  app.get('/api/integrations/hotmart/product-mappings/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const result = await db.execute(sql`
+        SELECT * FROM "hotmartProductMappings"
+        WHERE id = ${parseInt(id)}
+      `);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({ 
+          success: false, 
+          message: 'Mapeamento Hotmart não encontrado'
+        });
+      }
+      
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error('Erro ao buscar mapeamento de produto Hotmart:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erro ao buscar mapeamento de produto Hotmart',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
+  
+  // Atualizar mapeamento Hotmart
+  app.put('/api/integrations/hotmart/product-mappings/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const result = await db.execute(sql`
+        UPDATE "hotmartProductMappings"
+        SET 
+          "productId" = ${req.body.productId || ''},
+          "offerId" = ${req.body.offerId || ''},
+          "productName" = ${req.body.productName || 'Produto Padrão'},
+          "planType" = ${req.body.planType || 'premium'},
+          "durationDays" = ${req.body.durationDays || 30},
+          "isLifetime" = ${!!req.body.isLifetime},
+          "updatedAt" = now()
+        WHERE id = ${parseInt(id)}
+        RETURNING *
+      `);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({ 
+          success: false, 
+          message: 'Mapeamento Hotmart não encontrado'
+        });
+      }
+      
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error('Erro ao atualizar mapeamento de produto Hotmart:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erro ao atualizar mapeamento de produto Hotmart',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
+  
+  // Excluir mapeamento Hotmart
+  app.delete('/api/integrations/hotmart/product-mappings/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      await db.execute(sql`
+        DELETE FROM "hotmartProductMappings"
+        WHERE id = ${parseInt(id)}
+      `);
+      
+      res.json({ success: true, message: 'Mapeamento Hotmart excluído com sucesso' });
+    } catch (error) {
+      console.error('Erro ao excluir mapeamento de produto Hotmart:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erro ao excluir mapeamento de produto Hotmart',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
+  
+  // === DOPPUS PRODUCT MAPPINGS ===
+  
+  // Obter todos os mapeamentos Doppus
+  app.get('/api/integrations/doppus/product-mappings', async (req, res) => {
+    try {
+      const mappings = await db.execute(sql`
+        SELECT * FROM "doppusProductMappings"
+        ORDER BY "createdAt" DESC
+      `);
+      
+      res.json(mappings.rows);
+    } catch (error) {
+      console.error('Erro ao buscar mapeamentos de produtos Doppus:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erro ao buscar mapeamentos de produtos Doppus',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
+  
+  // Criar novo mapeamento Doppus
+  app.post('/api/integrations/doppus/product-mappings', async (req, res) => {
+    try {
+      const result = await db.execute(sql`
+        INSERT INTO "doppusProductMappings" (
+          "productId", "productName", "planType", "durationDays", "isLifetime"
+        ) VALUES (
+          ${req.body.productId || ''},
+          ${req.body.productName || 'Produto Padrão'},
+          ${req.body.planType || 'premium'},
+          ${req.body.durationDays || 30},
+          ${!!req.body.isLifetime}
+        )
+        RETURNING *
+      `);
+      
+      res.status(201).json(result.rows[0]);
+    } catch (error) {
+      console.error('Erro ao criar mapeamento de produto Doppus:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erro ao criar mapeamento de produto Doppus',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
+  
+  // Obter mapeamento específico Doppus
+  app.get('/api/integrations/doppus/product-mappings/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const result = await db.execute(sql`
+        SELECT * FROM "doppusProductMappings"
+        WHERE id = ${parseInt(id)}
+      `);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({ 
+          success: false, 
+          message: 'Mapeamento Doppus não encontrado'
+        });
+      }
+      
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error('Erro ao buscar mapeamento de produto Doppus:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erro ao buscar mapeamento de produto Doppus',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
+  
+  // Atualizar mapeamento Doppus
+  app.put('/api/integrations/doppus/product-mappings/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const result = await db.execute(sql`
+        UPDATE "doppusProductMappings"
+        SET 
+          "productId" = ${req.body.productId || ''},
+          "productName" = ${req.body.productName || 'Produto Padrão'},
+          "planType" = ${req.body.planType || 'premium'},
+          "durationDays" = ${req.body.durationDays || 30},
+          "isLifetime" = ${!!req.body.isLifetime},
+          "updatedAt" = now()
+        WHERE id = ${parseInt(id)}
+        RETURNING *
+      `);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({ 
+          success: false, 
+          message: 'Mapeamento Doppus não encontrado'
+        });
+      }
+      
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error('Erro ao atualizar mapeamento de produto Doppus:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erro ao atualizar mapeamento de produto Doppus',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
+  
+  // Excluir mapeamento Doppus
+  app.delete('/api/integrations/doppus/product-mappings/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      await db.execute(sql`
+        DELETE FROM "doppusProductMappings"
+        WHERE id = ${parseInt(id)}
+      `);
+      
+      res.json({ success: true, message: 'Mapeamento Doppus excluído com sucesso' });
+    } catch (error) {
+      console.error('Erro ao excluir mapeamento de produto Doppus:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erro ao excluir mapeamento de produto Doppus',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
+  
+  console.log('✅ Rotas de mapeamento de produtos implementadas diretamente');
   
   // Rotas para o sistema de comunidade
   app.use(communityRouter);

@@ -1,13 +1,14 @@
 /**
- * Adaptador para mapeamento de produtos da Hotmart
- * Este módulo é requisitado no processo de build do Replit
+ * Adaptador para mapear rotas de produtos Hotmart
+ * Este arquivo utiliza Express Router e é compatível com o processo de build
  */
 
 const { Router } = require('express');
-const { db } = require('../../db');
+const { db } = require('../db');
 const { sql } = require('drizzle-orm');
-const { isAdmin } = require('../../middlewares/auth');
+const { isAdmin } = require('../middlewares/auth');
 
+// Criar o router
 const router = Router();
 
 // Middleware para garantir que apenas admins possam acessar estas rotas

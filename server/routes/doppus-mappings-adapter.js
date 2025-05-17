@@ -1,13 +1,14 @@
 /**
- * Adaptador para mapeamento de produtos da Hotmart
- * Este módulo é requisitado no processo de build do Replit
+ * Adaptador para mapear rotas de produtos Doppus
+ * Este arquivo utiliza Express Router e é compatível com o processo de build
  */
 
 const { Router } = require('express');
-const { db } = require('../../db');
+const { db } = require('../db');
 const { sql } = require('drizzle-orm');
-const { isAdmin } = require('../../middlewares/auth');
+const { isAdmin } = require('../middlewares/auth');
 
+// Criar o router
 const router = Router();
 
 // Middleware para garantir que apenas admins possam acessar estas rotas
@@ -17,16 +18,16 @@ router.use(isAdmin);
 router.get('/', async (req, res) => {
   try {
     const mappings = await db.execute(sql`
-      SELECT * FROM "hotmartProductMappings"
+      SELECT * FROM "doppusProductMappings"
       ORDER BY "createdAt" DESC
     `);
     
     res.json(mappings.rows);
   } catch (error) {
-    console.error('Erro ao buscar mapeamentos de produtos:', error);
+    console.error('Erro ao buscar mapeamentos de produtos Doppus:', error);
     res.status(500).json({ 
       success: false, 
-      message: 'Erro ao buscar mapeamentos de produtos',
+      message: 'Erro ao buscar mapeamentos de produtos Doppus',
       error: error instanceof Error ? error.message : 'Erro desconhecido'
     });
   }
@@ -36,11 +37,10 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const result = await db.execute(sql`
-      INSERT INTO "hotmartProductMappings" (
-        "productId", "offerId", "productName", "planType", "durationDays", "isLifetime"
+      INSERT INTO "doppusProductMappings" (
+        "productId", "productName", "planType", "durationDays", "isLifetime"
       ) VALUES (
         ${req.body.productId || ''},
-        ${req.body.offerId || ''},
         ${req.body.productName || 'Produto Padrão'},
         ${req.body.planType || 'premium'},
         ${req.body.durationDays || 30},
@@ -51,10 +51,10 @@ router.post('/', async (req, res) => {
     
     res.status(201).json(result.rows[0]);
   } catch (error) {
-    console.error('Erro ao criar mapeamento de produto:', error);
+    console.error('Erro ao criar mapeamento de produto Doppus:', error);
     res.status(500).json({ 
       success: false, 
-      message: 'Erro ao criar mapeamento de produto',
+      message: 'Erro ao criar mapeamento de produto Doppus',
       error: error instanceof Error ? error.message : 'Erro desconhecido'
     });
   }
@@ -66,23 +66,23 @@ router.get('/:id', async (req, res) => {
     const { id } = req.params;
     
     const result = await db.execute(sql`
-      SELECT * FROM "hotmartProductMappings"
+      SELECT * FROM "doppusProductMappings"
       WHERE id = ${parseInt(id)}
     `);
     
     if (result.rows.length === 0) {
       return res.status(404).json({ 
         success: false, 
-        message: 'Mapeamento não encontrado'
+        message: 'Mapeamento Doppus não encontrado'
       });
     }
     
     res.json(result.rows[0]);
   } catch (error) {
-    console.error('Erro ao buscar mapeamento de produto:', error);
+    console.error('Erro ao buscar mapeamento de produto Doppus:', error);
     res.status(500).json({ 
       success: false, 
-      message: 'Erro ao buscar mapeamento de produto',
+      message: 'Erro ao buscar mapeamento de produto Doppus',
       error: error instanceof Error ? error.message : 'Erro desconhecido'
     });
   }
@@ -94,10 +94,9 @@ router.put('/:id', async (req, res) => {
     const { id } = req.params;
     
     const result = await db.execute(sql`
-      UPDATE "hotmartProductMappings"
+      UPDATE "doppusProductMappings"
       SET 
         "productId" = ${req.body.productId || ''},
-        "offerId" = ${req.body.offerId || ''},
         "productName" = ${req.body.productName || 'Produto Padrão'},
         "planType" = ${req.body.planType || 'premium'},
         "durationDays" = ${req.body.durationDays || 30},
@@ -110,16 +109,16 @@ router.put('/:id', async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ 
         success: false, 
-        message: 'Mapeamento não encontrado'
+        message: 'Mapeamento Doppus não encontrado'
       });
     }
     
     res.json(result.rows[0]);
   } catch (error) {
-    console.error('Erro ao atualizar mapeamento de produto:', error);
+    console.error('Erro ao atualizar mapeamento de produto Doppus:', error);
     res.status(500).json({ 
       success: false, 
-      message: 'Erro ao atualizar mapeamento de produto',
+      message: 'Erro ao atualizar mapeamento de produto Doppus',
       error: error instanceof Error ? error.message : 'Erro desconhecido'
     });
   }
@@ -131,16 +130,16 @@ router.delete('/:id', async (req, res) => {
     const { id } = req.params;
     
     await db.execute(sql`
-      DELETE FROM "hotmartProductMappings"
+      DELETE FROM "doppusProductMappings"
       WHERE id = ${parseInt(id)}
     `);
     
-    res.json({ success: true, message: 'Mapeamento excluído com sucesso' });
+    res.json({ success: true, message: 'Mapeamento Doppus excluído com sucesso' });
   } catch (error) {
-    console.error('Erro ao excluir mapeamento de produto:', error);
+    console.error('Erro ao excluir mapeamento de produto Doppus:', error);
     res.status(500).json({ 
       success: false, 
-      message: 'Erro ao excluir mapeamento de produto',
+      message: 'Erro ao excluir mapeamento de produto Doppus',
       error: error instanceof Error ? error.message : 'Erro desconhecido'
     });
   }
