@@ -3,9 +3,9 @@
  * usando uma conexão separada que evita o servidor de desenvolvimento Vite
  */
 
-const fetch = require('node-fetch');
-const crypto = require('crypto');
-const pool = require('./server/db').pool;
+import fetch from 'node-fetch';
+import crypto from 'crypto';
+import { pool } from './server/db.js';
 
 // Função para gerar assinatura HMAC
 function generateSignature(data, secret) {
