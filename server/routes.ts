@@ -18,6 +18,8 @@ import path from "path";
 import fs from "fs";
 // Importar o router de diagnóstico de webhooks
 import webhookDiagnosticsRouter from "./routes/webhook-diagnostics.js";
+// Importar router de webhooks falhos
+import webhooksRouter from "./routes/webhooks";
 // Importações adicionais para o upload de imagem
 import uploadRouter from "./routes/upload-image";
 // Usando apenas Supabase Storage para armazenamento de imagens
