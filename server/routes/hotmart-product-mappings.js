@@ -4,31 +4,31 @@ const { db } = require('../db');
 const { hotmartProductMappings } = require('../../shared/schema');
 const { eq } = require('drizzle-orm');
 
-// Obter todos os mapeamentos de produtos
+// Get all product mappings
 router.get('/', async (req, res) => {
   try {
     const mappings = await db.select().from(hotmartProductMappings).orderBy(hotmartProductMappings.productName);
     res.json(mappings);
   } catch (error) {
-    console.error('Erro ao buscar mapeamentos de produtos Hotmart:', error);
-    res.status(500).json({ error: 'Erro ao buscar mapeamentos de produtos' });
+    console.error('Error fetching Hotmart product mappings:', error);
+    res.status(500).json({ error: 'Error fetching product mappings' });
   }
 });
 
-// Obter um mapeamento específico
+// Get specific mapping
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const [mapping] = await db.select().from(hotmartProductMappings).where(eq(hotmartProductMappings.id, parseInt(id)));
-    
+
     if (!mapping) {
-      return res.status(404).json({ error: 'Mapeamento não encontrado' });
+      return res.status(404).json({ error: 'Mapping not found' });
     }
-    
+
     res.json(mapping);
   } catch (error) {
-    console.error('Erro ao buscar mapeamento de produto Hotmart:', error);
-    res.status(500).json({ error: 'Erro ao buscar mapeamento de produto' });
+    console.error('Error fetching Hotmart product mapping:', error);
+    res.status(500).json({ error: 'Error fetching product mapping' });
   }
 });
 
