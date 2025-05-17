@@ -4598,6 +4598,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Endpoint simplificado para webhooks da Doppus (Maio/2025)
+  // Apenas responde com 200 OK para evitar erros de stream
+  app.post("/api/webhooks/doppus", (req, res) => {
+    // Responder imediatamente com 200 OK
+    res.status(200).send("OK");
+    
+    // Registrar recebimento no console
+    console.log("📦 Webhook Doppus recebido em:", new Date().toISOString());
+  });
+  
   // Rota para testar rebaixamento de usuário específico (com verificação Hotmart)
   // Temporariamente removida restrição isAdmin para testes
   app.post("/api/test/downgradeUser/:userId", async (req, res) => {
