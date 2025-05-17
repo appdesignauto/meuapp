@@ -402,11 +402,11 @@ const WebhookList: React.FC = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-[60px]">ID</TableHead>
-                      <TableHead className="w-[140px]">Status</TableHead>
-                      <TableHead className="w-[170px]">Tipo de Evento</TableHead>
-                      <TableHead className="w-[120px]">Fonte</TableHead>
-                      <TableHead>Email / Transação</TableHead>
                       <TableHead className="w-[180px]">Data</TableHead>
+                      <TableHead>E-mail</TableHead>
+                      <TableHead className="w-[120px]">Fonte</TableHead>
+                      <TableHead className="w-[170px]">Tipo de Evento</TableHead>
+                      <TableHead className="w-[140px]">Status</TableHead>
                       <TableHead className="w-[100px] text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -415,29 +415,19 @@ const WebhookList: React.FC = () => {
                       data.logs.map((log) => (
                         <TableRow key={log.id}>
                           <TableCell className="font-medium">{log.id}</TableCell>
-                          <TableCell><WebhookStatus status={log.status} /></TableCell>
-                          <TableCell>{log.eventType}</TableCell>
-                          <TableCell><WebhookSource source={log.source} /></TableCell>
-                          <TableCell>
-                            {log.email ? (
-                              <span className="font-medium text-primary">{log.email}</span>
-                            ) : log.transactionId ? (
-                              <span className="text-muted-foreground">{log.transactionId}</span>
-                            ) : (
-                              <span className="text-muted-foreground italic">Não informado</span>
-                            )}
-                            {log.status === 'error' && log.errorMessage && (
-                              <div className="flex items-center mt-1 text-xs text-destructive">
-                                <AlertTriangle className="h-3 w-3 mr-1" />
-                                {log.errorMessage.length > 50 
-                                  ? `${log.errorMessage.substring(0, 50)}...` 
-                                  : log.errorMessage}
-                              </div>
-                            )}
-                          </TableCell>
                           <TableCell>
                             {format(new Date(log.createdAt), 'dd/MM/yyyy HH:mm:ss', { locale: ptBR })}
                           </TableCell>
+                          <TableCell>
+                            {log.email ? (
+                              <span className="font-medium text-primary">{log.email}</span>
+                            ) : (
+                              <span className="text-muted-foreground italic">Não informado</span>
+                            )}
+                          </TableCell>
+                          <TableCell><WebhookSource source={log.source} /></TableCell>
+                          <TableCell>{log.eventType}</TableCell>
+                          <TableCell><WebhookStatus status={log.status} /></TableCell>
                           <TableCell className="text-right">
                             <Button 
                               variant="ghost" 
