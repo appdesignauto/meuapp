@@ -12,6 +12,7 @@ const { HotmartService } = require('../services/hotmart-service');
 router.post('/', async (req, res) => {
   try {
     console.log('⚡ Webhook da Hotmart recebido');
+    console.log("🔥 Webhook recebido:", JSON.stringify(req.body, null, 2));
     
     // Extrair informações importantes do webhook
     let email = null;
