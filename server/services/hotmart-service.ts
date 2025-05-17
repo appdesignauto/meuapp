@@ -348,7 +348,25 @@ export class HotmartService {
                 console.log(`Mapeamento encontrado no banco: ${JSON.stringify(mapping)}`);
                 if (mapping.planType) {
                   console.log(`✅ Plano identificado pelo mapeamento de produto: ${mapping.planType}`);
-                  planType = mapping.planType;
+                  
+                  // Extrair o tipo de plano base do formato premium_XXX
+                  const planParts = mapping.planType.split('_');
+                  if (planParts.length > 1) {
+                    // Se o formato for premium_365, extrair o valor numérico para determinar o plano
+                    const durationDays = parseInt(planParts[1]);
+                    if (durationDays >= 365) {
+                      planType = 'anual';
+                    } else if (durationDays >= 180) {
+                      planType = 'semestral';
+                    } else if (durationDays >= 30) {
+                      planType = 'mensal';
+                    }
+                    console.log(`✅ Formato deduzido a partir de ${mapping.planType}: ${planType} (${durationDays} dias)`);
+                  } else {
+                    // Se não tiver o formato esperado, usar o valor direto
+                    planType = mapping.planType;
+                  }
+                  
                   // Encontrou um mapeamento, pode retornar aqui
                   console.log(`Tipo de plano final (via mapeamento): ${planType}`);
                   return {
