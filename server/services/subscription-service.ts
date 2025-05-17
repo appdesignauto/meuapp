@@ -443,8 +443,10 @@ export class SubscriptionService {
           }
           
           // Extrair tipo de plano a partir do resultado do webhook
-          const planParts = result.plan.split('_');
-          let planType = planParts.length > 1 ? planParts[1] : 'mensal'; // padrão
+          // Usamos diretamente o plano detectado pelo HotmartService, que já tem o formato correto
+          let planType = result.plan || 'mensal'; // padrão é mensal
+          
+          console.log(`Tipo do plano recebido do HotmartService: ${planType}`);
           
           // Calcular data de expiração
           let endDate: Date | null = null;

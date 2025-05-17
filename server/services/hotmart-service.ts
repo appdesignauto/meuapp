@@ -315,15 +315,78 @@ export class HotmartService {
     switch (event) {
       case 'PURCHASE_APPROVED':
         // Assinatura aprovada - usuário deve ser premium
-        let planType = 'premium_mensal'; // padrão
-        if (data.subscription?.plan?.name) {
-          const planName = data.subscription.plan.name.toLowerCase();
-          if (planName.includes('anual')) {
-            planType = 'premium_anual';
-          } else if (planName.includes('semestral')) {
-            planType = 'premium_semestral';
+        let planType = 'mensal'; // padrão
+        
+        try {
+          // Método 1: Verificar pelo nome do plano (se disponível)
+          if (data.subscription?.plan?.name) {
+            const planName = data.subscription.plan.name.toLowerCase();
+            if (planName.includes('anual')) {
+              planType = 'anual';
+            } else if (planName.includes('semestral')) {
+              planType = 'semestral';
+            }
           }
+          
+          // Método 2: Verificar pelo nome do produto (mais confiável)
+          if (data.product?.name) {
+            const productName = data.product.name.toLowerCase();
+            console.log(`Nome do produto detectado: ${data.product.name}`);
+            
+            if (productName.includes('anual')) {
+              console.log('Plano ANUAL detectado pelo nome do produto');
+              planType = 'anual';
+            } else if (productName.includes('semestral')) {
+              console.log('Plano SEMESTRAL detectado pelo nome do produto');
+              planType = 'semestral';
+            } else if (productName.includes('mensal')) {
+              console.log('Plano MENSAL detectado pelo nome do produto');
+              planType = 'mensal';
+            }
+          }
+          
+          // Método 3: Verificar pelo ID do produto e oferta (mais preciso)
+          const productId = data.product?.id || data.purchase?.product?.id;
+          const offerId = data.purchase?.offer?.code;
+          
+          if (productId) {
+            console.log(`Verificando mapeamento para productId: ${productId}, offerId: ${offerId || 'não informado'}`);
+            // Consultar mapeamento no banco de dados
+            const { db } = await import('../db');
+            const { sql } = await import('drizzle-orm');
+            
+            const queryParams = [];
+            let query = 'SELECT * FROM "hotmartProductMappings" WHERE ';
+            
+            if (productId) {
+              query += '"productId" = $1';
+              queryParams.push(productId.toString());
+              
+              if (offerId) {
+                query += ' AND "offerId" = $2';
+                queryParams.push(offerId.toString());
+              }
+            }
+            
+            const result = await db.execute(sql.raw(query, ...queryParams));
+            
+            if (result.rows && result.rows.length > 0) {
+              const mapping = result.rows[0];
+              console.log(`Mapeamento encontrado: ${JSON.stringify(mapping)}`);
+              if (mapping.planType) {
+                console.log(`Plano identificado pelo mapeamento: ${mapping.planType}`);
+                planType = mapping.planType;
+              }
+            } else {
+              console.log('Nenhum mapeamento encontrado no banco de dados para este produto/oferta');
+            }
+          }
+        } catch (error) {
+          console.error('Erro ao determinar o tipo de plano:', error);
+          // Continua com o padrão em caso de erro
         }
+        
+        console.log(`Tipo de plano final: ${planType}`);
         
         return {
           action: 'subscription_approved',
