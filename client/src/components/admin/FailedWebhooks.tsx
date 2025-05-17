@@ -1,16 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertCircle } from 'lucide-react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
 } from '@/components/ui/table';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import {
   Select,
   SelectContent,
@@ -18,11 +23,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { apiRequest } from '@/lib/queryClient';
+import { Loader2, RefreshCw, Eye, RotateCw, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
+// Tipos para os dados de webhooks falhos
 type FailedWebhook = {
   id: number;
   webhookLogId: number;
@@ -36,6 +55,7 @@ type FailedWebhook = {
   lastRetryAt: string | null;
 };
 
+// Tipos para estatísticas
 type WebhookStats = {
   total: number;
   pending: number;
@@ -45,316 +65,436 @@ type WebhookStats = {
   bySource: Record<string, number>;
 };
 
-const PayloadViewer = ({ payload }: { payload: any }) => {
-  return (
-    <pre className="bg-muted p-4 rounded-md text-xs overflow-auto max-h-[500px]">
-      {JSON.stringify(payload, null, 2)}
-    </pre>
-  );
-};
-
-const FailedWebhooksComponent = () => {
+export default function FailedWebhooks() {
   const { toast } = useToast();
-  const [webhooks, setWebhooks] = useState<FailedWebhook[]>([]);
-  const [stats, setStats] = useState<WebhookStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [selectedStatus, setSelectedStatus] = useState<string>('all');
-  const [selectedSource, setSelectedSource] = useState<string>('all');
+  const queryClient = useQueryClient();
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [sourceFilter, setSourceFilter] = useState<string>('all');
   const [selectedWebhook, setSelectedWebhook] = useState<FailedWebhook | null>(null);
-  const [isPayloadDialogOpen, setIsPayloadDialogOpen] = useState(false);
-  const [isRetrying, setIsRetrying] = useState(false);
-
-  const fetchWebhooks = async () => {
-    setLoading(true);
-    try {
-      let url = '/api/webhooks/failed';
-      const params = new URLSearchParams();
+  const [dialogType, setDialogType] = useState<'view' | 'retry'>('view');
+  
+  // Consulta para buscar webhooks falhos
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['/api/webhooks/failed', statusFilter, sourceFilter],
+    queryFn: async () => {
+      const url = `/api/webhooks/failed?status=${statusFilter}&source=${sourceFilter}`;
+      const response = await apiRequest('GET', url);
+      return response.json();
+    },
+  });
+  
+  // Mutação para reprocessar um webhook
+  const retryMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest('POST', `/api/webhooks/failed/${id}/retry`);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Webhook reprocessado',
+        description: 'O webhook foi reprocessado com sucesso',
+        variant: 'default',
+      });
       
-      if (selectedStatus !== 'all') {
-        params.append('status', selectedStatus);
-      }
-      
-      if (selectedSource !== 'all') {
-        params.append('source', selectedSource);
-      }
-      
-      if (params.toString()) {
-        url += `?${params.toString()}`;
-      }
-      
-      const response = await fetch(url);
-      const data = await response.json();
-      
-      setWebhooks(data.webhooks || []);
-      setStats(data.stats || null);
-    } catch (error) {
-      console.error('Erro ao buscar webhooks falhos:', error);
+      // Invalidar consultas para atualizar os dados
+      queryClient.invalidateQueries({ queryKey: ['/api/webhooks/failed'] });
+    },
+    onError: (error: any) => {
       toast({
         title: 'Erro',
-        description: 'Não foi possível carregar os webhooks falhos.',
+        description: `Erro ao reprocessar webhook: ${error.message}`,
         variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Buscar webhooks ao montar componente
-  useEffect(() => {
-    fetchWebhooks();
-  }, [selectedStatus, selectedSource]);
-
-  const handleRetryWebhook = async (webhookId: number) => {
-    setIsRetrying(true);
-    try {
-      const response = await apiRequest('POST', `/api/webhooks/failed/${webhookId}/retry`);
-      const result = await response.json();
-      
-      if (result.success) {
-        toast({
-          title: 'Sucesso',
-          description: 'Webhook reprocessado com sucesso!',
-        });
-      } else {
-        toast({
-          title: 'Erro no reprocessamento',
-          description: result.message || 'Erro ao reprocessar webhook',
-          variant: 'destructive',
-        });
-      }
-      
-      // Atualizar a lista após o reprocessamento
-      fetchWebhooks();
-    } catch (error) {
-      console.error('Erro ao reprocessar webhook:', error);
-      toast({
-        title: 'Erro',
-        description: 'Falha ao reprocessar o webhook. Tente novamente.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsRetrying(false);
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    const statusMap: Record<string, { color: string; label: string }> = {
-      pending: { color: 'bg-yellow-500', label: 'Pendente' },
-      processing: { color: 'bg-blue-500', label: 'Processando' },
-      resolved: { color: 'bg-green-500', label: 'Resolvido' },
-      failed: { color: 'bg-red-500', label: 'Falhou' },
-    };
-    
-    const { color, label } = statusMap[status] || { color: 'bg-gray-500', label: status };
-    
-    return (
-      <Badge className={`${color} hover:${color}`}>
-        {label}
-      </Badge>
-    );
-  };
-
-  const formatDate = (dateString: string) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleString('pt-BR');
-  };
-
+    },
+  });
+  
+  // Função para abrir o diálogo de visualização
   const handleViewPayload = (webhook: FailedWebhook) => {
     setSelectedWebhook(webhook);
-    setIsPayloadDialogOpen(true);
+    setDialogType('view');
   };
-
+  
+  // Função para abrir o diálogo de reprocessamento
+  const handleOpenRetryDialog = (webhook: FailedWebhook) => {
+    setSelectedWebhook(webhook);
+    setDialogType('retry');
+  };
+  
+  // Função para executar o reprocessamento
+  const handleRetry = () => {
+    if (selectedWebhook) {
+      retryMutation.mutate(selectedWebhook.id);
+    }
+  };
+  
+  // Renderizar status com cores apropriadas
+  const renderStatus = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200"><Clock className="h-3 w-3 mr-1" /> Pendente</Badge>;
+      case 'processing':
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200"><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Processando</Badge>;
+      case 'resolved':
+        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200"><CheckCircle2 className="h-3 w-3 mr-1" /> Resolvido</Badge>;
+      case 'failed':
+        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200"><AlertCircle className="h-3 w-3 mr-1" /> Falhou</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+  
+  // Renderizar origem com cores apropriadas
+  const renderSource = (source: string) => {
+    switch (source) {
+      case 'hotmart':
+        return <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">Hotmart</Badge>;
+      case 'doppus':
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Doppus</Badge>;
+      default:
+        return <Badge variant="outline">{source}</Badge>;
+    }
+  };
+  
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center p-6">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2">Carregando webhooks...</span>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="p-6 text-center">
+        <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
+        <h3 className="text-lg font-medium">Erro ao carregar webhooks</h3>
+        <p className="text-sm text-muted-foreground">
+          Ocorreu um erro ao buscar os webhooks falhos. Por favor, tente novamente.
+        </p>
+        <Button 
+          variant="outline" 
+          className="mt-4"
+          onClick={() => queryClient.invalidateQueries({ queryKey: ['/api/webhooks/failed'] })}
+        >
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Tentar novamente
+        </Button>
+      </div>
+    );
+  }
+  
+  const webhooks = data?.webhooks || [];
+  const stats: WebhookStats = data?.stats || {
+    total: 0,
+    pending: 0,
+    processing: 0,
+    resolved: 0,
+    failed: 0,
+    bySource: {}
+  };
+  
   return (
-    <Card className="shadow-md">
+    <Card className="w-full">
       <CardHeader>
-        <CardTitle>Webhooks com Falha</CardTitle>
+        <CardTitle>Webhooks Falhos</CardTitle>
         <CardDescription>
-          Gerencie e reprocesse webhooks que falharam durante o processamento
+          Gerencie webhooks que falharam durante o processamento e precisam ser reprocessados.
         </CardDescription>
       </CardHeader>
+      
       <CardContent>
-        <div className="flex flex-col space-y-4">
-          {/* Estatísticas */}
-          {stats && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+        <Tabs defaultValue="webhooks" className="w-full">
+          <TabsList className="mb-4">
+            <TabsTrigger value="webhooks">Lista de Webhooks</TabsTrigger>
+            <TabsTrigger value="stats">Estatísticas</TabsTrigger>
+          </TabsList>
+          
+          {/* Tab de lista de webhooks */}
+          <TabsContent value="webhooks">
+            <div className="flex flex-col space-y-4">
+              {/* Filtros */}
+              <div className="flex flex-wrap gap-4 mb-4">
+                <div className="flex flex-col space-y-1">
+                  <label className="text-sm font-medium" htmlFor="status-filter">
+                    Status
+                  </label>
+                  <Select
+                    value={statusFilter}
+                    onValueChange={setStatusFilter}
+                  >
+                    <SelectTrigger id="status-filter" className="w-[180px]">
+                      <SelectValue placeholder="Filtrar por status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="pending">Pendentes</SelectItem>
+                      <SelectItem value="processing">Em processamento</SelectItem>
+                      <SelectItem value="resolved">Resolvidos</SelectItem>
+                      <SelectItem value="failed">Falhou</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="flex flex-col space-y-1">
+                  <label className="text-sm font-medium" htmlFor="source-filter">
+                    Origem
+                  </label>
+                  <Select
+                    value={sourceFilter}
+                    onValueChange={setSourceFilter}
+                  >
+                    <SelectTrigger id="source-filter" className="w-[180px]">
+                      <SelectValue placeholder="Filtrar por origem" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas</SelectItem>
+                      <SelectItem value="hotmart">Hotmart</SelectItem>
+                      <SelectItem value="doppus">Doppus</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="flex items-end">
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      setStatusFilter('all');
+                      setSourceFilter('all');
+                    }}
+                  >
+                    Limpar filtros
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Tabela de webhooks */}
+              {webhooks.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">
+                    Nenhum webhook falho encontrado com os filtros atuais.
+                  </p>
+                </div>
+              ) : (
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>ID</TableHead>
+                        <TableHead>Origem</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Erro</TableHead>
+                        <TableHead>Data</TableHead>
+                        <TableHead>Tentativas</TableHead>
+                        <TableHead className="text-right">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {webhooks.map((webhook: FailedWebhook) => (
+                        <TableRow key={webhook.id}>
+                          <TableCell className="font-medium">{webhook.id}</TableCell>
+                          <TableCell>{renderSource(webhook.source)}</TableCell>
+                          <TableCell>{renderStatus(webhook.status)}</TableCell>
+                          <TableCell className="max-w-xs truncate" title={webhook.errorMessage}>
+                            {webhook.errorMessage.length > 40
+                              ? webhook.errorMessage.substring(0, 40) + '...'
+                              : webhook.errorMessage}
+                          </TableCell>
+                          <TableCell title={new Date(webhook.createdAt).toLocaleString('pt-BR')}>
+                            {formatDistanceToNow(new Date(webhook.createdAt), { locale: ptBR, addSuffix: true })}
+                          </TableCell>
+                          <TableCell>
+                            {webhook.retryCount || 0}
+                            {webhook.lastRetryAt && (
+                              <span className="text-xs text-muted-foreground block">
+                                Última: {formatDistanceToNow(new Date(webhook.lastRetryAt), { locale: ptBR, addSuffix: true })}
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right space-x-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleViewPayload(webhook)}
+                              title="Ver payload"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleOpenRetryDialog(webhook)}
+                              disabled={webhook.status === 'processing' || webhook.status === 'resolved'}
+                              title="Reprocessar"
+                            >
+                              <RotateCw className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+          
+          {/* Tab de estatísticas */}
+          <TabsContent value="stats">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card>
-                <CardHeader className="py-2">
-                  <CardTitle className="text-sm font-medium">Total</CardTitle>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">Total</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-2xl font-bold">{stats.total}</p>
+                  <div className="text-3xl font-bold">{stats.total || 0}</div>
+                  <p className="text-sm text-muted-foreground">webhooks falhos</p>
                 </CardContent>
               </Card>
+              
               <Card>
-                <CardHeader className="py-2">
-                  <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">Pendentes</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-2xl font-bold text-yellow-500">{stats.pending}</p>
+                  <div className="text-3xl font-bold text-yellow-600">{stats.pending || 0}</div>
+                  <p className="text-sm text-muted-foreground">aguardando reprocessamento</p>
                 </CardContent>
               </Card>
+              
               <Card>
-                <CardHeader className="py-2">
-                  <CardTitle className="text-sm font-medium">Resolvidos</CardTitle>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">Resolvidos</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-2xl font-bold text-green-500">{stats.resolved}</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="py-2">
-                  <CardTitle className="text-sm font-medium">Falhas</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold text-red-500">{stats.failed}</p>
+                  <div className="text-3xl font-bold text-green-600">{stats.resolved || 0}</div>
+                  <p className="text-sm text-muted-foreground">reprocessados com sucesso</p>
                 </CardContent>
               </Card>
             </div>
-          )}
-
-          {/* Filtros */}
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="w-full md:w-1/3">
-              <label className="text-sm font-medium mb-1 block">Status</label>
-              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos os status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os status</SelectItem>
-                  <SelectItem value="pending">Pendentes</SelectItem>
-                  <SelectItem value="processing">Em processamento</SelectItem>
-                  <SelectItem value="resolved">Resolvidos</SelectItem>
-                  <SelectItem value="failed">Falhas</SelectItem>
-                </SelectContent>
-              </Select>
+            
+            <div className="mt-6">
+              <h3 className="text-lg font-semibold mb-4">Por origem</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(stats.bySource || {}).map(([source, count]) => (
+                  <Card key={source}>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg flex items-center">
+                        {renderSource(source)}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{count}</div>
+                      <p className="text-sm text-muted-foreground">webhooks</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
-            <div className="w-full md:w-1/3">
-              <label className="text-sm font-medium mb-1 block">Origem</label>
-              <Select value={selectedSource} onValueChange={setSelectedSource}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todas as origens" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas as origens</SelectItem>
-                  <SelectItem value="hotmart">Hotmart</SelectItem>
-                  <SelectItem value="doppus">Doppus</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="w-full md:w-1/3 flex items-end">
-              <Button 
-                variant="outline" 
-                className="w-full" 
-                onClick={() => fetchWebhooks()}
-              >
-                Atualizar
-              </Button>
-            </div>
-          </div>
-
-          {/* Tabela */}
-          {loading ? (
-            <div className="py-8 text-center">
-              <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-              <p>Carregando webhooks...</p>
-            </div>
-          ) : webhooks.length === 0 ? (
-            <div className="py-8 text-center border rounded-md">
-              <AlertCircle className="mx-auto h-12 w-12 text-muted-foreground mb-2" />
-              <p className="text-muted-foreground">Nenhum webhook encontrado com os filtros selecionados.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Origem</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Erro</TableHead>
-                    <TableHead>Tentativas</TableHead>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {webhooks.map((webhook) => (
-                    <TableRow key={webhook.id}>
-                      <TableCell>{webhook.id}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="capitalize">
-                          {webhook.source}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{getStatusBadge(webhook.status)}</TableCell>
-                      <TableCell className="max-w-[250px] truncate" title={webhook.errorMessage}>
-                        {webhook.errorMessage}
-                      </TableCell>
-                      <TableCell>{webhook.retryCount || 0}</TableCell>
-                      <TableCell>{formatDate(webhook.createdAt)}</TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => handleViewPayload(webhook)}
-                          >
-                            Ver Payload
-                          </Button>
-                          <Button 
-                            variant="default" 
-                            size="sm" 
-                            disabled={webhook.status === 'resolved' || webhook.status === 'processing' || isRetrying}
-                            onClick={() => handleRetryWebhook(webhook.id)}
-                          >
-                            Reprocessar
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </div>
+          </TabsContent>
+        </Tabs>
+        
+        {/* Diálogo para visualizar o payload do webhook */}
+        <Dialog>
+          <DialogTrigger asChild>
+            <span className="hidden">Open Dialog</span> {/* Elemento invisível, controlado programaticamente */}
+          </DialogTrigger>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {dialogType === 'view' ? 'Detalhes do Webhook' : 'Reprocessar Webhook'}
+              </DialogTitle>
+              <DialogDescription>
+                {dialogType === 'view' 
+                  ? 'Visualizando payload completo do webhook.' 
+                  : 'Tem certeza que deseja tentar reprocessar este webhook?'}
+              </DialogDescription>
+            </DialogHeader>
+            
+            {selectedWebhook && (
+              <div>
+                {dialogType === 'view' && (
+                  <>
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <h4 className="font-medium mb-1">ID</h4>
+                        <p>{selectedWebhook.id}</p>
+                      </div>
+                      <div>
+                        <h4 className="font-medium mb-1">Origem</h4>
+                        <p>{renderSource(selectedWebhook.source)}</p>
+                      </div>
+                      <div>
+                        <h4 className="font-medium mb-1">Status</h4>
+                        <p>{renderStatus(selectedWebhook.status)}</p>
+                      </div>
+                      <div>
+                        <h4 className="font-medium mb-1">Data</h4>
+                        <p>{new Date(selectedWebhook.createdAt).toLocaleString('pt-BR')}</p>
+                      </div>
+                      <div className="col-span-2">
+                        <h4 className="font-medium mb-1">Mensagem de erro</h4>
+                        <p className="text-red-600">{selectedWebhook.errorMessage}</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium mb-1">Payload (JSON)</h4>
+                      <pre className="bg-muted p-4 rounded-md overflow-auto max-h-[300px] text-xs">
+                        {JSON.stringify(selectedWebhook.payload, null, 2)}
+                      </pre>
+                    </div>
+                  </>
+                )}
+                
+                {dialogType === 'retry' && (
+                  <>
+                    <div className="mb-4">
+                      <p className="mb-2">
+                        Você está prestes a reprocessar o webhook <strong>#{selectedWebhook.id}</strong>.
+                      </p>
+                      <p className="text-muted-foreground">
+                        Este processo tentará executar novamente o webhook que falhou. Se funcionar, 
+                        o status será atualizado para "Resolvido". Caso contrário, a contagem de tentativas 
+                        será incrementada e o status permanecerá como "Falhou".
+                      </p>
+                    </div>
+                    
+                    <div className="bg-muted p-4 rounded-md mb-4">
+                      <h4 className="font-medium mb-1">Detalhes</h4>
+                      <ul className="space-y-1 text-sm">
+                        <li><span className="font-medium">ID:</span> {selectedWebhook.id}</li>
+                        <li><span className="font-medium">Origem:</span> {selectedWebhook.source}</li>
+                        <li><span className="font-medium">Erro original:</span> {selectedWebhook.errorMessage}</li>
+                        <li><span className="font-medium">Tentativas anteriores:</span> {selectedWebhook.retryCount || 0}</li>
+                      </ul>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+            
+            <DialogFooter>
+              {dialogType === 'retry' && (
+                <Button
+                  variant="destructive"
+                  onClick={handleRetry}
+                  disabled={retryMutation.isPending}
+                >
+                  {retryMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {retryMutation.isPending ? 'Reprocessando...' : 'Reprocessar webhook'}
+                </Button>
+              )}
+              <DialogClose asChild>
+                <Button variant="outline">
+                  {dialogType === 'view' ? 'Fechar' : 'Cancelar'}
+                </Button>
+              </DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </CardContent>
-
-      {/* Dialog para visualizar payload */}
-      <Dialog open={isPayloadDialogOpen} onOpenChange={setIsPayloadDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-auto">
-          <DialogHeader>
-            <DialogTitle>Payload do Webhook #{selectedWebhook?.id}</DialogTitle>
-          </DialogHeader>
-          {selectedWebhook && (
-            <div className="mt-4">
-              <h4 className="font-medium mb-1">Detalhes:</h4>
-              <div className="grid grid-cols-2 gap-2 mb-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Origem: <span className="text-foreground font-medium">{selectedWebhook.source}</span></p>
-                  <p className="text-sm text-muted-foreground">Status: <span className="text-foreground font-medium">{selectedWebhook.status}</span></p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Data: <span className="text-foreground font-medium">{formatDate(selectedWebhook.createdAt)}</span></p>
-                  <p className="text-sm text-muted-foreground">Tentativas: <span className="text-foreground font-medium">{selectedWebhook.retryCount || 0}</span></p>
-                </div>
-              </div>
-              <div className="mb-4">
-                <h4 className="font-medium mb-1">Mensagem de Erro:</h4>
-                <div className="bg-muted p-2 rounded text-sm">
-                  {selectedWebhook.errorMessage}
-                </div>
-              </div>
-              <h4 className="font-medium mb-1">Payload:</h4>
-              <PayloadViewer payload={selectedWebhook.payload} />
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </Card>
   );
-};
-
-export default FailedWebhooksComponent;
+}

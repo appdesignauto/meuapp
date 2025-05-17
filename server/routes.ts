@@ -116,6 +116,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Importar roteador de webhooks
+  const webhooksRouter = await import('./routes/webhooks').then(m => m.default);
+  
+  // Adicionar roteador de webhooks
+  app.use('/api/webhooks', webhooksRouter);
+  
   // Setup authentication middleware and routes
   const { isAuthenticated, isPremium, isAdmin, isDesigner, hasRole } = setupAuth(app);
   
