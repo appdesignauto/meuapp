@@ -44,6 +44,9 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
+// Importamos o componente de diagnóstico avançado
+import WebhookDiagnosticsTab from './WebhookDiagnosticsTab';
+
 // Interface para o log de webhook
 interface WebhookLog {
   id: number;
@@ -60,7 +63,7 @@ interface WebhookLog {
   updatedAt: string;
 }
 
-// Interface para detalhes do log
+// Interface para os detalhes do log de webhook
 interface WebhookLogDetails {
   log: WebhookLog;
   userData: {
@@ -74,7 +77,7 @@ interface WebhookLogDetails {
   } | null;
 }
 
-// Interface para a resposta da API
+// Interface para a resposta da API de logs de webhook
 interface WebhookLogsResponse {
   logs: WebhookLog[];
   totalCount: number;
@@ -83,55 +86,56 @@ interface WebhookLogsResponse {
   totalPages: number;
 }
 
-// Componente para mostrar o status do webhook com cores
-const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
-  let variant:
-    | 'default'
-    | 'secondary'
-    | 'destructive'
-    | 'outline'
-    | null
-    | undefined = 'default';
-  
+// Componente auxiliar para formatar o status do webhook
+const WebhookStatus: React.FC<{ status: string }> = ({ status }) => {
+  let variant: "default" | "secondary" | "destructive" | "outline" = "outline";
   let displayText = status;
-  
+
   switch (status) {
     case 'processed':
-      variant = 'default'; // verde
-      displayText = 'completo';
+      variant = "default";
+      displayText = "Processado";
       break;
     case 'received':
-      variant = 'secondary'; // cinza
-      displayText = 'recebido';
+      variant = "secondary";
+      displayText = "Recebido";
       break;
     case 'pending':
-      variant = 'outline'; // outline
-      displayText = 'aguardando';
+      variant = "outline";
+      displayText = "Pendente";
       break;
     case 'error':
-      variant = 'destructive'; // vermelho
-      displayText = 'erro';
+      variant = "destructive";
+      displayText = "Erro";
       break;
-    case 'approved':
-      variant = 'default'; // verde
-      displayText = 'aprovado';
-      break;
-    case 'waiting':
-      variant = 'outline'; // outline
-      displayText = 'esperando';
-      break;
-    default:
-      variant = 'outline';
-      displayText = status;
   }
-  
+
   return <Badge variant={variant}>{displayText}</Badge>;
 };
 
-// Componente principal
-// Importamos o componente de diagnóstico avançado
-import WebhookDiagnosticsTab from './WebhookDiagnosticsTab';
+// Componente auxiliar para formatar a fonte do webhook
+const WebhookSource: React.FC<{ source: string | null }> = ({ source }) => {
+  let variant: "default" | "secondary" | "destructive" | "outline" = "outline";
+  let displayText = source || "Desconhecido";
 
+  switch (source) {
+    case 'hotmart':
+      variant = "default";
+      displayText = "Hotmart";
+      break;
+    case 'doppus':
+      variant = "secondary";
+      displayText = "Doppus";
+      break;
+    default:
+      variant = "outline";
+      displayText = "Desconhecido";
+  }
+
+  return <Badge variant={variant}>{displayText}</Badge>;
+};
+
+// Componente principal de lista de webhooks
 const WebhookList: React.FC = () => {
   const { toast } = useToast();
   const [location, setLocation] = useLocation();
@@ -144,109 +148,94 @@ const WebhookList: React.FC = () => {
     source: 'all', // 'all', 'hotmart', 'doppus'
     search: '',
   });
+  
   // Estado separado para o campo de pesquisa para evitar re-renderização a cada tecla
   const [searchText, setSearchText] = useState('');
   const [selectedLog, setSelectedLog] = useState<WebhookLogDetails | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isReprocessing, setIsReprocessing] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const searchTimeoutRef = useRef<number | null>(null);
+  const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Função com debounce para atualizar a pesquisa
-  const handleSearchChange = (value: string) => {
-    setSearchText(value);
-    
-    // Limpar o timeout anterior se existir
-    if (searchTimeoutRef.current) {
-      window.clearTimeout(searchTimeoutRef.current);
-    }
-    
-    // Criar um novo timeout de 500ms
-    searchTimeoutRef.current = window.setTimeout(() => {
-      setFilters(prev => ({ ...prev, search: value }));
-    }, 500);
-  };
-
-  // Limpar o timeout quando o componente for desmontado
-  useEffect(() => {
-    return () => {
-      if (searchTimeoutRef.current) {
-        window.clearTimeout(searchTimeoutRef.current);
-      }
-    };
-  }, []);
+  // Construir query parameters
+  const queryParams = new URLSearchParams();
+  queryParams.append('page', page.toString());
+  queryParams.append('limit', limit.toString());
+  
+  if (filters.status !== 'all') {
+    queryParams.append('status', filters.status);
+  }
+  
+  if (filters.eventType !== 'all') {
+    queryParams.append('eventType', filters.eventType);
+  }
+  
+  if (filters.source !== 'all') {
+    queryParams.append('source', filters.source);
+  }
+  
+  if (filters.search) {
+    queryParams.append('search', filters.search);
+  }
 
   // Buscar logs de webhook
   const {
     data,
     isLoading,
-    error,
-    refetch
+    refetch,
   } = useQuery<WebhookLogsResponse>({
-    queryKey: ['/api/webhooks/logs', {
-      page,
-      limit,
-      ...filters
-    }],
-    // Usar o queryFn padrão do sistema que está configurado no queryClient
+    queryKey: ['/api/webhooks/logs', page, limit, filters.status, filters.eventType, filters.source, filters.search],
+    queryFn: getQueryFn({ on401: 'returnNull' }),
   });
 
-  // Buscar detalhes de um log específico
-  const handleViewDetails = async (id: number) => {
+  // Construir o URL para a consulta
+  const queryString = queryParams.toString();
+  const apiUrl = `/api/webhooks/logs${queryString ? `?${queryString}` : ''}`;
+
+  // Buscar detalhes de um log de webhook
+  const fetchLogDetails = async (logId: number) => {
     try {
-      const response = await apiRequest('GET', `/api/webhooks/logs/${id}`);
-      
+      const response = await apiRequest('GET', `/api/webhooks/logs/${logId}`);
       const data = await response.json();
       setSelectedLog(data);
       setIsDetailsOpen(true);
     } catch (error) {
+      console.error('Erro ao buscar detalhes do log:', error);
       toast({
         title: 'Erro',
-        description: 'Não foi possível carregar os detalhes do log',
+        description: 'Não foi possível carregar os detalhes do log.',
         variant: 'destructive',
       });
     }
   };
 
-  // Função para reprocessar um webhook
-  const handleReprocess = async (id: number) => {
+  // Reprocessar um webhook
+  const reprocessWebhook = async (logId: number) => {
     if (isReprocessing) return;
     
     setIsReprocessing(true);
     
     try {
-      const response = await apiRequest('POST', `/api/webhooks/logs/${id}/reprocess`);
+      const response = await apiRequest('POST', `/api/webhooks/reprocess/${logId}`);
+      const data = await response.json();
       
-      if (response.ok) {
-        const result = await response.json();
+      if (data.success) {
+        toast({
+          title: 'Sucesso',
+          description: 'Webhook reprocessado com sucesso!',
+        });
         
-        if (result.success) {
-          toast({
-            title: 'Sucesso',
-            description: 'Webhook reprocessado com sucesso',
-          });
-          
-          // Atualizar os dados
-          refetch();
-          
-          // Se estiver vendo detalhes, atualizar também
-          if (selectedLog && selectedLog.log.id === id) {
-            handleViewDetails(id);
-          }
-        } else {
-          toast({
-            title: 'Aviso',
-            description: result.message || 'Não foi possível reprocessar o webhook',
-            variant: 'destructive',
-          });
-        }
+        // Atualizar detalhes e lista
+        fetchLogDetails(logId);
+        refetch();
       } else {
-        throw new Error('Erro ao reprocessar webhook');
+        throw new Error(data.message || 'Falha ao reprocessar webhook');
       }
     } catch (error) {
+      console.error('Erro ao reprocessar webhook:', error);
       toast({
-        title: 'Erro',
-        description: 'Erro ao reprocessar o webhook',
+        title: 'Erro no reprocessamento',
+        description: error instanceof Error ? error.message : 'Não foi possível reprocessar o webhook.',
         variant: 'destructive',
       });
     } finally {
@@ -254,519 +243,390 @@ const WebhookList: React.FC = () => {
     }
   };
 
-  // Função para formatar a data
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), 'dd/MM/yyyy HH:mm:ss', { locale: ptBR });
-    } catch (e) {
-      return dateString;
-    }
-  };
-
-  // Função para formatar o JSON
-  const formatJson = (jsonString: string) => {
-    try {
-      const parsed = JSON.parse(jsonString);
-      return JSON.stringify(parsed, null, 2);
-    } catch (e) {
-      return jsonString;
-    }
-  };
-
-  // Renderizar paginação
-  const renderPagination = () => {
-    if (!data) return null;
+  // Função para lidar com a pesquisa com debounce
+  const handleSearchChange = (value: string) => {
+    setSearchText(value);
     
-    const { totalPages } = data;
+    if (searchTimerRef.current) {
+      clearTimeout(searchTimerRef.current);
+    }
     
-    return (
-      <Pagination>
-        <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious
-              onClick={() => setPage(prev => Math.max(prev - 1, 1))}
-              className={page === 1 ? "pointer-events-none opacity-50" : ""}
-            />
-          </PaginationItem>
-          
-          {Array.from({ length: totalPages }, (_, i) => i + 1)
-            .filter(
-              p => p === 1 || p === totalPages || (p >= page - 1 && p <= page + 1)
-            )
-            .map((p, i, arr) => {
-              // Adicionar reticências
-              if (i > 0 && arr[i - 1] !== p - 1) {
-                return (
-                  <React.Fragment key={`ellipsis-${p}`}>
-                    <PaginationItem>
-                      <PaginationLink className="pointer-events-none opacity-50">...</PaginationLink>
-                    </PaginationItem>
-                    <PaginationItem>
-                      <PaginationLink
-                        isActive={page === p}
-                        onClick={() => setPage(p)}
-                      >
-                        {p}
-                      </PaginationLink>
-                    </PaginationItem>
-                  </React.Fragment>
-                );
-              }
-              
-              return (
-                <PaginationItem key={p}>
-                  <PaginationLink
-                    isActive={page === p}
-                    onClick={() => setPage(p)}
-                  >
-                    {p}
-                  </PaginationLink>
-                </PaginationItem>
-              );
-            })}
-          
-          <PaginationItem>
-            <PaginationNext
-              onClick={() => setPage(prev => (prev < totalPages ? prev + 1 : prev))}
-              className={page === totalPages ? "pointer-events-none opacity-50" : ""}
-            />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
-    );
+    searchTimerRef.current = setTimeout(() => {
+      setFilters(prev => ({ ...prev, search: value }));
+      setPage(1); // Voltar para a primeira página
+    }, 500);
   };
 
-  // Renderizar o conteúdo principal
-  if (isLoading) {
+  // Mostrar indicação de carregamento
+  if (isLoading && !data) {
     return (
-      <div className="flex items-center justify-center p-6">
-        <Loader2 className="h-6 w-6 animate-spin" />
-        <span className="ml-2">Carregando logs de webhook...</span>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center p-6">
-        <AlertTriangle className="h-10 w-10 text-destructive mb-2" />
-        <h3 className="text-lg font-medium">Erro ao carregar logs</h3>
-        <p className="text-sm text-muted-foreground">
-          Não foi possível carregar os logs de webhook. Tente novamente mais tarde.
-        </p>
-        <Button 
-          variant="outline" 
-          onClick={() => refetch()} 
-          className="mt-4"
-        >
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Tentar novamente
-        </Button>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center">
+          <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+          <p className="text-lg text-muted-foreground">Carregando logs de webhook...</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader className="px-6 pt-6 pb-4">
-          <CardTitle className="text-xl flex justify-between items-center">
-            <span>Logs de Webhooks</span>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => {
-                console.log("Botão Atualizar clicado");
-                // Ativar estado de atualização para feedback visual
-                setIsRefreshing(true);
-                
-                // Resetar filtros e estado
-                setPage(1);
-                setSearchText(''); // Limpar também o campo de texto de pesquisa
-                setFilters({
-                  status: 'all',
-                  eventType: 'all',
-                  source: 'all',
-                  search: '',
-                });
-                
-                // Invalidar e atualizar os dados sem redirecionamento
-                queryClient.invalidateQueries({ queryKey: ['/api/webhooks/logs'] });
-                
-                // Forçar a atualização imediata com um pequeno delay
-                setTimeout(() => {
-                  refetch().finally(() => {
-                    // Desativar estado de atualização quando terminar
-                    setTimeout(() => setIsRefreshing(false), 500);
-                  });
-                }, 100);
-                
-                // Feedback visual de que algo aconteceu
-                toast({
-                  title: "Atualizando logs",
-                  description: "Os dados estão sendo recarregados...",
-                });
-              }}
-              disabled={isRefreshing}
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-              {isRefreshing ? 'Atualizando...' : 'Atualizar'}
-            </Button>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-6">
-          {/* Filtros */}
-          <div className="flex flex-wrap gap-4 mb-4">
-            <div className="flex-1 min-w-[200px]">
-              <div className="relative w-full">
-                <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                  <Search className="h-4 w-4 opacity-50" />
-                </div>
-                <Input
-                  placeholder="Buscar por transação, email ou erro..."
-                  value={searchText}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  className="w-full pl-9"
-                />
-              </div>
-            </div>
-            <div className="w-[150px]">
-              <Select
-                value={filters.status}
-                onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os status</SelectItem>
-                  <SelectItem value="processed">Processados</SelectItem>
-                  <SelectItem value="received">Recebidos</SelectItem>
-                  <SelectItem value="pending">Pendentes</SelectItem>
-                  <SelectItem value="error">Erros</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="w-[200px]">
-              <Select
-                value={filters.eventType}
-                onValueChange={(value) => setFilters(prev => ({ ...prev, eventType: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Tipo de Evento" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os eventos</SelectItem>
-                  <SelectItem value="PURCHASE_APPROVED">Compra Aprovada</SelectItem>
-                  <SelectItem value="PURCHASE_REFUNDED">Reembolso</SelectItem>
-                  <SelectItem value="PURCHASE_CANCELED">Cancelamento</SelectItem>
-                  <SelectItem value="SUBSCRIPTION_CANCELED">Assinatura Cancelada</SelectItem>
-                  <SelectItem value="SUBSCRIPTION_REACTIVATED">Assinatura Reativada</SelectItem>
-                  <SelectItem value="purchase_approved">Compra Aprovada (Doppus)</SelectItem>
-                  <SelectItem value="subscription_canceled">Assinatura Cancelada (Doppus)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="w-[150px]">
-              <Select
-                value={filters.source}
-                onValueChange={(value) => setFilters(prev => ({ ...prev, source: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Fonte" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas as fontes</SelectItem>
-                  <SelectItem value="hotmart">Hotmart</SelectItem>
-                  <SelectItem value="doppus">Doppus</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Layout de Cartões */}
-          {data && data.logs.length > 0 ? (
-            <div className="space-y-4">
-              {data.logs.map((log) => (
-                <div 
-                  key={log.id} 
-                  className={`border rounded-lg p-4 transition-colors ${log.status === 'error' ? 'bg-red-50 border-red-200' : 'bg-card hover:bg-accent/10'}`}
-                >
-                  {/* Cabeçalho do Cartão com Fonte */}
-                  <div className="flex justify-between items-center mb-3">
-                    <div>
-                      {log.source ? (
-                        <Badge variant="outline" className={log.source === 'hotmart' ? 'bg-blue-50' : 'bg-purple-50'}>
-                          {log.source === 'hotmart' ? 'Hotmart' : 'Doppus'}
-                        </Badge>
-                      ) : (
-                        <span className="text-muted-foreground italic">Fonte desconhecida</span>
-                      )}
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleViewDetails(log.id)}
-                        className="h-8 w-8 p-0"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      {log.status === 'error' || log.status === 'pending' ? (
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => handleReprocess(log.id)}
-                          disabled={isReprocessing}
-                          className="h-8 w-8 p-0"
-                        >
-                          <RefreshCw className={`h-4 w-4 ${isReprocessing ? 'animate-spin' : ''}`} />
-                        </Button>
-                      ) : null}
-                    </div>
-                  </div>
-                  
-                  {/* Conteúdo do Cartão */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {/* Coluna Esquerda */}
-                    <div className="space-y-2">
-                      <div>
-                        <span className="text-sm font-medium text-muted-foreground block">Email:</span>
-                        <span className="text-sm font-medium">{log.email || 'Não disponível'}</span>
-                      </div>
-                      
-                      <div>
-                        <span className="text-sm font-medium text-muted-foreground block">Data:</span>
-                        <span className="text-sm">{formatDate(log.createdAt)}</span>
-                      </div>
-                      
-                      {log.errorMessage && (
-                        <div>
-                          <span className="text-sm font-medium text-destructive block">Erro:</span>
-                          <span className="text-sm text-destructive">{log.errorMessage}</span>
-                        </div>
-                      )}
-                      
-                      <Button 
-                        variant="link" 
-                        size="sm" 
-                        className="h-auto p-0 text-xs text-muted-foreground"
-                        onClick={() => handleViewDetails(log.id)}
-                      >
-                        Ver payload completo
-                      </Button>
-                    </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="w-full mb-4">
+          <TabsTrigger value="logs">Logs de Webhooks</TabsTrigger>
+          <TabsTrigger value="diagnostics">Diagnóstico Avançado</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="logs">
+          <Card>
+            <CardHeader className="px-6 pt-6 pb-4">
+              <CardTitle className="text-xl flex justify-between items-center">
+                <span>Logs de Webhooks</span>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => {
+                    console.log("Botão Atualizar clicado");
+                    // Ativar estado de atualização para feedback visual
+                    setIsRefreshing(true);
                     
-                    {/* Coluna Direita */}
-                    <div className="space-y-2">
-                      <div>
-                        <span className="text-sm font-medium text-muted-foreground block">Status:</span>
-                        <StatusBadge status={log.status} />
-                      </div>
-                      
-                      <div>
-                        <span className="text-sm font-medium text-muted-foreground block">Evento:</span>
-                        <span className="text-sm">{log.eventType}</span>
-                      </div>
-                      
-                      {log.transactionId && (
-                        <div>
-                          <span className="text-sm font-medium text-muted-foreground block">Transação:</span>
-                          <span className="text-sm">{log.transactionId}</span>
-                        </div>
-                      )}
-                      
-                      <div>
-                        <span className="text-sm font-medium text-muted-foreground block">Processado:</span>
-                        <span className="text-sm">{log.status === 'processed' ? 'Sim' : 'Não'}</span>
-                      </div>
+                    // Resetar filtros e estado
+                    setPage(1);
+                    setSearchText(''); // Limpar também o campo de texto de pesquisa
+                    setFilters({
+                      status: 'all',
+                      eventType: 'all',
+                      source: 'all',
+                      search: '',
+                    });
+                    
+                    // Invalidar e atualizar os dados sem redirecionamento
+                    queryClient.invalidateQueries({ queryKey: ['/api/webhooks/logs'] });
+                    
+                    // Forçar a atualização imediata com um pequeno delay
+                    setTimeout(() => {
+                      refetch().finally(() => {
+                        // Desativar estado de atualização quando terminar
+                        setTimeout(() => setIsRefreshing(false), 500);
+                      });
+                    }, 100);
+                    
+                    // Feedback visual de que algo aconteceu
+                    toast({
+                      title: "Atualizando logs",
+                      description: "Os dados estão sendo recarregados...",
+                    });
+                  }}
+                  disabled={isRefreshing}
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  {isRefreshing ? 'Atualizando...' : 'Atualizar'}
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-6">
+              {/* Filtros */}
+              <div className="flex flex-wrap gap-4 mb-4">
+                <div className="flex-1 min-w-[200px]">
+                  <div className="relative w-full">
+                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                      <Search className="h-4 w-4 opacity-50" />
                     </div>
+                    <Input
+                      placeholder="Buscar por transação, email ou erro..."
+                      value={searchText}
+                      onChange={(e) => handleSearchChange(e.target.value)}
+                      className="w-full pl-9"
+                    />
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="py-6 text-center text-muted-foreground border rounded-md">
-              Nenhum log de webhook encontrado.
-            </div>
-          )}
+                <div className="w-[150px]">
+                  <Select
+                    value={filters.status}
+                    onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os status</SelectItem>
+                      <SelectItem value="processed">Processados</SelectItem>
+                      <SelectItem value="received">Recebidos</SelectItem>
+                      <SelectItem value="pending">Pendentes</SelectItem>
+                      <SelectItem value="error">Erros</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="w-[200px]">
+                  <Select
+                    value={filters.eventType}
+                    onValueChange={(value) => setFilters(prev => ({ ...prev, eventType: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Tipo de Evento" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os eventos</SelectItem>
+                      <SelectItem value="PURCHASE_APPROVED">Compra Aprovada</SelectItem>
+                      <SelectItem value="PURCHASE_COMPLETE">Compra Completa</SelectItem>
+                      <SelectItem value="PURCHASE_CANCELED">Compra Cancelada</SelectItem>
+                      <SelectItem value="PURCHASE_REFUNDED">Compra Reembolsada</SelectItem>
+                      <SelectItem value="PURCHASE_CHARGEBACK">Chargeback</SelectItem>
+                      <SelectItem value="PURCHASE_DELAYED">Pagamento Atrasado</SelectItem>
+                      <SelectItem value="SUBSCRIPTION_CANCELLATION">Cancelamento de Assinatura</SelectItem>
+                      <SelectItem value="RECURRENCE_BILLED">Recorrência Cobrada</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="w-[150px]">
+                  <Select
+                    value={filters.source}
+                    onValueChange={(value) => setFilters(prev => ({ ...prev, source: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Fonte" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas as fontes</SelectItem>
+                      <SelectItem value="hotmart">Hotmart</SelectItem>
+                      <SelectItem value="doppus">Doppus</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
 
-          {/* Paginação */}
-          {data && data.totalPages > 1 && (
-            <div className="mt-4 flex justify-center">
-              {renderPagination()}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              {/* Tabela de logs */}
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[60px]">ID</TableHead>
+                      <TableHead className="w-[140px]">Status</TableHead>
+                      <TableHead className="w-[170px]">Tipo de Evento</TableHead>
+                      <TableHead className="w-[120px]">Fonte</TableHead>
+                      <TableHead>Email / Transação</TableHead>
+                      <TableHead className="w-[180px]">Data</TableHead>
+                      <TableHead className="w-[100px] text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {data?.logs && data.logs.length > 0 ? (
+                      data.logs.map((log) => (
+                        <TableRow key={log.id}>
+                          <TableCell className="font-medium">{log.id}</TableCell>
+                          <TableCell><WebhookStatus status={log.status} /></TableCell>
+                          <TableCell>{log.eventType}</TableCell>
+                          <TableCell><WebhookSource source={log.source} /></TableCell>
+                          <TableCell>
+                            {log.email ? (
+                              <span className="font-medium text-primary">{log.email}</span>
+                            ) : log.transactionId ? (
+                              <span className="text-muted-foreground">{log.transactionId}</span>
+                            ) : (
+                              <span className="text-muted-foreground italic">Não informado</span>
+                            )}
+                            {log.status === 'error' && log.errorMessage && (
+                              <div className="flex items-center mt-1 text-xs text-destructive">
+                                <AlertTriangle className="h-3 w-3 mr-1" />
+                                {log.errorMessage.length > 50 
+                                  ? `${log.errorMessage.substring(0, 50)}...` 
+                                  : log.errorMessage}
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {format(new Date(log.createdAt), 'dd/MM/yyyy HH:mm:ss', { locale: ptBR })}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => fetchLogDetails(log.id)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={7} className="h-24 text-center">
+                          Nenhum log de webhook encontrado.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
 
-      {/* Modal de detalhes */}
+              {/* Paginação */}
+              {data && data.totalPages > 1 && (
+                <div className="mt-4 flex justify-center">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious 
+                          onClick={() => setPage(p => Math.max(1, p - 1))}
+                          className={page <= 1 ? 'pointer-events-none opacity-50' : ''}
+                        />
+                      </PaginationItem>
+                      
+                      {Array.from({ length: data.totalPages }).map((_, i) => {
+                        const pageNumber = i + 1;
+                        // Mostrar apenas 5 páginas ao redor da página atual
+                        if (
+                          pageNumber === 1 || 
+                          pageNumber === data.totalPages || 
+                          (pageNumber >= page - 2 && pageNumber <= page + 2)
+                        ) {
+                          return (
+                            <PaginationItem key={pageNumber}>
+                              <PaginationLink 
+                                isActive={page === pageNumber}
+                                onClick={() => setPage(pageNumber)}
+                              >
+                                {pageNumber}
+                              </PaginationLink>
+                            </PaginationItem>
+                          );
+                        } else if (
+                          (pageNumber === page - 3 && page > 3) || 
+                          (pageNumber === page + 3 && page < data.totalPages - 2)
+                        ) {
+                          return (
+                            <PaginationItem key={pageNumber}>
+                              <PaginationLink className="cursor-default">...</PaginationLink>
+                            </PaginationItem>
+                          );
+                        }
+                        return null;
+                      })}
+                      
+                      <PaginationItem>
+                        <PaginationNext 
+                          onClick={() => setPage(p => Math.min(data.totalPages, p + 1))}
+                          className={page >= data.totalPages ? 'pointer-events-none opacity-50' : ''}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="diagnostics">
+          <WebhookDiagnosticsTab />
+        </TabsContent>
+      </Tabs>
+
+      {/* Modal de detalhes do webhook */}
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Detalhes do Webhook #{selectedLog?.log.id}</DialogTitle>
-            <DialogDescription>
-              Informações completas sobre o registro de webhook
-            </DialogDescription>
-          </DialogHeader>
-          
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           {selectedLog ? (
-            <div className="space-y-4">
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-xl flex items-center gap-2">
+                  Webhook #{selectedLog.log.id}
+                  <WebhookStatus status={selectedLog.log.status} />
+                  <WebhookSource source={selectedLog.log.source} />
+                </DialogTitle>
+                <DialogDescription>
+                  Detalhes do webhook recebido em {format(new Date(selectedLog.log.createdAt), 'dd/MM/yyyy HH:mm:ss', { locale: ptBR })}
+                </DialogDescription>
+              </DialogHeader>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <h4 className="text-sm font-medium mb-1">Informações Básicas</h4>
-                  <div className="border rounded-md p-3 space-y-2">
+                  <h3 className="text-lg font-medium mb-2">Informações Básicas</h3>
+                  <div className="space-y-2">
                     <div>
-                      <span className="text-sm text-muted-foreground">ID:</span>
-                      <span className="text-sm ml-2 font-medium">{selectedLog.log.id}</span>
+                      <span className="font-medium">Tipo de Evento:</span> {selectedLog.log.eventType}
                     </div>
                     <div>
-                      <span className="text-sm text-muted-foreground">Tipo de Evento:</span>
-                      <span className="text-sm ml-2 font-medium">{selectedLog.log.eventType}</span>
+                      <span className="font-medium">Transação ID:</span> {selectedLog.log.transactionId || 'Não informado'}
                     </div>
                     <div>
-                      <span className="text-sm text-muted-foreground">ID da Transação:</span>
-                      <span className="text-sm ml-2 font-medium">
-                        {selectedLog.log.transactionId || 'N/A'}
-                      </span>
+                      <span className="font-medium">Email:</span> {selectedLog.log.email || 'Não informado'}
                     </div>
                     <div>
-                      <span className="text-sm text-muted-foreground">Status:</span>
-                      <span className="ml-2">
-                        <StatusBadge status={selectedLog.log.status} />
-                      </span>
+                      <span className="font-medium">IP de Origem:</span> {selectedLog.log.sourceIp}
                     </div>
-                    <div>
-                      <span className="text-sm text-muted-foreground">Fonte:</span>
-                      <span className="ml-2">
-                        {selectedLog.log.source ? (
-                          <Badge variant="outline" className={selectedLog.log.source === 'hotmart' ? 'bg-blue-50' : 'bg-purple-50'}>
-                            {selectedLog.log.source === 'hotmart' ? 'Hotmart' : 'Doppus'}
-                          </Badge>
-                        ) : (
-                          <span className="text-muted-foreground italic">N/A</span>
-                        )}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm text-muted-foreground">IP de Origem:</span>
-                      <span className="text-sm ml-2 font-medium">{selectedLog.log.sourceIp}</span>
-                    </div>
-                    <div>
-                      <span className="text-sm text-muted-foreground">Email:</span>
-                      <span className="text-sm ml-2 font-medium">
-                        {selectedLog.log.email || 'Não disponível'}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm text-muted-foreground">Data de Criação:</span>
-                      <span className="text-sm ml-2 font-medium">
-                        {formatDate(selectedLog.log.createdAt)}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm text-muted-foreground">Última Atualização:</span>
-                      <span className="text-sm ml-2 font-medium">
-                        {formatDate(selectedLog.log.updatedAt)}
-                      </span>
-                    </div>
+                    {selectedLog.log.status === 'error' && (
+                      <div>
+                        <span className="font-medium text-destructive">Erro:</span> 
+                        <p className="text-sm text-destructive mt-1">{selectedLog.log.errorMessage}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
-                
+
                 {selectedLog.userData && (
                   <div>
-                    <h4 className="text-sm font-medium mb-1">Dados do Usuário</h4>
-                    <div className="border rounded-md p-3 space-y-2">
+                    <h3 className="text-lg font-medium mb-2">Informações do Usuário</h3>
+                    <div className="space-y-2">
                       <div>
-                        <span className="text-sm text-muted-foreground">ID:</span>
-                        <span className="text-sm ml-2 font-medium">{selectedLog.userData.id}</span>
+                        <span className="font-medium">Nome:</span> {selectedLog.userData.name}
                       </div>
                       <div>
-                        <span className="text-sm text-muted-foreground">Nome:</span>
-                        <span className="text-sm ml-2 font-medium">{selectedLog.userData.name}</span>
+                        <span className="font-medium">Email:</span> {selectedLog.userData.email}
                       </div>
                       <div>
-                        <span className="text-sm text-muted-foreground">Email:</span>
-                        <span className="text-sm ml-2 font-medium">{selectedLog.userData.email}</span>
+                        <span className="font-medium">Usuário:</span> {selectedLog.userData.username}
                       </div>
                       <div>
-                        <span className="text-sm text-muted-foreground">Usuário:</span>
-                        <span className="text-sm ml-2 font-medium">{selectedLog.userData.username}</span>
+                        <span className="font-medium">Nível de Acesso:</span> {selectedLog.userData.nivelacesso}
                       </div>
                       <div>
-                        <span className="text-sm text-muted-foreground">Nível de Acesso:</span>
-                        <span className="text-sm ml-2 font-medium">{selectedLog.userData.nivelacesso}</span>
+                        <span className="font-medium">Assinatura:</span> {selectedLog.userData.dataassinatura ? format(new Date(selectedLog.userData.dataassinatura), 'dd/MM/yyyy', { locale: ptBR }) : 'Não possui'}
                       </div>
                       <div>
-                        <span className="text-sm text-muted-foreground">Data da Assinatura:</span>
-                        <span className="text-sm ml-2 font-medium">
-                          {selectedLog.userData.dataassinatura 
-                            ? formatDate(selectedLog.userData.dataassinatura) 
-                            : 'N/A'}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-sm text-muted-foreground">Data de Expiração:</span>
-                        <span className="text-sm ml-2 font-medium">
-                          {selectedLog.userData.dataexpiracao 
-                            ? formatDate(selectedLog.userData.dataexpiracao) 
-                            : 'N/A'}
-                        </span>
+                        <span className="font-medium">Expiração:</span> {selectedLog.userData.dataexpiracao ? format(new Date(selectedLog.userData.dataexpiracao), 'dd/MM/yyyy', { locale: ptBR }) : 'Não aplicável'}
                       </div>
                     </div>
                   </div>
                 )}
               </div>
-              
-              {selectedLog.log.errorMessage && (
-                <div>
-                  <h4 className="text-sm font-medium text-destructive mb-1">Mensagem de Erro</h4>
-                  <div className="border border-destructive bg-destructive/10 rounded-md p-3">
-                    <p className="text-sm">{selectedLog.log.errorMessage}</p>
-                  </div>
-                </div>
-              )}
-              
-              <div>
-                <h4 className="text-sm font-medium mb-1">Dados do Payload</h4>
-                <div className="border rounded-md p-3">
-                  <pre className="text-xs overflow-auto max-h-[200px] whitespace-pre-wrap">
-                    {formatJson(selectedLog.log.payloadData)}
+
+              <div className="mt-4">
+                <h3 className="text-lg font-medium mb-2">Payload</h3>
+                <div className="bg-muted p-4 rounded-md overflow-x-auto">
+                  <pre className="text-xs text-muted-foreground whitespace-pre-wrap">
+                    {JSON.stringify(JSON.parse(selectedLog.log.payloadData), null, 2)}
                   </pre>
                 </div>
               </div>
-            </div>
+
+              <DialogFooter className="flex justify-between items-center mt-4">
+                <div>
+                  {selectedLog.log.status !== 'processed' && (
+                    <Button 
+                      variant="default" 
+                      onClick={() => reprocessWebhook(selectedLog.log.id)}
+                      disabled={isReprocessing}
+                    >
+                      {isReprocessing ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Reprocessando...
+                        </>
+                      ) : (
+                        'Reprocessar Webhook'
+                      )}
+                    </Button>
+                  )}
+                </div>
+                <Button variant="outline" onClick={() => setIsDetailsOpen(false)}>
+                  Fechar
+                </Button>
+              </DialogFooter>
+            </>
           ) : (
-            <div className="flex items-center justify-center p-6">
-              <Loader2 className="h-6 w-6 animate-spin" />
-              <span className="ml-2">Carregando detalhes...</span>
+            <div className="flex justify-center items-center h-[200px]">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           )}
-          
-          <DialogFooter className="gap-2">
-            {selectedLog && (selectedLog.log.status === 'error' || selectedLog.log.status === 'pending') && (
-              <Button 
-                onClick={() => handleReprocess(selectedLog.log.id)}
-                disabled={isReprocessing}
-              >
-                {isReprocessing ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Reprocessando...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Reprocessar
-                  </>
-                )}
-              </Button>
-            )}
-            <Button variant="outline" onClick={() => setIsDetailsOpen(false)}>
-              Fechar
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
