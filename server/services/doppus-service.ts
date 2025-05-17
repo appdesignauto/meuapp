@@ -184,7 +184,17 @@ class DoppusService {
       //     "expire_in": "2024:02:02 13:17:40"
       //   }
       // }
-      const data = await response.json();
+      const data = await response.json() as { 
+        success: boolean; 
+        error: string[];
+        return_type: string;
+        message: string;
+        data?: { 
+          token: string;
+          token_type: string;
+          expire_in: string;
+        } 
+      };
       
       console.log('Estrutura da resposta:', Object.keys(data).join(', '));
       
@@ -615,27 +625,79 @@ class DoppusService {
   }
   
   /**
+   * Método auxiliar para fazer requisições autenticadas à API da Doppus
+   * @param method Método HTTP (GET, POST, PUT, DELETE)
+   * @param endpoint Endpoint da API (sem o baseUrl)
+   * @param data Dados a serem enviados no corpo da requisição (para POST/PUT)
+   */
+  private async makeAuthenticatedRequest(method: string, endpoint: string, data?: any): Promise<any> {
+    try {
+      // Obter token de acesso
+      const token = await this.getAccessToken();
+      
+      // Montar URL completa
+      const url = `${this.baseUrl}${endpoint}`;
+      console.log(`Fazendo requisição ${method} para ${url}`);
+      
+      // Opções da requisição
+      const options: RequestInit = {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`  // Formato conforme documentação Doppus
+        }
+      };
+      
+      // Adicionar corpo da requisição para métodos que o permitem
+      if (data && (method === 'POST' || method === 'PUT')) {
+        options.body = JSON.stringify(data);
+      }
+      
+      // Executar requisição
+      const response = await fetch(url, options);
+      
+      // Verificar se a resposta foi bem-sucedida
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Erro na requisição ${method} ${endpoint}: ${response.status}`);
+        console.error('Conteúdo da resposta de erro:', errorText);
+        throw new Error(`Erro na requisição à API Doppus: ${response.status} ${errorText}`);
+      }
+      
+      // Converter resposta para JSON
+      const responseData = await response.json() as { 
+        success?: boolean; 
+        message?: string;
+        data?: any;
+      };
+      
+      // Verificar se a resposta possui a estrutura esperada
+      if (responseData.success === false) {
+        console.error('Resposta da API Doppus com sucesso=false:', responseData);
+        throw new Error(`Erro retornado pela API Doppus: ${responseData.message || 'Erro desconhecido'}`);
+      }
+      
+      // Retornar a resposta completa
+      return responseData;
+    } catch (error) {
+      console.error(`Erro ao fazer requisição autenticada à API Doppus:`, error);
+      throw error;
+    }
+  }
+
+  /**
    * Verifica o status de uma assinatura na Doppus
    * @param email Email do cliente
    */
   public async checkSubscriptionStatus(email: string): Promise<any> {
     try {
-      const token = await this.getAccessToken();
+      console.log(`Verificando status de assinatura para o email: ${email}`);
       
-      const response = await fetch(`${this.baseUrl}/subscriptions?customer.email=${encodeURIComponent(email)}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Erro ao verificar status da assinatura: ${response.status} ${errorText}`);
-      }
-      
-      const data = await response.json();
+      // Conforme documentação da Doppus, endpoint para consultar vendas do cliente
+      const data = await this.makeAuthenticatedRequest(
+        'GET', 
+        `/Sale/checkout/customer/${encodeURIComponent(email)}`
+      );
       
       return {
         success: true,
