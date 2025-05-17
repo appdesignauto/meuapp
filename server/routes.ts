@@ -5777,15 +5777,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Evento Hotmart recebido:", req.body.event);
       
-      // Processar o webhook usando o serviço
-      const result = await SubscriptionService.processHotmartWebhook(req.body);
+      // Importar o serviço de webhooks para gerenciar o sistema de fallback
+      const { webhookService } = await import('./services/webhook-service');
       
-      // Log do resultado para monitoramento
-      console.log("Resultado do processamento do webhook:", result);
-      
-      // Atualizar o status do webhook no banco de dados para success
-      webhookStatus = result.success ? 'success' : 'error';
-      webhookError = result.success ? null : (result.message || 'Erro no processamento');
+      try {
+        // Processar o webhook usando o serviço
+        const result = await SubscriptionService.processHotmartWebhook(req.body);
+        
+        // Log do resultado para monitoramento
+        console.log("Resultado do processamento do webhook:", result);
+        
+        // Atualizar o status do webhook no banco de dados para success
+        webhookStatus = result.success ? 'success' : 'error';
+        webhookError = result.success ? null : (result.message || 'Erro no processamento');
+      } catch (processingError) {
+        console.error("Erro ao processar webhook da Hotmart:", processingError);
+        
+        // Armazenar o webhook falho no sistema de fallback para reprocessamento posterior
+        try {
+          console.log("Armazenando webhook para reprocessamento posterior...");
+          
+          const failedWebhook = await webhookService.storeFailedWebhook(
+            webhookLogId,        // ID do log do webhook original
+            'hotmart',           // Fonte do webhook
+            req.body,            // Payload completo do webhook
+            processingError.message || 'Erro desconhecido ao processar webhook' // Mensagem de erro
+          );
+          
+          webhookStatus = 'error';
+          webhookError = `Erro ao processar: ${processingError.message}. Armazenado para reprocessamento (ID: ${failedWebhook.id})`;
+          
+          console.log(`Webhook armazenado para reprocessamento, ID: ${failedWebhook.id}`);
+        } catch (fallbackError) {
+          console.error("Erro ao armazenar webhook para reprocessamento:", fallbackError);
+          webhookStatus = 'error';
+          webhookError = `Erro ao processar: ${processingError.message}. Falha ao armazenar: ${fallbackError.message}`;
+        }
+        
+        // Retornamos 200 OK para Hotmart mesmo em caso de erro no processamento
+        // para evitar que eles reenviem o mesmo webhook várias vezes
+        return res.json({
+          success: false,
+          message: "Webhook recebido, mas ocorreu erro no processamento. Armazenado para reprocessamento posterior.",
+          error: processingError.message
+        });
+      }
       
       if (webhookLogId) {
         try {
