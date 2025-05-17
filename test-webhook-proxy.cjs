@@ -11,30 +11,46 @@ const { exec } = require('child_process');
 const WEBHOOK_PORT = process.env.WEBHOOK_PORT || 3333;
 const WEBHOOK_URL = `http://localhost:${WEBHOOK_PORT}/webhook/hotmart`;
 
-// Dados de teste do webhook (simulando uma compra aprovada)
+// Dados de teste do webhook (simulando uma compra aprovada com formato real da Hotmart)
 const webhookData = {
-  id: `test-${Date.now()}`,
+  id: `083bb5a0-f7e0-414b-b600-585a01${Date.now().toString().slice(-6)}`,
+  creation_date: new Date().toISOString(),
   event: 'PURCHASE_APPROVED',
+  version: "2.0",
   data: {
     buyer: {
       email: 'teste@designauto.com.br',
-      name: 'Usuário Teste'
+      name: 'Usuário Teste',
+      checkout_phone: "+5511999999999"
     },
     purchase: {
-      transaction: `tx-${Date.now()}`,
-      order_date: Date.now().toString(),
-      approved_date: Date.now().toString(),
+      transaction: `TRANS-${Date.now().toString().slice(-6)}`,
+      order_date: new Date().toISOString(),
+      approved_date: new Date().toISOString(),
+      status: "APPROVED",
+      payment: {
+        method: "CREDIT_CARD",
+        installment_number: 1
+      },
       price: {
-        value: '297.00'
-      },
-      product: {
-        id: '1234567',
-        name: 'DesignAuto Premium'
-      },
-      offer: {
-        code: 'OFFERX123'
+        value: 297.00
       }
-    }
+    },
+    product: {
+      id: "1820731",
+      name: "DesignAuto Premium",
+      has_co_production: false
+    },
+    offer: {
+      code: "DAUTOANUAL",
+      payment_mode: "PAYMENT_SINGLE"
+    },
+    producer: {
+      name: "Design Auto"
+    },
+    commissions: [],
+    subscription: null,
+    affiliate: null
   }
 };
 
@@ -105,16 +121,25 @@ function sendTestWebhook() {
   return new Promise((resolve, reject) => {
     console.log(`📡 Enviando webhook de teste para: ${WEBHOOK_URL}`);
     
+    // Gerar um ID de rastreamento único para este teste
+    const traceId = `test-${Date.now()}`;
     const data = JSON.stringify(webhookData);
     
+    // Adicionar cabeçalhos que simulam um request real da Hotmart
     const options = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Content-Length': data.length,
-        'X-Hotmart-Signature': 'teste-sem-validacao' // Para testes, uma assinatura qualquer
+        'X-Hotmart-Signature': `teste-sig-${traceId}`, // Assinatura simulada
+        'User-Agent': 'Hotmart-Webhook/1.0',
+        'X-Hotmart-Webhook-Trace-ID': traceId,
+        'Accept': 'application/json'
       }
     };
+    
+    console.log('🔍 Enviando com headers:', JSON.stringify(options.headers, null, 2));
+    console.log('📊 Payload:', data.substring(0, 200) + '... (truncado)');
     
     const req = http.request(
       WEBHOOK_URL,
@@ -122,20 +147,50 @@ function sendTestWebhook() {
       (res) => {
         let responseData = '';
         
+        // Log do status e headers de resposta para debugging
+        console.log(`📥 Resposta recebida com status: ${res.statusCode}`);
+        console.log('📥 Headers de resposta:', JSON.stringify(res.headers, null, 2));
+        
         res.on('data', (chunk) => {
           responseData += chunk;
         });
         
         res.on('end', () => {
+          console.log(`📄 Dados da resposta (${responseData.length} bytes): "${responseData.substring(0, 100)}${responseData.length > 100 ? '...' : ''}"`);
+          
+          // Tentar analisar a resposta como JSON
           try {
+            if (responseData.trim() === '') {
+              console.log('⚠️ Resposta vazia do servidor');
+              resolve({ 
+                success: false, 
+                message: 'Resposta vazia do servidor',
+                statusCode: res.statusCode,
+                headers: res.headers 
+              });
+              return;
+            }
+            
             const parsedResponse = JSON.parse(responseData);
             console.log(`✅ Webhook enviado com sucesso! Status: ${res.statusCode}`);
             console.log('📋 Resposta do servidor:', JSON.stringify(parsedResponse, null, 2));
             resolve(parsedResponse);
           } catch (error) {
-            console.error('❌ Erro ao processar resposta do webhook:', error.message);
-            console.log('Resposta bruta:', responseData);
-            resolve({ success: false, error: error.message });
+            console.error('❌ Erro ao processar resposta do webhook como JSON:', error.message);
+            console.log('Resposta bruta completa:', responseData);
+            
+            // Tentar determinar o tipo de resposta
+            if (responseData.includes('<!DOCTYPE html>') || responseData.includes('<html>')) {
+              console.log('⚠️ Resposta contém HTML (possível interceptação pelo Vite)');
+            }
+            
+            resolve({ 
+              success: false, 
+              error: error.message,
+              rawResponse: responseData.substring(0, 500),
+              statusCode: res.statusCode,
+              headers: res.headers 
+            });
           }
         });
       }

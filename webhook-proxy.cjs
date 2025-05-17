@@ -196,12 +196,14 @@ app.post('/webhook/hotmart', async (req, res) => {
     // Para debugging, logar os headers
     console.log('🔍 Headers da requisição:', JSON.stringify(req.headers, null, 2));
     
-    // Validar a assinatura (opcional durante testes)
-    const isSignatureValid = await validateHotmartSignature(req);
-    if (!isSignatureValid) {
-      console.warn('⚠️ Assinatura inválida, mas continuando o processamento para fins de teste');
-      // Nota: em produção, retornaria um erro aqui
-    }
+    // Validar a assinatura (desativado durante desenvolvimento)
+    // const isSignatureValid = await validateHotmartSignature(req);
+    // if (!isSignatureValid) {
+    //   console.warn('⚠️ Assinatura inválida, mas continuando o processamento para fins de teste');
+    // }
+    
+    // Para desenvolvimento, sempre assume assinatura válida
+    console.log('✅ Validação de assinatura desativada em ambiente de desenvolvimento')
     
     // Para desenvolvimento, usar um processamento simplificado
     console.log('💾 Registrando payload no banco de dados (modo simplificado)');
