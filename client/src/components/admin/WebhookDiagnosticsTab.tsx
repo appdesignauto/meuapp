@@ -1,13 +1,12 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Search } from "lucide-react";
+import { Loader2, Search, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { getQueryFn } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 
 type WebhookLog = {
   id: number;
@@ -15,6 +14,7 @@ type WebhookLog = {
   eventType: string;
   source: string;
   createdAt: string;
+  payloadData: any;
   extractedEmail?: string;
   emailLocation?: string;
   matchType?: string;
@@ -28,20 +28,13 @@ type SearchResult = {
 
 export default function WebhookDiagnosticsTab() {
   const [email, setEmail] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchResult | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   
-  const {
-    data: searchResults,
-    isLoading,
-    refetch
-  } = useQuery<SearchResult>({
-    queryKey: ['/api/webhook-diagnostics/advanced-search', searchTerm],
-    queryFn: getQueryFn({ on401: 'returnNull' }),
-    enabled: !!searchTerm,
-  });
-  
-  const handleSearch = () => {
+  // Método de pesquisa direta
+  const handleSearch = async () => {
     if (!email) {
       toast({
         title: "Email obrigatório",
@@ -51,7 +44,77 @@ export default function WebhookDiagnosticsTab() {
       return;
     }
     
-    setSearchTerm(`?email=${encodeURIComponent(email)}`);
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      console.log(`Buscando webhooks relacionados a: ${email}`);
+      
+      // Usando a tabela diretamente para uma busca rápida
+      const response = await fetch(`/api/webhooks/search?email=${encodeURIComponent(email)}`);
+      
+      if (!response.ok) {
+        throw new Error(`Erro na busca: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log("Resultados da busca:", data);
+      
+      // Processar os resultados para extrair emails
+      const processedResults = data.logs.map((log: WebhookLog) => {
+        let foundEmail = null;
+        let emailLocation = null;
+        
+        try {
+          const payload = typeof log.payloadData === 'string' 
+            ? JSON.parse(log.payloadData) 
+            : log.payloadData;
+          
+          // Buscar em diferentes locais dependendo da origem
+          if (log.source === 'hotmart') {
+            foundEmail = payload.data?.buyer?.email || null;
+            emailLocation = foundEmail ? 'data.buyer.email' : null;
+          } else if (log.source === 'doppus') {
+            foundEmail = payload.data?.customer?.email || payload.customer?.email || null;
+            emailLocation = foundEmail ? (payload.data?.customer?.email ? 'data.customer.email' : 'customer.email') : null;
+          }
+          
+          // Se ainda não encontrou o email, verificar se está no texto serializado
+          if (!foundEmail) {
+            const payloadStr = JSON.stringify(payload).toLowerCase();
+            if (payloadStr.includes(email.toLowerCase())) {
+              foundEmail = email;
+              emailLocation = 'json_serialized';
+            }
+          }
+        } catch (e) {
+          console.error(`Erro ao analisar payload do log ${log.id}:`, e);
+        }
+        
+        return {
+          ...log,
+          extractedEmail: foundEmail,
+          emailLocation,
+          matchType: foundEmail ? 'direct_match' : 'text_match'
+        };
+      });
+      
+      setSearchResults({
+        success: true,
+        count: processedResults.length,
+        results: processedResults
+      });
+    } catch (err) {
+      console.error("Erro na busca:", err);
+      setError(err instanceof Error ? err.message : "Erro desconhecido");
+      toast({
+        title: "Erro na busca",
+        description: err instanceof Error ? err.message : "Ocorreu um erro na busca de webhooks",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   const formatDate = (dateString: string) => {
