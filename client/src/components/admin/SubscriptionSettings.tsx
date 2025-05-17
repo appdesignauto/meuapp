@@ -515,7 +515,7 @@ export default function SubscriptionSettings() {
                 <Separator className="my-6" />
 
                 <div className="space-y-4">
-                  <h3 className="text-sm font-medium">Credenciais da API</h3>
+                  <h3 className="text-sm font-medium">Credenciais de Acesso</h3>
                   
                   <FormField
                     control={form.control}
@@ -700,7 +700,7 @@ export default function SubscriptionSettings() {
                 <Separator className="my-6" />
 
                 <div className="space-y-4">
-                  <h3 className="text-sm font-medium">Credenciais da API</h3>
+                  <h3 className="text-sm font-medium">Credenciais de Acesso</h3>
                   
                   <FormField
                     control={form.control}
