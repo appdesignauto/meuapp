@@ -54,7 +54,7 @@ import courseRouter from './routes/course-routes'; // Rotas para gerenciamento d
 // Usando dynamic import para compatibilidade entre CommonJS e ES modules
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
-const hotmartProductMappingsRouter = require('./routes/hotmart-product-mappings');
+const hotmartProductMappingsRouter = require('./routes/hotmart-product-mappings/index.js');
 const doppusProductMappingsRouter = require('./routes/doppus-product-mappings');
 import manifestRouter from './routes/manifest-route'; // Rota para o manifest.json do PWA
 import appConfigRouter from './routes/app-config-routes'; // Rotas para configuração do PWA
