@@ -268,6 +268,11 @@ function AppRoutes() {
         component={GerenciarCursosPage}
         roles={['admin']} 
       />
+      <ProtectedRoute 
+        path="/admin/webhook-diagnostics" 
+        component={WebhookDiagnostics}
+        roles={['admin']} 
+      />
       <ProtectedRoute
         path="/admin/analytics"
         component={() => {
