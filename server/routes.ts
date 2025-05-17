@@ -5605,7 +5605,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Garantir que todas as chaves esperadas existam
       const requiredHotmartKeys = ['secret', 'clientId', 'clientSecret'];
-      const requiredDoppusKeys = ['secret', 'apiKey'];
+      const requiredDoppusKeys = ['secretKey', 'clientId', 'clientSecret'];
       
       for (const key of requiredHotmartKeys) {
         if (!formattedSettings.hotmart[key]) {
