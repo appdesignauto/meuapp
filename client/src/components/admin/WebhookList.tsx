@@ -461,58 +461,58 @@ const WebhookList: React.FC = () => {
               </div>
 
               {/* Paginação */}
-              {data && data.totalPages > 1 && (
-                <div className="mt-4 flex justify-center">
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious 
-                          onClick={() => setPage(p => Math.max(1, p - 1))}
-                          className={page <= 1 ? 'pointer-events-none opacity-50' : ''}
-                        />
-                      </PaginationItem>
-                      
-                      {data?.totalPages && Array.from({ length: data.totalPages }).map((_, i) => {
-                        const pageNumber = i + 1;
-                        // Mostrar apenas 5 páginas ao redor da página atual
-                        if (
-                          pageNumber === 1 || 
-                          pageNumber === data.totalPages || 
-                          (pageNumber >= page - 2 && pageNumber <= page + 2)
-                        ) {
-                          return (
-                            <PaginationItem key={pageNumber}>
-                              <PaginationLink 
-                                isActive={page === pageNumber}
-                                onClick={() => setPage(pageNumber)}
-                              >
-                                {pageNumber}
-                              </PaginationLink>
-                            </PaginationItem>
-                          );
-                        } else if (
-                          (pageNumber === page - 3 && page > 3) || 
-                          (pageNumber === page + 3 && page < data.totalPages - 2)
-                        ) {
-                          return (
-                            <PaginationItem key={pageNumber}>
-                              <PaginationLink className="cursor-default">...</PaginationLink>
-                            </PaginationItem>
-                          );
-                        }
-                        return null;
-                      })}
-                      
-                      <PaginationItem>
-                        <PaginationNext 
-                          onClick={() => setPage(p => Math.min(data.totalPages, p + 1))}
-                          className={page >= data.totalPages ? 'pointer-events-none opacity-50' : ''}
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
-                </div>
-              )}
+              {data?.totalPages && data.totalPages > 0 && (
+                  <div className="mt-4 flex justify-center">
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious 
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            className={page <= 1 ? 'pointer-events-none opacity-50' : ''}
+                          />
+                        </PaginationItem>
+                        
+                        {Array.from({ length: data.totalPages }).map((_, i) => {
+                          const pageNumber = i + 1;
+                          // Mostrar apenas 5 páginas ao redor da página atual
+                          if (
+                            pageNumber === 1 || 
+                            pageNumber === data.totalPages || 
+                            (pageNumber >= page - 2 && pageNumber <= page + 2)
+                          ) {
+                            return (
+                              <PaginationItem key={pageNumber}>
+                                <PaginationLink 
+                                  isActive={page === pageNumber}
+                                  onClick={() => setPage(pageNumber)}
+                                >
+                                  {pageNumber}
+                                </PaginationLink>
+                              </PaginationItem>
+                            );
+                          } else if (
+                            (pageNumber === page - 3 && page > 3) || 
+                            (pageNumber === page + 3 && page < data.totalPages - 2)
+                          ) {
+                            return (
+                              <PaginationItem key={pageNumber}>
+                                <PaginationLink className="cursor-default">...</PaginationLink>
+                              </PaginationItem>
+                            );
+                          }
+                          return null;
+                        })}
+                        
+                        <PaginationItem>
+                          <PaginationNext 
+                            onClick={() => setPage(p => Math.min(data.totalPages, p + 1))}
+                            className={page >= data.totalPages ? 'pointer-events-none opacity-50' : ''}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                )}
             </CardContent>
           </Card>
         </TabsContent>
