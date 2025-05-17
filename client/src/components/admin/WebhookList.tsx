@@ -181,10 +181,10 @@ const WebhookList: React.FC = () => {
 
   // Buscar logs de webhook
   const {
-    data: logsData,
+    data,
     isLoading,
     refetch,
-  } = useQuery<WebhookLog[]>({
+  } = useQuery<WebhookLogsResponse>({
     queryKey: ['/api/webhooks/logs', page, limit, filters.status, filters.eventType, filters.source, filters.search],
     queryFn: getQueryFn({ on401: 'returnNull' }),
   });
@@ -259,7 +259,7 @@ const WebhookList: React.FC = () => {
   };
 
   // Mostrar indicação de carregamento
-  if (isLoading && !logsData) {
+  if (isLoading && !data) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="flex flex-col items-center">
@@ -411,8 +411,8 @@ const WebhookList: React.FC = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {logsData && logsData.length > 0 ? (
-                      logsData.map((log) => (
+                    {data?.logs && data.logs.length > 0 ? (
+                      data.logs.map((log) => (
                         <TableRow key={log.id}>
                           <TableCell className="font-medium">{log.id}</TableCell>
                           <TableCell><WebhookStatus status={log.status} /></TableCell>
@@ -472,7 +472,7 @@ const WebhookList: React.FC = () => {
                         />
                       </PaginationItem>
                       
-                      {Array.from({ length: data.totalPages }).map((_, i) => {
+                      {data?.totalPages && Array.from({ length: data.totalPages }).map((_, i) => {
                         const pageNumber = i + 1;
                         // Mostrar apenas 5 páginas ao redor da página atual
                         if (
