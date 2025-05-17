@@ -77,7 +77,8 @@ interface WebhookLogDetails {
   } | null;
 }
 
-// Interface para a resposta da API de logs de webhook
+// Nota: A API retorna diretamente um array de logs, não um objeto com propriedade logs
+// Mantemos esta interface por compatibilidade, mas não será usada na consulta principal
 interface WebhookLogsResponse {
   logs: WebhookLog[];
   totalCount: number;
@@ -180,10 +181,10 @@ const WebhookList: React.FC = () => {
 
   // Buscar logs de webhook
   const {
-    data,
+    data: logsData,
     isLoading,
     refetch,
-  } = useQuery<WebhookLogsResponse>({
+  } = useQuery<WebhookLog[]>({
     queryKey: ['/api/webhooks/logs', page, limit, filters.status, filters.eventType, filters.source, filters.search],
     queryFn: getQueryFn({ on401: 'returnNull' }),
   });
@@ -258,7 +259,7 @@ const WebhookList: React.FC = () => {
   };
 
   // Mostrar indicação de carregamento
-  if (isLoading && !data) {
+  if (isLoading && !logsData) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="flex flex-col items-center">
@@ -410,8 +411,8 @@ const WebhookList: React.FC = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {data?.logs && data.logs.length > 0 ? (
-                      data.logs.map((log) => (
+                    {logsData && logsData.length > 0 ? (
+                      logsData.map((log) => (
                         <TableRow key={log.id}>
                           <TableCell className="font-medium">{log.id}</TableCell>
                           <TableCell><WebhookStatus status={log.status} /></TableCell>
