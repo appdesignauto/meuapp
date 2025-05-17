@@ -196,7 +196,13 @@ app.use((req, res, next) => {
         
         // Salvar webhook diretamente no banco usando SQL
         try {
-          const { pool } = await import('./db');
+          // Usando o módulo pg diretamente para evitar problemas com importações
+          const { Client } = require('pg');
+          const client = new Client({
+            connectionString: process.env.DATABASE_URL
+          });
+          
+          await client.connect();
           
           console.log('📝 Salvando webhook no banco via SQL direto:', { 
             eventType, 
@@ -230,7 +236,8 @@ app.use((req, res, next) => {
             null
           ];
           
-          const result = await pool.query(query, values);
+          const result = await client.query(query, values);
+          await client.end();
           
           console.log('✅ Log de webhook criado com sucesso via SQL direto:', result.rows[0].id);
         } catch (logError) {
