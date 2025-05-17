@@ -6317,6 +6317,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Registrar rotas para diagnóstico de e-mail (administradores)
   app.use('/api/email-diagnostics', emailDiagnosticsRouter);
   
+  // Registrar rotas para diagnóstico avançado de webhooks (administradores)
+  const webhookDiagnosticsRouter = (await import('./routes/webhook-diagnostics.js')).default;
+  app.use('/api/webhook-diagnostics', webhookDiagnosticsRouter);
+  
   // Configurar rota de diagnóstico direto do R2
   setupTestR2DirectRoute(app);
   
