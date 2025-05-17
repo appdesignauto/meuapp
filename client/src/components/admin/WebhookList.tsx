@@ -45,7 +45,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 // Importamos o componente de diagnóstico avançado
-import WebhookDiagnosticsTab from './WebhookDiagnosticsTab';
+import WebhookDiagnosticsTab from './WebhookDiagnosticsNew';
 
 // Interface para o log de webhook
 interface WebhookLog {
