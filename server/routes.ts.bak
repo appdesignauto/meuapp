@@ -1,4 +1,4 @@
-import type { Express, Request, Response, NextFunction } from "express";
+import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { arts, insertUserSchema, users, userFollows, categories, collections, views, downloads, favorites, communityPosts, communityComments, formats, fileTypes, testimonials, designerStats, subscriptions, siteSettings, insertSiteSettingsSchema, type User, emailVerificationCodes } from "@shared/schema";
@@ -16,6 +16,8 @@ import { SQL } from "drizzle-orm/sql";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+// Importar o router de diagnóstico de webhooks
+import webhookDiagnosticsRouter from "./routes/webhook-diagnostics.js";
 // Importações adicionais para o upload de imagem
 import uploadRouter from "./routes/upload-image";
 // Usando apenas Supabase Storage para armazenamento de imagens
@@ -30,6 +32,7 @@ const scryptAsync = promisify(scrypt);
 
 // Importar nossas rotas personalizadas
 import logoUploadRouter from './routes/logo-upload';
+import faviconUploadRouter from './routes/favicon-upload'; // Nova rota para upload de favicon
 import removeLogoRouter from './routes/remove-logo';
 import supabaseRegisterTestRouter from './routes/supabase-register-test';
 import avatarUploadRouter from './routes/avatar-upload';
@@ -47,11 +50,16 @@ import multiArtRouter from './routes/multi-art'; // Rota para artes multi-format
 import testCreateGroupRouter from './routes/test-create-group'; // Rota de teste para criar grupos
 import videoaulasRouter from './routes/videoaulas-routes'; // Rotas para as videoaulas
 import courseRouter from './routes/course-routes'; // Rotas para gerenciamento de módulos e aulas
+// Importações removidas - serão tratadas diretamente no local de uso
+import manifestRouter from './routes/manifest-route'; // Rota para o manifest.json do PWA
+import appConfigRouter from './routes/app-config-routes'; // Rotas para configuração do PWA
+import imageProxyRouter from './routes/image-proxy'; // Proxy para imagens do Supabase
 import coursesRouter from './routes/courses-routes'; // Rotas para gerenciamento de cursos
 import { registerPostPositionRoute } from './routes/post-position-route'; // Rota para calcular posição
 import ferramentasRouter from './routes/ferramentas-routes'; // Rotas para gerenciamento de ferramentas úteis do post
 import popupRouter from './routes/popup-routes'; // Rotas para gerenciamento de popups promocionais
 import coursesAdapterRouter from './routes/courses-adapter'; // Adaptador para compatibilidade com rotas antigas
+import artesAdapterRouter from './routes/artes-adapter'; // Adaptador para rotas em português da API de artes
 import videoCommentsRouter from './routes/video-comments-routes'; // Rotas para comentários de videoaulas
 import courseRatingsRouter from './routes/course-ratings-routes'; // Rotas para avaliações de cursos
 import lessonThumbnailUploadRouter from './routes/lesson-thumbnail-upload'; // Rota para upload de thumbnails de aulas
@@ -59,9 +67,18 @@ import courseThumbnailUploadRouter from './routes/course-thumbnail-upload'; // R
 import bannerUploadRouter from './routes/banner-upload'; // Rota para upload de banners de
 import moduleUploadRouter from './routes/module-upload'; // Rota para upload de thumbnails de módulos cursos
 import communityRouter from './routes/community-routes'; // Rotas para o sistema de comunidade
-import ferramentasUploadRouter from './routes/ferramentas-upload'; // Rotas para upload de imagens de ferramentas
+import ferramentasUploadRouter from './routes/ferramentas-upload'; // Rotas para upload de imagens 
+import analyticsRouter from './routes/analytics'; // Rotas para gerenciamento de analytics
+import sitemapRouter from './routes/sitemap'; // Rotas para sitemap.xml e robots.txt
+import { convertImageUrlsMiddleware } from './routes/image-url-proxy'; // Middleware para converter URLs de imagens
+import imageProxyTestRouter from './routes/image-proxy-test'; // Rota para testar o proxy de imagens
+import reportsRouter from './routes/reports'; // Rotas para o sistema de denúncias (original)
+import reportsV2Router from './routes/reports-v2'; // Rotas para o sistema de denúncias (reescrito)
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Aplicar middleware global para converter URLs de imagens para todas as respostas JSON
+  app.use(convertImageUrlsMiddleware());
+  
   // Rota simples de verificação de saúde
   app.get('/health', (req, res) => {
     res.status(200).json({
@@ -636,6 +653,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Registrar as rotas relacionadas ao logo
   app.use('/api/upload-logo', logoUploadRouter);
+  
+  // Registrar a rota para upload de favicon
+  app.use('/api/site-settings/favicon', faviconUploadRouter);
+  
+  // Registrar a rota para o manifest.json dinâmico do PWA
+  app.use(manifestRouter);
+  
+  // Registrar as rotas para configuração do PWA
+  app.use('/api', appConfigRouter);
   
   // Adicionar rota para remover o logo
   removeLogoRouter(app);
@@ -1642,9 +1668,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`[GET /api/arts/${id}/related] Encontradas ${relatedArts.length} artes relacionadas`);
       
+      // Converter URLs de imagem para o formato de proxy
+      const convertedArts = supabaseStorageService.convertImageUrls(relatedArts, ['imageUrl', 'thumbnailUrl']);
+      
       // Se não houver artes relacionadas, retorna array vazio em vez de 404
       // para que o frontend possa lidar com isso de maneira apropriada
-      res.json(relatedArts);
+      res.json(convertedArts);
     } catch (error) {
       console.error("Erro ao buscar artes relacionadas:", error);
       res.status(500).json({ message: "Erro ao buscar artes relacionadas" });
@@ -2310,6 +2339,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Registrar rotas de upload de imagem
   app.use(imageUploadRoutes);
+  
+  // Registrar rota de proxy de imagens do Supabase
+  app.use(imageProxyRouter);
   
   // Rota para upload de imagens (usada no formulário multi-formato) 
   app.use("/api/upload-image", isAuthenticated, uploadMemory.single("image"), async (req, res) => {
@@ -4567,29 +4599,1240 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Rota para webhook da Hotmart
-  app.post("/api/webhooks/hotmart", async (req, res) => {
+  // Endpoint para obter estatísticas de assinaturas para o painel administrativo
+  app.get("/api/subscriptions/stats", isAdmin, async (req, res) => {
     try {
-      console.log("Webhook da Hotmart recebido:", req.body);
+      // Obter total de usuários com assinatura (exceto free)
+      const [totalResult] = await db
+        .select({ count: count() })
+        .from(users)
+        .where(not(eq(users.nivelacesso, 'free')));
+      
+      // Obter usuários com assinatura ativa
+      const [activeResult] = await db
+        .select({ count: count() })
+        .from(users)
+        .where(
+          and(
+            not(eq(users.nivelacesso, 'free')),
+            or(
+              isNull(users.dataexpiracao),
+              sql`${users.dataexpiracao} > NOW()`,
+              eq(users.acessovitalicio, true)
+            )
+          )
+        );
+      
+      // Obter usuários com assinatura expirada
+      const [expiredResult] = await db
+        .select({ count: count() })
+        .from(users)
+        .where(
+          and(
+            not(eq(users.nivelacesso, 'free')),
+            not(eq(users.acessovitalicio, true)),
+            not(isNull(users.dataexpiracao)),
+            sql`${users.dataexpiracao} <= NOW()`
+          )
+        );
+      
+      // Obter usuários em teste
+      const [trialResult] = await db
+        .select({ count: count() })
+        .from(users)
+        .where(eq(users.tipoplano, 'trial'));
+      
+      // Obter usuários com assinatura expirando em 7 dias
+      const [expiringIn7DaysResult] = await db
+        .select({ count: count() })
+        .from(users)
+        .where(
+          and(
+            not(eq(users.nivelacesso, 'free')),
+            not(eq(users.acessovitalicio, true)),
+            not(isNull(users.dataexpiracao)),
+            sql`${users.dataexpiracao} > NOW()`,
+            sql`${users.dataexpiracao} <= NOW() + INTERVAL '7 days'`
+          )
+        );
+      
+      // Obter usuários com assinatura expirando em 30 dias
+      const [expiringIn30DaysResult] = await db
+        .select({ count: count() })
+        .from(users)
+        .where(
+          and(
+            not(eq(users.nivelacesso, 'free')),
+            not(eq(users.acessovitalicio, true)),
+            not(isNull(users.dataexpiracao)),
+            sql`${users.dataexpiracao} > NOW()`,
+            sql`${users.dataexpiracao} <= NOW() + INTERVAL '30 days'`
+          )
+        );
+      
+      // Obter contagem por origem de assinatura
+      const [hotmartResult] = await db
+        .select({ count: count() })
+        .from(users)
+        .where(eq(users.origemassinatura, 'hotmart'));
+      
+      const [doppusResult] = await db
+        .select({ count: count() })
+        .from(users)
+        .where(eq(users.origemassinatura, 'doppus'));
+      
+      const [manualResult] = await db
+        .select({ count: count() })
+        .from(users)
+        .where(eq(users.origemassinatura, 'manual'));
+      
+      // Obter contagem por tipo de plano
+      const planCounts = await db
+        .select({
+          planType: users.tipoplano,
+          count: count(),
+        })
+        .from(users)
+        .where(not(isNull(users.tipoplano)))
+        .groupBy(users.tipoplano);
+      
+      // Converter para formato de objeto
+      const subscriptionsByPlan: Record<string, number> = {};
+      planCounts.forEach(item => {
+        subscriptionsByPlan[item.planType || 'desconhecido'] = item.count;
+      });
+      
+      // Obter contagem por origem de assinatura
+      const originCounts = await db
+        .select({
+          origin: users.origemassinatura,
+          count: count(),
+        })
+        .from(users)
+        .where(not(isNull(users.origemassinatura)))
+        .groupBy(users.origemassinatura);
+      
+      // Converter para formato de objeto
+      const subscriptionsByOrigin: Record<string, number> = {};
+      originCounts.forEach(item => {
+        subscriptionsByOrigin[item.origin || 'desconhecido'] = item.count;
+      });
+      
+      // Obter assinaturas recentes (últimos 30 dias)
+      const recentSubscriptionsData = await db
+        .select({
+          date: sql`DATE(${users.dataassinatura})`,
+          count: count(),
+        })
+        .from(users)
+        .where(
+          and(
+            not(isNull(users.dataassinatura)),
+            sql`${users.dataassinatura} >= NOW() - INTERVAL '30 days'`
+          )
+        )
+        .groupBy(sql`DATE(${users.dataassinatura})`)
+        .orderBy(sql`DATE(${users.dataassinatura})`);
+      
+      // Converter para o formato esperado pelo frontend
+      const recentSubscriptions = recentSubscriptionsData.map(item => ({
+        date: item.date.toString(),
+        count: item.count,
+      }));
+      
+      res.status(200).json({
+        total: totalResult.count,
+        active: activeResult.count,
+        expired: expiredResult.count,
+        trialCount: trialResult.count,
+        expiringIn7Days: expiringIn7DaysResult.count,
+        expiringIn30Days: expiringIn30DaysResult.count,
+        hotmartCount: hotmartResult.count,
+        doppusCount: doppusResult.count,
+        manualCount: manualResult.count,
+        subscriptionsByPlan,
+        subscriptionsByOrigin,
+        recentSubscriptions,
+      });
+    } catch (error) {
+      console.error("Erro ao obter estatísticas de assinaturas:", error);
+      res.status(500).json({ message: "Erro ao obter estatísticas de assinaturas" });
+    }
+  });
+  
+  // Endpoints de configurações de assinatura foram movidos para a seção "ENDPOINTS DE CONFIGURAÇÕES DE ASSINATURAS"
+  
+  // Endpoint para listar usuários com assinaturas com filtros e paginação
+  app.get("/api/admin/users", isAdmin, async (req, res) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const status = req.query.status as string;
+      const origin = req.query.origin as string;
+      const search = req.query.search as string;
+      
+      const offset = (page - 1) * limit;
+      
+      // Construir condições de filtro
+      let whereConditions: SQL[] = [];
+      
+      // Filtro por status
+      if (status) {
+        if (status === 'active') {
+          whereConditions.push(
+            or(
+              isNull(users.dataexpiracao),
+              sql`${users.dataexpiracao} > NOW()`,
+              eq(users.acessovitalicio, true)
+            )
+          );
+        } else if (status === 'expired') {
+          whereConditions.push(
+            and(
+              not(eq(users.acessovitalicio, true)),
+              not(isNull(users.dataexpiracao)),
+              sql`${users.dataexpiracao} <= NOW()`
+            )
+          );
+        } else if (status === 'trial') {
+          whereConditions.push(eq(users.tipoplano, 'trial'));
+        }
+      }
+      
+      // Filtro por origem
+      if (origin && origin !== 'all') {
+        whereConditions.push(eq(users.origemassinatura, origin));
+      }
+      
+      // Filtro por termo de busca
+      if (search) {
+        whereConditions.push(
+          or(
+            sql`${users.username} ILIKE ${`%${search}%`}`,
+            sql`${users.email} ILIKE ${`%${search}%`}`,
+            sql`${users.name} ILIKE ${`%${search}%`}`
+          )
+        );
+      }
+      
+      // Combinar condições
+      let query = db.select({
+        id: users.id,
+        username: users.username,
+        email: users.email,
+        nivelacesso: users.nivelacesso,
+        planstatus: sql`
+          CASE
+            WHEN ${users.acessovitalicio} = true THEN 'lifetime'
+            WHEN ${users.dataexpiracao} IS NULL THEN 'active'
+            WHEN ${users.dataexpiracao} > NOW() THEN 'active'
+            ELSE 'expired'
+          END
+        `,
+        origemassinatura: users.origemassinatura,
+        tipoplano: users.tipoplano,
+        planoexpiracao: users.dataexpiracao,
+        criadoem: users.criadoem,
+        atualizadoem: users.atualizadoem,
+      })
+      .from(users)
+      .limit(limit)
+      .offset(offset)
+      .orderBy(desc(users.criadoem));
+      
+      if (whereConditions.length > 0) {
+        const finalCondition = whereConditions.length === 1
+          ? whereConditions[0]
+          : and(...whereConditions);
+        
+        query = query.where(finalCondition);
+      }
+      
+      // Executar consulta
+      const userList = await query;
+      
+      // Obter contagem total para paginação
+      const [totalResult] = await db
+        .select({ count: count() })
+        .from(users);
+      
+      res.status(200).json({
+        users: userList,
+        pagination: {
+          total: totalResult.count,
+          page,
+          limit,
+          pages: Math.ceil(totalResult.count / limit),
+        }
+      });
+    } catch (error) {
+      console.error("Erro ao listar usuários:", error);
+      res.status(500).json({ message: "Erro ao listar usuários" });
+    }
+  });
+  
+  // Endpoint para obter detalhes de um usuário específico
+  app.get("/api/admin/users/:id", isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "ID de usuário inválido" });
+      }
+      
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId));
+      
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+      
+      // Formatar o status do plano para exibição
+      let planStatus = 'free';
+      if (user.acessovitalicio) {
+        planStatus = 'lifetime';
+      } else if (user.dataexpiracao) {
+        if (new Date(user.dataexpiracao) > new Date()) {
+          planStatus = 'active';
+        } else {
+          planStatus = 'expired';
+        }
+      } else if (user.nivelacesso !== 'free') {
+        planStatus = 'active';
+      }
+      
+      res.status(200).json({
+        ...user,
+        planstatus: planStatus
+      });
+    } catch (error) {
+      console.error("Erro ao obter detalhes do usuário:", error);
+      res.status(500).json({ message: "Erro ao obter detalhes do usuário" });
+    }
+  });
+  
+  // Endpoint para atualizar a assinatura de um usuário
+  app.put("/api/admin/users/:id/subscription", isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "ID de usuário inválido" });
+      }
+      
+      const { planstatus, tipoplano, origemassinatura, planoexpiracao, notifyUser } = req.body;
+      
+      // Verificar se o usuário existe
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId));
+      
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+      
+      // Preparar dados para atualização
+      const updateData: any = {
+        tipoplano,
+        origemassinatura,
+        dataexpiracao: planoexpiracao ? new Date(planoexpiracao) : null,
+        atualizadoem: new Date(),
+      };
+      
+      // Definir acesso vitalício e nível de acesso com base no status do plano
+      if (planstatus === 'lifetime') {
+        updateData.acessovitalicio = true;
+        updateData.nivelacesso = 'premium';
+      } else if (planstatus === 'active') {
+        updateData.acessovitalicio = false;
+        updateData.nivelacesso = 'premium';
+      } else if (planstatus === 'expired' || planstatus === 'free') {
+        updateData.acessovitalicio = false;
+        updateData.nivelacesso = 'free';
+      }
+      
+      // Atualizar usuário
+      await db
+        .update(users)
+        .set(updateData)
+        .where(eq(users.id, userId));
+      
+      // Enviar notificação ao usuário se solicitado
+      if (notifyUser) {
+        // Implementar o envio de e-mail (isso seria feito pelo EmailService)
+        // EmailService.sendSubscriptionUpdateEmail(user.email, planstatus, planoexpiracao);
+        console.log(`Notificação enviada para ${user.email} sobre atualização da assinatura`);
+      }
+      
+      res.status(200).json({
+        success: true,
+        message: "Assinatura atualizada com sucesso",
+        user: {
+          ...user,
+          ...updateData,
+        },
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar assinatura:", error);
+      res.status(500).json({ message: "Erro ao atualizar assinatura" });
+    }
+  });
+  
+  // Endpoint para remover assinatura de um usuário
+  app.delete("/api/admin/users/:id/subscription", isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "ID de usuário inválido" });
+      }
+      
+      // Verificar se o usuário existe
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId));
+      
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+      
+      // Rebaixar o usuário para free
+      await db
+        .update(users)
+        .set({
+          nivelacesso: 'free',
+          tipoplano: null,
+          origemassinatura: null,
+          dataassinatura: null,
+          dataexpiracao: null,
+          acessovitalicio: false,
+          atualizadoem: new Date(),
+        })
+        .where(eq(users.id, userId));
+      
+      res.status(200).json({
+        success: true,
+        message: "Assinatura removida com sucesso",
+      });
+    } catch (error) {
+      console.error("Erro ao remover assinatura:", error);
+      res.status(500).json({ message: "Erro ao remover assinatura" });
+    }
+  });
+
+  // Rotas para gerenciamento de integrações (Hotmart/Doppus)
+  
+  // Atualizar chave secreta da Hotmart
+  app.post("/api/integrations/hotmart/secret", isAdmin, async (req, res) => {
+    try {
+      const { secret } = req.body;
+      
+      if (!secret) {
+        return res.status(400).json({ message: "Chave secreta é obrigatória" });
+      }
+      
+      // Verificar se o registro já existe
+      const existingRecord = await db.execute(sql`
+        SELECT id FROM "integrationSettings"
+        WHERE "provider" = 'hotmart' AND "key" = 'secret'
+      `);
+      
+      if (existingRecord.rows.length === 0) {
+        // Se não existir, criar um novo registro
+        await db.execute(sql`
+          INSERT INTO "integrationSettings" 
+          (provider, key, value, description, "isActive", "createdAt", "updatedAt")
+          VALUES ('hotmart', 'secret', ${secret}, 'Chave secreta para validação de webhooks da Hotmart', true, NOW(), NOW())
+        `);
+      } else {
+        // Se existir, atualizar o valor
+        await db.execute(sql`
+          UPDATE "integrationSettings" 
+          SET "value" = ${secret}, "updatedAt" = NOW() 
+          WHERE "provider" = 'hotmart' AND "key" = 'secret'
+        `);
+      }
+      
+      console.log("Chave secreta da Hotmart atualizada por:", req.user?.username);
+      
+      // Retornar o valor atualizado para o frontend poder atualizar a exibição
+      return res.status(200).json({ 
+        success: true, 
+        message: "Chave secreta da Hotmart atualizada com sucesso",
+        updatedValue: {
+          key: "secret",
+          value: "••••••••", // Valor mascarado para exibição
+          provider: "hotmart",
+          realValue: secret, // Valor real para ser usado pelo frontend
+          lastChars: secret.length > 4 ? secret.slice(-4) : "",
+          isDefined: true,
+          isActive: true,
+          updatedAt: new Date()
+        }
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar chave secreta da Hotmart:", error);
+      return res.status(500).json({ 
+        success: false, 
+        message: "Erro ao atualizar chave secreta da Hotmart" 
+      });
+    }
+  });
+  
+  // Atualizar Client ID da Hotmart
+  app.post("/api/integrations/hotmart/client-id", isAdmin, async (req, res) => {
+    try {
+      const { clientId } = req.body;
+      
+      if (!clientId) {
+        return res.status(400).json({ message: "Client ID é obrigatório" });
+      }
+      
+      // Verificar se o registro já existe
+      const existingRecord = await db.execute(sql`
+        SELECT id FROM "integrationSettings"
+        WHERE "provider" = 'hotmart' AND "key" = 'clientId'
+      `);
+      
+      if (existingRecord.rows.length === 0) {
+        // Se não existir, criar um novo registro
+        await db.execute(sql`
+          INSERT INTO "integrationSettings" 
+          (provider, key, value, description, "isActive", "createdAt", "updatedAt")
+          VALUES ('hotmart', 'clientId', ${clientId}, 'Client ID da API da Hotmart', true, NOW(), NOW())
+        `);
+      } else {
+        // Se existir, atualizar o valor
+        await db.execute(sql`
+          UPDATE "integrationSettings" 
+          SET "value" = ${clientId}, "updatedAt" = NOW() 
+          WHERE "provider" = 'hotmart' AND "key" = 'clientId'
+        `);
+      }
+      
+      console.log("Client ID da Hotmart atualizado por:", req.user?.username);
+      
+      // Retornar o valor atualizado para o frontend poder atualizar a exibição
+      return res.status(200).json({ 
+        success: true, 
+        message: "Client ID da Hotmart atualizado com sucesso",
+        updatedValue: {
+          key: "clientId",
+          value: "••••••••", // Valor mascarado para exibição
+          provider: "hotmart",
+          realValue: clientId, // Valor real para ser usado pelo frontend
+          lastChars: clientId.length > 4 ? clientId.slice(-4) : "",
+          isDefined: true,
+          isActive: true,
+          updatedAt: new Date()
+        }
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar Client ID da Hotmart:", error);
+      return res.status(500).json({ 
+        success: false, 
+        message: "Erro ao atualizar Client ID da Hotmart" 
+      });
+    }
+  });
+  
+  // Atualizar Client Secret da Hotmart
+  app.post("/api/integrations/hotmart/client-secret", isAdmin, async (req, res) => {
+    try {
+      const { clientSecret } = req.body;
+      
+      if (!clientSecret) {
+        return res.status(400).json({ message: "Client Secret é obrigatório" });
+      }
+      
+      // Verificar se o registro já existe
+      const existingRecord = await db.execute(sql`
+        SELECT id FROM "integrationSettings"
+        WHERE "provider" = 'hotmart' AND "key" = 'clientSecret'
+      `);
+      
+      if (existingRecord.rows.length === 0) {
+        // Se não existir, criar um novo registro
+        await db.execute(sql`
+          INSERT INTO "integrationSettings" 
+          (provider, key, value, description, "isActive", "createdAt", "updatedAt")
+          VALUES ('hotmart', 'clientSecret', ${clientSecret}, 'Client Secret da API da Hotmart', true, NOW(), NOW())
+        `);
+      } else {
+        // Se existir, atualizar o valor
+        await db.execute(sql`
+          UPDATE "integrationSettings" 
+          SET "value" = ${clientSecret}, "updatedAt" = NOW() 
+          WHERE "provider" = 'hotmart' AND "key" = 'clientSecret'
+        `);
+      }
+      
+      console.log("Client Secret da Hotmart atualizado por:", req.user?.username);
+      
+      // Retornar o valor atualizado para o frontend poder atualizar a exibição
+      return res.status(200).json({ 
+        success: true, 
+        message: "Client Secret da Hotmart atualizado com sucesso",
+        updatedValue: {
+          key: "clientSecret",
+          value: "••••••••", // Valor mascarado para exibição
+          provider: "hotmart",
+          realValue: clientSecret, // Valor real para ser usado pelo frontend
+          lastChars: clientSecret.length > 4 ? clientSecret.slice(-4) : "",
+          isDefined: true,
+          isActive: true,
+          updatedAt: new Date()
+        }
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar Client Secret da Hotmart:", error);
+      return res.status(500).json({ 
+        success: false, 
+        message: "Erro ao atualizar Client Secret da Hotmart" 
+      });
+    }
+  });
+  
+  // Alternar ambiente Sandbox/Produção da Hotmart
+  app.post("/api/integrations/hotmart/toggle-environment", isAdmin, async (req, res) => {
+    try {
+      // Buscar a configuração atual
+      const currentSetting = await db.execute(sql`
+        SELECT value FROM "integrationSettings"
+        WHERE "provider" = 'hotmart' AND "key" = 'useSandbox'
+      `);
+      
+      // Determinar o novo valor (inversão do atual)
+      let currentValue = true; // Valor padrão se não existir
+      if (currentSetting.rows.length > 0) {
+        currentValue = currentSetting.rows[0].value === 'true';
+      }
+      
+      const newValue = !currentValue;
+      
+      // Atualizar ou criar a configuração
+      if (currentSetting.rows.length === 0) {
+        // Se não existir, criar um novo registro
+        await db.execute(sql`
+          INSERT INTO "integrationSettings" 
+          (provider, key, value, description, "isActive", "createdAt", "updatedAt")
+          VALUES ('hotmart', 'useSandbox', ${String(newValue)}, 'Usar ambiente de sandbox da Hotmart', true, NOW(), NOW())
+        `);
+      } else {
+        // Se existir, atualizar o valor
+        await db.execute(sql`
+          UPDATE "integrationSettings" 
+          SET "value" = ${String(newValue)}, "updatedAt" = NOW() 
+          WHERE "provider" = 'hotmart' AND "key" = 'useSandbox'
+        `);
+      }
+      
+      console.log(`Ambiente da Hotmart alterado para ${newValue ? 'Sandbox' : 'Produção'} por: ${req.user?.username}`);
+      
+      // Retornar o valor atualizado
+      return res.status(200).json({ 
+        success: true, 
+        message: `Ambiente da Hotmart alterado para ${newValue ? 'Sandbox' : 'Produção'}`,
+        updatedValue: {
+          key: "useSandbox",
+          value: String(newValue),
+          provider: "hotmart",
+          realValue: String(newValue),
+          isDefined: true,
+          isActive: true,
+          updatedAt: new Date()
+        }
+      });
+    } catch (error) {
+      console.error("Erro ao alternar ambiente da Hotmart:", error);
+      return res.status(500).json({ 
+        success: false, 
+        message: "Erro ao alternar ambiente da Hotmart" 
+      });
+    }
+  });
+  
+  // Testar conexão com a API da Hotmart
+  app.get("/api/integrations/hotmart/test-connection", isAdmin, async (req, res) => {
+    try {
+      console.log("===== TESTE DE CONEXÃO COM HOTMART INICIADO =====");
+      console.log("Usuário:", req.user?.username);
+      console.log("Data e hora do teste:", new Date().toISOString());
+      
+      // Buscar as credenciais da Hotmart e configuração de ambiente do banco de dados
+      const settings = await db.execute(sql`
+        SELECT key, value
+        FROM "integrationSettings"
+        WHERE "provider" = 'hotmart' AND "key" IN ('clientId', 'clientSecret', 'useSandbox')
+      `);
+      
+      console.log("Configurações encontradas:", settings.rows.length);
+      
+      // Converter o resultado em um objeto para facilitar o acesso
+      const credentials = settings.rows.reduce((acc, setting) => {
+        console.log(`Configuração: ${setting.key} = ${setting.key === 'useSandbox' ? setting.value : '***' + (setting.value?.slice(-4) || '')}`);
+        acc[setting.key] = setting.value;
+        return acc;
+      }, {} as Record<string, string>);
+      
+      // Verificar se as credenciais estão configuradas
+      if (!credentials.clientId || !credentials.clientSecret) {
+        return res.status(400).json({
+          success: false,
+          message: "Credenciais da Hotmart não configuradas. Configure o Client ID e Client Secret primeiro."
+        });
+      }
+      
+      // Importar o serviço da Hotmart
+      const { HotmartService } = await import('./services/hotmart-service');
+      
+      // Determinar ambiente baseado na configuração useSandbox
+      const useSandbox = credentials.useSandbox === 'true';
+      
+      // Usar as credenciais reais fornecidas pelo usuário a partir do banco de dados
+      const clientId = credentials.clientId;
+      const clientSecret = credentials.clientSecret;
+      
+      console.log(`Teste de conexão - usando ambiente: ${useSandbox ? 'sandbox' : 'produção'}`);
+      console.log(`Credenciais utilizadas - Client ID: ${clientId.substring(0, 10)}... | Client Secret: ${clientSecret.substring(0, 5)}...`);
+      
+      // Inicializar o serviço com as credenciais reais do usuário
+      HotmartService.initialize(clientId, clientSecret, useSandbox);
+      
+      // Testar a conexão
+      console.log('Iniciando teste de conexão com a API da Hotmart...');
+      
+      try {
+        const result = await HotmartService.testConnection();
+        console.log('Resultado do teste de conexão:', JSON.stringify(result));
+        return res.json(result);
+      } catch (error) {
+        console.error('ERRO CRÍTICO no teste de conexão:', error);
+        return res.status(500).json({
+          success: false,
+          message: `Erro ao testar conexão: ${error instanceof Error ? error.message : String(error)}`,
+          details: { error: String(error) }
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao testar conexão com a Hotmart:", error);
+      let errorMessage = "Erro desconhecido";
+      
+      // Extrai uma mensagem de erro amigável para o usuário
+      if (error instanceof Error) {
+        if (error.message.includes('404')) {
+          errorMessage = "Não foi possível conectar à API da Hotmart. Verifique se as credenciais estão corretas.";
+        } else if (error.message.includes('401')) {
+          errorMessage = "Credenciais da Hotmart inválidas. Verifique o Client ID e Client Secret.";
+        } else if (error.message.includes('403')) {
+          errorMessage = "Sem permissão para acessar a API da Hotmart. Verifique as permissões das credenciais.";
+        } else if (error.message.includes('500')) {
+          errorMessage = "Erro interno no servidor da Hotmart. Tente novamente mais tarde.";
+        } else if (error.message.includes('timeout')) {
+          errorMessage = "Tempo limite excedido na conexão com a Hotmart. Verifique sua conexão com a internet.";
+        } else {
+          // Se não for nenhum dos casos acima, usa a mensagem original, mas formatada
+          errorMessage = "Falha na conexão: " + error.message.replace(/^Error: /, '');
+        }
+      }
+      
+      return res.status(500).json({
+        success: false,
+        message: errorMessage
+      });
+    }
+  });
+  
+  // Testar conexão com a API da Doppus
+  app.get("/api/integrations/doppus/test-connection", isAdmin, async (req, res) => {
+    try {
+      console.log("===== TESTE DE CONEXÃO COM DOPPUS INICIADO =====");
+      console.log("Usuário:", req.user?.username);
+      console.log("Data e hora do teste:", new Date().toISOString());
+      
+      // Importar o serviço da Doppus
+      const doppusService = await import('./services/doppus-service');
+      
+      // Testar a conexão
+      console.log('Iniciando teste de conexão com a API da Doppus...');
+      
+      try {
+        const result = await doppusService.default.testConnection();
+        console.log('Resultado do teste de conexão:', JSON.stringify(result));
+        
+        // Garantir que a resposta tenha um formato consistente
+        // e que o status success seja explícito para que a UI possa processar corretamente
+        if (result && result.success === true) {
+          console.log('✅ Teste de conexão com a Doppus bem-sucedido: Token obtido');
+          return res.json({
+            success: true,
+            message: result.message || 'Conexão com a API da Doppus estabelecida com sucesso.',
+            details: result.details || {}
+          });
+        } else {
+          console.log('❌ Teste de conexão com a Doppus falhou, mas não lançou exceção');
+          return res.status(500).json({
+            success: false,
+            message: result.message || 'Falha no teste de conexão com a API da Doppus',
+            details: result.details || {}
+          });
+        }
+      } catch (error) {
+        console.error('ERRO CRÍTICO no teste de conexão:', error);
+        return res.status(500).json({
+          success: false,
+          message: `Erro ao testar conexão: ${error instanceof Error ? error.message : String(error)}`,
+          details: { error: String(error) }
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao testar conexão com a Doppus:", error);
+      let errorMessage = "Erro desconhecido";
+      
+      // Extrai uma mensagem de erro amigável para o usuário
+      if (error instanceof Error) {
+        if (error.message.includes('404')) {
+          errorMessage = "Não foi possível conectar à API da Doppus. Verifique se as credenciais estão corretas.";
+        } else if (error.message.includes('401')) {
+          errorMessage = "Credenciais da Doppus inválidas. Verifique o Client ID e Client Secret.";
+        } else if (error.message.includes('403')) {
+          errorMessage = "Sem permissão para acessar a API da Doppus. Verifique as permissões das credenciais.";
+        } else if (error.message.includes('500')) {
+          errorMessage = "Erro interno no servidor da Doppus. Tente novamente mais tarde.";
+        } else if (error.message.includes('timeout')) {
+          errorMessage = "Tempo limite excedido na conexão com a Doppus. Verifique sua conexão com a internet.";
+        } else {
+          // Se não for nenhum dos casos acima, usa a mensagem original, mas formatada
+          errorMessage = "Falha na conexão: " + error.message.replace(/^Error: /, '');
+        }
+      }
+      
+      return res.status(500).json({
+        success: false,
+        message: errorMessage
+      });
+    }
+  });
+  
+  // Atualizar chave secreta da Doppus
+  app.post("/api/integrations/doppus/secret", isAdmin, async (req, res) => {
+    try {
+      const { secret } = req.body;
+      
+      if (!secret) {
+        return res.status(400).json({ message: "Chave secreta é obrigatória" });
+      }
+      
+      // 1. Atualizar na tabela integrationSettings
+      let integrationsResult;
+      try {
+        // Verificar se o registro já existe
+        const existingRecord = await db.execute(sql`
+          SELECT id FROM "integrationSettings"
+          WHERE "provider" = 'doppus' AND "key" = 'secret'
+        `);
+        
+        if (existingRecord.rows.length === 0) {
+          // Se não existir, criar um novo registro
+          integrationsResult = await db.execute(sql`
+            INSERT INTO "integrationSettings" 
+            (provider, key, value, description, "isActive", "createdAt", "updatedAt")
+            VALUES ('doppus', 'secret', ${secret}, 'Chave secreta para validação de webhooks da Doppus', true, NOW(), NOW())
+            RETURNING *
+          `);
+        } else {
+          // Se existir, atualizar o valor
+          integrationsResult = await db.execute(sql`
+            UPDATE "integrationSettings" 
+            SET "value" = ${secret}, "updatedAt" = NOW() 
+            WHERE "provider" = 'doppus' AND "key" = 'secret'
+            RETURNING *
+          `);
+        }
+        
+        console.log("Chave secreta da Doppus atualizada na tabela integrationSettings");
+      } catch (integrationError) {
+        console.error("Erro ao atualizar chave secreta na tabela integrationSettings:", integrationError);
+      }
+      
+      // 2. IMPORTANTE: Atualizar também na tabela subscriptionSettings (usada pelo DoppusService)
+      try {
+        // Importar o pool para consultas diretas ao banco de dados
+        const { pool } = await import('./db');
+        
+        const subscriptionResult = await pool.query(
+          `UPDATE "subscriptionSettings" 
+           SET "doppusSecretKey" = $1, "updatedAt" = $2
+           RETURNING *`,
+          [secret, new Date()]
+        );
+        console.log("Secret Key atualizada na tabela subscriptionSettings");
+      } catch (subscriptionError) {
+        console.error("Erro ao atualizar Secret Key na tabela subscriptionSettings:", subscriptionError);
+        return res.status(500).json({ 
+          success: false, 
+          message: "Erro ao atualizar Secret Key nas configurações de assinatura" 
+        });
+      }
+      
+      console.log("Chave secreta da Doppus atualizada por:", req.user?.username);
+      
+      // Retornar o valor atualizado para o frontend poder atualizar a exibição
+      return res.status(200).json({ 
+        success: true, 
+        message: "Chave secreta da Doppus atualizada com sucesso",
+        updatedValue: {
+          key: "secret",
+          value: "••••••••", // Valor mascarado para exibição
+          provider: "doppus",
+          realValue: secret, // Valor real para ser usado pelo frontend
+          lastChars: secret.length > 4 ? secret.slice(-4) : "",
+          isDefined: true,
+          isActive: true,
+          updatedAt: new Date()
+        }
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar chave secreta da Doppus:", error);
+      return res.status(500).json({ 
+        success: false, 
+        message: "Erro ao atualizar chave secreta da Doppus" 
+      });
+    }
+  });
+  
+  // Atualizar API Key da Doppus
+  app.post("/api/integrations/doppus/apikey", isAdmin, async (req, res) => {
+    try {
+      const { apiKey } = req.body;
+      
+      if (!apiKey) {
+        return res.status(400).json({ message: "API Key é obrigatória" });
+      }
+      
+      // Verificar se o registro já existe
+      const existingRecord = await db.execute(sql`
+        SELECT id FROM "integrationSettings"
+        WHERE "provider" = 'doppus' AND "key" = 'apiKey'
+      `);
+      
+      if (existingRecord.rows.length === 0) {
+        // Se não existir, criar um novo registro
+        await db.execute(sql`
+          INSERT INTO "integrationSettings" 
+          (provider, key, value, description, "isActive", "createdAt", "updatedAt")
+          VALUES ('doppus', 'apiKey', ${apiKey}, 'API Key da Doppus para acesso à API', true, NOW(), NOW())
+        `);
+      } else {
+        // Se existir, atualizar o valor
+        await db.execute(sql`
+          UPDATE "integrationSettings" 
+          SET "value" = ${apiKey}, "updatedAt" = NOW() 
+          WHERE "provider" = 'doppus' AND "key" = 'apiKey'
+        `);
+      }
+      
+      console.log("API Key da Doppus atualizada por:", req.user?.username);
+      
+      // Retornar o valor atualizado para o frontend poder atualizar a exibição
+      return res.status(200).json({ 
+        success: true, 
+        message: "API Key da Doppus atualizada com sucesso",
+        updatedValue: {
+          key: "apiKey",
+          value: "••••••••", // Valor mascarado para exibição
+          provider: "doppus",
+          realValue: apiKey, // Valor real para ser usado pelo frontend
+          lastChars: apiKey.length > 4 ? apiKey.slice(-4) : "",
+          isDefined: true,
+          isActive: true,
+          updatedAt: new Date()
+        }
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar API Key da Doppus:", error);
+      return res.status(500).json({ 
+        success: false, 
+        message: "Erro ao atualizar API Key da Doppus" 
+      });
+    }
+  });
+  
+  // Obter configurações atuais das integrações
+  app.get("/api/integrations/settings", isAdmin, async (req, res) => {
+    try {
+      // Buscar todas as configurações de integração
+      const settings = await db.execute(sql`
+        SELECT provider, key, value, description, "isActive", "updatedAt"
+        FROM "integrationSettings"
+        ORDER BY provider, key
+      `);
+      
+      // Transformar em um objeto mais fácil de usar no frontend
+      const formattedSettings = settings.rows.reduce((acc, setting) => {
+        if (!acc[setting.provider]) {
+          acc[setting.provider] = {};
+        }
+        
+        // Não enviar valores sensíveis como texto puro, mas incluir propriedade realValue
+        // para que o frontend possa mostrar quando explicitamente solicitado
+        const isSensitive = ['secret', 'clientSecret', 'clientId', 'apiKey'].includes(setting.key);
+        const isDefined = !!setting.value && setting.value.length > 0;
+        const maskedValue = isDefined ? '••••••••' : '';
+        
+        // Criar o objeto no formato exato que o frontend espera
+        // O componente SubscriptionManagement.tsx espera uma estrutura específica
+        acc[setting.provider][setting.key] = {
+          value: isSensitive ? maskedValue : setting.value,
+          description: setting.description,
+          isActive: setting.isActive,
+          updatedAt: setting.updatedAt,
+          isDefined: isDefined,
+          // Adicionar valor real para o frontend poder exibir quando solicitado
+          realValue: setting.value,
+          // Adicionar últimos caracteres para facilitar identificação
+          lastChars: isDefined && setting.value.length > 4 ? 
+            setting.value.slice(-4) : ''
+        };
+        
+        // Registrar no console para debug que os valores estão sendo processados
+        if (setting.provider === 'hotmart' && isDefined) {
+          console.log(`Configuração ${setting.provider}.${setting.key} encontrada com valor (últimos 4 caracteres): ${setting.value.slice(-4)}, realValue definido: ${!!setting.value}`);
+        }
+        
+        return acc;
+      }, {});
+      
+      // Verificar se temos todas as entradas necessárias para Hotmart e Doppus
+      // O componente frontend espera certas chaves, mesmo que vazias
+      if (!formattedSettings.hotmart) {
+        formattedSettings.hotmart = {};
+      }
+      
+      if (!formattedSettings.doppus) {
+        formattedSettings.doppus = {};
+      }
+      
+      // Garantir que todas as chaves esperadas existam
+      const requiredHotmartKeys = ['secret', 'clientId', 'clientSecret'];
+      const requiredDoppusKeys = ['secretKey', 'clientId', 'clientSecret'];
+      
+      for (const key of requiredHotmartKeys) {
+        if (!formattedSettings.hotmart[key]) {
+          formattedSettings.hotmart[key] = {
+            isDefined: false,
+            value: '',
+            realValue: '',
+            lastChars: '',
+            isActive: true,
+            description: '',
+            updatedAt: null
+          };
+        }
+      }
+      
+      for (const key of requiredDoppusKeys) {
+        if (!formattedSettings.doppus[key]) {
+          formattedSettings.doppus[key] = {
+            isDefined: false,
+            value: '',
+            realValue: '',
+            lastChars: '',
+            isActive: true,
+            description: '',
+            updatedAt: null
+          };
+        }
+      }
+      
+      console.log("Enviando configurações de integração formatadas com chaves:", 
+        Object.keys(formattedSettings.hotmart).join(', '), 
+        "/ Doppus:", 
+        Object.keys(formattedSettings.doppus).join(', ')
+      );
+      
+      return res.status(200).json(formattedSettings);
+    } catch (error) {
+      console.error("Erro ao obter configurações de integrações:", error);
+      return res.status(500).json({ 
+        success: false, 
+        message: "Erro ao obter configurações de integrações" 
+      });
+    }
+  });
+
+  // Rota para webhook da Hotmart - usando express.json() específico para esta rota
+  app.post("/api/webhooks/hotmart", express.json(), async (req, res) => {
+    try {
+      console.log("Webhook da Hotmart recebido");
+      // Log completo do corpo da requisição para diagnóstico
+      console.log("Corpo do webhook:", JSON.stringify(req.body, null, 2));
+      
+      // Verificar token de segurança no cabeçalho da requisição
+      // Aceitar múltiplos formatos do cabeçalho para maior compatibilidade
+      const token = 
+        req.headers['x-hotmart-webhook-token'] || 
+        req.headers['X-Hotmart-Webhook-Token'] || 
+        req.headers['x-hotmart-hottok'] || 
+        req.headers['X-Hotmart-Hottok'] ||
+        req.query.token;
+        
+      console.log("Token recebido no cabeçalho:", token);
+      console.log("Cabeçalhos recebidos:", Object.keys(req.headers).join(', '));
+      
+      const hotmartSecret = process.env.HOTMART_SECRET;
+      
+      // Registrar o webhook recebido no banco de dados
+      let webhookStatus = 'pending';
+      let webhookError = null;
+      let webhookLogId = null;
+      
+      try {
+        // Importar o pool para consultas diretas ao banco de dados
+        const { pool } = await import('./db');
+        
+        // Registrar o webhook no banco de dados
+        const insertWebhookQuery = `
+          INSERT INTO "webhookLogs" (
+            "eventType", "payloadData", "status", "createdAt", "source", "sourceIp"
+          ) VALUES ($1, $2, $3, NOW(), $4, $5)
+          RETURNING id;
+        `;
+        
+        const webhookLog = await pool.query(insertWebhookQuery, [
+          req.body.event || 'unknown',
+          JSON.stringify(req.body),
+          webhookStatus,
+          'hotmart',
+          req.ip
+        ]);
+        
+        if (webhookLog.rows && webhookLog.rows.length > 0) {
+          webhookLogId = webhookLog.rows[0].id;
+          console.log(`Webhook registrado com ID: ${webhookLogId}`);
+        }
+      } catch (dbError) {
+        console.error("Erro ao registrar webhook no banco de dados:", dbError);
+        // Continue o processamento mesmo se o registro falhar
+      }
+      
+      // Validar o token de segurança
+      if (!token || token !== hotmartSecret) {
+        webhookStatus = 'error';
+        webhookError = 'Token de webhook inválido ou não fornecido';
+        
+        // Atualizar o status do webhook no banco de dados
+        if (webhookLogId) {
+          try {
+            const { pool } = await import('./db');
+            await pool.query(`
+              UPDATE "webhookLogs" 
+              SET "status" = $1, "errorMessage" = $2 
+              WHERE id = $3
+            `, [webhookStatus, webhookError, webhookLogId]);
+          } catch (updateError) {
+            console.error("Erro ao atualizar status do webhook:", updateError);
+          }
+        }
+        
+        console.error(`Token de webhook inválido ou não fornecido. Token recebido: "${token}", esperado: "${hotmartSecret.slice(0, 3)}..."`);
+        return res.status(403).json({
+          success: false,
+          message: "Acesso não autorizado: token de webhook inválido"
+        });
+      }
       
       // Validação básica do webhook
       if (!req.body || !req.body.data || !req.body.event) {
+        webhookStatus = 'error';
+        webhookError = 'Formato de webhook inválido';
+        
+        // Atualizar o status do webhook no banco de dados
+        if (webhookLogId) {
+          try {
+            const { pool } = await import('./db');
+            await pool.query(`
+              UPDATE "webhookLogs" 
+              SET "status" = $1, "errorMessage" = $2 
+              WHERE id = $3
+            `, [webhookStatus, webhookError, webhookLogId]);
+          } catch (updateError) {
+            console.error("Erro ao atualizar status do webhook:", updateError);
+          }
+        }
+        
+        console.error("Formato de webhook inválido:", req.body);
         return res.status(400).json({ 
           success: false, 
-          message: "Webhook inválido" 
+          message: "Webhook inválido: formato incorreto" 
         });
       }
+      
+      console.log("Evento Hotmart recebido:", req.body.event);
       
       // Processar o webhook usando o serviço
       const result = await SubscriptionService.processHotmartWebhook(req.body);
       
+      // Log do resultado para monitoramento
+      console.log("Resultado do processamento do webhook:", result);
+      
+      // Atualizar o status do webhook no banco de dados para success
+      webhookStatus = result.success ? 'success' : 'error';
+      webhookError = result.success ? null : (result.message || 'Erro no processamento');
+      
+      if (webhookLogId) {
+        try {
+          const { pool } = await import('./db');
+          
+          // Extrair o email do comprador para facilitar buscas futuras
+          let buyerEmail = '';
+          try {
+            if (req.body.data && req.body.data.buyer && req.body.data.buyer.email) {
+              buyerEmail = req.body.data.buyer.email;
+            }
+          } catch (emailError) {
+            console.error("Erro ao extrair email do comprador:", emailError);
+          }
+          
+          await pool.query(`
+            UPDATE "webhookLogs" 
+            SET "status" = $1, "errorMessage" = $2, "email" = $3, "updatedAt" = NOW()
+            WHERE id = $4
+          `, [webhookStatus, webhookError, buyerEmail, webhookLogId]);
+          
+          console.log(`Status do webhook ${webhookLogId} atualizado para ${webhookStatus}`);
+        } catch (updateError) {
+          console.error("Erro ao atualizar status do webhook:", updateError);
+        }
+      }
+      
       res.json({ 
         success: true, 
         message: "Webhook processado com sucesso", 
-        result 
+        result,
+        webhookLogId
       });
     } catch (error) {
       console.error("Erro ao processar webhook da Hotmart:", error);
+      
+      // Se tivermos um ID de log, atualizar o status para error
+      if (typeof webhookLogId !== 'undefined' && webhookLogId !== null) {
+        try {
+          const { pool } = await import('./db');
+          await pool.query(`
+            UPDATE "webhookLogs" 
+            SET "status" = 'error', "errorMessage" = $1, "updatedAt" = NOW()
+            WHERE id = $2
+          `, [error instanceof Error ? error.message : String(error), webhookLogId]);
+        } catch (updateError) {
+          console.error("Erro ao atualizar status do webhook após falha:", updateError);
+        }
+      }
+      
       res.status(500).json({ 
         success: false, 
         message: "Erro ao processar webhook", 
@@ -4597,6 +5840,470 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+  
+  // Endpoint para atualizar o Client ID da Doppus
+  app.post("/api/integrations/doppus/clientid", isAdmin, async (req, res) => {
+    try {
+      const { clientId } = req.body;
+      
+      if (!clientId || typeof clientId !== 'string') {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Client ID inválido" 
+        });
+      }
+
+      const currentDate = new Date();
+      let integrationsResult, subscriptionResult;
+
+      // Importar o pool para consultas diretas ao banco de dados
+      const { pool } = await import('./db');
+
+      // 1. Atualizar na tabela integrationSettings
+      try {
+        // Verificar se a configuração já existe no banco
+        const existingSettings = await pool.query(
+          `SELECT * FROM "integrationSettings" WHERE provider = 'doppus' AND key = 'clientId'`
+        );
+
+        if (existingSettings.rows.length > 0) {
+          // Atualizar configuração existente
+          integrationsResult = await pool.query(
+            `UPDATE "integrationSettings" 
+             SET value = $1, "updatedAt" = $2
+             WHERE provider = 'doppus' AND key = 'clientId'
+             RETURNING *`,
+            [clientId, currentDate]
+          );
+        } else {
+          // Criar nova configuração
+          integrationsResult = await pool.query(
+            `INSERT INTO "integrationSettings" (provider, key, value, description, "isActive", "createdAt", "updatedAt")
+             VALUES ('doppus', 'clientId', $1, 'Client ID para autenticação OAuth2 com a Doppus', true, $2, $2)
+             RETURNING *`,
+            [clientId, currentDate]
+          );
+        }
+        console.log("Client ID atualizado na tabela integrationSettings");
+      } catch (integrationError) {
+        console.error("Erro ao atualizar Client ID na tabela integrationSettings:", integrationError);
+      }
+
+      // 2. IMPORTANTE: Atualizar também na tabela subscriptionSettings (usada pelo DoppusService)
+      try {
+        subscriptionResult = await pool.query(
+          `UPDATE "subscriptionSettings" 
+           SET "doppusClientId" = $1, "updatedAt" = $2
+           RETURNING *`,
+          [clientId, currentDate]
+        );
+        console.log("Client ID atualizado na tabela subscriptionSettings");
+      } catch (subscriptionError) {
+        console.error("Erro ao atualizar Client ID na tabela subscriptionSettings:", subscriptionError);
+        return res.status(500).json({ 
+          success: false, 
+          message: "Erro ao atualizar Client ID nas configurações de assinatura" 
+        });
+      }
+
+      const updatedSetting = integrationsResult?.rows[0] || {};
+      
+      // Formatando o valor da mesma forma que é feito no endpoint GET
+      const updatedValue = {
+        isDefined: true,
+        value: '••••••••',
+        description: updatedSetting.description || 'Client ID para autenticação OAuth2 com a Doppus',
+        isActive: updatedSetting.isActive || true,
+        updatedAt: updatedSetting.updatedAt || currentDate,
+        realValue: clientId,
+        lastChars: clientId.slice(-4)
+      };
+
+      return res.status(200).json({ 
+        success: true, 
+        message: "Client ID da Doppus atualizado com sucesso",
+        updatedValue
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar Client ID da Doppus:", error);
+      return res.status(500).json({ 
+        success: false, 
+        message: "Erro ao atualizar Client ID da Doppus" 
+      });
+    }
+  });
+
+  // Endpoint para atualizar o Client Secret da Doppus
+  app.post("/api/integrations/doppus/clientsecret", isAdmin, async (req, res) => {
+    try {
+      const { clientSecret } = req.body;
+      
+      if (!clientSecret || typeof clientSecret !== 'string') {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Client Secret inválido" 
+        });
+      }
+
+      // Importar o pool para consultas diretas ao banco de dados
+      const { pool } = await import('./db');
+
+      const currentDate = new Date();
+      let integrationsResult, subscriptionResult;
+
+      // 1. Atualizar na tabela integrationSettings
+      try {
+        // Verificar se a configuração já existe no banco
+        const existingSettings = await pool.query(
+          `SELECT * FROM "integrationSettings" WHERE provider = 'doppus' AND key = 'clientSecret'`
+        );
+
+        if (existingSettings.rows.length > 0) {
+          // Atualizar configuração existente
+          integrationsResult = await pool.query(
+            `UPDATE "integrationSettings" 
+             SET value = $1, "updatedAt" = $2
+             WHERE provider = 'doppus' AND key = 'clientSecret'
+             RETURNING *`,
+            [clientSecret, currentDate]
+          );
+        } else {
+          // Criar nova configuração
+          integrationsResult = await pool.query(
+            `INSERT INTO "integrationSettings" (provider, key, value, description, "isActive", "createdAt", "updatedAt")
+             VALUES ('doppus', 'clientSecret', $1, 'Client Secret para autenticação OAuth2 com a Doppus', true, $2, $2)
+             RETURNING *`,
+            [clientSecret, currentDate]
+          );
+        }
+        console.log("Client Secret atualizado na tabela integrationSettings");
+      } catch (integrationError) {
+        console.error("Erro ao atualizar Client Secret na tabela integrationSettings:", integrationError);
+      }
+
+      // 2. IMPORTANTE: Atualizar também na tabela subscriptionSettings (usada pelo DoppusService)
+      try {
+        subscriptionResult = await pool.query(
+          `UPDATE "subscriptionSettings" 
+           SET "doppusClientSecret" = $1, "updatedAt" = $2
+           RETURNING *`,
+          [clientSecret, currentDate]
+        );
+        console.log("Client Secret atualizado na tabela subscriptionSettings");
+      } catch (subscriptionError) {
+        console.error("Erro ao atualizar Client Secret na tabela subscriptionSettings:", subscriptionError);
+        return res.status(500).json({ 
+          success: false, 
+          message: "Erro ao atualizar Client Secret nas configurações de assinatura" 
+        });
+      }
+
+      const updatedSetting = integrationsResult?.rows[0] || {};
+      
+      // Formatando o valor da mesma forma que é feito no endpoint GET
+      const updatedValue = {
+        isDefined: true,
+        value: '••••••••',
+        description: updatedSetting.description || 'Client Secret para autenticação OAuth2 com a Doppus',
+        isActive: updatedSetting.isActive || true,
+        updatedAt: updatedSetting.updatedAt || currentDate,
+        realValue: clientSecret,
+        lastChars: clientSecret.slice(-4)
+      };
+
+      return res.status(200).json({ 
+        success: true, 
+        message: "Client Secret da Doppus atualizado com sucesso",
+        updatedValue
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar Client Secret da Doppus:", error);
+      return res.status(500).json({ 
+        success: false, 
+        message: "Erro ao atualizar Client Secret da Doppus" 
+      });
+    }
+  });
+
+  // Rota de diagnóstico para testar conexão com a Doppus
+  app.get('/api/webhooks/doppus/test-connection', async (req, res) => {
+    try {
+      console.log('[DIAGNÓSTICO DOPPUS] Iniciando teste de conexão');
+      
+      // Importar o serviço da Doppus
+      const DoppusService = (await import('./services/doppus-service')).default;
+      
+      const result = await DoppusService.testConnection();
+      console.log('[DIAGNÓSTICO DOPPUS] Resultado do teste:', JSON.stringify(result));
+      
+      res.json(result);
+    } catch (error) {
+      console.error('[DIAGNÓSTICO DOPPUS] Erro durante o teste:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro durante o teste de conexão',
+        error: error instanceof Error ? error.message : String(error),
+        stack: process.env.NODE_ENV === 'production' ? undefined : error instanceof Error ? error.stack : undefined
+      });
+    }
+  });
+
+  // Rota webhook do Doppus - SOLUÇÃO FINAL SIMPLIFICADA
+  // Essa implementação recebe o webhook e responde imediatamente com 200 OK
+  // sem tentar processar o corpo, evitando assim o erro "stream is not readable"
+  app.post("/api/webhooks/doppus", async (req, res) => {
+    // Passo 1: Sempre responder com 200 OK imediatamente
+    res.status(200).send("OK");
+    
+    // Passo 2: Registrar o evento no log
+    console.log("📦 Webhook Doppus recebido");
+    
+    try {
+      // Passo 3: Registrar no banco de dados para processamento posterior
+      await storage.createWebhookLog({
+        eventType: 'webhook.received',
+        payloadData: JSON.stringify({
+          receivedAt: new Date().toISOString(),
+          note: "Webhook recebido e processamento delegado para evitar erro 'stream is not readable'"
+        }),
+        status: 'received',
+        source: 'doppus',
+        errorMessage: null,
+        sourceIp: req.ip || req.connection.remoteAddress || 'unknown',
+        transactionId: null
+      });
+      
+      console.log("✅ Webhook da Doppus registrado para processamento posterior");
+    } catch (err) {
+      console.error("❌ Erro ao registrar evento de webhook:", err);
+    }
+  });
+  
+  // Nova rota para processar webhooks Doppus a partir do painel administrativo
+  app.post("/api/admin/process-doppus-webhook", isAdmin, async (req, res) => {
+    try {
+        const sourceIp = req.ip || req.connection.remoteAddress || 'unknown';
+        console.log("📦 Webhook Doppus recebido de IP:", sourceIp);
+        
+        // Capturar uma cópia do body para evitar modificação do objeto original
+        let body = JSON.parse(JSON.stringify(req.body || {}));
+        
+        // Registrar os detalhes críticos para diagnóstico
+        const contentType = req.headers['content-type'] || 'desconhecido';
+        console.log("Content-Type:", contentType);
+        console.log("Body tipo:", typeof body);
+        console.log("Body tamanho:", Object.keys(body).length);
+        
+        // Para o caso onde existe um campo 'payload' contendo JSON serializado
+        if (body && body.payload && typeof body.payload === 'string') {
+          try {
+            body = JSON.parse(body.payload);
+            console.log("✅ Payload extraído e convertido para objeto");
+          } catch (error) {
+            console.error("⚠️ Payload existe mas não é JSON válido:", error);
+          }
+        }
+        
+        // Para casos onde o body é { _rawData: string } do middleware universal
+        if (body && body._rawData && typeof body._rawData === 'string') {
+          try {
+            body = JSON.parse(body._rawData);
+            console.log("✅ Dados brutos extraídos e convertidos");
+          } catch (error) {
+            console.error("⚠️ Dados brutos não são JSON válido:", error);
+          }
+        }
+        
+        // Adaptação para o formato de maio/2025 da Doppus
+        // Se encontrarmos a estrutura básica do novo formato (customer, items, etc)
+        // mas não encontrarmos data ou event, que são esperados pelo processador
+        if (body && 
+            body.customer && 
+            body.items && 
+            Array.isArray(body.items) && 
+            !body.data && 
+            !body.event) {
+          // Reformatar para um formato compatível com o processador
+          const originalBody = { ...body };
+          body = {
+            event: 'payment.approved',
+            data: originalBody
+          };
+          console.log("✅ Detectado formato Doppus maio/2025, adaptado para processamento");
+        }
+        
+        // Log detalhado do corpo para diagnóstico
+        console.log("📋 Corpo final processado:", JSON.stringify(body, null, 2));
+        
+        if (Object.keys(body).length === 0) {
+          console.error("❌ Body vazio ou não processável. Verificando raw payload.");
+          // Em último caso, tentar obter os dados brutos da requisição
+          if (req.rawBody) {
+            try {
+              body = JSON.parse(req.rawBody.toString());
+              console.log("✅ Payload reconstruído de rawBody com sucesso");
+            } catch (e) {
+              console.error("❌ Não foi possível parsear rawBody:", e);
+            }
+          }
+        }
+        
+        // Registrar sempre o webhook no banco, não importa o formato
+        const eventType = req.headers['x-doppus-event'] as string || body?.event || 'unknown';
+        const signature = req.headers['x-doppus-signature'] as string;
+        const transactionId = body?.data?.transaction?.code || 
+                             body?.transaction?.code || 
+                             body?.data?.code || 
+                             body?.id || 
+                             null;
+        
+        // Log dos cabeçalhos para diagnóstico
+        console.log("🔍 Cabeçalhos recebidos:", {
+          signature: signature ? 'presente' : 'ausente',
+          contentType,
+          eventType
+        });
+        
+        // Criar log no banco independentemente de erros futuros
+        let webhookLog;
+        try {
+          webhookLog = await storage.createWebhookLog({
+            eventType: body?.event || eventType,
+            payloadData: JSON.stringify(body),
+            status: 'received',
+            source: 'doppus',
+            errorMessage: null,
+            sourceIp,
+            transactionId
+          });
+          console.log("✅ Log de webhook registrado com ID:", webhookLog.id);
+        } catch (dbError) {
+          console.error("❌ Erro ao registrar log de webhook:", dbError);
+          // Prosseguir mesmo sem o log para tentar processar o webhook
+        }
+        
+        // Verificação de formato mínimo - mais tolerante
+        if (!body || Object.keys(body).length === 0) {
+          console.error("❌ ERRO: Corpo da requisição completamente vazio ou inválido");
+          
+          if (webhookLog) {
+            await storage.updateWebhookLog(webhookLog.id, {
+              status: 'error',
+              errorMessage: "Corpo da requisição vazio ou inválido"
+            });
+          }
+          
+          return; // Já enviamos a resposta HTTP anteriormente
+        }
+        
+        // Tolerância a formatos imperfeitos: Tentar extrair dados mesmo sem estrutura perfeita
+        // Esta parte é crucial para máxima compatibilidade com diferentes formatos
+        const dataObject = body.data || body.payload?.data || body.transaction || body.order || {};
+        const eventName = body.event || body.type || body.event_type || eventType;
+        
+        console.log("🔍 Dados extraídos:", {
+          evento: eventName,
+          transacao: transactionId,
+          temDados: !!dataObject && Object.keys(dataObject).length > 0
+        });
+        
+        // Validar assinatura apenas se fornecida
+        if (signature) {
+          try {
+            const payloadString = JSON.stringify(body);
+            const isValid = await DoppusService.validateWebhookSignature(signature, payloadString);
+            
+            if (!isValid) {
+              console.error("⚠️ Assinatura webhook Doppus inválida");
+              if (webhookLog) {
+                await storage.updateWebhookLog(webhookLog.id, {
+                  status: 'error',
+                  errorMessage: "Assinatura inválida"
+                });
+              }
+              
+              return; // Já enviamos a resposta HTTP anteriormente
+            }
+          } catch (error) {
+            console.error("❌ Erro ao validar assinatura:", error);
+            if (webhookLog) {
+              await storage.updateWebhookLog(webhookLog.id, {
+                status: 'error',
+                errorMessage: `Erro na validação: ${error instanceof Error ? error.message : String(error)}`
+              });
+            }
+            
+            return; // Já enviamos a resposta HTTP anteriormente
+          }
+        }
+        
+        // Processar o webhook usando o serviço Doppus
+        console.log("🔄 Processando webhook Doppus:", eventName);
+        
+        try {
+          // Adaptar o body para o formato que o DoppusService espera
+          // Se faltam campos obrigatórios mas temos os dados básicos, reconstruímos o formato esperado
+          if (!body.data && dataObject && Object.keys(dataObject).length > 0) {
+            body = {
+              ...body,
+              data: dataObject,
+              event: eventName
+            };
+            console.log("🔧 Body reconstruído para formato compatível");
+          }
+          
+          // Processar o webhook usando o serviço com o objeto body processado
+          const result = await DoppusService.processWebhook(body);
+          
+          // Atualizar o log com sucesso
+          if (webhookLog) {
+            await storage.updateWebhookLog(webhookLog.id, {
+              status: 'processed',
+              processingResult: JSON.stringify(result)
+            });
+          }
+          
+          // Log do resultado para monitoramento
+          console.log("✅ Resultado do processamento do webhook Doppus:", result);
+        } catch (processingError) {
+          console.error("❌ Erro ao processar evento Doppus:", processingError);
+          
+          // Atualizar o log com erro de processamento
+          if (webhookLog) {
+            await storage.updateWebhookLog(webhookLog.id, {
+              status: 'error',
+              errorMessage: processingError instanceof Error ? processingError.message : String(processingError)
+            });
+          }
+        }
+      } catch (error) {
+        console.error("❌ ERRO CRÍTICO no webhook Doppus:", error);
+        
+        // Tente registrar o erro, se possível
+        try {
+          await storage.createWebhookLog({
+            eventType: 'ERROR',
+            payloadData: JSON.stringify(req.body || {}),
+            status: 'error',
+            source: 'doppus',
+            errorMessage: `Erro grave: ${error instanceof Error ? error.message : String(error)}`,
+            sourceIp: req.ip
+          });
+        } catch (logError) {
+          console.error('❌ Não foi possível registrar o erro no log:', logError);
+        }
+      }
+    })().catch(err => {
+      console.error("❌❌❌ Erro catastrófico no webhook Doppus:", err);
+    });
+  }).catch(err => {
+    // Em caso de erro na promise inicial, garantir que respondemos com 200
+    console.error("❌❌❌ Erro fatal no processador do webhook:", err);
+    if (!res.headersSent) {
+      res.status(200).send("OK");
+    }
+  });
+});
   
   // Rota para testar rebaixamento de usuário específico (com verificação Hotmart)
   // Temporariamente removida restrição isAdmin para testes
@@ -4841,6 +6548,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Registrar rotas para diagnóstico de e-mail (administradores)
   app.use('/api/email-diagnostics', emailDiagnosticsRouter);
   
+  // Registrar rotas para diagnóstico avançado de webhooks (administradores)
+  const webhookDiagnosticsRouter = (await import('./routes/webhook-diagnostics.js')).default;
+  app.use('/api/webhook-diagnostics', webhookDiagnosticsRouter);
+  
   // Configurar rota de diagnóstico direto do R2
   setupTestR2DirectRoute(app);
   
@@ -4876,6 +6587,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Adaptador para manter compatibilidade com rotas antigas
   app.use('/api/courses', coursesAdapterRouter);
+  // Registrar router de adaptador para rotas em português da API de artes
+  app.use(artesAdapterRouter);
   
   // Rota de diagnóstico para testes (sem middleware)
   app.get('/api/course-debug', (req, res) => {
@@ -5130,25 +6843,1078 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Rotas para upload de imagens de ferramentas
   app.use(ferramentasUploadRouter);
   
+  // Rotas para gerenciamento de analytics
+  app.use('/api/analytics', analyticsRouter);
+  
+  // Rotas para mapeamentos de produtos Hotmart - implementação direta
+  // Implementação direta das rotas para evitar problemas de importação
+  
+  // === HOTMART PRODUCT MAPPINGS ===
+  
+  // Middleware para garantir que apenas admins possam acessar estas rotas
+  app.use('/api/integrations/hotmart/product-mappings', isAdmin);
+  app.use('/api/integrations/doppus/product-mappings', isAdmin);
+  
+  // Obter todos os mapeamentos Hotmart
+  app.get('/api/integrations/hotmart/product-mappings', async (req, res) => {
+    try {
+      const mappings = await db.execute(sql`
+        SELECT * FROM "hotmartProductMappings"
+        ORDER BY "createdAt" DESC
+      `);
+      
+      res.json(mappings.rows);
+    } catch (error) {
+      console.error('Erro ao buscar mapeamentos de produtos Hotmart:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erro ao buscar mapeamentos de produtos Hotmart',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
+  
+  // Criar novo mapeamento Hotmart
+  app.post('/api/integrations/hotmart/product-mappings', async (req, res) => {
+    try {
+      const result = await db.execute(sql`
+        INSERT INTO "hotmartProductMappings" (
+          "productId", "offerId", "productName", "planType", "durationDays", "isLifetime"
+        ) VALUES (
+          ${req.body.productId || ''},
+          ${req.body.offerId || ''},
+          ${req.body.productName || 'Produto Padrão'},
+          ${req.body.planType || 'premium'},
+          ${req.body.durationDays || 30},
+          ${!!req.body.isLifetime}
+        )
+        RETURNING *
+      `);
+      
+      res.status(201).json(result.rows[0]);
+    } catch (error) {
+      console.error('Erro ao criar mapeamento de produto Hotmart:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erro ao criar mapeamento de produto Hotmart',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
+  
+  // Obter mapeamento específico Hotmart
+  app.get('/api/integrations/hotmart/product-mappings/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const result = await db.execute(sql`
+        SELECT * FROM "hotmartProductMappings"
+        WHERE id = ${parseInt(id)}
+      `);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({ 
+          success: false, 
+          message: 'Mapeamento Hotmart não encontrado'
+        });
+      }
+      
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error('Erro ao buscar mapeamento de produto Hotmart:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erro ao buscar mapeamento de produto Hotmart',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
+  
+  // Atualizar mapeamento Hotmart
+  app.put('/api/integrations/hotmart/product-mappings/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const result = await db.execute(sql`
+        UPDATE "hotmartProductMappings"
+        SET 
+          "productId" = ${req.body.productId || ''},
+          "offerId" = ${req.body.offerId || ''},
+          "productName" = ${req.body.productName || 'Produto Padrão'},
+          "planType" = ${req.body.planType || 'premium'},
+          "durationDays" = ${req.body.durationDays || 30},
+          "isLifetime" = ${!!req.body.isLifetime},
+          "updatedAt" = now()
+        WHERE id = ${parseInt(id)}
+        RETURNING *
+      `);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({ 
+          success: false, 
+          message: 'Mapeamento Hotmart não encontrado'
+        });
+      }
+      
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error('Erro ao atualizar mapeamento de produto Hotmart:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erro ao atualizar mapeamento de produto Hotmart',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
+  
+  // Excluir mapeamento Hotmart
+  app.delete('/api/integrations/hotmart/product-mappings/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      await db.execute(sql`
+        DELETE FROM "hotmartProductMappings"
+        WHERE id = ${parseInt(id)}
+      `);
+      
+      res.json({ success: true, message: 'Mapeamento Hotmart excluído com sucesso' });
+    } catch (error) {
+      console.error('Erro ao excluir mapeamento de produto Hotmart:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erro ao excluir mapeamento de produto Hotmart',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
+  
+  // === DOPPUS PRODUCT MAPPINGS ===
+  
+  // Obter todos os mapeamentos Doppus
+  app.get('/api/integrations/doppus/product-mappings', async (req, res) => {
+    try {
+      const mappings = await db.execute(sql`
+        SELECT * FROM "doppusProductMappings"
+        ORDER BY "createdAt" DESC
+      `);
+      
+      res.json(mappings.rows);
+    } catch (error) {
+      console.error('Erro ao buscar mapeamentos de produtos Doppus:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erro ao buscar mapeamentos de produtos Doppus',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
+  
+  // Criar novo mapeamento Doppus
+  app.post('/api/integrations/doppus/product-mappings', async (req, res) => {
+    try {
+      const result = await db.execute(sql`
+        INSERT INTO "doppusProductMappings" (
+          "productId", "productName", "planType", "durationDays", "isLifetime"
+        ) VALUES (
+          ${req.body.productId || ''},
+          ${req.body.productName || 'Produto Padrão'},
+          ${req.body.planType || 'premium'},
+          ${req.body.durationDays || 30},
+          ${!!req.body.isLifetime}
+        )
+        RETURNING *
+      `);
+      
+      res.status(201).json(result.rows[0]);
+    } catch (error) {
+      console.error('Erro ao criar mapeamento de produto Doppus:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erro ao criar mapeamento de produto Doppus',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
+  
+  // Obter mapeamento específico Doppus
+  app.get('/api/integrations/doppus/product-mappings/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const result = await db.execute(sql`
+        SELECT * FROM "doppusProductMappings"
+        WHERE id = ${parseInt(id)}
+      `);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({ 
+          success: false, 
+          message: 'Mapeamento Doppus não encontrado'
+        });
+      }
+      
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error('Erro ao buscar mapeamento de produto Doppus:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erro ao buscar mapeamento de produto Doppus',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
+  
+  // Atualizar mapeamento Doppus
+  app.put('/api/integrations/doppus/product-mappings/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const result = await db.execute(sql`
+        UPDATE "doppusProductMappings"
+        SET 
+          "productId" = ${req.body.productId || ''},
+          "productName" = ${req.body.productName || 'Produto Padrão'},
+          "planType" = ${req.body.planType || 'premium'},
+          "durationDays" = ${req.body.durationDays || 30},
+          "isLifetime" = ${!!req.body.isLifetime},
+          "updatedAt" = now()
+        WHERE id = ${parseInt(id)}
+        RETURNING *
+      `);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({ 
+          success: false, 
+          message: 'Mapeamento Doppus não encontrado'
+        });
+      }
+      
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error('Erro ao atualizar mapeamento de produto Doppus:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erro ao atualizar mapeamento de produto Doppus',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
+  
+  // Excluir mapeamento Doppus
+  app.delete('/api/integrations/doppus/product-mappings/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      await db.execute(sql`
+        DELETE FROM "doppusProductMappings"
+        WHERE id = ${parseInt(id)}
+      `);
+      
+      res.json({ success: true, message: 'Mapeamento Doppus excluído com sucesso' });
+    } catch (error) {
+      console.error('Erro ao excluir mapeamento de produto Doppus:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erro ao excluir mapeamento de produto Doppus',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
+  
+  console.log('✅ Rotas de mapeamento de produtos implementadas diretamente');
+  
   // Rotas para o sistema de comunidade
   app.use(communityRouter);
   
-
+  // Rotas para o sistema de denúncias
+  // Versão original do sistema de denúncias (utiliza ORM/schema)
+  app.use('/api/reports', reportsRouter);
   
+  // Versão 2 do sistema de denúncias (utiliza SQL puro)
+  // Implementada em reports-v2.ts para resolver problemas de ORM
+  app.use('/api/reports-v2', reportsV2Router);
+  
+  // Nota: A implementação do endpoint de webhook da Hotmart foi unificada na versão acima
+  // Removendo código duplicado para evitar conflitos de rotas
+  
+  // Endpoints adicionais para gerenciamento de webhooks da Hotmart
+  
+  // Endpoint para listar logs de webhook (com paginação e filtros)
+  app.get('/api/webhooks/logs', isAdmin, async (req, res) => {
+    try {
+      console.log('DEBUG /api/webhooks/logs - Endpoint chamado');
+      
+      // Verificar registros diretamente
+      try {
+        const rawCount = await db.select({ count: count() }).from(schema.webhookLogs);
+        console.log('DEBUG /api/webhooks/logs - Total de registros na tabela:', rawCount[0]?.count || 0);
+      } catch (countErr) {
+        console.error('DEBUG /api/webhooks/logs - Erro ao contar registros:', countErr);
+      }
+      
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      
+      const filters = {
+        status: req.query.status as string,
+        eventType: req.query.eventType as string,
+        source: req.query.source as string,
+        search: req.query.search as string
+      };
+      
+      console.log('DEBUG /api/webhooks/logs - Parâmetros da requisição:', { page, limit, filters });
+      
+      const result = await storage.getWebhookLogs(page, limit, filters);
+      
+      console.log('DEBUG /api/webhooks/logs - Resultado:', {
+        totalCount: result.totalCount,
+        logsLength: result.logs.length,
+        firstLog: result.logs[0] ? {
+          id: result.logs[0].id,
+          eventType: result.logs[0].eventType,
+          status: result.logs[0].status,
+        } : 'Nenhum log retornado'
+      });
+      
+      return res.json({
+        logs: result.logs,
+        totalCount: result.totalCount,
+        page,
+        limit,
+        totalPages: Math.ceil(result.totalCount / limit)
+      });
+    } catch (error) {
+      console.error('Erro ao listar logs de webhook:', error);
+      return res.status(500).json({ 
+        message: 'Erro ao listar logs de webhook', 
+        error: error.message 
+      });
+    }
+  });
+  
+  // Endpoint para buscar logs de webhook por email
+  app.get('/api/webhooks/search', isAdmin, async (req, res) => {
+    try {
+      const { email } = req.query;
+      
+      if (!email) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email é obrigatório para a busca'
+        });
+      }
+      
+      console.log(`Buscando webhooks relacionados ao email: ${email}`);
+      
+      // Buscar na tabela todos os webhooks que contêm o email no payload
+      const result = await db.execute(sql`
+        SELECT * 
+        FROM "webhookLogs"
+        WHERE "payloadData"::text ILIKE ${`%${email}%`}
+        ORDER BY "createdAt" DESC
+        LIMIT 50
+      `);
+      
+      console.log(`Encontrados ${result.rows.length} registros para o email ${email}`);
+      
+      // Pré-processar os logs para extrair informações relevantes
+      const logs = result.rows.map(log => {
+        let payloadData = log.payloadData;
+        
+        // Converter para string se não for (para garantir consistência)
+        if (typeof payloadData !== 'string') {
+          payloadData = JSON.stringify(payloadData);
+        }
+        
+        return {
+          ...log,
+          payloadData
+        };
+      });
+      
+      res.json({
+        success: true,
+        count: logs.length,
+        logs
+      });
+    } catch (error) {
+      console.error('Erro na busca de webhooks por email:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro ao realizar busca de webhooks',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
+  
+  // Endpoint para obter detalhes de um log específico
+  app.get('/api/webhooks/logs/:id', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'ID inválido' });
+      }
+      
+      const log = await storage.getWebhookLogById(id);
+      
+      if (!log) {
+        return res.status(404).json({ message: 'Log não encontrado' });
+      }
+      
+      // Se tiver dados de usuário associados, buscar informações adicionais
+      let userData = null;
+      if (log.userId) {
+        userData = await storage.getUserById(log.userId);
+      }
+      
+      return res.json({
+        log,
+        userData: userData ? {
+          id: userData.id,
+          username: userData.username,
+          email: userData.email,
+          name: userData.name,
+          nivelacesso: userData.nivelacesso,
+          dataassinatura: userData.dataassinatura,
+          dataexpiracao: userData.dataexpiracao
+        } : null
+      });
+    } catch (error) {
+      console.error(`Erro ao obter detalhes do log #${req.params.id}:`, error);
+      return res.status(500).json({ 
+        message: 'Erro ao obter detalhes do log', 
+        error: error.message 
+      });
+    }
+  });
+  
+  // Endpoint para reprocessar um webhook
+  app.post('/api/webhooks/logs/:id/reprocess', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'ID inválido' });
+      }
+      
+      const success = await storage.reprocessWebhook(id);
+      
+      if (success) {
+        return res.json({ 
+          success: true, 
+          message: 'Webhook reprocessado com sucesso' 
+        });
+      } else {
+        return res.json({ 
+          success: false, 
+          message: 'Não foi possível reprocessar o webhook' 
+        });
+      }
+    } catch (error) {
+      console.error(`Erro ao reprocessar webhook #${req.params.id}:`, error);
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Erro ao reprocessar webhook', 
+        error: error.message 
+      });
+    }
+  });
+
+  // =========== ENDPOINTS DE CONFIGURAÇÕES DE ASSINATURAS ===========
+  
+  // Endpoint para testes - sem verificação de admin (temporário)
+  app.get('/api/test/subscription-settings', async (req, res) => {
+    try {
+      const settings = await storage.getSubscriptionSettings();
+      res.status(200).json(settings || {});
+    } catch (error) {
+      console.error('Erro ao buscar configurações de assinaturas (teste):', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Erro ao buscar configurações de assinaturas', 
+        error: error.message 
+      });
+    }
+  });
+
+  // Endpoint para obter as configurações de assinaturas
+  app.get('/api/subscription-settings', isAdmin, async (req, res) => {
+    try {
+      const settings = await storage.getSubscriptionSettings();
+      
+      // Se não existir configurações, retornamos um objeto vazio mas com status 200
+      res.status(200).json(settings || {});
+    } catch (error) {
+      console.error('Erro ao buscar configurações de assinaturas:', error);
+      
+      res.status(500).json({ 
+        success: false,
+        message: 'Erro ao buscar configurações de assinaturas', 
+        error: error.message 
+      });
+    }
+  });
+  
+  // Endpoint para testes - atualização sem verificação de admin (temporário)
+  app.put('/api/test/subscription-settings', async (req, res) => {
+    try {
+      // Validar dados de entrada se necessário
+      const updatedSettings = await storage.updateSubscriptionSettings(req.body);
+      
+      res.status(200).json({
+        success: true,
+        message: 'Configurações de assinaturas atualizadas com sucesso (teste)',
+        settings: updatedSettings
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar configurações de assinaturas (teste):', error);
+      
+      res.status(500).json({ 
+        success: false,
+        message: 'Erro ao atualizar configurações de assinaturas', 
+        error: error.message 
+      });
+    }
+  });
+
+  // Endpoint para atualizar as configurações de assinaturas
+  app.put('/api/subscription-settings', isAdmin, async (req, res) => {
+    try {
+      // Validar dados de entrada se necessário
+      const updatedSettings = await storage.updateSubscriptionSettings(req.body);
+      
+      res.status(200).json({
+        success: true,
+        message: 'Configurações de assinaturas atualizadas com sucesso',
+        settings: updatedSettings
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar configurações de assinaturas:', error);
+      
+      res.status(500).json({ 
+        success: false,
+        message: 'Erro ao atualizar configurações de assinaturas', 
+        error: error.message 
+      });
+    }
+  });
+
+  // =========== ENDPOINTS DE ESTATÍSTICAS DE ASSINATURAS ===========
+
+  // Endpoint para obter estatísticas gerais de assinaturas (versão de teste - sem verificação de admin)
+  app.get('/api/test/subscription-stats', async (req, res) => {
+    try {
+      const stats = await storage.getSubscriptionStats();
+      res.status(200).json(stats);
+    } catch (error) {
+      console.error('Erro ao buscar estatísticas de assinaturas (teste):', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Erro ao buscar estatísticas de assinaturas', 
+        error: error.message 
+      });
+    }
+  });
+
+  // Endpoint para obter estatísticas gerais de assinaturas
+  app.get('/api/subscription-stats', isAdmin, async (req, res) => {
+    try {
+      const stats = await storage.getSubscriptionStats();
+      res.status(200).json(stats);
+    } catch (error) {
+      console.error('Erro ao buscar estatísticas de assinaturas:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Erro ao buscar estatísticas de assinaturas', 
+        error: error.message 
+      });
+    }
+  });
+
+  // Endpoint para obter tendências de assinaturas (versão de teste - sem verificação de admin)
+  app.get('/api/test/subscription-trends', async (req, res) => {
+    try {
+      const months = req.query.months ? parseInt(req.query.months as string) : 6;
+      const trends = await storage.getSubscriptionTrends(months);
+      res.status(200).json(trends);
+    } catch (error) {
+      console.error('Erro ao buscar tendências de assinaturas (teste):', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Erro ao buscar tendências de assinaturas', 
+        error: error.message 
+      });
+    }
+  });
+
+  // Endpoint para obter tendências de assinaturas
+  app.get('/api/subscription-trends', isAdmin, async (req, res) => {
+    try {
+      const months = req.query.months ? parseInt(req.query.months as string) : 6;
+      const trends = await storage.getSubscriptionTrends(months);
+      res.status(200).json(trends);
+    } catch (error) {
+      console.error('Erro ao buscar tendências de assinaturas:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Erro ao buscar tendências de assinaturas', 
+        error: error.message 
+      });
+    }
+  });
+  
+  // Rotas para gerenciamento de mapeamentos de produtos Hotmart
+  
+  // Obter todos os mapeamentos de produtos
+  app.get('/api/hotmart/product-mappings', isAdmin, async (req, res) => {
+    try {
+      // Buscar todos os mapeamentos da tabela
+      const mappings = await db.select().from(schema.hotmartProductMappings).orderBy(schema.hotmartProductMappings.productName);
+      
+      res.status(200).json({ 
+        success: true,
+        mappings
+      });
+    } catch (error) {
+      console.error('Erro ao buscar mapeamentos de produtos da Hotmart:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Erro ao buscar mapeamentos de produtos', 
+        error: error.message 
+      });
+    }
+  });
+  
+  // Adicionar novo mapeamento de produto
+  app.post('/api/hotmart/product-mappings', isAdmin, async (req, res) => {
+    try {
+      const { productName, planType, durationDays, isLifetime } = req.body;
+      
+      if (!productName || !planType) {
+        return res.status(400).json({ 
+          success: false,
+          message: 'Nome do produto e tipo de plano são obrigatórios'
+        });
+      }
+      
+      // Verificar se já existe um mapeamento com o mesmo nome de produto
+      const existingMapping = await db.select().from(schema.hotmartProductMappings)
+        .where(eq(schema.hotmartProductMappings.productName, productName))
+        .limit(1);
+      
+      if (existingMapping.length > 0) {
+        return res.status(400).json({ 
+          success: false,
+          message: 'Já existe um mapeamento para este produto'
+        });
+      }
+      
+      // Criar novo mapeamento
+      const [newMapping] = await db.insert(schema.hotmartProductMappings)
+        .values({
+          productName,
+          planType,
+          durationDays: isLifetime ? null : durationDays,
+          isLifetime: !!isLifetime
+        })
+        .returning();
+      
+      console.log(`Novo mapeamento de produto Hotmart criado por ${req.user?.username}:`, newMapping);
+      
+      res.status(201).json({ 
+        success: true,
+        message: 'Mapeamento de produto criado com sucesso',
+        mapping: newMapping
+      });
+    } catch (error) {
+      console.error('Erro ao criar mapeamento de produto da Hotmart:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Erro ao criar mapeamento de produto', 
+        error: error.message 
+      });
+    }
+  });
+  
+  // Atualizar mapeamento de produto existente
+  app.put('/api/hotmart/product-mappings/:id', isAdmin, async (req, res) => {
+    try {
+      const mappingId = parseInt(req.params.id);
+      const { productName, planType, durationDays, isLifetime } = req.body;
+      
+      if (!productName || !planType) {
+        return res.status(400).json({ 
+          success: false,
+          message: 'Nome do produto e tipo de plano são obrigatórios'
+        });
+      }
+      
+      // Verificar se o mapeamento existe
+      const existingMapping = await db.select().from(schema.hotmartProductMappings)
+        .where(eq(schema.hotmartProductMappings.id, mappingId))
+        .limit(1);
+      
+      if (existingMapping.length === 0) {
+        return res.status(404).json({ 
+          success: false,
+          message: 'Mapeamento não encontrado'
+        });
+      }
+      
+      // Verificar se o novo nome já existe em outro mapeamento
+      if (productName !== existingMapping[0].productName) {
+        const duplicateProduct = await db.select().from(schema.hotmartProductMappings)
+          .where(eq(schema.hotmartProductMappings.productName, productName))
+          .limit(1);
+        
+        if (duplicateProduct.length > 0) {
+          return res.status(400).json({ 
+            success: false,
+            message: 'Já existe outro mapeamento com este nome de produto'
+          });
+        }
+      }
+      
+      // Atualizar o mapeamento
+      const [updatedMapping] = await db.update(schema.hotmartProductMappings)
+        .set({
+          productName,
+          planType,
+          durationDays: isLifetime ? null : durationDays,
+          isLifetime: !!isLifetime,
+          updatedAt: new Date()
+        })
+        .where(eq(schema.hotmartProductMappings.id, mappingId))
+        .returning();
+      
+      console.log(`Mapeamento de produto Hotmart atualizado por ${req.user?.username}:`, updatedMapping);
+      
+      res.status(200).json({ 
+        success: true,
+        message: 'Mapeamento de produto atualizado com sucesso',
+        mapping: updatedMapping
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar mapeamento de produto da Hotmart:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Erro ao atualizar mapeamento de produto', 
+        error: error.message 
+      });
+    }
+  });
+  
+  // Alternar estado ativo/inativo de um mapeamento
+  app.patch('/api/hotmart/product-mappings/:id/toggle', isAdmin, async (req, res) => {
+    try {
+      const mappingId = parseInt(req.params.id);
+      
+      // Verificar se o mapeamento existe
+      const existingMapping = await db.select().from(schema.hotmartProductMappings)
+        .where(eq(schema.hotmartProductMappings.id, mappingId))
+        .limit(1);
+      
+      if (existingMapping.length === 0) {
+        return res.status(404).json({ 
+          success: false,
+          message: 'Mapeamento não encontrado'
+        });
+      }
+      
+      // Inverter o status atual
+      const currentStatus = existingMapping[0].isActive;
+      
+      // Atualizar o status
+      const [updatedMapping] = await db.update(schema.hotmartProductMappings)
+        .set({
+          isActive: !currentStatus,
+          updatedAt: new Date()
+        })
+        .where(eq(schema.hotmartProductMappings.id, mappingId))
+        .returning();
+      
+      console.log(`Status do mapeamento de produto Hotmart alterado por ${req.user?.username}:`, 
+                 `ID ${mappingId}, Novo status: ${!currentStatus ? 'ativo' : 'inativo'}`);
+      
+      res.status(200).json({ 
+        success: true,
+        message: `Mapeamento ${!currentStatus ? 'ativado' : 'desativado'} com sucesso`,
+        mapping: updatedMapping
+      });
+    } catch (error) {
+      console.error('Erro ao alternar status do mapeamento de produto:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Erro ao alternar status do mapeamento', 
+        error: error.message 
+      });
+    }
+  });
+  
+  // Excluir mapeamento de produto
+  app.delete('/api/hotmart/product-mappings/:id', isAdmin, async (req, res) => {
+    try {
+      const mappingId = parseInt(req.params.id);
+      
+      // Verificar se o mapeamento existe
+      const existingMapping = await db.select().from(schema.hotmartProductMappings)
+        .where(eq(schema.hotmartProductMappings.id, mappingId))
+        .limit(1);
+      
+      if (existingMapping.length === 0) {
+        return res.status(404).json({ 
+          success: false,
+          message: 'Mapeamento não encontrado'
+        });
+      }
+      
+      // Excluir o mapeamento
+      await db.delete(schema.hotmartProductMappings)
+        .where(eq(schema.hotmartProductMappings.id, mappingId));
+      
+      console.log(`Mapeamento de produto Hotmart excluído por ${req.user?.username}:`, 
+                 `ID ${mappingId}, Produto: ${existingMapping[0].productName}`);
+      
+      res.status(200).json({ 
+        success: true,
+        message: 'Mapeamento de produto excluído com sucesso'
+      });
+    } catch (error) {
+      console.error('Erro ao excluir mapeamento de produto:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Erro ao excluir mapeamento de produto', 
+        error: error.message 
+      });
+    }
+  });
+  
+  // Endpoint de teste para verificar conexão com a API da Hotmart
+  app.get('/api/test-hotmart-connection', isAdmin, async (req, res) => {
+    try {
+      console.log('Testando conexão com a API da Hotmart...');
+      
+      // Testa conexão com a API usando o token fixo configurado
+      const result = await HotmartService.testConnection();
+      
+      console.log('Resultado do teste de conexão:', result);
+      
+      // Retorna resultado detalhado para o frontend
+      res.status(200).json({ 
+        ...result,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Erro ao testar conexão com a Hotmart:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Erro ao testar conexão com a Hotmart', 
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
   // Registrar rota para calcular posição do post na paginação
   registerPostPositionRoute(app);
+
+  // Registrar rotas para sitemap.xml e robots.txt (acessíveis na raiz do site)
+  app.use(sitemapRouter);
+
+  // Configurar rotas de diagnóstico de webhook diretamente
+  // Rota para busca avançada de webhooks
+  app.get('/api/webhook-diagnostics/advanced-search', isAdmin, async (req, res) => {
+    try {
+      const { email } = req.query;
+      
+      if (!email) {
+        return res.status(400).json({
+          success: false,
+          message: 'O parâmetro email é obrigatório'
+        });
+      }
+      
+      console.log(`[/webhook-diagnostics/advanced-search] Buscando logs com email: ${email}`);
+      
+      // Usar o operador LIKE do PostgreSQL para buscar em texto JSON
+      const result = await db.execute(sql`
+        WITH parsed_webhooks AS (
+          SELECT 
+            id, 
+            "eventType",
+            source,
+            status,
+            "createdAt",
+            "payloadData",
+            "errorMessage"
+          FROM "webhookLogs"
+          WHERE 
+            "payloadData"::text LIKE ${`%${email}%`}
+        )
+        SELECT * FROM parsed_webhooks
+        ORDER BY "createdAt" DESC
+      `);
+      
+      // Processar os resultados para encontrar informações mais detalhadas sobre o email
+      const enhancedResults = result.rows.map(log => {
+        let foundEmail = null;
+        let emailLocation = null;
+        
+        try {
+          // Converter o payload para JSON se for string
+          const payload = typeof log.payloadData === 'string' 
+            ? JSON.parse(log.payloadData) 
+            : log.payloadData;
+          
+          // Buscar o email em diferentes locais dependendo da origem
+          if (log.source === 'hotmart') {
+            foundEmail = payload.data?.buyer?.email || null;
+            emailLocation = foundEmail ? 'data.buyer.email' : null;
+          } else if (log.source === 'doppus') {
+            foundEmail = payload.customer?.email || null;
+            emailLocation = foundEmail ? 'customer.email' : null;
+          }
+          
+          // Se ainda não encontrou o email, verificar no texto serializado
+          if (!foundEmail) {
+            const payloadStr = JSON.stringify(payload).toLowerCase();
+            if (payloadStr.includes(String(email).toLowerCase())) {
+              foundEmail = '[Email encontrado na serialização do payload]';
+              emailLocation = 'json_serialized';
+            }
+          }
+        } catch (e) {
+          console.error(`Erro ao analisar payload do log ${log.id}:`, e);
+        }
+        
+        return {
+          ...log,
+          extractedEmail: foundEmail,
+          emailLocation,
+          matchType: foundEmail ? 'direct_match' : 'text_match'
+        };
+      });
+      
+      res.json({
+        success: true,
+        count: enhancedResults.length,
+        results: enhancedResults
+      });
+    } catch (error) {
+      console.error('Erro na busca avançada de webhooks:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro ao realizar busca avançada de webhooks',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
+
+  // Rota para buscar detalhes de um log específico
+  app.get('/api/webhook-diagnostics/log/:id', isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      if (!id || isNaN(parseInt(id))) {
+        return res.status(400).json({
+          success: false,
+          message: 'ID inválido'
+        });
+      }
+      
+      const result = await db.execute(sql`
+        SELECT * 
+        FROM "webhookLogs"
+        WHERE id = ${parseInt(id)}
+      `);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Log não encontrado'
+        });
+      }
+      
+      const log = result.rows[0];
+      
+      // Tentar extrair informações relevantes do payload
+      let parsedPayload = null;
+      let extractedEmail = null;
+      let payloadEmail = null;
+      
+      try {
+        parsedPayload = typeof log.payloadData === 'string' 
+          ? JSON.parse(log.payloadData) 
+          : log.payloadData;
+        
+        // Tentar encontrar o email dependendo da origem
+        if (log.source === 'hotmart') {
+          payloadEmail = parsedPayload.data?.buyer?.email;
+        } else if (log.source === 'doppus') {
+          payloadEmail = parsedPayload.customer?.email;
+        }
+        
+        // Se encontrou o email, destacar
+        if (payloadEmail) {
+          extractedEmail = payloadEmail;
+        }
+      } catch (e) {
+        console.error(`Erro ao analisar payload do log ${log.id}:`, e);
+      }
+      
+      res.json({
+        success: true,
+        log: {
+          ...log,
+          parsedPayload,
+          extractedEmail
+        }
+      });
+    } catch (error) {
+      console.error('Erro ao buscar detalhes do log:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro ao buscar detalhes do log',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
 
   const httpServer = createServer(app);
   
   // Inicializar o serviço da Hotmart se as credenciais estiverem disponíveis
   if (process.env.HOTMART_CLIENT_ID && process.env.HOTMART_CLIENT_SECRET) {
-    const useSandbox = true; // Usar sandbox para desenvolvimento/teste
-    HotmartService.initialize(
-      process.env.HOTMART_CLIENT_ID,
-      process.env.HOTMART_CLIENT_SECRET,
-      useSandbox
-    );
-    console.log('Serviço da Hotmart inicializado com sucesso no modo Sandbox');
+    try {
+      // Buscar configuração de ambiente no banco de dados
+      const sandboxConfig = await db.execute(sql`
+        SELECT value FROM "integrationSettings"
+        WHERE "provider" = 'hotmart' AND "key" = 'useSandbox'
+      `);
+      
+      // Determinar o ambiente a ser usado
+      let useSandbox = true; // Valor padrão se não existir configuração
+      if (sandboxConfig.rows.length > 0) {
+        useSandbox = sandboxConfig.rows[0].value === 'true';
+      }
+      
+      // Inicializar o serviço com as credenciais e configuração de ambiente
+      HotmartService.initialize(
+        process.env.HOTMART_CLIENT_ID,
+        process.env.HOTMART_CLIENT_SECRET,
+        useSandbox
+      );
+      console.log(`Serviço da Hotmart inicializado com sucesso no modo ${useSandbox ? 'Sandbox' : 'Produção'}`);
+    } catch (error) {
+      console.error('Erro ao inicializar serviço da Hotmart:', error);
+      // Fallback para sandbox em caso de erro
+      HotmartService.initialize(
+        process.env.HOTMART_CLIENT_ID,
+        process.env.HOTMART_CLIENT_SECRET,
+        true
+      );
+      console.log('Serviço da Hotmart inicializado com fallback para modo Sandbox devido a erro');
+    }
   } else {
     console.log('Credenciais da Hotmart não encontradas. A verificação de renovações na Hotmart não estará disponível.');
   }

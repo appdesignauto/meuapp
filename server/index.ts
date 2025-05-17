@@ -211,7 +211,10 @@ app.use((req, res, next) => {
     console.error("Erro ao inicializar banco de dados:", error);
   }
   
-  const server = await registerRoutes(app);
+  // Removemos a implementação do servidor dedicado para webhooks
+  // Em vez disso, estamos usando uma solução simplificada diretamente nas rotas
+
+const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
