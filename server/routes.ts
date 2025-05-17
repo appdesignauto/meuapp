@@ -5825,7 +5825,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const { pool } = await import('./db');
           await pool.query(`
             UPDATE "webhookLogs" 
-            SET "status" = 'error', "errorMessage" = $1, "updatedAt" = NOW(), "processed" = true
+            SET "status" = 'error', "errorMessage" = $1, "updatedAt" = NOW()
             WHERE id = $2
           `, [error instanceof Error ? error.message : String(error), webhookLogId]);
         } catch (updateError) {
