@@ -1009,16 +1009,46 @@ const AdminDashboard = () => {
             </button>
             
             {/* Assinaturas */}
-            <button
-              onClick={() => setActiveTab('subscriptions')}
-              className={`flex items-center w-full px-4 py-2 rounded-lg transition-all duration-200 ${
-                activeTab === 'subscriptions' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
-              } ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
-              title="Assinaturas"
+            <Collapsible 
+              className="rounded-lg overflow-hidden"
+              defaultOpen={['subscriptions'].includes(activeTab)}
+              open={sidebarOpen ? undefined : false}
             >
-              <CreditCard className={`${sidebarOpen ? 'w-5 h-5' : 'w-5 h-5 mx-auto'}`} />
-              {sidebarOpen && <span className="ml-3 truncate">Assinaturas</span>}
-            </button>
+              <CollapsibleTrigger 
+                className={`flex items-center w-full px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 rounded-lg transition-all duration-200 ${!sidebarOpen ? 'lg:justify-center lg:px-2' : ''}`}
+                title="Assinaturas"
+              >
+                <CreditCard className={`${sidebarOpen ? 'w-5 h-5' : 'w-5 h-5 mx-auto'}`} />
+                {sidebarOpen && (
+                  <>
+                    <span className="ml-3 truncate">Assinaturas</span>
+                    <ChevronDown className="w-4 h-4 ml-auto transition-transform duration-200 ui-open:rotate-180" />
+                  </>
+                )}
+              </CollapsibleTrigger>
+              <CollapsibleContent className={`mt-1 ${sidebarOpen ? 'pl-5' : 'flex flex-col items-center'} space-y-1`}>
+                <button
+                  onClick={() => setActiveTab('subscriptions')}
+                  className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
+                    activeTab === 'subscriptions' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
+                  title="Gerenciar Assinaturas"
+                >
+                  <CreditCard className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                  {sidebarOpen && <span className="truncate text-sm">Gerenciar Assinaturas</span>}
+                </button>
+                <Link 
+                  href="/admin/webhook-diagnostics"
+                  title="Diagnóstico de Webhooks"
+                  className={`flex items-center w-full py-2 rounded-md transition-all duration-200
+                  text-gray-600 hover:bg-gray-50 
+                  ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
+                >
+                  <MessageSquare className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                  {sidebarOpen && <span className="truncate text-sm">Diagnóstico de Webhooks</span>}
+                </Link>
+              </CollapsibleContent>
+            </Collapsible>
 
 
             {/* Usuários e Comunidade */}

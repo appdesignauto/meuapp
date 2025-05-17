@@ -16,6 +16,8 @@ import { SQL } from "drizzle-orm/sql";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+// Importar o router de diagnóstico de webhooks
+import webhookDiagnosticsRouter from "./routes/webhook-diagnostics.js";
 // Importações adicionais para o upload de imagem
 import uploadRouter from "./routes/upload-image";
 // Usando apenas Supabase Storage para armazenamento de imagens
@@ -7162,6 +7164,165 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Registrar rotas para sitemap.xml e robots.txt (acessíveis na raiz do site)
   app.use(sitemapRouter);
+
+  // Configurar rotas de diagnóstico de webhook diretamente
+  // Rota para busca avançada de webhooks
+  app.get('/api/webhook-diagnostics/advanced-search', isAdmin, async (req, res) => {
+    try {
+      const { email } = req.query;
+      
+      if (!email) {
+        return res.status(400).json({
+          success: false,
+          message: 'O parâmetro email é obrigatório'
+        });
+      }
+      
+      console.log(`[/webhook-diagnostics/advanced-search] Buscando logs com email: ${email}`);
+      
+      // Usar o operador LIKE do PostgreSQL para buscar em texto JSON
+      const result = await db.execute(sql`
+        WITH parsed_webhooks AS (
+          SELECT 
+            id, 
+            "eventType",
+            source,
+            status,
+            "createdAt",
+            "payloadData",
+            "errorMessage"
+          FROM "webhookLogs"
+          WHERE 
+            "payloadData"::text LIKE ${`%${email}%`}
+        )
+        SELECT * FROM parsed_webhooks
+        ORDER BY "createdAt" DESC
+      `);
+      
+      // Processar os resultados para encontrar informações mais detalhadas sobre o email
+      const enhancedResults = result.rows.map(log => {
+        let foundEmail = null;
+        let emailLocation = null;
+        
+        try {
+          // Converter o payload para JSON se for string
+          const payload = typeof log.payloadData === 'string' 
+            ? JSON.parse(log.payloadData) 
+            : log.payloadData;
+          
+          // Buscar o email em diferentes locais dependendo da origem
+          if (log.source === 'hotmart') {
+            foundEmail = payload.data?.buyer?.email || null;
+            emailLocation = foundEmail ? 'data.buyer.email' : null;
+          } else if (log.source === 'doppus') {
+            foundEmail = payload.customer?.email || null;
+            emailLocation = foundEmail ? 'customer.email' : null;
+          }
+          
+          // Se ainda não encontrou o email, verificar no texto serializado
+          if (!foundEmail) {
+            const payloadStr = JSON.stringify(payload).toLowerCase();
+            if (payloadStr.includes(String(email).toLowerCase())) {
+              foundEmail = '[Email encontrado na serialização do payload]';
+              emailLocation = 'json_serialized';
+            }
+          }
+        } catch (e) {
+          console.error(`Erro ao analisar payload do log ${log.id}:`, e);
+        }
+        
+        return {
+          ...log,
+          extractedEmail: foundEmail,
+          emailLocation,
+          matchType: foundEmail ? 'direct_match' : 'text_match'
+        };
+      });
+      
+      res.json({
+        success: true,
+        count: enhancedResults.length,
+        results: enhancedResults
+      });
+    } catch (error) {
+      console.error('Erro na busca avançada de webhooks:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro ao realizar busca avançada de webhooks',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
+
+  // Rota para buscar detalhes de um log específico
+  app.get('/api/webhook-diagnostics/log/:id', isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      if (!id || isNaN(parseInt(id))) {
+        return res.status(400).json({
+          success: false,
+          message: 'ID inválido'
+        });
+      }
+      
+      const result = await db.execute(sql`
+        SELECT * 
+        FROM "webhookLogs"
+        WHERE id = ${parseInt(id)}
+      `);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Log não encontrado'
+        });
+      }
+      
+      const log = result.rows[0];
+      
+      // Tentar extrair informações relevantes do payload
+      let parsedPayload = null;
+      let extractedEmail = null;
+      let payloadEmail = null;
+      
+      try {
+        parsedPayload = typeof log.payloadData === 'string' 
+          ? JSON.parse(log.payloadData) 
+          : log.payloadData;
+        
+        // Tentar encontrar o email dependendo da origem
+        if (log.source === 'hotmart') {
+          payloadEmail = parsedPayload.data?.buyer?.email;
+        } else if (log.source === 'doppus') {
+          payloadEmail = parsedPayload.customer?.email;
+        }
+        
+        // Se encontrou o email, destacar
+        if (payloadEmail) {
+          extractedEmail = payloadEmail;
+        }
+      } catch (e) {
+        console.error(`Erro ao analisar payload do log ${log.id}:`, e);
+      }
+      
+      res.json({
+        success: true,
+        log: {
+          ...log,
+          parsedPayload,
+          extractedEmail
+        }
+      });
+    } catch (error) {
+      console.error('Erro ao buscar detalhes do log:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro ao buscar detalhes do log',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
 
   const httpServer = createServer(app);
   
