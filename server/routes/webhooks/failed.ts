@@ -2,7 +2,39 @@ import { Router } from 'express';
 import { webhookService } from '../../services/webhook-service';
 import { HotmartService } from '../../services/hotmart-service';
 import { z } from 'zod';
-import { isAdmin } from '../../middlewares/auth';
+import { Request, Response, NextFunction } from 'express';
+import { db } from '../../db';
+import { users } from '@shared/schema';
+import { eq } from 'drizzle-orm';
+
+// Middleware seguro para verificar se o usuário é admin
+// Verifica através de múltiplos métodos para evitar problemas com req.isAuthenticated()
+const checkAdminSafely = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    // Método 1: Verificar pelo método padrão req.isAuthenticated()
+    if (req.isAuthenticated && req.isAuthenticated() && req.user?.nivelacesso === 'admin') {
+      return next();
+    }
+    
+    // Método 2: Verificar diretamente pela sessão se o método 1 falhar
+    if (req.session && req.session.passport && req.session.passport.user) {
+      const userId = req.session.passport.user;
+      const userRecord = await db.query.users.findFirst({
+        where: eq(users.id, userId)
+      });
+      
+      if (userRecord && userRecord.nivelacesso === 'admin') {
+        return next();
+      }
+    }
+    
+    // Se nenhum método funcionar, retornar 401
+    return res.status(401).json({ error: 'Não autorizado. Apenas administradores podem acessar este recurso.' });
+  } catch (error) {
+    console.error('Erro ao verificar permissões de admin:', error);
+    return res.status(500).json({ error: 'Erro ao verificar permissões' });
+  }
+};
 
 const router = Router();
 
@@ -15,11 +47,29 @@ const listParamsSchema = z.object({
 });
 
 /**
+ * @route GET /api/webhooks/failed/stats
+ * @description Retorna estatísticas sobre webhooks falhos
+ * @access Admin
+ */
+router.get('/stats', checkAdminSafely, async (req, res) => {
+  try {
+    const stats = await webhookService.getWebhookStats();
+    res.json(stats);
+  } catch (error) {
+    console.error('Erro ao buscar estatísticas de webhooks:', error);
+    res.status(500).json({ 
+      error: 'Erro ao buscar estatísticas',
+      message: error.message 
+    });
+  }
+});
+
+/**
  * @route GET /api/webhooks/failed
  * @description Lista todos os webhooks que falharam durante o processamento
  * @access Admin
  */
-router.get('/', isAdmin, async (req, res) => {
+router.get('/', checkAdminSafely, async (req, res) => {
   try {
     // Validar e converter parâmetros de consulta
     const validation = listParamsSchema.safeParse(req.query);
@@ -57,7 +107,7 @@ router.get('/', isAdmin, async (req, res) => {
  * @description Busca detalhes de um webhook falho específico
  * @access Admin
  */
-router.get('/:id', isAdmin, async (req, res) => {
+router.get('/:id', checkAdminSafely, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     
@@ -86,7 +136,7 @@ router.get('/:id', isAdmin, async (req, res) => {
  * @description Tenta reprocessar um webhook que falhou anteriormente
  * @access Admin
  */
-router.post('/:id/retry', isAdmin, async (req, res) => {
+router.post('/:id/retry', checkAdminSafely, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     
@@ -172,24 +222,6 @@ router.post('/:id/retry', isAdmin, async (req, res) => {
       success: false,
       message: 'Erro ao processar tentativa de reprocessamento',
       error: error.message 
-    });
-  }
-});
-
-/**
- * @route GET /api/webhooks/failed/stats
- * @description Retorna estatísticas sobre webhooks falhos
- * @access Admin
- */
-router.get('/stats', isAdmin, async (req, res) => {
-  try {
-    const stats = await webhookService.getWebhookStats();
-    res.json(stats);
-  } catch (error) {
-    console.error('Erro ao buscar estatísticas de webhooks:', error);
-    res.status(500).json({ 
-      error: 'Erro ao buscar estatísticas',
-      message: error.message 
     });
   }
 });

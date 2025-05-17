@@ -86,7 +86,7 @@ export default function FailedWebhooks() {
   // Mutação para reprocessar um webhook
   const retryMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await apiRequest('POST', `/api/failed-webhooks/${id}/retry`);
+      const response = await apiRequest('POST', `/api/webhooks/failed/${id}/retry`);
       return response.json();
     },
     onSuccess: () => {
