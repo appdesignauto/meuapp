@@ -4,6 +4,7 @@ import { useLocation } from 'wouter';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Table,
   TableBody,
@@ -128,11 +129,15 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
 };
 
 // Componente principal
+// Importamos o componente de diagnóstico avançado
+import WebhookDiagnosticsTab from './WebhookDiagnosticsTab';
+
 const WebhookList: React.FC = () => {
   const { toast } = useToast();
   const [location, setLocation] = useLocation();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
+  const [activeTab, setActiveTab] = useState('logs');
   const [filters, setFilters] = useState({
     status: 'all',
     eventType: 'all',
