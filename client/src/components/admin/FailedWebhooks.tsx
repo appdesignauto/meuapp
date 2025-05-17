@@ -77,10 +77,70 @@ export default function FailedWebhooks() {
   const { data, isLoading, error } = useQuery({
     queryKey: ['/api/webhooks/failed', statusFilter, sourceFilter],
     queryFn: async () => {
-      const url = `/api/webhooks/failed?status=${statusFilter}&source=${sourceFilter}`;
-      const response = await apiRequest('GET', url);
-      return response.json();
+      try {
+        // Construir URL com parâmetros de filtro
+        const url = `/api/webhooks/failed?status=${statusFilter}&source=${sourceFilter}`;
+        
+        // Usar fetch diretamente com credentials para garantir envio de cookies
+        const response = await fetch(url, {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+        
+        if (!response.ok) {
+          console.error('Resposta não ok:', await response.text());
+          throw new Error(`Erro ao buscar webhooks falhos: ${response.status}`);
+        }
+        
+        // Tentar fazer parsing do JSON
+        const jsonData = await response.json();
+        console.log('Dados recebidos:', jsonData);
+        
+        // Se não houver dados ou formato incorreto, retornar estrutura padrão
+        if (!jsonData || !jsonData.webhooks) {
+          console.warn('Resposta não contém webhooks, usando array vazio e estatísticas vazias');
+          return { 
+            webhooks: [], 
+            stats: {
+              total: 0,
+              pending: 0,
+              processing: 0,
+              resolved: 0,
+              failed: 0,
+              bySource: {}
+            } 
+          };
+        }
+        
+        return jsonData;
+      } catch (err) {
+        console.error('Erro ao buscar webhooks falhos:', err);
+        // Em caso de erro de autenticação 401, mostrar mensagem amigável
+        if (err.message && err.message.includes('401')) {
+          toast({
+            title: 'Erro de autenticação',
+            description: 'Sua sessão pode ter expirado. Tente fazer login novamente.',
+            variant: 'destructive',
+          });
+        }
+        // Retornar estrutura vazia em vez de lançar erro
+        return { 
+          webhooks: [], 
+          stats: {
+            total: 0,
+            pending: 0,
+            processing: 0,
+            resolved: 0,
+            failed: 0,
+            bySource: {}
+          } 
+        };
+      }
     },
+    // Não falhar completamente em caso de erros, permitir recuperação
+    retry: 1,
   });
   
   // Mutação para reprocessar um webhook

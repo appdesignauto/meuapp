@@ -28,6 +28,8 @@ import { SubscriptionService } from "./services/subscription-service";
 import { HotmartService } from "./services/hotmart-service";
 import { webhookService } from "./services/webhook-service";
 import uploadMemory from "./middlewares/upload";
+// Importação do middleware aprimorado de autenticação
+import { isAdminEnhanced } from './middlewares/auth';
 import sharp from "sharp";
 
 // Versão promisificada do scrypt
@@ -120,7 +122,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const { isAuthenticated, isPremium, isAdmin, isDesigner, hasRole } = setupAuth(app);
   
   // IMPORTANTE: Definindo rotas de webhook direto aqui para evitar problemas de autenticação
-  app.get('/api/webhooks/failed', isAdmin, async (req, res) => {
+  // Usando o middleware isAdminEnhanced que já foi importado no topo do arquivo
+  
+  app.get('/api/webhooks/failed', isAdminEnhanced, async (req, res) => {
     try {
       console.log('[DIRETO] Rota /api/webhooks/failed acessada por', req.user?.username);
       const failedWebhooks = await webhookService.getFailedWebhooks();
@@ -131,7 +135,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get('/api/webhooks/logs', isAdmin, async (req, res) => {
+  app.get('/api/webhooks/logs', isAdminEnhanced, async (req, res) => {
     try {
       console.log('[DIRETO] Rota /api/webhooks/logs acessada por', req.user?.username);
       const logs = await webhookService.getWebhookLogs();
@@ -142,7 +146,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get('/api/webhooks/failed/:id', isAdmin, async (req, res) => {
+  app.get('/api/webhooks/failed/:id', isAdminEnhanced, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const webhook = await webhookService.getFailedWebhookById(id);
@@ -158,7 +162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.post('/api/webhooks/failed/:id/retry', isAdmin, async (req, res) => {
+  app.post('/api/webhooks/failed/:id/retry', isAdminEnhanced, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const result = await webhookService.retryFailedWebhook(id);

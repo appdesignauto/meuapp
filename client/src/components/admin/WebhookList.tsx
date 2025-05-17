@@ -53,12 +53,51 @@ export default function WebhookList() {
   const { data, isLoading, isError, error } = useQuery<LogsResponse, Error>({
     queryKey: ['/api/webhooks/logs', page],
     queryFn: async () => {
-      const response = await fetch(`/api/webhooks/logs?page=${page}&limit=${limit}`);
-      if (!response.ok) {
-        throw new Error('Erro ao buscar logs de webhook');
+      try {
+        // Incluir credenciais nas requisições para garantir que cookies sejam enviados
+        const response = await fetch(`/api/webhooks/logs?page=${page}&limit=${limit}`, {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+        
+        if (!response.ok) {
+          console.error('Resposta não ok:', await response.text());
+          throw new Error(`Erro ao buscar logs de webhook: ${response.status}`);
+        }
+        
+        // Tentar fazer parsing do JSON
+        const jsonData = await response.json();
+        console.log('Dados recebidos:', jsonData);
+        
+        // Se não houver logs no retorno, criar uma estrutura padrão com array vazio
+        if (!jsonData || !Array.isArray(jsonData)) {
+          console.warn('Resposta não contém um array de logs, usando array vazio');
+          return { logs: [], totalCount: 0 };
+        }
+        
+        // Formatar a resposta para o formato esperado pelo componente
+        return {
+          logs: jsonData,
+          totalCount: jsonData.length
+        };
+      } catch (err) {
+        console.error('Erro ao buscar logs de webhook:', err);
+        // Em caso de erro de autenticação 401, mostrar mensagem amigável
+        if (err.message && err.message.includes('401')) {
+          toast({
+            title: 'Erro de autenticação',
+            description: 'Sua sessão pode ter expirado. Tente fazer login novamente.',
+            variant: 'destructive',
+          });
+        }
+        // Retornar array vazio em vez de lançar erro para evitar tela de erro
+        return { logs: [], totalCount: 0 };
       }
-      return response.json();
     },
+    // Não falhar completamente em caso de erros, permitir recuperação
+    retry: 1,
   });
 
   const maxPage = data ? Math.ceil(data.totalCount / limit) : 1;
