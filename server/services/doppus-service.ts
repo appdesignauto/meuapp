@@ -30,7 +30,7 @@ interface DoppusCredentials {
  * Serviço para gerenciar integração com Doppus
  */
 class DoppusService {
-  private baseUrl: string = 'https://api.doppus.app/4.0';
+  private baseUrl: string = 'https://api.doppus.com/v4';
   private credentials: DoppusCredentials | null = null;
   
   /**
@@ -733,7 +733,7 @@ class DoppusService {
               stage: 'token', 
               status: tokenResponse.status, 
               error: errorText,
-              clientIdUsed: credentials.doppusClientId.substring(0, 4) + '...' + credentials.doppusClientId.slice(-4)
+              clientIdUsed: credentials.clientId.substring(0, 4) + '...' + credentials.clientId.slice(-4)
             }
           };
         }

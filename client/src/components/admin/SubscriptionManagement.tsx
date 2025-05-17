@@ -2345,41 +2345,8 @@ export default function SubscriptionManagement() {
                 </CardContent>
               </Card>
               
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Mapeamento de Produtos Doppus</CardTitle>
-                  <CardDescription>Configure como os produtos da Doppus são mapeados no sistema</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="border rounded-lg overflow-hidden">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className="w-[250px]">Produto Doppus</TableHead>
-                            <TableHead>Plano no DesignAuto</TableHead>
-                            <TableHead>Duração</TableHead>
-                            <TableHead className="text-right">Ações</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          <TableRow>
-                            <TableCell className="text-muted-foreground italic">Nenhum produto configurado</TableCell>
-                            <TableCell></TableCell>
-                            <TableCell></TableCell>
-                            <TableCell></TableCell>
-                          </TableRow>
-                        </TableBody>
-                      </Table>
-                    </div>
-                    
-                    <Button variant="outline" size="sm">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Adicionar Mapeamento
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Card de mapeamento removido pois estava duplicado, 
+                 * mantido apenas o card que usa o componente DoppusProductMapping */}
 
               <Card>
                 <CardHeader>
