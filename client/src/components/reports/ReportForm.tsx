@@ -394,9 +394,13 @@ const ReportForm = () => {
               </div>
 
               <DialogFooter className="pt-4">
-                <DialogClose asChild>
-                  <Button type="button" variant="outline">Cancelar</Button>
-                </DialogClose>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setOpen(false)}
+                >
+                  Cancelar
+                </Button>
                 <Button type="submit" disabled={loading}>
                   {loading ? 'Enviando...' : 'Enviar relatório'}
                 </Button>
