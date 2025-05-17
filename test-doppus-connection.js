@@ -86,32 +86,48 @@ async function testDoppusConnection() {
         // Teste de requisição autenticada
         console.log('\nTestando requisição autenticada...');
         try {
-          const testAuthResponse = await fetch(`${baseUrl}/product`, {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${authData.data.token}`
-            }
-          });
+          // Testando vários endpoints possíveis para produtos
+          console.log('Testando endpoints para produtos:');
           
-          console.log(`Status da resposta: ${testAuthResponse.status}`);
-          const productsData = await testAuthResponse.json();
+          const endpoints = [
+            '/Product', 
+            '/Products',
+            '/store/product',
+            '/api/product',
+            '/Products/List',
+            '/Product/List'
+          ];
           
-          if (productsData.success) {
-            console.log('✅ Requisição autenticada bem-sucedida!');
-            
-            if (productsData.data && Array.isArray(productsData.data)) {
-              console.log(`Total de produtos: ${productsData.data.length}`);
+          for (const endpoint of endpoints) {
+            try {
+              console.log(`\nTestando endpoint: ${endpoint}`);
+              const testResponse = await fetch(`${baseUrl}${endpoint}`, {
+                method: 'GET',
+                headers: {
+                  'Authorization': `Bearer ${authData.data.token}`
+                }
+              });
               
-              if (productsData.data.length > 0) {
-                console.log('Primeiro produto:');
-                console.log(`- ID: ${productsData.data[0].id}`);
-                console.log(`- Nome: ${productsData.data[0].name}`);
+              console.log(`Status: ${testResponse.status}`);
+              if (testResponse.status !== 404) {
+                const data = await testResponse.text();
+                console.log(`Resposta: ${data.substring(0, 150)}...`);
+                try {
+                  const jsonData = JSON.parse(data);
+                  console.log('Resposta JSON válida encontrada!');
+                  if (jsonData.success) {
+                    console.log('✅ Endpoint encontrado com sucesso!');
+                  }
+                } catch (e) {
+                  console.log('Resposta não é JSON válido');
+                }
               }
+            } catch (e) {
+              console.log(`Erro: ${e.message}`);
             }
-          } else {
-            console.log('❌ Falha na requisição autenticada');
-            console.log('Erro:', productsData.error || 'Desconhecido');
           }
+          
+          // Finalizar o processo após testar todos os endpoints
         } catch (error) {
           console.error('❌ Erro na requisição autenticada:', error.message);
         }
