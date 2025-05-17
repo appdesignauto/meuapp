@@ -37,7 +37,7 @@ export default function WebhookDiagnostics() {
     refetch
   } = useQuery<SearchResult>({
     queryKey: ['/api/webhook-diagnostics/advanced-search', searchTerm],
-    queryFn: getQueryFn(),
+    queryFn: getQueryFn({ on401: 'returnNull' }),
     enabled: !!searchTerm,
   });
   
