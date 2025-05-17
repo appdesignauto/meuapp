@@ -13,8 +13,65 @@ const app = express();
 // Configurar CORS para o domínio customizado
 configureCors(app);
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+// Middleware de debug para garantir que o body esteja sempre disponível
+app.use((req: Request, res: Response, next: NextFunction) => {
+  // Não processar streams para uploads de arquivos ou outras rotas específicas
+  if (req.url.includes('/upload') || req.url.includes('/files')) {
+    return next();
+  }
+  
+  // Middleware universal para capturar o corpo bruto da requisição
+  let data = '';
+  
+  req.on('data', chunk => {
+    data += chunk;
+  });
+
+  req.on('end', () => {
+    if (!data) {
+      next();
+      return;
+    }
+      
+    // Se já temos req.body populado pelo express.json(), não interfira
+    if (req.body && Object.keys(req.body).length > 0) {
+      next();
+      return;
+    }
+    
+    // Tentar parsear como JSON
+    try {
+      req.body = JSON.parse(data);
+      console.log("🛠️ Body reconstruído manualmente como JSON");
+    } catch (e) {
+      // Se não for JSON, pode ser um formulário URL-encoded
+      try {
+        const params = new URLSearchParams(data);
+        const formData: Record<string, string> = {};
+        
+        for (const [key, value] of params.entries()) {
+          formData[key] = value;
+        }
+        
+        if (Object.keys(formData).length > 0) {
+          req.body = formData;
+          console.log("🛠️ Body reconstruído manualmente como formulário");
+        }
+      } catch (formError) {
+        // Se tudo falhar, armazenar os dados brutos
+        if (req.url.includes('/webhook') || req.url.includes('/api/webhooks')) {
+          console.warn("⚠️ Não foi possível parsear o body, armazenando dados brutos.", formError);
+          req.body = { _rawData: data };
+        }
+      }
+    }
+    next();
+  });
+});
+
+// Middlewares padrão do Express para parsing
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Configuração para servir arquivos estáticos da pasta public
 app.use(express.static(path.join(process.cwd(), 'public')));

@@ -6048,83 +6048,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Rota universal para webhook do Doppus - com suporte a múltiplos formatos
-  app.post("/api/webhooks/doppus", express.urlencoded({ extended: true }), express.json({
-    limit: '10mb',
-    strict: false
-  }), async (req, res) => {
+  // Rota webhook do Doppus - Versão ultra simplificada e robusta
+  app.post("/api/webhooks/doppus", async (req, res) => {
     try {
-      // Obter o IP de origem para registro
       const sourceIp = req.ip || req.connection.remoteAddress || 'unknown';
-      console.log("✅ Webhook Doppus recebido de IP:", sourceIp);
+      console.log("📦 Webhook Doppus recebido de IP:", sourceIp);
       
-      // Verificar tipo de conteúdo para diagnóstico
-      const contentType = req.headers['content-type'] || 'unknown';
-      console.log("Content-Type recebido:", contentType);
-      
-      // Adaptação universal do corpo da requisição para lidar com diferentes formatos
+      // Adaptação universal para garantir que sempre teremos um objeto processado
       let body = req.body;
       
-      // Se o payload vier como string e for JSON válido, faz o parse
+      // Registrar os detalhes críticos para diagnóstico
+      const contentType = req.headers['content-type'] || 'desconhecido';
+      console.log("Content-Type:", contentType);
+      console.log("Body tipo:", typeof body);
+      
+      // Se o body vier como string, tentar converter para objeto
       if (typeof body === 'string') {
         try {
           body = JSON.parse(body);
-          console.log("String JSON convertida com sucesso para objeto");
+          console.log("✅ Convertido string para objeto com sucesso");
         } catch (error) {
-          console.log("Corpo recebido como string, mas não é JSON válido");
+          console.error("⚠️ Falha ao converter string para objeto:", error);
         }
       }
       
-      // Se o payload vier dentro de um campo especial (como algumas plataformas enviam)
+      // Para o caso onde existe um campo 'payload' contendo JSON serializado
       if (body && body.payload && typeof body.payload === 'string') {
         try {
           body = JSON.parse(body.payload);
-          console.log("Payload extraído do campo 'payload' e convertido para objeto");
+          console.log("✅ Payload extraído e convertido para objeto");
         } catch (error) {
-          console.log("Campo 'payload' presente, mas não contém JSON válido");
+          console.error("⚠️ Payload existe mas não é JSON válido:", error);
         }
       }
       
-      // Verificação e log detalhado para diagnóstico
-      if (!body || Object.keys(body).length === 0) {
-        console.error("ERRO CRÍTICO: Corpo da requisição vazio ou inválido após processamento");
-        console.error("Headers completos:", JSON.stringify(req.headers, null, 2));
-        console.error("Método da requisição:", req.method);
-        
-        // Criar log de erro no banco de dados
-        const errorLog = await storage.createWebhookLog({
-          eventType: 'error',
-          payloadData: JSON.stringify({
-            headers: req.headers,
-            body: req.body,
-            error: "Corpo da requisição inválido após processamento"
-          }),
-          status: 'error',
-          source: 'doppus',
-          errorMessage: "Falha ao processar o corpo da requisição em qualquer formato",
-          sourceIp,
-          transactionId: null
-        });
-        
-        return res.status(400).json({
-          success: false,
-          message: "Erro ao processar o corpo da requisição",
-          logId: errorLog.id
-        });
+      // Para casos onde o body é { _rawData: string } do middleware universal
+      if (body && body._rawData && typeof body._rawData === 'string') {
+        try {
+          body = JSON.parse(body._rawData);
+          console.log("✅ Dados brutos extraídos e convertidos");
+        } catch (error) {
+          console.error("⚠️ Dados brutos não são JSON válido:", error);
+        }
       }
       
-      // Log do corpo processado com sucesso
-      console.log("Corpo do webhook Doppus processado:", JSON.stringify(body, null, 2));
+      // Log detalhado do corpo para diagnóstico
+      console.log("📋 Corpo final processado:", JSON.stringify(body, null, 2));
       
-      // Importar o serviço da Doppus
-      const DoppusService = (await import('./services/doppus-service')).default;
-      
-      // Extrai assinatura de segurança do webhook Doppus no cabeçalho da requisição
+      // Registrar sempre o webhook no banco, não importa o formato
+      const eventType = req.headers['x-doppus-event'] as string || body?.event || 'unknown';
       const signature = req.headers['x-doppus-signature'] as string;
-      const eventType = req.headers['x-doppus-event'] as string || body.event || 'unknown';
-      
-      // Registrar o webhook no banco de dados primeiro para garantir que não perdemos dados
       const transactionId = body?.data?.transaction?.code || null;
+      
+      // Criar log no banco independentemente de erros futuros
       const webhookLog = await storage.createWebhookLog({
         eventType: body?.event || eventType,
         payloadData: JSON.stringify(body),
@@ -6135,62 +6111,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
         transactionId
       });
       
-      // Validação básica do webhook
-      if (!body || !body.data || !body.event) {
-        console.error("Formato de webhook Doppus inválido:", body);
+      // Verificação de formato mínimo - mais tolerante
+      if (!body) {
+        console.error("❌ ERRO: Corpo da requisição completamente vazio");
         
-        // Atualizar o log com erro
         await storage.updateWebhookLog(webhookLog.id, {
           status: 'error',
-          errorMessage: "Formato de webhook inválido"
+          errorMessage: "Corpo da requisição vazio"
         });
         
         return res.status(400).json({ 
           success: false, 
-          message: "Webhook inválido: formato incorreto" 
+          message: "Corpo da requisição vazio ou não interpretável" 
         });
       }
       
-      // Validar a assinatura do webhook se fornecida
+      // Tolerância a formatos imperfeitos: Tentar extrair dados mesmo sem estrutura perfeita
+      // Esta parte é crucial para máxima compatibilidade com diferentes formatos
+      const dataObject = body.data || body.payload?.data || body.transaction || body.order || {};
+      const eventName = body.event || body.type || body.event_type || eventType;
+      
+      console.log("🔍 Dados extraídos:", {
+        evento: eventName,
+        transacao: transactionId,
+        temDados: !!dataObject && Object.keys(dataObject).length > 0
+      });
+      
+      // Validar assinatura apenas se fornecida
       if (signature) {
         try {
           const payloadString = JSON.stringify(body);
           const isValid = await DoppusService.validateWebhookSignature(signature, payloadString);
           
           if (!isValid) {
-            console.error("Assinatura de webhook Doppus inválida");
-            
-            // Atualizar o log com erro
+            console.error("⚠️ Assinatura webhook Doppus inválida");
             await storage.updateWebhookLog(webhookLog.id, {
               status: 'error',
               errorMessage: "Assinatura inválida"
             });
             
-            return res.status(403).json({
-              success: false,
-              message: "Acesso não autorizado: assinatura de webhook inválida"
+            // Responder com sucesso mas logar erro - algumas plataformas reenviam indefinidamente se não recebem HTTP 200
+            console.warn("⚡ Retornando HTTP 200 mesmo com assinatura inválida para evitar reenvios");
+            return res.status(200).json({ 
+              success: false, 
+              status: 'signature_failed',
+              message: "Assinatura inválida, mas requisição recebida"
             });
           }
         } catch (error) {
-          console.error("Erro ao validar assinatura Doppus:", error);
-          
+          console.error("❌ Erro ao validar assinatura:", error);
           await storage.updateWebhookLog(webhookLog.id, {
             status: 'error',
-            errorMessage: `Erro ao validar assinatura: ${error instanceof Error ? error.message : String(error)}`
+            errorMessage: `Erro na validação: ${error instanceof Error ? error.message : String(error)}`
           });
           
-          return res.status(500).json({
+          // Resposta amigável para evitar reenvios
+          return res.status(200).json({
             success: false,
-            message: "Erro ao validar assinatura do webhook"
+            status: 'validation_error',
+            message: "Erro de validação, mas requisição recebida"
           });
         }
       }
       
       // Processar o webhook usando o serviço Doppus
-      console.log("Evento Doppus recebido:", eventType);
-      console.log("Processando webhook com o serviço Doppus...");
+      console.log("🔄 Processando webhook Doppus:", eventName);
       
       try {
+        // Adaptar o body para o formato que o DoppusService espera
+        // Se faltam campos obrigatórios mas temos os dados básicos, reconstruímos o formato esperado
+        if (!body.data && dataObject && Object.keys(dataObject).length > 0) {
+          body = {
+            ...body,
+            data: dataObject,
+            event: eventName
+          };
+          console.log("🔧 Body reconstruído para formato compatível");
+        }
+        
         // Processar o webhook usando o serviço com o objeto body processado
         const result = await DoppusService.processWebhook(body);
         
@@ -6201,15 +6199,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         
         // Log do resultado para monitoramento
-        console.log("Resultado do processamento do webhook Doppus:", result);
+        console.log("✅ Resultado do processamento do webhook Doppus:", result);
         
-        res.json({ 
-          success: true, 
-          message: "Webhook Doppus processado com sucesso", 
-          result 
+        // Resposta de sucesso para a Doppus
+        return res.status(200).json({ 
+          success: true,
+          status: 'processed',
+          message: "Webhook processado com sucesso",
+          timestamp: new Date().toISOString()
         });
       } catch (processingError) {
-        console.error("Erro ao processar evento Doppus:", processingError);
+        console.error("❌ Erro ao processar evento Doppus:", processingError);
         
         // Atualizar o log com erro de processamento
         await storage.updateWebhookLog(webhookLog.id, {
@@ -6217,14 +6217,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           errorMessage: processingError instanceof Error ? processingError.message : String(processingError)
         });
         
-        res.status(500).json({
+        // Resposta com código 200 para evitar reenvios automáticos
+        return res.status(200).json({
           success: false,
-          message: "Erro ao processar evento Doppus",
+          status: 'processing_failed',
+          message: "Webhook recebido, mas falha no processamento",
           error: processingError instanceof Error ? processingError.message : String(processingError)
         });
       }
     } catch (error) {
-      console.error("Erro ao processar webhook do Doppus:", error);
+      console.error("❌ ERRO CRÍTICO no webhook Doppus:", error);
       
       // Tente registrar o erro, se possível
       try {
@@ -6237,12 +6239,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           sourceIp: req.ip
         });
       } catch (logError) {
-        console.error('Não foi possível registrar o erro no log:', logError);
+        console.error('❌ Não foi possível registrar o erro no log:', logError);
       }
       
-      res.status(500).json({ 
+      // Mesmo em caso de erro crítico, retornamos 200 para evitar reenvios automáticos
+      return res.status(200).json({ 
         success: false, 
-        message: "Erro ao processar webhook", 
+        status: 'critical_error',
+        message: "Webhook recebido, mas ocorreu um erro crítico", 
         error: error instanceof Error ? error.message : String(error)
       });
     }
