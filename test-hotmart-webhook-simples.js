@@ -26,11 +26,12 @@ async function enviarWebhook() {
       }
     };
     
-    // Enviar para o endpoint do webhook
-    const response = await fetch("http://localhost:3000/webhook/hotmart", {
+    // Enviar para o endpoint do webhook (porta 5000 para Replit)
+    const response = await fetch("http://localhost:5000/webhook/hotmart", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "X-Hotmart-Webhook-Token": "test-secret"
       },
       body: JSON.stringify(webhookData)
     });
