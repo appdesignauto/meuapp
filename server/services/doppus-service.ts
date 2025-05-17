@@ -34,6 +34,22 @@ class DoppusService {
   private credentials: DoppusCredentials | null = null;
   
   /**
+   * Permite configurar a URL base da API
+   * @param url Nova URL base
+   */
+  public setBaseUrl(url: string): void {
+    console.log(`Alterando URL base da API de ${this.baseUrl} para ${url}`);
+    this.baseUrl = url;
+  }
+  
+  /**
+   * Retorna a URL base atual
+   */
+  public getBaseUrl(): string {
+    return this.baseUrl;
+  }
+  
+  /**
    * Obtém as credenciais da Doppus do banco de dados
    */
   private async getCredentials(): Promise<DoppusCredentials> {
@@ -607,6 +623,9 @@ class DoppusService {
       console.log('===== INICIANDO TESTE DE CONEXÃO COM A DOPPUS =====');
       console.log('Data e hora:', new Date().toISOString());
       console.log('URL da API:', this.baseUrl);
+      console.log('Endpoints a serem testados:');
+      console.log('- Autenticação:', `${this.baseUrl}/oauth/token`);
+      console.log('- API:', `${this.baseUrl}/rest/v2`);
       
       try {
         // Consultar diretamente o banco de dados para obter as credenciais da Doppus
@@ -785,14 +804,29 @@ class DoppusService {
           };
         }
         
-        const tokenData = await tokenResponse.json() as { access_token?: string };
+        let tokenData;
+        try {
+          tokenData = await tokenResponse.json() as { access_token?: string };
+          console.log('Resposta JSON completa:', JSON.stringify(tokenData, null, 2));
+        } catch (parseError) {
+          console.error('✗ Erro ao analisar resposta como JSON:', parseError);
+          return {
+            success: false,
+            message: 'Erro ao processar resposta da API',
+            details: { 
+              stage: 'parse_json', 
+              error: String(parseError),
+              baseUrl: this.baseUrl
+            }
+          };
+        }
         
-        if (!tokenData.access_token) {
+        if (!tokenData || !tokenData.access_token) {
           console.error('✗ Token não encontrado na resposta:', tokenData);
           return {
             success: false,
             message: 'Token de acesso não retornado pela API da Doppus',
-            details: { stage: 'token', response: tokenData }
+            details: { stage: 'token', response: tokenData, baseUrl: this.baseUrl }
           };
         }
         
