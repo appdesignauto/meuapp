@@ -4602,10 +4602,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Apenas responde com 200 OK para evitar erros de stream
   app.post("/api/webhooks/doppus", (req, res) => {
     // Responder imediatamente com 200 OK
-    res.status(200).send("OK");
+    res.status(200).json({
+      status: "success",
+      message: "Webhook recebido com sucesso"
+    });
     
     // Registrar recebimento no console
     console.log("📦 Webhook Doppus recebido em:", new Date().toISOString());
+  });
+  
+  // API para listar logs de webhooks (para a página de Assinaturas)
+  app.get("/api/webhooks/logs", async (req, res) => {
+    try {
+      // Retorna lista vazia temporariamente enquanto a tabela não existe
+      res.json({ 
+        logs: [], 
+        totalCount: 0,
+        page: 1,
+        limit: 10,
+        totalPages: 0
+      });
+    } catch (error) {
+      console.error("Erro ao buscar logs de webhook:", error);
+      res.status(500).json({ 
+        message: "Erro ao buscar logs de webhook"
+      });
+    }
+  });
+  
+  // API para obter detalhes de um log específico
+  app.get("/api/webhooks/logs/:id", async (req, res) => {
+    try {
+      res.json({
+        log: {
+          id: parseInt(req.params.id),
+          eventType: "EXEMPLO",
+          payloadData: "{}",
+          status: "processed",
+          source: "example",
+          errorMessage: null,
+          userId: null,
+          sourceIp: "127.0.0.1",
+          transactionId: null,
+          email: null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        userData: null
+      });
+    } catch (error) {
+      console.error("Erro ao buscar detalhes do log:", error);
+      res.status(500).json({ 
+        message: "Erro ao buscar detalhes do log" 
+      });
+    }
   });
   
   // Rota para testar rebaixamento de usuário específico (com verificação Hotmart)
