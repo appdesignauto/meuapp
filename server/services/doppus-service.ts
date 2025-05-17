@@ -87,22 +87,35 @@ class DoppusService {
    */
   private async getAccessToken(): Promise<string> {
     try {
-      console.log('Solicitando token de acesso da Doppus...');
+      console.log('===== SOLICITANDO TOKEN DE ACESSO DA DOPPUS =====');
+      console.log('Data e hora:', new Date().toISOString());
+      
       const credentials = await this.getCredentials();
       
+      if (!credentials.doppusClientId || !credentials.doppusClientSecret) {
+        console.error('ERRO CRÍTICO: Credenciais incompletas ou mal formatadas');
+        console.error('doppusClientId disponível:', !!credentials.doppusClientId);
+        console.error('doppusClientSecret disponível:', !!credentials.doppusClientSecret);
+        throw new Error('Credenciais da Doppus (Client ID ou Client Secret) incompletas');
+      }
+      
       console.log(`Enviando requisição de autenticação para ${this.baseUrl}/token`);
-      console.log('Client ID utilizado:', credentials.doppusClientId.substring(0, 4) + '...');
+      console.log('Client ID utilizado:', credentials.doppusClientId.substring(0, 4) + '...' + credentials.doppusClientId.slice(-4));
+      
+      const params = new URLSearchParams({
+        'grant_type': 'client_credentials',
+        'client_id': credentials.doppusClientId,
+        'client_secret': credentials.doppusClientSecret
+      });
+      
+      console.log('Parâmetros da requisição:', params.toString().replace(credentials.doppusClientSecret, '[SECRET]'));
       
       const response = await fetch(`${this.baseUrl}/token`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: new URLSearchParams({
-          'grant_type': 'client_credentials',
-          'client_id': credentials.doppusClientId,
-          'client_secret': credentials.doppusClientSecret
-        })
+        body: params
       });
       
       console.log('Resposta recebida. Status:', response.status);
@@ -593,6 +606,7 @@ class DoppusService {
     try {
       console.log('===== INICIANDO TESTE DE CONEXÃO COM A DOPPUS =====');
       console.log('Data e hora:', new Date().toISOString());
+      console.log('URL da API:', this.baseUrl);
       
       try {
         // Consultar diretamente o banco de dados para obter as credenciais da Doppus
@@ -698,24 +712,39 @@ class DoppusService {
         // Tentar obter token de acesso
         console.log('PASSO 2: Solicitando token de acesso da Doppus...');
         console.log(`Enviando requisição para ${this.baseUrl}/token`);
+        console.log('Credenciais utilizadas:');
+        console.log('- Client ID: ', credentials.doppusClientId ? `${credentials.doppusClientId.substring(0, 4)}...${credentials.doppusClientId.slice(-4)}` : 'não definido');
+        console.log('- Client Secret: ', credentials.doppusClientSecret ? 'definido (valor mascarado)' : 'não definido');
+        
+        const params = new URLSearchParams({
+          'grant_type': 'client_credentials',
+          'client_id': credentials.doppusClientId,
+          'client_secret': credentials.doppusClientSecret
+        });
+        
+        console.log('Body da requisição:', params.toString());
         
         const tokenResponse = await fetch(`${this.baseUrl}/token`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
           },
-          body: new URLSearchParams({
-            'grant_type': 'client_credentials',
-            'client_id': credentials.doppusClientId,
-            'client_secret': credentials.doppusClientSecret
-          })
+          body: params
         });
         
         console.log('Resposta recebida. Status:', tokenResponse.status);
         
         if (!tokenResponse.ok) {
           const errorText = await tokenResponse.text();
-          console.error('✗ Erro na resposta da API:', errorText);
+          console.error('✗ Erro na resposta da API. Status:', tokenResponse.status);
+          console.error('✗ Corpo da resposta:', errorText);
+          
+          // Log de alguns headers importantes
+          const headers = {
+            'content-type': tokenResponse.headers.get('content-type'),
+            'www-authenticate': tokenResponse.headers.get('www-authenticate')
+          };
+          console.error('✗ Headers da resposta:', JSON.stringify(headers));
           
           let errorMsg = `Erro ao obter token de acesso (HTTP ${tokenResponse.status})`;
           if (tokenResponse.status === 401) {
@@ -724,6 +753,23 @@ class DoppusService {
             errorMsg = 'Requisição inválida. Verifique se as credenciais estão no formato correto.';
           } else if (tokenResponse.status === 404) {
             errorMsg = 'Endpoint de autenticação não encontrado. Verifique a URL da API.';
+          } else if (tokenResponse.status === 0 || tokenResponse.status >= 500) {
+            errorMsg = 'Erro de conexão ou erro no servidor Doppus. Verifique a URL e tente novamente mais tarde.';
+          }
+          
+          try {
+            // Tentar analisar o erro como JSON
+            const errorJson = JSON.parse(errorText);
+            console.error('✗ Erro em formato JSON:', JSON.stringify(errorJson, null, 2));
+            
+            if (errorJson.error_description) {
+              errorMsg = `Erro da API Doppus: ${errorJson.error_description}`;
+            } else if (errorJson.message) {
+              errorMsg = `Erro da API Doppus: ${errorJson.message}`;
+            }
+          } catch (e) {
+            // Não é um JSON válido, continuar com o errorText
+            console.log('O erro não está em formato JSON válido');
           }
           
           return {
@@ -733,7 +779,8 @@ class DoppusService {
               stage: 'token', 
               status: tokenResponse.status, 
               error: errorText,
-              clientIdUsed: credentials.doppusClientId.substring(0, 4) + '...' + credentials.doppusClientId.slice(-4)
+              clientIdUsed: credentials.doppusClientId.substring(0, 4) + '...' + credentials.doppusClientId.slice(-4),
+              baseUrl: this.baseUrl
             }
           };
         }
