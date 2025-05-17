@@ -5895,6 +5895,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Rota de diagnóstico para testar conexão com a Doppus
+  app.get('/api/webhooks/doppus/test-connection', async (req, res) => {
+    try {
+      console.log('[DIAGNÓSTICO DOPPUS] Iniciando teste de conexão');
+      
+      // Importar o serviço da Doppus
+      const DoppusService = (await import('./services/doppus-service')).default;
+      
+      const result = await DoppusService.testConnection();
+      console.log('[DIAGNÓSTICO DOPPUS] Resultado do teste:', JSON.stringify(result));
+      
+      res.json(result);
+    } catch (error) {
+      console.error('[DIAGNÓSTICO DOPPUS] Erro durante o teste:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro durante o teste de conexão',
+        error: error instanceof Error ? error.message : String(error),
+        stack: process.env.NODE_ENV === 'production' ? undefined : error instanceof Error ? error.stack : undefined
+      });
+    }
+  });
+
   // Rota para webhook do Doppus
   app.post("/api/webhooks/doppus", async (req, res) => {
     try {

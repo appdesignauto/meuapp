@@ -30,7 +30,7 @@ interface DoppusCredentials {
  * Serviço para gerenciar integração com Doppus
  */
 class DoppusService {
-  private baseUrl: string = 'https://api.hotmart.com';
+  private baseUrl: string = 'https://api.doppus.com/v4';
   private credentials: DoppusCredentials | null = null;
   
   /**
@@ -115,7 +115,7 @@ class DoppusService {
         throw new Error('Credenciais da Doppus (Client ID ou Client Secret) incompletas');
       }
       
-      console.log(`Enviando requisição de autenticação para ${this.baseUrl}/oauth/token`);
+      console.log(`Enviando requisição de autenticação para ${this.baseUrl}/token`);
       console.log('Client ID utilizado:', credentials.doppusClientId.substring(0, 4) + '...' + credentials.doppusClientId.slice(-4));
       
       const params = new URLSearchParams({
@@ -126,7 +126,7 @@ class DoppusService {
       
       console.log('Parâmetros da requisição:', params.toString().replace(credentials.doppusClientSecret, '[SECRET]'));
       
-      const response = await fetch(`${this.baseUrl}/oauth/token`, {
+      const response = await fetch(`${this.baseUrl}/token`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -730,7 +730,7 @@ class DoppusService {
         
         // Tentar obter token de acesso
         console.log('PASSO 2: Solicitando token de acesso da Doppus...');
-        console.log(`Enviando requisição para ${this.baseUrl}/oauth/token`);
+        console.log(`Enviando requisição para ${this.baseUrl}/token`);
         console.log('Credenciais utilizadas:');
         console.log('- Client ID: ', credentials.doppusClientId ? `${credentials.doppusClientId.substring(0, 4)}...${credentials.doppusClientId.slice(-4)}` : 'não definido');
         console.log('- Client Secret: ', credentials.doppusClientSecret ? 'definido (valor mascarado)' : 'não definido');
@@ -743,7 +743,7 @@ class DoppusService {
         
         console.log('Body da requisição:', params.toString());
         
-        const tokenResponse = await fetch(`${this.baseUrl}/oauth/token`, {
+        const tokenResponse = await fetch(`${this.baseUrl}/token`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
