@@ -6049,12 +6049,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Rota para webhook do Doppus - usando express.json() específico para esta rota
-  app.post("/api/webhooks/doppus", express.json(), async (req, res) => {
+  app.post("/api/webhooks/doppus", express.json({
+    // Configuração mais permissiva para garantir processamento do corpo
+    limit: '10mb',
+    strict: false
+  }), async (req, res) => {
     try {
       // Obter o IP de origem para registro
       const sourceIp = req.ip || req.connection.remoteAddress || 'unknown';
-      console.log("Webhook Doppus recebido de IP:", sourceIp);
-      // Log completo do corpo da requisição para diagnóstico
+      console.log("🎯 Webhook Doppus recebido de IP:", sourceIp);
+      
+      // Verificação e log detalhado do corpo da requisição
+      if (req.body === null || req.body === undefined) {
+        console.error("ERRO CRÍTICO: req.body é null ou undefined");
+        
+        // Log avançado para diagnóstico
+        console.error("Headers completos:", JSON.stringify(req.headers, null, 2));
+        console.error("Método da requisição:", req.method);
+        console.error("Content-Type:", req.headers['content-type']);
+        
+        // Criar log de erro no banco de dados
+        const errorLog = await storage.createWebhookLog({
+          eventType: 'error',
+          payloadData: JSON.stringify({
+            headers: req.headers,
+            error: "Body da requisição vazio ou não processado"
+          }),
+          status: 'error',
+          source: 'doppus',
+          errorMessage: "O middleware express.json() falhou ao processar o corpo da requisição",
+          sourceIp,
+          transactionId: null
+        });
+        
+        return res.status(400).json({
+          success: false,
+          message: "Erro ao processar o corpo da requisição",
+          logId: errorLog.id
+        });
+      }
+      
+      // Log completo do corpo da requisição processado com sucesso
       console.log("Corpo do webhook Doppus:", JSON.stringify(req.body, null, 2));
       
       // Importar o serviço da Doppus
