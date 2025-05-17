@@ -6048,8 +6048,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Rota webhook do Doppus - Versão ultra simplificada e robusta
+  // Rota webhook do Doppus - Versão ultra robusta para maio/2025
   app.post("/api/webhooks/doppus", async (req, res) => {
+    // Resposta imediata para evitar o erro "stream is not readable"
+    // Enviamos um cabeçalho que informa que a requisição está sendo processada, 
+    // mas não fechamos a conexão ainda
+    res.setHeader('X-Processing', 'true');
+    
     try {
       const sourceIp = req.ip || req.connection.remoteAddress || 'unknown';
       console.log("📦 Webhook Doppus recebido de IP:", sourceIp);
@@ -6092,13 +6097,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Adaptação para o formato de maio/2025 da Doppus
+      // Se encontrarmos a estrutura básica do novo formato (customer, items, etc)
+      // mas não encontrarmos data ou event, que são esperados pelo processador
+      if (body && 
+          body.customer && 
+          body.items && 
+          Array.isArray(body.items) && 
+          !body.data && 
+          !body.event) {
+        // Reformatar para um formato compatível com o processador
+        const originalBody = { ...body };
+        body = {
+          event: 'payment.approved',
+          data: originalBody
+        };
+        console.log("✅ Detectado formato Doppus maio/2025, adaptado para processamento");
+      }
+      
       // Log detalhado do corpo para diagnóstico
       console.log("📋 Corpo final processado:", JSON.stringify(body, null, 2));
       
       // Registrar sempre o webhook no banco, não importa o formato
       const eventType = req.headers['x-doppus-event'] as string || body?.event || 'unknown';
       const signature = req.headers['x-doppus-signature'] as string;
-      const transactionId = body?.data?.transaction?.code || null;
+      const transactionId = body?.data?.transaction?.code || body?.transaction?.code || null;
       
       // Criar log no banco independentemente de erros futuros
       const webhookLog = await storage.createWebhookLog({
@@ -6120,7 +6143,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           errorMessage: "Corpo da requisição vazio"
         });
         
-        return res.status(400).json({ 
+        // Sempre HTTP 200 para Doppus
+        return res.status(200).json({ 
           success: false, 
           message: "Corpo da requisição vazio ou não interpretável" 
         });
@@ -6201,13 +6225,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Log do resultado para monitoramento
         console.log("✅ Resultado do processamento do webhook Doppus:", result);
         
-        // Resposta de sucesso para a Doppus
-        return res.status(200).json({ 
-          success: true,
-          status: 'processed',
-          message: "Webhook processado com sucesso",
-          timestamp: new Date().toISOString()
-        });
+        // Resposta de sucesso para a Doppus - sempre status 200 e um objeto simples
+        return res.status(200).send("OK");
       } catch (processingError) {
         console.error("❌ Erro ao processar evento Doppus:", processingError);
         
@@ -6218,12 +6237,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         
         // Resposta com código 200 para evitar reenvios automáticos
-        return res.status(200).json({
-          success: false,
-          status: 'processing_failed',
-          message: "Webhook recebido, mas falha no processamento",
-          error: processingError instanceof Error ? processingError.message : String(processingError)
-        });
+        // Simplificada ao máximo para evitar problemas de buffer
+        return res.status(200).send("OK");
       }
     } catch (error) {
       console.error("❌ ERRO CRÍTICO no webhook Doppus:", error);
@@ -6235,20 +6250,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           payloadData: JSON.stringify(req.body),
           status: 'error',
           source: 'doppus',
-          errorMessage: `Erro grave: ${error.message}`,
+          errorMessage: `Erro grave: ${error instanceof Error ? error.message : String(error)}`,
           sourceIp: req.ip
         });
       } catch (logError) {
         console.error('❌ Não foi possível registrar o erro no log:', logError);
       }
       
-      // Mesmo em caso de erro crítico, retornamos 200 para evitar reenvios automáticos
-      return res.status(200).json({ 
-        success: false, 
-        status: 'critical_error',
-        message: "Webhook recebido, mas ocorreu um erro crítico", 
-        error: error instanceof Error ? error.message : String(error)
-      });
+      // Mesmo em caso de erro crítico, retornamos 200 com texto simples
+      // para garantir que não haverá problemas com o buffer ou stream
+      return res.status(200).send("OK");
     }
   });
   
