@@ -79,17 +79,20 @@ async function testAuthentication(credentials) {
   const authEndpoint = `${baseUrl}/Auth`;
   console.log(`- Endpoint: ${authEndpoint}`);
   
-  // Parâmetros da requisição
+  // Parâmetros da requisição - conforme documentação específica da Doppus
   const params = new URLSearchParams({
+    'client_id': credentials.doppusClientId,
+    'client_secret': credentials.doppusClientSecret,
     'grant_type': 'client_credentials'
   });
   
-  // Autenticação Basic
+  // Tentando com token de autenticação no header
+  // Formato da autenticação esperado pela API
   const authString = Buffer.from(`${credentials.doppusClientId}:${credentials.doppusClientSecret}`).toString('base64');
-  console.log(`- Autenticação: Basic ${authString.substring(0, 8)}...`);
+  console.log(`- Autenticação Basic: ${authString.substring(0, 8)}...`);
   
   try {
-    console.log('Enviando requisição...');
+    console.log('Enviando requisição com autenticação no header e parâmetros no corpo...');
     
     const response = await fetch(authEndpoint, {
       method: 'POST',

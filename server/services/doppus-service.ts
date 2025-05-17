@@ -119,8 +119,11 @@ class DoppusService {
       console.log('Client ID utilizado:', credentials.doppusClientId.substring(0, 4) + '...' + credentials.doppusClientId.slice(-4));
       
       // Parâmetros conforme documentação da Doppus
+      // Incluindo client_id e client_secret como parâmetros adicionais no corpo
       const params = new URLSearchParams({
-        'grant_type': 'client_credentials'
+        'grant_type': 'client_credentials',
+        'client_id': credentials.doppusClientId,
+        'client_secret': credentials.doppusClientSecret
       });
       
       console.log('Parâmetros da requisição:', params.toString());
