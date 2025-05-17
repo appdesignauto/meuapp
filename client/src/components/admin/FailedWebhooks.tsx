@@ -546,11 +546,9 @@ export default function FailedWebhooks() {
                   {retryMutation.isPending ? 'Reprocessando...' : 'Reprocessar webhook'}
                 </Button>
               )}
-              <DialogClose asChild>
-                <Button variant="outline">
-                  {dialogType === 'view' ? 'Fechar' : 'Cancelar'}
-                </Button>
-              </DialogClose>
+              <Button variant="outline" onClick={() => setSelectedWebhook(null)}>
+                {dialogType === 'view' ? 'Fechar' : 'Cancelar'}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
