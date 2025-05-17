@@ -5,51 +5,59 @@ import { z } from 'zod';
 
 const router = Router();
 
-// Obter lista de webhooks falhos com filtros opcionais
+// Schema para validação de parâmetros de paginação e filtros
+const listParamsSchema = z.object({
+  status: z.string().optional(),
+  source: z.string().optional(),
+  limit: z.coerce.number().optional(),
+  offset: z.coerce.number().optional(),
+});
+
+/**
+ * @route GET /api/webhooks/failed
+ * @description Lista todos os webhooks que falharam durante o processamento
+ * @access Admin
+ */
 router.get('/', async (req, res) => {
   try {
-    // Verificar se o usuário tem permissão
-    if (!req.isAuthenticated() || !['admin'].includes(req.user.role)) {
-      return res.status(403).json({ error: 'Acesso negado' });
-    }
-
-    // Parsear e validar os parâmetros da query
-    const querySchema = z.object({
-      status: z.string().optional(),
-      source: z.string().optional(),
-      limit: z.coerce.number().optional(),
-      offset: z.coerce.number().optional()
-    });
-
-    const validationResult = querySchema.safeParse(req.query);
+    // Validar e converter parâmetros de consulta
+    const validation = listParamsSchema.safeParse(req.query);
     
-    if (!validationResult.success) {
+    if (!validation.success) {
       return res.status(400).json({ 
-        error: 'Parâmetros inválidos', 
-        details: validationResult.error.errors 
+        error: 'Parâmetros de consulta inválidos',
+        details: validation.error.format() 
       });
     }
-
-    const options = validationResult.data;
     
-    // Buscar webhooks falhos com os filtros fornecidos
-    const result = await webhookService.getFailedWebhooks(options);
+    // Extrair parâmetros validados
+    const { status, source, limit, offset } = validation.data;
+    
+    // Buscar webhooks falhos com os filtros aplicados
+    const result = await webhookService.getFailedWebhooks({
+      status,
+      source,
+      limit,
+      offset
+    });
     
     res.json(result);
   } catch (error) {
     console.error('Erro ao listar webhooks falhos:', error);
-    res.status(500).json({ error: 'Erro ao listar webhooks falhos', message: error.message });
+    res.status(500).json({ 
+      error: 'Erro ao listar webhooks falhos',
+      message: error.message 
+    });
   }
 });
 
-// Obter detalhes de um webhook falho específico
+/**
+ * @route GET /api/webhooks/failed/:id
+ * @description Busca detalhes de um webhook falho específico
+ * @access Admin
+ */
 router.get('/:id', async (req, res) => {
   try {
-    // Verificar se o usuário tem permissão
-    if (!req.isAuthenticated() || !['admin'].includes(req.user.role)) {
-      return res.status(403).json({ error: 'Acesso negado' });
-    }
-
     const id = parseInt(req.params.id);
     
     if (isNaN(id)) {
@@ -64,19 +72,21 @@ router.get('/:id', async (req, res) => {
     
     res.json(webhook);
   } catch (error) {
-    console.error(`Erro ao buscar webhook falho ID ${req.params.id}:`, error);
-    res.status(500).json({ error: 'Erro ao buscar webhook falho', message: error.message });
+    console.error(`Erro ao buscar webhook ID ${req.params.id}:`, error);
+    res.status(500).json({ 
+      error: 'Erro ao buscar webhook',
+      message: error.message 
+    });
   }
 });
 
-// Reprocessar um webhook falho
+/**
+ * @route POST /api/webhooks/failed/:id/retry
+ * @description Tenta reprocessar um webhook que falhou anteriormente
+ * @access Admin
+ */
 router.post('/:id/retry', async (req, res) => {
   try {
-    // Verificar se o usuário tem permissão
-    if (!req.isAuthenticated() || !['admin'].includes(req.user.role)) {
-      return res.status(403).json({ error: 'Acesso negado' });
-    }
-
     const id = parseInt(req.params.id);
     
     if (isNaN(id)) {
@@ -90,67 +100,94 @@ router.post('/:id/retry', async (req, res) => {
       return res.status(404).json({ error: 'Webhook não encontrado' });
     }
     
-    // Verificar se o webhook já está em processamento ou resolvido
+    // Verificar se o webhook já está sendo processado
     if (webhook.status === 'processing') {
-      return res.status(400).json({ 
-        error: 'Webhook já está em processamento',
-        message: 'Este webhook já está sendo reprocessado' 
-      });
+      return res.status(409).json({ error: 'Este webhook já está sendo reprocessado' });
     }
     
+    // Verificar se o webhook já foi resolvido
     if (webhook.status === 'resolved') {
-      return res.status(400).json({ 
-        error: 'Webhook já foi resolvido',
-        message: 'Este webhook já foi processado com sucesso' 
-      });
+      return res.status(409).json({ error: 'Este webhook já foi processado com sucesso' });
     }
     
-    // Marcar webhook como em processamento
+    // Atualizar status para processando
     await webhookService.markAsProcessing(id);
     
     // Incrementar contador de tentativas
     await webhookService.incrementRetryCount(id);
     
-    // Reprocessar o webhook de acordo com a fonte
     let result;
     
     try {
+      // Processar o webhook de acordo com sua origem
       if (webhook.source === 'hotmart') {
-        // Reprocessar webhook da Hotmart
         // Chamar o serviço da Hotmart para processar o webhook
         result = await HotmartService.processWebhook(webhook.payload);
         
         // Se chegou aqui, foi processado com sucesso
         await webhookService.markAsResolved(id, 'Webhook processado com sucesso no reprocessamento');
         
-        return res.json({ 
+        res.json({ 
           success: true, 
           message: 'Webhook reprocessado com sucesso',
           result 
         });
-      } 
-      else if (webhook.source === 'doppus') {
-        // TODO: Implementar reprocessamento de webhooks do Doppus
-        throw new Error('Reprocessamento de webhooks do Doppus ainda não implementado');
-      } 
-      else {
-        throw new Error(`Fonte desconhecida: ${webhook.source}`);
+      } else if (webhook.source === 'doppus') {
+        // Para implementação futura
+        // result = await DoppusService.processWebhook(webhook.payload);
+        
+        // Enquanto não implementado
+        await webhookService.markAsFailed(id, 'Reprocessamento de webhooks Doppus ainda não implementado');
+        
+        res.status(501).json({ 
+          success: false, 
+          message: 'Reprocessamento de webhooks Doppus ainda não implementado' 
+        });
+      } else {
+        // Origem desconhecida
+        await webhookService.markAsFailed(id, `Origem desconhecida: ${webhook.source}`);
+        
+        res.status(400).json({ 
+          success: false, 
+          message: `Origem de webhook não suportada: ${webhook.source}` 
+        });
       }
     } catch (error) {
-      // Em caso de erro, marcar como falho e retornar o erro
+      // Em caso de erro no reprocessamento
+      console.error(`Erro ao reprocessar webhook ID ${id}:`, error);
+      
+      // Atualizar status para falha
       await webhookService.markAsFailed(id, `Erro no reprocessamento: ${error.message}`);
       
-      return res.status(500).json({ 
+      res.status(500).json({ 
         success: false, 
-        error: 'Erro ao reprocessar webhook', 
-        message: error.message 
+        message: 'Erro ao reprocessar webhook',
+        error: error.message 
       });
     }
   } catch (error) {
-    console.error(`Erro ao reprocessar webhook falho ID ${req.params.id}:`, error);
+    console.error(`Erro ao processar tentativa de reprocessamento para ID ${req.params.id}:`, error);
     res.status(500).json({ 
       success: false,
-      error: 'Erro ao reprocessar webhook falho', 
+      message: 'Erro ao processar tentativa de reprocessamento',
+      error: error.message 
+    });
+  }
+});
+
+/**
+ * @route GET /api/webhooks/failed/stats
+ * @description Retorna estatísticas sobre webhooks falhos
+ * @access Admin
+ */
+router.get('/stats', async (req, res) => {
+  try {
+    const stats = await webhookService.getWebhookStats();
+    res.json(stats);
+  } catch (error) {
+    console.error('Erro ao buscar estatísticas de webhooks:', error);
+    res.status(500).json({ 
+      error: 'Erro ao buscar estatísticas',
       message: error.message 
     });
   }
