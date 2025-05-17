@@ -11,6 +11,7 @@ import { configureCors } from "./cors-config";
 // Importação dos routers de webhook
 import webhookHotmart from './routes/webhook-hotmart';
 import webhookDoppus from './routes/webhook-doppus';
+import webhookLogs from './routes/webhook-logs';
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use(express.urlencoded({ extended: true }));
 // Registrar as rotas de webhook
 app.use('/webhook/hotmart', webhookHotmart);
 app.use('/webhook/doppus', webhookDoppus);
+app.use('/api/webhooks/logs', webhookLogs);
 
 // Middleware de debug para garantir que o body esteja sempre disponível
 app.use((req: Request, res: Response, next: NextFunction) => {
