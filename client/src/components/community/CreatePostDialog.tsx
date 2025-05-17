@@ -367,11 +367,9 @@ export function CreatePostDialog({ open, onOpenChange }: CreatePostDialogProps) 
             </div>
             
             <DialogFooter className="flex justify-between pt-4">
-              <DialogClose asChild>
-                <Button type="button" variant="outline" className="rounded-md">
-                  Cancelar
-                </Button>
-              </DialogClose>
+              <Button type="button" variant="outline" className="rounded-md" onClick={() => setIsOpen(false)}>
+                Cancelar
+              </Button>
               <Button 
                 type="submit" 
                 disabled={createPostMutation.isPending}
