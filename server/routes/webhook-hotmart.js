@@ -13,9 +13,25 @@ router.post('/', async (req, res) => {
   try {
     console.log('⚡ Webhook da Hotmart recebido');
     console.log("🔥 Webhook recebido:", JSON.stringify(req.body, null, 2));
+    console.log("📌 Headers:", JSON.stringify(req.headers, null, 2));
     
     // Extrair informações importantes do webhook
     let email = null;
+    
+    // Registrar o webhook bruto para diagnóstico
+    try {
+      const webhookStr = JSON.stringify(req.body);
+      console.log("Webhook da Hotmart recebido");
+      console.log("Corpo do webhook:", webhookStr);
+      
+      console.log("Token recebido no cabeçalho ou corpo:", req.headers['x-hotmart-webhook-token'] || 
+                 req.headers['x-hotmart-hottok'] || req.body?.hottok || req.query?.token);
+      
+      console.log("Cabeçalhos recebidos:", Object.keys(req.headers).join(", "));
+      console.log("Corpo recebido tem hottok?", req.body?.hottok ? "Sim" : "Não");
+    } catch (e) {
+      console.error("Erro ao registrar webhook:", e);
+    }
     if (req.body?.data?.buyer?.email) {
       email = req.body.data.buyer.email;
     } else if (req.body?.buyer?.email) {
