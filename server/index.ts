@@ -204,6 +204,15 @@ app.use((req, res, next) => {
           
           await client.connect();
           
+          // Log detalhado do webhook para diagnóstico
+          console.log('📊 [DIAGNÓSTICO WEBHOOK HOTMART]');
+          console.log('- ID do evento:', req.body?.id || 'não encontrado');
+          console.log('- Tipo de evento:', eventType);
+          console.log('- Email do comprador:', email);
+          console.log('- ID da transação:', transactionId);
+          console.log('- Data de recebimento:', new Date().toISOString());
+          console.log('- Status do processamento: em andamento');
+          
           console.log('📝 Salvando webhook no banco via SQL direto:', { 
             eventType, 
             email, 
