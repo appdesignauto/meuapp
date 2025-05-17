@@ -118,6 +118,7 @@ class DoppusService {
       console.log(`Enviando requisição de autenticação para ${this.baseUrl}/Auth`);
       console.log('Client ID utilizado:', credentials.doppusClientId.substring(0, 4) + '...' + credentials.doppusClientId.slice(-4));
       
+      // Parâmetros conforme documentação da Doppus
       const params = new URLSearchParams({
         'grant_type': 'client_credentials'
       });
@@ -126,6 +127,7 @@ class DoppusService {
       
       // A documentação da Doppus indica que o Client ID e Client Secret devem ser enviados via Basic Auth
       const authString = Buffer.from(`${credentials.doppusClientId}:${credentials.doppusClientSecret}`).toString('base64');
+      console.log('Autenticação: Basic', authString.substring(0, 8) + '...');
       
       const response = await fetch(`${this.baseUrl}/Auth`, {
         method: 'POST',
@@ -142,6 +144,13 @@ class DoppusService {
         const errorText = await response.text();
         console.error('Erro completo da API:', errorText);
         
+        // Log detalhado para diagnóstico
+        console.error('Detalhes da requisição para diagnóstico:');
+        console.error('- URL:', `${this.baseUrl}/Auth`);
+        console.error('- Content-Type:', 'application/x-www-form-urlencoded');
+        console.error('- Authorization: Basic [CENSURADO]');
+        console.error('- Body:', params.toString());
+        
         // Construir uma mensagem de erro mais informativa
         let errorMsg = `Erro ao obter token de acesso (HTTP ${response.status})`;
         
@@ -155,18 +164,40 @@ class DoppusService {
           errorMsg = 'Erro interno no servidor da Doppus. Tente novamente mais tarde.';
         }
         
+        // Erros específicos da API Doppus
+        if (errorText.includes("Unidentified or invalid customer account")) {
+          errorMsg = 'Conta de cliente não identificada ou inválida. Verifique as credenciais Client ID e Client Secret.';
+        }
+        
         throw new Error(errorMsg + ` (${errorText})`);
       }
       
-      const data = await response.json() as { access_token?: string };
+      // Formato de resposta esperado conforme a documentação
+      // {
+      //   "success": true,
+      //   "error": [],
+      //   "return_type": "OK",
+      //   "message": "Access token successfully generated.",
+      //   "data": {
+      //     "token": "=Q=M.a7267ef8b2423afff9.vHJcjHVZvGld=g=b.p3JduGld=w=Z.wTcM5jgN2DYM=A=M",
+      //     "token_type": "Bearer",
+      //     "expire_in": "2024:02:02 13:17:40"
+      //   }
+      // }
+      const data = await response.json();
       
-      if (!data.access_token) {
-        console.error('Resposta sem token de acesso:', JSON.stringify(data));
-        throw new Error('Token de acesso não retornado pela API da Doppus');
+      console.log('Estrutura da resposta:', Object.keys(data).join(', '));
+      
+      if (!data.success || !data.data?.token) {
+        console.error('Resposta inesperada da API Doppus:', JSON.stringify(data, null, 2));
+        throw new Error('Token de acesso não encontrado na resposta da API Doppus');
       }
       
-      console.log('Token de acesso obtido com sucesso!');
-      return data.access_token as string;
+      console.log('Token obtido com sucesso!');
+      console.log('Tipo de token:', data.data.token_type);
+      console.log('Validade até:', data.data.expire_in);
+      
+      return data.data.token;
     } catch (error) {
       console.error('Erro ao obter token de acesso da Doppus:', error);
       throw new Error('Falha na autenticação com a Doppus: ' + (error instanceof Error ? error.message : String(error)));
@@ -732,23 +763,26 @@ class DoppusService {
         
         // Tentar obter token de acesso
         console.log('PASSO 2: Solicitando token de acesso da Doppus...');
-        console.log(`Enviando requisição para ${this.baseUrl}/token`);
+        console.log(`Enviando requisição para ${this.baseUrl}/Auth`);
         console.log('Credenciais utilizadas:');
         console.log('- Client ID: ', credentials.doppusClientId ? `${credentials.doppusClientId.substring(0, 4)}...${credentials.doppusClientId.slice(-4)}` : 'não definido');
         console.log('- Client Secret: ', credentials.doppusClientSecret ? 'definido (valor mascarado)' : 'não definido');
         
         const params = new URLSearchParams({
-          'grant_type': 'client_credentials',
-          'client_id': credentials.doppusClientId,
-          'client_secret': credentials.doppusClientSecret
+          'grant_type': 'client_credentials'
         });
+        
+        // A documentação da Doppus indica que o Client ID e Client Secret devem ser enviados via Basic Auth
+        const authString = Buffer.from(`${credentials.doppusClientId}:${credentials.doppusClientSecret}`).toString('base64');
+        console.log('Autenticação: Basic', authString.substring(0, 8) + '...');
         
         console.log('Body da requisição:', params.toString());
         
-        const tokenResponse = await fetch(`${this.baseUrl}/token`, {
+        const tokenResponse = await fetch(`${this.baseUrl}/Auth`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': `Basic ${authString}`
           },
           body: params
         });
