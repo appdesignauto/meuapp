@@ -39,6 +39,7 @@ import SupabaseAuthTestPage from "@/pages/SupabaseAuthTestPage";
 import VideoaulasPage from "@/pages/videoaulas";
 import ComunidadePage from "@/pages/comunidade";
 import FerramentasPage from "@/pages/ferramentas";
+import WebhookDiagnostics from "@/pages/webhook-diagnostics";
 
 // Páginas do Painel do Usuário
 import { ProtectedPainelRoute } from "@/components/painel/ProtectedPainelRoute";
