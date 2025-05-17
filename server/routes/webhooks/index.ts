@@ -5,28 +5,57 @@ import logsRouter from './logs';
 import { db } from '../../db';
 import { users } from '@shared/schema';
 import { eq } from 'drizzle-orm';
+import { Request, Response, NextFunction } from "express";
+import { Session, SessionData } from 'express-session';
+
+// Extensão do tipo de Session para incluir o campo passport
+declare module 'express-session' {
+  interface Session {
+    passport?: {
+      user?: number;
+    };
+  }
+}
 
 const router = Router();
 
-// Middleware alternativo para verificar se o usuário é admin
-// sem depender do req.isAuthenticated() do Passport
-const checkAdminManually = async (req, res, next) => {
+/**
+ * Middleware aprimorado para verificar se o usuário é admin
+ * com alternativas de fallback para quando req.isAuthenticated() não estiver disponível
+ * 
+ * Estratégia de verificação:
+ * 1. Tenta acessar req.user diretamente (se já estiver disponível via passport)
+ * 2. Verifica a sessão manualmente se req.user não estiver disponível
+ * 3. Retorna erro 401 se nenhuma das tentativas de autenticação funcionar
+ */
+const checkAdminSafely = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // Verificar se existe uma sessão
-    if (!req.session || !req.session.passport || !req.session.passport.user) {
+    let user = null;
+    
+    // Tentativa 1: Verificar se req.user já existe (via passport.initialize/session)
+    if (req.user) {
+      user = req.user;
+    } 
+    // Tentativa 2: Verificar pela sessão (fallback)
+    else if (req.session?.passport?.user) {
+      const userId = req.session.passport.user;
+      const [dbUser] = await db.select().from(users).where(eq(users.id, userId));
+      user = dbUser;
+      
+      // Anexar o usuário à requisição para uso posterior
+      req.user = dbUser;
+    }
+    
+    // Verificação final: usuário existe e é admin
+    if (!user) {
       return res.status(401).json({ error: 'Usuário não autenticado' });
     }
     
-    // Buscar o usuário pelo ID na sessão
-    const userId = req.session.passport.user;
-    const [user] = await db.select().from(users).where(eq(users.id, userId));
-    
-    if (!user || user.nivelacesso !== 'admin') {
+    if (user.nivelacesso !== 'admin') {
       return res.status(403).json({ error: 'Acesso negado, apenas administradores podem realizar esta ação' });
     }
     
-    // Anexar o usuário à requisição para uso posterior
-    req.user = user;
+    // Usuário é admin, prosseguir
     next();
   } catch (error) {
     console.error('Erro ao verificar administrador:', error);
@@ -35,9 +64,9 @@ const checkAdminManually = async (req, res, next) => {
 };
 
 // Rotas para gerenciamento de webhooks falhos
-router.use('/failed', checkAdminManually, failedRouter);
+router.use('/failed', checkAdminSafely, failedRouter);
 
 // Rotas para visualização e gerenciamento de logs de webhook
-router.use('/logs', checkAdminManually, logsRouter);
+router.use('/logs', checkAdminSafely, logsRouter);
 
 export default router;

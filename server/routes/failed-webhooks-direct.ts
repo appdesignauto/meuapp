@@ -1,126 +1,177 @@
-import { Router } from 'express';
+import express from 'express';
 import { db } from '../db';
-import { users, failedWebhooks } from '@shared/schema';
-import { eq, desc, sql } from 'drizzle-orm';
-import { webhookService } from '../services/webhook-service';
+import { sql, eq, and, desc } from 'drizzle-orm';
+import { failedWebhooks } from '@shared/schema';
+import { WebhookService } from '../services/webhook-service';
 
-const router = Router();
+const router = express.Router();
 
-// Middleware alternativo para verificar se o usuário é admin
-// sem depender do req.isAuthenticated() do Passport
-const checkAdminManually = async (req, res, next) => {
-  try {
-    // Verificar se existe uma sessão
-    if (!req.session || !req.session.passport || !req.session.passport.user) {
-      return res.status(401).json({ error: 'Usuário não autenticado' });
-    }
-    
-    // Buscar o usuário pelo ID na sessão
-    const userId = req.session.passport.user;
-    const [user] = await db.select().from(users).where(eq(users.id, userId));
-    
-    if (!user || user.nivelacesso !== 'admin') {
-      return res.status(403).json({ error: 'Acesso negado, apenas administradores podem realizar esta ação' });
-    }
-    
-    // Anexar o usuário à requisição para uso posterior
-    req.user = user;
-    next();
-  } catch (error) {
-    console.error('Erro ao verificar administrador:', error);
-    res.status(500).json({ error: 'Erro ao verificar permissões de administrador' });
+// Middleware de verificação manual de admin sem depender do Passport
+function checkAdminManually(req, res, next) {
+  // Verificar a sessão manualmente para autenticação
+  if (!req.session || !req.session.passport || !req.session.passport.user) {
+    return res.status(401).json({ error: 'Não autenticado' });
   }
-};
 
-// Rota para listar webhooks falhos (com paginação)
+  // Buscar o usuário pelo ID da sessão
+  db.execute(sql`
+    SELECT id, nivelacesso FROM users WHERE id = ${req.session.passport.user}
+  `).then(result => {
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'Usuário não encontrado' });
+    }
+
+    const user = result.rows[0];
+    if (user.nivelacesso !== 'admin') {
+      return res.status(403).json({ error: 'Acesso negado. Apenas administradores podem acessar esta área.' });
+    }
+
+    // Usuário é administrador, prosseguir
+    next();
+  }).catch(error => {
+    console.error('Erro ao verificar administrador:', error);
+    res.status(500).json({ error: 'Erro ao verificar permissões' });
+  });
+}
+
+// Obter todos os webhooks com falha com filtros opcionais
 router.get('/', checkAdminManually, async (req, res) => {
   try {
-    console.log('DEBUG /api/failed-webhooks - Endpoint chamado');
+    const { status = 'all', source = 'all' } = req.query;
     
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
-    const offset = (page - 1) * limit;
+    let query = db.select().from(failedWebhooks);
     
-    // Buscar webhooks falhos
-    const failedWebhooksData = await db.select({
-      id: failedWebhooks.id,
-      payload: failedWebhooks.payload,
-      errorMessage: failedWebhooks.errorMessage,
-      errorStack: failedWebhooks.errorStack,
-      createdAt: failedWebhooks.createdAt,
-      source: failedWebhooks.source
-    })
-    .from(failedWebhooks)
-    .orderBy(desc(failedWebhooks.createdAt))
-    .limit(limit)
-    .offset(offset);
+    // Aplicar filtros se fornecidos
+    if (status !== 'all') {
+      query = query.where(eq(failedWebhooks.status, status as string));
+    }
     
-    // Buscar contagem total
-    const [{ count }] = await db.select({
-      count: sql<number>`count(*)`
-    })
-    .from(failedWebhooks);
+    if (source !== 'all') {
+      query = query.where(eq(failedWebhooks.source, source as string));
+    }
     
-    res.json({
-      success: true,
-      data: failedWebhooksData,
-      pagination: {
-        page,
-        limit,
-        totalCount: Number(count),
-        totalPages: Math.ceil(Number(count) / limit)
-      }
+    // Ordenar por data de criação (mais recente primeiro)
+    const webhooks = await query.orderBy(desc(failedWebhooks.createdAt)).limit(100);
+    
+    // Obter estatísticas
+    const stats = {
+      total: 0,
+      pending: 0,
+      processing: 0,
+      resolved: 0,
+      failed: 0,
+      bySource: {}
+    };
+    
+    // Contar totais
+    const totalResult = await db.execute(sql`
+      SELECT COUNT(*) as total FROM "failedWebhooks"
+    `);
+    stats.total = parseInt(totalResult.rows[0].total);
+    
+    // Contar por status
+    const statusCounts = await db.execute(sql`
+      SELECT status, COUNT(*) as count FROM "failedWebhooks" GROUP BY status
+    `);
+    
+    statusCounts.rows.forEach(row => {
+      if (row.status === 'pending') stats.pending = parseInt(row.count);
+      else if (row.status === 'processing') stats.processing = parseInt(row.count);
+      else if (row.status === 'resolved') stats.resolved = parseInt(row.count);
+      else if (row.status === 'failed') stats.failed = parseInt(row.count);
     });
+    
+    // Contar por origem
+    const sourceCounts = await db.execute(sql`
+      SELECT source, COUNT(*) as count FROM "failedWebhooks" GROUP BY source
+    `);
+    
+    sourceCounts.rows.forEach(row => {
+      stats.bySource[row.source] = parseInt(row.count);
+    });
+    
+    res.json({ webhooks, stats });
   } catch (error) {
-    console.error('Erro ao buscar webhooks falhos:', error);
-    res.status(500).json({ 
-      success: false,
-      message: 'Erro ao buscar webhooks falhos', 
-      error: error instanceof Error ? error.message : 'Erro desconhecido' 
-    });
+    console.error('Erro ao obter webhooks com falha:', error);
+    res.status(500).json({ error: 'Erro ao buscar webhooks com falha' });
   }
 });
 
-// Rota para reprocessar um webhook falho específico
-router.post('/reprocess/:id', checkAdminManually, async (req, res) => {
+// Reprocessar um webhook com falha
+router.post('/:id/retry', checkAdminManually, async (req, res) => {
   try {
-    const failedWebhookId = parseInt(req.params.id);
+    const { id } = req.params;
     
-    // Buscar o webhook falho
-    const [failedWebhook] = await db.select()
+    // Localizar o webhook com falha
+    const [failedWebhook] = await db
+      .select()
       .from(failedWebhooks)
-      .where(eq(failedWebhooks.id, failedWebhookId));
+      .where(eq(failedWebhooks.id, parseInt(id)))
+      .limit(1);
     
     if (!failedWebhook) {
-      return res.status(404).json({ 
-        success: false,
-        message: 'Webhook falho não encontrado' 
-      });
+      return res.status(404).json({ error: 'Webhook não encontrado' });
     }
     
-    // Reprocessar o webhook
-    const result = await webhookService.reprocessFailedWebhook(failedWebhookId);
+    // Verificar se o webhook não está já sendo processado
+    if (failedWebhook.status === 'processing') {
+      return res.status(400).json({ error: 'Este webhook já está sendo processado' });
+    }
     
-    if (result.success) {
-      res.json({
-        success: true,
-        message: 'Webhook reprocessado com sucesso',
-        data: result.data
-      });
-    } else {
-      res.status(400).json({
-        success: false,
-        message: 'Erro ao reprocessar webhook',
-        error: result.error
+    // Verificar se o webhook já foi resolvido
+    if (failedWebhook.status === 'resolved') {
+      return res.status(400).json({ error: 'Este webhook já foi resolvido' });
+    }
+    
+    // Marcar o webhook como em processamento
+    await db
+      .update(failedWebhooks)
+      .set({
+        status: 'processing',
+        retryCount: (failedWebhook.retryCount || 0) + 1,
+        lastRetryAt: new Date()
+      })
+      .where(eq(failedWebhooks.id, parseInt(id)));
+    
+    // Criar instância do serviço de webhook
+    const webhookService = new WebhookService();
+    
+    // Tentar reprocessar o webhook
+    try {
+      // Chamar método de reprocessamento no serviço
+      await webhookService.reprocessFailedWebhook(failedWebhook);
+      
+      // Se chegou aqui, o reprocessamento foi bem-sucedido
+      await db
+        .update(failedWebhooks)
+        .set({
+          status: 'resolved',
+          updatedAt: new Date()
+        })
+        .where(eq(failedWebhooks.id, parseInt(id)));
+      
+      res.json({ success: true, message: 'Webhook reprocessado com sucesso' });
+    } catch (error) {
+      console.error(`Erro ao reprocessar webhook ${id}:`, error);
+      
+      // Atualizar o registro com o novo erro
+      await db
+        .update(failedWebhooks)
+        .set({
+          status: 'failed',
+          errorMessage: `Erro no reprocessamento: ${error.message}`,
+          updatedAt: new Date()
+        })
+        .where(eq(failedWebhooks.id, parseInt(id)));
+      
+      res.status(500).json({ 
+        error: 'Falha ao reprocessar webhook',
+        message: error.message
       });
     }
   } catch (error) {
-    console.error(`Erro ao reprocessar webhook falho ID ${req.params.id}:`, error);
-    res.status(500).json({ 
-      success: false,
-      message: 'Erro ao reprocessar webhook falho', 
-      error: error instanceof Error ? error.message : 'Erro desconhecido' 
-    });
+    console.error('Erro ao reprocessar webhook:', error);
+    res.status(500).json({ error: 'Erro ao reprocessar webhook' });
   }
 });
 
