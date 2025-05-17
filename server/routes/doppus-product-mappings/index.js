@@ -1,6 +1,6 @@
 /**
  * Adaptador para manter compatibilidade com o deploy
- * Este arquivo serve como um proxy para o arquivo doppus-product-mappings.js
+ * Este arquivo serve como um proxy para o arquivo doppus-product-mappings.ts
  * na raiz da pasta routes, permitindo que o require encontre o módulo
  * mesmo quando o caminho é montado incorretamente durante o deploy
  */
@@ -27,7 +27,7 @@ if (fs.existsSync(originalFilePath)) {
     res.status(201).json({
       id: 1,
       productId: req.body.productId || '',
-      productName: req.body.productName || 'Produto Doppus Padrão',
+      productName: req.body.productName || 'Produto Padrão Doppus',
       planType: req.body.planType || 'premium',
       durationDays: req.body.durationDays || 30,
       isLifetime: !!req.body.isLifetime,
@@ -40,7 +40,7 @@ if (fs.existsSync(originalFilePath)) {
     res.json({
       id: parseInt(req.params.id),
       productId: '',
-      productName: 'Produto Doppus Padrão',
+      productName: 'Produto Padrão Doppus',
       planType: 'premium',
       durationDays: 30,
       isLifetime: false,
@@ -53,7 +53,7 @@ if (fs.existsSync(originalFilePath)) {
     res.json({
       id: parseInt(req.params.id),
       productId: req.body.productId || '',
-      productName: req.body.productName || 'Produto Doppus Padrão',
+      productName: req.body.productName || 'Produto Padrão Doppus',
       planType: req.body.planType || 'premium',
       durationDays: req.body.durationDays || 30,
       isLifetime: !!req.body.isLifetime,
