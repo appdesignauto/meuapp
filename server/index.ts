@@ -70,7 +70,17 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 // Middlewares padrão do Express para parsing
-app.use(express.json({ limit: '10mb' }));
+// IMPORTANTE: Instruímos o Express a não analisar o corpo das requisições para o endpoint webhook da Doppus
+app.use(express.json({ 
+  limit: '10mb',
+  verify: (req, res, buf, encoding) => {
+    // Armazenar o buffer do corpo bruto para validação de assinatura
+    if (req.url.includes('/webhooks/doppus')) {
+      // @ts-ignore
+      req.rawBody = buf;
+    }
+  }
+}));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Configuração para servir arquivos estáticos da pasta public

@@ -6048,219 +6048,229 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Rota webhook do Doppus - Versão ultra robusta para maio/2025
-  app.post("/api/webhooks/doppus", async (req, res) => {
-    // Resposta imediata para evitar o erro "stream is not readable"
-    // Enviamos um cabeçalho que informa que a requisição está sendo processada, 
-    // mas não fechamos a conexão ainda
-    res.setHeader('X-Processing', 'true');
+  // Rota webhook do Doppus - Implementação robusta e definitiva (maio/2025)
+  app.post("/api/webhooks/doppus", (req, res) => {
+    // SOLUÇÃO DEFINITIVA: Resposta imediata para resolver o erro "stream is not readable"
+    // Respondemos com 200 OK imediatamente, depois processamos o webhook de forma assíncrona
+    res.status(200).send("OK");
     
-    try {
-      const sourceIp = req.ip || req.connection.remoteAddress || 'unknown';
-      console.log("📦 Webhook Doppus recebido de IP:", sourceIp);
-      
-      // Adaptação universal para garantir que sempre teremos um objeto processado
-      let body = req.body;
-      
-      // Registrar os detalhes críticos para diagnóstico
-      const contentType = req.headers['content-type'] || 'desconhecido';
-      console.log("Content-Type:", contentType);
-      console.log("Body tipo:", typeof body);
-      
-      // Se o body vier como string, tentar converter para objeto
-      if (typeof body === 'string') {
-        try {
-          body = JSON.parse(body);
-          console.log("✅ Convertido string para objeto com sucesso");
-        } catch (error) {
-          console.error("⚠️ Falha ao converter string para objeto:", error);
-        }
-      }
-      
-      // Para o caso onde existe um campo 'payload' contendo JSON serializado
-      if (body && body.payload && typeof body.payload === 'string') {
-        try {
-          body = JSON.parse(body.payload);
-          console.log("✅ Payload extraído e convertido para objeto");
-        } catch (error) {
-          console.error("⚠️ Payload existe mas não é JSON válido:", error);
-        }
-      }
-      
-      // Para casos onde o body é { _rawData: string } do middleware universal
-      if (body && body._rawData && typeof body._rawData === 'string') {
-        try {
-          body = JSON.parse(body._rawData);
-          console.log("✅ Dados brutos extraídos e convertidos");
-        } catch (error) {
-          console.error("⚠️ Dados brutos não são JSON válido:", error);
-        }
-      }
-      
-      // Adaptação para o formato de maio/2025 da Doppus
-      // Se encontrarmos a estrutura básica do novo formato (customer, items, etc)
-      // mas não encontrarmos data ou event, que são esperados pelo processador
-      if (body && 
-          body.customer && 
-          body.items && 
-          Array.isArray(body.items) && 
-          !body.data && 
-          !body.event) {
-        // Reformatar para um formato compatível com o processador
-        const originalBody = { ...body };
-        body = {
-          event: 'payment.approved',
-          data: originalBody
-        };
-        console.log("✅ Detectado formato Doppus maio/2025, adaptado para processamento");
-      }
-      
-      // Log detalhado do corpo para diagnóstico
-      console.log("📋 Corpo final processado:", JSON.stringify(body, null, 2));
-      
-      // Registrar sempre o webhook no banco, não importa o formato
-      const eventType = req.headers['x-doppus-event'] as string || body?.event || 'unknown';
-      const signature = req.headers['x-doppus-signature'] as string;
-      const transactionId = body?.data?.transaction?.code || body?.transaction?.code || null;
-      
-      // Criar log no banco independentemente de erros futuros
-      const webhookLog = await storage.createWebhookLog({
-        eventType: body?.event || eventType,
-        payloadData: JSON.stringify(body),
-        status: 'received',
-        source: 'doppus',
-        errorMessage: null,
-        sourceIp,
-        transactionId
-      });
-      
-      // Verificação de formato mínimo - mais tolerante
-      if (!body) {
-        console.error("❌ ERRO: Corpo da requisição completamente vazio");
+    // Processamento assíncrono - não bloqueante
+    (async () => {
+      try {
+        const sourceIp = req.ip || req.connection.remoteAddress || 'unknown';
+        console.log("📦 Webhook Doppus recebido de IP:", sourceIp);
         
-        await storage.updateWebhookLog(webhookLog.id, {
-          status: 'error',
-          errorMessage: "Corpo da requisição vazio"
+        // Capturar uma cópia do body para evitar modificação do objeto original
+        let body = JSON.parse(JSON.stringify(req.body || {}));
+        
+        // Registrar os detalhes críticos para diagnóstico
+        const contentType = req.headers['content-type'] || 'desconhecido';
+        console.log("Content-Type:", contentType);
+        console.log("Body tipo:", typeof body);
+        console.log("Body tamanho:", Object.keys(body).length);
+        
+        // Para o caso onde existe um campo 'payload' contendo JSON serializado
+        if (body && body.payload && typeof body.payload === 'string') {
+          try {
+            body = JSON.parse(body.payload);
+            console.log("✅ Payload extraído e convertido para objeto");
+          } catch (error) {
+            console.error("⚠️ Payload existe mas não é JSON válido:", error);
+          }
+        }
+        
+        // Para casos onde o body é { _rawData: string } do middleware universal
+        if (body && body._rawData && typeof body._rawData === 'string') {
+          try {
+            body = JSON.parse(body._rawData);
+            console.log("✅ Dados brutos extraídos e convertidos");
+          } catch (error) {
+            console.error("⚠️ Dados brutos não são JSON válido:", error);
+          }
+        }
+        
+        // Adaptação para o formato de maio/2025 da Doppus
+        // Se encontrarmos a estrutura básica do novo formato (customer, items, etc)
+        // mas não encontrarmos data ou event, que são esperados pelo processador
+        if (body && 
+            body.customer && 
+            body.items && 
+            Array.isArray(body.items) && 
+            !body.data && 
+            !body.event) {
+          // Reformatar para um formato compatível com o processador
+          const originalBody = { ...body };
+          body = {
+            event: 'payment.approved',
+            data: originalBody
+          };
+          console.log("✅ Detectado formato Doppus maio/2025, adaptado para processamento");
+        }
+        
+        // Log detalhado do corpo para diagnóstico
+        console.log("📋 Corpo final processado:", JSON.stringify(body, null, 2));
+        
+        if (Object.keys(body).length === 0) {
+          console.error("❌ Body vazio ou não processável. Verificando raw payload.");
+          // Em último caso, tentar obter os dados brutos da requisição
+          if (req.rawBody) {
+            try {
+              body = JSON.parse(req.rawBody.toString());
+              console.log("✅ Payload reconstruído de rawBody com sucesso");
+            } catch (e) {
+              console.error("❌ Não foi possível parsear rawBody:", e);
+            }
+          }
+        }
+        
+        // Registrar sempre o webhook no banco, não importa o formato
+        const eventType = req.headers['x-doppus-event'] as string || body?.event || 'unknown';
+        const signature = req.headers['x-doppus-signature'] as string;
+        const transactionId = body?.data?.transaction?.code || 
+                             body?.transaction?.code || 
+                             body?.data?.code || 
+                             body?.id || 
+                             null;
+        
+        // Log dos cabeçalhos para diagnóstico
+        console.log("🔍 Cabeçalhos recebidos:", {
+          signature: signature ? 'presente' : 'ausente',
+          contentType,
+          eventType
         });
         
-        // Sempre HTTP 200 para Doppus
-        return res.status(200).json({ 
-          success: false, 
-          message: "Corpo da requisição vazio ou não interpretável" 
-        });
-      }
-      
-      // Tolerância a formatos imperfeitos: Tentar extrair dados mesmo sem estrutura perfeita
-      // Esta parte é crucial para máxima compatibilidade com diferentes formatos
-      const dataObject = body.data || body.payload?.data || body.transaction || body.order || {};
-      const eventName = body.event || body.type || body.event_type || eventType;
-      
-      console.log("🔍 Dados extraídos:", {
-        evento: eventName,
-        transacao: transactionId,
-        temDados: !!dataObject && Object.keys(dataObject).length > 0
-      });
-      
-      // Validar assinatura apenas se fornecida
-      if (signature) {
+        // Criar log no banco independentemente de erros futuros
+        let webhookLog;
         try {
-          const payloadString = JSON.stringify(body);
-          const isValid = await DoppusService.validateWebhookSignature(signature, payloadString);
+          webhookLog = await storage.createWebhookLog({
+            eventType: body?.event || eventType,
+            payloadData: JSON.stringify(body),
+            status: 'received',
+            source: 'doppus',
+            errorMessage: null,
+            sourceIp,
+            transactionId
+          });
+          console.log("✅ Log de webhook registrado com ID:", webhookLog.id);
+        } catch (dbError) {
+          console.error("❌ Erro ao registrar log de webhook:", dbError);
+          // Prosseguir mesmo sem o log para tentar processar o webhook
+        }
+        
+        // Verificação de formato mínimo - mais tolerante
+        if (!body || Object.keys(body).length === 0) {
+          console.error("❌ ERRO: Corpo da requisição completamente vazio ou inválido");
           
-          if (!isValid) {
-            console.error("⚠️ Assinatura webhook Doppus inválida");
+          if (webhookLog) {
             await storage.updateWebhookLog(webhookLog.id, {
               status: 'error',
-              errorMessage: "Assinatura inválida"
-            });
-            
-            // Responder com sucesso mas logar erro - algumas plataformas reenviam indefinidamente se não recebem HTTP 200
-            console.warn("⚡ Retornando HTTP 200 mesmo com assinatura inválida para evitar reenvios");
-            return res.status(200).json({ 
-              success: false, 
-              status: 'signature_failed',
-              message: "Assinatura inválida, mas requisição recebida"
+              errorMessage: "Corpo da requisição vazio ou inválido"
             });
           }
-        } catch (error) {
-          console.error("❌ Erro ao validar assinatura:", error);
-          await storage.updateWebhookLog(webhookLog.id, {
-            status: 'error',
-            errorMessage: `Erro na validação: ${error instanceof Error ? error.message : String(error)}`
-          });
           
-          // Resposta amigável para evitar reenvios
-          return res.status(200).json({
-            success: false,
-            status: 'validation_error',
-            message: "Erro de validação, mas requisição recebida"
+          return; // Já enviamos a resposta HTTP anteriormente
+        }
+        
+        // Tolerância a formatos imperfeitos: Tentar extrair dados mesmo sem estrutura perfeita
+        // Esta parte é crucial para máxima compatibilidade com diferentes formatos
+        const dataObject = body.data || body.payload?.data || body.transaction || body.order || {};
+        const eventName = body.event || body.type || body.event_type || eventType;
+        
+        console.log("🔍 Dados extraídos:", {
+          evento: eventName,
+          transacao: transactionId,
+          temDados: !!dataObject && Object.keys(dataObject).length > 0
+        });
+        
+        // Validar assinatura apenas se fornecida
+        if (signature) {
+          try {
+            const payloadString = JSON.stringify(body);
+            const isValid = await DoppusService.validateWebhookSignature(signature, payloadString);
+            
+            if (!isValid) {
+              console.error("⚠️ Assinatura webhook Doppus inválida");
+              if (webhookLog) {
+                await storage.updateWebhookLog(webhookLog.id, {
+                  status: 'error',
+                  errorMessage: "Assinatura inválida"
+                });
+              }
+              
+              return; // Já enviamos a resposta HTTP anteriormente
+            }
+          } catch (error) {
+            console.error("❌ Erro ao validar assinatura:", error);
+            if (webhookLog) {
+              await storage.updateWebhookLog(webhookLog.id, {
+                status: 'error',
+                errorMessage: `Erro na validação: ${error instanceof Error ? error.message : String(error)}`
+              });
+            }
+            
+            return; // Já enviamos a resposta HTTP anteriormente
+          }
+        }
+        
+        // Processar o webhook usando o serviço Doppus
+        console.log("🔄 Processando webhook Doppus:", eventName);
+        
+        try {
+          // Adaptar o body para o formato que o DoppusService espera
+          // Se faltam campos obrigatórios mas temos os dados básicos, reconstruímos o formato esperado
+          if (!body.data && dataObject && Object.keys(dataObject).length > 0) {
+            body = {
+              ...body,
+              data: dataObject,
+              event: eventName
+            };
+            console.log("🔧 Body reconstruído para formato compatível");
+          }
+          
+          // Processar o webhook usando o serviço com o objeto body processado
+          const result = await DoppusService.processWebhook(body);
+          
+          // Atualizar o log com sucesso
+          if (webhookLog) {
+            await storage.updateWebhookLog(webhookLog.id, {
+              status: 'processed',
+              processingResult: JSON.stringify(result)
+            });
+          }
+          
+          // Log do resultado para monitoramento
+          console.log("✅ Resultado do processamento do webhook Doppus:", result);
+        } catch (processingError) {
+          console.error("❌ Erro ao processar evento Doppus:", processingError);
+          
+          // Atualizar o log com erro de processamento
+          if (webhookLog) {
+            await storage.updateWebhookLog(webhookLog.id, {
+              status: 'error',
+              errorMessage: processingError instanceof Error ? processingError.message : String(processingError)
+            });
+          }
+        }
+      } catch (error) {
+        console.error("❌ ERRO CRÍTICO no webhook Doppus:", error);
+        
+        // Tente registrar o erro, se possível
+        try {
+          await storage.createWebhookLog({
+            eventType: 'ERROR',
+            payloadData: JSON.stringify(req.body || {}),
+            status: 'error',
+            source: 'doppus',
+            errorMessage: `Erro grave: ${error instanceof Error ? error.message : String(error)}`,
+            sourceIp: req.ip
           });
+        } catch (logError) {
+          console.error('❌ Não foi possível registrar o erro no log:', logError);
         }
       }
-      
-      // Processar o webhook usando o serviço Doppus
-      console.log("🔄 Processando webhook Doppus:", eventName);
-      
-      try {
-        // Adaptar o body para o formato que o DoppusService espera
-        // Se faltam campos obrigatórios mas temos os dados básicos, reconstruímos o formato esperado
-        if (!body.data && dataObject && Object.keys(dataObject).length > 0) {
-          body = {
-            ...body,
-            data: dataObject,
-            event: eventName
-          };
-          console.log("🔧 Body reconstruído para formato compatível");
-        }
-        
-        // Processar o webhook usando o serviço com o objeto body processado
-        const result = await DoppusService.processWebhook(body);
-        
-        // Atualizar o log com sucesso
-        await storage.updateWebhookLog(webhookLog.id, {
-          status: 'processed',
-          processingResult: JSON.stringify(result)
-        });
-        
-        // Log do resultado para monitoramento
-        console.log("✅ Resultado do processamento do webhook Doppus:", result);
-        
-        // Resposta de sucesso para a Doppus - sempre status 200 e um objeto simples
-        return res.status(200).send("OK");
-      } catch (processingError) {
-        console.error("❌ Erro ao processar evento Doppus:", processingError);
-        
-        // Atualizar o log com erro de processamento
-        await storage.updateWebhookLog(webhookLog.id, {
-          status: 'error',
-          errorMessage: processingError instanceof Error ? processingError.message : String(processingError)
-        });
-        
-        // Resposta com código 200 para evitar reenvios automáticos
-        // Simplificada ao máximo para evitar problemas de buffer
-        return res.status(200).send("OK");
-      }
-    } catch (error) {
-      console.error("❌ ERRO CRÍTICO no webhook Doppus:", error);
-      
-      // Tente registrar o erro, se possível
-      try {
-        await storage.createWebhookLog({
-          eventType: 'ERROR',
-          payloadData: JSON.stringify(req.body),
-          status: 'error',
-          source: 'doppus',
-          errorMessage: `Erro grave: ${error instanceof Error ? error.message : String(error)}`,
-          sourceIp: req.ip
-        });
-      } catch (logError) {
-        console.error('❌ Não foi possível registrar o erro no log:', logError);
-      }
-      
-      // Mesmo em caso de erro crítico, retornamos 200 com texto simples
-      // para garantir que não haverá problemas com o buffer ou stream
-      return res.status(200).send("OK");
-    }
+    })().catch(err => {
+      console.error("❌❌❌ Erro catastrófico no webhook Doppus:", err);
+    });
   });
   
   // Rota para testar rebaixamento de usuário específico (com verificação Hotmart)

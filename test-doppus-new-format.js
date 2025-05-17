@@ -23,10 +23,25 @@ async function getSecretKey() {
       connectionString: process.env.DATABASE_URL,
     });
     
-    // Buscar chave secreta da tabela de configurações
-    const result = await pool.query(
-      "SELECT value FROM \"integrationSettings\" WHERE key = 'doppusSecretKey'"
-    );
+    // Buscar chave secreta da tabela de configurações - tentando com e sem aspas no nome da tabela
+    let result;
+    try {
+      result = await pool.query(
+        "SELECT value FROM \"integrationSettings\" WHERE key = 'doppusSecretKey'"
+      );
+    } catch (err) {
+      console.log("⚠️ Erro buscando na tabela com aspas, tentando sem aspas...");
+      try {
+        result = await pool.query(
+          "SELECT value FROM integrationSettings WHERE key = 'doppusSecretKey'"
+        );
+      } catch (innerErr) {
+        console.log("❌ Também falhou sem aspas:", innerErr.message);
+        // Verificar se a tabela existe
+        const tables = await pool.query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'");
+        console.log("📋 Tabelas disponíveis:", tables.rows.map(r => r.table_name).join(', '));
+      }
+    }
     
     await pool.end();
     
@@ -88,12 +103,14 @@ async function simulateNewDoppusWebhook() {
     // Gerar assinatura
     const signature = generateSignature(payloadString, secretKey);
     
-    console.log('Enviando webhook para http://localhost:5000/api/webhooks/doppus');
+    // Usar localhost na porta 5000
+    const webhookUrl = 'http://127.0.0.1:5000/api/webhooks/doppus';
+    console.log(`Enviando webhook para ${webhookUrl}`);
     console.log('Payload:', payloadString);
     console.log('Assinatura:', signature);
     
     // Enviando requisição
-    const response = await fetch('http://localhost:5000/api/webhooks/doppus', {
+    const response = await fetch(webhookUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -139,10 +156,44 @@ async function checkWebhookLog() {
       connectionString: process.env.DATABASE_URL,
     });
     
-    // Buscar logs recentes
-    const result = await pool.query(
-      "SELECT * FROM webhookLogs WHERE source = 'doppus' ORDER BY createdAt DESC LIMIT 1"
-    );
+    // Verificar se a tabela existe e tentar diferentes variações do nome
+    let result;
+    try {
+      // Tentativa 1: com letras minúsculas
+      result = await pool.query(
+        "SELECT * FROM webhooklogs WHERE source = 'doppus' ORDER BY \"createdAt\" DESC LIMIT 1"
+      );
+    } catch (err1) {
+      console.log("⚠️ Erro na primeira consulta:", err1.message);
+      try {
+        // Tentativa 2: com CamelCase e aspas
+        result = await pool.query(
+          "SELECT * FROM \"webhookLogs\" WHERE source = 'doppus' ORDER BY \"createdAt\" DESC LIMIT 1"
+        );
+      } catch (err2) {
+        console.log("⚠️ Erro na segunda consulta:", err2.message);
+        
+        // Listar todas as tabelas para diagnóstico
+        const tables = await pool.query(
+          "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'"
+        );
+        console.log("📋 Tabelas disponíveis:", tables.rows.map(r => r.table_name).join(', '));
+        
+        // Tentar buscar com o nome correto da tabela
+        if (tables.rows.some(row => row.table_name.toLowerCase().includes('webhook'))) {
+          const webhookTable = tables.rows.find(row => row.table_name.toLowerCase().includes('webhook')).table_name;
+          console.log(`🔍 Encontrada tabela de webhooks: ${webhookTable}`);
+          
+          try {
+            result = await pool.query(
+              `SELECT * FROM "${webhookTable}" WHERE source = 'doppus' ORDER BY "createdAt" DESC LIMIT 1`
+            );
+          } catch (err3) {
+            console.log(`❌ Erro ao consultar tabela ${webhookTable}:`, err3.message);
+          }
+        }
+      }
+    }
     
     await pool.end();
     
