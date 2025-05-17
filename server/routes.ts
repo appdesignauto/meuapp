@@ -6958,6 +6958,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Endpoint para buscar logs de webhook por email
+  app.get('/api/webhooks/search', isAdmin, async (req, res) => {
+    try {
+      const { email } = req.query;
+      
+      if (!email) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email é obrigatório para a busca'
+        });
+      }
+      
+      console.log(`Buscando webhooks relacionados ao email: ${email}`);
+      
+      // Buscar na tabela todos os webhooks que contêm o email no payload
+      const result = await db.execute(sql`
+        SELECT * 
+        FROM "webhookLogs"
+        WHERE "payloadData"::text ILIKE ${`%${email}%`}
+        ORDER BY "createdAt" DESC
+        LIMIT 50
+      `);
+      
+      console.log(`Encontrados ${result.rows.length} registros para o email ${email}`);
+      
+      // Pré-processar os logs para extrair informações relevantes
+      const logs = result.rows.map(log => {
+        let payloadData = log.payloadData;
+        
+        // Converter para string se não for (para garantir consistência)
+        if (typeof payloadData !== 'string') {
+          payloadData = JSON.stringify(payloadData);
+        }
+        
+        return {
+          ...log,
+          payloadData
+        };
+      });
+      
+      res.json({
+        success: true,
+        count: logs.length,
+        logs
+      });
+    } catch (error) {
+      console.error('Erro na busca de webhooks por email:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro ao realizar busca de webhooks',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
+  
   // Endpoint para obter detalhes de um log específico
   app.get('/api/webhooks/logs/:id', isAdmin, async (req, res) => {
     try {
