@@ -5800,7 +5800,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           await pool.query(`
             UPDATE "webhookLogs" 
-            SET "status" = $1, "errorMessage" = $2, "email" = $3, "processedAt" = NOW(), "processed" = true
+            SET "status" = $1, "errorMessage" = $2, "email" = $3, "updatedAt" = NOW()
             WHERE id = $4
           `, [webhookStatus, webhookError, buyerEmail, webhookLogId]);
           
@@ -5825,7 +5825,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const { pool } = await import('./db');
           await pool.query(`
             UPDATE "webhookLogs" 
-            SET "status" = 'error', "errorMessage" = $1, "processedAt" = NOW(), "processed" = true
+            SET "status" = 'error', "errorMessage" = $1, "updatedAt" = NOW(), "processed" = true
             WHERE id = $2
           `, [error instanceof Error ? error.message : String(error), webhookLogId]);
         } catch (updateError) {
