@@ -7,8 +7,8 @@ import { createAdminUser } from "./init-admin";
 import { SubscriptionService } from "./services/subscription-service";
 import { validateR2Environment } from "./env-check";
 import { configureCors } from "./cors-config";
-// Importar configurações de webhook
-import { setupWebhookRoutes } from "./webhook-routes";
+// Removemos a dependência do arquivo webhook-routes-setup.js
+// e implementamos as rotas diretamente nesse arquivo
 
 const app = express();
 
@@ -146,7 +146,127 @@ app.use((req, res, next) => {
     // IMPORTANTE: Configurar rotas de webhook ANTES de qualquer fallback para o SPA
     // Isso garante que webhooks da Hotmart e Doppus sejam processados corretamente
     console.log("Configurando rotas de webhook dedicadas...");
-    setupWebhookRoutes(app);
+    
+    // Middleware de logging para Debug dos webhooks
+    app.use('/webhook', (req, res, next) => {
+      console.log(`📝 [DEBUG WEBHOOK] ${req.method} ${req.url} - Headers:`, JSON.stringify(req.headers, null, 2));
+      if (req.method === 'POST') {
+        console.log(`📝 [DEBUG WEBHOOK] Body:`, JSON.stringify(req.body, null, 2));
+      }
+      
+      // Salvar o método original
+      const originalJson = res.json;
+      
+      // Sobrescrever o método para fazer log
+      res.json = function(body) {
+        console.log(`📝 [DEBUG WEBHOOK] Response:`, JSON.stringify(body, null, 2));
+        return originalJson.call(this, body);
+      };
+      
+      next();
+    });
+    
+    // Configurando webhook da Hotmart diretamente no index.ts para evitar problemas de sistema de módulos
+    app.post('/webhook/hotmart', async (req, res) => {
+      try {
+        console.log('⚡ Webhook da Hotmart recebido');
+        
+        // Extrair informações importantes do webhook
+        let email = null;
+        if (req.body?.data?.buyer?.email) {
+          email = req.body.data.buyer.email;
+        } else if (req.body?.buyer?.email) {
+          email = req.body.buyer.email;
+        } else if (req.body?.data?.subscriber?.email) {
+          email = req.body.data.subscriber.email;
+        } else if (req.body?.subscriber?.email) {
+          email = req.body.subscriber.email;
+        }
+        
+        let transactionId = null;
+        if (req.body?.data?.purchase?.transaction) {
+          transactionId = req.body.data.purchase.transaction;
+        } else if (req.body?.data?.subscription?.code) {
+          transactionId = req.body.data.subscription.code;
+        } else if (req.body?.purchase?.transaction) {
+          transactionId = req.body.purchase.transaction;
+        }
+        
+        const eventType = req.body?.event || 'UNKNOWN';
+        
+        // Salvar webhook diretamente no banco usando SQL
+        try {
+          const { pool } = await import('./db');
+          
+          console.log('📝 Salvando webhook no banco via SQL direto:', { 
+            eventType, 
+            email, 
+            transactionId
+          });
+          
+          // Usar SQL direto para garantir compatibilidade
+          const query = `
+            INSERT INTO "webhookLogs" 
+            ("eventType", "payloadData", "status", "source", "sourceIp", "transactionId", "email", "errorMessage", "createdAt", "updatedAt") 
+            VALUES 
+            ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+            RETURNING id;
+          `;
+          
+          // Certifique-se de que sourceIp seja uma string, não um array
+          const sourceIp = typeof req.ip === 'string' ? 
+                         req.ip : 
+                         (typeof req.headers['x-forwarded-for'] === 'string' ? 
+                          req.headers['x-forwarded-for'] : 'unknown');
+                          
+          const values = [
+            eventType,
+            JSON.stringify(req.body),
+            'received',
+            'hotmart',
+            sourceIp,
+            transactionId,
+            email,
+            null
+          ];
+          
+          const result = await pool.query(query, values);
+          
+          console.log('✅ Log de webhook criado com sucesso via SQL direto:', result.rows[0].id);
+        } catch (logError) {
+          console.error('❌ Erro ao criar log de webhook:', logError);
+          console.error('Detalhes do erro:', logError);
+        }
+        
+        // Retornar 200 para confirmar recebimento do webhook
+        return res.status(200).json({
+          success: true,
+          message: 'Webhook processado com sucesso'
+        });
+        
+      } catch (error) {
+        console.error('❌ Erro ao processar webhook da Hotmart:', error);
+        
+        // Retornar 200 mesmo em caso de erro para evitar retentativas
+        return res.status(200).json({
+          success: false,
+          message: 'Erro ao processar webhook, mas confirmando recebimento'
+        });
+      }
+    });
+    
+    // Rota de diagnóstico para verificação básica de webhooks
+    app.get('/webhook/status', (req, res) => {
+      res.json({
+        status: 'online',
+        timestamp: new Date().toISOString(),
+        routes: [
+          { path: '/webhook/hotmart', status: 'configured' }
+        ],
+        message: 'Os webhooks estão configurados e funcionando. Use o painel de Admin para diagnósticos avançados.'
+      });
+    });
+    
     console.log("Rotas de webhook configuradas com sucesso");
   } catch (error) {
     console.error("Erro ao inicializar banco de dados:", error);

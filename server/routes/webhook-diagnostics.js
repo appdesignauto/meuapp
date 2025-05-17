@@ -1,206 +1,187 @@
 /**
  * Rotas de diagnóstico para webhooks
- * Estas rotas permitem testar e diagnosticar o funcionamento dos webhooks
+ * Estas rotas são usadas apenas por administradores para verificar
+ * o status e histórico de webhooks recebidos
  */
 
-const express = require('express');
+import express from 'express';
+import { storage } from '../storage.js';
+import { db } from '../db.js';
+import { isAdmin } from '../middleware/auth-middleware.js';
 const router = express.Router();
-const { storage } = require('../storage');
-const { SubscriptionService } = require('../services/subscription-service');
-const { db } = require('../db');
 
-// Middleware para verificar se o usuário é administrador
-const isAdminEnhanced = async (req, res, next) => {
-  try {
-    // Verificar se o usuário está autenticado
-    if (!req.isAuthenticated || !req.isAuthenticated()) {
-      return res.status(401).json({ error: 'Não autorizado - Faça login como administrador' });
-    }
-    
-    // Verificar se existe um usuário na sessão
-    if (!req.user) {
-      return res.status(401).json({ error: 'Usuário não encontrado na sessão' });
-    }
-    
-    // Verificar se o usuário é administrador
-    if (req.user.nivelacesso !== 'admin' && req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'Acesso negado - Apenas administradores podem acessar esta área' });
-    }
-    
-    // Usuário autenticado e é administrador, continuar
-    next();
-  } catch (error) {
-    console.error('Erro ao verificar permissões de administrador:', error);
-    return res.status(500).json({ error: 'Erro ao verificar permissões' });
-  }
-};
+// Middleware que verifica se o usuário é admin
+router.use(isAdmin);
 
-// Aplicar middleware de administrador em todas as rotas
-router.use(isAdminEnhanced);
-
-// Rota para obter os últimos logs de webhook
+// Listar todos os logs de webhook (com paginação)
 router.get('/logs', async (req, res) => {
   try {
-    const { limit = 50, source, status, email } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const offset = (page - 1) * limit;
     
-    // Construir filtros opcionais
-    const filters = {};
-    if (source) filters.source = source;
-    if (status) filters.status = status;
-    if (email) filters.email = email;
+    // Usar sintaxe mais simples e compatível com ambos sistemas de módulos
+    const logs = await db.select().from('webhookLogs')
+      .orderBy('createdAt', 'desc')
+      .limit(limit)
+      .offset(offset);
     
-    // Buscar logs de webhook do banco de dados
-    const logs = await storage.getWebhookLogs(parseInt(limit, 10), filters);
+    const total = await db.select().from('webhookLogs').count('id as count');
     
-    return res.json({ logs });
+    return res.json({
+      logs,
+      pagination: {
+        page,
+        limit,
+        total: total[0].count,
+        pages: Math.ceil(total[0].count / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Erro ao listar logs de webhook:', error);
+    return res.status(500).json({ error: 'Erro ao listar logs de webhook' });
+  }
+});
+
+// Visualizar detalhes de um log específico
+router.get('/logs/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const log = await storage.getWebhookLog(id);
+    
+    if (!log) {
+      return res.status(404).json({ error: 'Log não encontrado' });
+    }
+    
+    return res.json(log);
+  } catch (error) {
+    console.error(`Erro ao buscar log #${req.params.id}:`, error);
+    return res.status(500).json({ error: 'Erro ao buscar log de webhook' });
+  }
+});
+
+// Buscar webhooks por email
+router.get('/search', async (req, res) => {
+  try {
+    const { email, transactionId, source, status } = req.query;
+    let query = db.select().from(db.webhookLogs);
+    
+    if (email) {
+      query = query.where(db.webhookLogs.email, 'like', `%${email}%`);
+    }
+    
+    if (transactionId) {
+      query = query.where(db.webhookLogs.transactionId, 'like', `%${transactionId}%`);
+    }
+    
+    if (source) {
+      query = query.where(db.webhookLogs.source, '=', source);
+    }
+    
+    if (status) {
+      query = query.where(db.webhookLogs.status, '=', status);
+    }
+    
+    const results = await query.orderBy(db.webhookLogs.createdAt, 'desc').limit(100);
+    
+    return res.json({
+      results,
+      count: results.length
+    });
   } catch (error) {
     console.error('Erro ao buscar logs de webhook:', error);
     return res.status(500).json({ error: 'Erro ao buscar logs de webhook' });
   }
 });
 
-// Rota para testar os endpoints de webhook
-router.post('/test-webhook', async (req, res) => {
+// Testar simulação de webhook Hotmart
+router.post('/simulate/hotmart', async (req, res) => {
   try {
-    const { type, payload, email } = req.body;
-    
-    if (!type || !['hotmart', 'doppus'].includes(type)) {
-      return res.status(400).json({ error: 'Tipo de webhook inválido. Use "hotmart" ou "doppus"' });
-    }
+    const { email, productId } = req.body;
     
     if (!email) {
-      return res.status(400).json({ error: 'Email do usuário é obrigatório para o teste' });
+      return res.status(400).json({ error: 'Email é obrigatório' });
     }
     
-    // Verificar se o email existe no sistema
-    const user = await storage.getUserByEmail(email);
-    if (!user) {
-      return res.status(400).json({ error: `Usuário com email ${email} não encontrado no sistema` });
-    }
-    
-    // Definir um payload padrão se não for fornecido
-    const testPayload = payload || {
-      event: 'PURCHASE_APPROVED',
+    // Criar o webhook simulado
+    const webhookPayload = {
       data: {
         buyer: {
           email: email
         },
         purchase: {
-          transaction: `test-${Date.now()}`,
-          hotmart_fee: { price: { currency_value: 49.90 } }
+          transaction: `SIM-${Date.now()}`,
+          status: 'APPROVED'
         },
         product: {
-          id: '1234567',
-          name: 'Produto de Teste',
-          has_co_production: false
+          id: productId || 'DEFAULT_PRODUCT'
         }
-      }
+      },
+      event: 'PURCHASE_APPROVED',
+      id: `sim-${Date.now()}`
     };
     
-    // Registrar o teste no log
-    await storage.createWebhookLog({
-      eventType: testPayload.event || 'TEST_EVENT',
-      payloadData: JSON.stringify(testPayload),
-      status: 'test',
-      source: type,
-      sourceIp: req.ip,
+    // Simular o processamento do webhook
+    try {
+      await storage.createWebhookLog({
+        eventType: webhookPayload.event,
+        payloadData: JSON.stringify(webhookPayload),
+        status: 'received',
+        source: 'hotmart',
+        sourceIp: req.ip || 'simulação',
+        transactionId: webhookPayload.data.purchase.transaction,
+        email: email,
+        userId: null,
+        errorMessage: null
+      });
+      
+      return res.json({
+        success: true,
+        message: 'Webhook simulado processado com sucesso',
+        webhook: webhookPayload
+      });
+    } catch (error) {
+      console.error('Erro ao processar webhook simulado:', error);
+      return res.status(500).json({ 
+        success: false,
+        error: 'Erro ao processar webhook simulado',
+        details: error.message 
+      });
+    }
+  } catch (error) {
+    console.error('Erro ao simular webhook Hotmart:', error);
+    return res.status(500).json({ error: 'Erro ao simular webhook Hotmart' });
+  }
+});
+
+// Rota para testar o serviço de armazenamento de logs
+router.post('/test-log', async (req, res) => {
+  try {
+    const testLog = await storage.createWebhookLog({
+      eventType: 'TEST_EVENT',
+      payloadData: JSON.stringify({ test: true, timestamp: new Date().toISOString() }),
+      status: 'testing',
+      source: 'diagnostic',
+      sourceIp: req.ip || 'unknown',
       transactionId: `test-${Date.now()}`,
-      email,
-      userId: user.id,
+      email: req.body.email || 'test@example.com',
+      userId: null,
       errorMessage: null
     });
     
-    // Fazer um POST para o endpoint correspondente
-    let testEndpoint = '';
-    if (type === 'hotmart') {
-      testEndpoint = '/webhook/hotmart';
-    } else {
-      testEndpoint = '/webhook/doppus';
-    }
-    
-    // Agora enviamos uma solicitação usando axios ou fetch para o endpoint
-    // Normalmente faríamos uma chamada HTTP real, mas para simplificar,
-    // vamos apenas registrar o teste e simular uma resposta bem-sucedida
-    
     return res.json({
       success: true,
-      message: `Teste de webhook ${type} enviado com sucesso para ${testEndpoint}`,
-      payload: testPayload,
-      email: email,
-      user: {
-        id: user.id,
-        username: user.username
-      }
+      message: 'Log de teste criado com sucesso',
+      log: testLog
     });
   } catch (error) {
-    console.error('Erro ao testar webhook:', error);
-    return res.status(500).json({ error: 'Erro ao testar webhook' });
-  }
-});
-
-// Rota para verificar a configuração dos endpoints de webhook
-router.get('/check-status', async (req, res) => {
-  try {
-    // Verificar configurações da Hotmart
-    const integrationSettings = await db.query.integrationSettings.findFirst();
-    const hotmartSettingsConfigured = !!(integrationSettings?.hotmartApiKey || process.env.HOTMART_CLIENT_ID);
-    const doppusSettingsConfigured = !!(integrationSettings?.doppusClientId || process.env.DOPPUS_CLIENT_ID);
-    
-    // Retornar status das configurações
-    return res.json({
-      endpoints: {
-        hotmart: {
-          url: '/webhook/hotmart',
-          status: 'configurado',
-          testUrl: '/webhook/hotmart/test',
-          credentialStatus: hotmartSettingsConfigured ? 'configurado' : 'não configurado'
-        },
-        doppus: {
-          url: '/webhook/doppus',
-          status: 'configurado',
-          testUrl: '/webhook/doppus/test',
-          credentialStatus: doppusSettingsConfigured ? 'configurado' : 'não configurado'
-        }
-      },
-      timestamp: new Date().toISOString(),
-      serverInfo: {
-        environment: process.env.NODE_ENV || 'production',
-        hostname: req.headers.host
-      }
+    console.error('Erro ao criar log de teste:', error);
+    return res.status(500).json({ 
+      success: false,
+      error: 'Erro ao criar log de teste', 
+      details: error.message 
     });
-  } catch (error) {
-    console.error('Erro ao verificar status dos webhooks:', error);
-    return res.status(500).json({ error: 'Erro ao verificar status dos webhooks' });
   }
 });
 
-// Rota para limpar logs de webhook (com confirmação)
-router.delete('/logs/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    if (!id) {
-      return res.status(400).json({ error: 'ID do log é obrigatório' });
-    }
-    
-    // Se o ID for 'all', excluir todos os logs (apenas com confirmação)
-    if (id === 'all' && req.body.confirm === true) {
-      await storage.clearAllWebhookLogs();
-      return res.json({ success: true, message: 'Todos os logs de webhook foram excluídos' });
-    }
-    
-    // Excluir um log específico
-    const success = await storage.deleteWebhookLog(parseInt(id, 10));
-    
-    if (success) {
-      return res.json({ success: true, message: `Log de webhook ${id} excluído com sucesso` });
-    } else {
-      return res.status(404).json({ error: `Log de webhook ${id} não encontrado` });
-    }
-  } catch (error) {
-    console.error('Erro ao excluir log de webhook:', error);
-    return res.status(500).json({ error: 'Erro ao excluir log de webhook' });
-  }
-});
-
-module.exports = router;
+export default router;
