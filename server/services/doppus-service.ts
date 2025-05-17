@@ -930,7 +930,13 @@ class DoppusService {
           };
         }
         
-        if (!tokenData || !tokenData.access_token) {
+        // A Doppus retorna o token dentro de data.token quando success=true
+        // ou diretamente como access_token em algumas respostas
+        const hasToken = 
+          (tokenData.success === true && tokenData.data?.token) || 
+          tokenData.access_token;
+        
+        if (!hasToken) {
           console.error('✗ Token não encontrado na resposta:', tokenData);
           return {
             success: false,
