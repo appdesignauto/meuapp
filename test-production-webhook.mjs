@@ -110,7 +110,7 @@ async function enviarWebhook() {
     console.log(`✅ Assinatura HMAC gerada: ${signature}`);
     
     // URL do webhook - usar o domínio do Replit quando disponível
-    const dominio = process.env.REPLIT_DOMAIN || 'localhost:3000';
+    const dominio = process.env.REPLIT_DOMAIN || 'e1b8508c-921c-4d22-af73-1cb8fd7145e2-00-121uwb868mg4j.spock.replit.dev';
     const webhookUrl = `https://${dominio}/webhook/hotmart`;
     console.log(`📡 Enviando webhook para: ${webhookUrl}`);
     
@@ -175,16 +175,21 @@ async function verificarLog() {
   try {
     console.log('🔍 Verificando registro do webhook no banco de dados...');
     
+    // Usar o transactionId e email para encontrar o log
+    const email = webhookData.data.buyer.email;
+    const transactionId = webhookData.data.purchase.transaction;
+    
     const result = await pool.query(
-      `SELECT * FROM "webhookLogs" WHERE "webhookId" = $1 ORDER BY id DESC LIMIT 1`,
-      [webhookData.id]
+      `SELECT * FROM "webhookLogs" WHERE "transactionId" = $1 AND "email" = $2 ORDER BY id DESC LIMIT 1`,
+      [transactionId, email]
     );
     
     if (result.rows.length > 0) {
       const log = result.rows[0];
       console.log('✅ Log encontrado no banco de dados:');
       console.log(`   ID: ${log.id}`);
-      console.log(`   Evento: ${log.event}`);
+      console.log(`   Evento: ${log.eventType}`);
+      console.log(`   Status: ${log.status}`);
       console.log(`   Data de Criação: ${log.createdAt}`);
       return true;
     } else {
