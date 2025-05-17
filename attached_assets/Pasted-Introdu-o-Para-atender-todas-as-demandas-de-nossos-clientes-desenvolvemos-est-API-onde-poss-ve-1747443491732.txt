@@ -1,0 +1,92 @@
+Introdução
+Para atender todas as demandas de nossos clientes, desenvolvemos está API onde é possível realizar transações via cartão de crédito, boleto bancário e PIX e, posteriormente, realizar cancelamentos/estornos e consultas de transações específicas ou por determinados períodos.
+
+Este manual cobre o modelo transacional via API, que realiza a conexão com a Doppus utilizando protocolo HTTPS tendo sua chamada através de Web Services em REST.
+
+Testes na API
+Com o objetivo de facilitar a implementação desta API, você pode criar chaves de acesso específicas para realização de testes que, nas chamadas executadas, validam normalmente os parâmetros enviados. No entanto, como resultado, são sempre retornados valores estáticos e ficítios, apenas como exemplo, independente dos parâmetros enviados.
+
+Autenticação
+As APIs listadas nessa documentação utilizam autenticação OAuth2. Isso significa que em todas as requisições é necessário informar um token de acesso que será obtido através da autenticação com o seu Client ID e Client Secret.
+
+Token de acesso
+Endpoint responsável pela geração do token de acesso utilizado nas demais requisições. Para isso utilizamos HTTP Basic Authentication.
+
+Importante: O token tem validade de 60 minutos. Procure utilizar o mesmo token para as requisições realizadas durante a validade do mesmo.
+
+Requisição
+POST https://api.doppus.app/4.0/Auth/
+
+Parâmetros
+Header Parameters
+Content-type
+string Obrigatório
+Default: "application/x-www-form-urlencoded"
+Tipo do conteúdo padrão application/x-www-form-urlencoded.
+Authorization
+string Obrigatório
+Authorization: Basic AuthString
+Onde AuthString é a concatenação do seu Client ID, seguido de “:” (dois pontos) mais seu Client Secret, convertidos para base64.
+
+Como exemplo: Para o Client ID igual a client-01 e Client Secret igual a secret-key-02, teremos o texto client-01:secret-key-02 após a concatenação, convertendo para base64 teremos o resultado 2xpZW50LTAxOnNlY3JldC1rZXktMDI=.
+
+Neste caso o Authorization no header da requisição será: Authorization: Basic Y2xpZW50LTAxOnNlY3JldC1rZXktMDI=
+Body (x-www-form-urlencoded)
+grant_type
+string Obrigatório
+Default: "client_credentials"
+Usar o valor fixo "client_credentials".
+
+Response
+ 200 Retorna o token de acesso
+ 400 Requisição inválida
+Request samples
+CURL
+
+curl -X POST \
+https://api.doppus.app/4.0/Auth \
+-H 'authorization: Basic Y2xpZW50LTAxOnNlY3JldC1rZXktMDI=' \
+-H 'content-type: application/x-www-form-urlencoded' \
+-d 'grant_type=client_credentials'
+Response samples
+200: Retorna o token de acesso 400: Requisição inválida
+
+{
+    "success": true,
+    "error": [],
+    "return_type": "OK",
+    "message": "Access token successfully generated.",
+    "data": {
+        "token": "=Q=M.a7267ef8b2423afff9.vHJcjHVZvGld=g=b.p3JduGld=w=Z.wTcM5jgN2DYM=A=M",
+        "token_type": "Bearer",
+        "expire_in": "2024:02:02 13:17:40"
+    }
+}
+Vendas
+Consultas a uma transação específica ou transações de um determinado período podem ser realizadas através de requisições aos endpoints abaixo.
+
+Consultar venda
+Para realizar uma consulta a uma transação específica basta acionar o endpoint abaixo informando o código da transação.
+
+Requisição
+GET https://api.doppus.app/4.0/Sale/checkout/{code}
+
+Parâmetros
+Header Parameters
+Content-type
+string Obrigatório
+Default: "application/json"
+Tipo do conteúdo padrão application/json.
+Authorization
+string Obrigatório
+Authorization: Bearer AuthString
+Onde AuthString é o token de acesso obtido no endpoint de autenticação.
+Path parameters
+code
+string(10) Obrigatório
+Código da transação de venda.
+
+Response
+ 200 Requisição realizada
+ 400 Requisição inválida
+ 401 Autenticação inválida

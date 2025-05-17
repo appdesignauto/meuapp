@@ -30,7 +30,7 @@ interface DoppusCredentials {
  * Serviço para gerenciar integração com Doppus
  */
 class DoppusService {
-  private baseUrl: string = 'https://api.doppus.com/v4';
+  private baseUrl: string = 'https://api.doppus.app/4.0';
   private credentials: DoppusCredentials | null = null;
   
   /**
@@ -115,21 +115,23 @@ class DoppusService {
         throw new Error('Credenciais da Doppus (Client ID ou Client Secret) incompletas');
       }
       
-      console.log(`Enviando requisição de autenticação para ${this.baseUrl}/token`);
+      console.log(`Enviando requisição de autenticação para ${this.baseUrl}/Auth`);
       console.log('Client ID utilizado:', credentials.doppusClientId.substring(0, 4) + '...' + credentials.doppusClientId.slice(-4));
       
       const params = new URLSearchParams({
-        'grant_type': 'client_credentials',
-        'client_id': credentials.doppusClientId,
-        'client_secret': credentials.doppusClientSecret
+        'grant_type': 'client_credentials'
       });
       
-      console.log('Parâmetros da requisição:', params.toString().replace(credentials.doppusClientSecret, '[SECRET]'));
+      console.log('Parâmetros da requisição:', params.toString());
       
-      const response = await fetch(`${this.baseUrl}/token`, {
+      // A documentação da Doppus indica que o Client ID e Client Secret devem ser enviados via Basic Auth
+      const authString = Buffer.from(`${credentials.doppusClientId}:${credentials.doppusClientSecret}`).toString('base64');
+      
+      const response = await fetch(`${this.baseUrl}/Auth`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': `Basic ${authString}`
         },
         body: params
       });
