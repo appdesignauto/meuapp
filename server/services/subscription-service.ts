@@ -224,4 +224,71 @@ export class SubscriptionService {
       throw error;
     }
   }
+
+  /**
+   * Processa um webhook da Hotmart
+   * Esta função serve como ponte entre a requisição webhook e o HotmartService
+   * @param webhookData Dados do webhook recebido da Hotmart
+   */
+  static async processHotmartWebhook(webhookData: any) {
+    console.log('🔄 SubscriptionService.processHotmartWebhook iniciado');
+    try {
+      // Importar o HotmartService dinamicamente
+      // Esta abordagem resolve problemas de circular dependency entre os módulos
+      const { HotmartService } = require('./hotmart-service');
+      
+      // Extrair email e eventType
+      let email = null;
+      if (webhookData?.data?.buyer?.email) {
+        email = webhookData.data.buyer.email;
+      } else if (webhookData?.buyer?.email) {
+        email = webhookData.buyer.email;
+      } else if (webhookData?.data?.subscriber?.email) {
+        email = webhookData.data.subscriber.email;
+      } else if (webhookData?.subscriber?.email) {
+        email = webhookData.subscriber.email;
+      }
+      
+      const eventType = webhookData?.event || 'UNKNOWN';
+      
+      if (!email) {
+        throw new Error('Email não encontrado no webhook');
+      }
+      
+      console.log(`📧 Email extraído: ${email}, Evento: ${eventType}`);
+      
+      // Processar com base no tipo de evento
+      let result;
+      switch (eventType) {
+        case 'PURCHASE_APPROVED':
+        case 'SUBSCRIPTION_CREATED':
+        case 'PURCHASE_COMPLETE':
+          result = await HotmartService.processPurchase(webhookData, email);
+          break;
+        
+        case 'SUBSCRIPTION_CANCELLED':
+          result = await HotmartService.processCancellation(webhookData, email);
+          break;
+        
+        case 'PURCHASE_REFUNDED':
+        case 'PURCHASE_CHARGEBACK':
+        case 'SUBSCRIPTION_REFUNDED':
+          result = await HotmartService.processRefund(webhookData, email);
+          break;
+        
+        case 'SUBSCRIPTION_RENEWED':
+          result = await HotmartService.processRenewal(webhookData, email);
+          break;
+        
+        default:
+          console.log(`⚠️ Evento não processado: ${eventType}`);
+          return { success: false, message: `Evento não suportado: ${eventType}` };
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('❌ Erro no processamento do webhook Hotmart:', error);
+      throw error;
+    }
+  }
 }
