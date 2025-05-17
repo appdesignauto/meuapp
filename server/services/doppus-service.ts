@@ -733,7 +733,7 @@ class DoppusService {
               stage: 'token', 
               status: tokenResponse.status, 
               error: errorText,
-              clientIdUsed: credentials.clientId.substring(0, 4) + '...' + credentials.clientId.slice(-4)
+              clientIdUsed: credentials.doppusClientId.substring(0, 4) + '...' + credentials.doppusClientId.slice(-4)
             }
           };
         }
