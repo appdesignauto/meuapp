@@ -318,17 +318,71 @@ export class HotmartService {
         let planType = 'mensal'; // padrão
         
         try {
-          // Método 1: Verificar pelo nome do plano (se disponível)
+          // Método 1 (PRIORITÁRIO): Verificar pelo ID do produto e oferta
+          // Este é o método mais seguro e preciso
+          const productId = data.product?.id || data.purchase?.product?.id;
+          const offerId = data.purchase?.offer?.code;
+          
+          if (productId) {
+            console.log(`Verificando mapeamento para productId: ${productId}, offerId: ${offerId || 'não informado'}`);
+            
+            try {
+              // Consultar mapeamento no banco de dados
+              const { pool } = await import('../db');
+              
+              // Construir consulta SQL com parâmetros
+              let query = `SELECT * FROM "hotmartProductMappings" WHERE "productId" = $1`;
+              const queryParams = [productId.toString()];
+              
+              // Adicionar offerId à consulta se disponível
+              if (offerId) {
+                query += ` AND "offerId" = $2`;
+                queryParams.push(offerId.toString());
+              }
+              
+              // Executar consulta
+              const result = await pool.query(query, queryParams);
+              
+              if (result.rows && result.rows.length > 0) {
+                const mapping = result.rows[0];
+                console.log(`Mapeamento encontrado no banco: ${JSON.stringify(mapping)}`);
+                if (mapping.planType) {
+                  console.log(`✅ Plano identificado pelo mapeamento de produto: ${mapping.planType}`);
+                  planType = mapping.planType;
+                  // Encontrou um mapeamento, pode retornar aqui
+                  console.log(`Tipo de plano final (via mapeamento): ${planType}`);
+                  return {
+                    action: 'subscription_approved',
+                    email: email,
+                    plan: planType,
+                    name: data.buyer?.name,
+                    purchaseId: data.purchase?.transaction,
+                    status: 'active',
+                    endDate: data.subscription?.end_date
+                  };
+                }
+              } else {
+                console.log('Nenhum mapeamento encontrado no banco de dados para este produto/oferta');
+              }
+            } catch (dbError) {
+              console.error('Erro ao consultar mapeamento de produto no banco:', dbError);
+              // Continua para outros métodos em caso de erro
+            }
+          }
+          
+          // Método 2: Verificar pelo nome do plano (se disponível)
           if (data.subscription?.plan?.name) {
             const planName = data.subscription.plan.name.toLowerCase();
             if (planName.includes('anual')) {
+              console.log('Plano ANUAL detectado pelo nome do plano');
               planType = 'anual';
             } else if (planName.includes('semestral')) {
+              console.log('Plano SEMESTRAL detectado pelo nome do plano');
               planType = 'semestral';
             }
           }
           
-          // Método 2: Verificar pelo nome do produto (mais confiável)
+          // Método 3: Verificar pelo nome do produto (menos confiável, mas útil como fallback)
           if (data.product?.name) {
             const productName = data.product.name.toLowerCase();
             console.log(`Nome do produto detectado: ${data.product.name}`);
@@ -342,43 +396,6 @@ export class HotmartService {
             } else if (productName.includes('mensal')) {
               console.log('Plano MENSAL detectado pelo nome do produto');
               planType = 'mensal';
-            }
-          }
-          
-          // Método 3: Verificar pelo ID do produto e oferta (mais preciso)
-          const productId = data.product?.id || data.purchase?.product?.id;
-          const offerId = data.purchase?.offer?.code;
-          
-          if (productId) {
-            console.log(`Verificando mapeamento para productId: ${productId}, offerId: ${offerId || 'não informado'}`);
-            // Consultar mapeamento no banco de dados
-            const { db } = await import('../db');
-            const { sql } = await import('drizzle-orm');
-            
-            const queryParams = [];
-            let query = 'SELECT * FROM "hotmartProductMappings" WHERE ';
-            
-            if (productId) {
-              query += '"productId" = $1';
-              queryParams.push(productId.toString());
-              
-              if (offerId) {
-                query += ' AND "offerId" = $2';
-                queryParams.push(offerId.toString());
-              }
-            }
-            
-            const result = await db.execute(sql.raw(query, ...queryParams));
-            
-            if (result.rows && result.rows.length > 0) {
-              const mapping = result.rows[0];
-              console.log(`Mapeamento encontrado: ${JSON.stringify(mapping)}`);
-              if (mapping.planType) {
-                console.log(`Plano identificado pelo mapeamento: ${mapping.planType}`);
-                planType = mapping.planType;
-              }
-            } else {
-              console.log('Nenhum mapeamento encontrado no banco de dados para este produto/oferta');
             }
           }
         } catch (error) {
