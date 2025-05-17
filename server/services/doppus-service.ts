@@ -252,41 +252,76 @@ class DoppusService {
    */
   public async processWebhook(payload: any): Promise<any> {
     try {
-      const event = payload.event;
-      const data = payload.data;
+      console.log('💾 Processando webhook Doppus com payload:', JSON.stringify(payload, null, 2));
       
-      if (!event || !data) {
-        throw new Error('Payload do webhook inválido');
+      // Adaptador universal para o formato de webhook
+      let event: string;
+      let data: any;
+      
+      // Caso 1: Formato padrão {event: string, data: object}
+      if (payload.event && payload.data) {
+        event = payload.event;
+        data = payload.data;
+        console.log('✅ Usando formato padrão: event + data');
+      } 
+      // Caso 2: Novo formato com cliente e status diretamente no root
+      else if (payload.customer && payload.status) {
+        // Determinar o evento com base no status
+        event = 'PAYMENT_APPROVED';
+        data = payload; // Todo o payload é considerado como data
+        console.log('✅ Usando formato direto: payload como data');
+      }
+      // Caso 3: Outro formato não reconhecido
+      else {
+        console.error('❌ Formato de webhook não reconhecido - tentando extrair informações básicas');
+        event = payload.status?.code || 'unknown';
+        data = payload;
       }
       
       // Log para debug
-      console.log(`Processando webhook da Doppus: ${event}`);
-      console.log('Dados do webhook:', JSON.stringify(data, null, 2));
+      console.log(`🔄 Processando webhook da Doppus: ${event}`);
       
-      // Registrar detalhes do produto para diagnóstico
-      if (data.product) {
-        console.log(`Produto recebido: ${data.product.name || 'sem nome'} (${data.product.code || 'sem código'})`);
-        
-        if (data.product.plan) {
-          console.log(`Plano recebido: ${data.product.plan.name || 'sem nome'} (${data.product.plan.code || 'sem código'})`);
-        }
+      // Se temos informações do cliente
+      if (payload.customer) {
+        console.log(`👤 Cliente: ${payload.customer.name || 'sem nome'} (${payload.customer.email || 'sem email'})`);
       }
       
+      // Se temos informações de itens
+      if (payload.items && Array.isArray(payload.items)) {
+        payload.items.forEach((item: any, index: number) => {
+          console.log(`📦 Item ${index+1}: ${item.name || 'sem nome'} (${item.code || 'sem código'})`);
+          console.log(`💲 Oferta: ${item.offer_name || 'sem nome'} (${item.offer || 'sem código'})`);
+        });
+      }
+      
+      // Se temos um objeto de transação
+      if (payload.transaction) {
+        console.log(`💰 Transação: ${payload.transaction.code || 'sem código'}`);
+        console.log(`💵 Valor: ${payload.transaction.total || 'não informado'}`);
+      }
+      
+      console.log(`✅ Webhook Doppus processado - Evento identificado: ${event}`);
+      
+      // Tratamento específico para cada tipo de evento
       switch (event) {
         case 'PAYMENT_APPROVED':
-          return await this.handlePaymentApproved(data);
+        case 'approved': // Compatibilidade com novos formatos
+          return await this.handlePaymentApprovedNew(data);
           
         case 'SUBSCRIPTION_CANCELLED':
+        case 'cancelled':
           return await this.handleSubscriptionCancelled(data);
           
         case 'SUBSCRIPTION_EXPIRED':
+        case 'expired':
           return await this.handleSubscriptionExpired(data);
           
         case 'PAYMENT_REFUNDED':
+        case 'refunded':
           return await this.handlePaymentRefunded(data);
           
         default:
-          console.log(`Evento não processado: ${event}`);
+          console.log(`⚠️ Evento não processado: ${event}`);
           return { success: true, status: 'ignored', event };
       }
     } catch (error) {
@@ -351,6 +386,226 @@ class DoppusService {
   /**
    * Processa um evento de pagamento aprovado da Doppus
    */
+  /**
+   * Processa um pagamento aprovado no novo formato Doppus
+   * @param data Dados do webhook no formato atualizado
+   */
+  private async handlePaymentApprovedNew(data: any): Promise<any> {
+    try {
+      console.log('🔄 Processando pagamento aprovado no novo formato Doppus');
+      
+      // No novo formato, o email está diretamente em customer.email
+      const email = data.customer?.email;
+      if (!email) {
+        throw new Error('Email do cliente não encontrado no webhook');
+      }
+      
+      console.log(`👤 Cliente: ${data.customer.name} (${email})`);
+      
+      // Extrair dados dos itens (no novo formato são arrays)
+      let productCode: string | null = null;
+      let productName: string | null = null;
+      let offerCode: string | null = null;
+      let offerName: string | null = null;
+      
+      // Verificar se temos items no array
+      if (data.items && Array.isArray(data.items) && data.items.length > 0) {
+        const item = data.items[0]; // Pegar o primeiro item
+        productCode = item.code;
+        productName = item.name;
+        offerCode = item.offer;
+        offerName = item.offer_name;
+        
+        console.log(`📦 Produto encontrado: ${productName} (${productCode})`);
+        console.log(`🏷️ Oferta: ${offerName} (${offerCode})`);
+      } else {
+        console.warn('⚠️ Nenhum item encontrado no payload');
+      }
+      
+      // Extrair informações de recorrência se disponíveis
+      let expirationDate: Date | null = null;
+      
+      if (data.recurrence && data.recurrence.expiration_date) {
+        try {
+          // Converter string de data para objeto Date
+          expirationDate = new Date(data.recurrence.expiration_date);
+          console.log(`📅 Data de expiração: ${expirationDate.toISOString()}`);
+        } catch (e) {
+          console.error('❌ Erro ao converter data de expiração:', e);
+        }
+      }
+      
+      // Transação
+      let transactionId: string | null = null;
+      if (data.transaction && data.transaction.code) {
+        transactionId = data.transaction.code;
+        console.log(`💰 ID da Transação: ${transactionId}`);
+      }
+      
+      // Determinar o tipo de plano com base no nome da oferta
+      // Essa é uma estratégia de fallback caso o produto não tenha um mapeamento
+      let planType: PlanType = 'premium_30'; // Padrão mensal
+      
+      if (offerName) {
+        const offerNameLower = offerName.toLowerCase();
+        
+        if (offerNameLower.includes('anual')) {
+          planType = 'premium_365';
+        } else if (offerNameLower.includes('vitalício') || offerNameLower.includes('lifetime')) {
+          planType = 'premium_lifetime';
+        } else if (offerNameLower.includes('semestral') || offerNameLower.includes('180')) {
+          planType = 'premium_180';
+        }
+      }
+      
+      // Buscar mapeamento do produto no banco
+      let productMapping = null;
+      if (productCode && offerCode) {
+        productMapping = await this.getProductMapping(productCode, offerCode);
+      }
+      
+      if (!productMapping && productCode) {
+        productMapping = await this.getProductMapping(productCode);
+      }
+      
+      // Se não encontrou mapeamento, usar o determinado pelo nome da oferta
+      if (!productMapping) {
+        productMapping = {
+          productId: productCode || '',
+          planId: offerCode || '',
+          planType: planType,
+          accessLevel: 'premium',
+          isActive: true
+        };
+        
+        console.log(`⚠️ Mapeamento não encontrado, usando valores padrão. Tipo: ${planType}`);
+      } else {
+        console.log(`✅ Mapeamento encontrado: ${productMapping.planType}`);
+      }
+      
+      // Calcular data de expiração se não foi fornecida
+      const subscriptionEndDate = expirationDate || this.calculateExpirationDate(productMapping.planType);
+      console.log(`📅 Data de expiração calculada: ${subscriptionEndDate.toISOString()}`);
+      
+      // Buscar usuário pelo email
+      const [userResult] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email));
+      
+      if (!userResult) {
+        // Criar novo usuário
+        console.log(`➕ Criando novo usuário para ${email}`);
+        
+        const newUser = {
+          username: email.split('@')[0],
+          email,
+          password: crypto.randomBytes(16).toString('hex'), // Senha aleatória
+          name: data.customer?.name || email.split('@')[0],
+          nivelacesso: productMapping.accessLevel,
+          origemassinatura: 'doppus',
+          tipoplano: productMapping.planType,
+          dataassinatura: new Date(),
+          dataexpiracao: subscriptionEndDate,
+          acessovitalicio: productMapping.planType === 'premium_lifetime',
+          isactive: true,
+          criadoem: new Date(),
+          atualizadoem: new Date()
+        };
+        
+        const [insertedUser] = await db.insert(users).values(newUser).returning();
+        
+        // Criar assinatura para o novo usuário
+        await db.insert(subscriptions).values({
+          userId: insertedUser.id,
+          platform: 'doppus',
+          planType: productMapping.planType,
+          status: 'active',
+          startDate: new Date(),
+          endDate: subscriptionEndDate,
+          transactionId,
+          productId: productCode,
+          planId: offerCode,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+        
+        return {
+          success: true,
+          status: 'created',
+          userId: insertedUser.id,
+          email,
+          planType: productMapping.planType
+        };
+      } else {
+        // Atualizar usuário existente
+        console.log(`✏️ Atualizando usuário existente: ${userResult.id} (${userResult.email})`);
+        
+        await db.update(users)
+          .set({
+            nivelacesso: productMapping.accessLevel,
+            origemassinatura: 'doppus',
+            tipoplano: productMapping.planType,
+            dataassinatura: new Date(),
+            dataexpiracao: subscriptionEndDate,
+            acessovitalicio: productMapping.planType === 'premium_lifetime',
+            isactive: true,
+            atualizadoem: new Date()
+          })
+          .where(eq(users.id, userResult.id));
+        
+        // Verificar assinatura existente
+        const [existingSubscription] = await db
+          .select()
+          .from(subscriptions)
+          .where(eq(subscriptions.userId, userResult.id));
+        
+        if (existingSubscription) {
+          // Atualizar assinatura
+          await db.update(subscriptions)
+            .set({
+              platform: 'doppus',
+              planType: productMapping.planType,
+              status: 'active',
+              startDate: new Date(),
+              endDate: subscriptionEndDate,
+              transactionId,
+              productId: productCode,
+              planId: offerCode,
+              updatedAt: new Date()
+            })
+            .where(eq(subscriptions.id, existingSubscription.id));
+        } else {
+          // Criar nova assinatura
+          await db.insert(subscriptions).values({
+            userId: userResult.id,
+            platform: 'doppus',
+            planType: productMapping.planType,
+            status: 'active',
+            startDate: new Date(),
+            endDate: subscriptionEndDate,
+            transactionId,
+            productId: productCode,
+            planId: offerCode,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          });
+        }
+        
+        return {
+          success: true,
+          status: 'updated',
+          userId: userResult.id,
+          email,
+          planType: productMapping.planType
+        };
+      }
+    } catch (error) {
+      console.error('❌ Erro ao processar pagamento Doppus no novo formato:', error);
+      throw error;
+    }
+  }
+  
   private async handlePaymentApproved(data: any): Promise<any> {
     try {
       const email = data.customer?.email;
