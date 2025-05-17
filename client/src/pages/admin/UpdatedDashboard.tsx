@@ -1037,16 +1037,7 @@ const AdminDashboard = () => {
                   <CreditCard className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
                   {sidebarOpen && <span className="truncate text-sm">Gerenciar Assinaturas</span>}
                 </button>
-                <Link 
-                  href="/admin/webhook-diagnostics"
-                  title="Diagnóstico de Webhooks"
-                  className={`flex items-center w-full py-2 rounded-md transition-all duration-200
-                  text-gray-600 hover:bg-gray-50 
-                  ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
-                >
-                  <MessageSquare className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
-                  {sidebarOpen && <span className="truncate text-sm">Diagnóstico de Webhooks</span>}
-                </Link>
+                {/* O Diagnóstico de Webhooks agora é uma aba dentro da página de Webhooks */}
               </CollapsibleContent>
             </Collapsible>
 
