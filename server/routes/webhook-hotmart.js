@@ -45,7 +45,26 @@ router.post('/', async (req, res) => {
         body: JSON.stringify(req.body).substring(0, 100) + '...' 
       });
       
-      // Registrar o webhook no banco de dados
+      // Verificar se este webhook já foi processado antes (em caso de reprocessamento)
+      let existingLog = null;
+      if (transactionId && email) {
+        const existingLogs = await db.query.webhookLogs.findMany({
+          where: db.and(
+            db.eq(db.webhookLogs.transactionId, transactionId),
+            db.eq(db.webhookLogs.email, email),
+            db.eq(db.webhookLogs.source, 'hotmart')
+          ),
+          orderBy: db.desc(db.webhookLogs.createdAt),
+          limit: 1
+        });
+        
+        if (existingLogs.length > 0) {
+          existingLog = existingLogs[0];
+          console.log(`🔄 Webhook reprocessado detectado: ID ${existingLog.id}, status anterior: ${existingLog.status}`);
+        }
+      }
+
+      // Se for um reprocessamento, criar um novo registro de log
       const webhookLog = await db.insert(db.webhookLogs)
         .values({
           eventType,
@@ -56,7 +75,8 @@ router.post('/', async (req, res) => {
           transactionId,
           email,
           userId: null,
-          errorMessage: null
+          errorMessage: existingLog ? `Reprocessamento do webhook ID ${existingLog.id}` : null,
+          retryCount: existingLog ? (existingLog.retryCount || 0) + 1 : 0
         })
         .returning();
       
