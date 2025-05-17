@@ -5820,6 +5820,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erro ao processar webhook da Hotmart:", error);
       
+      // Obter mensagem de erro formatada
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
       // Se tivermos um ID de log, atualizar o status para error
       if (typeof webhookLogId !== 'undefined' && webhookLogId !== null) {
         try {
@@ -5828,16 +5831,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
             UPDATE "webhookLogs" 
             SET "status" = 'error', "errorMessage" = $1, "updatedAt" = NOW()
             WHERE id = $2
-          `, [error instanceof Error ? error.message : String(error), webhookLogId]);
+          `, [errorMessage, webhookLogId]);
         } catch (updateError) {
           console.error("Erro ao atualizar status do webhook após falha:", updateError);
+        }
+        
+        // Registrar no sistema de fallback para reprocessamento posterior
+        try {
+          console.log(`[Webhook Fallback] Registrando webhook ID ${webhookLogId} no sistema de fallback`);
+          
+          // Registrar o webhook falho para reprocessamento posterior
+          await webhookService.registerFailedWebhook(
+            webhookLogId,
+            'hotmart',
+            req.body, // Payload completo do webhook
+            errorMessage
+          );
+          
+          console.log(`[Webhook Fallback] Webhook registrado para reprocessamento posterior`);
+        } catch (fallbackError) {
+          console.error("Erro ao registrar webhook no sistema de fallback:", fallbackError);
+        }
+      } else {
+        // Se não temos o webhookLogId, tentar registrar diretamente no sistema de fallback
+        try {
+          console.log(`[Webhook Fallback] Tentativa de registro direto no sistema de fallback (sem webhookLogId)`);
+          
+          // Primeiro registrar como webhook normal para obter um ID
+          const { pool } = await import('./db');
+          const insertResult = await pool.query(`
+            INSERT INTO "webhookLogs" (
+              "eventType", "payloadData", "status", "createdAt", "source", "sourceIp", "errorMessage"
+            ) VALUES ($1, $2, $3, NOW(), $4, $5, $6)
+            RETURNING id;
+          `, [
+            req.body.event || 'unknown',
+            JSON.stringify(req.body),
+            'error',
+            'hotmart',
+            req.ip,
+            errorMessage
+          ]);
+          
+          if (insertResult.rows && insertResult.rows.length > 0) {
+            const newWebhookLogId = insertResult.rows[0].id;
+            
+            // Agora registrar no sistema de fallback
+            await webhookService.registerFailedWebhook(
+              newWebhookLogId,
+              'hotmart',
+              req.body,
+              errorMessage
+            );
+            
+            console.log(`[Webhook Fallback] Webhook registrado diretamente no sistema de fallback com ID ${newWebhookLogId}`);
+          }
+        } catch (fallbackError) {
+          console.error("Erro ao registrar webhook diretamente no sistema de fallback:", fallbackError);
         }
       }
       
       res.status(500).json({ 
         success: false, 
         message: "Erro ao processar webhook", 
-        error: error instanceof Error ? error.message : String(error)
+        error: errorMessage,
+        fallbackRegistered: true,
+        webhookLogId
       });
     }
   });
