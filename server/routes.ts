@@ -24,6 +24,7 @@ import uploadRouter from "./routes/upload-image";
 import { supabaseStorageService } from "./services/supabase-storage";
 import { SubscriptionService } from "./services/subscription-service";
 import { HotmartService } from "./services/hotmart-service";
+import { webhookService } from "./services/webhook-service";
 import uploadMemory from "./middlewares/upload";
 import sharp from "sharp";
 
