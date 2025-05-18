@@ -41,11 +41,24 @@ import { Input } from '@/components/ui/input';
 import { queryClient, apiRequest, getQueryFn } from '@/lib/queryClient';
 import { Loader2, RefreshCw, Search, Eye, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 // Importamos o componente de diagnóstico avançado
 import WebhookDiagnosticsTab from './WebhookDiagnosticsNew';
+
+// Função auxiliar para formatação segura de datas
+const formatDateSafe = (dateString: string | null | undefined, formatStr: string = 'dd/MM/yyyy HH:mm:ss'): string => {
+  if (!dateString) return 'Data inválida';
+  
+  try {
+    const date = new Date(dateString);
+    return isValid(date) ? format(date, formatStr, { locale: ptBR }) : 'Data inválida';
+  } catch (error) {
+    console.error('Erro ao formatar data:', error, 'Data original:', dateString);
+    return 'Data inválida';
+  }
+};
 
 // Interface para o log de webhook
 interface WebhookLog {
@@ -416,7 +429,7 @@ const WebhookList: React.FC = () => {
                         <TableRow key={log.id}>
                           <TableCell className="font-medium">{log.id}</TableCell>
                           <TableCell>
-                            {format(new Date(log.createdAt), 'dd/MM/yyyy HH:mm:ss', { locale: ptBR })}
+                            {formatDateSafe(log.createdAt)}
                           </TableCell>
                           <TableCell>
                             {log.email ? (
@@ -524,7 +537,7 @@ const WebhookList: React.FC = () => {
                   <WebhookSource source={selectedLog.log.source} />
                 </DialogTitle>
                 <DialogDescription>
-                  Detalhes do webhook recebido em {format(new Date(selectedLog.log.createdAt), 'dd/MM/yyyy HH:mm:ss', { locale: ptBR })}
+                  Detalhes do webhook recebido em {formatDateSafe(selectedLog.log.createdAt)}
                 </DialogDescription>
               </DialogHeader>
 
@@ -570,10 +583,10 @@ const WebhookList: React.FC = () => {
                         <span className="font-medium">Nível de Acesso:</span> {selectedLog.userData.nivelacesso}
                       </div>
                       <div>
-                        <span className="font-medium">Assinatura:</span> {selectedLog.userData.dataassinatura ? format(new Date(selectedLog.userData.dataassinatura), 'dd/MM/yyyy', { locale: ptBR }) : 'Não possui'}
+                        <span className="font-medium">Assinatura:</span> {selectedLog.userData.dataassinatura ? formatDateSafe(selectedLog.userData.dataassinatura, 'dd/MM/yyyy') : 'Não possui'}
                       </div>
                       <div>
-                        <span className="font-medium">Expiração:</span> {selectedLog.userData.dataexpiracao ? format(new Date(selectedLog.userData.dataexpiracao), 'dd/MM/yyyy', { locale: ptBR }) : 'Não aplicável'}
+                        <span className="font-medium">Expiração:</span> {selectedLog.userData.dataexpiracao ? formatDateSafe(selectedLog.userData.dataexpiracao, 'dd/MM/yyyy') : 'Não aplicável'}
                       </div>
                     </div>
                   </div>
