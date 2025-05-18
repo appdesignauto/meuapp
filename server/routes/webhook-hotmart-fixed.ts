@@ -1,221 +1,162 @@
 /**
- * Rotas de webhook da Hotmart com tratamento melhorado
- * Esta implementação segue as melhores práticas para integração com a Hotmart
+ * Rota fixa para webhook da Hotmart com implementação independente
+ * que garante sempre uma resposta JSON válida, sem interferência
+ * do middleware SPA ou outras configurações
  */
 
-import express from 'express';
-import pg from 'pg';
-const { Pool } = pg;
+import { Router, Request, Response } from 'express';
+import { Pool } from 'pg';
 
-// Função para obter a conexão com o banco de dados
-async function getPool() {
-  const pool = new Pool({
-    connectionString: process.env.DATABASE_URL
-  });
-  return pool;
-}
+// Criar router para a rota fixa
+const router = Router();
 
-const router = express.Router();
-
-// Função para registrar logs de webhook
-async function logWebhookToDatabase(
-  event: string,
-  status: 'received' | 'processed' | 'error',
-  email: string | null,
-  webhookData: any,
-  errorMessage: string | null = null
-) {
-  try {
-    // Log detalhado para debugging
-    console.log('📝 Registrando webhook no banco de dados:');
-    console.log('- Evento:', event);
-    console.log('- Status:', status);
-    console.log('- Email:', email);
+// Função para encontrar email em qualquer parte do payload da Hotmart
+function findEmailInPayload(payload: any): string | null {
+  if (!payload) return null;
+  
+  // Função recursiva para buscar emails em objetos aninhados
+  function searchEmail(obj: any): string | null {
+    // Caso base: é uma string e parece um email
+    if (typeof obj === 'string' && obj.includes('@') && obj.includes('.')) {
+      return obj;
+    }
     
-    // Obter conexão com o banco de dados
-    const pool = await getPool();
+    // Caso recursivo: objeto
+    if (typeof obj === 'object' && obj !== null) {
+      // Verificar chaves que provavelmente contêm email
+      if (obj.email && typeof obj.email === 'string') return obj.email;
+      if (obj.buyer && obj.buyer.email) return obj.buyer.email;
+      if (obj.customer && obj.customer.email) return obj.customer.email;
+      if (obj.data && obj.data.buyer && obj.data.buyer.email) return obj.data.buyer.email;
+      
+      // Buscar em todas as propriedades
+      for (const key in obj) {
+        const result = searchEmail(obj[key]);
+        if (result) return result;
+      }
+    }
     
-    // Construir consulta SQL diretamente - verificando estrutura da tabela
-    const query = `
-      INSERT INTO "webhookLogs" (
-        "eventType", "status", "email", "source", "payloadData", "errorMessage", "createdAt"
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
-      RETURNING id
-    `;
+    // Caso recursivo: array
+    if (Array.isArray(obj)) {
+      for (let i = 0; i < obj.length; i++) {
+        const result = searchEmail(obj[i]);
+        if (result) return result;
+      }
+    }
     
-    const values = [
-      event,
-      status,
-      email,
-      'hotmart',
-      JSON.stringify(webhookData),
-      errorMessage,
-      new Date()
-    ];
-    
-    // Executar a consulta
-    const result = await pool.query(query, values);
-    const logId = result.rows[0].id;
-    
-    console.log('✅ Log de webhook registrado com ID:', logId);
-    
-    // Liberar a conexão
-    await pool.end();
-    
-    return logId;
-  } catch (error) {
-    console.error('❌ Erro ao registrar webhook no banco de dados:', error);
-    // Não lançar erro para não interromper o fluxo
     return null;
   }
+  
+  return searchEmail(payload);
 }
 
-// Função para extrair email do payload da Hotmart
-function extractEmailFromPayload(payload: any): string | null {
-  let email = null;
+// Função para encontrar ID da transação no payload
+function findTransactionId(payload: any): string | null {
+  if (!payload) return null;
   
-  // Verificar todas as possíveis localizações do email
-  if (payload?.data?.buyer?.email) {
-    email = payload.data.buyer.email;
-  } else if (payload?.data?.subscriber?.email) {
-    email = payload.data.subscriber.email;
-  } else if (payload?.buyer?.email) {
-    email = payload.buyer.email;
-  } else if (payload?.subscriber?.email) {
-    email = payload.subscriber.email;
-  } else if (payload?.data?.customer?.email) {
-    // Alguns webhooks da Hotmart usam 'customer' em vez de 'buyer'
-    email = payload.data.customer.email;
-  } else if (payload?.data?.purchase?.customer?.email) {
-    // Formato encontrado em alguns webhooks de compra
-    email = payload.data.purchase.customer.email;
-  }
+  // Verificar locais comuns primeiro
+  if (payload.data?.purchase?.transaction) return payload.data.purchase.transaction;
+  if (payload.data?.transaction) return payload.data.transaction;
+  if (payload.transaction) return payload.transaction;
   
-  return email;
-}
-
-// Função para normalizar o formato de data do payload
-function normalizePayloadDates(payload: any): any {
-  try {
-    // Criar uma cópia do payload para não modificar o original
-    const normalizedPayload = { ...payload };
+  // Função recursiva para busca profunda
+  function searchTransactionId(obj: any): string | null {
+    if (!obj || typeof obj !== 'object') return null;
     
-    // Verificar se o creation_date é um número (timestamp) e convertê-lo para string ISO
-    if (normalizedPayload.creation_date && typeof normalizedPayload.creation_date === 'number') {
-      // Converter timestamp de milissegundos para data ISO
-      const date = new Date(normalizedPayload.creation_date);
-      normalizedPayload.creation_date = date.toISOString();
-      console.log('📅 Timestamp convertido:', normalizedPayload.creation_date);
+    // Procurar por chaves que possam conter o ID da transação
+    for (const key in obj) {
+      if (
+        (key.toLowerCase().includes('transaction') || 
+         key.toLowerCase().includes('order') || 
+         key.toLowerCase().includes('pedido')) && 
+        typeof obj[key] === 'string'
+      ) {
+        return obj[key];
+      }
+      
+      // Buscar recursivamente
+      if (typeof obj[key] === 'object') {
+        const result = searchTransactionId(obj[key]);
+        if (result) return result;
+      }
     }
     
-    return normalizedPayload;
-  } catch (error) {
-    console.error('❌ Erro ao normalizar datas do payload:', error);
-    // Em caso de erro, retornar o payload original
-    return payload;
+    return null;
   }
-}
-
-// Função para extrair número da transação (quando disponível)
-function extractTransactionId(payload: any): string | null {
-  if (payload?.data?.purchase?.transaction) {
-    return payload.data.purchase.transaction;
-  } else if (payload?.data?.transaction) {
-    return payload.data.transaction;
-  } else if (payload?.transaction) {
-    return payload.transaction;
-  }
-  return null;
-}
-
-// Rota principal para receber webhooks da Hotmart
-router.post('/', async (req, res) => {
-  console.log('📩 Webhook da Hotmart recebido');
-  console.log('📦 Corpo do webhook:', JSON.stringify(req.body, null, 2));
   
-  // Listar os cabeçalhos recebidos para diagnóstico
-  const headerKeys = Object.keys(req.headers).join(', ');
-  console.log('🔑 Cabeçalhos recebidos:', headerKeys);
+  return searchTransactionId(payload);
+}
+
+// Implementação dedicada do webhook da Hotmart para garantir resposta JSON
+router.post('/', async (req: Request, res: Response) => {
+  // Forçar todos os cabeçalhos anti-cache possíveis
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '-1');
+  res.setHeader('Surrogate-Control', 'no-store');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-No-Cache', Date.now().toString());
+  
+  console.log('📩 Webhook FIXO da Hotmart recebido em', new Date().toISOString());
   
   try {
-    // Normalizar o payload, especialmente as datas
-    const originalPayload = req.body;
-    const payload = normalizePayloadDates(originalPayload);
+    // Imprimir o corpo da requisição
+    console.log('📦 Corpo do webhook:', JSON.stringify(req.body, null, 2));
     
-    let event = payload?.event || 'UNKNOWN';
-    let webhookStatus = 'received';
-    let webhookError = null;
-    let logId = null;
+    // Capturar dados básicos do webhook
+    const payload = req.body;
+    const event = payload?.event || 'UNKNOWN';
+    const email = findEmailInPayload(payload);
+    const transactionId = findTransactionId(payload);
     
-    // Extrair o email do payload para registro
-    const email = extractEmailFromPayload(payload);
-    console.log('📧 Email extraído:', email);
+    console.log(`📊 Dados extraídos: evento=${event}, email=${email}, transactionId=${transactionId}`);
     
-    // Extrair número da transação (quando disponível)
-    const transactionId = extractTransactionId(payload);
-    console.log('🧾 ID da Transação:', transactionId);
-    
-    // Verificar se o evento é válido
-    if (!event || event === 'UNKNOWN') {
-      console.warn('⚠️ Evento Hotmart indefinido ou desconhecido');
-      event = 'UNDEFINED_EVENT';
-    }
-    
-    // Registrar o webhook no log
+    // Registrar no banco de dados (log only)
     try {
-      logId = await logWebhookToDatabase(
-        event,
-        webhookStatus as 'received' | 'processed' | 'error',
-        email,
-        payload
+      const pool = new Pool({
+        connectionString: process.env.DATABASE_URL
+      });
+      
+      await pool.query(
+        `INSERT INTO webhook_logs 
+          (event_type, status, email, source, raw_payload, transaction_id, source_ip, created_at) 
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [
+          event,
+          'received',
+          email,
+          'hotmart',
+          JSON.stringify(payload),
+          transactionId,
+          req.ip,
+          new Date()
+        ]
       );
       
-      console.log(`📝 Webhook registrado com ID: ${logId}`);
+      console.log('✅ Webhook registrado no banco de dados');
+      await pool.end();
     } catch (dbError) {
-      console.error("Erro ao registrar webhook no banco de dados:", dbError);
-      // Continuar o processamento mesmo com erro de registro
+      console.error('❌ Erro ao registrar webhook:', dbError);
+      // Continuar mesmo com erro de log
     }
     
-    // ⚠️ Por padrão, sempre confirmar recebimento para a Hotmart
-    // mesmo que haja erros no processamento interno
-    
-    // Aqui implementaríamos a lógica de processamento do webhook
-    // com base no tipo de evento (purchase_approved, etc)
-    
-    // Para o diagnóstico, vamos apenas confirmar recebimento
+    // Sempre retornar sucesso para a Hotmart não reenviar
     return res.status(200).json({
       success: true,
-      message: 'Webhook recebido com sucesso',
-      event: event,
-      email: email,
-      transactionId: transactionId,
-      note: 'Este endpoint é apenas para diagnóstico'
+      message: 'Webhook recebido com sucesso pelo endpoint FIXO',
+      timestamp: new Date().toISOString()
     });
+  } catch (error) {
+    console.error('❌ Erro ao processar webhook:', error);
     
-  } catch (error: any) {
-    console.error('❌ Erro ao processar webhook da Hotmart:', error);
-    
-    // Sempre retornar 200 para a Hotmart não reenviar
+    // Mesmo com erro, retornar 200 para evitar reenvios
     return res.status(200).json({
       success: false,
-      message: 'Erro ao processar webhook, mas confirmando recebimento',
-      error: error.message
+      message: 'Erro ao processar webhook, mas confirmamos o recebimento',
+      timestamp: new Date().toISOString()
     });
   }
 });
 
-// Rota para testar se o webhook está acessível
-router.get('/test', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'O endpoint de webhook da Hotmart está online e funcionando',
-    timestamp: new Date().toISOString(),
-    note: 'Configure este endpoint na plataforma da Hotmart para receber notificações de pagamento'
-  });
-});
-
-// Exportação padrão como objeto
 export default router;
-
-// Exportação compatível com ESM para dynamic import
-export { router };
