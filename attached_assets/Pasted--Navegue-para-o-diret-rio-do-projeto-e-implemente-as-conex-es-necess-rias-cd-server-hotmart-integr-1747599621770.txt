@@ -1,0 +1,531 @@
+# Navegue para o diretório do projeto e implemente as conexões necessárias
+cd server/hotmart-integration && \
+# Atualize o arquivo api-server.js para incluir os endpoints necessários
+echo 'const express = require("express");
+const { PrismaClient } = require("@prisma/client");
+const router = express.Router();
+const prisma = new PrismaClient();
+const axios = require("axios");
+const syncService = require("./sync-service");
+
+// Middleware para logs
+router.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+
+// Endpoint para verificar status da integração
+router.get("/api/hotmart/status", async (req, res) => {
+  try {
+    // Estatísticas de usuários
+    const totalUsers = await prisma.user.count();
+    const activeSubscriptions = await prisma.subscription.count({
+      where: { status: "ACTIVE" }
+    });
+    const lifetimeAccesses = await prisma.subscription.count({
+      where: { status: "ACTIVE", endDate: null }
+    });
+    const expiredSubscriptions = await prisma.subscription.count({
+      where: { status: "EXPIRED" }
+    });
+    const hotmartUsers = await prisma.user.count({
+      where: {
+        subscriptions: {
+          some: {}
+        }
+      }
+    });
+
+    // Distribuição por plano
+    const planDistribution = await prisma.subscription.groupBy({
+      by: ["planName"],
+      _count: {
+        id: true
+      },
+      where: {
+        status: "ACTIVE"
+      }
+    });
+
+    const formattedPlanDistribution = {};
+    planDistribution.forEach(plan => {
+      formattedPlanDistribution[plan.planName || "Sem plano"] = plan._count.id;
+    });
+
+    // Usuários sem plano
+    const usersWithoutPlan = totalUsers - hotmartUsers;
+    if (usersWithoutPlan > 0) {
+      formattedPlanDistribution["Sem plano"] = usersWithoutPlan;
+    }
+
+    res.json({
+      statistics: {
+        totalUsers,
+        activeSubscriptions,
+        lifetimeAccesses,
+        expiredSubscriptions,
+        hotmartUsers
+      },
+      planDistribution: formattedPlanDistribution
+    });
+  } catch (error) {
+    console.error("Erro ao obter status da integração:", error);
+    res.status(500).json({ error: "Erro ao obter status da integração" });
+  }
+});
+
+// Endpoint para iniciar sincronização manualmente
+router.post("/api/hotmart/sync", async (req, res) => {
+  try {
+    // Registrar início da sincronização
+    const syncLog = await prisma.syncLog.create({
+      data: {
+        status: "RUNNING",
+        startedAt: new Date(),
+        details: JSON.stringify({ message: "Sincronização iniciada manualmente" })
+      }
+    });
+
+    // Iniciar processo de sincronização de forma assíncrona
+    syncService.syncTransactions()
+      .then(async (result) => {
+        // Atualizar log com resultados
+        await prisma.syncLog.update({
+          where: { id: syncLog.id },
+          data: {
+            status: "COMPLETED",
+            completedAt: new Date(),
+            details: JSON.stringify(result)
+          }
+        });
+        console.log("Sincronização manual concluída:", result);
+      })
+      .catch(async (error) => {
+        // Atualizar log com erro
+        await prisma.syncLog.update({
+          where: { id: syncLog.id },
+          data: {
+            status: "FAILED",
+            completedAt: new Date(),
+            details: JSON.stringify({ error: error.message })
+          }
+        });
+        console.error("Erro na sincronização manual:", error);
+      });
+
+    res.json({ message: "Sincronização iniciada", syncId: syncLog.id });
+  } catch (error) {
+    console.error("Erro ao iniciar sincronização:", error);
+    res.status(500).json({ error: "Erro ao iniciar sincronização" });
+  }
+});
+
+// Endpoint para obter logs de sincronização
+router.get("/api/hotmart/sync-logs", async (req, res) => {
+  try {
+    const logs = await prisma.syncLog.findMany({
+      orderBy: {
+        startedAt: "desc"
+      },
+      take: 10
+    });
+
+    res.json(logs.map(log => ({
+      id: log.id,
+      status: log.status,
+      startedAt: log.startedAt,
+      completedAt: log.completedAt,
+      details: log.details ? JSON.parse(log.details) : null
+    })));
+  } catch (error) {
+    console.error("Erro ao obter logs de sincronização:", error);
+    res.status(500).json({ error: "Erro ao obter logs de sincronização" });
+  }
+});
+
+module.exports = router;' > api-server.js && \
+
+# Atualizar o schema.prisma para incluir modelo de logs
+echo 'model SyncLog {
+  id          String    @id @default(uuid())
+  status      String    // RUNNING, COMPLETED, FAILED
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  details     String?   // JSON stringified details
+}' >> schema.prisma && \
+
+# Atualizar o modelo de sincronização para reportar progresso
+echo 'const { PrismaClient } = require("@prisma/client");
+const axios = require("axios");
+const prisma = new PrismaClient();
+
+// Configuração
+const HOTMART_BASE_URL = "https://api-sec-vlc.hotmart.com";
+let accessToken = null;
+let tokenExpiry = 0;
+
+// Função para obter token de acesso
+async function getAccessToken() {
+  const now = Date.now();
+  
+  if (accessToken && tokenExpiry > now + 60000) {
+    return accessToken;
+  }
+  
+  try {
+    const params = new URLSearchParams();
+    params.append("grant_type", "client_credentials");
+    params.append("client_id", process.env.HOTMART_CLIENT_ID);
+    params.append("client_secret", process.env.HOTMART_CLIENT_SECRET);
+    
+    const response = await axios.post(`${HOTMART_BASE_URL}/security/oauth/token`, params, {
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      }
+    });
+    
+    accessToken = response.data.access_token;
+    tokenExpiry = now + (response.data.expires_in * 1000);
+    
+    console.log("Novo token obtido, expira em:", new Date(tokenExpiry).toISOString());
+    return accessToken;
+  } catch (error) {
+    console.error("Erro ao obter token:", error.response?.data || error.message);
+    throw new Error("Falha na autenticação com a Hotmart");
+  }
+}
+
+// Função principal de sincronização
+async function syncTransactions() {
+  console.log("Iniciando sincronização de transações...");
+  
+  const result = {
+    errors: 0,
+    users_processed: 0,
+    subscriptions_updated: 0,
+    transactions_created: 0
+  };
+  
+  try {
+    // Obter token de acesso
+    const token = await getAccessToken();
+    
+    // Buscar vendas dos últimos 7 dias
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 7);
+    
+    const response = await axios.get(`${HOTMART_BASE_URL}/payments/api/v1/sales/history`, {
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      params: {
+        "start_date": startDate.toISOString().split("T")[0],
+        "end_date": new Date().toISOString().split("T")[0],
+        "transaction_status": "APPROVED",
+        "max_results": 100
+      }
+    });
+    
+    const transactions = response.data.items || [];
+    console.log(`Encontradas ${transactions.length} transações aprovadas`);
+    
+    // Processar cada transação
+    for (const transaction of transactions) {
+      try {
+        await processTransaction(transaction, result);
+      } catch (error) {
+        console.error(`Erro ao processar transação ${transaction.transaction || transaction.purchase?.transaction}:`, error);
+        result.errors++;
+      }
+    }
+    
+    console.log("Sincronização concluída:", result);
+    return result;
+  } catch (error) {
+    console.error("Erro na sincronização:", error);
+    result.errors++;
+    return result;
+  }
+}
+
+// Função para processar uma transação
+async function processTransaction(transaction, result) {
+  const transactionId = transaction.transaction || transaction.purchase?.transaction;
+  
+  if (!transactionId) {
+    console.warn("Transação sem ID, ignorando");
+    return;
+  }
+  
+  // Verificar se a transação já foi processada
+  const existingTransaction = await prisma.transaction.findUnique({
+    where: { hotmartTransactionId: transactionId }
+  });
+  
+  if (existingTransaction) {
+    console.log(`Transação ${transactionId} já processada anteriormente`);
+    return;
+  }
+  
+  // Extrair dados da transação
+  const buyer = {
+    email: transaction.buyer?.email || transaction.email,
+    name: transaction.buyer?.name || transaction.name,
+    document: transaction.buyer?.document || transaction.doc
+  };
+  
+  const subscription = transaction.subscription || {
+    code: transaction.subscriber_code,
+    plan: {
+      id: transaction.plan_id || "0",
+      name: transaction.plan_name || "Plano Padrão"
+    }
+  };
+  
+  const product = {
+    id: transaction.product?.id || transaction.prod
+  };
+  
+  const purchase = {
+    transaction: transactionId,
+    approvedDate: transaction.purchase?.approvedDate || transaction.approved_date || new Date(),
+    nextChargeDate: transaction.purchase?.nextChargeDate || transaction.next_charge_date,
+    price: {
+      value: parseFloat(transaction.purchase?.price?.value || transaction.full_price || 0),
+      currency: transaction.purchase?.price?.currency || "BRL"
+    },
+    paymentType: transaction.purchase?.payment?.type || "UNKNOWN"
+  };
+  
+  // Transação no banco usando Prisma
+  await prisma.$transaction(async (tx) => {
+    // Verificar ou criar usuário
+    let user = await tx.user.findUnique({
+      where: { email: buyer.email.toLowerCase() }
+    });
+    
+    if (!user) {
+      user = await tx.user.create({
+        data: {
+          email: buyer.email.toLowerCase(),
+          name: buyer.name,
+          document: buyer.document || ""
+        }
+      });
+      console.log(`Novo usuário criado: ${buyer.email}`);
+      result.users_processed++;
+    } else {
+      result.users_processed++;
+    }
+    
+    // Se for uma assinatura, processar
+    let userSubscription = null;
+    if (subscription && subscription.code) {
+      userSubscription = await tx.subscription.findUnique({
+        where: { hotmartSubscriberId: subscription.code }
+      });
+      
+      if (userSubscription) {
+        // Atualizar assinatura existente
+        userSubscription = await tx.subscription.update({
+          where: { id: userSubscription.id },
+          data: {
+            status: "ACTIVE",
+            planName: subscription.plan.name,
+            endDate: new Date(purchase.nextChargeDate || Date.now() + 365 * 24 * 60 * 60 * 1000),
+            updatedAt: new Date()
+          }
+        });
+        console.log(`Assinatura atualizada: ${subscription.code}`);
+        result.subscriptions_updated++;
+      } else {
+        // Criar nova assinatura
+        userSubscription = await tx.subscription.create({
+          data: {
+            userId: user.id,
+            hotmartSubscriberId: subscription.code,
+            productId: product.id.toString(),
+            planId: subscription.plan.id.toString(),
+            planName: subscription.plan.name,
+            status: "ACTIVE",
+            startDate: new Date(purchase.approvedDate),
+            endDate: new Date(purchase.nextChargeDate || Date.now() + 365 * 24 * 60 * 60 * 1000)
+          }
+        });
+        console.log(`Nova assinatura criada: ${subscription.code}`);
+        result.subscriptions_updated++;
+      }
+    }
+    
+    // Registrar a transação
+    await tx.transaction.create({
+      data: {
+        hotmartTransactionId: transactionId,
+        userId: user.id,
+        subscriptionId: userSubscription?.id,
+        amount: purchase.price.value,
+        currency: purchase.price.currency,
+        paymentType: purchase.paymentType,
+        status: "APPROVED",
+        transactionDate: new Date(purchase.approvedDate)
+      }
+    });
+    
+    result.transactions_created++;
+    console.log(`Transação ${transactionId} processada com sucesso`);
+  });
+}
+
+// Função para iniciar sincronização programada
+function startScheduledSync() {
+  // Sincronizar a cada 30 minutos
+  const interval = 30 * 60 * 1000;
+  
+  setInterval(async () => {
+    console.log(`[${new Date().toISOString()}] Iniciando sincronização programada...`);
+    
+    try {
+      // Registrar log de início
+      const syncLog = await prisma.syncLog.create({
+        data: {
+          status: "RUNNING",
+          startedAt: new Date(),
+          details: JSON.stringify({ message: "Sincronização programada automática" })
+        }
+      });
+      
+      // Executar sincronização
+      const result = await syncTransactions();
+      
+      // Atualizar log com resultados
+      await prisma.syncLog.update({
+        where: { id: syncLog.id },
+        data: {
+          status: "COMPLETED",
+          completedAt: new Date(),
+          details: JSON.stringify(result)
+        }
+      });
+    } catch (error) {
+      console.error(`[${new Date().toISOString()}] Erro na sincronização programada:`, error);
+      
+      // Registrar erro no log se possível
+      try {
+        await prisma.syncLog.create({
+          data: {
+            status: "FAILED",
+            startedAt: new Date(),
+            completedAt: new Date(),
+            details: JSON.stringify({ error: error.message })
+          }
+        });
+      } catch (logError) {
+        console.error("Erro ao registrar falha no log:", logError);
+      }
+    }
+  }, interval);
+  
+  console.log(`Sincronização programada configurada para executar a cada ${interval / 60000} minutos`);
+}
+
+// Executa uma sincronização inicial na inicialização
+async function init() {
+  try {
+    const syncLog = await prisma.syncLog.create({
+      data: {
+        status: "RUNNING",
+        startedAt: new Date(),
+        details: JSON.stringify({ message: "Sincronização inicial na inicialização" })
+      }
+    });
+    
+    const result = await syncTransactions();
+    
+    await prisma.syncLog.update({
+      where: { id: syncLog.id },
+      data: {
+        status: "COMPLETED",
+        completedAt: new Date(),
+        details: JSON.stringify(result)
+      }
+    });
+    
+    // Iniciar sincronização programada
+    startScheduledSync();
+  } catch (error) {
+    console.error("Erro na sincronização inicial:", error);
+    
+    try {
+      await prisma.syncLog.create({
+        data: {
+          status: "FAILED",
+          startedAt: new Date(),
+          completedAt: new Date(),
+          details: JSON.stringify({ error: error.message })
+        }
+      });
+    } catch (logError) {
+      console.error("Erro ao registrar falha no log:", logError);
+    }
+    
+    // Mesmo com erro, iniciar a sincronização programada
+    startScheduledSync();
+  }
+}
+
+// Exportar funções para uso no API server
+module.exports = {
+  syncTransactions,
+  init
+};
+
+// Inicializar se este for o arquivo principal
+if (require.main === module) {
+  init();
+}' > sync-service.js && \
+
+# Atualizar o index.js para conectar todos os componentes
+echo 'const express = require("express");
+const cors = require("cors");
+const path = require("path");
+const apiServer = require("./api-server");
+const syncService = require("./sync-service");
+require("dotenv").config();
+
+const app = express();
+const PORT = process.env.PORT || 5050;
+
+// Configuração de middlewares
+app.use(cors());
+app.use(express.json());
+
+// Rotas da API
+app.use(apiServer);
+
+// Servir arquivos estáticos do frontend
+app.use(express.static(path.join(__dirname, "public")));
+
+// Rota de status simples
+app.get("/status", (req, res) => {
+  res.json({
+    status: "online",
+    timestamp: new Date().toISOString(),
+    service: "hotmart-integration"
+  });
+});
+
+// Iniciar servidor
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+  console.log(`Iniciando serviço de sincronização com a Hotmart...`);
+  
+  // Iniciar serviço de sincronização
+  syncService.init();
+});' > index.js && \
+
+# Aplicar migration do Prisma para adicionar a tabela de logs
+npx prisma migrate dev --name add_sync_logs && \
+
+# Iniciar o servidor
+node index.js

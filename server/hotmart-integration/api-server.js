@@ -1,135 +1,148 @@
 import express from 'express';
-import pg from 'pg';
+import { Pool } from 'pg';
 import dotenv from 'dotenv';
-import { fork } from 'child_process';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import * as syncService from './sync-service.js';
 
-// Configurar ambiente
 dotenv.config();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const router = express.Router();
 
-// Configurar pool de conexão
-const pool = new pg.Pool({
-  connectionString: process.env.DATABASE_URL,
+// Middleware para logs
+router.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
 });
-
-// Criar router Express
-const apiRouter = express.Router();
 
 // Endpoint para verificar status da integração
-apiRouter.get('/status', async (req, res) => {
+router.get("/subscription/stats", async (req, res) => {
   try {
-    // Verificar tabela de configurações
-    const settingsResult = await pool.query('SELECT * FROM integration_settings WHERE provider = $1', ['hotmart']);
-    
-    // Verificar tabela de logs
-    const logsResult = await pool.query('SELECT COUNT(*) FROM sync_logs');
-    
-    res.json({
-      status: 'active',
-      hasCredentials: settingsResult.rows.length > 0,
-      syncLogsCount: parseInt(logsResult.rows[0].count, 10)
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL
     });
-  } catch (error) {
-    console.error('Erro ao verificar status da integração:', error);
-    res.status(500).json({ 
-      error: 'Erro ao verificar status da integração',
-      details: error.message
-    });
-  }
-});
 
-// Endpoint para listar logs de sincronização
-apiRouter.get('/sync/logs', async (req, res) => {
-  try {
-    const result = await pool.query(
-      'SELECT * FROM sync_logs ORDER BY created_at DESC LIMIT 50'
-    );
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Erro ao buscar logs de sincronização:', error);
-    res.status(500).json({ 
-      error: 'Erro ao buscar logs de sincronização',
-      details: error.message
-    });
-  }
-});
+    // Estatísticas de usuários
+    const totalUsersResult = await pool.query('SELECT COUNT(*) as count FROM users');
+    const activeSubscriptionsResult = await pool.query(`
+      SELECT COUNT(*) as count FROM users 
+      WHERE nivelacesso != 'free' AND dataexpiracao > NOW()
+    `);
+    const lifetimeUsersResult = await pool.query(`
+      SELECT COUNT(*) as count FROM users 
+      WHERE acessovitalicio = true
+    `);
+    const expiredSubscriptionsResult = await pool.query(`
+      SELECT COUNT(*) as count FROM users 
+      WHERE nivelacesso != 'free' AND dataexpiracao < NOW()
+    `);
+    const hotmartUsersResult = await pool.query(`
+      SELECT COUNT(*) as count FROM users 
+      WHERE origemassinatura = 'hotmart'
+    `);
 
-// Endpoint para iniciar sincronização manual
-apiRouter.post('/sync/start', async (req, res) => {
-  try {
-    // Registrar solicitação de sincronização
-    const logResult = await pool.query(
-      'INSERT INTO sync_logs (status, message) VALUES ($1, $2) RETURNING id',
-      ['requested', 'Sincronização manual solicitada']
-    );
-    
-    const syncId = logResult.rows[0].id;
-    
-    // Iniciar processo de sincronização em background
-    const syncProcess = fork(path.join(__dirname, 'sync-service.js'), ['--manual', `--sync-id=${syncId}`]);
-    
-    // Configurar detecção de término do processo
-    syncProcess.on('exit', (code) => {
-      console.log(`Processo de sincronização encerrado com código ${code}`);
-    });
-    
-    res.json({ 
-      message: 'Sincronização iniciada com sucesso', 
-      syncId 
-    });
-  } catch (error) {
-    console.error('Erro ao iniciar sincronização:', error);
-    res.status(500).json({ 
-      error: 'Erro ao iniciar sincronização',
-      details: error.message
-    });
-  }
-});
-
-// Endpoint para obter estatísticas de assinaturas
-apiRouter.get('/subscription/stats', async (req, res) => {
-  try {
-    // Estatísticas gerais
-    const generalStatsQuery = `
-      SELECT 
-        COUNT(*) as total_users,
-        SUM(CASE WHEN acessovitalicio = true THEN 1 ELSE 0 END) as lifetime_users,
-        SUM(CASE WHEN dataexpiracao > NOW() AND tipoplano IS NOT NULL THEN 1 ELSE 0 END) as active_subscriptions,
-        SUM(CASE WHEN dataexpiracao <= NOW() AND tipoplano IS NOT NULL THEN 1 ELSE 0 END) as expired_subscriptions,
-        SUM(CASE WHEN origemassinatura = 'hotmart' THEN 1 ELSE 0 END) as hotmart_users
-      FROM users
-    `;
-    
-    const generalStats = await pool.query(generalStatsQuery);
-    
     // Distribuição por plano
-    const planDistributionQuery = `
-      SELECT 
-        COALESCE(tipoplano, 'Sem plano') as tipoplano,
-        COUNT(*) as count
-      FROM users
+    const planDistributionResult = await pool.query(`
+      SELECT tipoplano, COUNT(*) as count 
+      FROM users 
+      WHERE tipoplano IS NOT NULL 
       GROUP BY tipoplano
-      ORDER BY count DESC
-    `;
-    
-    const planDistribution = await pool.query(planDistributionQuery);
-    
-    res.json({
-      general: generalStats.rows[0],
-      planDistribution: planDistribution.rows
-    });
+    `);
+
+    // Formatando os resultados
+    const totalUsers = parseInt(totalUsersResult.rows[0].count);
+    const activeSubscriptions = parseInt(activeSubscriptionsResult.rows[0].count);
+    const lifetimeUsers = parseInt(lifetimeUsersResult.rows[0].count);
+    const expiredSubscriptions = parseInt(expiredSubscriptionsResult.rows[0].count);
+    const hotmartUsers = parseInt(hotmartUsersResult.rows[0].count);
+
+    // Preparando a resposta
+    const response = {
+      general: {
+        total_users: totalUsers,
+        active_subscriptions: activeSubscriptions,
+        lifetime_users: lifetimeUsers,
+        expired_subscriptions: expiredSubscriptions,
+        hotmart_users: hotmartUsers
+      },
+      planDistribution: planDistributionResult.rows
+    };
+
+    await pool.end();
+    res.json(response);
   } catch (error) {
-    console.error('Erro ao obter estatísticas de assinaturas:', error);
-    res.status(500).json({ 
-      error: 'Erro ao obter estatísticas de assinaturas',
-      details: error.message
-    });
+    console.error("Erro ao obter estatísticas de assinatura:", error);
+    res.status(500).json({ error: "Erro ao obter estatísticas de assinatura" });
   }
 });
 
-// Exportar router
-export default apiRouter;
+// Endpoint para iniciar sincronização manualmente
+router.post("/sync/start", async (req, res) => {
+  try {
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL
+    });
+
+    // Registrar início da sincronização
+    const syncLogResult = await pool.query(`
+      INSERT INTO sync_logs (status, message, details, created_at)
+      VALUES ('started', 'Sincronização iniciada manualmente', $1, NOW())
+      RETURNING id
+    `, [JSON.stringify({ startedBy: req.user?.username || 'sistema' })]);
+
+    const syncId = syncLogResult.rows[0].id;
+
+    // Iniciar processo de sincronização de forma assíncrona
+    syncService.syncHotmartData()
+      .then(async (result) => {
+        // Atualizar log com resultados
+        await pool.query(`
+          UPDATE sync_logs
+          SET status = 'completed', 
+              message = 'Sincronização concluída com sucesso',
+              details = $1
+          WHERE id = $2
+        `, [JSON.stringify(result), syncId]);
+        console.log("Sincronização manual concluída:", result);
+      })
+      .catch(async (error) => {
+        // Atualizar log com erro
+        await pool.query(`
+          UPDATE sync_logs
+          SET status = 'failed',
+              message = 'Falha na sincronização',
+              details = $1
+          WHERE id = $2
+        `, [JSON.stringify({ error: error.message }), syncId]);
+        console.error("Erro na sincronização manual:", error);
+      });
+
+    await pool.end();
+    res.json({ message: "Sincronização iniciada", syncId });
+  } catch (error) {
+    console.error("Erro ao iniciar sincronização:", error);
+    res.status(500).json({ error: "Erro ao iniciar sincronização" });
+  }
+});
+
+// Endpoint para obter logs de sincronização
+router.get("/sync/logs", async (req, res) => {
+  try {
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL
+    });
+
+    const logs = await pool.query(`
+      SELECT id, status, message, details, created_at
+      FROM sync_logs
+      ORDER BY created_at DESC
+      LIMIT 10
+    `);
+
+    await pool.end();
+    res.json(logs.rows);
+  } catch (error) {
+    console.error("Erro ao obter logs de sincronização:", error);
+    res.status(500).json({ error: "Erro ao obter logs de sincronização" });
+  }
+});
+
+export default router;
