@@ -4,7 +4,7 @@
  */
 
 // Importações necessárias
-const { PrismaClient } = require('@prisma/client');
+import { PrismaClient } from '@prisma/client';
 
 /**
  * Obtém conexão com o banco de dados
