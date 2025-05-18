@@ -29,6 +29,7 @@ import { HotmartService } from "./services/hotmart-service";
 import uploadMemory from "./middlewares/upload";
 import sharp from "sharp";
 import hotmartRoutes from "./routes/hotmart-routes";
+import hotmartApiTestRoutes from "./routes/hotmart-api-test";
 
 // Versão promisificada do scrypt
 const scryptAsync = promisify(scrypt);

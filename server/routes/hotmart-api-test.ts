@@ -3,6 +3,7 @@
  */
 import { Router } from 'express';
 import axios from 'axios';
+// @ts-ignore
 import hotmartAPI from '../services/hotmart-api';
 
 const router = Router();
@@ -45,7 +46,7 @@ router.get('/test-connection', async (req, res) => {
           itemsCount: productData && Array.isArray(productData.items) ? productData.items.length : 0
         }
       });
-    } catch (apiError) {
+    } catch (apiError: any) {
       console.error("⚠️ Autenticação bem-sucedida, mas falha ao acessar dados:", apiError);
       
       // Mesmo que não consiga obter dados, a autenticação funcionou
@@ -54,11 +55,10 @@ router.get('/test-connection', async (req, res) => {
         message: "Conexão autenticada com sucesso, mas não foi possível acessar dados",
         environment: process.env.HOTMART_SANDBOX_MODE === 'true' ? 'Sandbox' : 'Produção',
         timestamp: new Date().toISOString(),
-        warning: apiError.message
+        warning: apiError?.message || 'Erro desconhecido'
       });
     }
-    
-  } catch (error) {
+  } catch (error: any) {
     console.error("❌ Erro no teste de conexão com a API da Hotmart:", error);
     
     // Determinando o tipo de erro e formatando para retorno
