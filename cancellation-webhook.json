@@ -1,0 +1,1 @@
+{"event":"SUBSCRIPTION_CANCELLATION","data":{"subscriber":{"email":"inovedigitalmarketing10@gmail.com"},"subscription":{"id":"SUB123456789","code":"SUB123456789","status":"CANCELLED"},"purchase":{"transaction":"SUB123456789"},"cancellation_date":"2025-05-18T01:10:00.000Z"}}
