@@ -205,7 +205,7 @@ app.post('/auth', async (req, res) => {
           ...userWithoutPassword,
           subscriptions: userSubscriptions
         },
-        token
+        token: userToken
       });
 
     } catch (hotmartError) {

@@ -25,8 +25,11 @@ const app = express();
 
 // Importar api-server dinamicamente
 import('./api-server.js').then(apiServer => {
+  // Middleware para processar JSON
+  app.use(express.json());
+  
   // Redirecionar solicitações para API
-  app.use('/api', apiServer.default);
+  app.use('/api/hotmart', apiServer.default);
 });
 
 // Servir arquivos estáticos

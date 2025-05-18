@@ -1,370 +1,296 @@
-// sync-service.js
-import axios from 'axios';
-import pg from 'pg';
-import nodeCron from 'node-cron';
 import dotenv from 'dotenv';
+import pg from 'pg';
+import cron from 'node-cron';
+import https from 'https';
+import fetch from 'node-fetch';
+import { fileURLToPath } from 'url';
+import path from 'path';
 
+// Configuração de ambiente
 dotenv.config();
-const { Pool } = pg;
-const cron = nodeCron;
 
-const pool = new Pool({
+// Configuração para ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Configuração do pool de conexão
+const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL
 });
 
-// Configuração da API Hotmart
-const HOTMART_BASE_URL = 'https://developers.hotmart.com';
-const HOTMART_AUTH_URL = `${HOTMART_BASE_URL}/oauth/token`;
-const HOTMART_PURCHASES_URL = `${HOTMART_BASE_URL}/payments/api/v1/sales`;
-const HOTMART_SUBSCRIPTIONS_URL = `${HOTMART_BASE_URL}/payments/api/v1/subscriptions`;
+// Verificar modo manual (para chamadas diretas via API)
+const args = process.argv.slice(2);
+const isManual = args.includes('--manual');
+const syncIdArg = args.find(arg => arg.startsWith('--sync-id='));
+const syncId = syncIdArg ? syncIdArg.split('=')[1] : null;
 
-// Cache para o token
-let accessTokenCache = {
-  token: null,
-  expiresAt: 0
-};
-
-// Função para obter token de acesso
+// Função para obter token de acesso da Hotmart
 async function getAccessToken() {
-  // Verificar se o token em cache ainda é válido
-  const now = Date.now();
-  if (accessTokenCache.token && accessTokenCache.expiresAt > now) {
-    return accessTokenCache.token;
-  }
-
   try {
-    // Buscar credenciais do banco de dados
-    const credResult = await pool.query(`
-      SELECT key, value FROM integration_settings
-      WHERE provider = 'hotmart'
-      AND (key = 'client_id' OR key = 'client_secret')
-    `);
-
-    const credentials = {
-      clientId: null,
-      clientSecret: null
-    };
-
-    credResult.rows.forEach(row => {
-      if (row.key === 'client_id') {
-        credentials.clientId = row.value;
-      } else if (row.key === 'client_secret') {
-        credentials.clientSecret = row.value;
-      }
-    });
-
-    // Verificar se as credenciais estão presentes
-    if (!credentials.clientId || !credentials.clientSecret) {
-      throw new Error('Credenciais da Hotmart não configuradas no banco de dados');
+    // Buscar credenciais no banco de dados
+    const settingsResult = await pool.query('SELECT client_id, client_secret FROM integration_settings WHERE provider = $1', ['hotmart']);
+    
+    if (settingsResult.rows.length === 0) {
+      throw new Error('Credenciais da Hotmart não encontradas no banco de dados');
     }
-
-    // Parâmetros para obter token
+    
+    const { client_id, client_secret } = settingsResult.rows[0];
+    
+    // Solicitar token de acesso
+    const tokenUrl = 'https://api-sec-vlc.hotmart.com/security/oauth/token';
     const params = new URLSearchParams();
     params.append('grant_type', 'client_credentials');
-    params.append('client_id', credentials.clientId);
-    params.append('client_secret', credentials.clientSecret);
-
-    // Requisição para obter o token
-    const response = await axios.post(HOTMART_AUTH_URL, params, {
+    params.append('client_id', client_id);
+    params.append('client_secret', client_secret);
+    
+    const response = await fetch(tokenUrl, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
-      }
+      },
+      body: params
     });
-
-    // Armazenar token em cache
-    const token = response.data.access_token;
-    const expiresIn = response.data.expires_in * 1000; // Converter para milissegundos
-    accessTokenCache = {
-      token,
-      expiresAt: now + expiresIn - 60000 // 1 minuto de margem
-    };
-
-    // Log para o console
-    console.log(`[sync-service] Token obtido com sucesso. Válido por ${Math.floor(expiresIn / 1000 / 60)} minutos.`);
-
-    return token;
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Erro na autenticação Hotmart: ${errorData.error_description || 'Falha na solicitação'}`);
+    }
+    
+    const data = await response.json();
+    return data.access_token;
   } catch (error) {
-    console.error('Erro ao obter token de acesso Hotmart:', error.message);
+    console.error('Erro ao obter token de acesso:', error.message);
     throw error;
   }
 }
 
-// Função para registrar log da sincronização
+// Função para registrar logs de sincronização
 async function logSync(status, message, details = null) {
   try {
-    await pool.query(`
-      INSERT INTO sync_logs (status, message, details, created_at)
-      VALUES ($1, $2, $3, NOW())
-    `, [status, message, details ? JSON.stringify(details) : null]);
+    // Se for uma sincronização manual, atualizar o log existente
+    if (isManual && syncId) {
+      await pool.query(
+        'UPDATE sync_logs SET status = $1, message = $2, details = $3, updated_at = NOW() WHERE id = $4',
+        [status, message, JSON.stringify(details), syncId]
+      );
+    } else {
+      // Caso contrário, criar novo log
+      await pool.query(
+        'INSERT INTO sync_logs (status, message, details) VALUES ($1, $2, $3)',
+        [status, message, JSON.stringify(details)]
+      );
+    }
   } catch (error) {
     console.error('Erro ao registrar log de sincronização:', error.message);
   }
 }
 
-// Função para atualizar o status do usuário com base nos dados da Hotmart
+// Função para atualizar status de usuário com base em dados da Hotmart
 async function updateUserStatus(email, subscriptionData, purchaseData) {
   try {
-    // Buscar usuário pelo email
-    const userResult = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+    // Verificar se o usuário existe
+    const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
     
     if (userResult.rows.length === 0) {
-      return { success: false, message: 'Usuário não encontrado' };
+      return { status: 'skipped', message: 'Usuário não encontrado', email };
     }
     
-    const userId = userResult.rows[0].id;
+    const user = userResult.rows[0];
     
-    // Verificar se há assinaturas ativas
-    const activeSubscriptions = (subscriptionData.items || []).filter(sub => 
-      sub.status === 'ACTIVE' || sub.status === 'DELAYED'
+    // Definir dados de assinatura
+    const tipoplano = subscriptionData.plan?.name || 'Hotmart Standard';
+    const dataAssinatura = new Date(subscriptionData.dateCreated || purchaseData.dateApproved);
+    
+    // Calcular data de expiração - 12 meses após a aprovação
+    const dataExpiracao = new Date(dataAssinatura);
+    dataExpiracao.setMonth(dataExpiracao.getMonth() + 12);
+    
+    // Atualizar dados do usuário
+    await pool.query(
+      `UPDATE users SET 
+         tipoplano = $1, 
+         dataassinatura = $2,
+         dataexpiracao = $3,
+         origemassinatura = 'hotmart',
+         atualizadoem = NOW()
+       WHERE id = $4`,
+      [tipoplano, dataAssinatura, dataExpiracao, user.id]
     );
     
-    if (activeSubscriptions.length > 0) {
-      // Usuário tem assinatura ativa
-      const subscription = activeSubscriptions[0]; // Pegar a primeira assinatura ativa
-      
-      // Atualizar usuário como premium
-      await pool.query(`
-        UPDATE users 
-        SET tipoplano = $1, 
-            origemassinatura = 'hotmart', 
-            dataassinatura = $2, 
-            dataexpiracao = $3,
-            atualizadoem = NOW()
-        WHERE id = $4
-      `, [
-        subscription.plan?.name || 'Plano Premium',
-        new Date(subscription.start_date || new Date()),
-        new Date(subscription.end_date || new Date(new Date().setFullYear(new Date().getFullYear() + 1))),
-        userId
-      ]);
-      
-      return { 
-        success: true, 
-        message: 'Usuário atualizado como premium', 
-        subscription: subscription 
-      };
-    } else {
-      // Verificar se tem compras avulsas sem assinatura
-      const approvedPurchases = (purchaseData.items || []).filter(purchase => 
-        purchase.status === 'APPROVED' || purchase.status === 'COMPLETE'
-      );
-      
-      if (approvedPurchases.length > 0) {
-        // Usuário tem compra aprovada (acesso vitalício)
-        const purchase = approvedPurchases[0]; // Pegar a primeira compra aprovada
-        
-        // Atualizar usuário como acesso vitalício
-        await pool.query(`
-          UPDATE users 
-          SET tipoplano = 'Acesso Vitalício', 
-              origemassinatura = 'hotmart', 
-              dataassinatura = $1,
-              acessovitalicio = true, 
-              atualizadoem = NOW()
-          WHERE id = $2
-        `, [
-          new Date(purchase.approved_date || new Date()),
-          userId
-        ]);
-        
-        return { 
-          success: true, 
-          message: 'Usuário atualizado com acesso vitalício', 
-          purchase: purchase 
-        };
-      } else {
-        // Usuário não tem assinatura ativa nem compra aprovada
-        // Se o usuário tinha origem de assinatura 'hotmart', atualizar como free
-        const userDetailResult = await pool.query('SELECT origemassinatura FROM users WHERE id = $1', [userId]);
-        
-        if (userDetailResult.rows.length > 0 && userDetailResult.rows[0].origemassinatura === 'hotmart') {
-          await pool.query(`
-            UPDATE users 
-            SET tipoplano = NULL, 
-                dataexpiracao = NOW(),
-                atualizadoem = NOW()
-            WHERE id = $1
-          `, [userId]);
-          
-          return { 
-            success: true, 
-            message: 'Usuário atualizado como gratuito' 
-          };
-        }
-        
-        return {
-          success: true,
-          message: 'Usuário mantido sem alterações (não é cliente Hotmart)'
-        };
-      }
-    }
+    return { 
+      status: 'updated', 
+      message: 'Usuário atualizado com sucesso', 
+      userId: user.id, 
+      email, 
+      plan: tipoplano,
+      expiryDate: dataExpiracao
+    };
   } catch (error) {
-    console.error('Erro ao atualizar status do usuário:', error.message);
-    return { success: false, message: error.message };
+    console.error(`Erro ao atualizar usuário ${email}:`, error.message);
+    return { status: 'error', message: error.message, email };
   }
 }
 
-// Função principal para sincronizar todos os usuários
+// Função principal de sincronização de todos os usuários
 async function syncAllUsers() {
-  console.log('[sync-service] Iniciando sincronização de todos os usuários...');
-  
   try {
-    await logSync('started', 'Sincronização iniciada');
+    await logSync('started', 'Iniciando sincronização com a Hotmart');
     
     // Obter token de acesso
-    const token = await getAccessToken();
+    const accessToken = await getAccessToken();
     
-    // Buscar todos os usuários com email
-    const usersResult = await pool.query(`
-      SELECT id, email FROM users 
-      WHERE email IS NOT NULL AND email != ''
-      ORDER BY id LIMIT 100
-    `);
+    // Buscar assinaturas ativas
+    const subscriptionsUrl = 'https://developers.hotmart.com/payments/api/v1/subscriptions';
+    const subscriptionsResponse = await fetch(subscriptionsUrl, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
     
-    const stats = {
-      total: usersResult.rows.length,
-      success: 0,
-      failed: 0,
+    if (!subscriptionsResponse.ok) {
+      const errorData = await subscriptionsResponse.json();
+      throw new Error(`Erro ao buscar assinaturas: ${errorData.message || 'Falha na solicitação'}`);
+    }
+    
+    const subscriptionsData = await subscriptionsResponse.json();
+    const subscriptions = subscriptionsData.items || [];
+    
+    // Buscar compras aprovadas
+    const purchasesUrl = 'https://developers.hotmart.com/payments/api/v1/sales/history';
+    const purchasesResponse = await fetch(purchasesUrl, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!purchasesResponse.ok) {
+      const errorData = await purchasesResponse.json();
+      throw new Error(`Erro ao buscar compras: ${errorData.message || 'Falha na solicitação'}`);
+    }
+    
+    const purchasesData = await purchasesResponse.json();
+    const purchases = purchasesData.items || [];
+    
+    // Processar e atualizar usuários
+    const results = {
+      totalProcessed: 0,
       updated: 0,
-      unchanged: 0,
-      errors: []
+      skipped: 0,
+      errors: 0,
+      details: []
     };
     
-    // Processar cada usuário
-    for (const user of usersResult.rows) {
-      try {
-        console.log(`[sync-service] Verificando usuário: ${user.email}`);
+    // Processar assinaturas
+    for (const subscription of subscriptions) {
+      const email = subscription.subscriber?.email;
+      
+      if (email) {
+        results.totalProcessed++;
+        const purchase = purchases.find(p => p.buyer?.email === email);
+        const result = await updateUserStatus(email, subscription, purchase || {});
         
-        // Consultar assinaturas na Hotmart
-        const subscriptionResponse = await axios.get(`${HOTMART_SUBSCRIPTIONS_URL}?subscriber_email=${user.email}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        results.details.push(result);
         
-        // Consultar compras na Hotmart
-        const purchaseResponse = await axios.get(`${HOTMART_PURCHASES_URL}?email=${user.email}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        // Atualizar status do usuário
-        const result = await updateUserStatus(
-          user.email, 
-          subscriptionResponse.data, 
-          purchaseResponse.data
-        );
-        
-        if (result.success) {
-          stats.success++;
-          
-          if (result.message.includes('atualizado')) {
-            stats.updated++;
-          } else {
-            stats.unchanged++;
-          }
-        } else {
-          stats.failed++;
-          stats.errors.push({
-            email: user.email,
-            error: result.message
-          });
-        }
-        
-        // Pequena pausa para não sobrecarregar a API
-        await new Promise(resolve => setTimeout(resolve, 500));
-      } catch (error) {
-        stats.failed++;
-        stats.errors.push({
-          email: user.email,
-          error: error.message
-        });
-        console.error(`[sync-service] Erro ao sincronizar usuário ${user.email}:`, error.message);
+        if (result.status === 'updated') results.updated++;
+        else if (result.status === 'skipped') results.skipped++;
+        else if (result.status === 'error') results.errors++;
       }
     }
     
-    // Registrar resultados no log
-    await logSync('completed', `Sincronização concluída. ${stats.updated} usuários atualizados.`, stats);
+    // Processar compras que não são assinaturas
+    const subscriptionEmails = subscriptions.map(s => s.subscriber?.email).filter(Boolean);
+    for (const purchase of purchases) {
+      const email = purchase.buyer?.email;
+      
+      if (email && !subscriptionEmails.includes(email)) {
+        results.totalProcessed++;
+        const result = await updateUserStatus(email, {}, purchase);
+        
+        results.details.push(result);
+        
+        if (result.status === 'updated') results.updated++;
+        else if (result.status === 'skipped') results.skipped++;
+        else if (result.status === 'error') results.errors++;
+      }
+    }
     
-    console.log(`[sync-service] Sincronização concluída. Resultados: ${JSON.stringify(stats)}`);
-    return stats;
+    // Registrar conclusão da sincronização
+    await logSync(
+      'completed', 
+      `Sincronização concluída: ${results.updated} usuários atualizados, ${results.skipped} ignorados, ${results.errors} erros`,
+      results
+    );
+    
+    return results;
   } catch (error) {
-    console.error('[sync-service] Erro na sincronização:', error.message);
-    await logSync('failed', `Sincronização falhou: ${error.message}`);
+    console.error('Erro na sincronização:', error.message);
+    await logSync('failed', `Erro na sincronização: ${error.message}`, { error: error.message });
     throw error;
   }
 }
 
-// Verificar se a tabela de logs existe, ou criá-la
+// Função para garantir que a tabela de logs existe
 async function ensureSyncLogsTable() {
   try {
-    // Verificar se a tabela sync_logs existe
+    // Verificar se a tabela existe
     const tableExists = await pool.query(`
       SELECT EXISTS (
         SELECT FROM information_schema.tables 
-        WHERE table_name = 'sync_logs'
+        WHERE table_schema = 'public' 
+        AND table_name = 'sync_logs'
       );
     `);
     
+    // Se a tabela não existir, criar
     if (!tableExists.rows[0].exists) {
-      console.log('[sync-service] Criando tabela sync_logs...');
-      
-      // Criar a tabela
       await pool.query(`
         CREATE TABLE sync_logs (
           id SERIAL PRIMARY KEY,
-          status VARCHAR(255) NOT NULL,
+          status VARCHAR(50) NOT NULL,
           message TEXT NOT NULL,
           details JSONB,
-          created_at TIMESTAMP NOT NULL
+          created_at TIMESTAMP DEFAULT NOW(),
+          updated_at TIMESTAMP DEFAULT NOW()
         );
       `);
-      
-      console.log('[sync-service] Tabela sync_logs criada com sucesso.');
+      console.log('Tabela sync_logs criada com sucesso.');
     }
   } catch (error) {
-    console.error('[sync-service] Erro ao verificar tabela de logs:', error.message);
+    console.error('Erro ao verificar/criar tabela sync_logs:', error.message);
   }
 }
 
-// Agendar sincronização a cada 60 minutos
-cron.schedule('0 */1 * * *', async () => {
-  try {
-    await syncAllUsers();
-  } catch (error) {
-    console.error('[sync-service] Erro ao executar sincronização agendada:', error.message);
-  }
-});
-
-// Função para inicializar o serviço
+// Função de inicialização
 async function init() {
   try {
     // Garantir que a tabela de logs existe
     await ensureSyncLogsTable();
     
-    // Executar primeira sincronização após 1 minuto
-    setTimeout(async () => {
+    // Se for chamada manual, executar sincronização imediatamente
+    if (isManual) {
+      console.log('Executando sincronização manual...');
+      await syncAllUsers();
+      process.exit(0);
+    }
+    
+    // Agendar sincronização automática a cada hora
+    cron.schedule('0 * * * *', async () => {
+      console.log(`[${new Date().toISOString()}] Executando sincronização agendada...`);
       try {
         await syncAllUsers();
+        console.log(`[${new Date().toISOString()}] Sincronização agendada concluída com sucesso.`);
       } catch (error) {
-        console.error('[sync-service] Erro na sincronização inicial:', error.message);
+        console.error(`[${new Date().toISOString()}] Erro na sincronização agendada:`, error.message);
       }
-    }, 60000);
+    });
     
     console.log('[sync-service] Serviço de sincronização iniciado. Verificação agendada a cada hora.');
   } catch (error) {
-    console.error('[sync-service] Erro ao inicializar serviço:', error.message);
+    console.error('Erro ao inicializar serviço de sincronização:', error.message);
   }
 }
 
 // Iniciar o serviço
 init();
-
-// Manter o módulo ativo para evitar que o processo filho seja encerrado
-setInterval(() => {
-  console.log('[sync-service] Mantendo o serviço ativo');
-}, 60000);
-
-// Exportar funções para uso externo se necessário
-export { syncAllUsers, getAccessToken };
