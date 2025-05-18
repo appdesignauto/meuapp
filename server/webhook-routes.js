@@ -15,16 +15,16 @@ const webhookDiagnosticsRouter = require('./routes/webhook-diagnostics');
  */
 function setupWebhookRoutes(app) {
   console.log('⚠️ Configurando rotas de webhook ANTES do fallback SPA');
-  
+
   // Importante: usar o mesmo middleware de parsing antes de registrar rotas
   // para garantir que o corpo da requisição seja parseado corretamente
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
-  
+
   // Registrar as rotas de webhook com path específico
   // Nota: estas rotas devem ser registradas ANTES de qualquer fallback para o SPA
   app.use('/webhook/hotmart', hotmartWebhookRouter);
-  
+
   // Se a rota de webhook Doppus existir, registrá-la também
   try {
     app.use('/webhook/doppus', doppusWebhookRouter);
@@ -32,10 +32,10 @@ function setupWebhookRoutes(app) {
   } catch (error) {
     console.warn('⚠️ Rotas de webhook da Doppus não disponíveis:', error.message);
   }
-  
+
   // Registrar rotas de diagnóstico para administradores
   app.use('/api/webhook-diagnostics', webhookDiagnosticsRouter);
-  
+
   // Rota de diagnóstico para verificação básica de webhooks (sem autenticação)
   app.get('/webhook/status', (req, res) => {
     res.json({
@@ -48,7 +48,7 @@ function setupWebhookRoutes(app) {
       message: 'Os webhooks estão configurados e funcionando. Use o painel de Admin para diagnósticos avançados.'
     });
   });
-  
+
   console.log('✅ Rotas de webhook configuradas com sucesso!');
 }
 
