@@ -313,9 +313,10 @@ export class SubscriptionService {
   static async processHotmartWebhook(webhookData: any) {
     console.log('🔄 SubscriptionService.processHotmartWebhook iniciado');
     try {
-      // Importar o HotmartService dinamicamente
+      // Importar o HotmartService dinamicamente usando import()
       // Esta abordagem resolve problemas de circular dependency entre os módulos
-      const { HotmartService } = require('./hotmart-service');
+      const HotmartModule = await import('./hotmart-service');
+      const { HotmartService } = HotmartModule;
       
       // Extrair email e eventType
       let email = null;
