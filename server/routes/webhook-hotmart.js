@@ -32,14 +32,15 @@ router.post('/', async (req, res) => {
     } catch (e) {
       console.error("Erro ao registrar webhook:", e);
     }
-    if (req.body?.data?.buyer?.email) {
-      email = req.body.data.buyer.email;
-    } else if (req.body?.buyer?.email) {
-      email = req.body.buyer.email;
-    } else if (req.body?.data?.subscriber?.email) {
+    // Extrair email do comprador ou assinante
+    if (req.body?.data?.subscriber?.email) {
       email = req.body.data.subscriber.email;
+    } else if (req.body?.data?.buyer?.email) {
+      email = req.body.data.buyer.email;
     } else if (req.body?.subscriber?.email) {
       email = req.body.subscriber.email;
+    } else if (req.body?.buyer?.email) {
+      email = req.body.buyer.email;
     }
     
     let transactionId = null;
