@@ -18,6 +18,7 @@ import WebhookList from '@/components/admin/WebhookList';
 import SubscriptionManagement from '@/components/admin/SubscriptionManagement';
 import SubscriptionSettings from '@/components/admin/SubscriptionSettings';
 import HotmartProductMapping from '@/components/admin/HotmartProductMapping';
+import HotmartConnectionTest from '@/components/admin/HotmartConnectionTest';
 import { 
   Card, 
   CardContent, 
@@ -498,6 +499,15 @@ export default function AssinaturasPage() {
             </div>
           </div>
           
+          {/* Seção de Teste de Conexão com a API da Hotmart */}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold mb-4">Status da API da Hotmart</h3>
+            <HotmartConnectionTest />
+          </div>
+          
+          {/* Separador visual */}
+          <Separator className="my-8" />
+
           {/* Seção de Mapeamento de Produtos Hotmart */}
           <div className="mb-8">
             <h3 className="text-lg font-semibold mb-4">Mapeamento de Produtos Hotmart</h3>
