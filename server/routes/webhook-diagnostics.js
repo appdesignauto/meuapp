@@ -3,263 +3,392 @@
  * integrações com Hotmart e Doppus
  */
 
-import express from 'express';
-import { Pool } from '@neondatabase/serverless';
-import dotenv from 'dotenv';
-
-dotenv.config();
-
+const express = require('express');
 const router = express.Router();
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const { pool } = require('../db');
 
-// Middleware de autenticação básica para endpoints de administração
-const requireAdmin = (req, res, next) => {
-  if (!req.isAuthenticated || !req.isAuthenticated()) {
-    return res.status(401).json({ error: 'Não autorizado' });
-  }
-  
-  // Verificar se o usuário é administrador
-  const user = req.user;
-  if (user.nivelacesso !== 'admin' && user.role !== 'admin') {
-    return res.status(403).json({ error: 'Acesso restrito a administradores' });
-  }
-  
-  next();
-};
-
-// Registrar o middleware para esta rota
-router.use(requireAdmin);
-
-// Endpoint para verificar status do sistema de webhook
+// Endpoint para verificar integridade do sistema de webhooks
 router.get('/status', async (req, res) => {
   try {
-    // Consultar os últimos 5 logs de webhook
-    const recentLogs = await pool.query(
-      'SELECT * FROM "webhookLogs" ORDER BY "createdAt" DESC LIMIT 5'
+    // Verificar se temos entradas no banco de dados
+    const countResult = await pool.query(
+      'SELECT COUNT(*) as total FROM "webhookLogs"'
     );
-    
-    // Obter configurações de integração para verificação
-    const integrationSettings = await pool.query(
-      'SELECT * FROM "integrationSettings" WHERE "provider" = $1 AND "key" = $2',
-      ['hotmart', 'secret']
+
+    // Buscar os webhooks mais recentes
+    const latestResult = await pool.query(
+      'SELECT id, "eventType", status, email, source, "createdAt" FROM "webhookLogs" ORDER BY "createdAt" DESC LIMIT 5'
     );
-    
-    const hasHotmartSecret = integrationSettings.rows.length > 0;
-    
+
+    // Verificar configurações da Hotmart
+    const hotmartConfigResult = await pool.query(
+      'SELECT key, value FROM "integrationSettings" WHERE provider = $1',
+      ['hotmart']
+    );
+
+    // Transformar em objeto para fácil acesso
+    const hotmartConfig = {};
+    hotmartConfigResult.rows.forEach(row => {
+      hotmartConfig[row.key] = row.value ? true : false;
+    });
+
+    // Verificar configurações da Doppus
+    const doppusConfigResult = await pool.query(
+      'SELECT key, value FROM "integrationSettings" WHERE provider = $1',
+      ['doppus']
+    );
+
+    // Transformar em objeto para fácil acesso
+    const doppusConfig = {};
+    doppusConfigResult.rows.forEach(row => {
+      doppusConfig[row.key] = row.value ? true : false;
+    });
+
+    // Verificar mapeamentos de produtos da Hotmart
+    const hotmartMappingsResult = await pool.query(
+      'SELECT COUNT(*) as total FROM "hotmartProductMappings"'
+    );
+
+    // Verificar mapeamentos de produtos da Doppus
+    const doppusMappingsResult = await pool.query(
+      'SELECT COUNT(*) as total FROM "doppusProductMappings"'
+    );
+
     res.json({
       status: 'online',
-      lastCheck: new Date().toISOString(),
-      configuration: {
-        hotmartSecretConfigured: hasHotmartSecret,
-        webhookEndpoints: {
-          hotmart: '/webhook/hotmart',
-          doppus: '/webhook/doppus'
-        },
-        webhookProxy: {
-          status: 'available',
-          testEndpoint: '/webhook-diagnostics/test-proxy'
-        }
+      timestamp: new Date().toISOString(),
+      webhooks: {
+        total: parseInt(countResult.rows[0].total, 10),
+        latest: latestResult.rows
       },
-      recentWebhooks: recentLogs.rows.map(log => ({
-        id: log.id,
-        source: log.source || 'desconhecido',
-        event: log.eventType,
-        status: log.status,
-        timestamp: log.createdAt,
-        hasValidSignature: log.signatureValid
-      }))
-    });
-  } catch (error) {
-    console.error('Erro ao verificar status dos webhooks:', error);
-    res.status(500).json({
-      status: 'error',
-      error: error.message,
-      stack: process.env.NODE_ENV === 'production' ? null : error.stack
-    });
-  }
-});
-
-// Endpoint para buscar logs de webhook
-router.get('/logs', async (req, res) => {
-  try {
-    const { limit = 50, offset = 0, source, status, eventType } = req.query;
-    
-    // Construir consulta dinâmica com filtros
-    let query = 'SELECT * FROM "webhookLogs"';
-    const params = [];
-    const conditions = [];
-    
-    if (source) {
-      params.push(source);
-      conditions.push(`"source" = $${params.length}`);
-    }
-    
-    if (status) {
-      params.push(status);
-      conditions.push(`"status" = $${params.length}`);
-    }
-    
-    if (eventType) {
-      params.push(eventType);
-      conditions.push(`"eventType" = $${params.length}`);
-    }
-    
-    if (conditions.length > 0) {
-      query += ' WHERE ' + conditions.join(' AND ');
-    }
-    
-    query += ' ORDER BY "createdAt" DESC';
-    
-    // Adicionar limites
-    params.push(parseInt(limit, 10));
-    params.push(parseInt(offset, 10));
-    query += ` LIMIT $${params.length - 1} OFFSET $${params.length}`;
-    
-    const result = await pool.query(query, params);
-    
-    // Consultar total para paginação
-    let countQuery = 'SELECT COUNT(*) FROM "webhookLogs"';
-    if (conditions.length > 0) {
-      countQuery += ' WHERE ' + conditions.join(' AND ');
-    }
-    
-    const countResult = await pool.query(countQuery, params.slice(0, -2));
-    const total = parseInt(countResult.rows[0].count, 10);
-    
-    res.json({
-      total,
-      logs: result.rows,
-      pagination: {
-        limit: parseInt(limit, 10),
-        offset: parseInt(offset, 10),
-        totalPages: Math.ceil(total / parseInt(limit, 10))
+      configuration: {
+        hotmart: {
+          configured: Object.keys(hotmartConfig).length > 0,
+          settings: hotmartConfig,
+          productMappings: parseInt(hotmartMappingsResult.rows[0].total, 10)
+        },
+        doppus: {
+          configured: Object.keys(doppusConfig).length > 0,
+          settings: doppusConfig,
+          productMappings: parseInt(doppusMappingsResult.rows[0].total, 10)
+        }
       }
     });
   } catch (error) {
-    console.error('Erro ao buscar logs de webhook:', error);
-    res.status(500).json({ error: error.message });
+    console.error('[Webhook Diagnostics] Erro ao verificar status:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Erro ao verificar status do sistema de webhooks',
+      error: error.message
+    });
   }
 });
 
-// Endpoint para testar diretamente o proxy de webhook
-router.post('/test-proxy', async (req, res) => {
+// Endpoint para listar os webhooks registrados
+router.get('/logs', async (req, res) => {
   try {
-    // Registrar um log da tentativa de teste
-    console.log('📋 Teste de proxy de webhook iniciado');
-    console.log('📦 Payload:', JSON.stringify(req.body, null, 2));
-    
-    // Registrar o teste no banco de dados
-    const webhookLogQuery = `
-      INSERT INTO "webhookLogs" 
-      ("source", "rawData", "eventType", "status", "processedData", "error", "email", "signatureValid") 
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      RETURNING *
-    `;
-    
-    const webhookLogValues = [
-      'test',
-      JSON.stringify(req.body),
-      'TEST_WEBHOOK',
-      'success',
-      JSON.stringify({ message: 'Teste de webhook processado com sucesso' }),
-      null,
-      req.body.data?.buyer?.email || 'test@example.com',
-      true
-    ];
-    
-    const result = await pool.query(webhookLogQuery, webhookLogValues);
-    
-    res.status(200).json({
-      success: true,
-      message: 'Teste de webhook processado com sucesso',
-      logId: result.rows[0].id,
-      timestamp: new Date().toISOString()
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const offset = (page - 1) * limit;
+    const source = req.query.source;
+    const status = req.query.status;
+    const eventType = req.query.eventType;
+    const email = req.query.email;
+
+    // Construir a consulta SQL com filtros opcionais
+    let query = 'SELECT * FROM "webhookLogs"';
+    const queryParams = [];
+    const whereConditions = [];
+
+    if (source) {
+      whereConditions.push(`source = $${queryParams.length + 1}`);
+      queryParams.push(source);
+    }
+
+    if (status) {
+      whereConditions.push(`status = $${queryParams.length + 1}`);
+      queryParams.push(status);
+    }
+
+    if (eventType) {
+      whereConditions.push(`"eventType" = $${queryParams.length + 1}`);
+      queryParams.push(eventType);
+    }
+
+    if (email) {
+      whereConditions.push(`email ILIKE $${queryParams.length + 1}`);
+      queryParams.push(`%${email}%`);
+    }
+
+    if (whereConditions.length > 0) {
+      query += ' WHERE ' + whereConditions.join(' AND ');
+    }
+
+    // Adicionar ordenação e paginação
+    query += ' ORDER BY "createdAt" DESC LIMIT $' + (queryParams.length + 1) + ' OFFSET $' + (queryParams.length + 2);
+    queryParams.push(limit, offset);
+
+    // Executar a consulta
+    const result = await pool.query(query, queryParams);
+
+    // Contar o total de registros para paginação
+    let countQuery = 'SELECT COUNT(*) FROM "webhookLogs"';
+    if (whereConditions.length > 0) {
+      countQuery += ' WHERE ' + whereConditions.join(' AND ');
+    }
+    const countResult = await pool.query(countQuery, queryParams.slice(0, whereConditions.length));
+
+    res.json({
+      webhooks: result.rows,
+      pagination: {
+        total: parseInt(countResult.rows[0].count, 10),
+        page,
+        limit,
+        pages: Math.ceil(parseInt(countResult.rows[0].count, 10) / limit)
+      }
     });
   } catch (error) {
-    console.error('Erro ao testar proxy de webhook:', error);
+    console.error('[Webhook Diagnostics] Erro ao listar logs:', error);
     res.status(500).json({
-      success: false,
-      error: error.message,
-      stack: process.env.NODE_ENV === 'production' ? null : error.stack
+      status: 'error',
+      message: 'Erro ao listar logs de webhook',
+      error: error.message
     });
   }
 });
 
-// Endpoint para reprocessar um webhook
-router.post('/reprocess/:id', async (req, res) => {
+// Endpoint para buscar detalhes de um webhook específico
+router.get('/logs/:id', async (req, res) => {
   try {
-    const { id } = req.params;
-    
-    // Buscar o webhook original
-    const webhookLog = await pool.query(
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'ID inválido'
+      });
+    }
+
+    const result = await pool.query(
       'SELECT * FROM "webhookLogs" WHERE id = $1',
       [id]
     );
-    
-    if (webhookLog.rows.length === 0) {
-      return res.status(404).json({ error: 'Webhook não encontrado' });
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Webhook não encontrado'
+      });
     }
-    
-    const log = webhookLog.rows[0];
-    
-    // Atualizar o status para "reprocessing"
-    await pool.query(
-      'UPDATE "webhookLogs" SET status = $1, "updatedAt" = NOW() WHERE id = $2',
-      ['reprocessing', id]
-    );
-    
-    // Aqui você deveria implementar a lógica para reprocessar o webhook
-    // Isso geralmente envolve chamar a mesma função que processa webhooks novos
-    // Neste exemplo, apenas simulamos o reprocessamento
-    
-    console.log(`🔄 Reprocessando webhook ${id} do tipo ${log.eventType}`);
-    
-    // Simular o reprocessamento bem-sucedido
-    await pool.query(
-      'UPDATE "webhookLogs" SET status = $1, "updatedAt" = NOW(), error = NULL WHERE id = $2',
-      ['success', id]
-    );
-    
+
+    // Verificar se o usuário associado existe
+    let user = null;
+    if (result.rows[0].userId) {
+      const userResult = await pool.query(
+        'SELECT id, username, email, name, "profileimageurl", "tipoplano", "dataassinatura", "dataexpiracao", "origemassinatura", "acessovitalicio" FROM users WHERE id = $1',
+        [result.rows[0].userId]
+      );
+      if (userResult.rows.length > 0) {
+        user = userResult.rows[0];
+      }
+    }
+
+    // Verificar se há uma assinatura associada
+    let subscription = null;
+    if (result.rows[0].userId) {
+      const subscriptionResult = await pool.query(
+        'SELECT * FROM subscriptions WHERE "userId" = $1',
+        [result.rows[0].userId]
+      );
+      if (subscriptionResult.rows.length > 0) {
+        subscription = subscriptionResult.rows[0];
+      }
+    }
+
     res.json({
-      success: true,
-      message: `Webhook ${id} reprocessado com sucesso`,
-      webhookId: id
+      webhook: result.rows[0],
+      user,
+      subscription
     });
   } catch (error) {
-    console.error(`Erro ao reprocessar webhook ${req.params.id}:`, error);
-    res.status(500).json({ error: error.message });
+    console.error('[Webhook Diagnostics] Erro ao buscar detalhes do webhook:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Erro ao buscar detalhes do webhook',
+      error: error.message
+    });
   }
 });
 
-// Adicionar endpoint para capturar webhooks em tempo real
-router.get('/monitor-incoming', (req, res) => {
-  // Configurar headers para streaming de eventos
-  res.writeHead(200, {
-    'Content-Type': 'text/event-stream',
-    'Cache-Control': 'no-cache',
-    'Connection': 'keep-alive'
-  });
-  
-  // Enviar um evento inicial para confirmar a conexão
-  res.write(`data: ${JSON.stringify({ type: 'connection', status: 'established', timestamp: new Date().toISOString() })}\n\n`);
-  
-  // Criar um intervalo para enviar heartbeat e manter a conexão viva
-  const heartbeatInterval = setInterval(() => {
-    res.write(`data: ${JSON.stringify({ type: 'heartbeat', timestamp: new Date().toISOString() })}\n\n`);
-  }, 30000); // 30 segundos
-  
-  // Função para lidar com o fechamento da conexão
-  const cleanup = () => {
-    clearInterval(heartbeatInterval);
-  };
-  
-  // Lidar com o fechamento da conexão pelo cliente
-  req.on('close', cleanup);
-  req.on('end', cleanup);
-  
-  // Observação: Este é um exemplo simplificado. Numa implementação real,
-  // você precisaria implementar uma fila de mensagens ou pubsub para
-  // notificar este endpoint quando um novo webhook chegar.
+// Endpoint para buscar estatísticas dos webhooks
+router.get('/stats', async (req, res) => {
+  try {
+    // Estatísticas gerais
+    const generalStats = await pool.query(`
+      SELECT 
+        COUNT(*) as total,
+        COUNT(*) FILTER (WHERE status = 'success') as success,
+        COUNT(*) FILTER (WHERE status = 'error') as error,
+        COUNT(*) FILTER (WHERE status = 'received') as received,
+        COUNT(*) FILTER (WHERE source = 'hotmart') as hotmart,
+        COUNT(*) FILTER (WHERE source = 'doppus') as doppus,
+        MAX("createdAt") as last_received
+      FROM "webhookLogs"
+    `);
+
+    // Estatísticas por tipo de evento
+    const eventTypeStats = await pool.query(`
+      SELECT "eventType", COUNT(*) as count
+      FROM "webhookLogs"
+      GROUP BY "eventType"
+      ORDER BY count DESC
+    `);
+
+    // Estatísticas por dia (últimos 30 dias)
+    const dailyStats = await pool.query(`
+      SELECT 
+        DATE_TRUNC('day', "createdAt") as date,
+        COUNT(*) as total,
+        COUNT(*) FILTER (WHERE status = 'success') as success,
+        COUNT(*) FILTER (WHERE status = 'error') as error
+      FROM "webhookLogs"
+      WHERE "createdAt" > NOW() - INTERVAL '30 days'
+      GROUP BY DATE_TRUNC('day', "createdAt")
+      ORDER BY date DESC
+    `);
+
+    res.json({
+      general: generalStats.rows[0],
+      eventTypes: eventTypeStats.rows,
+      daily: dailyStats.rows
+    });
+  } catch (error) {
+    console.error('[Webhook Diagnostics] Erro ao buscar estatísticas:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Erro ao buscar estatísticas de webhook',
+      error: error.message
+    });
+  }
 });
 
-export default router;
+// Endpoint para testar a configuração da Hotmart
+router.get('/test/hotmart', async (req, res) => {
+  try {
+    // Verificar configurações da Hotmart
+    const hotmartConfigResult = await pool.query(
+      'SELECT key, value FROM "integrationSettings" WHERE provider = $1',
+      ['hotmart']
+    );
+
+    // Transformar em objeto para fácil acesso
+    const hotmartConfig = {};
+    hotmartConfigResult.rows.forEach(row => {
+      hotmartConfig[row.key] = row.value;
+    });
+
+    // Verificar se há credenciais configuradas
+    if (!hotmartConfig.clientId || !hotmartConfig.clientSecret) {
+      return res.json({
+        status: 'error',
+        message: 'Credenciais da Hotmart não configuradas'
+      });
+    }
+
+    // Verificar se há secret configurado para webhooks
+    if (!hotmartConfig.secret) {
+      return res.json({
+        status: 'warning',
+        message: 'Secret para webhooks da Hotmart não configurado'
+      });
+    }
+
+    // Verificar mapeamentos de produtos
+    const mappingsResult = await pool.query(
+      'SELECT * FROM "hotmartProductMappings"'
+    );
+
+    res.json({
+      status: 'success',
+      config: {
+        clientId: Boolean(hotmartConfig.clientId),
+        clientSecret: Boolean(hotmartConfig.clientSecret),
+        secret: Boolean(hotmartConfig.secret),
+        webhookUrl: Boolean(hotmartConfig.webhookUrl)
+      },
+      mappings: mappingsResult.rows.map(row => ({
+        id: row.id,
+        hotmartProductId: row.hotmartProductId,
+        planType: row.planType
+      }))
+    });
+  } catch (error) {
+    console.error('[Webhook Diagnostics] Erro ao testar configuração da Hotmart:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Erro ao testar configuração da Hotmart',
+      error: error.message
+    });
+  }
+});
+
+// Endpoint para testar configuração da Doppus
+router.get('/test/doppus', async (req, res) => {
+  try {
+    // Verificar configurações da Doppus
+    const doppusConfigResult = await pool.query(
+      'SELECT key, value FROM "integrationSettings" WHERE provider = $1',
+      ['doppus']
+    );
+
+    // Transformar em objeto para fácil acesso
+    const doppusConfig = {};
+    doppusConfigResult.rows.forEach(row => {
+      doppusConfig[row.key] = row.value;
+    });
+
+    // Verificar se há credenciais configuradas
+    if (!doppusConfig.clientId || !doppusConfig.clientSecret) {
+      return res.json({
+        status: 'error',
+        message: 'Credenciais da Doppus não configuradas'
+      });
+    }
+
+    // Verificar se há secret configurado para webhooks
+    if (!doppusConfig.secret) {
+      return res.json({
+        status: 'warning',
+        message: 'Secret para webhooks da Doppus não configurado'
+      });
+    }
+
+    // Verificar mapeamentos de produtos
+    const mappingsResult = await pool.query(
+      'SELECT * FROM "doppusProductMappings"'
+    );
+
+    res.json({
+      status: 'success',
+      config: {
+        clientId: Boolean(doppusConfig.clientId),
+        clientSecret: Boolean(doppusConfig.clientSecret),
+        secret: Boolean(doppusConfig.secret),
+        webhookUrl: Boolean(doppusConfig.webhookUrl)
+      },
+      mappings: mappingsResult.rows.map(row => ({
+        id: row.id,
+        doppusProductId: row.doppusProductId,
+        planType: row.planType
+      }))
+    });
+  } catch (error) {
+    console.error('[Webhook Diagnostics] Erro ao testar configuração da Doppus:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Erro ao testar configuração da Doppus',
+      error: error.message
+    });
+  }
+});
+
+module.exports = router;
