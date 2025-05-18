@@ -577,42 +577,4 @@ export class HotmartService {
         };
     }
   }
-
-  /**
-   * Processa um evento de cancelamento de assinatura recebido da Hotmart
-   * @param webhook Dados do webhook
-   * @param email Email do usuário
-   * @returns Resultado do processamento
-   */
-  static async processCancellation(webhook: any, email: string): Promise<any> {
-    console.log(`Processando cancelamento de assinatura para: ${email}`);
-    
-    try {
-      const data = webhook.data;
-      const subscriptionId = data?.subscription?.id || 
-                           data?.data?.subscription?.id ||
-                           data?.purchase?.transaction;
-      
-      console.log(`Dados de cancelamento recebidos:`, JSON.stringify(data, null, 2));
-      console.log(`ID da assinatura: ${subscriptionId}`);
-      
-      // Importar a service de assinaturas para atualizar o banco de dados
-      const { SubscriptionService } = await import('./subscription-service');
-      
-      // Atualizar o status da assinatura para cancelada
-      const result = await SubscriptionService.cancelSubscription(email, {
-        reason: 'Cancelamento pelo cliente via Hotmart',
-        source: 'hotmart',
-        subscriptionId: subscriptionId,
-        cancellationDate: data?.cancellation_date || new Date(),
-        webhookData: JSON.stringify(webhook)
-      });
-      
-      console.log(`Resultado do processamento de cancelamento:`, result);
-      return result;
-    } catch (error) {
-      console.error(`❌ Erro ao processar cancelamento de assinatura:`, error);
-      throw new Error(`Falha ao processar o cancelamento: ${error.message}`);
-    }
-  }
 }

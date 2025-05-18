@@ -251,27 +251,27 @@ function extractEmailDeep(obj) {
       }
       
       switch (eventType) {
-      case 'PURCHASE_APPROVED':
-      case 'PURCHASE_COMPLETE':
-        await HotmartService.processPurchase(req.body, email);
-        break;
-      
-      case 'SUBSCRIPTION_CANCELLATION':
-        await HotmartService.processCancellation(req.body, email);
-        break;
-      
-      case 'PURCHASE_REFUNDED':
-      case 'PURCHASE_CHARGEBACK':
-        await HotmartService.processRefund(req.body, email);
-        break;
-      
-      case 'RECURRENCE_BILLED':
-        await HotmartService.processRenewal(req.body, email);
-        break;
-      
-      default:
-        console.log(`ℹ️ Tipo de evento não processado: ${eventType}`);
-    }
+        case 'PURCHASE_APPROVED':
+        case 'PURCHASE_COMPLETE':
+          await HotmartService.processPurchase(req.body, email);
+          break;
+        
+        case 'SUBSCRIPTION_CANCELLATION':
+          await HotmartService.processCancellation(req.body, email);
+          break;
+        
+        case 'PURCHASE_REFUNDED':
+        case 'PURCHASE_CHARGEBACK':
+          await HotmartService.processRefund(req.body, email);
+          break;
+        
+        case 'RECURRENCE_BILLED':
+          await HotmartService.processRenewal(req.body, email);
+          break;
+        
+        default:
+          console.log(`ℹ️ Tipo de evento não processado: ${eventType}`);
+      }
     
     // Atualizar o registro do webhook para sucesso
     try {

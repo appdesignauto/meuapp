@@ -179,9 +179,15 @@ export class SubscriptionService {
   /**
    * Cancela uma assinatura de usuário
    * @param email Email do usuário
-   * @param reason Motivo do cancelamento (opcional)
+   * @param options Opções do cancelamento (motivo, data, etc.)
    */
-  static async cancelSubscription(email: string, reason?: string) {
+  static async cancelSubscription(email: string, options?: {
+    reason?: string;
+    source?: string;
+    subscriptionId?: string;
+    cancellationDate?: Date;
+    webhookData?: string;
+  }) {
     console.log(`🔄 Cancelando assinatura para usuário: ${email}`);
     
     try {
@@ -196,23 +202,39 @@ export class SubscriptionService {
       }
       
       // 2. Encontrar e cancelar assinatura
-      const subscription = await db.query.subscriptions.findFirst({
-        where: eq(subscriptions.userId, user.id)
-      });
+      let subscription;
+      
+      // Se tiver o ID da assinatura externa, tenta verificar por ele
+      if (options?.subscriptionId) {
+        console.log(`🔍 Procurando assinatura por ID externo: ${options.subscriptionId}`);
+        subscription = await db.query.subscriptions.findFirst({
+          where: and(
+            eq(subscriptions.userId, user.id),
+            eq(subscriptions.transactionid, options.subscriptionId)
+          )
+        });
+      }
+      
+      // Se não achou por ID externo, busca por usuário
+      if (!subscription) {
+        subscription = await db.query.subscriptions.findFirst({
+          where: eq(subscriptions.userId, user.id)
+        });
+      }
       
       if (!subscription) {
         console.log(`❌ Assinatura não encontrada para usuário: ${email}`);
         throw new Error(`Assinatura não encontrada para: ${email}`);
       }
       
-      const now = new Date();
+      const now = options?.cancellationDate || new Date();
       
-      // 3. Marcar assinatura como inativa
+      // 3. Marcar assinatura como cancelada
       await db.update(subscriptions)
         .set({
-          isActive: false,
-          cancelledAt: now,
-          cancelReason: reason || 'Cancelamento via webhook',
+          status: 'cancelled',
+          lastevent: 'subscription_cancellation',
+          webhookData: options?.webhookData || null,
           updatedAt: now
         })
         .where(eq(subscriptions.id, subscription.id));
