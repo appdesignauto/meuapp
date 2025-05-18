@@ -67,16 +67,21 @@ router.post('/hotmart', async (req: Request, res: Response) => {
       });
     } else {
       console.warn(`[Webhook] Erro ao processar evento da Hotmart: ${result.message}`);
-      return res.status(400).json({ 
+      // Importante: Sempre retornar 200 para a Hotmart, mesmo com erro
+      // Isso evita que a Hotmart tente reenviar o mesmo webhook repetidamente
+      return res.status(200).json({ 
         success: false, 
-        message: result.message 
+        message: result.message,
+        note: "Erro registrado, mas confirmamos o recebimento do webhook"
       });
     }
   } catch (error) {
     console.error('[Webhook] Erro interno ao processar webhook da Hotmart:', error);
-    return res.status(500).json({ 
+    // Sempre responder com 200 mesmo em caso de erro interno
+    // A Hotmart não precisa reenviar o webhook, nós é que precisamos corrigir o problema
+    return res.status(200).json({ 
       success: false, 
-      message: 'Erro interno ao processar webhook' 
+      message: 'Erro interno ao processar webhook, mas confirmando recebimento' 
     });
   }
 });
