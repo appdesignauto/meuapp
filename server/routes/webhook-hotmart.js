@@ -206,39 +206,36 @@ function extractEmailDeep(obj) {
         
         // Atualizar o log para retry posterior
         try {
+          // Agendar retry em 5 minutos
+          const retryAfter = 5 * 60 * 1000; // 5 minutos
+          const retryAt = new Date(Date.now() + retryAfter);
+          
           await db.update(db.webhookLogs)
             .set({
               status: 'pending_retry',
               errorMessage: 'Email não encontrado - Agendado para retry',
               retryCount: (webhookLog?.retryCount || 0) + 1,
-              nextRetryAt: new Date(Date.now() + 300000), // 5 minutos
+              nextRetryAt: retryAt,
               updatedAt: new Date()
             })
-            .where(db.eq(db.webhookLogs.transactionId, transactionId));
+            .where(db.eq(db.webhookLogs.id, webhookLog[0].id));
             
           console.log('📅 Webhook agendado para retry em 5 minutos');
+          
+          return res.status(200).json({
+            success: false,
+            message: 'Email não encontrado no webhook - Agendado retry',
+            nextRetryAt: retryAt
+          });
         } catch (updateError) {
           console.error('❌ Erro ao agendar retry:', updateError);
+          
+          return res.status(200).json({
+            success: false,
+            message: 'Email não encontrado e falha ao agendar retry'
+          });
         }
-      
-      // Agendar retry em 5 minutos
-      const retryAfter = 5 * 60 * 1000; // 5 minutos
-      const retryAt = new Date(Date.now() + retryAfter);
-      
-      await db.update(db.webhookLogs)
-        .set({
-          status: 'pending_retry',
-          nextRetryAt: retryAt,
-          retryCount: (webhookLog?.retryCount || 0) + 1,
-          errorMessage: 'Email não encontrado - Agendado para retry automático'
-        })
-        .where(db.eq(db.webhookLogs.id, webhookLog.id));
-      
-      return res.status(200).json({
-        success: false,
-        message: 'Email não encontrado no webhook - Agendado retry',
-        nextRetryAt: retryAt
-      });
+      }
     }
     
     // Processar o webhook baseado no tipo de evento
