@@ -319,8 +319,14 @@ export class HotmartService {
       return emailSources.find(email => email && typeof email === 'string') || null;
     };
 
-    // Extrair e validar email
-    const email = extractEmail(data);
+    // Extrair e validar email com lógica específica para cancelamento
+    let email;
+    if (event === 'SUBSCRIPTION_CANCELLATION') {
+      email = data.subscriber?.email;
+      console.log('Email extraído do subscriber para cancelamento:', email);
+    } else {
+      email = extractEmail(data);
+    }
     
     if (!email) {
       const errorMsg = `Email não encontrado no webhook do tipo ${event}. Payload: ${JSON.stringify(webhookData)}`;
