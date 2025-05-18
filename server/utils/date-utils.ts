@@ -54,10 +54,10 @@ export function getBrazilDateTime(): Date {
 export function convertToBrazilTimezone(date: Date | string): Date {
   const inputDate = typeof date === 'string' ? new Date(date) : date;
   
-  // Convertemos para string no timezone do Brasil
-  const brazilDateString = inputDate.toLocaleString('en-US', { timeZone: BRAZIL_TIMEZONE });
-  // Convertemos esta string de volta para um objeto Date
-  return new Date(brazilDateString);
+  // Convertemos para o timezone do Brasil usando getTime() e offset
+  const brazilDate = new Date(inputDate.toLocaleString('en-US', { timeZone: BRAZIL_TIMEZONE }));
+  const offset = inputDate.getTime() - brazilDate.getTime();
+  return new Date(inputDate.getTime() - offset);
 }
 
 /**
