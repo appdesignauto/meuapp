@@ -10,6 +10,84 @@ import { configureCors } from "./cors-config";
 // Importar o novo manipulador de webhook aprimorado
 import enhancedHotmartWebhook from "./routes/webhook-hotmart-enhanced";
 import adminRoutes from "./routes/admin";
+import { Pool } from "pg";
+
+// Função para encontrar email em qualquer parte do payload da Hotmart
+function findEmailInPayload(payload: any): string | null {
+  if (!payload) return null;
+  
+  // Função recursiva para buscar emails em objetos aninhados
+  function searchEmail(obj: any): string | null {
+    // Caso base: é uma string e parece um email
+    if (typeof obj === 'string' && obj.includes('@') && obj.includes('.')) {
+      return obj;
+    }
+    
+    // Caso recursivo: objeto
+    if (typeof obj === 'object' && obj !== null) {
+      // Verificar chaves que provavelmente contêm email
+      if (obj.email && typeof obj.email === 'string') return obj.email;
+      if (obj.buyer && obj.buyer.email) return obj.buyer.email;
+      if (obj.customer && obj.customer.email) return obj.customer.email;
+      if (obj.data && obj.data.buyer && obj.data.buyer.email) return obj.data.buyer.email;
+      
+      // Buscar em todas as propriedades
+      for (const key in obj) {
+        const result = searchEmail(obj[key]);
+        if (result) return result;
+      }
+    }
+    
+    // Caso recursivo: array
+    if (Array.isArray(obj)) {
+      for (let i = 0; i < obj.length; i++) {
+        const result = searchEmail(obj[i]);
+        if (result) return result;
+      }
+    }
+    
+    return null;
+  }
+  
+  return searchEmail(payload);
+}
+
+// Função para encontrar ID da transação no payload
+function findTransactionId(payload: any): string | null {
+  if (!payload) return null;
+  
+  // Verificar locais comuns primeiro
+  if (payload.data?.purchase?.transaction) return payload.data.purchase.transaction;
+  if (payload.data?.transaction) return payload.data.transaction;
+  if (payload.transaction) return payload.transaction;
+  
+  // Função recursiva para busca profunda
+  function searchTransactionId(obj: any): string | null {
+    if (!obj || typeof obj !== 'object') return null;
+    
+    // Procurar por chaves que possam conter o ID da transação
+    for (const key in obj) {
+      if (
+        (key.toLowerCase().includes('transaction') || 
+         key.toLowerCase().includes('order') || 
+         key.toLowerCase().includes('pedido')) && 
+        typeof obj[key] === 'string'
+      ) {
+        return obj[key];
+      }
+      
+      // Buscar recursivamente
+      if (typeof obj[key] === 'object') {
+        const result = searchTransactionId(obj[key]);
+        if (result) return result;
+      }
+    }
+    
+    return null;
+  }
+  
+  return searchTransactionId(payload);
+}
 
 const app = express();
 
