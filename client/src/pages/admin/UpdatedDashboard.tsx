@@ -48,11 +48,10 @@ import {
   Zap,
   Award,
   FileVideo,
-  RefreshCcw,
+  RefreshCw,
   MoreHorizontal,
   Edit,
-  Eye, 
-  RefreshCw,
+  Eye,
   ListOrdered,
   BellRing,
   Palette,
@@ -1057,7 +1056,7 @@ const AdminDashboard = () => {
                   ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
                   title="Integração Hotmart"
                 >
-                  <RefreshCcw className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                  <RefreshCw className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
                   {sidebarOpen && <span className="truncate text-sm">Integração Hotmart</span>}
                 </Link>
                 {/* O Diagnóstico de Webhooks agora é uma aba dentro da página de Webhooks */}

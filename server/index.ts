@@ -364,6 +364,15 @@ app.use((req, res, next) => {
       console.error("❌ Erro ao configurar rota de detalhes de webhook corrigida:", error);
     }
     
+    // Adicionar rotas da API de integração com Hotmart
+    try {
+      const apiServerModule = await import('./hotmart-integration/api-server');
+      app.use('/api/hotmart', apiServerModule.default);
+      console.log("✅ Rotas da API de integração Hotmart configuradas com sucesso");
+    } catch (error) {
+      console.error("❌ Erro ao configurar rotas da API de integração Hotmart:", error);
+    }
+    
     // Configurar a nova rota de webhook APRIMORADA para Hotmart
     try {
       // Usar o manipulador de webhook aprimorado importado no início do arquivo
