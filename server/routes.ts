@@ -77,6 +77,7 @@ import imageProxyTestRouter from './routes/image-proxy-test'; // Rota para testa
 import reportsRouter from './routes/reports'; // Rotas para o sistema de denúncias (original)
 import reportsV2Router from './routes/reports-v2'; // Rotas para o sistema de denúncias (reescrito)
 import mappingRouter from './routes/mapping-routes'; // Rotas para mapeamento de produtos Hotmart
+import { PrismaClient } from '@prisma/client';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Aplicar middleware global para converter URLs de imagens para todas as respostas JSON
@@ -6739,8 +6740,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // === HOTMART PRODUCT MAPPINGS ===
   
   // Middleware para garantir que apenas admins possam acessar estas rotas
-  app.use('/api/integrations/hotmart/product-mappings', isAdmin);
-  app.use('/api/integrations/doppus/product-mappings', isAdmin);
+  // Rota para gerenciamento de mapeamentos de produtos Hotmart
+  app.use('/api', mappingRouter);
   
   // Obter todos os mapeamentos Hotmart
   app.get('/api/integrations/hotmart/product-mappings', async (req, res) => {
