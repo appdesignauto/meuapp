@@ -226,24 +226,33 @@ export class HotmartService {
       
       console.log(`Buscando mapeamento para produto ${productId}${offerCode ? ` com offerCode ${offerCode}` : ''}`);
       
-      // Buscar mapeamento específico com offerCode
+      // Buscar mapeamento específico com offerCode ou offerId
       let productMapping = null;
       if (offerCode) {
+        console.log(`Buscando mapeamento com offerCode: ${offerCode}`);
         productMapping = await this.prisma.hotmartProductMapping.findFirst({
           where: {
             productId,
-            offerCode
+            OR: [
+              { offerCode },
+              { offerId: offerCode }
+            ]
           }
         });
       }
       
-      // Se não encontrou com offerCode, buscar mapeamento genérico
+      // Se não encontrou com offerCode/offerId, buscar mapeamento genérico
       if (!productMapping) {
-        console.log('Buscando mapeamento genérico (sem offerCode)');
+        console.log('Buscando mapeamento genérico (sem offerCode/offerId)');
         productMapping = await this.prisma.hotmartProductMapping.findFirst({
           where: {
             productId,
-            offerCode: null
+            OR: [
+              { offerCode: null },
+              { offerCode: '' },
+              { offerId: null },
+              { offerId: '' }
+            ]
           }
         });
       }

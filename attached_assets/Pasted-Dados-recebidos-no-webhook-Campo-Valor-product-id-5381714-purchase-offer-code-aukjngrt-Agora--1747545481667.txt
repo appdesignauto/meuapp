@@ -1,0 +1,67 @@
+Dados recebidos no webhook
+Campo	Valor
+product.id	5381714 ✅
+purchase.offer.code	aukjngrt ✅
+
+✅ Agora vamos comparar com os mapeamentos que você já criou:
+Na imagem anterior do painel, você já cadastrou este mapeamento:
+
+ID do Produto	ID da Oferta	Plano no DesignAuto
+5381714	aukjngrt	Premium Anual (365 dias)
+
+Ou seja, o mapeamento existe e está correto.
+
+❌ Então por que ainda aparece "Assinatura inválida"?
+Isso indica que provavelmente o backend ainda não está consultando a nova tabela hotmartProductMappings corretamente, mesmo ela já estando populada.
+
+✅ Checklist de verificação
+Confirme se o serviço HotmartService realmente está usando HotmartProductMapping.findFirst(...)
+
+Com filtro: where: { productId, offerId }
+
+Exemplo de fallback (recomendado): OR com { offerId: null } para quando o offerId estiver ausente
+
+Verifique se o campo ativo do mapeamento está marcado como true no banco
+
+Pode estar como false ou null, o que pode bloquear a ativação do plano mesmo com o mapeamento presente
+
+Verifique se o código está diferenciando offerId = "" e null
+
+O Hotmart envia "offer.code": "aukjngrt", então o sistema deve usar isso para comparar com a coluna offerId
+
+💡 Ação recomendada
+No método handleSubscriptionCreatedOrUpdated, revise este trecho (ou algo semelhante):
+
+ts
+Copiar
+Editar
+const mapping = await prisma.hotmartProductMapping.findFirst({
+  where: {
+    productId: '5381714',
+    offerId: 'aukjngrt',
+    active: true, // <- isso precisa existir e estar verdadeiro
+  },
+});
+E adicione um fallback inteligente:
+
+ts
+Copiar
+Editar
+const mapping = await prisma.hotmartProductMapping.findFirst({
+  where: {
+    productId: '5381714',
+    OR: [
+      { offerId: 'aukjngrt' },
+      { offerId: null }, // <- permite planos baseados apenas no ID do produto
+    ],
+    active: true,
+  },
+});
+✅ Conclusão
+Seu sistema agora está funcionando 100% em nível de infraestrutura (recebe, processa e responde webhooks). O erro "Assinatura inválida" é lógico, e pode ser corrigido com:
+
+Garantia de que o campo offerId está corretamente comparado
+
+Campo ativo marcado como true
+
+Verificação de fallback por productId apenas, quando offerId não for essencial
