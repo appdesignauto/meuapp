@@ -7,7 +7,8 @@ import fetch from 'node-fetch';
 async function testHotmartMappingAPI() {
   console.log('🧪 Testando API de mapeamento de produtos Hotmart...\n');
   
-  const baseUrl = 'http://localhost:3000';
+  // Usar a URL do servidor que está rodando no Replit
+  const baseUrl = 'https://e1b8508c-921c-4d22-af73-1cb8fd7145e2-00-121uwb868mg4j.spock.replit.dev';
   
   try {
     console.log('1. Testando GET /api/hotmart-mappings (listar todos os mapeamentos)');
