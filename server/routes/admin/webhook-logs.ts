@@ -38,15 +38,15 @@ router.get('/webhook-logs', isAdmin, async (req, res) => {
     const offset = (page - 1) * limit;
     
     // Parâmetros de ordenação
-    const sortField = req.query.sort_field as string || 'createdAt';
+    const sortField = req.query.sort_field as string || 'created_at';
     const sortDirection = req.query.sort_direction as string || 'desc';
     
     // Parâmetros de filtro
     const email = req.query.email as string;
-    const eventType = req.query.eventType as string;
+    const eventType = req.query.event_type as string;
     const source = req.query.source as string;
     const status = req.query.status as string;
-    const transactionId = req.query.transactionId as string;
+    const transactionId = req.query.transaction_id as string;
     
     // Construir a consulta base
     let query = `SELECT * FROM "webhook_logs" WHERE 1=1`;
@@ -63,8 +63,8 @@ router.get('/webhook-logs', isAdmin, async (req, res) => {
     }
     
     if (eventType) {
-      query += ` AND "eventType" = $${paramIndex}`;
-      countQuery += ` AND "eventType" = $${paramIndex}`;
+      query += ` AND "event_type" = $${paramIndex}`;
+      countQuery += ` AND "event_type" = $${paramIndex}`;
       params.push(eventType);
       paramIndex++;
     }
@@ -84,8 +84,8 @@ router.get('/webhook-logs', isAdmin, async (req, res) => {
     }
     
     if (transactionId) {
-      query += ` AND "transactionId" ILIKE $${paramIndex}`;
-      countQuery += ` AND "transactionId" ILIKE $${paramIndex}`;
+      query += ` AND "transaction_id" ILIKE $${paramIndex}`;
+      countQuery += ` AND "transaction_id" ILIKE $${paramIndex}`;
       params.push(`%${transactionId}%`);
       paramIndex++;
     }
@@ -131,7 +131,7 @@ router.get('/webhook-logs/:id', isAdmin, async (req, res) => {
     }
     
     // Buscar o log de webhook
-    const result = await pool.query('SELECT * FROM "webhookLogs" WHERE id = $1', [id]);
+    const result = await pool.query('SELECT * FROM "webhook_logs" WHERE id = $1', [id]);
     
     // Verificar se o log foi encontrado
     if (result.rows.length === 0) {
@@ -162,16 +162,16 @@ router.get('/webhook-stats', isAdmin, async (req, res) => {
     
     // Obter contagem por tipo de evento
     const eventTypesQuery = `
-      SELECT "eventType", COUNT(*) as count 
-      FROM "webhookLogs" 
-      GROUP BY "eventType" 
+      SELECT "event_type", COUNT(*) as count 
+      FROM "webhook_logs" 
+      GROUP BY "event_type" 
       ORDER BY count DESC
     `;
     
     // Obter contagem por fonte
     const sourcesQuery = `
       SELECT source, COUNT(*) as count 
-      FROM "webhookLogs" 
+      FROM "webhook_logs" 
       GROUP BY source 
       ORDER BY count DESC
     `;
@@ -179,7 +179,7 @@ router.get('/webhook-stats', isAdmin, async (req, res) => {
     // Obter contagem por status
     const statusQuery = `
       SELECT status, COUNT(*) as count 
-      FROM "webhookLogs" 
+      FROM "webhook_logs" 
       GROUP BY status 
       ORDER BY count DESC
     `;
@@ -187,10 +187,10 @@ router.get('/webhook-stats', isAdmin, async (req, res) => {
     // Obter contagem por dia (últimos 7 dias)
     const dailyCountQuery = `
       SELECT 
-        DATE_TRUNC('day', "createdAt") as date,
+        DATE_TRUNC('day', "created_at") as date,
         COUNT(*) as count
-      FROM "webhookLogs"
-      WHERE "createdAt" > NOW() - INTERVAL '7 days'
+      FROM "webhook_logs"
+      WHERE "created_at" > NOW() - INTERVAL '7 days'
       GROUP BY date
       ORDER BY date ASC
     `;
