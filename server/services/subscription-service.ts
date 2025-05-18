@@ -315,7 +315,7 @@ export class SubscriptionService {
     try {
       // Importar o HotmartService dinamicamente
       // Esta abordagem resolve problemas de circular dependency entre os módulos
-      const { HotmartService } = require('./hotmart-service');
+      const { HotmartService } = await import('./hotmart-service');
       
       // Extrair email e eventType
       let email = null;
