@@ -37,16 +37,13 @@ export const BRAZIL_DATETIME_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {
  */
 export function getBrazilDateTime(): Date {
   const now = new Date();
-  return new Date(now.toLocaleString('en-US', { 
-    timeZone: BRAZIL_TIMEZONE,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false
+  const brazilDate = new Date(now.toLocaleString('en-US', { 
+    timeZone: BRAZIL_TIMEZONE 
   }));
+  
+  // Ajusta para o timezone correto
+  const offset = now.getTime() - brazilDate.getTime();
+  return new Date(now.getTime() - offset);
 }
 
 /**
