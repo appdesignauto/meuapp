@@ -14,7 +14,17 @@ const ALLOWED_ORIGINS = [
   'http://app.designauto.com.br',
   'https://designauto-app.replit.app',
   'https://designauto-app.repl.co',
-  'https://design-auto-hub-1-appdesignauto.replit.app'
+  'https://design-auto-hub-1-appdesignauto.replit.app',
+  // Domínios da Hotmart para webhooks
+  'https://hotmart.com',
+  'https://www.hotmart.com',
+  'https://developers.hotmart.com',
+  'https://apis.hotmart.com',
+  'https://sandbox.hotmart.com',
+  'https://api-content.hotmart.com',
+  'https://api-hot-connect.hotmart.com',
+  'https://api-sec.hotmart.com',
+  'https://api-sec-vlc.hotmart.com'
 ];
 
 // Domínios Replit para desenvolvimento
@@ -74,7 +84,16 @@ export function configureCors(app: Express): void {
     credentials: true, // Importante para permitir cookies
     maxAge: 86400, // Cachear o resultado do pre-flight por 24 horas
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Origin']
+    allowedHeaders: [
+      'Content-Type', 
+      'Authorization', 
+      'X-Requested-With', 
+      'Origin',
+      'X-Hotmart-Webhook-Signature',
+      'X-Hotmart-Webhook-Token',
+      'X-Forwarded-For',
+      'User-Agent'
+    ]
   };
   
   app.use(cors(corsOptions));

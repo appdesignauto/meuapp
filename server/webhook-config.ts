@@ -4,6 +4,38 @@
  * corretamente os webhooks de integração de pagamento
  */
 
+import dotenv from 'dotenv';
+
+// Carregar variáveis de ambiente
+dotenv.config();
+
+/**
+ * Obtém o segredo (secret) compartilhado da Hotmart a partir das variáveis de ambiente
+ * @returns O segredo da Hotmart para verificação de assinaturas
+ */
+export function getHotmartSecret(): string {
+  // Verificar o ambiente (sandbox ou produção)
+  const isSandbox = process.env.HOTMART_SANDBOX === 'true';
+  
+  // Obter o segredo apropriado para o ambiente
+  const secret = isSandbox 
+    ? process.env.HOTMART_SANDBOX_SECRET_KEY 
+    : process.env.HOTMART_SECRET_KEY;
+  
+  // Se não for encontrado, usar um valor padrão em ambiente de desenvolvimento
+  if (!secret) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('⚠️ Segredo da Hotmart não configurado. Usando valor padrão em desenvolvimento.');
+      return 'development_secret_key';
+    } else {
+      console.error('❌ Segredo da Hotmart não configurado em ambiente de produção!');
+      return '';
+    }
+  }
+  
+  return secret;
+}
+
 import express from 'express';
 import { Express } from 'express';
 import hotmartFixedRouter from './routes/webhook-hotmart-fixed';

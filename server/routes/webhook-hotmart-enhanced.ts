@@ -7,6 +7,7 @@
 
 import express from 'express';
 import pg from 'pg';
+import { getHotmartSecret } from '../webhook-config';
 const { Pool } = pg;
 
 // Função para obter a conexão com o banco de dados
@@ -259,6 +260,60 @@ function normalizePayloadDates(payload: any): any {
 }
 
 /**
+ * Função para verificar a assinatura do webhook da Hotmart
+ * @param payload Dados recebidos no webhook
+ * @param signature Assinatura fornecida no cabeçalho
+ * @param secret Secret compartilhado com a Hotmart
+ * @returns boolean indicando se a assinatura é válida
+ */
+function verifyHotmartSignature(payload: any, signature: string | undefined, secret: string): boolean {
+  try {
+    // Se a assinatura não estiver presente, prosseguir sem verificação em ambiente de desenvolvimento
+    if (!signature) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('⚠️ Webhook sem assinatura, prosseguindo sem verificação (ambiente de desenvolvimento)');
+        return true;
+      } else {
+        console.error('❌ Webhook sem assinatura em ambiente de produção');
+        return false;
+      }
+    }
+    
+    // Importar crypto para verificação
+    const crypto = require('crypto');
+    
+    // Calcular assinatura usando o mesmo algoritmo da Hotmart (HMAC SHA-256)
+    const calculatedSignature = crypto
+      .createHmac('sha256', secret)
+      .update(JSON.stringify(payload))
+      .digest('hex');
+    
+    // Verificar se as assinaturas correspondem
+    const isValid = calculatedSignature === signature;
+    
+    if (isValid) {
+      console.log('✅ Assinatura do webhook validada com sucesso');
+    } else {
+      console.error('❌ Falha na validação da assinatura do webhook');
+      console.log('- Assinatura recebida:', signature);
+      console.log('- Assinatura calculada:', calculatedSignature);
+    }
+    
+    // Em ambiente de desenvolvimento, permitir mesmo com assinatura inválida
+    if (!isValid && process.env.NODE_ENV === 'development') {
+      console.warn('⚠️ Prosseguindo com assinatura inválida (ambiente de desenvolvimento)');
+      return true;
+    }
+    
+    return isValid;
+  } catch (error) {
+    console.error('❌ Erro ao verificar assinatura do webhook:', error);
+    // Em ambiente de desenvolvimento, continuar mesmo com erro
+    return process.env.NODE_ENV === 'development';
+  }
+}
+
+/**
  * Rota principal para receber webhooks da Hotmart
  */
 router.post('/', async (req, res) => {
@@ -274,11 +329,48 @@ router.post('/', async (req, res) => {
   // Listar os cabeçalhos recebidos para diagnóstico
   const headerKeys = Object.keys(req.headers).join(', ');
   console.log('🔑 Cabeçalhos recebidos:', headerKeys);
+  console.log('🔐 Assinatura recebida:', req.headers['x-hotmart-webhook-signature']);
   
   try {
     // Normalizar o payload, especialmente as datas
     const originalPayload = req.body;
     const payload = normalizePayloadDates(originalPayload);
+    
+    // Obter a assinatura do cabeçalho
+    const signature = req.headers['x-hotmart-webhook-signature'] as string | undefined;
+    
+    // Obter o segredo (secret) compartilhado da Hotmart
+    const hotmartSecret = getHotmartSecret();
+    
+    // Verificar a assinatura do webhook (se em produção)
+    if (process.env.NODE_ENV === 'production') {
+      const isValid = verifyHotmartSignature(originalPayload, signature, hotmartSecret);
+      if (!isValid) {
+        console.error('❌ Assinatura do webhook inválida ou ausente em ambiente de produção');
+        
+        // Log da tentativa inválida no banco de dados
+        await logWebhookToDatabase(
+          'INVALID_SIGNATURE',
+          'error',
+          null,
+          { originalPayload, signature },
+          'Assinatura inválida',
+          null,
+          sourceIp as string
+        );
+        
+        // Em produção, retornar 200 mesmo com assinatura inválida
+        // para não causar reenvios (mas registrar o erro)
+        return res.status(200).json({
+          success: false,
+          message: 'Assinatura do webhook inválida',
+          note: 'Webhook registrado como inválido'
+        });
+      }
+    } else {
+      // Em desenvolvimento, verificar mas continuar mesmo se inválido
+      verifyHotmartSignature(originalPayload, signature, hotmartSecret);
+    }
     
     let event = payload?.event || 'UNKNOWN';
     let webhookStatus = 'received';
