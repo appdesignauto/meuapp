@@ -43,6 +43,7 @@ model HotmartProductMapping {
   id              String    @id @default(uuid())
   productId       String    // ID do produto na Hotmart  
   offerCode       String?   // Código da oferta (opcional)
+  offerId         String?   // ID da oferta específica do produto
   productName     String    // Nome do produto para exibição
   planType        String    // Ex: "premium_mensal", "premium_anual"
   durationDays    Int       // Ex: 30, 180, 365
