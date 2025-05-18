@@ -428,30 +428,39 @@ export class HotmartService {
       // Calcular data de expiração baseado na duração configurada
       const currentPeriodEnd = this.calculateExpirationDateFromDays(productMapping.durationDays);
       
-      // Verificar se a assinatura já existe
-      const existingSubscription = await this.prisma.hotmartSubscription.findFirst({
-        where: { 
-          subscriberCode
-        }
-      });
+      // Verificar se a assinatura já existe - usando o nome correto da tabela no banco de dados
+      const existingSubscription = await this.prisma.$queryRaw`
+        SELECT * FROM "hotmart_subscription" 
+        WHERE "subscriber_code" = ${subscriberCode} 
+        LIMIT 1
+      `;
 
-      if (existingSubscription) {
+      // existingSubscription será um array, mesmo com apenas um resultado
+      if (existingSubscription && Array.isArray(existingSubscription) && existingSubscription.length > 0) {
         console.log(`Atualizando assinatura existente para ${email}`);
         
-        // Atualizar assinatura existente
-        await this.prisma.hotmartSubscription.update({
-          where: { 
-            id: existingSubscription.id 
-          },
-          data: {
-            status: 'active',
-            productId,
-            planType: productMapping.planType,
-            startDate: new Date(),
-            endDate: currentPeriodEnd,
-            updatedAt: new Date()
-          },
-        });
+        try {
+          // Atualizar assinatura existente usando SQL direto
+          await this.prisma.$executeRaw`
+            UPDATE "hotmart_subscription"
+            SET 
+              "status" = 'active',
+              "productId" = ${productId},
+              "planType" = ${productMapping.planType},
+              "currentPeriodStart" = ${new Date()},
+              "currentPeriodEnd" = ${currentPeriodEnd},
+              "updatedAt" = ${new Date()}
+            WHERE "id" = ${existingSubscription[0].id}
+          `;
+          
+          console.log(`✅ Assinatura atualizada com sucesso no banco de dados.`);
+        } catch (error) {
+          console.error('Erro ao atualizar assinatura:', error);
+          return { 
+            success: false, 
+            message: `Erro ao atualizar assinatura: ${error.message}` 
+          };
+        }
 
         // Atualizar usuário na plataforma
         await this.updateUserSubscription(email, productMapping.planType, currentPeriodEnd);
@@ -463,18 +472,33 @@ export class HotmartService {
       } else {
         console.log(`Criando nova assinatura para ${email}`);
         
-        // Criar nova assinatura
-        await this.prisma.hotmartSubscription.create({
-          data: {
-            subscriberCode,
-            email,
-            productId,
-            planType: productMapping.planType,
-            status: 'active',
-            startDate: new Date(),
-            endDate: currentPeriodEnd
-          },
-        });
+        try {
+          // Gerar UUID
+          const { v4: uuidv4 } = require('uuid');
+          const id = uuidv4();
+          
+          // Criar nova assinatura usando SQL direto
+          await this.prisma.$executeRaw`
+            INSERT INTO "hotmart_subscription" (
+              "id", "subscriberCode", "email", "productId", 
+              "planType", "status", "currentPeriodStart", "currentPeriodEnd", 
+              "createdAt", "updatedAt"
+            )
+            VALUES (
+              ${id}, ${subscriberCode}, ${email}, ${productId}, 
+              ${productMapping.planType}, 'active', ${new Date()}, ${currentPeriodEnd}, 
+              ${new Date()}, ${new Date()}
+            )
+          `;
+          
+          console.log(`✅ Nova assinatura criada com sucesso no banco de dados.`);
+        } catch (error) {
+          console.error('Erro ao criar assinatura:', error);
+          return { 
+            success: false, 
+            message: `Erro ao criar assinatura: ${error.message}` 
+          };
+        }
 
         // Atualizar ou criar usuário na plataforma
         await this.updateUserSubscription(email, productMapping.planType, currentPeriodEnd);
