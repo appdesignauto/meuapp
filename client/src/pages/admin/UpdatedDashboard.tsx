@@ -1060,17 +1060,6 @@ const AdminDashboard = () => {
                   <RefreshCw className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
                   {sidebarOpen && <span className="truncate text-sm">Integração Hotmart</span>}
                 </button>
-                
-                <button
-                  onClick={() => setActiveTab('hotmartIntegration')}
-                  className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
-                    activeTab === 'hotmartIntegration' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
-                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
-                  title="Integração Hotmart"
-                >
-                  <RefreshCw className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
-                  {sidebarOpen && <span className="truncate text-sm">Integração Hotmart</span>}
-                </button>
                 {/* O Diagnóstico de Webhooks agora é uma aba dentro da página de Webhooks */}
               </CollapsibleContent>
             </Collapsible>
