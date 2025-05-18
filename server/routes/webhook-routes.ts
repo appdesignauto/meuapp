@@ -9,25 +9,32 @@ const router = Router();
 // Endpoint para webhook da Hotmart
 router.post('/hotmart', async (req: Request, res: Response) => {
   try {
-    // Log completo de todos os cabeçalhos para diagnóstico
+    // Log detalhado para diagnóstico
     console.log('[Webhook] Cabeçalhos recebidos:', JSON.stringify(req.headers));
     console.log('[Webhook] Corpo recebido:', JSON.stringify(req.body));
     
-    // Verificação de assinatura mais flexível - tentar diferentes formatos de cabeçalho
-    let signature = req.headers['x-hotmart-hottok'] as string; 
+    // Verificação de assinatura com fallback mais flexível e seguro
+    // Considera diferentes formatos de cabeçalho e capitalização
+    const hottok = 
+      req.headers['x-hotmart-hottok'] || 
+      req.headers['X-Hotmart-Hottok'] || 
+      req.headers['x-hotmart-webhook-token'] ||
+      req.headers['X-Hotmart-Webhook-Token'] || 
+      (req.body && req.body.hottok);
     
-    // Tentar formatos alternativos se o padrão não existir
-    if (!signature) {
-      signature = req.headers['x-hotmart-webhook-token'] as string;
+    // Verificação do TOKEN SECRET - única verificação realmente obrigatória
+    if (process.env.HOTMART_WEBHOOK_SECRET && 
+        hottok !== process.env.HOTMART_WEBHOOK_SECRET) {
+      console.warn('🔒 [Webhook] Token inválido ou ausente:', hottok);
+      console.warn('[Webhook] Esperado:', process.env.HOTMART_WEBHOOK_SECRET);
+      
+      // Mesmo com token inválido, retornamos 200 para evitar retentativas
+      return res.status(200).json({
+        success: false,
+        message: 'Token Hotmart inválido ou ausente',
+        note: 'Webhook rejeitado, mas confirmamos o recebimento'
+      });
     }
-    
-    // Se ainda não encontrou, verificar no corpo do payload (alguns webhooks enviam no corpo)
-    if (!signature && req.body.hottok) {
-      signature = req.body.hottok;
-    }
-    
-    // Para webhook real Hotmart, signature será usada para validação
-    // Para teste/simulação, ignoramos a verificação rígida
     
     // Extrair informações do evento - também flexível
     let event = req.headers['x-hotmart-event'] as string;
@@ -46,14 +53,9 @@ router.post('/hotmart', async (req: Request, res: Response) => {
     
     console.log(`[Webhook] Processando evento da Hotmart: ${event || 'evento não identificado'}`);
     
-    // Registrar avisos, mas não bloquear o processamento
-    if (!signature) {
-      console.warn('[Webhook] AVISO: Assinatura/token da Hotmart ausente');
-    }
-    
+    // Se não tiver identificado um evento, definir um valor padrão
     if (!event) {
-      console.warn('[Webhook] AVISO: Tipo de evento da Hotmart ausente, prosseguindo mesmo assim');
-      // Para evitar erro no processamento, definir um valor padrão para event se não existir
+      console.warn('[Webhook] AVISO: Tipo de evento da Hotmart ausente, prosseguindo como evento genérico');
       event = 'UNDEFINED_EVENT';
     }
 
