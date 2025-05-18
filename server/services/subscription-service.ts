@@ -347,6 +347,7 @@ export class SubscriptionService {
           break;
         
         case 'SUBSCRIPTION_CANCELLED':
+        case 'SUBSCRIPTION_CANCELLATION':  // Adicionando o formato correto usado pela Hotmart
           result = await HotmartService.processCancellation(webhookData, email);
           break;
         
