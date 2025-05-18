@@ -348,6 +348,15 @@ app.use((req, res, next) => {
       console.error("❌ Erro ao configurar rota Hotmart fixa:", error);
     }
     
+    // Adicionar rota para teste de API da Hotmart
+    try {
+      const hotmartApiTestRouter = await import('./routes/hotmart-api-test');
+      app.use('/api/integrations/hotmart/api-test', hotmartApiTestRouter.default);
+      console.log("✅ Rota de teste da API da Hotmart configurada com sucesso");
+    } catch (error) {
+      console.error("❌ Erro ao configurar rota de teste da API da Hotmart:", error);
+    }
+    
     // Adicionar a rota corrigida para detalhes de webhook
     try {
       const webhookDetailFixModule = await import('./routes/webhooks-detail-fix');

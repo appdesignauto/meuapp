@@ -34,7 +34,7 @@ export default function HotmartConnectionTest() {
   const testConnection = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/hotmart/check-connectivity');
+      const response = await fetch('/api/integrations/hotmart/api-test/test-connection');
       
       if (!response.ok) {
         throw new Error('Falha ao verificar conectividade');
