@@ -189,89 +189,22 @@ app.use((req, res, next) => {
           } else if (req.body?.subscriber?.email) {
             email = req.body.subscriber.email;
           }
-        
-        let transactionId = null;
-        if (req.body?.data?.purchase?.transaction) {
-          transactionId = req.body.data.purchase.transaction;
-        } else if (req.body?.data?.subscription?.code) {
-          transactionId = req.body.data.subscription.code;
-        } else if (req.body?.purchase?.transaction) {
-          transactionId = req.body.purchase.transaction;
-        }
-        
-        const eventType = req.body?.event || 'UNKNOWN';
-        
-        // Salvar webhook diretamente no banco usando SQL
-        let webhookLogId = null;
-        try {
-          // Usando o módulo pg diretamente para evitar problemas com importações
-          const { Client } = require('pg');
-          const client = new Client({
-            connectionString: process.env.DATABASE_URL
-          });
           
-          await client.connect();
+          let transactionId = null;
+          if (req.body?.data?.purchase?.transaction) {
+            transactionId = req.body.data.purchase.transaction;
+          } else if (req.body?.data?.subscription?.code) {
+            transactionId = req.body.data.subscription.code;
+          } else if (req.body?.purchase?.transaction) {
+            transactionId = req.body.purchase.transaction;
+          }
           
-          // Log detalhado do webhook para diagnóstico
-          console.log('📊 [DIAGNÓSTICO WEBHOOK HOTMART]');
-          console.log('- ID do evento:', req.body?.id || 'não encontrado');
-          console.log('- Tipo de evento:', eventType);
-          console.log('- Email do comprador:', email);
-          console.log('- ID da transação:', transactionId);
-          console.log('- Data de recebimento:', new Date().toISOString());
-          console.log('- Status do processamento: em andamento');
+          const eventType = req.body?.event || 'UNKNOWN';
           
-          console.log('📝 Salvando webhook no banco via SQL direto:', { 
-            eventType, 
-            email, 
-            transactionId
-          });
-          
-          // Usar SQL direto para garantir compatibilidade
-          const query = `
-            INSERT INTO "webhookLogs" 
-            ("eventType", "payloadData", "status", "source", "sourceIp", "transactionId", "email", "errorMessage", "createdAt", "updatedAt") 
-            VALUES 
-            ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
-            RETURNING id;
-          `;
-          
-          // Certifique-se de que sourceIp seja uma string, não um array
-          const sourceIp = typeof req.ip === 'string' ? 
-                         req.ip : 
-                         (typeof req.headers['x-forwarded-for'] === 'string' ? 
-                          req.headers['x-forwarded-for'] : 'unknown');
-                          
-          const values = [
-            eventType,
-            JSON.stringify(req.body),
-            'processing', // Mudamos para 'processing' enquanto processamos
-            'hotmart',
-            sourceIp,
-            transactionId,
-            email,
-            null
-          ];
-          
-          const result = await client.query(query, values);
-          webhookLogId = result.rows[0].id;
-          console.log('✅ Log de webhook criado com sucesso via SQL direto:', webhookLogId);
-          
-          await client.end();
-        } catch (logError) {
-          console.error('❌ Erro ao criar log de webhook:', logError);
-          console.error('Detalhes do erro:', logError);
-        }
-        
-        // Processar o webhook usando o SubscriptionService
-        let processResult = null;
-        try {
-          const { SubscriptionService } = await import('./services/subscription-service');
-          processResult = await SubscriptionService.processHotmartWebhook(req.body);
-          console.log('✅ Webhook processado com sucesso:', processResult);
-          
-          // Atualizar o status do log para sucesso
-          if (webhookLogId) {
+          // Salvar webhook diretamente no banco usando SQL
+          let webhookLogId = null;
+          try {
+            // Usando o módulo pg diretamente para evitar problemas com importações
             const { Client } = require('pg');
             const client = new Client({
               connectionString: process.env.DATABASE_URL
@@ -279,21 +212,66 @@ app.use((req, res, next) => {
             
             await client.connect();
             
-            await client.query(
-              `UPDATE "webhookLogs" SET status = 'success', "updatedAt" = NOW() WHERE id = $1`,
-              [webhookLogId]
-            );
+            // Log detalhado do webhook para diagnóstico
+            console.log('📊 [DIAGNÓSTICO WEBHOOK HOTMART]');
+            console.log('- ID do evento:', req.body?.id || 'não encontrado');
+            console.log('- Tipo de evento:', eventType);
+            console.log('- Email do comprador:', email);
+            console.log('- ID da transação:', transactionId);
+            console.log('- Data de recebimento:', new Date().toISOString());
+            console.log('- Status do processamento: em andamento');
             
-            console.log(`Status do webhook ${webhookLogId} atualizado para success`);
+            console.log('📝 Salvando webhook no banco via SQL direto:', { 
+              eventType, 
+              email, 
+              transactionId
+            });
+            
+            // Usar SQL direto para garantir compatibilidade
+            const query = `
+              INSERT INTO "webhookLogs" 
+              ("eventType", "payloadData", "status", "source", "sourceIp", "transactionId", "email", "errorMessage", "createdAt", "updatedAt") 
+              VALUES 
+              ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+              RETURNING id;
+            `;
+            
+            // Certifique-se de que sourceIp seja uma string, não um array
+            const sourceIp = typeof req.ip === 'string' ? 
+                           req.ip : 
+                           (typeof req.headers['x-forwarded-for'] === 'string' ? 
+                            req.headers['x-forwarded-for'] : 'unknown');
+                            
+            const values = [
+              eventType,
+              JSON.stringify(req.body),
+              'processing', // Mudamos para 'processing' enquanto processamos
+              'hotmart',
+              sourceIp,
+              transactionId,
+              email,
+              null
+            ];
+            
+            const result = await client.query(query, values);
+            webhookLogId = result.rows[0].id;
+            console.log('✅ Log de webhook criado com sucesso via SQL direto:', webhookLogId);
             
             await client.end();
+          } catch (logError) {
+            console.error('❌ Erro ao criar log de webhook:', logError);
+            console.error('Detalhes do erro:', logError);
           }
-        } catch (processError) {
-          console.error('❌ Erro ao processar webhook via SubscriptionService:', processError);
           
-          // Atualizar o status do log para erro
-          if (webhookLogId) {
-            try {
+          // Processar o webhook usando o SubscriptionService
+          let processResult = null;
+          try {
+            const { SubscriptionService } = await import('./services/subscription-service');
+            processResult = await SubscriptionService.processHotmartWebhook(req.body);
+            console.log('✅ Webhook processado com sucesso:', processResult);
+            
+            // Atualizar o status do log para sucesso
+            if (webhookLogId) {
               const { Client } = require('pg');
               const client = new Client({
                 connectionString: process.env.DATABASE_URL
@@ -302,27 +280,49 @@ app.use((req, res, next) => {
               await client.connect();
               
               await client.query(
-                `UPDATE "webhookLogs" SET status = 'error', "errorMessage" = $1, "updatedAt" = NOW() WHERE id = $2`,
-                [processError.message || 'Erro desconhecido', webhookLogId]
+                `UPDATE "webhookLogs" SET status = 'success', "updatedAt" = NOW() WHERE id = $1`,
+                [webhookLogId]
               );
               
-              console.log(`Status do webhook ${webhookLogId} atualizado para error`);
+              console.log(`Status do webhook ${webhookLogId} atualizado para success`);
               
               await client.end();
-            } catch (updateError) {
-              console.error('❌ Erro ao atualizar status do log de webhook:', updateError);
+            }
+          } catch (processError) {
+            console.error('❌ Erro ao processar webhook via SubscriptionService:', processError);
+            
+            // Atualizar o status do log para erro
+            if (webhookLogId) {
+              try {
+                const { Client } = require('pg');
+                const client = new Client({
+                  connectionString: process.env.DATABASE_URL
+                });
+                
+                await client.connect();
+                
+                await client.query(
+                  `UPDATE "webhookLogs" SET status = 'error', "errorMessage" = $1, "updatedAt" = NOW() WHERE id = $2`,
+                  [processError.message || 'Erro desconhecido', webhookLogId]
+                );
+                
+                console.log(`Status do webhook ${webhookLogId} atualizado para error`);
+                
+                await client.end();
+              } catch (updateError) {
+                console.error('❌ Erro ao atualizar status do log de webhook:', updateError);
+              }
             }
           }
+          
+          // Retornar 200 para confirmar recebimento do webhook
+          return res.status(200).json({
+            success: true,
+            message: 'Webhook processado com sucesso',
+            result: processResult,
+            webhookLogId
+          });
         }
-        
-        // Retornar 200 para confirmar recebimento do webhook
-        return res.status(200).json({
-          success: true,
-          message: 'Webhook processado com sucesso',
-          result: processResult,
-          webhookLogId
-        });
-        
       } catch (error) {
         console.error('❌ Erro ao processar webhook da Hotmart:', error);
         

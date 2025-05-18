@@ -5692,18 +5692,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           req.query.token ||
           req.body.hottok;  // Adicionado para verificar token no corpo da requisição
 
-      console.log("Token recebido no cabeçalho ou corpo:", token);
-      console.log("Cabeçalhos recebidos:", Object.keys(req.headers).join(', '));
-      console.log("Corpo recebido tem hottok?", req.body.hottok ? "Sim" : "Não");
-      
-      const hotmartSecret = process.env.HOTMART_SECRET;
-      
-      // Registrar o webhook recebido no banco de dados - sempre registrar, independente do token
-      let webhookStatus = 'received'; // Começar como 'received' em vez de 'pending'
-      let webhookError = null;
-      let webhookLogId = null;
-      
-      try {
+        console.log("Token recebido no cabeçalho ou corpo:", token);
+        console.log("Cabeçalhos recebidos:", Object.keys(req.headers).join(', '));
+        console.log("Corpo recebido tem hottok?", req.body.hottok ? "Sim" : "Não");
+        
+        const hotmartSecret = process.env.HOTMART_SECRET;
+        
+        // Registrar o webhook recebido no banco de dados - sempre registrar, independente do token
+        let webhookStatus = 'received'; // Começar como 'received' em vez de 'pending'
+        let webhookError = null;
+        let webhookLogId = null;
+        
+        try {
         // Importar o pool para consultas diretas ao banco de dados
         const { pool } = await import('./db');
         
