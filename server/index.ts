@@ -166,22 +166,29 @@ app.use((req, res, next) => {
       next();
     });
     
-    // Configurando webhook da Hotmart diretamente no index.ts para evitar problemas de sistema de módulos
+    // Configurando webhook da Hotmart diretamente no index.ts usando processador unificado
     app.post('/webhook/hotmart', async (req, res) => {
       try {
-        console.log('⚡ Webhook da Hotmart recebido no caminho exato configurado na plataforma Hotmart');
+        console.log('⚡ Webhook da Hotmart recebido no caminho /webhook/hotmart');
         
-        // Extrair informações importantes do webhook
-        let email = null;
-        if (req.body?.data?.buyer?.email) {
-          email = req.body.data.buyer.email;
-        } else if (req.body?.buyer?.email) {
-          email = req.body.buyer.email;
-        } else if (req.body?.data?.subscriber?.email) {
-          email = req.body.data.subscriber.email;
-        } else if (req.body?.subscriber?.email) {
-          email = req.body.subscriber.email;
-        }
+        // Importar o processador unificado de webhooks
+        try {
+          const { processHotmartWebhook } = await import('./unifiedHotmartWebhook');
+          return await processHotmartWebhook(req, res);
+        } catch (importError) {
+          console.error('❌ Erro ao importar processador unificado:', importError);
+          
+          // Continuar com a implementação anterior como fallback
+          let email = null;
+          if (req.body?.data?.buyer?.email) {
+            email = req.body.data.buyer.email;
+          } else if (req.body?.buyer?.email) {
+            email = req.body.buyer.email;
+          } else if (req.body?.data?.subscriber?.email) {
+            email = req.body.data.subscriber.email;
+          } else if (req.body?.subscriber?.email) {
+            email = req.body.subscriber.email;
+          }
         
         let transactionId = null;
         if (req.body?.data?.purchase?.transaction) {
