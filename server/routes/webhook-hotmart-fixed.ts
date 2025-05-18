@@ -35,11 +35,11 @@ async function logWebhookToDatabase(
     // Obter conexão com o banco de dados
     const pool = await getPool();
     
-    // Construir consulta SQL diretamente
+    // Construir consulta SQL diretamente - verificando estrutura da tabela
     const query = `
       INSERT INTO "webhookLogs" (
-        "eventType", "status", "email", "source", "payloadData", "errorMessage", "createdAt", "updatedAt"
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        "eventType", "status", "email", "source", "payloadData", "errorMessage", "createdAt"
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING id
     `;
     
@@ -50,7 +50,6 @@ async function logWebhookToDatabase(
       'hotmart',
       JSON.stringify(webhookData),
       errorMessage,
-      new Date(),
       new Date()
     ];
     
