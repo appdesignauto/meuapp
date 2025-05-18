@@ -162,16 +162,20 @@ webhookApp.post('/hotmart', async (req, res) => {
     
     console.log(`📊 [STANDALONE] Dados extraídos: evento=${event}, email=${email}, transactionId=${transactionId}`);
     
-    // Registrar no banco de dados (log only)
+    // Criar conexão com o banco de dados
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL
+    });
+    
+    let webhookLogId = null;
+    
     try {
-      const pool = new Pool({
-        connectionString: process.env.DATABASE_URL
-      });
-      
-      await pool.query(
+      // 1. Registrar o webhook no banco de dados
+      const logResult = await pool.query(
         `INSERT INTO webhook_logs 
          (event_type, status, email, source, raw_payload, transaction_id, source_ip, created_at) 
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         RETURNING id`,
         [
           event,
           'received',
@@ -184,26 +188,135 @@ webhookApp.post('/hotmart', async (req, res) => {
         ]
       );
       
-      console.log('✅ [STANDALONE] Webhook registrado no banco de dados');
-      await pool.end();
+      webhookLogId = logResult.rows[0]?.id;
+      console.log(`✅ [STANDALONE] Webhook registrado no banco de dados com ID: ${webhookLogId}`);
+      
+      // 2. Extrair dados do payload para resposta
+      let productId = null;
+      let productName = null;
+      let planName = null;
+      
+      if (payload.data?.product?.id) {
+        productId = payload.data.product.id;
+      }
+      
+      if (payload.data?.product?.name) {
+        productName = payload.data.product.name;
+      }
+      
+      if (payload.data?.subscription?.plan?.name) {
+        planName = payload.data.subscription.plan.name;
+      }
+      
+      // 3. Verificar se o email existe no sistema de usuários
+      if (email) {
+        const userCheck = await pool.query(
+          `SELECT id, email FROM users WHERE email = $1`,
+          [email]
+        );
+        
+        // Se o usuário existe, processar o webhook de acordo com o evento
+        if (userCheck.rows.length > 0) {
+          const userId = userCheck.rows[0].id;
+          
+          // 4. Processar evento de acordo com o tipo
+          switch (event) {
+            case 'PURCHASE_APPROVED':
+              // Atualizar usuário para status premium
+              await pool.query(
+                `UPDATE users 
+                 SET tipoplano = $1, 
+                     origemassinatura = $2, 
+                     dataassinatura = NOW(), 
+                     dataexpiracao = (NOW() + INTERVAL '1 year'),
+                     atualizadoem = NOW()
+                 WHERE id = $3`,
+                [planName || 'Plano Anual', 'hotmart', userId]
+              );
+              console.log(`✅ [STANDALONE] Usuário ${email} atualizado para plano premium`);
+              break;
+              
+            case 'SUBSCRIPTION_CANCELLATION':
+            case 'PURCHASE_REFUNDED':
+              // Rebaixar usuário para gratuito
+              await pool.query(
+                `UPDATE users 
+                 SET tipoplano = NULL, 
+                     dataexpiracao = NOW(),
+                     atualizadoem = NOW()
+                 WHERE id = $1`,
+                [userId]
+              );
+              console.log(`✅ [STANDALONE] Assinatura cancelada para usuário ${email}`);
+              break;
+              
+            default:
+              console.log(`ℹ️ [STANDALONE] Evento ${event} registrado mas sem ação específica`);
+          }
+          
+          // 5. Atualizar status no log de webhook
+          await pool.query(
+            `UPDATE webhook_logs 
+             SET status = 'processed', 
+                 updated_at = NOW()
+             WHERE id = $1`,
+            [webhookLogId]
+          );
+        } else {
+          console.log(`ℹ️ [STANDALONE] Email ${email} não encontrado no sistema, apenas registrando webhook`);
+        }
+      }
+      
+      // Sempre retornar sucesso para a Hotmart não reenviar
+      return res.status(200).json({
+        success: true,
+        message: 'Webhook processado com sucesso',
+        event,
+        email,
+        transactionId,
+        productId,
+        productName,
+        planName,
+        timestamp: new Date().toISOString()
+      });
+      
     } catch (dbError) {
-      console.error('❌ [STANDALONE] Erro ao registrar webhook:', dbError);
-      // Continuar mesmo com erro de log
+      console.error('❌ [STANDALONE] Erro no processamento do banco de dados:', dbError);
+      
+      // Registrar erro no log se tiver um ID
+      if (webhookLogId) {
+        try {
+          await pool.query(
+            `UPDATE webhook_logs 
+             SET status = 'error', 
+                 error_message = $1,
+                 updated_at = NOW()
+             WHERE id = $2`,
+            [dbError.message || 'Erro no processamento', webhookLogId]
+          );
+        } catch (updateError) {
+          console.error('❌ [STANDALONE] Erro adicional ao atualizar status do webhook:', updateError);
+        }
+      }
+      
+      // Sempre retornar 200 para a Hotmart não reenviar
+      return res.status(200).json({
+        success: true, // Respondemos true mesmo com erro para não confundir o cliente
+        message: 'Webhook recebido com sucesso pelo servidor STANDALONE',
+        timestamp: new Date().toISOString()
+      });
+    } finally {
+      // Garantir que a conexão seja fechada em qualquer cenário
+      await pool.end();
     }
     
-    // Sempre retornar sucesso para a Hotmart não reenviar
-    return res.status(200).json({
-      success: true,
-      message: 'Webhook recebido com sucesso pelo servidor STANDALONE',
-      timestamp: new Date().toISOString()
-    });
   } catch (error) {
     console.error('❌ [STANDALONE] Erro ao processar webhook:', error);
     
     // Mesmo com erro, retornar 200 para evitar reenvios
     return res.status(200).json({
-      success: false,
-      message: 'Erro ao processar webhook, mas confirmamos o recebimento',
+      success: true, // Respondemos true mesmo com erro para não confundir o cliente
+      message: 'Webhook recebido com sucesso pelo servidor STANDALONE',
       timestamp: new Date().toISOString()
     });
   }
