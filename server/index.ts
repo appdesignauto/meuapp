@@ -7,8 +7,8 @@ import { createAdminUser } from "./init-admin";
 import { SubscriptionService } from "./services/subscription-service";
 import { validateR2Environment } from "./env-check";
 import { configureCors } from "./cors-config";
-// Removemos a dependência do arquivo webhook-routes-setup.js
-// e implementamos as rotas diretamente nesse arquivo
+// Importar o novo manipulador de webhook aprimorado
+import enhancedHotmartWebhook from "./routes/webhook-hotmart-enhanced";
 
 const app = express();
 
@@ -212,6 +212,15 @@ app.use((req, res, next) => {
       console.error("❌ Erro ao configurar rota de detalhes de webhook corrigida:", error);
     }
     
+    // Configurar a nova rota de webhook APRIMORADA para Hotmart
+    try {
+      // Usar o manipulador de webhook aprimorado importado no início do arquivo
+      app.use('/webhook/hotmart-enhanced', enhancedHotmartWebhook);
+      console.log("✅ Rota de webhook Hotmart aprimorada configurada com sucesso");
+    } catch (error) {
+      console.error("❌ Erro ao configurar rota de webhook Hotmart aprimorada:", error);
+    }
+    
     // Manter a rota de status para diagnóstico
     app.get('/webhook/status', (req, res) => {
       res.json({
@@ -219,11 +228,13 @@ app.use((req, res, next) => {
         timestamp: new Date().toISOString(),
         routes: [
           { path: '/webhook/hotmart', status: 'configured' },
-          { path: '/webhook/hotmart-fixed', status: 'configured' }
+          { path: '/webhook/hotmart-fixed', status: 'configured' },
+          { path: '/webhook/hotmart-enhanced', status: 'configured', version: '2.0', recommended: true }
         ],
         integrationService: 'HotmartService',
         environment: process.env.HOTMART_SANDBOX === 'true' ? 'Sandbox' : 'Produção',
-        message: 'Os webhooks estão configurados e funcionando. Use o painel de Admin para diagnósticos avançados.'
+        recommendedEndpoint: '/webhook/hotmart-enhanced',
+        message: 'Os webhooks estão configurados e funcionando. Recomendamos usar o endpoint aprimorado para melhor compatibilidade.'
       });
     });
     
