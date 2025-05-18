@@ -59,7 +59,8 @@ router.post('/hotmart', async (req: Request, res: Response) => {
       event = 'UNDEFINED_EVENT';
     }
 
-    const result = await hotmartService.processWebhook(event, payload, signature);
+    // Usar o hottok obtido anteriormente como assinatura para validação
+    const result = await hotmartService.processWebhook(event, payload, hottok as string);
     
     if (result.success) {
       console.log(`[Webhook] Evento da Hotmart processado com sucesso: ${event}`);
