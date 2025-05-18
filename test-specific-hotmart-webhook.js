@@ -37,21 +37,34 @@ async function testarWebhook() {
   try {
     console.log('🔍 Enviando teste de webhook da Hotmart para os dados específicos...');
     
-    // Dados específicos para o teste
+    // Dados específicos para o teste - formato atualizado com base na estrutura real da Hotmart
     const webhookData = {
       event: "PURCHASE_APPROVED",
       id: "webhook-test-" + Date.now(),
       creation_date: new Date().toISOString(),
       data: {
-        buyer: {
-          email: "teste.especifico@example.com",
-          name: "Cliente Teste Específico"
-        },
         purchase: {
           transaction: "TRANS-" + Date.now(),
           status: "APPROVED",
-          offer: {
-            code: "aukjngrt"  // Este é o offerId que deve ser reconhecido
+          offer_code: "aukjngrt",  // Formato correto do campo
+          buyer: {
+            email: "teste.especifico@example.com",
+            name: "Cliente Teste Específico"
+          },
+          subscription: {
+            subscriber: {
+              code: "SUB-" + Date.now(),
+              email: "teste.especifico@example.com",
+              name: "Cliente Teste Específico"
+            },
+            plan: {
+              name: "App Design Auto - Premium Anual"
+            },
+            status: "ACTIVE",
+            recurrenceNumber: 1,
+            accession: {
+              date: new Date().toISOString()
+            }
           }
         },
         product: {
@@ -71,8 +84,9 @@ async function testarWebhook() {
     
     console.log('📦 Enviando dados:', {
       productId: webhookData.data.product.id,
-      offerCode: webhookData.data.purchase.offer.code,
-      email: webhookData.data.buyer.email
+      offerCode: webhookData.data.purchase.offer_code,
+      email: webhookData.data.purchase.subscription.subscriber.email,
+      subscriberCode: webhookData.data.purchase.subscription.subscriber.code
     });
     
     // Enviar para o endpoint do webhook (porta 5000 para Replit)
