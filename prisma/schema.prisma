@@ -47,4 +47,6 @@ model HotmartProductMapping {
   planType        String    // Ex: "premium_mensal", "premium_anual"
   durationDays    Int       // Ex: 30, 180, 365
   createdAt       DateTime  @default(now())
+
+  @@map("hotmartProductMappings")
 }
