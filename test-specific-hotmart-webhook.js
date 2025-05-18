@@ -37,39 +37,103 @@ async function testarWebhook() {
   try {
     console.log('🔍 Enviando teste de webhook da Hotmart para os dados específicos...');
     
-    // Dados específicos para o teste - formato atualizado com base na estrutura real da Hotmart
+    // Dados exatos do formato da Hotmart (com base no exemplo fornecido)
     const webhookData = {
-      event: "PURCHASE_APPROVED",
       id: "webhook-test-" + Date.now(),
-      creation_date: new Date().toISOString(),
+      creation_date: Date.now(),
+      event: "PURCHASE_APPROVED",
+      version: "2.0.0",
       data: {
-        purchase: {
-          transaction: "TRANS-" + Date.now(),
-          status: "APPROVED",
-          offer_code: "aukjngrt",  // Formato correto do campo
-          buyer: {
-            email: "teste.especifico@example.com",
-            name: "Cliente Teste Específico"
-          },
-          subscription: {
-            subscriber: {
-              code: "SUB-" + Date.now(),
-              email: "teste.especifico@example.com",
-              name: "Cliente Teste Específico"
-            },
-            plan: {
-              name: "App Design Auto - Premium Anual"
-            },
-            status: "ACTIVE",
-            recurrenceNumber: 1,
-            accession: {
-              date: new Date().toISOString()
-            }
-          }
-        },
         product: {
-          id: "5381714",  // Este é o productId que deve ser reconhecido
-          name: "App Design Auto - Premium Anual"
+          id: 5381714,
+          ucode: "eef7f8c8-ce74-47aa-a8da-d1e7505dfa8a",
+          name: "App DesignAuto",
+          warranty_date: "2025-05-24T00:00:00Z",
+          has_co_production: false,
+          is_physical_product: false
+        },
+        affiliates: [
+          {
+            affiliate_code: "",
+            name: ""
+          }
+        ],
+        buyer: {
+          email: "teste.especifico@example.com",
+          name: "Cliente Teste Hotmart",
+          first_name: "Cliente",
+          last_name: "Teste",
+          address: {
+            country: "Brasil",
+            country_iso: "BR"
+          },
+          document: "",
+          document_type: ""
+        },
+        producer: {
+          name: "EDITORA INOVE DIGITAL LTDA",
+          document: "52883206000100",
+          legal_nature: "Pessoa Jurídica"
+        },
+        commissions: [
+          {
+            value: 1.4,
+            source: "MARKETPLACE",
+            currency_value: "BRL"
+          },
+          {
+            value: 5.6,
+            source: "PRODUCER",
+            currency_value: "BRL"
+          }
+        ],
+        purchase: {
+          approved_date: Date.now(),
+          full_price: {
+            value: 7,
+            currency_value: "BRL"
+          },
+          price: {
+            value: 7,
+            currency_value: "BRL"
+          },
+          checkout_country: {
+            name: "Brasil",
+            iso: "BR"
+          },
+          order_bump: {
+            is_order_bump: false
+          },
+          original_offer_price: {
+            value: 7,
+            currency_value: "BRL"
+          },
+          order_date: Date.now(),
+          status: "APPROVED",
+          transaction: "HP0" + Date.now(),
+          payment: {
+            installments_number: 1,
+            type: "PIX"
+          },
+          offer: {
+            code: "aukjngrt"
+          },
+          invoice_by: "HOTMART",
+          subscription_anticipation_purchase: false,
+          date_next_charge: Date.now() + 31536000000, // +1 ano
+          recurrence_number: 1,
+          is_funnel: false,
+          business_model: "I"
+        },
+        subscription: {
+          status: "ACTIVE",
+          plan: {
+            id: 1038897,
+            name: "Plano Anual"
+          },
+          subscriber: {
+            code: "SUB" + Date.now()
+          }
         }
       },
       hottok: process.env.HOTMART_WEBHOOK_SECRET || "test-secret" // O token também vai no corpo do JSON
@@ -84,9 +148,9 @@ async function testarWebhook() {
     
     console.log('📦 Enviando dados:', {
       productId: webhookData.data.product.id,
-      offerCode: webhookData.data.purchase.offer_code,
-      email: webhookData.data.purchase.subscription.subscriber.email,
-      subscriberCode: webhookData.data.purchase.subscription.subscriber.code
+      offerCode: webhookData.data.purchase.offer.code,
+      email: webhookData.data.buyer.email,
+      subscriberCode: webhookData.data.subscription.subscriber.code
     });
     
     // Enviar para o endpoint do webhook (porta 5000 para Replit)

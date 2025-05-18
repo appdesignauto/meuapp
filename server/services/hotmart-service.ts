@@ -203,57 +203,132 @@ export class HotmartService {
   }
 
   // Tratar eventos de criação/reativação de assinatura
-  private async handleSubscriptionCreatedOrUpdated(data: HotmartPurchaseEvent | HotmartSubscriptionEvent): Promise<{ success: boolean; message: string }> {
+  private async handleSubscriptionCreatedOrUpdated(data: any): Promise<{ success: boolean; message: string }> {
     try {
       // Extrair informações básicas do payload
-      let subscriberCode: string;
-      let email: string;
-      let productId: string;
+      let subscriberCode: string = '';
+      let email: string = '';
+      let productId: string = '';
       let offerCode: string | null = null;
       let planName: string | null = null;
-
-      // Extrair informações com maior flexibilidade para acomodar diferentes estruturas de webhook
-
-      // Primeiro, tentamos encontrar o ID do produto
-      productId = data.data.product?.id || '';
+      let transactionId: string | null = null;
       
       console.log('Analisando estrutura do webhook para extrair dados do assinante...');
+      console.log('Payload para diagnóstico:', JSON.stringify(data, null, 2));
       
-      // Tentativa 1: Formato padrão de evento de compra
-      if ('purchase' in data.data && data.data.purchase.subscription?.subscriber) {
-        console.log('Tentativa 1: Verificando estrutura padrão de PURCHASE com subscription');
-        subscriberCode = data.data.purchase.subscription?.subscriber.code || '';
-        email = data.data.purchase.subscription?.subscriber.email || '';
-        planName = data.data.purchase.subscription?.plan?.name || null;
+      // Verificamos se estamos processando o formato correto da Hotmart v2.0.0
+      if (data.version === '2.0.0') {
+        console.log('✅ Processando webhook da Hotmart v2.0.0');
+        
+        // Extrair ID do produto
+        if (data.data.product?.id) {
+          productId = String(data.data.product.id); // Convertemos para string para consistência
+          console.log(`✅ Product ID extraído: ${productId}`);
+        }
+        
+        // Extrair código do assinante
+        if (data.data.subscription?.subscriber?.code) {
+          subscriberCode = data.data.subscription.subscriber.code;
+          console.log(`✅ Subscriber Code extraído: ${subscriberCode}`);
+        }
+        
+        // Extrair e-mail do comprador
+        if (data.data.buyer?.email) {
+          email = data.data.buyer.email;
+          console.log(`✅ Email extraído: ${email}`);
+        }
+        
+        // Extrair código da oferta (offerCode)
+        if (data.data.purchase?.offer?.code) {
+          offerCode = data.data.purchase.offer.code;
+          console.log(`✅ Offer Code extraído: ${offerCode}`);
+        }
+        
+        // Extrair nome do plano
+        if (data.data.subscription?.plan?.name) {
+          planName = data.data.subscription.plan.name;
+          console.log(`✅ Nome do plano extraído: ${planName}`);
+        }
+        
+        // Extrair ID da transação
+        if (data.data.purchase?.transaction) {
+          transactionId = data.data.purchase.transaction;
+          console.log(`✅ Transaction ID extraído: ${transactionId}`);
+        }
       } 
-      // Tentativa 2: Formato padrão de evento de assinatura
-      else if ('subscription' in data.data && data.data.subscription.subscriber) {
-        console.log('Tentativa 2: Verificando estrutura padrão de SUBSCRIPTION');
-        subscriberCode = data.data.subscription.subscriber.code || '';
-        email = data.data.subscription.subscriber.email || '';
-        planName = data.data.subscription.plan?.name || null;
+      // Formato anterior/legado - Tentamos extrair dos campos conhecidos
+      else {
+        console.log('⚠️ Formato de webhook não é v2.0.0, tentando formatos alternativos...');
+        
+        // Extrair ID do produto
+        if (typeof data.data.product?.id !== 'undefined') {
+          productId = String(data.data.product.id);
+          console.log(`✅ Product ID extraído: ${productId}`);
+        }
+        
+        // Extrair código do assinante - várias possibilidades
+        if (data.data.subscription?.subscriber?.code) {
+          subscriberCode = data.data.subscription.subscriber.code;
+          console.log(`✅ Subscriber Code extraído de data.subscription: ${subscriberCode}`);
+        } else if (data.data.purchase?.subscription?.subscriber?.code) {
+          subscriberCode = data.data.purchase.subscription.subscriber.code;
+          console.log(`✅ Subscriber Code extraído de data.purchase.subscription: ${subscriberCode}`);
+        }
+        
+        // Extrair email - várias possibilidades
+        if (data.data.buyer?.email) {
+          email = data.data.buyer.email;
+          console.log(`✅ Email extraído de data.buyer: ${email}`);
+        } else if (data.data.subscription?.subscriber?.email) {
+          email = data.data.subscription.subscriber.email;
+          console.log(`✅ Email extraído de data.subscription.subscriber: ${email}`);
+        } else if (data.data.purchase?.buyer?.email) {
+          email = data.data.purchase.buyer.email;
+          console.log(`✅ Email extraído de data.purchase.buyer: ${email}`);
+        } else if (data.data.purchase?.subscription?.subscriber?.email) {
+          email = data.data.purchase.subscription.subscriber.email;
+          console.log(`✅ Email extraído de data.purchase.subscription.subscriber: ${email}`);
+        }
+        
+        // Se ainda não temos o código do assinante mas temos o email, podemos usar o email como código
+        if (!subscriberCode && email) {
+          subscriberCode = email;
+          console.log(`⚠️ Usando email como subscriber code: ${subscriberCode}`);
+        }
+        
+        // Extrair código da oferta (offerCode)
+        if (data.data.purchase?.offer?.code) {
+          offerCode = data.data.purchase.offer.code;
+          console.log(`✅ Offer Code extraído de data.purchase.offer.code: ${offerCode}`);
+        } else if (data.data.purchase?.offer_code) {
+          offerCode = data.data.purchase.offer_code;
+          console.log(`✅ Offer Code extraído de data.purchase.offer_code: ${offerCode}`);
+        }
+        
+        // Extrair ID da transação
+        if (data.data.purchase?.transaction) {
+          transactionId = data.data.purchase.transaction;
+          console.log(`✅ Transaction ID extraído: ${transactionId}`);
+        }
       }
       
-      // Tentativa 3: Formato com buyer diretamente na raiz
-      if ((!email || !subscriberCode) && 'buyer' in data.data) {
-        console.log('Tentativa 3: Verificando estrutura com buyer na raiz');
-        email = email || data.data.buyer.email || '';
-        subscriberCode = subscriberCode || data.data.buyer.email || '';
-      }
-      
-      // Tentativa 4: Formato com buyer dentro de purchase
-      if ((!email || !subscriberCode) && 'purchase' in data.data && 'buyer' in data.data.purchase) {
-        console.log('Tentativa 4: Verificando estrutura com buyer dentro de purchase');
-        email = email || data.data.purchase.buyer.email || '';
-        subscriberCode = subscriberCode || data.data.purchase.buyer.email || '';
-      }
-      
-      console.log(`Dados extraídos: productId=${productId}, email=${email}, subscriberCode=${subscriberCode}`);
+      console.log(`Resumo dos dados extraídos:
+        - productId: ${productId}
+        - email: ${email}
+        - subscriberCode: ${subscriberCode}
+        - offerCode: ${offerCode}
+        - planName: ${planName}
+        - transactionId: ${transactionId}
+      `);
       
       if (!subscriberCode || !email) {
-        console.log('Falha na extração de dados: Estrutura do webhook não contém dados de assinante no formato esperado.');
-        console.log('Payload completo:', JSON.stringify(data, null, 2));
+        console.log('❌ Falha na extração de dados: Estrutura do webhook não contém dados de assinante no formato esperado.');
         return { success: false, message: 'Dados de assinante incompletos' };
+      }
+      
+      if (!productId) {
+        console.log('❌ Falha na extração de dados: ID do produto não encontrado.');
+        return { success: false, message: 'ID do produto não encontrado' };
       }
 
       // Extrair offerCode do payload com mais logs de diagnóstico
@@ -288,6 +363,10 @@ export class HotmartService {
       
       console.log(`Buscando mapeamento para produto ${productId}${offerCode ? ` com offerCode/offerId ${offerCode}` : ''}`);
       
+      // Converter productId para string para garantir compatibilidade com o banco
+      const productIdStr = String(productId);
+      console.log(`Convertendo productId para string: ${productIdStr}`);
+      
       // Buscar mapeamento usando a lógica recomendada em OR
       let productMapping = null;
       
@@ -296,19 +375,19 @@ export class HotmartService {
           OR: [
             // Opção 1: Procurar por offerId específico (prioridade)
             {
-              productId,
+              productId: productIdStr,
               offerId: offerCode,
               isActive: true
             },
             // Opção 2: Procurar por offerCode específico (alternativa)
             {
-              productId, 
+              productId: productIdStr, 
               offerCode: offerCode,
               isActive: true
             },
             // Opção 3: Procurar apenas por productId (fallback)
             {
-              productId,
+              productId: productIdStr,
               isActive: true,
               OR: [
                 { offerId: null },
