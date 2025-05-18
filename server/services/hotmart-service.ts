@@ -217,47 +217,51 @@ export class HotmartService {
         return { success: false, message: 'Dados de assinante incompletos' };
       }
 
-      // Extrair offerCode do nome do plano, se disponível
-      if (planName && planName.includes('-')) {
+      // Extrair offerCode do payload
+      if ('purchase' in data.data && data.data.purchase.offer?.code) {
+        offerCode = data.data.purchase.offer.code;
+        console.log(`Extraído offerCode "${offerCode}" diretamente do payload`);
+      } else if (planName && planName.includes('-')) {
+        // Fallback: extrair do nome do plano se não vier no payload
         const parts = planName.split('-');
         offerCode = parts[parts.length - 1].trim();
         console.log(`Extraído offerCode "${offerCode}" do nome do plano: ${planName}`);
       }
       
-      console.log(`Buscando mapeamento para produto ${productId}${offerCode ? ` com offerCode ${offerCode}` : ''}`);
+      console.log(`Buscando mapeamento para produto ${productId}${offerCode ? ` com offerCode/offerId ${offerCode}` : ''}`);
       
-      // Buscar mapeamento específico com offerCode ou offerId
+      // Buscar mapeamento usando a lógica recomendada em OR
       let productMapping = null;
-      if (offerCode) {
-        console.log(`Buscando mapeamento com offerCode: ${offerCode}`);
-        productMapping = await this.prisma.hotmartProductMapping.findFirst({
-          where: {
-            productId,
-            isActive: true,
-            OR: [
-              { offerCode },
-              { offerId: offerCode }
-            ]
-          }
-        });
-      }
       
-      // Se não encontrou com offerCode/offerId, buscar mapeamento genérico
-      if (!productMapping) {
-        console.log('Buscando mapeamento genérico (sem offerCode/offerId)');
-        productMapping = await this.prisma.hotmartProductMapping.findFirst({
-          where: {
-            productId,
-            isActive: true,
-            OR: [
-              { offerCode: null },
-              { offerCode: '' },
-              { offerId: null },
-              { offerId: '' }
-            ]
-          }
-        });
-      }
+      productMapping = await this.prisma.hotmartProductMapping.findFirst({
+        where: {
+          OR: [
+            // Opção 1: Procurar por offerId específico (prioridade)
+            {
+              productId,
+              offerId: offerCode,
+              isActive: true
+            },
+            // Opção 2: Procurar por offerCode específico (alternativa)
+            {
+              productId, 
+              offerCode: offerCode,
+              isActive: true
+            },
+            // Opção 3: Procurar apenas por productId (fallback)
+            {
+              productId,
+              isActive: true,
+              OR: [
+                { offerId: null },
+                { offerId: '' }
+              ]
+            }
+          ]
+        }
+      });
+      
+      console.log("Resultado da busca de mapeamento:", productMapping);
       
       // Último recurso: buscar qualquer mapeamento para este produto, mesmo que inativo
       if (!productMapping) {
