@@ -108,9 +108,9 @@ async function logWebhookToDatabase(
     
     // Construir consulta SQL com suporte à coluna transactionId
     const query = `
-      INSERT INTO "webhookLogs" (
-        "eventType", "status", "email", "source", "payloadData", 
-        "errorMessage", "transactionId", "sourceIp", "createdAt"
+      INSERT INTO "webhook_logs" (
+        "event_type", "status", "email", "source", "raw_payload", 
+        "error_message", "transaction_id", "source_ip", "created_at"
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       RETURNING id
     `;
