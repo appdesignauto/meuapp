@@ -15,10 +15,10 @@ dotenv.config();
 const PORT = process.env.HOTMART_PORT || 5050;
 
 // Iniciar o servidor de autenticação (em processo separado)
-const authServer = fork('./auth-server.js');
+const authServer = fork(path.join(__dirname, 'auth-server.js'));
 
 // Iniciar o serviço de sincronização (em processo separado)
-const syncService = fork('./sync-service.js');
+const syncService = fork(path.join(__dirname, 'sync-service.js'));
 
 // Servidor principal (API + arquivos estáticos)
 const app = express();

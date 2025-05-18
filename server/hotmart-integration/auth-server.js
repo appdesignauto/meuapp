@@ -179,7 +179,7 @@ app.post('/auth', async (req, res) => {
 
       // Gerar token JWT
       const jwtSecret = process.env.JWT_SECRET || 'hotmart-integration-secret';
-      const token = jwt.sign(
+      const userToken = jwt.sign(
         { id: updatedUser.id, email: updatedUser.email },
         jwtSecret,
         { expiresIn: '24h' }
@@ -216,7 +216,7 @@ app.post('/auth', async (req, res) => {
       
       // Gerar token JWT mesmo sem verificação Hotmart
       const jwtSecret = process.env.JWT_SECRET || 'hotmart-integration-secret';
-      const token = jwt.sign(
+      const userToken = jwt.sign(
         { id: user.id, email: user.email },
         jwtSecret,
         { expiresIn: '24h' }
@@ -224,7 +224,7 @@ app.post('/auth', async (req, res) => {
       
       return res.json({
         user: userWithoutPassword,
-        token,
+        token: userToken,
         warning: 'Não foi possível verificar assinatura na Hotmart.'
       });
     }

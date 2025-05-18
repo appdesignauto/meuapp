@@ -365,3 +365,6 @@ init();
 setInterval(() => {
   console.log('[sync-service] Mantendo o serviço ativo');
 }, 60000);
+
+// Exportar funções para uso externo se necessário
+export { syncAllUsers, getAccessToken };
