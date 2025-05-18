@@ -35,31 +35,11 @@ function extractEmailDeep(obj) {
   return null;
 }
 
-// Importar o processador unificado de webhooks (função auxiliar para importação dinâmica)
-async function getUnifiedProcessor() {
-  try {
-    // Como este arquivo é CommonJS, usamos require dinâmico para importar o módulo ESM
-    return await eval('import("../unifiedHotmartWebhook.js")');
-  } catch (error) {
-    console.error('❌ Erro ao importar processador unificado:', error);
-    return null;
-  }
-}
-
 // Rota principal para receber webhooks da Hotmart
 router.post('/', async (req, res) => {
   try {
-    console.log('⚡ Webhook da Hotmart recebido em /api/webhook/hotmart');
-    
-    // Tentar usar o processador unificado primeiro
-    const unifiedModule = await getUnifiedProcessor();
-    if (unifiedModule && unifiedModule.processHotmartWebhook) {
-      console.log('✅ Usando processador unificado de webhooks');
-      return await unifiedModule.processHotmartWebhook(req, res);
-    }
-    
-    // Se não conseguir importar o processador unificado, continuar com a implementação existente
-    console.log('⚠️ Processador unificado não disponível, usando implementação local');
+    console.log('⚡ Webhook da Hotmart recebido');
+
     console.log("🔥 Webhook recebido:", JSON.stringify(req.body, null, 2));
     console.log("📌 Headers:", JSON.stringify(req.headers, null, 2));
     

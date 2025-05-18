@@ -5667,43 +5667,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Rota para webhook da Hotmart usando processador unificado
+  // Rota para webhook da Hotmart - usando express.json() específico para esta rota
   app.post("/api/webhooks/hotmart", express.json(), async (req, res) => {
     try {
-      console.log("Webhook da Hotmart recebido em /api/webhooks/hotmart");
+      console.log("Webhook da Hotmart recebido");
+      // Log completo do corpo da requisição para diagnóstico
+      console.log("Corpo do webhook:", JSON.stringify(req.body, null, 2));
       
-      // Usar o processador unificado para garantir consistência
-      try {
-        const { processHotmartWebhook } = await import('./unifiedHotmartWebhook');
-        return await processHotmartWebhook(req, res);
-      } catch (importError) {
-        console.error('❌ Erro ao importar processador unificado:', importError);
-        
-        // Manter código original como fallback
-        console.log("Corpo do webhook:", JSON.stringify(req.body, null, 2));
-        
-        // Verificar token de segurança no cabeçalho da requisição ou no corpo
-        // Aceitar múltiplos formatos do token para maior compatibilidade
-        const token = 
-          req.headers['x-hotmart-webhook-token'] || 
-          req.headers['X-Hotmart-Webhook-Token'] || 
-          req.headers['x-hotmart-hottok'] || 
-          req.headers['X-Hotmart-Hottok'] ||
-          req.query.token ||
-          req.body.hottok;  // Adicionado para verificar token no corpo da requisição
+      // Verificar token de segurança no cabeçalho da requisição ou no corpo
+      // Aceitar múltiplos formatos do token para maior compatibilidade
+      const token = 
+        req.headers['x-hotmart-webhook-token'] || 
+        req.headers['X-Hotmart-Webhook-Token'] || 
+        req.headers['x-hotmart-hottok'] || 
+        req.headers['X-Hotmart-Hottok'] ||
+        req.query.token ||
+        req.body.hottok;  // Adicionado para verificar token no corpo da requisição
 
-        console.log("Token recebido no cabeçalho ou corpo:", token);
-        console.log("Cabeçalhos recebidos:", Object.keys(req.headers).join(', '));
-        console.log("Corpo recebido tem hottok?", req.body.hottok ? "Sim" : "Não");
-        
-        const hotmartSecret = process.env.HOTMART_SECRET;
-        
-        // Registrar o webhook recebido no banco de dados - sempre registrar, independente do token
-        let webhookStatus = 'received'; // Começar como 'received' em vez de 'pending'
-        let webhookError = null;
-        let webhookLogId = null;
-        
-        try {
+      console.log("Token recebido no cabeçalho ou corpo:", token);
+      console.log("Cabeçalhos recebidos:", Object.keys(req.headers).join(', '));
+      console.log("Corpo recebido tem hottok?", req.body.hottok ? "Sim" : "Não");
+      
+      const hotmartSecret = process.env.HOTMART_SECRET;
+      
+      // Registrar o webhook recebido no banco de dados - sempre registrar, independente do token
+      let webhookStatus = 'received'; // Começar como 'received' em vez de 'pending'
+      let webhookError = null;
+      let webhookLogId = null;
+      
+      try {
         // Importar o pool para consultas diretas ao banco de dados
         const { pool } = await import('./db');
         
