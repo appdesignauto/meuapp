@@ -259,7 +259,7 @@ app.use((req, res, next) => {
         // Processar o webhook usando o SubscriptionService
         let processResult = null;
         try {
-          const { SubscriptionService } = require('./services/subscription-service');
+          import { SubscriptionService } from './services/subscription-service';
           processResult = await SubscriptionService.processHotmartWebhook(req.body);
           console.log('✅ Webhook processado com sucesso:', processResult);
           
