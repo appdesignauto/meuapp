@@ -19,7 +19,6 @@ router.get('/logs', async (req, res) => {
     const source = req.query.source as string;
     const search = req.query.search as string;
     
-    // Debug information
     console.log('DEBUG /api/webhooks/logs - Parâmetros da requisição:', {
       page,
       limit,
@@ -31,55 +30,73 @@ router.get('/logs', async (req, res) => {
       }
     });
     
-    // Construir WHERE com filtros dinâmicos
-    const whereClause: any = {};
+    // Usar SQL direto para obter contagem total
+    let totalCount = 0;
+    let logs = [];
     
-    if (status) {
-      whereClause.status = status;
+    try {
+      // Primeiro verificamos se a tabela existe
+      await prisma.$executeRawUnsafe(`
+        SELECT 1 FROM information_schema.tables 
+        WHERE table_name = 'webhook_logs'
+      `);
+      
+      // Se a tabela existir, fazemos a consulta principal
+      const countResult = await prisma.$queryRawUnsafe(`
+        SELECT COUNT(*) AS count FROM webhook_logs
+      `);
+      
+      totalCount = parseInt(countResult[0]?.count || '0');
+      
+      // Construir a condição WHERE com base nos filtros
+      let whereClause = '';
+      const filterParams = [];
+      let paramIndex = 1;
+      
+      if (status) {
+        whereClause += whereClause ? ' AND ' : ' WHERE ';
+        whereClause += `status = $${paramIndex++}`;
+        filterParams.push(status);
+      }
+      
+      if (eventType) {
+        whereClause += whereClause ? ' AND ' : ' WHERE ';
+        whereClause += `event_type = $${paramIndex++}`;
+        filterParams.push(eventType);
+      }
+      
+      if (source) {
+        whereClause += whereClause ? ' AND ' : ' WHERE ';
+        whereClause += `source = $${paramIndex++}`;
+        filterParams.push(source);
+      }
+      
+      if (search) {
+        whereClause += whereClause ? ' AND ' : ' WHERE ';
+        whereClause += `email ILIKE $${paramIndex++}`;
+        filterParams.push(`%${search}%`);
+      }
+      
+      // Consulta principal para buscar logs
+      const query = `
+        SELECT id, created_at, event_type, status, email, source, raw_payload, error_message
+        FROM webhook_logs
+        ${whereClause}
+        ORDER BY created_at DESC
+        LIMIT $${paramIndex++} OFFSET $${paramIndex++}
+      `;
+      
+      filterParams.push(limit);
+      filterParams.push(skip);
+      
+      logs = await prisma.$queryRawUnsafe(query, ...filterParams);
+    } catch (dbError) {
+      console.error('Erro no banco de dados:', dbError);
+      // Se houver erro no banco, retornar array vazio
+      logs = [];
     }
     
-    if (eventType) {
-      whereClause.event_type = eventType;
-    }
-    
-    if (source) {
-      whereClause.source = source;
-    }
-    
-    if (search) {
-      whereClause.OR = [
-        { email: { contains: search, mode: 'insensitive' } }
-      ];
-    }
-    
-    // Usar SQL direto para garantir compatibilidade com o nome da tabela no banco
-    const countQuery = `
-      SELECT COUNT(*) FROM webhook_logs 
-      ${Object.keys(whereClause).length > 0 ? 'WHERE ...' : ''}
-    `;
-    
-    const logsQuery = `
-      SELECT * FROM webhook_logs 
-      ORDER BY created_at DESC 
-      LIMIT $1 OFFSET $2
-    `;
-    
-    // Buscar o número total de logs para paginação
-    const totalCountResult = await prisma.$queryRaw`
-      SELECT COUNT(*) FROM webhook_logs
-    `;
-    
-    // Buscar os logs com paginação
-    const logs = await prisma.$queryRaw`
-      SELECT id, created_at, event_type, status, email, source, raw_payload, error_message
-      FROM webhook_logs
-      ORDER BY created_at DESC
-      LIMIT ${limit} OFFSET ${skip}
-    `;
-    
-    const totalCount = parseInt(totalCountResult[0].count || "0");
-    
-    // Formatar resposta
+    // Formatar os logs para o formato esperado pelo frontend
     const formatted = Array.isArray(logs) ? logs.map(log => ({
       id: log.id,
       date: log.created_at,
@@ -109,6 +126,31 @@ router.get('/logs', async (req, res) => {
     return res.status(500).json({
       success: false,
       message: 'Erro ao buscar logs de webhook',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * Rota para testar o registro de webhook manualmente
+ */
+router.post('/test', async (req, res) => {
+  try {
+    // Inserir um registro de teste na tabela webhook_logs
+    await prisma.$executeRawUnsafe(`
+      INSERT INTO webhook_logs (event_type, status, email, source, raw_payload, error_message)
+      VALUES ($1, $2, $3, $4, $5, $6)
+    `, 'TEST_EVENT', 'success', 'test@example.com', 'hotmart', JSON.stringify({test: 'payload'}), null);
+    
+    return res.json({
+      success: true,
+      message: 'Log de teste criado com sucesso'
+    });
+  } catch (error) {
+    console.error('Erro ao criar log de teste:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Erro ao criar log de teste',
       error: error.message
     });
   }
