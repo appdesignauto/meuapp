@@ -7784,22 +7784,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         useSandbox = sandboxConfig.rows[0].value === 'true';
       }
       
-      // Inicializar o serviço com as credenciais e configuração de ambiente
-      HotmartService.initialize(
-        process.env.HOTMART_CLIENT_ID,
-        process.env.HOTMART_CLIENT_SECRET,
-        useSandbox
-      );
-      console.log(`Serviço da Hotmart inicializado com sucesso no modo ${useSandbox ? 'Sandbox' : 'Produção'}`);
+      // O serviço Hotmart agora é inicializado diretamente no server/index.ts
+      // Não precisamos inicializar aqui, pois usamos uma abordagem orientada a objetos
+      console.log(`Configuração do ambiente Hotmart: ${useSandbox ? 'Sandbox' : 'Produção'}`);
+      
+      // Configurar variáveis de ambiente usadas pelo novo serviço
+      process.env.HOTMART_SANDBOX = useSandbox ? 'true' : 'false';
     } catch (error) {
-      console.error('Erro ao inicializar serviço da Hotmart:', error);
+      console.error('Erro ao obter configuração da Hotmart:', error);
       // Fallback para sandbox em caso de erro
-      HotmartService.initialize(
-        process.env.HOTMART_CLIENT_ID,
-        process.env.HOTMART_CLIENT_SECRET,
-        true
-      );
-      console.log('Serviço da Hotmart inicializado com fallback para modo Sandbox devido a erro');
+      process.env.HOTMART_SANDBOX = 'true';
+      console.log('Configurado fallback para modo Sandbox devido a erro');
     }
   } else {
     console.log('Credenciais da Hotmart não encontradas. A verificação de renovações na Hotmart não estará disponível.');
