@@ -334,6 +334,18 @@ app.use((req, res, next) => {
     
     console.log("✅ Configuração da rota do webhook da Hotmart concluída com sucesso!");
     
+    // SOLUÇÃO FINAL: Iniciar servidor standalone para webhooks em outra porta
+    // Este servidor é COMPLETAMENTE INDEPENDENTE e não sofre interferência
+    // de nenhum middleware do servidor principal
+    try {
+      // Importar o servidor standalone
+      import('./standalone-webhook-server');
+      console.log("🚀 Servidor standalone de webhooks iniciado em segundo plano");
+      console.log("⚠️ IMPORTANTE: Configure o webhook da Hotmart para apontar para a porta 5001");
+    } catch (error) {
+      console.error("❌ Erro ao iniciar servidor standalone de webhooks:", error);
+    }
+    
     // Adicionar a rota de webhook fixa para Hotmart
     try {
       const hotmartModule = await import('./routes/webhook-hotmart-fixed');
