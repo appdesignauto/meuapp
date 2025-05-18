@@ -6753,6 +6753,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Registrar rotas da API da Hotmart
   app.use('/api/hotmart', hotmartRoutes);
   
+  // Registrar rotas de teste da API da Hotmart
+  app.use('/api/hotmart-test', hotmartApiTestRoutes);
+  
   // Obter todos os mapeamentos Hotmart
   app.get('/api/integrations/hotmart/product-mappings', async (req, res) => {
     try {
