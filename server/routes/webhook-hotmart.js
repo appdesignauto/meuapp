@@ -12,6 +12,34 @@ const { HotmartService } = require('../services/hotmart-service');
 router.post('/', async (req, res) => {
   try {
     console.log('⚡ Webhook da Hotmart recebido');
+
+// Função para busca profunda de email em objetos
+function extractEmailDeep(obj) {
+  if (!obj) return null;
+  
+  // Se for string, verificar se é email
+  if (typeof obj === 'string' && obj.includes('@')) {
+    return obj;
+  }
+  
+  // Se for objeto, buscar recursivamente
+  if (typeof obj === 'object') {
+    for (let key in obj) {
+      if (key.toLowerCase().includes('email')) {
+        const value = obj[key];
+        if (typeof value === 'string' && value.includes('@')) {
+          return value;
+        }
+      }
+      
+      const deepResult = extractEmailDeep(obj[key]);
+      if (deepResult) return deepResult;
+    }
+  }
+  
+  return null;
+}
+
     console.log("🔥 Webhook recebido:", JSON.stringify(req.body, null, 2));
     console.log("📌 Headers:", JSON.stringify(req.headers, null, 2));
     
@@ -144,22 +172,38 @@ router.post('/', async (req, res) => {
       });
     }
     
-    // Se não encontrou o email, atualizar o log e retornar erro
+    // Se não encontrou o email, tentar extrair de outras formas antes de falhar
     if (!email) {
-      console.error('❌ Email não encontrado no webhook');
+      console.log('⚠️ Email não encontrado nas localizações padrão, tentando métodos alternativos...');
       
-      // Atualizar o log para indicar erro
-      try {
-        await db.update(db.webhookLogs)
-          .set({
-            status: 'error',
-            errorMessage: 'Email não encontrado no webhook',
-            updatedAt: new Date()
-          })
-          .where(db.eq(db.webhookLogs.transactionId, transactionId));
-      } catch (updateError) {
-        console.error('❌ Erro ao atualizar log de webhook:', updateError);
+      // Tentar extrair email de forma mais agressiva
+      if (req.body.data) {
+        email = extractEmailDeep(req.body.data);
       }
+      
+      if (!email && req.body.subscriber) {
+        email = extractEmailDeep(req.body.subscriber);
+      }
+      
+      if (!email) {
+        console.error('❌ Email não encontrado mesmo após tentativas adicionais');
+        
+        // Atualizar o log para retry posterior
+        try {
+          await db.update(db.webhookLogs)
+            .set({
+              status: 'pending_retry',
+              errorMessage: 'Email não encontrado - Agendado para retry',
+              retryCount: (webhookLog?.retryCount || 0) + 1,
+              nextRetryAt: new Date(Date.now() + 300000), // 5 minutos
+              updatedAt: new Date()
+            })
+            .where(db.eq(db.webhookLogs.transactionId, transactionId));
+            
+          console.log('📅 Webhook agendado para retry em 5 minutos');
+        } catch (updateError) {
+          console.error('❌ Erro ao agendar retry:', updateError);
+        }
       
       return res.status(200).json({
         success: false,
