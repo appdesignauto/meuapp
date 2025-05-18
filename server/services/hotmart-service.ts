@@ -435,11 +435,12 @@ export class HotmartService {
         
       case 'SUBSCRIPTION_CANCELED':
       case 'PURCHASE_CANCELED':
+      case 'SUBSCRIPTION_CANCELLATION':
         // Assinatura cancelada - usuário deve ser rebaixado para free
         return {
           action: 'subscription_canceled',
           email: email,
-          purchaseId: data.purchase?.transaction,
+          purchaseId: data.purchase?.transaction || data.subscription?.code,
           status: 'canceled',
           reason: 'Cancelamento solicitado pelo usuário'
         };
