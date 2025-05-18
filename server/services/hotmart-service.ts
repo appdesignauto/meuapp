@@ -499,8 +499,14 @@ export class HotmartService {
           };
         }
 
-        // Atualizar ou criar usuário na plataforma
-        await this.updateUserSubscription(email, productMapping.planType, currentPeriodEnd);
+        // Atualizar ou criar usuário na plataforma - com tratamento de erro
+        try {
+          await this.updateUserSubscription(email, productMapping.planType, currentPeriodEnd);
+          console.log(`✅ Usuário ${email} atualizado com sucesso!`);
+        } catch (userError) {
+          console.warn(`⚠️ Falha ao atualizar usuário, mas a assinatura foi criada: ${userError.message}`);
+          // Continuar mesmo se a atualização do usuário falhar
+        }
 
         return { 
           success: true, 
@@ -587,45 +593,69 @@ export class HotmartService {
   // Atualizar usuário na plataforma com a nova assinatura
   private async updateUserSubscription(email: string, planType: string, expirationDate: Date): Promise<void> {
     try {
-      // Verificar se o usuário existe
-      const user = await this.prisma.users.findFirst({
-        where: { email },
-      });
+      // Verificar se o usuário existe usando SQL direto
+      const users = await this.prisma.$queryRaw`
+        SELECT id, email, username, name FROM users 
+        WHERE email = ${email} 
+        LIMIT 1
+      `;
+      
+      const user = Array.isArray(users) && users.length > 0 ? users[0] : null;
 
       if (!user) {
         console.log(`Usuário com email ${email} não encontrado. Criando novo usuário.`);
         // Criar novo usuário se não existir
         const username = email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '') + Math.floor(Math.random() * 1000);
         
-        await this.prisma.users.create({
-          data: {
-            email,
-            username,
-            name: email.split('@')[0],
-            nivelacesso: 'usuario',
-            tipoplano: planType,
-            dataassinatura: new Date(),
-            dataexpiracao: expirationDate,
-            origemassinatura: 'hotmart',
-            isactive: true,
-            criadoem: new Date(),
-            atualizadoem: new Date(),
-            emailconfirmed: true
-          },
-        });
+        // Criar usando SQL direto
+        await this.prisma.$executeRawUnsafe(`
+          INSERT INTO users (
+            username, email, name, nivelacesso, tipoplano, 
+            dataassinatura, dataexpiracao, origemassinatura, 
+            isactive, criadoem, atualizadoem, emailconfirmed, role
+          ) VALUES (
+            $1, $2, $3, $4, $5, 
+            $6, $7, $8, 
+            $9, $10, $11, $12, $13
+          )
+        `, 
+        username, 
+        email, 
+        email.split('@')[0], 
+        'usuario', 
+        planType,
+        new Date(), 
+        expirationDate, 
+        'hotmart',
+        true, 
+        new Date(), 
+        new Date(), 
+        true,
+        'user' // role padrão para novos usuários
+        );
+        console.log(`✅ Novo usuário ${username} criado com sucesso!`);
       } else {
-        // Atualizar usuário existente
-        await this.prisma.users.update({
-          where: { id: user.id },
-          data: {
-            tipoplano: planType,
-            dataassinatura: new Date(),
-            dataexpiracao: expirationDate,
-            origemassinatura: 'hotmart',
-            isactive: true,
-            atualizadoem: new Date(),
-          },
-        });
+        // Atualizar usuário existente usando SQL direto
+        await this.prisma.$executeRawUnsafe(`
+          UPDATE users 
+          SET 
+            tipoplano = $1,
+            dataassinatura = $2,
+            dataexpiracao = $3,
+            origemassinatura = $4,
+            isactive = $5,
+            atualizadoem = $6
+          WHERE id = $7
+        `, 
+        planType, 
+        new Date(), 
+        expirationDate, 
+        'hotmart', 
+        true, 
+        new Date(), 
+        user.id
+        );
+        console.log(`✅ Usuário ${user.username || user.email} atualizado com sucesso!`);
       }
     } catch (error) {
       console.error(`Erro ao atualizar usuário ${email}:`, error);
