@@ -170,6 +170,63 @@ app.use((req, res, next) => {
       next();
     });
     
+    // Rota dedicada para webhook da Hotmart - implementação direta para garantir resposta JSON
+    app.post('/webhook/hotmart', async (req, res) => {
+      console.log('📩 Webhook da Hotmart recebido em', new Date().toISOString());
+      
+      try {
+        // Capturar dados básicos do webhook
+        const payload = req.body;
+        const event = payload?.event || 'UNKNOWN';
+        const email = findEmailInPayload(payload);
+        const transactionId = findTransactionId(payload);
+        
+        // Registrar no banco de dados (log only)
+        try {
+          const pool = new Pool({
+            connectionString: process.env.DATABASE_URL
+          });
+          
+          await pool.query(
+            `INSERT INTO webhook_logs 
+             (event_type, status, email, source, raw_payload, transaction_id, source_ip, created_at) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+            [
+              event,
+              'received',
+              email,
+              'hotmart',
+              JSON.stringify(payload),
+              transactionId,
+              req.ip,
+              new Date()
+            ]
+          );
+          
+          await pool.end();
+        } catch (dbError) {
+          console.error('❌ Erro ao registrar webhook:', dbError);
+          // Continuar mesmo com erro de log
+        }
+        
+        // Sempre retornar sucesso para a Hotmart não reenviar
+        return res.status(200).json({
+          success: true,
+          message: 'Webhook recebido com sucesso',
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error('❌ Erro ao processar webhook:', error);
+        
+        // Mesmo com erro, retornar 200 para evitar reenvios
+        return res.status(200).json({
+          success: false,
+          message: 'Erro ao processar webhook, mas confirmamos o recebimento',
+          timestamp: new Date().toISOString()
+        });
+      }
+    });
+    
     // Inicializar o serviço da Hotmart
     // Importações serão feitas de forma dinâmica para evitar problemas
     const initHotmartService = async () => {
