@@ -97,9 +97,13 @@ export default function WebhookLogList() {
         )
       });
 
+      console.log('Buscando logs de webhook com URL:', `/api/admin/webhook-logs?${queryParams}`);
       const response = await fetch(`/api/admin/webhook-logs?${queryParams}`);
       if (!response.ok) {
-        throw new Error('Erro ao carregar logs de webhook');
+        console.error('Erro ao carregar logs de webhook:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.error('Resposta de erro:', errorText);
+        throw new Error(`Erro ao carregar logs de webhook: ${response.status} ${response.statusText}`);
       }
       return response.json();
     }

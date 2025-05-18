@@ -8,7 +8,7 @@ import webhookLogsRouter from './webhook-logs';
 
 const router = express.Router();
 
-// Adicionar as rotas de administração
-router.use('/admin', webhookLogsRouter);
+// Adicionar as rotas de administração diretamente no caminho admin
+router.use(webhookLogsRouter);
 
 export default router;

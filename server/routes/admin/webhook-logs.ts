@@ -5,7 +5,17 @@
 
 import express from 'express';
 import { Pool } from 'pg';
-import { isAdmin } from '../../middleware/auth';
+// Importar middleware básico de autenticação 
+// Isso será verificado no router principal que já tem a autenticação configurada
+import { Request, Response, NextFunction } from 'express';
+
+const isAdmin = (req: Request, res: Response, next: NextFunction) => {
+  const user = req.user as any;
+  if (user && (user.role === 'admin' || user.nivelacesso === 'admin')) {
+    return next();
+  }
+  return res.status(403).json({ message: 'Acesso negado. É necessário ser administrador.' });
+};
 
 const router = express.Router();
 
