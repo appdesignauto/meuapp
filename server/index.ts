@@ -203,6 +203,15 @@ app.use((req, res, next) => {
       console.error("❌ Erro ao configurar rota Hotmart fixa:", error);
     }
     
+    // Adicionar a rota corrigida para detalhes de webhook
+    try {
+      const webhookDetailFixModule = await import('./routes/webhooks-detail-fix');
+      app.use(webhookDetailFixModule.default);
+      console.log("✅ Rota de detalhes de webhook corrigida configurada com sucesso");
+    } catch (error) {
+      console.error("❌ Erro ao configurar rota de detalhes de webhook corrigida:", error);
+    }
+    
     // Manter a rota de status para diagnóstico
     app.get('/webhook/status', (req, res) => {
       res.json({
