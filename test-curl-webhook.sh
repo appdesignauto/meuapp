@@ -17,7 +17,7 @@ curl -X POST "http://localhost:5000/api/webhooks/hotmart" \
       "subscriber": {
         "code": "0000aaaa",
         "name": "User name",
-        "email": "teste@email.com"
+        "email": "inovedigitalmarketing10@gmail.com"
       },
       "subscription": {
         "id": 4148584,
