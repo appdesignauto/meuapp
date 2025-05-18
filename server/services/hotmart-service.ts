@@ -457,12 +457,20 @@ export class HotmartService {
       case 'PURCHASE_CANCELED':
       case 'SUBSCRIPTION_CANCELLATION':
         // Assinatura cancelada - usuário deve ser rebaixado para free
+        const subscriptionCode = data.subscription?.id || 
+                               data.subscription?.code || 
+                               data.purchase?.transaction;
+        
+        console.log('Processando cancelamento para:', email);
+        console.log('Código da assinatura:', subscriptionCode);
+        
         return {
           action: 'subscription_canceled',
           email: email,
-          purchaseId: data.purchase?.transaction || data.subscription?.code,
+          purchaseId: subscriptionCode,
           status: 'canceled',
-          reason: 'Cancelamento solicitado pelo usuário'
+          reason: 'Cancelamento solicitado pelo usuário',
+          cancellationDate: data.cancellation_date || new Date().toISOString()
         };
 
       case 'PURCHASE_REFUNDED':

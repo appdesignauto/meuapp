@@ -32,16 +32,26 @@ router.post('/', async (req, res) => {
     } catch (e) {
       console.error("Erro ao registrar webhook:", e);
     }
-    // Extrair email do comprador ou assinante
-    if (req.body?.data?.subscriber?.email) {
-      email = req.body.data.subscriber.email;
-    } else if (req.body?.data?.buyer?.email) {
-      email = req.body.data.buyer.email;
-    } else if (req.body?.subscriber?.email) {
-      email = req.body.subscriber.email;
-    } else if (req.body?.buyer?.email) {
-      email = req.body.buyer.email;
+    // Log detalhado do payload para diagnóstico
+    console.log('Payload completo recebido:', JSON.stringify(req.body, null, 2));
+    
+    const eventType = req.body?.event || 'UNKNOWN';
+    console.log('Tipo de evento:', eventType);
+    
+    // Extração de email com lógica específica por tipo de evento
+    if (eventType === 'SUBSCRIPTION_CANCELLATION') {
+      email = req.body?.data?.subscriber?.email;
+      console.log('Email do subscriber:', email);
+    } else {
+      // Fallback para outros tipos de evento
+      email = req.body?.data?.subscriber?.email || 
+              req.body?.data?.buyer?.email || 
+              req.body?.subscriber?.email || 
+              req.body?.buyer?.email;
     }
+    
+    // Log do email encontrado
+    console.log('Email extraído:', email);
     
     let transactionId = null;
     if (req.body?.data?.purchase?.transaction) {
