@@ -369,6 +369,14 @@ app.use((req, res, next) => {
       const apiServerModule = await import('./hotmart-integration/api-server');
       app.use('/api/hotmart', apiServerModule.default);
       console.log("✅ Rotas da API de integração Hotmart configuradas com sucesso");
+      
+      // Iniciar o servidor de integração Hotmart em background
+      try {
+        import('./hotmart-integration/index.js');
+        console.log("🚀 Servidor de integração Hotmart iniciado em segundo plano na porta 5050");
+      } catch (integrationError) {
+        console.error("❌ Erro ao iniciar servidor de integração Hotmart:", integrationError);
+      }
     } catch (error) {
       console.error("❌ Erro ao configurar rotas da API de integração Hotmart:", error);
     }
