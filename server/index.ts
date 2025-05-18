@@ -221,6 +221,15 @@ app.use((req, res, next) => {
       console.error("❌ Erro ao configurar rota de webhook Hotmart aprimorada:", error);
     }
     
+    // Adicionar a rota de DEBUG para capturar qualquer webhook
+    try {
+      const webhookDebugModule = await import('./routes/webhook-debug');
+      app.use('/webhook', webhookDebugModule.default);
+      console.log("✅ Rota de diagnóstico de webhook configurada com sucesso");
+    } catch (error) {
+      console.error("❌ Erro ao configurar rota de diagnóstico de webhook:", error);
+    }
+    
     // Manter a rota de status para diagnóstico
     app.get('/webhook/status', (req, res) => {
       res.json({

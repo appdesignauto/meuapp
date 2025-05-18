@@ -6,8 +6,16 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { db } from '../database';
-import { getHotmartSecret } from '../webhook-config';
+import pg from 'pg';
+import dotenv from 'dotenv';
+
+// Carregar variáveis de ambiente
+dotenv.config();
+
+// Configurar conexão com banco de dados
+const db = new pg.Pool({
+  connectionString: process.env.DATABASE_URL,
+});
 
 const router = Router();
 
@@ -74,14 +82,14 @@ router.post('/debug', async (req: Request, res: Response) => {
       ipAddress
     });
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Erro ao processar webhook de diagnóstico:', error);
     
     // Mesmo em caso de erro, retornar 200 para não causar reenvios
     return res.status(200).json({
       success: false,
       message: 'Erro ao processar webhook de diagnóstico',
-      error: error.message
+      error: error.message || String(error)
     });
   }
 });
