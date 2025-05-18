@@ -7,6 +7,7 @@
 
 import express from 'express';
 import pg from 'pg';
+import crypto from 'crypto';
 import { getHotmartSecret } from '../webhook-config';
 const { Pool } = pg;
 
@@ -279,8 +280,8 @@ function verifyHotmartSignature(payload: any, signature: string | undefined, sec
       }
     }
     
-    // Importar crypto para verificação
-    const crypto = require('crypto');
+    // Já importamos crypto no topo do arquivo
+    // Não precisamos importar novamente
     
     // Calcular assinatura usando o mesmo algoritmo da Hotmart (HMAC SHA-256)
     const calculatedSignature = crypto
