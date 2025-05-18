@@ -49,8 +49,8 @@ router.get('/webhook-logs', isAdmin, async (req, res) => {
     const transactionId = req.query.transactionId as string;
     
     // Construir a consulta base
-    let query = `SELECT * FROM "webhookLogs" WHERE 1=1`;
-    let countQuery = `SELECT COUNT(*) FROM "webhookLogs" WHERE 1=1`;
+    let query = `SELECT * FROM "webhook_logs" WHERE 1=1`;
+    let countQuery = `SELECT COUNT(*) FROM "webhook_logs" WHERE 1=1`;
     const params: any[] = [];
     let paramIndex = 1;
     

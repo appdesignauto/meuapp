@@ -43,14 +43,15 @@ import {
 // Tipo para os logs de webhook
 interface WebhookLog {
   id: number;
-  eventType: string;
+  event_type: string; // nome da coluna no banco
   status: string;
   email: string;
   source: string;
-  transactionId: string;
-  sourceIp: string;
-  createdAt: string;
-  webhookData?: string;
+  transaction_id: string; // nome da coluna no banco
+  source_ip: string; // nome da coluna no banco
+  created_at: string; // nome da coluna no banco
+  raw_payload?: string; // nome da coluna no banco
+  error_message?: string; // nome da coluna no banco
 }
 
 // Componente principal de listagem de logs
@@ -58,13 +59,13 @@ export default function WebhookLogList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [filter, setFilter] = useState({
     email: '',
-    eventType: '',
+    event_type: '',
     source: '',
     status: '',
-    transactionId: ''
+    transaction_id: ''
   });
   const [sort, setSort] = useState({
-    field: 'createdAt',
+    field: 'created_at',
     direction: 'desc'
   });
   const pageSize = 10;
@@ -73,10 +74,10 @@ export default function WebhookLogList() {
   const clearFilters = () => {
     setFilter({
       email: '',
-      eventType: '',
+      event_type: '',
       source: '',
       status: '',
-      transactionId: ''
+      transaction_id: ''
     });
   };
 
