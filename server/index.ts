@@ -334,22 +334,15 @@ app.use((req, res, next) => {
     
     console.log("✅ Configuração da rota do webhook da Hotmart concluída com sucesso!");
     
-    // SOLUÇÃO FINAL: Iniciar servidor standalone para webhooks em outra porta
-    // Este servidor é COMPLETAMENTE INDEPENDENTE e não sofre interferência
-    // de nenhum middleware do servidor principal
-    try {
-      // Importar o servidor standalone
-      import('./standalone-webhook-server');
-      console.log("🚀 Servidor standalone de webhooks iniciado em segundo plano");
-      console.log("⚠️ IMPORTANTE: Configure o webhook da Hotmart para apontar para a porta 5001");
-    } catch (error) {
-      console.error("❌ Erro ao iniciar servidor standalone de webhooks:", error);
-    }
+    // No ambiente de desenvolvimento do Replit, não iniciaremos o servidor standalone
+    // para evitar conflitos de porta e problemas de inicialização
+    console.log("ℹ️ Servidor standalone de webhooks desativado no ambiente de desenvolvimento");
+    console.log("ℹ️ Use a rota '/webhook/hotmart-fixed' para testes de webhook da Hotmart");
     
     // Adicionar a rota de webhook fixa para Hotmart
     try {
-      const hotmartModule = await import('./routes/webhook-hotmart-fixed');
-      app.use('/webhook/hotmart-fixed', hotmartModule.router);
+      const hotmartRouter = await import('./routes/webhook-hotmart-fixed');
+      app.use('/webhook/hotmart-fixed', hotmartRouter.default);
       console.log("✅ Rota Hotmart fixa configurada com sucesso");
     } catch (error) {
       console.error("❌ Erro ao configurar rota Hotmart fixa:", error);
