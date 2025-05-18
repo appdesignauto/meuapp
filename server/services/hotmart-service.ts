@@ -440,16 +440,14 @@ export class HotmartService {
         console.log(`Atualizando assinatura existente para ${email}`);
         
         try {
-          // Atualizar assinatura existente usando SQL direto
+          // Atualizar assinatura existente usando SQL direto com nomes de colunas em snake_case
           await this.prisma.$executeRaw`
             UPDATE "hotmart_subscription"
             SET 
               "status" = 'active',
-              "productId" = ${productId},
-              "planType" = ${productMapping.planType},
-              "currentPeriodStart" = ${new Date()},
-              "currentPeriodEnd" = ${currentPeriodEnd},
-              "updatedAt" = ${new Date()}
+              "plan_type" = ${productMapping.planType},
+              "current_period_end" = ${currentPeriodEnd},
+              "updated_at" = ${new Date()}
             WHERE "id" = ${existingSubscription[0].id}
           `;
           
@@ -473,20 +471,19 @@ export class HotmartService {
         console.log(`Criando nova assinatura para ${email}`);
         
         try {
-          // Gerar UUID
-          const { v4: uuidv4 } = require('uuid');
-          const id = uuidv4();
+          // Gerar ID sequencial simples
+          const id = Math.floor(Date.now() + Math.random() * 10000).toString();
           
-          // Criar nova assinatura usando SQL direto
+          // Criar nova assinatura usando SQL direto com nomes corretos em snake_case
           await this.prisma.$executeRaw`
             INSERT INTO "hotmart_subscription" (
-              "id", "subscriberCode", "email", "productId", 
-              "planType", "status", "currentPeriodStart", "currentPeriodEnd", 
-              "createdAt", "updatedAt"
+              "id", "subscriber_code", "email",  
+              "plan_type", "status", "current_period_end", 
+              "created_at", "updated_at"
             )
             VALUES (
-              ${id}, ${subscriberCode}, ${email}, ${productId}, 
-              ${productMapping.planType}, 'active', ${new Date()}, ${currentPeriodEnd}, 
+              ${id}, ${subscriberCode}, ${email},
+              ${productMapping.planType}, 'active', ${currentPeriodEnd}, 
               ${new Date()}, ${new Date()}
             )
           `;
