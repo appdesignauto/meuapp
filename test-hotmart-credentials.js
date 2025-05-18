@@ -10,7 +10,8 @@ dotenv.config();
 const { Pool } = pg;
 
 // URLs da API
-const HOTMART_AUTH_URL = 'https://sandbox.hotmart.com/oauth/token';
+// Usando a URL da API de produção conforme documentação
+const HOTMART_AUTH_URL = 'https://developers.hotmart.com/oauth/token';
 
 async function getHotmartCredentials() {
   const pool = new Pool({
