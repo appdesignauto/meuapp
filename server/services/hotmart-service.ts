@@ -212,21 +212,47 @@ export class HotmartService {
       let offerCode: string | null = null;
       let planName: string | null = null;
 
-      if ('purchase' in data.data) {
-        // É um evento de compra (PURCHASE_*)
+      // Extrair informações com maior flexibilidade para acomodar diferentes estruturas de webhook
+
+      // Primeiro, tentamos encontrar o ID do produto
+      productId = data.data.product?.id || '';
+      
+      console.log('Analisando estrutura do webhook para extrair dados do assinante...');
+      
+      // Tentativa 1: Formato padrão de evento de compra
+      if ('purchase' in data.data && data.data.purchase.subscription?.subscriber) {
+        console.log('Tentativa 1: Verificando estrutura padrão de PURCHASE com subscription');
         subscriberCode = data.data.purchase.subscription?.subscriber.code || '';
         email = data.data.purchase.subscription?.subscriber.email || '';
-        productId = data.data.product.id;
         planName = data.data.purchase.subscription?.plan?.name || null;
-      } else {
-        // É um evento de assinatura (SUBSCRIPTION_*)
-        subscriberCode = data.data.subscription.subscriber.code;
-        email = data.data.subscription.subscriber.email;
-        productId = data.data.product.id;
+      } 
+      // Tentativa 2: Formato padrão de evento de assinatura
+      else if ('subscription' in data.data && data.data.subscription.subscriber) {
+        console.log('Tentativa 2: Verificando estrutura padrão de SUBSCRIPTION');
+        subscriberCode = data.data.subscription.subscriber.code || '';
+        email = data.data.subscription.subscriber.email || '';
         planName = data.data.subscription.plan?.name || null;
       }
-
+      
+      // Tentativa 3: Formato com buyer diretamente na raiz
+      if ((!email || !subscriberCode) && 'buyer' in data.data) {
+        console.log('Tentativa 3: Verificando estrutura com buyer na raiz');
+        email = email || data.data.buyer.email || '';
+        subscriberCode = subscriberCode || data.data.buyer.email || '';
+      }
+      
+      // Tentativa 4: Formato com buyer dentro de purchase
+      if ((!email || !subscriberCode) && 'purchase' in data.data && 'buyer' in data.data.purchase) {
+        console.log('Tentativa 4: Verificando estrutura com buyer dentro de purchase');
+        email = email || data.data.purchase.buyer.email || '';
+        subscriberCode = subscriberCode || data.data.purchase.buyer.email || '';
+      }
+      
+      console.log(`Dados extraídos: productId=${productId}, email=${email}, subscriberCode=${subscriberCode}`);
+      
       if (!subscriberCode || !email) {
+        console.log('Falha na extração de dados: Estrutura do webhook não contém dados de assinante no formato esperado.');
+        console.log('Payload completo:', JSON.stringify(data, null, 2));
         return { success: false, message: 'Dados de assinante incompletos' };
       }
 
@@ -577,7 +603,6 @@ export class HotmartService {
           transactionId,
           email,
           status,
-          errorMessage,
           rawPayload: typeof rawPayload === 'string' ? JSON.parse(rawPayload) : rawPayload,
         },
       });
