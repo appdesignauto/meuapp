@@ -91,8 +91,11 @@ async function startHotmartIntegration() {
 
   // Inicializar o servidor Express
   const app = express();
-  const PORT = parseInt(process.env.HOTMART_INTEGRATION_PORT || '5050');
-
+  
+  // NOTA: Evitando iniciar um novo servidor HTTP, apenas criando o roteador
+  // para ser usado pelo servidor principal. Isso evita conflitos de porta.
+  console.log('[hotmart-integration] Executando somente em modo roteador (sem servidor HTTP dedicado)');
+  
   // Configurar middleware
   app.use(cors());
   app.use(express.json());
@@ -106,16 +109,16 @@ async function startHotmartIntegration() {
 
   // Rota de saúde para verificar se o serviço está funcionando
   app.get('/health', (req, res) => {
-    res.json({ status: 'ok', message: 'Serviço de integração Hotmart em execução', timestamp: new Date() });
+    res.json({ 
+      status: 'ok', 
+      message: 'Serviço de integração Hotmart em execução (modo integrado)',
+      mode: 'embedded',
+      timestamp: new Date() 
+    });
   });
 
   // Registrar rotas da API
   app.use('/api/hotmart', apiRouter);
-
-  // Iniciar o servidor
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[hotmart-integration] Servidor de integração iniciado na porta ${PORT}`);
-  });
 
   console.log('[hotmart-integration] Serviço de integração Hotmart iniciado com sucesso!');
   return app;

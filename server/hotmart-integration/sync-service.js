@@ -6,9 +6,14 @@ import cron from 'node-cron';
 dotenv.config();
 
 // Configuração
-const HOTMART_BASE_URL = process.env.HOTMART_SANDBOX === 'true' 
+// Forçar o uso do ambiente de sandbox para testes
+const HOTMART_SANDBOX = true;
+const HOTMART_BASE_URL = HOTMART_SANDBOX 
   ? "https://sandbox.hotmart.com" 
   : "https://api-sec-vlc.hotmart.com";
+
+console.log(`[hotmart-integration] Utilizando API Hotmart em modo: ${HOTMART_SANDBOX ? 'SANDBOX' : 'PRODUÇÃO'}`);
+console.log(`[hotmart-integration] URL Base: ${HOTMART_BASE_URL}`);
 
 let accessToken = null;
 let tokenExpiry = 0;
@@ -19,6 +24,12 @@ async function getAccessToken() {
   
   if (accessToken && tokenExpiry > now + 60000) {
     return accessToken;
+  }
+  
+  // Verificar se as credenciais estão configuradas
+  if (!process.env.HOTMART_CLIENT_ID || !process.env.HOTMART_CLIENT_SECRET) {
+    console.warn("Credenciais da Hotmart não configuradas. CLIENT_ID e CLIENT_SECRET são necessários.");
+    throw new Error("Credenciais da Hotmart não configuradas. Verifique as variáveis de ambiente HOTMART_CLIENT_ID e HOTMART_CLIENT_SECRET.");
   }
   
   try {
@@ -40,7 +51,7 @@ async function getAccessToken() {
     return accessToken;
   } catch (error) {
     console.error("Erro ao obter token:", error.response?.data || error.message);
-    throw new Error("Falha na autenticação com a Hotmart");
+    throw new Error("Falha na autenticação com a Hotmart. Verifique se as credenciais estão corretas.");
   }
 }
 

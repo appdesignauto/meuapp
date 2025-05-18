@@ -322,6 +322,26 @@ const HotmartIntegration = () => {
                   <p>A sincronização automática ocorre a cada hora.</p>
                   <p className="mt-2">Use o botão acima para forçar uma sincronização imediata com a Hotmart.</p>
                 </div>
+                
+                {startSyncMutation.isError && (
+                  <Alert variant="destructive" className="mt-2">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Erro na sincronização</AlertTitle>
+                    <AlertDescription>
+                      {startSyncMutation.error instanceof Error 
+                        ? startSyncMutation.error.message 
+                        : 'Falha na conexão com a API Hotmart. Verifique as credenciais.'}
+                      
+                      {(startSyncMutation.error instanceof Error && 
+                        startSyncMutation.error.message.includes('Credenciais')) && (
+                        <p className="mt-2 text-xs">
+                          É necessário configurar HOTMART_CLIENT_ID e HOTMART_CLIENT_SECRET 
+                          nas variáveis de ambiente.
+                        </p>
+                      )}
+                    </AlertDescription>
+                  </Alert>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -413,6 +433,15 @@ const HotmartIntegration = () => {
                   <AlertDescription>
                     As credenciais da Hotmart são gerenciadas de forma segura através de variáveis de ambiente.
                     Para alterar essas credenciais, entre em contato com o administrador do sistema.
+                  </AlertDescription>
+                </Alert>
+                
+                <Alert className="mt-4 border-yellow-500 bg-yellow-50">
+                  <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                  <AlertTitle className="text-yellow-700">Ambiente de Sandbox</AlertTitle>
+                  <AlertDescription className="text-yellow-700">
+                    O sistema está configurado para usar o ambiente de sandbox da Hotmart para testes.
+                    As credenciais de sandbox são necessárias para testar a integração sem afetar dados reais.
                   </AlertDescription>
                 </Alert>
                 

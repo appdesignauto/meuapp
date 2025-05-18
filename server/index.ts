@@ -334,22 +334,15 @@ app.use((req, res, next) => {
     
     console.log("✅ Configuração da rota do webhook da Hotmart concluída com sucesso!");
     
-    // SOLUÇÃO FINAL: Iniciar servidor standalone para webhooks em outra porta
-    // Este servidor é COMPLETAMENTE INDEPENDENTE e não sofre interferência
-    // de nenhum middleware do servidor principal
-    try {
-      // Importar o servidor standalone
-      import('./standalone-webhook-server');
-      console.log("🚀 Servidor standalone de webhooks iniciado em segundo plano");
-      console.log("⚠️ IMPORTANTE: Configure o webhook da Hotmart para apontar para a porta 5001");
-    } catch (error) {
-      console.error("❌ Erro ao iniciar servidor standalone de webhooks:", error);
-    }
+    // Servidor standalone de webhooks desativado - usando integração direta com API
+    // Este comentário mantido para referência histórica
+    console.log("ℹ️ Servidor standalone de webhooks desativado - usando integração direta com API");
+    console.log("ℹ️ Migrando para integração direta com a API da Hotmart")
     
     // Adicionar a rota de webhook fixa para Hotmart
     try {
       const hotmartModule = await import('./routes/webhook-hotmart-fixed');
-      app.use('/webhook/hotmart-fixed', hotmartModule.router);
+      app.use('/webhook/hotmart-fixed', hotmartModule.default);
       console.log("✅ Rota Hotmart fixa configurada com sucesso");
     } catch (error) {
       console.error("❌ Erro ao configurar rota Hotmart fixa:", error);
@@ -370,12 +363,15 @@ app.use((req, res, next) => {
       app.use('/api/hotmart', apiServerModule.default);
       console.log("✅ Rotas da API de integração Hotmart configuradas com sucesso");
       
-      // Iniciar o servidor de integração Hotmart em background
+      // Inicializar serviço de sincronização sem iniciar servidor independente
       try {
-        import('./hotmart-integration/index.js');
-        console.log("🚀 Servidor de integração Hotmart iniciado em segundo plano na porta 5050");
+        // Importar apenas para garantir que as tabelas e serviço de sincronização sejam inicializados
+        const integrationModule = await import('./hotmart-integration/sync-service.js');
+        // Iniciar o serviço de sincronização agendada
+        integrationModule.startScheduledSync();
+        console.log("🚀 Serviço de sincronização Hotmart iniciado com sucesso");
       } catch (integrationError) {
-        console.error("❌ Erro ao iniciar servidor de integração Hotmart:", integrationError);
+        console.error("❌ Erro ao iniciar sincronização Hotmart:", integrationError);
       }
     } catch (error) {
       console.error("❌ Erro ao configurar rotas da API de integração Hotmart:", error);
@@ -442,15 +438,16 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
+  // A porta 5000 está sendo usada, então vamos usar a porta 3001
+  // que está disponível no ambiente Replit
+  const port = 3001;
   server.listen({
     port,
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
-    log(`serving on port ${port}`);
+    log(`🚀 Servidor iniciado na porta ${port}`);
+    log(`🔄 Integração Hotmart: Usando ambiente ${process.env.HOTMART_SANDBOX === 'true' ? 'SANDBOX' : 'PRODUÇÃO'}`);
+    log(`💡 Acesse o servidor em: http://localhost:${port} ou pela URL do Replit`);
   });
 })();

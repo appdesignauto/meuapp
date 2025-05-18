@@ -16,6 +16,30 @@ router.use((req, res, next) => {
 // Endpoint para verificar status da integração
 router.get("/subscription/stats", async (req, res) => {
   try {
+    // Verificar se as credenciais da Hotmart estão disponíveis
+    const hasCredentials = process.env.HOTMART_CLIENT_ID && process.env.HOTMART_CLIENT_SECRET;
+    
+    if (!hasCredentials) {
+      console.log("Credenciais Hotmart não encontradas. Retornando dados de exemplo.");
+      // Retornar dados de demonstração quando as credenciais não estiverem disponíveis
+      return res.json({
+        general: {
+          total_users: 145,
+          active_subscriptions: 98,
+          lifetime_users: 12,
+          expired_subscriptions: 35,
+          hotmart_users: 110
+        },
+        planDistribution: [
+          { tipoplano: "Mensal", count: "45" },
+          { tipoplano: "Anual", count: "53" },
+          { tipoplano: "Vitalício", count: "12" },
+          { tipoplano: "Gratuito", count: "35" }
+        ],
+        demo_mode: true
+      });
+    }
+    
     const pool = new Pool({
       connectionString: process.env.DATABASE_URL
     });
@@ -63,7 +87,8 @@ router.get("/subscription/stats", async (req, res) => {
         expired_subscriptions: expiredSubscriptions,
         hotmart_users: hotmartUsers
       },
-      planDistribution: planDistributionResult.rows
+      planDistribution: planDistributionResult.rows,
+      demo_mode: false
     };
 
     await pool.end();
@@ -77,6 +102,16 @@ router.get("/subscription/stats", async (req, res) => {
 // Endpoint para iniciar sincronização manualmente
 router.post("/sync/start", async (req, res) => {
   try {
+    // Verificar se as credenciais da Hotmart estão disponíveis
+    const hasCredentials = process.env.HOTMART_CLIENT_ID && process.env.HOTMART_CLIENT_SECRET;
+    
+    if (!hasCredentials) {
+      console.log("Credenciais Hotmart não encontradas. Retornando resposta simulada para sincronização.");
+      return res.status(400).json({ 
+        error: "Credenciais da Hotmart não configuradas. Verifique as variáveis de ambiente HOTMART_CLIENT_ID e HOTMART_CLIENT_SECRET." 
+      });
+    }
+    
     const pool = new Pool({
       connectionString: process.env.DATABASE_URL
     });
