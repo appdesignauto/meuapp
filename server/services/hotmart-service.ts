@@ -140,6 +140,55 @@ export class HotmartService {
     }
   }
 
+  /**
+   * Registra um log de webhook na tabela webhook_logs
+   * @param eventType Tipo de evento
+   * @param status Status do processamento
+   * @param email Email do cliente (opcional)
+   * @param payload Payload completo do webhook
+   * @param errorMessage Mensagem de erro (opcional)
+   */
+  private async logToWebhookLogs(
+    eventType: string,
+    status: string,
+    email: string | null = null,
+    payload: any = null,
+    errorMessage: string | null = null
+  ): Promise<void> {
+    try {
+      // Extrair email do payload se não foi fornecido
+      if (!email && payload && typeof payload === 'object') {
+        if (payload.data) {
+          if (payload.data.buyer && payload.data.buyer.email) {
+            email = payload.data.buyer.email;
+          } else if (payload.data.subscription && 
+                    payload.data.subscription.subscriber && 
+                    payload.data.subscription.subscriber.email) {
+            email = payload.data.subscription.subscriber.email;
+          } else if (payload.data.purchase && 
+                    payload.data.purchase.buyer && 
+                    payload.data.purchase.buyer.email) {
+            email = payload.data.purchase.buyer.email;
+          }
+        }
+      }
+
+      // Converter payload para JSON string se for objeto
+      const jsonPayload = typeof payload === 'object' ? JSON.stringify(payload) : payload;
+
+      // Inserir log diretamente usando SQL para evitar problemas com Prisma
+      await this.prisma.$executeRawUnsafe(`
+        INSERT INTO webhook_logs (event_type, status, email, source, raw_payload, error_message)
+        VALUES ($1, $2, $3, $4, $5, $6)
+      `, eventType, status, email, 'hotmart', jsonPayload, errorMessage);
+      
+      console.log(`✅ Log registrado na tabela webhook_logs: ${eventType} - ${status}`);
+    } catch (error) {
+      console.error('❌ Erro ao registrar log na tabela webhook_logs:', error);
+      // Não propagar o erro para não interromper o fluxo
+    }
+  }
+
   // Processa os eventos de webhook
   public async processWebhook(
     event: string,
@@ -154,39 +203,72 @@ export class HotmartService {
       // Verificar a assinatura
       const isValidSignature = this.verifyWebhookSignature(stringPayload, signature);
       if (!isValidSignature) {
-        await this.logWebhookEvent({
+        // Registrar log com erro de assinatura
+        await this.logToWebhookLogs(
           event,
-          status: 'error',
-          rawPayload: payload,
-        });
+          'error',
+          null,
+          payload,
+          'Assinatura inválida'
+        );
+        
         return { 
           success: false, 
           message: 'Assinatura inválida' 
         };
       }
 
-      // Log do webhook recebido
-      await this.logWebhookEvent({
+      // Registrar log inicial com status de sucesso
+      await this.logToWebhookLogs(
         event,
-        status: 'success',
-        rawPayload: payload,
-      });
+        'success',
+        null,
+        payload,
+        null
+      );
 
       // Processar o evento com base no tipo
       const data = typeof payload === 'string' ? JSON.parse(payload) : payload;
       
-      switch (event) {
-        case 'PURCHASE_APPROVED':
-        case 'PURCHASE_COMPLETE':
-        case 'SUBSCRIPTION_REACTIVATED':
-          return await this.handleSubscriptionCreatedOrUpdated(data);
+      try {
+        let result;
+        switch (event) {
+          case 'PURCHASE_APPROVED':
+          case 'PURCHASE_COMPLETE':
+          case 'SUBSCRIPTION_REACTIVATED':
+            result = await this.handleSubscriptionCreatedOrUpdated(data);
+            break;
+          
+          case 'SUBSCRIPTION_CANCELLATION':
+          case 'SUBSCRIPTION_EXPIRED':
+            result = await this.handleSubscriptionCanceled(data);
+            break;
+          
+          default:
+            result = { success: true, message: `Evento ${event} recebido, mas não processado` };
+        }
         
-        case 'SUBSCRIPTION_CANCELLATION':
-        case 'SUBSCRIPTION_EXPIRED':
-          return await this.handleSubscriptionCanceled(data);
+        // Registrar o resultado do processamento no log
+        await this.logToWebhookLogs(
+          event,
+          result.success ? 'success' : 'error',
+          this.extractEmailFromPayload(data),
+          data,
+          result.success ? null : result.message
+        );
         
-        default:
-          return { success: true, message: `Evento ${event} recebido, mas não processado` };
+        return result;
+      } catch (error) {
+        // Registrar erro no log
+        await this.logToWebhookLogs(
+          event,
+          'error',
+          this.extractEmailFromPayload(data),
+          data,
+          error.message || 'Erro interno no processamento'
+        );
+        
+        throw error;
       }
     } catch (error) {
       console.error(`Erro ao processar webhook ${event}:`, error);

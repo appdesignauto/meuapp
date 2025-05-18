@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { HotmartService } from '../services/hotmart-service';
+import { logWebhookToDatabase, extractEmailFromPayload } from '../utils/webhook-helpers';
 
 const prisma = new PrismaClient();
 const hotmartService = new HotmartService(prisma);
@@ -85,6 +86,24 @@ router.post('/hotmart', async (req: Request, res: Response) => {
     }
   } catch (error) {
     console.error('[Webhook] Erro interno ao processar webhook da Hotmart:', error);
+    
+    // Registrar o erro no log mesmo em caso de exceção
+    try {
+      const payload = req.body;
+      const event = req.body.event || 'UNKNOWN_EVENT';
+      
+      await logWebhookToDatabase(
+        prisma,
+        event,
+        'error',
+        extractEmailFromPayload(payload),
+        payload,
+        error.message || 'Erro interno no processamento do webhook'
+      );
+    } catch (logError) {
+      console.error('[Webhook] Erro ao registrar log de falha:', logError);
+    }
+    
     // Sempre responder com 200 mesmo em caso de erro interno
     // A Hotmart não precisa reenviar o webhook, nós é que precisamos corrigir o problema
     return res.status(200).json({ 
@@ -129,15 +148,93 @@ router.post('/hotmart/simulate', async (req: Request, res: Response) => {
 // Endpoint para listar logs de webhook (apenas para administradores)
 router.get('/logs', async (req: Request, res: Response) => {
   try {
-    // Aqui deveria haver verificação de autenticação e autorização
-    // Mas para simplicidade, vamos apenas buscar os logs
-    const logs = await hotmartService.getRecentWebhookLogs();
-    return res.status(200).json({ logs });
+    // Parâmetros de paginação e filtros
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+    
+    // Filtros opcionais
+    const status = req.query.status as string;
+    const eventType = req.query.eventType as string;
+    const source = req.query.source as string;
+    const search = req.query.search as string;
+    
+    console.log('Buscando logs de webhook com filtros:', {
+      page, limit, status, eventType, source, search
+    });
+    
+    // Consulta SQL direta para buscar os logs
+    let whereClause = '';
+    const params = [];
+    let paramCount = 1;
+    
+    if (status) {
+      whereClause += ' WHERE status = $' + paramCount++;
+      params.push(status);
+    }
+    
+    if (eventType) {
+      whereClause += whereClause ? ' AND ' : ' WHERE ';
+      whereClause += 'event_type = $' + paramCount++;
+      params.push(eventType);
+    }
+    
+    if (source) {
+      whereClause += whereClause ? ' AND ' : ' WHERE ';
+      whereClause += 'source = $' + paramCount++;
+      params.push(source);
+    }
+    
+    if (search) {
+      whereClause += whereClause ? ' AND ' : ' WHERE ';
+      whereClause += 'email ILIKE $' + paramCount++;
+      params.push(`%${search}%`);
+    }
+    
+    // Consulta para contar o total de registros
+    const countQuery = `SELECT COUNT(*) FROM webhook_logs${whereClause}`;
+    const countResult = await prisma.$queryRawUnsafe(countQuery, ...params);
+    const totalCount = parseInt(countResult[0]?.count || '0');
+    
+    // Consulta para buscar os logs com paginação
+    const query = `
+      SELECT id, created_at, event_type, status, email, source, raw_payload, error_message
+      FROM webhook_logs
+      ${whereClause}
+      ORDER BY created_at DESC
+      LIMIT $${paramCount++} OFFSET $${paramCount++}
+    `;
+    
+    params.push(limit);
+    params.push(skip);
+    
+    const logs = await prisma.$queryRawUnsafe(query, ...params);
+    
+    // Formatar os logs para o frontend
+    const formatted = logs.map(log => ({
+      id: log.id,
+      date: log.created_at,
+      email: log.email || 'N/A',
+      source: log.source || 'hotmart',
+      event_type: log.event_type,
+      status: log.status,
+      raw_payload: log.raw_payload,
+      error_message: log.error_message
+    }));
+    
+    return res.status(200).json({
+      logs: formatted,
+      totalCount,
+      page,
+      limit,
+      totalPages: Math.ceil(totalCount / limit)
+    });
   } catch (error) {
     console.error('Erro ao buscar logs de webhook:', error);
     return res.status(500).json({ 
       success: false, 
-      message: 'Erro ao buscar logs de webhook' 
+      message: 'Erro ao buscar logs de webhook',
+      error: error.message
     });
   }
 });
@@ -145,15 +242,100 @@ router.get('/logs', async (req: Request, res: Response) => {
 // Endpoint para listar assinaturas ativas (apenas para administradores)
 router.get('/subscriptions', async (req: Request, res: Response) => {
   try {
-    // Aqui deveria haver verificação de autenticação e autorização
-    // Mas para simplicidade, vamos apenas buscar as assinaturas
-    const subscriptions = await hotmartService.getActiveSubscriptions();
-    return res.status(200).json({ subscriptions });
+    // Parâmetros de paginação e filtros
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+    const search = req.query.search as string;
+    const planType = req.query.planType as string;
+    const status = req.query.status as string;
+    
+    console.log('Buscando assinaturas com filtros:', {
+      page, limit, search, planType, status
+    });
+    
+    // Consulta SQL direta para buscar as assinaturas
+    let whereClause = '';
+    const params = [];
+    let paramCount = 1;
+    
+    // Começamos com WHERE tipoplano IS NOT NULL para garantir que só buscamos usuários com assinatura
+    whereClause = ' WHERE tipoplano IS NOT NULL';
+    
+    if (search) {
+      whereClause += ' AND (email ILIKE $' + paramCount + ' OR username ILIKE $' + paramCount + ')';
+      params.push(`%${search}%`);
+      paramCount++;
+    }
+    
+    if (planType) {
+      whereClause += ' AND tipoplano = $' + paramCount++;
+      params.push(planType);
+    }
+    
+    if (status) {
+      if (status === 'active') {
+        whereClause += ' AND dataexpiracao > NOW()';
+      } else if (status === 'expired') {
+        whereClause += ' AND dataexpiracao < NOW()';
+      }
+    }
+    
+    // Consulta para contar o total de registros
+    const countQuery = `SELECT COUNT(*) FROM users${whereClause}`;
+    const countResult = await prisma.$queryRawUnsafe(countQuery, ...params);
+    const totalCount = parseInt(countResult[0]?.count || '0');
+    
+    // Consulta para buscar as assinaturas com paginação
+    const query = `
+      SELECT 
+        id, 
+        username, 
+        email, 
+        tipoplano, 
+        origemassinatura, 
+        dataassinatura, 
+        dataexpiracao,
+        acessovitalicio,
+        observacaoadmin
+      FROM users
+      ${whereClause}
+      ORDER BY dataassinatura DESC
+      LIMIT $${paramCount++} OFFSET $${paramCount++}
+    `;
+    
+    params.push(limit);
+    params.push(skip);
+    
+    const subscriptions = await prisma.$queryRawUnsafe(query, ...params);
+    
+    // Formatar as assinaturas para o frontend
+    const formatted = subscriptions.map(sub => ({
+      id: sub.id,
+      username: sub.username,
+      email: sub.email,
+      planType: sub.tipoplano,
+      source: sub.origemassinatura || 'manual',
+      startDate: sub.dataassinatura,
+      expiryDate: sub.dataexpiracao,
+      isLifetime: sub.acessovitalicio,
+      adminNotes: sub.observacaoadmin,
+      status: sub.dataexpiracao > new Date() || sub.acessovitalicio ? 'active' : 'expired'
+    }));
+    
+    return res.status(200).json({
+      subscriptions: formatted,
+      totalCount,
+      page,
+      limit,
+      totalPages: Math.ceil(totalCount / limit)
+    });
   } catch (error) {
     console.error('Erro ao buscar assinaturas:', error);
     return res.status(500).json({ 
       success: false, 
-      message: 'Erro ao buscar assinaturas' 
+      message: 'Erro ao buscar assinaturas',
+      error: error.message
     });
   }
 });
