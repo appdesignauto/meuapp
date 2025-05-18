@@ -1,8 +1,15 @@
 // index.js
-require('dotenv').config();
-const { fork } = require('child_process');
-const express = require('express');
-const path = require('path');
+import dotenv from 'dotenv';
+import { fork } from 'child_process';
+import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Configurando o dirname para ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config();
 
 // Porta principal para o serviço combinado
 const PORT = process.env.HOTMART_PORT || 5050;
