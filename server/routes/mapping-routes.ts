@@ -115,7 +115,8 @@ router.post('/hotmart-mappings', isAdmin, async (req: Request, res: Response) =>
         offerCode: offerCode || null,
         productName,
         planType,
-        durationDays: Number(durationDays)
+        durationDays: Number(durationDays),
+        isActive: true // Por padrão, novos mapeamentos são ativos
       }
     });
 
@@ -140,7 +141,7 @@ router.post('/hotmart-mappings', isAdmin, async (req: Request, res: Response) =>
 router.put('/hotmart-mappings/:id', isAdmin, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { productId, offerCode, productName, planType, durationDays } = req.body;
+    const { productId, offerCode, productName, planType, durationDays, isActive } = req.body;
 
     // Validação de campos obrigatórios
     if (!productId || !productName || !planType || !durationDays) {
@@ -170,7 +171,8 @@ router.put('/hotmart-mappings/:id', isAdmin, async (req: Request, res: Response)
         offerCode: offerCode || null,
         productName,
         planType,
-        durationDays: Number(durationDays)
+        durationDays: Number(durationDays),
+        isActive: isActive !== undefined ? isActive : existingMapping.isActive // Manter o valor atual se não fornecido
       }
     });
 

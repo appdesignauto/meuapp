@@ -233,6 +233,7 @@ export class HotmartService {
         productMapping = await this.prisma.hotmartProductMapping.findFirst({
           where: {
             productId,
+            isActive: true,
             OR: [
               { offerCode },
               { offerId: offerCode }
@@ -247,6 +248,7 @@ export class HotmartService {
         productMapping = await this.prisma.hotmartProductMapping.findFirst({
           where: {
             productId,
+            isActive: true,
             OR: [
               { offerCode: null },
               { offerCode: '' },
@@ -255,6 +257,20 @@ export class HotmartService {
             ]
           }
         });
+      }
+      
+      // Último recurso: buscar qualquer mapeamento para este produto, mesmo que inativo
+      if (!productMapping) {
+        console.log('Último recurso: buscando qualquer mapeamento para este produto...');
+        productMapping = await this.prisma.hotmartProductMapping.findFirst({
+          where: {
+            productId
+          }
+        });
+        
+        if (productMapping && !productMapping.isActive) {
+          console.warn(`⚠️ Encontrado mapeamento inativo para o produto ${productId}. O ideal é ativá-lo no painel.`);
+        }
       }
       
       // Se ainda não encontrou, não há mapeamento para este produto
