@@ -192,74 +192,126 @@ export class HotmartService {
   // Tratar eventos de criação/reativação de assinatura
   private async handleSubscriptionCreatedOrUpdated(data: HotmartPurchaseEvent | HotmartSubscriptionEvent): Promise<{ success: boolean; message: string }> {
     try {
+      // Extrair informações básicas do payload
       let subscriberCode: string;
       let email: string;
       let productId: string;
+      let offerCode: string | null = null;
+      let planName: string | null = null;
 
       if ('purchase' in data.data) {
         // É um evento de compra (PURCHASE_*)
         subscriberCode = data.data.purchase.subscription?.subscriber.code || '';
         email = data.data.purchase.subscription?.subscriber.email || '';
         productId = data.data.product.id;
+        planName = data.data.purchase.subscription?.plan?.name || null;
       } else {
         // É um evento de assinatura (SUBSCRIPTION_*)
         subscriberCode = data.data.subscription.subscriber.code;
         email = data.data.subscription.subscriber.email;
         productId = data.data.product.id;
+        planName = data.data.subscription.plan?.name || null;
       }
 
       if (!subscriberCode || !email) {
         return { success: false, message: 'Dados de assinante incompletos' };
       }
 
-      // Mapear o produto Hotmart para o plano interno
-      const planMapping = this.planMappings.find(
-        mapping => mapping.hotmartProductId === productId
-      );
-
-      if (!planMapping) {
-        return { success: false, message: `Produto não mapeado: ${productId}` };
+      // Extrair offerCode do nome do plano, se disponível
+      if (planName && planName.includes('-')) {
+        const parts = planName.split('-');
+        offerCode = parts[parts.length - 1].trim();
+        console.log(`Extraído offerCode "${offerCode}" do nome do plano: ${planName}`);
       }
-
-      // Calcular data de expiração com base no tipo de plano
-      const currentPeriodEnd = this.calculateExpirationDate(planMapping.planType);
-
+      
+      console.log(`Buscando mapeamento para produto ${productId}${offerCode ? ` com offerCode ${offerCode}` : ''}`);
+      
+      // Buscar mapeamento específico com offerCode
+      let productMapping = null;
+      if (offerCode) {
+        productMapping = await this.prisma.hotmartProductMapping.findFirst({
+          where: {
+            productId,
+            offerCode
+          }
+        });
+      }
+      
+      // Se não encontrou com offerCode, buscar mapeamento genérico
+      if (!productMapping) {
+        console.log('Buscando mapeamento genérico (sem offerCode)');
+        productMapping = await this.prisma.hotmartProductMapping.findFirst({
+          where: {
+            productId,
+            offerCode: null
+          }
+        });
+      }
+      
+      // Se ainda não encontrou, não há mapeamento para este produto
+      if (!productMapping) {
+        console.warn(`⚠️ Produto ${productId} não mapeado no sistema`);
+        return { 
+          success: false, 
+          message: `Produto ${productId} não mapeado no sistema` 
+        };
+      }
+      
+      console.log(`✅ Mapeamento encontrado:`, productMapping);
+      
+      // Calcular data de expiração baseado na duração configurada
+      const currentPeriodEnd = this.calculateExpirationDateFromDays(productMapping.durationDays);
+      
       // Verificar se a assinatura já existe
-      const existingSubscription = await this.prisma.hotmartSubscription.findUnique({
-        where: { subscriberCode },
+      const existingSubscription = await this.prisma.hotmartSubscription.findFirst({
+        where: { 
+          subscriberCode
+        }
       });
 
       if (existingSubscription) {
+        console.log(`Atualizando assinatura existente para ${email}`);
+        
         // Atualizar assinatura existente
         await this.prisma.hotmartSubscription.update({
-          where: { subscriberCode },
+          where: { 
+            id: existingSubscription.id 
+          },
           data: {
             status: 'active',
-            currentPeriodEnd,
+            productId,
+            planType: productMapping.planType,
+            startDate: new Date(),
+            endDate: currentPeriodEnd,
+            updatedAt: new Date()
           },
         });
 
         // Atualizar usuário na plataforma
-        await this.updateUserSubscription(email, planMapping.internalPlanName, currentPeriodEnd);
+        await this.updateUserSubscription(email, productMapping.planType, currentPeriodEnd);
 
         return { 
           success: true, 
           message: `Assinatura atualizada para ${email}` 
         };
       } else {
+        console.log(`Criando nova assinatura para ${email}`);
+        
         // Criar nova assinatura
         await this.prisma.hotmartSubscription.create({
           data: {
             subscriberCode,
             email,
-            planType: planMapping.planType,
+            productId,
+            planType: productMapping.planType,
             status: 'active',
-            currentPeriodEnd,
+            startDate: new Date(),
+            endDate: currentPeriodEnd
           },
         });
 
         // Atualizar ou criar usuário na plataforma
-        await this.updateUserSubscription(email, planMapping.internalPlanName, currentPeriodEnd);
+        await this.updateUserSubscription(email, productMapping.planType, currentPeriodEnd);
 
         return { 
           success: true, 
@@ -305,7 +357,8 @@ export class HotmartService {
     }
   }
 
-  // Calcular a data de expiração com base no tipo de plano
+  // Calcular a data de expiração com base no tipo de plano 
+  // (mantido para compatibilidade)
   private calculateExpirationDate(planType: string): Date {
     const now = new Date();
     
@@ -322,6 +375,24 @@ export class HotmartService {
       default:
         return new Date(now.setMonth(now.getMonth() + 1)); // Padrão: mensal
     }
+  }
+  
+  // Calcular a data de expiração com base no número de dias
+  private calculateExpirationDateFromDays(days: number): Date {
+    const now = new Date();
+    
+    // Verificar se é plano vitalício (dias > 100 anos)
+    if (days > 36500) { // mais de 100 anos = vitalício
+      return new Date(now.setFullYear(now.getFullYear() + 100));
+    }
+    
+    // Calcular data de expiração adicionando os dias
+    const expirationDate = new Date(now);
+    expirationDate.setDate(expirationDate.getDate() + days);
+    
+    console.log(`Calculada data de expiração: ${expirationDate.toISOString()} (${days} dias a partir de hoje)`);
+    
+    return expirationDate;
   }
 
   // Atualizar usuário na plataforma com a nova assinatura

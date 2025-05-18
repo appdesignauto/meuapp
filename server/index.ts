@@ -172,6 +172,7 @@ app.use((req, res, next) => {
       try {
         const { PrismaClient } = await import('@prisma/client');
         const { default: webhookRoutes } = await import('./routes/webhook-routes');
+        const { default: mappingRoutes } = await import('./routes/mapping-routes');
         const { HotmartService } = await import('./services/hotmart-service');
         
         const prisma = new PrismaClient();
@@ -179,6 +180,9 @@ app.use((req, res, next) => {
         
         // Usar as rotas do webhook definidas no arquivo webhook-routes.ts
         app.use('/webhook', webhookRoutes);
+        
+        // Registrar rotas para mapeamento de produtos Hotmart
+        app.use(mappingRoutes);
         
         console.log("Serviço da Hotmart inicializado com sucesso no modo " + 
                    (process.env.HOTMART_SANDBOX === 'true' ? 'Sandbox' : 'Produção'));
