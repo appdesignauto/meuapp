@@ -9,6 +9,7 @@ import { validateR2Environment } from "./env-check";
 import { configureCors } from "./cors-config";
 // Importar o novo manipulador de webhook aprimorado
 import enhancedHotmartWebhook from "./routes/webhook-hotmart-enhanced";
+import adminRoutes from "./routes/admin";
 
 const app = express();
 
@@ -123,6 +124,9 @@ app.use((req, res, next) => {
     
     // Criar usuário administrador
     await createAdminUser();
+    
+    // Registrar rotas de administração
+    app.use('/api', adminRoutes);
     
     // Configurar verificação diária de assinaturas expiradas (executar a cada 12 horas)
     const VERIFICAR_ASSINATURAS_INTERVALO = 12 * 60 * 60 * 1000; // 12 horas em milissegundos

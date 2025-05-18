@@ -40,6 +40,7 @@ import VideoaulasPage from "@/pages/videoaulas";
 import ComunidadePage from "@/pages/comunidade";
 import FerramentasPage from "@/pages/ferramentas";
 import WebhookDiagnostics from "@/pages/webhook-diagnostics";
+import WebhookLogsPage from "@/pages/admin/WebhookLogs";
 
 // Páginas do Painel do Usuário
 import { ProtectedPainelRoute } from "@/components/painel/ProtectedPainelRoute";
@@ -271,6 +272,11 @@ function AppRoutes() {
       <ProtectedRoute 
         path="/admin/webhook-diagnostics" 
         component={WebhookDiagnostics}
+        roles={['admin']} 
+      />
+      <ProtectedRoute 
+        path="/admin/webhooks" 
+        component={WebhookLogsPage}
         roles={['admin']} 
       />
       <ProtectedRoute
