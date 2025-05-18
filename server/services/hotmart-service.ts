@@ -322,8 +322,13 @@ export class HotmartService {
     // Extrair e validar email com lógica específica para cancelamento
     let email;
     if (event === 'SUBSCRIPTION_CANCELLATION') {
-      email = data.subscriber?.email;
+      email = data.subscriber?.email || data.data?.subscriber?.email;
       console.log('Email extraído do subscriber para cancelamento:', email);
+      
+      // Fallback para outros campos se não encontrar no subscriber
+      if (!email) {
+        email = extractEmail(data) || extractEmail(data.data || {});
+      }
     } else {
       email = extractEmail(data);
     }
