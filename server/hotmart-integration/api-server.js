@@ -1,183 +1,221 @@
-import express from 'express';
-import { Pool } from 'pg';
-import dotenv from 'dotenv';
-import * as syncService from './sync-service.js';
-
-dotenv.config();
+// api-server.js
+const express = require('express');
+const { Pool } = require('pg');
+const jwt = require('jsonwebtoken');
+const cors = require('cors');
+require('dotenv').config();
 
 const router = express.Router();
-
-// Middleware para logs
-router.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  next();
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL
 });
 
-// Endpoint para verificar status da integração
-router.get("/subscription/stats", async (req, res) => {
-  try {
-    // Verificar se as credenciais da Hotmart estão disponíveis
-    const hasCredentials = process.env.HOTMART_CLIENT_ID && process.env.HOTMART_CLIENT_SECRET;
-    
-    if (!hasCredentials) {
-      console.log("Credenciais Hotmart não encontradas. Retornando dados de exemplo.");
-      // Retornar dados de demonstração quando as credenciais não estiverem disponíveis
-      return res.json({
-        general: {
-          total_users: 145,
-          active_subscriptions: 98,
-          lifetime_users: 12,
-          expired_subscriptions: 35,
-          hotmart_users: 110
-        },
-        planDistribution: [
-          { tipoplano: "Mensal", count: "45" },
-          { tipoplano: "Anual", count: "53" },
-          { tipoplano: "Vitalício", count: "12" },
-          { tipoplano: "Gratuito", count: "35" }
-        ],
-        demo_mode: true
-      });
+// Middlewares
+router.use(cors());
+router.use(express.json());
+
+// Middleware para autenticação JWT
+const authenticateJWT = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader) {
+    return res.status(401).json({ message: 'Token de autenticação não fornecido' });
+  }
+  
+  const token = authHeader.split(' ')[1];
+  const jwtSecret = process.env.JWT_SECRET || 'hotmart-integration-secret';
+  
+  jwt.verify(token, jwtSecret, (err, user) => {
+    if (err) {
+      return res.status(401).json({ message: 'Token inválido ou expirado' });
     }
     
-    const pool = new Pool({
-      connectionString: process.env.DATABASE_URL
-    });
+    req.user = user;
+    next();
+  });
+};
 
-    // Estatísticas de usuários
-    const totalUsersResult = await pool.query('SELECT COUNT(*) as count FROM users');
-    const activeSubscriptionsResult = await pool.query(`
-      SELECT COUNT(*) as count FROM users 
-      WHERE nivelacesso != 'free' AND dataexpiracao > NOW()
-    `);
-    const lifetimeUsersResult = await pool.query(`
-      SELECT COUNT(*) as count FROM users 
-      WHERE acessovitalicio = true
-    `);
-    const expiredSubscriptionsResult = await pool.query(`
-      SELECT COUNT(*) as count FROM users 
-      WHERE nivelacesso != 'free' AND dataexpiracao < NOW()
-    `);
-    const hotmartUsersResult = await pool.query(`
-      SELECT COUNT(*) as count FROM users 
-      WHERE origemassinatura = 'hotmart'
-    `);
-
-    // Distribuição por plano
-    const planDistributionResult = await pool.query(`
-      SELECT tipoplano, COUNT(*) as count 
-      FROM users 
-      WHERE tipoplano IS NOT NULL 
-      GROUP BY tipoplano
-    `);
-
-    // Formatando os resultados
-    const totalUsers = parseInt(totalUsersResult.rows[0].count);
-    const activeSubscriptions = parseInt(activeSubscriptionsResult.rows[0].count);
-    const lifetimeUsers = parseInt(lifetimeUsersResult.rows[0].count);
-    const expiredSubscriptions = parseInt(expiredSubscriptionsResult.rows[0].count);
-    const hotmartUsers = parseInt(hotmartUsersResult.rows[0].count);
-
-    // Preparando a resposta
-    const response = {
-      general: {
-        total_users: totalUsers,
-        active_subscriptions: activeSubscriptions,
-        lifetime_users: lifetimeUsers,
-        expired_subscriptions: expiredSubscriptions,
-        hotmart_users: hotmartUsers
-      },
-      planDistribution: planDistributionResult.rows,
-      demo_mode: false
-    };
-
-    await pool.end();
-    res.json(response);
+// Rota para obter dados do usuário atual
+router.get('/user', authenticateJWT, async (req, res) => {
+  try {
+    const { id } = req.user;
+    
+    // Buscar detalhes do usuário
+    const userResult = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
+    
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Usuário não encontrado' });
+    }
+    
+    const user = userResult.rows[0];
+    
+    // Remover senha do resultado
+    const { password, ...userWithoutPassword } = user;
+    
+    return res.json(userWithoutPassword);
   } catch (error) {
-    console.error("Erro ao obter estatísticas de assinatura:", error);
-    res.status(500).json({ error: "Erro ao obter estatísticas de assinatura" });
+    console.error('Erro ao obter dados do usuário:', error.message);
+    return res.status(500).json({ message: 'Erro interno do servidor' });
   }
 });
 
-// Endpoint para iniciar sincronização manualmente
-router.post("/sync/start", async (req, res) => {
+// Rota para verificar o status da assinatura do usuário atual
+router.get('/subscription/status', authenticateJWT, async (req, res) => {
   try {
-    // Verificar se as credenciais da Hotmart estão disponíveis
-    const hasCredentials = process.env.HOTMART_CLIENT_ID && process.env.HOTMART_CLIENT_SECRET;
+    const { id } = req.user;
     
-    if (!hasCredentials) {
-      console.log("Credenciais Hotmart não encontradas. Retornando resposta simulada para sincronização.");
-      return res.status(400).json({ 
-        error: "Credenciais da Hotmart não configuradas. Verifique as variáveis de ambiente HOTMART_CLIENT_ID e HOTMART_CLIENT_SECRET." 
-      });
+    // Buscar detalhes do usuário
+    const userResult = await pool.query(`
+      SELECT id, email, tipoplano, origemassinatura, dataassinatura, dataexpiracao, acessovitalicio
+      FROM users WHERE id = $1
+    `, [id]);
+    
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Usuário não encontrado' });
     }
     
-    const pool = new Pool({
-      connectionString: process.env.DATABASE_URL
+    const user = userResult.rows[0];
+    
+    // Verificar status da assinatura
+    let status = 'free';
+    let planDetails = null;
+    
+    if (user.acessovitalicio) {
+      status = 'lifetime';
+      planDetails = {
+        type: 'lifetime',
+        name: user.tipoplano || 'Acesso Vitalício',
+        startDate: user.dataassinatura,
+        source: user.origemassinatura
+      };
+    } else if (user.tipoplano && user.dataexpiracao && new Date(user.dataexpiracao) > new Date()) {
+      status = 'active';
+      planDetails = {
+        type: 'subscription',
+        name: user.tipoplano,
+        startDate: user.dataassinatura,
+        expiryDate: user.dataexpiracao,
+        source: user.origemassinatura
+      };
+    } else if (user.tipoplano && user.dataexpiracao) {
+      status = 'expired';
+      planDetails = {
+        type: 'expired',
+        name: user.tipoplano,
+        startDate: user.dataassinatura,
+        expiryDate: user.dataexpiracao,
+        source: user.origemassinatura
+      };
+    }
+    
+    return res.json({
+      status,
+      planDetails
     });
-
-    // Registrar início da sincronização
-    const syncLogResult = await pool.query(`
-      INSERT INTO sync_logs (status, message, details, created_at)
-      VALUES ('started', 'Sincronização iniciada manualmente', $1, NOW())
-      RETURNING id
-    `, [JSON.stringify({ startedBy: req.user?.username || 'sistema' })]);
-
-    const syncId = syncLogResult.rows[0].id;
-
-    // Iniciar processo de sincronização de forma assíncrona
-    syncService.syncHotmartData()
-      .then(async (result) => {
-        // Atualizar log com resultados
-        await pool.query(`
-          UPDATE sync_logs
-          SET status = 'completed', 
-              message = 'Sincronização concluída com sucesso',
-              details = $1
-          WHERE id = $2
-        `, [JSON.stringify(result), syncId]);
-        console.log("Sincronização manual concluída:", result);
-      })
-      .catch(async (error) => {
-        // Atualizar log com erro
-        await pool.query(`
-          UPDATE sync_logs
-          SET status = 'failed',
-              message = 'Falha na sincronização',
-              details = $1
-          WHERE id = $2
-        `, [JSON.stringify({ error: error.message }), syncId]);
-        console.error("Erro na sincronização manual:", error);
-      });
-
-    await pool.end();
-    res.json({ message: "Sincronização iniciada", syncId });
   } catch (error) {
-    console.error("Erro ao iniciar sincronização:", error);
-    res.status(500).json({ error: "Erro ao iniciar sincronização" });
+    console.error('Erro ao verificar status da assinatura:', error.message);
+    return res.status(500).json({ message: 'Erro interno do servidor' });
   }
 });
 
-// Endpoint para obter logs de sincronização
-router.get("/sync/logs", async (req, res) => {
+// Rota para listar logs de sincronização (apenas para administradores)
+router.get('/sync/logs', authenticateJWT, async (req, res) => {
   try {
-    const pool = new Pool({
-      connectionString: process.env.DATABASE_URL
-    });
-
-    const logs = await pool.query(`
-      SELECT id, status, message, details, created_at
-      FROM sync_logs
+    // Verificar se o usuário é administrador
+    const userRoleResult = await pool.query(`
+      SELECT nivelacesso FROM users WHERE id = $1
+    `, [req.user.id]);
+    
+    if (userRoleResult.rows.length === 0 || userRoleResult.rows[0].nivelacesso !== 'admin') {
+      return res.status(403).json({ message: 'Acesso negado. Apenas administradores podem ver logs de sincronização.' });
+    }
+    
+    // Obter logs de sincronização
+    const logsResult = await pool.query(`
+      SELECT * FROM sync_logs
       ORDER BY created_at DESC
-      LIMIT 10
+      LIMIT 50
     `);
-
-    await pool.end();
-    res.json(logs.rows);
+    
+    return res.json(logsResult.rows);
   } catch (error) {
-    console.error("Erro ao obter logs de sincronização:", error);
-    res.status(500).json({ error: "Erro ao obter logs de sincronização" });
+    console.error('Erro ao listar logs de sincronização:', error.message);
+    return res.status(500).json({ message: 'Erro interno do servidor' });
   }
 });
 
-export default router;
+// Rota para iniciar sincronização manual (apenas para administradores)
+router.post('/sync/start', authenticateJWT, async (req, res) => {
+  try {
+    // Verificar se o usuário é administrador
+    const userRoleResult = await pool.query(`
+      SELECT nivelacesso FROM users WHERE id = $1
+    `, [req.user.id]);
+    
+    if (userRoleResult.rows.length === 0 || userRoleResult.rows[0].nivelacesso !== 'admin') {
+      return res.status(403).json({ message: 'Acesso negado. Apenas administradores podem iniciar sincronização.' });
+    }
+    
+    // Enviar mensagem para o serviço de sincronização via arquivo compartilhado
+    // (Implementação simplificada, em um ambiente real usaríamos um sistema de mensageria)
+    await pool.query(`
+      INSERT INTO sync_logs (status, message, created_at)
+      VALUES ('requested', 'Sincronização manual solicitada por administrador', NOW())
+    `);
+    
+    return res.json({
+      success: true,
+      message: 'Pedido de sincronização enviado. A sincronização será iniciada em breve.'
+    });
+  } catch (error) {
+    console.error('Erro ao iniciar sincronização manual:', error.message);
+    return res.status(500).json({ message: 'Erro interno do servidor' });
+  }
+});
+
+// Rota para obter estatísticas de assinaturas (apenas para administradores)
+router.get('/subscription/stats', authenticateJWT, async (req, res) => {
+  try {
+    // Verificar se o usuário é administrador
+    const userRoleResult = await pool.query(`
+      SELECT nivelacesso FROM users WHERE id = $1
+    `, [req.user.id]);
+    
+    if (userRoleResult.rows.length === 0 || userRoleResult.rows[0].nivelacesso !== 'admin') {
+      return res.status(403).json({ message: 'Acesso negado. Apenas administradores podem ver estatísticas.' });
+    }
+    
+    // Obter estatísticas de assinaturas
+    const statsResult = await pool.query(`
+      SELECT 
+        COUNT(*) as total_users,
+        COUNT(CASE WHEN acessovitalicio = true THEN 1 END) as lifetime_users,
+        COUNT(CASE WHEN tipoplano IS NOT NULL AND dataexpiracao > NOW() THEN 1 END) as active_subscriptions,
+        COUNT(CASE WHEN tipoplano IS NOT NULL AND dataexpiracao <= NOW() THEN 1 END) as expired_subscriptions,
+        COUNT(CASE WHEN origemassinatura = 'hotmart' THEN 1 END) as hotmart_users
+      FROM users
+    `);
+    
+    // Estatísticas por plano
+    const planStatsResult = await pool.query(`
+      SELECT 
+        tipoplano, 
+        COUNT(*) as count
+      FROM users
+      WHERE tipoplano IS NOT NULL
+      GROUP BY tipoplano
+      ORDER BY count DESC
+    `);
+    
+    return res.json({
+      general: statsResult.rows[0],
+      planDistribution: planStatsResult.rows
+    });
+  } catch (error) {
+    console.error('Erro ao obter estatísticas de assinaturas:', error.message);
+    return res.status(500).json({ message: 'Erro interno do servidor' });
+  }
+});
+
+// Exportar o router
+module.exports = router;

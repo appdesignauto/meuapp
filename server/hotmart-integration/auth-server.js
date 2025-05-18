@@ -1,13 +1,10 @@
 // auth-server.js
-import express from 'express';
-import axios from 'axios';
-import pg from 'pg';
-import cors from 'cors';
-import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
-
-dotenv.config();
-const { Pool } = pg;
+const express = require('express');
+const axios = require('axios');
+const { Pool } = require('pg');
+const cors = require('cors');
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
 const app = express();
 const pool = new Pool({
@@ -179,7 +176,7 @@ app.post('/auth', async (req, res) => {
 
       // Gerar token JWT
       const jwtSecret = process.env.JWT_SECRET || 'hotmart-integration-secret';
-      const userToken = jwt.sign(
+      const token = jwt.sign(
         { id: updatedUser.id, email: updatedUser.email },
         jwtSecret,
         { expiresIn: '24h' }
@@ -205,7 +202,7 @@ app.post('/auth', async (req, res) => {
           ...userWithoutPassword,
           subscriptions: userSubscriptions
         },
-        token: userToken
+        token
       });
 
     } catch (hotmartError) {
@@ -216,7 +213,7 @@ app.post('/auth', async (req, res) => {
       
       // Gerar token JWT mesmo sem verificação Hotmart
       const jwtSecret = process.env.JWT_SECRET || 'hotmart-integration-secret';
-      const userToken = jwt.sign(
+      const token = jwt.sign(
         { id: user.id, email: user.email },
         jwtSecret,
         { expiresIn: '24h' }
@@ -224,7 +221,7 @@ app.post('/auth', async (req, res) => {
       
       return res.json({
         user: userWithoutPassword,
-        token: userToken,
+        token,
         warning: 'Não foi possível verificar assinatura na Hotmart.'
       });
     }
@@ -268,4 +265,4 @@ setInterval(() => {
 }, 60000);
 
 // Exportar o app para ser usado pelo index.js
-export default app;
+module.exports = app;

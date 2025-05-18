@@ -78,9 +78,10 @@ export class HotmartService {
 
   constructor(prisma: PrismaClient) {
     this.prisma = prisma;
-    // Forçando ambiente de produção conforme solicitado
-    this.isSandbox = false;
-    this.hotmartApiUrl = 'https://api-sec.hotmart.com';
+    this.isSandbox = process.env.HOTMART_SANDBOX === 'true';
+    this.hotmartApiUrl = this.isSandbox 
+      ? 'https://sandbox.hotmart.com' 
+      : 'https://api-sec.hotmart.com';
     
     this.hotmartWebhookSecret = process.env.HOTMART_WEBHOOK_SECRET || '';
     this.planMappings = [

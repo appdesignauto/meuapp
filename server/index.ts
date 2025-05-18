@@ -319,7 +319,8 @@ app.use((req, res, next) => {
         // Registrar rotas para mapeamento de produtos Hotmart
         app.use(mappingRoutes);
         
-        console.log("Serviço da Hotmart inicializado com sucesso no modo Produção");
+        console.log("Serviço da Hotmart inicializado com sucesso no modo " + 
+                   (process.env.HOTMART_SANDBOX === 'true' ? 'Sandbox' : 'Produção'));
         
         // NOTA: Não registramos '/webhook' rotas aqui, pois
         // já temos uma implementação direta acima que deve ter precedência
@@ -333,15 +334,22 @@ app.use((req, res, next) => {
     
     console.log("✅ Configuração da rota do webhook da Hotmart concluída com sucesso!");
     
-    // Servidor standalone de webhooks desativado - usando integração direta com API
-    // Este comentário mantido para referência histórica
-    console.log("ℹ️ Servidor standalone de webhooks desativado - usando integração direta com API");
-    console.log("ℹ️ Migrando para integração direta com a API da Hotmart")
+    // SOLUÇÃO FINAL: Iniciar servidor standalone para webhooks em outra porta
+    // Este servidor é COMPLETAMENTE INDEPENDENTE e não sofre interferência
+    // de nenhum middleware do servidor principal
+    try {
+      // Importar o servidor standalone
+      import('./standalone-webhook-server');
+      console.log("🚀 Servidor standalone de webhooks iniciado em segundo plano");
+      console.log("⚠️ IMPORTANTE: Configure o webhook da Hotmart para apontar para a porta 5001");
+    } catch (error) {
+      console.error("❌ Erro ao iniciar servidor standalone de webhooks:", error);
+    }
     
     // Adicionar a rota de webhook fixa para Hotmart
     try {
       const hotmartModule = await import('./routes/webhook-hotmart-fixed');
-      app.use('/webhook/hotmart-fixed', hotmartModule.default);
+      app.use('/webhook/hotmart-fixed', hotmartModule.router);
       console.log("✅ Rota Hotmart fixa configurada com sucesso");
     } catch (error) {
       console.error("❌ Erro ao configurar rota Hotmart fixa:", error);
@@ -354,26 +362,6 @@ app.use((req, res, next) => {
       console.log("✅ Rota de detalhes de webhook corrigida configurada com sucesso");
     } catch (error) {
       console.error("❌ Erro ao configurar rota de detalhes de webhook corrigida:", error);
-    }
-    
-    // Adicionar rotas da API de integração com Hotmart
-    try {
-      const apiServerModule = await import('./hotmart-integration/api-server');
-      app.use('/api/hotmart', apiServerModule.default);
-      console.log("✅ Rotas da API de integração Hotmart configuradas com sucesso");
-      
-      // Inicializar serviço de sincronização sem iniciar servidor independente
-      try {
-        // Importar apenas para garantir que as tabelas e serviço de sincronização sejam inicializados
-        const integrationModule = await import('./hotmart-integration/sync-service.js');
-        // Iniciar o serviço de sincronização agendada
-        integrationModule.startScheduledSync();
-        console.log("🚀 Serviço de sincronização Hotmart iniciado com sucesso");
-      } catch (integrationError) {
-        console.error("❌ Erro ao iniciar sincronização Hotmart:", integrationError);
-      }
-    } catch (error) {
-      console.error("❌ Erro ao configurar rotas da API de integração Hotmart:", error);
     }
     
     // Configurar a nova rota de webhook APRIMORADA para Hotmart
@@ -437,15 +425,15 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // A porta 5000 está sendo usada por outro serviço, voltamos para a porta 3001
-  const port = 3001;
+  // ALWAYS serve the app on port 5000
+  // this serves both the API and the client.
+  // It is the only port that is not firewalled.
+  const port = 5000;
   server.listen({
     port,
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
-    log(`🚀 Servidor iniciado na porta ${port}`);
-    log(`🔄 Integração Hotmart: Usando ambiente PRODUÇÃO`);
-    log(`💡 Acesse o servidor em: http://localhost:${port} ou pela URL do Replit`);
+    log(`serving on port ${port}`);
   });
 })();

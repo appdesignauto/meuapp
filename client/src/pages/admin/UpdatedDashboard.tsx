@@ -5,7 +5,6 @@ import AnalyticsSettings from '@/components/admin/AnalyticsSettings';
 import ReportsManagement from '@/components/admin/ReportsManagement';
 import SubscriptionManagement from '@/components/admin/SubscriptionManagement';
 import SubscriptionSettings from '@/components/admin/SubscriptionSettings';
-import HotmartIntegration from '@/components/admin/HotmartIntegration';
 import {
   LayoutGrid,
   Image,
@@ -49,10 +48,10 @@ import {
   Zap,
   Award,
   FileVideo,
-  RefreshCw,
   MoreHorizontal,
   Edit,
-  Eye,
+  Eye, 
+  RefreshCw,
   ListOrdered,
   BellRing,
   Palette,
@@ -1049,17 +1048,6 @@ const AdminDashboard = () => {
                   <Database className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
                   {sidebarOpen && <span className="truncate text-sm">Logs de Webhook</span>}
                 </Link>
-                
-                <button
-                  onClick={() => setActiveTab('hotmartIntegration')}
-                  className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
-                    activeTab === 'hotmartIntegration' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
-                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
-                  title="Integração Hotmart"
-                >
-                  <RefreshCw className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
-                  {sidebarOpen && <span className="truncate text-sm">Integração Hotmart</span>}
-                </button>
                 {/* O Diagnóstico de Webhooks agora é uma aba dentro da página de Webhooks */}
               </CollapsibleContent>
             </Collapsible>
@@ -4045,23 +4033,6 @@ const AdminDashboard = () => {
                   
                   <div className="grid gap-6">
                     <SubscriptionManagement />
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-            
-            {/* Integração Hotmart */}
-            <TabsContent value="hotmartIntegration" className="mt-0">
-              <div className="bg-white p-6 rounded-lg shadow-sm">
-                <div className="flex flex-col space-y-6">
-                  <div>
-                    <h2 className="text-2xl font-bold tracking-tight mb-2">Integração Hotmart</h2>
-                    <p className="text-muted-foreground">
-                      Gerencie a integração com a Hotmart, sincronizações e logs relacionados.
-                    </p>
-                  </div>
-                  <div className="grid gap-6">
-                    <HotmartIntegration />
                   </div>
                 </div>
               </div>
