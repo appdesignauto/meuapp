@@ -28,6 +28,7 @@ import { SubscriptionService } from "./services/subscription-service";
 import { HotmartService } from "./services/hotmart-service";
 import uploadMemory from "./middlewares/upload";
 import sharp from "sharp";
+import hotmartRoutes from "./routes/hotmart-routes";
 
 // Versão promisificada do scrypt
 const scryptAsync = promisify(scrypt);
@@ -78,6 +79,7 @@ import reportsRouter from './routes/reports'; // Rotas para o sistema de denúnc
 import reportsV2Router from './routes/reports-v2'; // Rotas para o sistema de denúncias (reescrito)
 import mappingRouter from './routes/mapping-routes'; // Rotas para mapeamento de produtos Hotmart
 import webhookLogsRouter from './routes/webhook-logs'; // Rotas para visualização de logs de webhook
+import hotmartRoutes from './routes/hotmart-routes'; // Rotas para API da Hotmart
 import { PrismaClient } from '@prisma/client';
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -6746,6 +6748,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Middleware para garantir que apenas admins possam acessar estas rotas
   // Rota para gerenciamento de mapeamentos de produtos Hotmart
   app.use('/api', mappingRouter);
+  
+  // Registrar rotas da API da Hotmart
+  app.use('/api/hotmart', hotmartRoutes);
   
   // Obter todos os mapeamentos Hotmart
   app.get('/api/integrations/hotmart/product-mappings', async (req, res) => {
