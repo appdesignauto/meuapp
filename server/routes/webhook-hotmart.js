@@ -68,8 +68,21 @@ function extractEmailDeep(obj) {
     
     // Extração de email com lógica específica por tipo de evento
     if (eventType === 'SUBSCRIPTION_CANCELLATION') {
+      // Verificar na estrutura data.subscriber (formato v2.0.0)
       email = req.body?.data?.subscriber?.email;
-      console.log('Email do subscriber:', email);
+      
+      // Verificar no caminho alternativo para versão 2.0.0
+      if (!email && req.body?.data?.data?.subscriber?.email) {
+        email = req.body.data.data.subscriber.email;
+      }
+      
+      console.log('Email do subscriber em SUBSCRIPTION_CANCELLATION:', email);
+      
+      // Caso ainda não tenha encontrado, fazer busca mais profunda
+      if (!email) {
+        email = extractEmailDeep(req.body);
+        console.log('Email encontrado via busca profunda:', email);
+      }
     } else {
       // Fallback para outros tipos de evento
       email = req.body?.data?.subscriber?.email || 
@@ -84,15 +97,18 @@ function extractEmailDeep(obj) {
     let transactionId = null;
     if (req.body?.data?.purchase?.transaction) {
       transactionId = req.body.data.purchase.transaction;
-    } else if (req.body?.data?.subscription?.code) {
-      transactionId = req.body.data.subscription.code;
+    } else if (req.body?.data?.subscription?.id || req.body?.data?.subscription?.code) {
+      transactionId = req.body.data.subscription.id || req.body.data.subscription.code;
     } else if (req.body?.purchase?.transaction) {
       transactionId = req.body.purchase.transaction;
+    } else if (req.body?.data?.data?.subscription?.id) {
+      // Formato alternativo em alguns eventos
+      transactionId = req.body.data.data.subscription.id;
     }
     
-    const eventType = req.body?.event || 'UNKNOWN';
+    // O eventType já foi declarado acima, não precisamos repetir
     
-    // Criar log de recebimento do webhook
+    // Usar o eventType já definido anteriormente
     try {
       console.log('📝 Criando log de webhook com os dados:', { 
         eventType, 
