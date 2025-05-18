@@ -83,9 +83,49 @@ function extractEmailFromPayload(payload: any): string | null {
     email = payload.buyer.email;
   } else if (payload?.subscriber?.email) {
     email = payload.subscriber.email;
+  } else if (payload?.data?.customer?.email) {
+    // Alguns webhooks da Hotmart usam 'customer' em vez de 'buyer'
+    email = payload.data.customer.email;
+  } else if (payload?.data?.purchase?.customer?.email) {
+    // Formato encontrado em alguns webhooks de compra
+    email = payload.data.purchase.customer.email;
   }
   
   return email;
+}
+
+// Função para normalizar o formato de data do payload
+function normalizePayloadDates(payload: any): any {
+  try {
+    // Criar uma cópia do payload para não modificar o original
+    const normalizedPayload = { ...payload };
+    
+    // Verificar se o creation_date é um número (timestamp) e convertê-lo para string ISO
+    if (normalizedPayload.creation_date && typeof normalizedPayload.creation_date === 'number') {
+      // Converter timestamp de milissegundos para data ISO
+      const date = new Date(normalizedPayload.creation_date);
+      normalizedPayload.creation_date = date.toISOString();
+      console.log('📅 Timestamp convertido:', normalizedPayload.creation_date);
+    }
+    
+    return normalizedPayload;
+  } catch (error) {
+    console.error('❌ Erro ao normalizar datas do payload:', error);
+    // Em caso de erro, retornar o payload original
+    return payload;
+  }
+}
+
+// Função para extrair número da transação (quando disponível)
+function extractTransactionId(payload: any): string | null {
+  if (payload?.data?.purchase?.transaction) {
+    return payload.data.purchase.transaction;
+  } else if (payload?.data?.transaction) {
+    return payload.data.transaction;
+  } else if (payload?.transaction) {
+    return payload.transaction;
+  }
+  return null;
 }
 
 // Rota principal para receber webhooks da Hotmart
@@ -98,7 +138,10 @@ router.post('/', async (req, res) => {
   console.log('🔑 Cabeçalhos recebidos:', headerKeys);
   
   try {
-    const payload = req.body;
+    // Normalizar o payload, especialmente as datas
+    const originalPayload = req.body;
+    const payload = normalizePayloadDates(originalPayload);
+    
     let event = payload?.event || 'UNKNOWN';
     let webhookStatus = 'received';
     let webhookError = null;
@@ -107,6 +150,10 @@ router.post('/', async (req, res) => {
     // Extrair o email do payload para registro
     const email = extractEmailFromPayload(payload);
     console.log('📧 Email extraído:', email);
+    
+    // Extrair número da transação (quando disponível)
+    const transactionId = extractTransactionId(payload);
+    console.log('🧾 ID da Transação:', transactionId);
     
     // Verificar se o evento é válido
     if (!event || event === 'UNKNOWN') {
@@ -141,6 +188,7 @@ router.post('/', async (req, res) => {
       message: 'Webhook recebido com sucesso',
       event: event,
       email: email,
+      transactionId: transactionId,
       note: 'Este endpoint é apenas para diagnóstico'
     });
     
