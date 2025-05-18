@@ -40,11 +40,11 @@ export default function HotmartIntegration() {
 
   // Buscar logs de sincronização
   const { 
-    data: syncLogs,
+    data: syncLogs = [],
     isLoading: isLoadingLogs,
     error: logsError,
     refetch: refetchLogs
-  } = useQuery({ 
+  } = useQuery<SyncLog[]>({ 
     queryKey: ['/api/hotmart/sync/logs'],
     enabled: activeTab === 'logs',
   });
