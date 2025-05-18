@@ -499,14 +499,8 @@ export class HotmartService {
           };
         }
 
-        // Atualizar ou criar usuário na plataforma - com tratamento de erro
-        try {
-          await this.updateUserSubscription(email, productMapping.planType, currentPeriodEnd);
-          console.log(`✅ Usuário ${email} atualizado com sucesso!`);
-        } catch (userError) {
-          console.warn(`⚠️ Falha ao atualizar usuário, mas a assinatura foi criada: ${userError.message}`);
-          // Continuar mesmo se a atualização do usuário falhar
-        }
+        // Registrar apenas o sucesso da criação da assinatura sem tentar atualizar o usuário por enquanto
+        console.log(`✅ Assinatura foi criada com sucesso para ${email}, pulando atualização de usuário.`);
 
         return { 
           success: true, 

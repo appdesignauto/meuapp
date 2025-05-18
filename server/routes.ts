@@ -77,6 +77,7 @@ import imageProxyTestRouter from './routes/image-proxy-test'; // Rota para testa
 import reportsRouter from './routes/reports'; // Rotas para o sistema de denúncias (original)
 import reportsV2Router from './routes/reports-v2'; // Rotas para o sistema de denúncias (reescrito)
 import mappingRouter from './routes/mapping-routes'; // Rotas para mapeamento de produtos Hotmart
+import webhookLogsRouter from './routes/webhook-logs'; // Rotas para visualização de logs de webhook
 import { PrismaClient } from '@prisma/client';
 
 export async function registerRoutes(app: Express): Promise<Server> {
