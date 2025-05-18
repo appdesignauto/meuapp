@@ -8,11 +8,6 @@ const { storage } = require('../storage');
 const { db } = require('../db');
 const { HotmartService } = require('../services/hotmart-service');
 
-// Rota principal para receber webhooks da Hotmart
-router.post('/', async (req, res) => {
-  try {
-    console.log('⚡ Webhook da Hotmart recebido');
-
 // Função para busca profunda de email em objetos
 function extractEmailDeep(obj) {
   if (!obj) return null;
@@ -39,6 +34,11 @@ function extractEmailDeep(obj) {
   
   return null;
 }
+
+// Rota principal para receber webhooks da Hotmart
+router.post('/', async (req, res) => {
+  try {
+    console.log('⚡ Webhook da Hotmart recebido');
 
     console.log("🔥 Webhook recebido:", JSON.stringify(req.body, null, 2));
     console.log("📌 Headers:", JSON.stringify(req.headers, null, 2));
