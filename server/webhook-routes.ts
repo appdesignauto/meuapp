@@ -46,7 +46,7 @@ export function setupWebhookRoutes(app: Express): void {
   
   // Registrar as rotas de webhook com path específico
   // Nota: estas rotas devem ser registradas ANTES de qualquer fallback para o SPA
-  app.use('/webhook/hotmart', hotmartWebhookRouter);
+  app.use('/api/webhook/hotmart', hotmartWebhookRouter);
   
   // Se a rota de webhook Doppus existir, registrá-la também
   try {
