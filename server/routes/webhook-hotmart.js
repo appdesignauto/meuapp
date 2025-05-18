@@ -205,16 +205,39 @@ function extractEmailDeep(obj) {
           console.error('❌ Erro ao agendar retry:', updateError);
         }
       
+      // Agendar retry em 5 minutos
+      const retryAfter = 5 * 60 * 1000; // 5 minutos
+      const retryAt = new Date(Date.now() + retryAfter);
+      
+      await db.update(db.webhookLogs)
+        .set({
+          status: 'pending_retry',
+          nextRetryAt: retryAt,
+          retryCount: (webhookLog?.retryCount || 0) + 1,
+          errorMessage: 'Email não encontrado - Agendado para retry automático'
+        })
+        .where(db.eq(db.webhookLogs.id, webhookLog.id));
+      
       return res.status(200).json({
         success: false,
-        message: 'Email não encontrado no webhook'
+        message: 'Email não encontrado no webhook - Agendado retry',
+        nextRetryAt: retryAt
       });
     }
     
     // Processar o webhook baseado no tipo de evento
     console.log(`✅ Processando evento ${eventType} para ${email}`);
     
-    switch (eventType) {
+    try {
+      // Logar payload completo para diagnóstico
+      console.log('Payload completo do webhook:', JSON.stringify(req.body, null, 2));
+      
+      // Verificar estrutura do payload
+      if (!req.body.data) {
+        throw new Error('Payload inválido: data não encontrado');
+      }
+      
+      switch (eventType) {
       case 'PURCHASE_APPROVED':
       case 'PURCHASE_COMPLETE':
         await HotmartService.processPurchase(req.body, email);

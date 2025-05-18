@@ -322,12 +322,42 @@ export class HotmartService {
     // Extrair e validar email com lógica específica para cancelamento
     let email;
     if (event === 'SUBSCRIPTION_CANCELLATION') {
-      email = data.subscriber?.email || data.data?.subscriber?.email;
-      console.log('Email extraído do subscriber para cancelamento:', email);
+      // Log detalhado da estrutura recebida
+      console.log('Estrutura completa do evento de cancelamento:', JSON.stringify(data, null, 2));
       
-      // Fallback para outros campos se não encontrar no subscriber
+      // Tentativa em múltiplos caminhos possíveis
+      email = data.subscriber?.email || 
+              data.data?.subscriber?.email ||
+              data.buyer?.email ||
+              data.data?.buyer?.email ||
+              data.customer?.email ||
+              data.data?.customer?.email;
+              
+      console.log('Email extraído para cancelamento:', email);
+      console.log('Caminhos verificados:', {
+        'subscriber.email': data.subscriber?.email,
+        'data.subscriber.email': data.data?.subscriber?.email,
+        'buyer.email': data.buyer?.email,
+        'data.buyer.email': data.data?.buyer?.email
+      });
+      
+      // Se ainda não encontrou, tentar busca profunda
       if (!email) {
-        email = extractEmail(data) || extractEmail(data.data || {});
+        const extractEmailDeep = (obj: any): string | null => {
+          if (!obj) return null;
+          if (typeof obj === 'string' && obj.includes('@')) return obj;
+          if (typeof obj === 'object') {
+            for (const key in obj) {
+              if (typeof obj[key] === 'string' && obj[key].includes('@')) return obj[key];
+              const deepResult = extractEmailDeep(obj[key]);
+              if (deepResult) return deepResult;
+            }
+          }
+          return null;
+        };
+        
+        email = extractEmailDeep(data);
+        console.log('Email encontrado via busca profunda:', email);
       }
     } else {
       email = extractEmail(data);
