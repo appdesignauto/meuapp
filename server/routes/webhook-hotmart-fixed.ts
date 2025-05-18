@@ -4,7 +4,8 @@
  */
 
 import express from 'express';
-import { Pool } from 'pg';
+import pg from 'pg';
+const { Pool } = pg;
 
 // Função para obter a conexão com o banco de dados
 async function getPool() {
@@ -166,4 +167,8 @@ router.get('/test', (req, res) => {
   });
 });
 
+// Exportação padrão como objeto
 export default router;
+
+// Exportação compatível com ESM para dynamic import
+export { router };

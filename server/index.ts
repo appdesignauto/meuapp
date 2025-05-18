@@ -194,13 +194,23 @@ app.use((req, res, next) => {
     // Iniciar serviço de forma assíncrona
     await initHotmartService();
     
+    // Adicionar a rota de webhook fixa para Hotmart
+    try {
+      const hotmartModule = await import('./routes/webhook-hotmart-fixed');
+      app.use('/webhook/hotmart-fixed', hotmartModule.router);
+      console.log("✅ Rota Hotmart fixa configurada com sucesso");
+    } catch (error) {
+      console.error("❌ Erro ao configurar rota Hotmart fixa:", error);
+    }
+    
     // Manter a rota de status para diagnóstico
     app.get('/webhook/status', (req, res) => {
       res.json({
         status: 'online',
         timestamp: new Date().toISOString(),
         routes: [
-          { path: '/webhook/hotmart', status: 'configured' }
+          { path: '/webhook/hotmart', status: 'configured' },
+          { path: '/webhook/hotmart-fixed', status: 'configured' }
         ],
         integrationService: 'HotmartService',
         environment: process.env.HOTMART_SANDBOX === 'true' ? 'Sandbox' : 'Produção',
