@@ -48,6 +48,7 @@ model HotmartProductMapping {
   planType        String    // Ex: "premium_mensal", "premium_anual"
   durationDays    Int       // Ex: 30, 180, 365
   isLifetime      Boolean   @default(false) // Indica se é uma assinatura vitalícia
+  isActive        Boolean   @default(true)  // Indica se o mapeamento está ativo
   createdAt       DateTime  @default(now())
 
   @@map("hotmartProductMappings")
