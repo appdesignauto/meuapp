@@ -1,8 +1,12 @@
 // sync-service.js
-const axios = require('axios');
-const { Pool } = require('pg');
-const cron = require('node-cron');
-require('dotenv').config();
+import axios from 'axios';
+import pg from 'pg';
+import nodeCron from 'node-cron';
+import dotenv from 'dotenv';
+
+dotenv.config();
+const { Pool } = pg;
+const cron = nodeCron;
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL

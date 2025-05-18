@@ -1,10 +1,13 @@
 // auth-server.js
-const express = require('express');
-const axios = require('axios');
-const { Pool } = require('pg');
-const cors = require('cors');
-const jwt = require('jsonwebtoken');
-require('dotenv').config();
+import express from 'express';
+import axios from 'axios';
+import pg from 'pg';
+import cors from 'cors';
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+
+dotenv.config();
+const { Pool } = pg;
 
 const app = express();
 const pool = new Pool({
@@ -265,4 +268,4 @@ setInterval(() => {
 }, 60000);
 
 // Exportar o app para ser usado pelo index.js
-module.exports = app;
+export default app;

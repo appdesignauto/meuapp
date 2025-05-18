@@ -1,9 +1,12 @@
 // api-server.js
-const express = require('express');
-const { Pool } = require('pg');
-const jwt = require('jsonwebtoken');
-const cors = require('cors');
-require('dotenv').config();
+import express from 'express';
+import pg from 'pg';
+import jwt from 'jsonwebtoken';
+import cors from 'cors';
+import dotenv from 'dotenv';
+
+dotenv.config();
+const { Pool } = pg;
 
 const router = express.Router();
 const pool = new Pool({
@@ -218,4 +221,4 @@ router.get('/subscription/stats', authenticateJWT, async (req, res) => {
 });
 
 // Exportar o router
-module.exports = router;
+export default router;

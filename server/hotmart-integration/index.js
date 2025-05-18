@@ -15,16 +15,19 @@ dotenv.config();
 const PORT = process.env.HOTMART_PORT || 5050;
 
 // Iniciar o servidor de autenticação (em processo separado)
-const authServer = fork('./server/hotmart-integration/auth-server.js');
+const authServer = fork('./auth-server.js');
 
 // Iniciar o serviço de sincronização (em processo separado)
-const syncService = fork('./server/hotmart-integration/sync-service.js');
+const syncService = fork('./sync-service.js');
 
 // Servidor principal (API + arquivos estáticos)
 const app = express();
 
-// Redirecionar solicitações para API
-app.use('/api', require('./api-server'));
+// Importar api-server dinamicamente
+import('./api-server.js').then(apiServer => {
+  // Redirecionar solicitações para API
+  app.use('/api', apiServer.default);
+});
 
 // Servir arquivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
