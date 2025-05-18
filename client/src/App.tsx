@@ -316,6 +316,11 @@ function AppRoutes() {
         roles={['admin']}
       />
       <ProtectedRoute 
+        path="/admin/webhooks" 
+        component={WebhookLogsPage}
+        roles={['admin']} 
+      />
+      <ProtectedRoute 
         path="/admin/:page" 
         component={UpdatedDashboard}
         roles={['admin', 'designer_adm']} 

@@ -302,14 +302,14 @@ export default function WebhookLogList() {
             <Input
               type="text"
               placeholder="Transação"
-              value={filter.transactionId}
-              onChange={(e) => setFilter({ ...filter, transactionId: e.target.value })}
+              value={filter.transaction_id}
+              onChange={(e) => setFilter({ ...filter, transaction_id: e.target.value })}
               className="pl-8"
             />
             <SearchIcon className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           </div>
           
-          <Select value={filter.eventType} onValueChange={(value) => setFilter({ ...filter, eventType: value })}>
+          <Select value={filter.event_type} onValueChange={(value) => setFilter({ ...filter, event_type: value })}>
             <SelectTrigger>
               <SelectValue placeholder="Tipo de Evento" />
             </SelectTrigger>
@@ -364,9 +364,9 @@ export default function WebhookLogList() {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[80px]">ID</TableHead>
-                <TableHead className="cursor-pointer" onClick={() => handleSort('eventType')}>
+                <TableHead className="cursor-pointer" onClick={() => handleSort('event_type')}>
                   <div className="flex items-center gap-2">
-                    Evento {renderSortIcon('eventType')}
+                    Evento {renderSortIcon('event_type')}
                   </div>
                 </TableHead>
                 <TableHead>Status</TableHead>
@@ -376,14 +376,14 @@ export default function WebhookLogList() {
                   </div>
                 </TableHead>
                 <TableHead>Fonte</TableHead>
-                <TableHead className="cursor-pointer" onClick={() => handleSort('transactionId')}>
+                <TableHead className="cursor-pointer" onClick={() => handleSort('transaction_id')}>
                   <div className="flex items-center gap-2">
-                    Transaction ID {renderSortIcon('transactionId')}
+                    Transaction ID {renderSortIcon('transaction_id')}
                   </div>
                 </TableHead>
-                <TableHead className="cursor-pointer" onClick={() => handleSort('createdAt')}>
+                <TableHead className="cursor-pointer" onClick={() => handleSort('created_at')}>
                   <div className="flex items-center gap-2">
-                    Data {renderSortIcon('createdAt')}
+                    Data {renderSortIcon('created_at')}
                   </div>
                 </TableHead>
               </TableRow>
@@ -395,17 +395,17 @@ export default function WebhookLogList() {
                     <TableCell className="font-medium">{log.id}</TableCell>
                     <TableCell>
                       <Badge variant="outline">
-                        {log.eventType}
+                        {log.event_type}
                       </Badge>
                     </TableCell>
                     <TableCell>{renderStatus(log.status)}</TableCell>
                     <TableCell>{log.email}</TableCell>
                     <TableCell>{renderSource(log.source)}</TableCell>
                     <TableCell className="font-mono text-xs">
-                      {log.transactionId}
+                      {log.transaction_id}
                     </TableCell>
                     <TableCell>
-                      {format(new Date(log.createdAt), 'dd/MM/yyyy HH:mm:ss')}
+                      {format(new Date(log.created_at), 'dd/MM/yyyy HH:mm:ss')}
                     </TableCell>
                   </TableRow>
                 ))
