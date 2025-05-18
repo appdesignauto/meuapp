@@ -1,0 +1,138 @@
+Resumo do que já foi feito
+Prisma configurado com sucesso (db pull e generate executados)
+
+Diretório server/services criado
+
+Objetivo: processar os webhooks da Hotmart e gerenciar assinaturas
+
+✅ Próximas Etapas (Execução no Replit)
+1. Criar os modelos de dados personalizados (HotmartWebhookLog e HotmartSubscription)
+Crie ou edite o arquivo prisma/schema.prisma com os modelos:
+
+prisma
+Copiar
+Editar
+model HotmartWebhookLog {
+  id           Int      @id @default(autoincrement())
+  event        String
+  transaction  String?
+  email        String?
+  status       String
+  payload      Json
+  createdAt    DateTime @default(now())
+}
+
+model HotmartSubscription {
+  id              Int      @id @default(autoincrement())
+  email           String   @unique
+  planType        String
+  status          String   // active | cancelled | expired
+  productId       Int
+  offerId         String?
+  expirationDate  DateTime
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+E rode novamente:
+
+bash
+Copiar
+Editar
+npx prisma migrate dev --name hotmart-init
+2. Criar serviço da Hotmart
+Crie o arquivo server/services/hotmartService.js:
+
+js
+Copiar
+Editar
+import { prisma } from '@/lib/prisma'
+
+export async function processHotmartWebhook(data) {
+  const event = data.event;
+  const payload = data;
+
+  const email = data?.data?.buyer?.email || data?.data?.subscriber?.email || null;
+  const transaction = data?.data?.purchase?.transaction || null;
+
+  await prisma.hotmartWebhookLog.create({
+    data: {
+      event,
+      transaction,
+      email,
+      status: 'received',
+      payload,
+    }
+  });
+
+  if (event === 'PURCHASE_APPROVED') {
+    const expiration = new Date();
+    expiration.setFullYear(expiration.getFullYear() + 1);
+
+    await prisma.hotmartSubscription.upsert({
+      where: { email },
+      update: {
+        status: 'active',
+        expirationDate: expiration,
+        updatedAt: new Date(),
+      },
+      create: {
+        email,
+        status: 'active',
+        planType: 'anual',
+        productId: data.data.product.id,
+        offerId: data.data.purchase.offer?.code || '',
+        expirationDate: expiration,
+      }
+    });
+  }
+
+  if (event === 'SUBSCRIPTION_CANCELLATION') {
+    await prisma.hotmartSubscription.updateMany({
+      where: { email },
+      data: { status: 'cancelled' }
+    });
+  }
+
+  return { success: true };
+}
+3. Criar rota para receber webhooks
+Crie o arquivo server/routes/webhook-hotmart.js:
+
+js
+Copiar
+Editar
+import express from 'express';
+import { processHotmartWebhook } from '../services/hotmartService.js';
+
+const router = express.Router();
+
+router.post('/webhook/hotmart', async (req, res) => {
+  try {
+    const result = await processHotmartWebhook(req.body);
+    res.json({ success: true, message: 'Webhook processado com sucesso', result });
+  } catch (error) {
+    console.error('Erro no webhook Hotmart:', error);
+    res.status(500).json({ success: false, error: 'Erro ao processar webhook' });
+  }
+});
+
+export default router;
+4. Registrar a rota no index.ts (ou index.js)
+No server/index.ts (ou .js), registre a rota antes do fallback:
+
+ts
+Copiar
+Editar
+import webhookHotmart from './routes/webhook-hotmart.js'
+
+app.use(express.json({ limit: '5mb' }));
+app.use(webhookHotmart);
+✅ Resultado Esperado
+Quando a Hotmart envia um PURCHASE_APPROVED, cria ou atualiza a assinatura.
+
+Quando envia um SUBSCRIPTION_CANCELLATION, muda o status da assinatura.
+
+Logs dos webhooks são salvos com status e payloads completos.
+
+Toda transição aparece na sua interface de logs e assinaturas.
+
