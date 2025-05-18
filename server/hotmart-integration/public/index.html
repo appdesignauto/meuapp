@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DesignAuto - Integração Hotmart</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 20px;
+      background-color: #f4f7fa;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+    .login-form {
+      margin-bottom: 20px;
+    }
+    input {
+      padding: 10px;
+      width: 100%;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .user-info {
+      margin-top: 20px;
+      padding: 15px;
+      background: #e9f7fe;
+      border-radius: 4px;
+    }
+    .error {
+      color: red;
+      margin-bottom: 10px;
+    }
+    .admin-section {
+      margin-top: 30px;
+      padding: 20px;
+      background: #f9f9f9;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+    }
+    .admin-panel {
+      display: none;
+    }
+    .tab-buttons {
+      display: flex;
+      margin-bottom: 20px;
+    }
+    .tab-button {
+      padding: 10px 15px;
+      background: #f1f1f1;
+      border: 1px solid #ddd;
+      border-bottom: none;
+      cursor: pointer;
+      margin-right: 5px;
+      border-radius: 4px 4px 0 0;
+    }
+    .tab-button.active {
+      background: #fff;
+      border-bottom: 1px solid #fff;
+      position: relative;
+      z-index: 1;
+    }
+    .tab-content {
+      display: none;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 0 4px 4px 4px;
+      margin-top: -1px;
+      background: #fff;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    table, th, td {
+      border: 1px solid #ddd;
+    }
+    th, td {
+      padding: 10px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .status-active {
+      background: #e6f7e6;
+      color: #2e7d32;
+    }
+    .status-expired {
+      background: #ffebee;
+      color: #c62828;
+    }
+    .status-lifetime {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+    .api-credentials {
+      margin-top: 20px;
+    }
+    .api-credentials input {
+      margin-bottom: 15px;
+    }
+    .api-credentials label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>DesignAuto - Portal de Integração Hotmart</h1>
+    
+    <div id="login-section">
+      <h2>Acesse sua conta</h2>
+      <div class="login-form">
+        <div id="error" class="error"></div>
+        <input type="email" id="email" placeholder="Digite seu e-mail de cadastro" required>
+        <button id="login-btn">Acessar</button>
+      </div>
+    </div>
+    
+    <div id="user-section" style="display: none;">
+      <h2>Bem-vindo, <span id="user-name"></span>!</h2>
+      <div id="subscription-info" class="user-info">
+        Carregando informações da assinatura...
+      </div>
+      <button id="logout-btn" style="margin-top: 20px; background: #dc3545;">Sair</button>
+      
+      <!-- Seção exclusiva para administradores -->
+      <div id="admin-section" class="admin-section" style="display: none;">
+        <h3>Painel de Administração - Hotmart</h3>
+        
+        <div class="tab-buttons">
+          <div class="tab-button active" data-tab="dashboard">Dashboard</div>
+          <div class="tab-button" data-tab="users">Usuários</div>
+          <div class="tab-button" data-tab="logs">Logs de Sincronização</div>
+          <div class="tab-button" data-tab="config">Configurações</div>
+        </div>
+        
+        <div id="dashboard-tab" class="tab-content active">
+          <h4>Visão Geral</h4>
+          <div class="card">
+            <div id="stats-container">
+              <p>Carregando estatísticas...</p>
+            </div>
+          </div>
+          
+          <h4>Distribuição por Plano</h4>
+          <div class="card">
+            <div id="plan-distribution">
+              <p>Carregando distribuição de planos...</p>
+            </div>
+          </div>
+          
+          <button id="sync-now-btn" style="margin-top: 20px; background: #28a745;">Iniciar Sincronização Manual</button>
+        </div>
+        
+        <div id="users-tab" class="tab-content">
+          <h4>Pesquisar Usuário</h4>
+          <div class="card">
+            <input type="email" id="search-email" placeholder="Digite o e-mail do usuário">
+            <button id="search-user-btn" style="margin-top: 10px;">Pesquisar</button>
+            
+            <div id="user-details" style="margin-top: 20px; display: none;">
+              <h5>Detalhes do Usuário</h5>
+              <div id="user-details-content"></div>
+              
+              <h5 style="margin-top: 20px;">Assinaturas na Hotmart</h5>
+              <div id="subscription-details"></div>
+            </div>
+          </div>
+        </div>
+        
+        <div id="logs-tab" class="tab-content">
+          <h4>Logs de Sincronização</h4>
+          <div class="card">
+            <div id="sync-logs">
+              <p>Carregando logs de sincronização...</p>
+            </div>
+          </div>
+        </div>
+        
+        <div id="config-tab" class="tab-content">
+          <h4>Configurações da API Hotmart</h4>
+          <div class="card">
+            <div class="api-credentials">
+              <div id="credentials-status"></div>
+              
+              <label for="client-id">Client ID:</label>
+              <input type="text" id="client-id" placeholder="Digite o Client ID da Hotmart">
+              
+              <label for="client-secret">Client Secret:</label>
+              <input type="password" id="client-secret" placeholder="Digite o Client Secret da Hotmart">
+              
+              <button id="save-credentials-btn">Salvar Credenciais</button>
+              <button id="test-connection-btn" style="margin-left: 10px; background: #6c757d;">Testar Conexão</button>
+            </div>
+          </div>
+          
+          <h4 style="margin-top: 20px;">Configurações de Sincronização</h4>
+          <div class="card">
+            <p>A sincronização automática está programada para ocorrer a cada hora.</p>
+            <p>Última sincronização: <span id="last-sync">Carregando...</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const loginSection = document.getElementById('login-section');
+      const userSection = document.getElementById('user-section');
+      const adminSection = document.getElementById('admin-section');
+      const emailInput = document.getElementById('email');
+      const loginBtn = document.getElementById('login-btn');
+      const logoutBtn = document.getElementById('logout-btn');
+      const userName = document.getElementById('user-name');
+      const subscriptionInfo = document.getElementById('subscription-info');
+      const errorDiv = document.getElementById('error');
+      
+      // Elementos do painel admin
+      const tabButtons = document.querySelectorAll('.tab-button');
+      const tabContents = document.querySelectorAll('.tab-content');
+      const syncNowBtn = document.getElementById('sync-now-btn');
+      const searchUserBtn = document.getElementById('search-user-btn');
+      const saveCredentialsBtn = document.getElementById('save-credentials-btn');
+      const testConnectionBtn = document.getElementById('test-connection-btn');
+      
+      // Verificar se já existe um token
+      const token = localStorage.getItem('token');
+      if (token) {
+        checkSubscription();
+      }
+      
+      // Login
+      loginBtn.addEventListener('click', async function() {
+        const email = emailInput.value.trim();
+        if (!email) {
+          errorDiv.textContent = 'Por favor, informe seu e-mail.';
+          return;
+        }
+        
+        try {
+          errorDiv.textContent = '';
+          loginBtn.disabled = true;
+          loginBtn.textContent = 'Verificando...';
+          
+          const response = await fetch('/api/auth', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email })
+          });
+          
+          const data = await response.json();
+          
+          if (!response.ok) {
+            throw new Error(data.error || 'Erro ao realizar login');
+          }
+          
+          // Salvar token
+          localStorage.setItem('token', data.token);
+          
+          // Mostrar dados do usuário
+          displayUserInfo(data.user);
+          
+          // Alternar seções
+          loginSection.style.display = 'none';
+          userSection.style.display = 'block';
+          
+          // Verificar se é admin
+          if (data.user.nivelacesso === 'admin') {
+            adminSection.style.display = 'block';
+            loadAdminData();
+          }
+          
+        } catch (error) {
+          errorDiv.textContent = error.message;
+        } finally {
+          loginBtn.disabled = false;
+          loginBtn.textContent = 'Acessar';
+        }
+      });
+      
+      // Logout
+      logoutBtn.addEventListener('click', function() {
+        localStorage.removeItem('token');
+        loginSection.style.display = 'block';
+        userSection.style.display = 'none';
+        adminSection.style.display = 'none';
+        emailInput.value = '';
+      });
+      
+      // Alternar entre abas
+      tabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          const tabName = this.dataset.tab;
+          
+          // Remover classes ativas
+          tabButtons.forEach(btn => btn.classList.remove('active'));
+          tabContents.forEach(content => content.classList.remove('active'));
+          
+          // Adicionar classe ativa à aba clicada
+          this.classList.add('active');
+          document.getElementById(`${tabName}-tab`).classList.add('active');
+          
+          // Carregar dados específicos da aba
+          switch(tabName) {
+            case 'logs':
+              loadSyncLogs();
+              break;
+            case 'config':
+              loadApiCredentials();
+              loadLastSyncInfo();
+              break;
+          }
+        });
+      });
+      
+      // Botão para sincronização manual
+      if (syncNowBtn) {
+        syncNowBtn.addEventListener('click', async function() {
+          try {
+            syncNowBtn.disabled = true;
+            syncNowBtn.textContent = 'Iniciando sincronização...';
+            
+            const response = await fetch('/api/sync/start', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+              }
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+              throw new Error(data.message || 'Erro ao iniciar sincronização');
+            }
+            
+            alert(data.message);
+            
+          } catch (error) {
+            alert(`Erro: ${error.message}`);
+          } finally {
+            syncNowBtn.disabled = false;
+            syncNowBtn.textContent = 'Iniciar Sincronização Manual';
+          }
+        });
+      }
+      
+      // Botão para pesquisar usuário
+      if (searchUserBtn) {
+        searchUserBtn.addEventListener('click', async function() {
+          const email = document.getElementById('search-email').value.trim();
+          if (!email) {
+            alert('Por favor, informe o e-mail do usuário.');
+            return;
+          }
+          
+          try {
+            searchUserBtn.disabled = true;
+            searchUserBtn.textContent = 'Pesquisando...';
+            
+            // Verificar usuário
+            const userResponse = await fetch(`/api/check-user/${email}`, {
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+              }
+            });
+            
+            if (!userResponse.ok) {
+              throw new Error(`Erro ao buscar usuário: ${userResponse.status}`);
+            }
+            
+            const userData = await userResponse.json();
+            displayUserDetails(userData.result);
+            
+            // Verificar assinaturas
+            const subscriptionResponse = await fetch(`/api/subscriptions/${email}`, {
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+              }
+            });
+            
+            if (!subscriptionResponse.ok) {
+              throw new Error(`Erro ao buscar assinaturas: ${subscriptionResponse.status}`);
+            }
+            
+            const subscriptionData = await subscriptionResponse.json();
+            displaySubscriptionDetails(subscriptionData.subscriptions);
+            
+            // Mostrar seção de detalhes
+            document.getElementById('user-details').style.display = 'block';
+            
+          } catch (error) {
+            alert(`Erro: ${error.message}`);
+          } finally {
+            searchUserBtn.disabled = false;
+            searchUserBtn.textContent = 'Pesquisar';
+          }
+        });
+      }
+      
+      // Botão para salvar credenciais
+      if (saveCredentialsBtn) {
+        saveCredentialsBtn.addEventListener('click', async function() {
+          const clientId = document.getElementById('client-id').value.trim();
+          const clientSecret = document.getElementById('client-secret').value.trim();
+          
+          if (!clientId || !clientSecret) {
+            alert('Por favor, preencha o Client ID e Client Secret.');
+            return;
+          }
+          
+          try {
+            saveCredentialsBtn.disabled = true;
+            saveCredentialsBtn.textContent = 'Salvando...';
+            
+            const response = await fetch('/api/save-credentials', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ clientId, clientSecret })
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+              throw new Error(data.message || 'Erro ao salvar credenciais');
+            }
+            
+            alert(data.message);
+            loadApiCredentials(); // Recarregar informações
+            
+          } catch (error) {
+            alert(`Erro: ${error.message}`);
+          } finally {
+            saveCredentialsBtn.disabled = false;
+            saveCredentialsBtn.textContent = 'Salvar Credenciais';
+          }
+        });
+      }
+      
+      // Botão para testar conexão
+      if (testConnectionBtn) {
+        testConnectionBtn.addEventListener('click', async function() {
+          try {
+            testConnectionBtn.disabled = true;
+            testConnectionBtn.textContent = 'Testando...';
+            
+            const response = await fetch('/api/test-connection', {
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+              }
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+              throw new Error(data.message || 'Erro ao testar conexão');
+            }
+            
+            alert(data.message);
+            
+          } catch (error) {
+            alert(`Erro: ${error.message}`);
+          } finally {
+            testConnectionBtn.disabled = false;
+            testConnectionBtn.textContent = 'Testar Conexão';
+          }
+        });
+      }
+      
+      // Verificar assinatura
+      async function checkSubscription() {
+        try {
+          const token = localStorage.getItem('token');
+          
+          if (!token) {
+            return;
+          }
+          
+          const userResponse = await fetch('/api/user', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          if (!userResponse.ok) {
+            if (userResponse.status === 401) {
+              // Token inválido
+              localStorage.removeItem('token');
+              return;
+            }
+            throw new Error('Erro ao obter dados do usuário');
+          }
+          
+          const userData = await userResponse.json();
+          
+          // Mostrar dados do usuário
+          displayUserInfo(userData);
+          
+          // Alternar seções
+          loginSection.style.display = 'none';
+          userSection.style.display = 'block';
+          
+          // Verificar se é admin
+          if (userData.nivelacesso === 'admin') {
+            adminSection.style.display = 'block';
+            loadAdminData();
+          }
+          
+        } catch (error) {
+          console.error('Erro:', error);
+        }
+      }
+      
+      // Exibir informações do usuário
+      function displayUserInfo(user) {
+        userName.textContent = user.name || user.username;
+        
+        // Verificar status da assinatura
+        fetch('/api/subscription/status', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          let html = '';
+          
+          switch (data.status) {
+            case 'active':
+              const expiryDate = new Date(data.planDetails.expiryDate).toLocaleDateString('pt-BR');
+              html = `
+                <p><span class="status-badge status-active">Ativo</span></p>
+                <p><strong>Plano:</strong> ${data.planDetails.name}</p>
+                <p><strong>Válido até:</strong> ${expiryDate}</p>
+                <p><strong>Origem:</strong> ${data.planDetails.source || 'Não informada'}</p>
+              `;
+              break;
+            case 'lifetime':
+              html = `
+                <p><span class="status-badge status-lifetime">Vitalício</span></p>
+                <p><strong>Plano:</strong> ${data.planDetails.name}</p>
+                <p><strong>Origem:</strong> ${data.planDetails.source || 'Não informada'}</p>
+              `;
+              break;
+            case 'expired':
+              const expiredDate = new Date(data.planDetails.expiryDate).toLocaleDateString('pt-BR');
+              html = `
+                <p><span class="status-badge status-expired">Expirado</span></p>
+                <p><strong>Plano:</strong> ${data.planDetails.name}</p>
+                <p><strong>Expirado em:</strong> ${expiredDate}</p>
+                <p><strong>Origem:</strong> ${data.planDetails.source || 'Não informada'}</p>
+                <a href="https://app-hotmart.com/produto/seu-produto" target="_blank" 
+                   style="display: inline-block; margin-top: 10px; background: #28a745; color: white; 
+                          padding: 8px 12px; text-decoration: none; border-radius: 4px;">
+                  Renovar assinatura
+                </a>
+              `;
+              break;
+            default:
+              html = `
+                <p><span class="status-badge" style="background: #f5f5f5; color: #666;">Gratuito</span></p>
+                <p>Você não possui uma assinatura ativa no momento.</p>
+                <a href="https://app-hotmart.com/produto/seu-produto" target="_blank" 
+                   style="display: inline-block; margin-top: 10px; background: #28a745; color: white; 
+                          padding: 8px 12px; text-decoration: none; border-radius: 4px;">
+                  Assinar agora
+                </a>
+              `;
+          }
+          
+          subscriptionInfo.innerHTML = html;
+        })
+        .catch(error => {
+          subscriptionInfo.innerHTML = `
+            <p>Erro ao verificar status da assinatura: ${error.message}</p>
+          `;
+        });
+      }
+      
+      // Funções para o painel admin
+      
+      // Carregar dados para o painel administrativo
+      function loadAdminData() {
+        loadSubscriptionStats();
+        loadSyncLogs();
+        loadApiCredentials();
+        loadLastSyncInfo();
+      }
+      
+      // Carregar estatísticas de assinaturas
+      function loadSubscriptionStats() {
+        fetch('/api/subscription/stats', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          // Estatísticas gerais
+          const statsContainer = document.getElementById('stats-container');
+          statsContainer.innerHTML = `
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-between;">
+              <div style="flex: 1; min-width: 150px; margin: 5px; text-align: center; padding: 10px; background: #f8f9fa; border-radius: 4px;">
+                <h3>${data.general.total_users}</h3>
+                <p>Total de Usuários</p>
+              </div>
+              <div style="flex: 1; min-width: 150px; margin: 5px; text-align: center; padding: 10px; background: #e9f7fe; border-radius: 4px;">
+                <h3>${data.general.active_subscriptions}</h3>
+                <p>Assinaturas Ativas</p>
+              </div>
+              <div style="flex: 1; min-width: 150px; margin: 5px; text-align: center; padding: 10px; background: #e6f7e6; border-radius: 4px;">
+                <h3>${data.general.lifetime_users}</h3>
+                <p>Acessos Vitalícios</p>
+              </div>
+              <div style="flex: 1; min-width: 150px; margin: 5px; text-align: center; padding: 10px; background: #ffebee; border-radius: 4px;">
+                <h3>${data.general.expired_subscriptions}</h3>
+                <p>Assinaturas Expiradas</p>
+              </div>
+            </div>
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+              <h4>Usuários via Hotmart: ${data.general.hotmart_users}</h4>
+            </div>
+          `;
+          
+          // Distribuição por plano
+          const planDistribution = document.getElementById('plan-distribution');
+          if (data.planDistribution && data.planDistribution.length > 0) {
+            let plansHtml = '<table><thead><tr><th>Plano</th><th>Qtd. Usuários</th></tr></thead><tbody>';
+            
+            data.planDistribution.forEach(plan => {
+              plansHtml += `<tr><td>${plan.tipoplano || 'Sem plano'}</td><td>${plan.count}</td></tr>`;
+            });
+            
+            plansHtml += '</tbody></table>';
+            planDistribution.innerHTML = plansHtml;
+          } else {
+            planDistribution.innerHTML = '<p>Nenhum plano encontrado.</p>';
+          }
+        })
+        .catch(error => {
+          document.getElementById('stats-container').innerHTML = `<p>Erro ao carregar estatísticas: ${error.message}</p>`;
+          document.getElementById('plan-distribution').innerHTML = `<p>Erro ao carregar distribuição de planos: ${error.message}</p>`;
+        });
+      }
+      
+      // Carregar logs de sincronização
+      function loadSyncLogs() {
+        fetch('/api/sync/logs', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          const logsContainer = document.getElementById('sync-logs');
+          
+          if (data && data.length > 0) {
+            let logsHtml = '<table><thead><tr><th>Data</th><th>Status</th><th>Mensagem</th></tr></thead><tbody>';
+            
+            data.forEach(log => {
+              const date = new Date(log.created_at).toLocaleString('pt-BR');
+              const statusClass = log.status === 'completed' ? 'status-active' : 
+                                  log.status === 'failed' ? 'status-expired' : '';
+              
+              logsHtml += `
+                <tr>
+                  <td>${date}</td>
+                  <td><span class="status-badge ${statusClass}">${log.status}</span></td>
+                  <td>${log.message}</td>
+                </tr>
+              `;
+            });
+            
+            logsHtml += '</tbody></table>';
+            logsContainer.innerHTML = logsHtml;
+          } else {
+            logsContainer.innerHTML = '<p>Nenhum log de sincronização encontrado.</p>';
+          }
+        })
+        .catch(error => {
+          document.getElementById('sync-logs').innerHTML = `<p>Erro ao carregar logs: ${error.message}</p>`;
+        });
+      }
+      
+      // Carregar credenciais da API
+      function loadApiCredentials() {
+        fetch('/api/credentials', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          const statusContainer = document.getElementById('credentials-status');
+          
+          if (data.credentials.isConfigured) {
+            statusContainer.innerHTML = `
+              <div style="padding: 10px; background: #e6f7e6; color: #2e7d32; border-radius: 4px; margin-bottom: 15px;">
+                Credenciais configuradas. Você pode atualizar se necessário.
+              </div>
+            `;
+          } else {
+            statusContainer.innerHTML = `
+              <div style="padding: 10px; background: #ffebee; color: #c62828; border-radius: 4px; margin-bottom: 15px;">
+                Credenciais não configuradas. Por favor, configure para usar a integração.
+              </div>
+            `;
+          }
+          
+          // Preencher os campos
+          document.getElementById('client-id').value = data.credentials.clientId || '';
+          document.getElementById('client-secret').value = data.credentials.clientSecret ? '••••••••••••••••' : '';
+        })
+        .catch(error => {
+          document.getElementById('credentials-status').innerHTML = `
+            <div style="padding: 10px; background: #ffebee; color: #c62828; border-radius: 4px; margin-bottom: 15px;">
+              Erro ao carregar credenciais: ${error.message}
+            </div>
+          `;
+        });
+      }
+      
+      // Carregar informações da última sincronização
+      function loadLastSyncInfo() {
+        fetch('/api/sync/logs', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          const lastSyncElement = document.getElementById('last-sync');
+          
+          if (data && data.length > 0) {
+            const lastSync = data[0];
+            const date = new Date(lastSync.created_at).toLocaleString('pt-BR');
+            lastSyncElement.textContent = `${date} (${lastSync.status})`;
+          } else {
+            lastSyncElement.textContent = 'Nunca realizada';
+          }
+        })
+        .catch(error => {
+          document.getElementById('last-sync').textContent = `Erro: ${error.message}`;
+        });
+      }
+      
+      // Exibir detalhes do usuário pesquisado
+      function displayUserDetails(userData) {
+        const container = document.getElementById('user-details-content');
+        
+        if (userData.success === false) {
+          container.innerHTML = `<p>Erro: ${userData.message}</p>`;
+          return;
+        }
+        
+        let html = `
+          <table>
+            <tr>
+              <th>Nome</th>
+              <td>${userData.user?.name || 'Não informado'}</td>
+            </tr>
+            <tr>
+              <th>Email</th>
+              <td>${userData.user?.email || 'Não informado'}</td>
+            </tr>
+            <tr>
+              <th>Status</th>
+              <td>${userData.message}</td>
+            </tr>
+          </table>
+        `;
+        
+        container.innerHTML = html;
+      }
+      
+      // Exibir detalhes das assinaturas
+      function displaySubscriptionDetails(subscriptions) {
+        const container = document.getElementById('subscription-details');
+        
+        if (!subscriptions || subscriptions.length === 0) {
+          container.innerHTML = '<p>Nenhuma assinatura encontrada.</p>';
+          return;
+        }
+        
+        let html = '<table><thead><tr><th>ID</th><th>Status</th><th>Plano</th><th>Início</th><th>Término</th></tr></thead><tbody>';
+        
+        subscriptions.forEach(sub => {
+          const startDate = new Date(sub.start_date).toLocaleDateString('pt-BR');
+          const endDate = sub.end_date ? new Date(sub.end_date).toLocaleDateString('pt-BR') : 'N/A';
+          
+          html += `
+            <tr>
+              <td>${sub.id}</td>
+              <td>${sub.status}</td>
+              <td>${sub.plan?.name || 'Não informado'}</td>
+              <td>${startDate}</td>
+              <td>${endDate}</td>
+            </tr>
+          `;
+        });
+        
+        html += '</tbody></table>';
+        container.innerHTML = html;
+      }
+    });
+  </script>
+</body>
+</html>
