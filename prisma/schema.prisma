@@ -40,7 +40,7 @@ model HotmartSubscription {
 
 // Tabela para mapeamento de produtos Hotmart
 model HotmartProductMapping {
-  id              String    @id @default(uuid())
+  id              Int       @id @default(autoincrement())
   productId       String    // ID do produto na Hotmart  
   offerCode       String?   // Código da oferta (opcional)
   offerId         String?   // ID da oferta específica do produto
