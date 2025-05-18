@@ -1,49 +1,37 @@
 /**
- * Script de configuração da integração com a Hotmart
- * 
- * Este script configura a integração direta com a API da Hotmart,
- * criando as tabelas necessárias e configurando as credenciais.
+ * Script simples para configurar as credenciais da Hotmart
  */
 
 import pg from 'pg';
 import fs from 'fs';
-import readline from 'readline';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
-import { dirname } from 'path';
+import path from 'path';
 import { fileURLToPath } from 'url';
 
-// Configurando o dirname para ES modules
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const { Pool } = pg;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 dotenv.config();
 
-// Criar interface para leitura do terminal
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
-});
+const { Pool } = pg;
 
 // Conexão com o banco de dados
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL
 });
 
-/**
- * Função principal que executa a configuração
- */
-async function setup() {
+async function configureHotmart() {
   console.log('\n===== Configuração da Integração Direta com a Hotmart =====\n');
   
   try {
     // Verificar se as tabelas necessárias existem
     await checkAndCreateTables();
     
-    // Configurar credenciais da Hotmart
-    await configureHotmartCredentials();
+    // Configurar credenciais da Hotmart através do .env
+    await configureCredentials();
     
-    // Gerar arquivo .env
-    await generateEnvFile();
+    // Criar arquivo .env
+    await createEnvFile();
     
     console.log('\n✅ Configuração concluída com sucesso!\n');
     console.log('Para iniciar a integração, execute:');
@@ -53,7 +41,6 @@ async function setup() {
     console.error('\n❌ Erro durante a configuração:', error.message);
     console.error('Por favor, tente novamente ou contate o suporte.');
   } finally {
-    rl.close();
     await pool.end();
   }
 }
@@ -123,55 +110,26 @@ async function checkTableExists(tableName) {
 /**
  * Configurar credenciais da Hotmart no banco de dados
  */
-async function configureHotmartCredentials() {
+async function configureCredentials() {
   console.log('\nConfiguração das credenciais da Hotmart:');
-  console.log('(Você pode obter essas credenciais no painel da Hotmart em Ferramentas de Desenvolvedor > Credenciais)');
   
-  // Verificar se já existem credenciais configuradas
-  const existingCredentials = await pool.query(`
-    SELECT key, value FROM integration_settings
-    WHERE provider = 'hotmart'
-    AND (key = 'client_id' OR key = 'client_secret')
-  `);
-  
-  const credentials = {
-    clientId: '',
-    clientSecret: ''
-  };
-  
-  existingCredentials.rows.forEach(row => {
-    if (row.key === 'client_id') {
-      credentials.clientId = row.value;
-    } else if (row.key === 'client_secret') {
-      credentials.clientSecret = row.value;
-    }
-  });
-  
-  if (credentials.clientId && credentials.clientSecret) {
-    console.log('\nCredenciais já configuradas:');
-    console.log(`- Client ID: ${credentials.clientId}`);
-    console.log(`- Client Secret: ${'•'.repeat(8)}`);
-    
-    const answer = await askQuestion('\nDeseja atualizar as credenciais? (s/N): ');
-    if (answer.toLowerCase() !== 's') {
-      console.log('Mantendo as credenciais existentes.');
-      return;
-    }
-  }
-  
-  // Solicitar novas credenciais
-  const clientId = await askQuestion('Client ID: ');
-  const clientSecret = await askQuestion('Client Secret: ');
+  // Usar credenciais do ambiente
+  const clientId = process.env.HOTMART_CLIENT_ID;
+  const clientSecret = process.env.HOTMART_CLIENT_SECRET;
   
   if (!clientId || !clientSecret) {
-    throw new Error('Client ID e Client Secret são obrigatórios para a integração.');
+    throw new Error('Credenciais da Hotmart não encontradas nas variáveis de ambiente');
   }
+  
+  console.log('Encontradas credenciais nas variáveis de ambiente:');
+  console.log(`- Client ID: ${clientId.substring(0, 5)}...`);
+  console.log(`- Client Secret: ${'•'.repeat(8)}`);
   
   // Salvar credenciais no banco de dados
   await saveCredential('hotmart', 'client_id', clientId);
   await saveCredential('hotmart', 'client_secret', clientSecret);
   
-  console.log('✅ Credenciais da Hotmart salvas com sucesso.');
+  console.log('✅ Credenciais da Hotmart salvas com sucesso no banco de dados.');
 }
 
 /**
@@ -199,65 +157,32 @@ async function saveCredential(provider, key, value) {
 }
 
 /**
- * Gerar arquivo .env com as configurações necessárias
+ * Criar arquivo .env com as configurações necessárias
  */
-async function generateEnvFile() {
+async function createEnvFile() {
   console.log('\nConfiguração do arquivo .env...');
   
   // Gerar um secret JWT aleatório
   const jwtSecret = crypto.randomBytes(32).toString('hex');
   
-  // Obter credenciais da Hotmart do banco de dados
-  const credentialsResult = await pool.query(`
-    SELECT key, value FROM integration_settings
-    WHERE provider = 'hotmart'
-    AND (key = 'client_id' OR key = 'client_secret')
-  `);
-  
-  const credentials = {
-    clientId: '',
-    clientSecret: ''
-  };
-  
-  credentialsResult.rows.forEach(row => {
-    if (row.key === 'client_id') {
-      credentials.clientId = row.value;
-    } else if (row.key === 'client_secret') {
-      credentials.clientSecret = row.value;
-    }
-  });
-  
-  // Solicitar porta para o servidor
-  const port = await askQuestion('Porta para o servidor Hotmart (padrão: 5050): ') || '5050';
-  
   // Criar conteúdo do arquivo .env
   const envContent = `# Configurações da Hotmart
-HOTMART_CLIENT_ID=${credentials.clientId}
-HOTMART_CLIENT_SECRET=${credentials.clientSecret}
+HOTMART_CLIENT_ID=${process.env.HOTMART_CLIENT_ID}
+HOTMART_CLIENT_SECRET=${process.env.HOTMART_CLIENT_SECRET}
 
 # Configuração do JWT
 JWT_SECRET=${jwtSecret}
 
 # Configuração do servidor
-HOTMART_PORT=${port}
+HOTMART_PORT=5050
   `;
   
   // Escrever arquivo .env
-  fs.writeFileSync('./server/hotmart-integration/.env', envContent);
+  const envPath = path.join(__dirname, '.env');
+  fs.writeFileSync(envPath, envContent);
   
-  console.log('✅ Arquivo .env criado com sucesso.');
-}
-
-/**
- * Função auxiliar para fazer perguntas via terminal
- */
-function askQuestion(question) {
-  return new Promise((resolve) => {
-    rl.question(question, (answer) => {
-      resolve(answer);
-    });
-  });
+  console.log(`✅ Arquivo .env criado com sucesso em ${envPath}`);
 }
 
 // Executar o script
-setup();
+configureHotmart();
