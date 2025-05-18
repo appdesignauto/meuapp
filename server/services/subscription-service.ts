@@ -6,9 +6,67 @@
 
 import { db } from '../db';
 import { subscriptions, users } from '@shared/schema';
-import { eq } from 'drizzle-orm';
+import { eq, lt, and, isNull } from 'drizzle-orm';
 
 export class SubscriptionService {
+  /**
+   * Verifica e atualiza assinaturas expiradas
+   * Rebaixa usuários com assinaturas expiradas para o plano free
+   * @returns Número de usuários rebaixados
+   */
+  static async checkExpiredSubscriptions(): Promise<number> {
+    try {
+      console.log('[SubscriptionService] Verificando assinaturas expiradas...');
+      
+      const now = new Date();
+      
+      // Buscar todas as assinaturas expiradas que ainda não foram atualizadas
+      const expiredSubscriptions = await db.query.subscriptions.findMany({
+        where: and(
+          lt(subscriptions.endDate, now),
+          eq(subscriptions.status, 'active')
+        )
+      });
+      
+      console.log(`[SubscriptionService] Encontradas ${expiredSubscriptions.length} assinaturas expiradas`);
+      
+      let downgradedCount = 0;
+      
+      // Processar cada assinatura expirada
+      for (const subscription of expiredSubscriptions) {
+        try {
+          // Atualizar status da assinatura
+          await db.update(subscriptions)
+            .set({
+              status: 'expired',
+              updatedAt: now
+            })
+            .where(eq(subscriptions.id, subscription.id));
+          
+          // Rebaixar usuário para plano free
+          await db.update(users)
+            .set({
+              tipoplano: 'free',
+              dataexpiracao: null,
+              atualizadoem: now
+            })
+            .where(eq(users.id, subscription.userId));
+          
+          downgradedCount++;
+          
+          console.log(`[SubscriptionService] Usuário ${subscription.userId} rebaixado para free`);
+        } catch (error) {
+          console.error(`[SubscriptionService] Erro ao processar assinatura ${subscription.id}:`, error);
+        }
+      }
+      
+      console.log(`[SubscriptionService] Total de usuários rebaixados: ${downgradedCount}`);
+      return downgradedCount;
+    } catch (error) {
+      console.error('[SubscriptionService] Erro ao verificar assinaturas expiradas:', error);
+      return 0;
+    }
+  }
   /**
    * Cria ou atualiza assinatura baseada em informações de webhook
    * @param email Email do usuário

@@ -17,7 +17,9 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 // Importar o router de diagnóstico de webhooks
-import webhookDiagnosticsRouter from "./routes/webhook-diagnostics.js";
+// Remover importação de diagnóstico que está causando erro
+// Comentado até resolver problemas de compatibilidade entre módulos
+// import webhookDiagnosticsRouter from "./routes/webhook-diagnostics.cjs";
 // Importações adicionais para o upload de imagem
 import uploadRouter from "./routes/upload-image";
 // Usando apenas Supabase Storage para armazenamento de imagens
@@ -6431,9 +6433,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Registrar rotas para diagnóstico de e-mail (administradores)
   app.use('/api/email-diagnostics', emailDiagnosticsRouter);
   
-  // Registrar rotas para diagnóstico avançado de webhooks (administradores)
-  const webhookDiagnosticsRouter = (await import('./routes/webhook-diagnostics.js')).default;
-  app.use('/api/webhook-diagnostics', webhookDiagnosticsRouter);
+  // Diagnóstico de webhook temporariamente desativado para resolver problemas de compatibilidade
+  // const webhookDiagnosticsRouter = (await import('./routes/webhook-diagnostics.js')).default;
+  // Rota de diagnóstico temporariamente desativada até resolver conflitos de módulos
+  // app.use('/api/webhook-diagnostics', webhookDiagnosticsRouter);
   
   // Configurar rota de diagnóstico direto do R2
   setupTestR2DirectRoute(app);

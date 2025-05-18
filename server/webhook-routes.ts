@@ -10,7 +10,8 @@ import type { Express } from 'express';
 // Importar rotas de webhook usando a sintaxe ESM
 import hotmartWebhookRouter from './routes/webhook-hotmart.js';
 import doppusWebhookRouter from './routes/webhook-doppus.js';
-import webhookDiagnosticsRouter from './routes/webhook-diagnostics.js';
+// @ts-ignore - Importação de módulo CommonJS em contexto ESM
+import webhookDiagnosticsRouter from './routes/webhook-diagnostics.cjs';
 
 /**
  * Configura as rotas de webhook para o Express
