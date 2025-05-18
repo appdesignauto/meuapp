@@ -304,15 +304,32 @@ export class HotmartService {
     // Log do evento recebido
     console.log(`Webhook Hotmart recebido: ${event}`, JSON.stringify(data, null, 2));
 
-    // Extrair informações essenciais com tratamento seguro para evitar erros
-    let email = data.buyer?.email;
-    if (!email && data.subscriber?.email) {
-        email = data.subscriber.email;
-    }
+    // Função auxiliar para extrair email de forma segura
+    const extractEmail = (data: any): string | null => {
+      // Ordem de prioridade para busca do email baseada no tipo de evento
+      const emailSources = [
+        data.subscriber?.email,           // Eventos de assinatura (SUBSCRIPTION_*)
+        data.buyer?.email,                // Eventos de compra (PURCHASE_*)
+        data.purchase?.buyer?.email,      // Compras aninhadas
+        data.customer?.email,             // Outros formatos possíveis
+        data.user?.email                  // Fallback
+      ];
+
+      // Retorna o primeiro email válido encontrado
+      return emailSources.find(email => email && typeof email === 'string') || null;
+    };
+
+    // Extrair e validar email
+    const email = extractEmail(data);
+    
     if (!email) {
-      console.error('Email do comprador não encontrado no webhook:', data);
-      throw new Error('Email do comprador não encontrado no webhook');
+      const errorMsg = `Email não encontrado no webhook do tipo ${event}. Payload: ${JSON.stringify(webhookData)}`;
+      console.error(errorMsg);
+      throw new Error(errorMsg);
     }
+
+    // Log de sucesso
+    console.log(`✅ Email extraído com sucesso: ${email} para evento ${event}`);
 
     // Processar diferentes tipos de eventos conforme as diretrizes
     switch (event) {
