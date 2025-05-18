@@ -5,6 +5,7 @@ import AnalyticsSettings from '@/components/admin/AnalyticsSettings';
 import ReportsManagement from '@/components/admin/ReportsManagement';
 import SubscriptionManagement from '@/components/admin/SubscriptionManagement';
 import SubscriptionSettings from '@/components/admin/SubscriptionSettings';
+import HotmartIntegration from '@/components/admin/HotmartIntegration';
 import {
   LayoutGrid,
   Image,
@@ -4044,6 +4045,23 @@ const AdminDashboard = () => {
                   
                   <div className="grid gap-6">
                     <SubscriptionManagement />
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+            
+            {/* Integração Hotmart */}
+            <TabsContent value="hotmartIntegration" className="mt-0">
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <div className="flex flex-col space-y-6">
+                  <div>
+                    <h2 className="text-2xl font-bold tracking-tight mb-2">Integração Hotmart</h2>
+                    <p className="text-muted-foreground">
+                      Gerencie a integração com a Hotmart, sincronizações e logs relacionados.
+                    </p>
+                  </div>
+                  <div className="grid gap-6">
+                    <HotmartIntegration />
                   </div>
                 </div>
               </div>
