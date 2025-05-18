@@ -315,6 +315,18 @@ function AppRoutes() {
         }}
         roles={['admin']}
       />
+      <ProtectedRoute
+        path="/admin/hotmart-integration"
+        component={() => {
+          const HotmartIntegration = lazy(() => import("@/pages/admin/HotmartIntegration"));
+          return (
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+              <HotmartIntegration />
+            </Suspense>
+          );
+        }}
+        roles={['admin']}
+      />
       <ProtectedRoute 
         path="/admin/webhooks" 
         component={WebhookLogsPage}
