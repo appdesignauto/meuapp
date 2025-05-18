@@ -319,8 +319,7 @@ app.use((req, res, next) => {
         // Registrar rotas para mapeamento de produtos Hotmart
         app.use(mappingRoutes);
         
-        console.log("Serviço da Hotmart inicializado com sucesso no modo " + 
-                   (process.env.HOTMART_SANDBOX === 'true' ? 'Sandbox' : 'Produção'));
+        console.log("Serviço da Hotmart inicializado com sucesso no modo Produção");
         
         // NOTA: Não registramos '/webhook' rotas aqui, pois
         // já temos uma implementação direta acima que deve ter precedência
@@ -438,8 +437,7 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // A porta 5000 está sendo usada, então vamos usar a porta 3001
-  // que está disponível no ambiente Replit
+  // A porta 5000 está sendo usada por outro serviço, voltamos para a porta 3001
   const port = 3001;
   server.listen({
     port,
@@ -447,7 +445,7 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`🚀 Servidor iniciado na porta ${port}`);
-    log(`🔄 Integração Hotmart: Usando ambiente ${process.env.HOTMART_SANDBOX === 'true' ? 'SANDBOX' : 'PRODUÇÃO'}`);
+    log(`🔄 Integração Hotmart: Usando ambiente PRODUÇÃO`);
     log(`💡 Acesse o servidor em: http://localhost:${port} ou pela URL do Replit`);
   });
 })();

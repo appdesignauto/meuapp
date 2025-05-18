@@ -14,13 +14,11 @@ dotenv.config();
  * @returns O segredo da Hotmart para verificação de assinaturas
  */
 export function getHotmartSecret(): string {
-  // Verificar o ambiente (sandbox ou produção)
-  const isSandbox = process.env.HOTMART_SANDBOX === 'true';
+  // Usando o ambiente de produção
+  const isSandbox = false;
   
-  // Obter o segredo apropriado para o ambiente
-  const secret = isSandbox 
-    ? process.env.HOTMART_SANDBOX_SECRET_KEY 
-    : process.env.HOTMART_SECRET_KEY;
+  // Obter o segredo para o ambiente de produção
+  const secret = process.env.HOTMART_SECRET_KEY;
   
   // Se não for encontrado, usar um valor padrão em ambiente de desenvolvimento
   if (!secret) {

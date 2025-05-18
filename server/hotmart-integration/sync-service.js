@@ -5,12 +5,14 @@ import cron from 'node-cron';
 
 dotenv.config();
 
-// Configuração
-// Forçar o uso do ambiente de sandbox para testes
-const HOTMART_SANDBOX = true;
-const HOTMART_BASE_URL = HOTMART_SANDBOX 
-  ? "https://sandbox.hotmart.com" 
-  : "https://api-sec-vlc.hotmart.com";
+// Configuração - Forçando ambiente de produção conforme solicitado
+// Novas credenciais foram fornecidas para o ambiente de produção
+
+// Usar ambiente de produção
+const HOTMART_SANDBOX = false;
+
+// URL da API de produção oficial da Hotmart
+const HOTMART_BASE_URL = "https://developers.hotmart.com";
 
 console.log(`[hotmart-integration] Utilizando API Hotmart em modo: ${HOTMART_SANDBOX ? 'SANDBOX' : 'PRODUÇÃO'}`);
 console.log(`[hotmart-integration] URL Base: ${HOTMART_BASE_URL}`);
