@@ -9,7 +9,7 @@ import fetch from 'node-fetch';
 import { Pool } from 'pg';
 
 // URLs da API
-const HOTMART_API_BASE_URL = 'https://developers.hotmart.com';
+const HOTMART_API_BASE_URL = 'https://api-sec-vlc.hotmart.com';
 const HOTMART_AUTH_URL = `${HOTMART_API_BASE_URL}/oauth/token`;
 const HOTMART_PURCHASES_URL = `${HOTMART_API_BASE_URL}/payments/api/v1/sales`;
 const HOTMART_SUBSCRIPTIONS_URL = `${HOTMART_API_BASE_URL}/payments/api/v1/subscriptions`;
