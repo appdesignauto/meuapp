@@ -520,6 +520,16 @@ export default function AssinaturasPage() {
           {/* Separador visual */}
           <Separator className="my-8" />
           
+          {/* Seção de Assinaturas da Hotmart */}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold mb-4">Assinaturas Ativas na Hotmart</h3>
+            <p className="text-gray-500 mb-4">Visualize todas as assinaturas ativas e recentes registradas na plataforma Hotmart</p>
+            <HotmartSubscriptionsList />
+          </div>
+          
+          {/* Separador visual */}
+          <Separator className="my-8" />
+          
           {/* Seção de Logs de Webhooks */}
           <div className="mb-4">
             <h3 className="text-lg font-semibold mb-4">Logs de Webhooks</h3>
