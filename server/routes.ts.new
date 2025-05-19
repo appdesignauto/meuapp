@@ -1,2 +1,0 @@
-// Adicionamos esta linha para incluir a rota de diagnóstico
-app.use(supabeDiagnosticsRouter);
