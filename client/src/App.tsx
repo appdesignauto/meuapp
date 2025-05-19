@@ -285,6 +285,15 @@ function App() {
   useEffect(() => {
     // Iniciar medição de métricas de performance
     measureWebVitals();
+    
+    // Redirecionar /admin/settings para o painel principal com a aba de configurações selecionada
+    const handleAdminSettingsRedirect = () => {
+      if (window.location.pathname === '/admin/settings') {
+        window.location.href = '/admin/config-sistema';
+      }
+    };
+    
+    handleAdminSettingsRedirect();
   }, []);
 
   return (

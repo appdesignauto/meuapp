@@ -81,8 +81,8 @@ const AdminLayout = ({ children, title, backLink }: AdminLayoutProps) => {
     },
     {
       icon: <Settings className="w-5 h-5" />,
-      label: 'Configurações',
-      href: '/admin/settings',
+      label: 'Config Sistema',
+      href: '/admin/config-sistema',
     },
   ];
 
