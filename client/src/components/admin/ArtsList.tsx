@@ -86,10 +86,11 @@ const ArtsList = () => {
   // Toggle premium status mutation
   const togglePremiumMutation = useMutation({
     mutationFn: async ({ id, isPremium }: { id: number; isPremium: boolean }) => {
-      await apiRequest('PUT', `/api/admin/artes/${id}`, { isPremium });
+      await apiRequest('PUT', `/api/admin/arts/${id}`, { isPremium });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/artes'] });
       toast({
         title: 'Status premium atualizado',
         description: 'O status premium da arte foi atualizado com sucesso.',
@@ -108,10 +109,11 @@ const ArtsList = () => {
   // Toggle visibility status mutation
   const toggleVisibilityMutation = useMutation({
     mutationFn: async ({ id, isVisible }: { id: number; isVisible: boolean }) => {
-      await apiRequest('PUT', `/api/admin/artes/${id}/visibility`, { isVisible });
+      await apiRequest('PUT', `/api/admin/arts/${id}/visibility`, { isVisible });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/artes'] });
       toast({
         title: 'Visibilidade atualizada',
         description: 'A visibilidade da arte foi atualizada com sucesso.',
@@ -119,6 +121,7 @@ const ArtsList = () => {
       });
     },
     onError: (error: any) => {
+      console.error('Erro ao atualizar visibilidade:', error);
       toast({
         title: 'Erro',
         description: error.message || 'Ocorreu um erro ao atualizar a visibilidade.',
