@@ -1,61 +1,49 @@
-const express = require("express");
 const fs = require("fs");
-const cors = require("cors");
 
 // Função para lidar com um webhook da Hotmart
 async function processHotmartWebhook(req, res) {
   try {
-    // Log do recebimento do webhook com timestamp
-    const timestamp = new Date().toISOString();
-    console.log(`[${timestamp}] Webhook da Hotmart recebido`);
+    const payload = req.body;
 
-    // Em desenvolvimento, log do payload completo
-    if (process.env.NODE_ENV !== 'production') {
-      console.log("Dados do webhook:", JSON.stringify(req.body, null, 2));
+    console.log("🔔 Webhook recebido da Hotmart:", payload);
+
+    // 🔒 Se quiser validar origem, você pode usar IPs ou campos do payload
+    // if (req.headers['user-agent'] !== 'Hotmart') return res.sendStatus(403);
+
+    // 💾 Salvar no log
+    if (!fs.existsSync("./logs")) {
+      fs.mkdirSync("./logs", { recursive: true });
+    }
+    fs.appendFileSync("./logs/webhook-log.json", JSON.stringify({ receivedAt: new Date(), payload }, null, 2) + ",\n");
+
+    // 🧠 Processamento baseado no tipo de evento
+    const type = payload?.event;
+    const email = payload?.data?.buyer?.email;
+
+    switch (type) {
+      case "PURCHASE_APPROVED":
+      case "SUBSCRIPTION_ACTIVATED":
+        console.log(`✅ Assinatura ativada para: ${email}`);
+        // Criar ou ativar assinatura
+        break;
+      case "SUBSCRIPTION_CANCELLED":
+      case "PURCHASE_CANCELED":
+      case "PURCHASE_REFUNDED":
+      case "SUBSCRIPTION_EXPIRED":
+        console.log(`❌ Assinatura cancelada para: ${email}`);
+        // Cancelar ou rebaixar assinatura
+        break;
+      default:
+        console.log("⚠️ Evento não reconhecido:", type);
     }
 
-    // Validação básica
-    if (!req.body || !req.body.event) {
-      console.error(`Webhook inválido, estrutura ou campos obrigatórios ausentes`);
-      return res.status(200).json({
-        success: false,
-        message: "Webhook inválido, campos obrigatórios ausentes"
-      });
-    }
-
-    // Identificar o tipo de evento recebido
-    const event = req.body.event;
-    console.log(`Evento recebido: ${event}`);
-
-    // Salvar webhook para auditoria (opcional, em produção usar banco de dados)
-    const logsDir = './logs';
-    if (!fs.existsSync(logsDir)) {
-      fs.mkdirSync(logsDir, { recursive: true });
-    }
-    
-    // Gerar nome de arquivo único baseado em timestamp
-    const filename = `${logsDir}/hotmart-webhook-${Date.now()}.json`;
-    
-    // Salvar payload para análise posterior (em produção, considere usar um banco de dados)
-    fs.writeFileSync(filename, JSON.stringify(req.body, null, 2));
-
-    // Responder com sucesso (conforme documentação da Hotmart)
-    // A resposta 200 indica que o webhook foi recebido com sucesso
-    return res.status(200).json({
-      success: true,
-      event: event,
-      message: "Webhook recebido com sucesso"
-    });
-
+    res.sendStatus(200); // Sempre responder OK
   } catch (error) {
-    console.error("Erro ao processar webhook da Hotmart:", error);
+    console.error("⚠️ Erro ao processar webhook:", error);
     
-    // Mesmo em caso de erro, retornar 200 para confirmar recebimento
-    // A Hotmart considera que o webhook foi entregue se receber 200
-    return res.status(200).json({
-      success: false,
-      message: "Erro ao processar webhook, mas foi recebido"
-    });
+    // Mesmo em caso de erro, responder com 200
+    // A Hotmart espera 200 para confirmar recebimento do webhook
+    res.sendStatus(200);
   }
 }
 
