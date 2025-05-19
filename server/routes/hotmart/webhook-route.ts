@@ -1,10 +1,7 @@
 import { Router, Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
-import { Pool } from 'pg';
-import { db } from '../../db';
-import { eq } from 'drizzle-orm';
-import { users } from '../../../shared/schema';
+import { hotmartWebhookProcessor } from '../../services/hotmart-webhook-processor';
 
 // Criar uma instância do roteador
 const router = Router();
@@ -52,96 +49,67 @@ router.post('/webhook-hotmart', async (req: Request, res: Response) => {
   try {
     console.log('===================== WEBHOOK HOTMART RECEBIDO =====================');
     
-    // Extrair dados do webhook
+    // Registrar informações principais para logging
     const payload = req.body as HotmartWebhookPayload;
     const eventType = payload.event;
-    const transactionCode = payload.data.purchase.transaction;
-    const buyerEmail = payload.data.buyer.email;
-    const status = payload.data.purchase.status;
-    const productName = payload.data.product.name;
-    const subscriberCode = payload.data?.subscription?.subscriber?.code || null;
+    const transactionCode = payload.data?.purchase?.transaction || 'unknown';
     
+    // Log básico das informações de cabeçalho
     console.log(`Evento: ${eventType}`);
     console.log(`Transação: ${transactionCode}`);
-    console.log(`Email do comprador: ${buyerEmail}`);
-    console.log(`Status: ${status}`);
-    console.log(`Produto: ${productName}`);
-    console.log(`Código de assinante: ${subscriberCode}`);
+    console.log(`Hora de recebimento: ${new Date().toISOString()}`);
     
-    // Salvar webhook em arquivo para análise
+    // Salvar webhook em arquivo para análise posterior
     const timestamp = new Date().toISOString().replace(/:/g, '-');
     const logFile = path.join(process.cwd(), `webhook-${timestamp}.json`);
     
     try {
-      fs.writeFileSync(logFile, JSON.stringify(payload, null, 2));
+      fs.writeFileSync(logFile, JSON.stringify({
+        receivedAt: new Date().toISOString(),
+        headers: req.headers,
+        body: payload
+      }, null, 2));
+      
       console.log(`Webhook salvo em ${logFile}`);
     } catch (fileError) {
       console.error('Erro ao salvar arquivo de webhook:', fileError);
     }
     
-    // INÍCIO DO PROCESSAMENTO REAL DO WEBHOOK
-    // Esta parte só executa para eventos de compra aprovada
-    if (eventType === 'PURCHASE_APPROVED' && status === 'APPROVED') {
-      console.log('Processando compra aprovada...');
-      
-      try {
-        // Verificar se o usuário existe com este email
-        const existingUser = await db.query.users.findFirst({
-          where: eq(users.email, buyerEmail)
-        });
-        
-        if (existingUser) {
-          console.log(`Usuário encontrado: ${existingUser.username} (ID: ${existingUser.id})`);
-          
-          // Determinar a data de expiração da assinatura (1 ano a partir de hoje)
-          const dataAssinatura = new Date();
-          const dataExpiracao = new Date();
-          dataExpiracao.setFullYear(dataExpiracao.getFullYear() + 1);
-          
-          // Determinar o tipo de plano baseado no nome do produto
-          const tipoPlanoPadrao = 'premium'; // Pode ser ajustado conforme os produtos reais
-          
-          // Atualizar assinatura do usuário
-          await db.update(users)
-            .set({
-              origemassinatura: 'hotmart',
-              tipoplano: tipoPlanoPadrao,
-              dataassinatura: dataAssinatura,
-              dataexpiracao: dataExpiracao,
-              codigoassinante: subscriberCode || transactionCode,
-              transaction_code: transactionCode,
-              acessovitalicio: false
-            })
-            .where(eq(users.id, existingUser.id));
-          
-          console.log(`Assinatura atualizada para o usuário ${existingUser.username}`);
-          console.log(`Plano: ${tipoPlanoPadrao}, Válido até: ${dataExpiracao.toISOString()}`);
-        } else {
-          console.log(`Usuário com email ${buyerEmail} não encontrado no sistema`);
-          // Aqui poderia implementar a criação automática de usuários se necessário
-        }
-        
-      } catch (dbError) {
-        console.error('Erro ao processar assinatura no banco de dados:', dbError);
+    // Processar o webhook usando o processador dedicado
+    const processingResult = await hotmartWebhookProcessor.processWebhook(payload);
+    
+    // Log do resultado do processamento
+    if (processingResult.success) {
+      console.log(`Webhook processado com sucesso: ${processingResult.message}`);
+      if (processingResult.details) {
+        console.log('Detalhes:', JSON.stringify(processingResult.details, null, 2));
+      }
+    } else {
+      console.error(`Erro no processamento do webhook: ${processingResult.message}`);
+      if (processingResult.details) {
+        console.error('Detalhes do erro:', processingResult.details);
       }
     }
-    // FIM DO PROCESSAMENTO REAL DO WEBHOOK
     
-    // Responder imediatamente para a Hotmart
+    // Sempre responder com 200 para a Hotmart não reenviar o webhook
     res.status(200).json({ 
       success: true, 
-      message: 'Webhook recebido e processado com sucesso',
+      message: 'Webhook recebido pelo servidor',
       eventType,
-      transactionCode
+      transactionCode,
+      processingResult: {
+        success: processingResult.success,
+        message: processingResult.message
+      }
     });
     
   } catch (error) {
-    console.error('Erro ao processar webhook da Hotmart:', error);
+    console.error('Erro não tratado no handler do webhook:', error);
     
-    // Mesmo em caso de erro, retornar 200 para a Hotmart não reenviar
+    // Mesmo em caso de erro grave, retornar 200 para a Hotmart não reenviar
     res.status(200).json({ 
       success: false, 
-      message: 'Erro no processamento do webhook',
+      message: 'Erro ao processar webhook, mas foi recebido pelo servidor',
       error: error instanceof Error ? error.message : 'Erro desconhecido'
     });
   }
