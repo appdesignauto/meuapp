@@ -357,6 +357,15 @@ app.use((req, res, next) => {
       console.error("❌ Erro ao configurar rota de teste da API da Hotmart:", error);
     }
     
+    // Adicionar rota para gerenciar assinaturas da Hotmart
+    try {
+      const hotmartSubscriptionsRouter = await import('./routes/hotmart-subscriptions');
+      app.use('/api/hotmart-subscriptions', hotmartSubscriptionsRouter.default);
+      console.log("✅ Rota de assinaturas da Hotmart configurada com sucesso");
+    } catch (error) {
+      console.error("❌ Erro ao configurar rota de assinaturas da Hotmart:", error);
+    }
+    
     // Adicionar a rota corrigida para detalhes de webhook
     try {
       const webhookDetailFixModule = await import('./routes/webhooks-detail-fix');

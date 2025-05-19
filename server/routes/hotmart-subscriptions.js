@@ -5,9 +5,10 @@
  * ativas da Hotmart.
  */
 
-const express = require('express');
+import express from 'express';
+import { createHotmartClient } from '../hotmart-client.js';
+
 const router = express.Router();
-const { createHotmartClient } = require('../hotmart-client');
 
 // Middleware CORS específico para permitir requisições de qualquer origem
 router.use((req, res, next) => {
@@ -55,4 +56,4 @@ router.get('/list', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

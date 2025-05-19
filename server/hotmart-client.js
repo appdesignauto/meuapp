@@ -6,7 +6,7 @@
  * como o retorno de HTML em vez de JSON.
  */
 
-const hotmartDirectApi = require('./hotmart-direct-api');
+import * as hotmartDirectApi from './hotmart-direct-api.js';
 
 /**
  * Cria um cliente da API Hotmart
@@ -15,7 +15,7 @@ const hotmartDirectApi = require('./hotmart-direct-api');
  * @param {string} environment - Ambiente (production ou sandbox)
  * @returns {Object} - Cliente da API Hotmart
  */
-function createHotmartClient(clientId, clientSecret, environment = 'production') {
+export function createHotmartClient(clientId, clientSecret, environment = 'production') {
   // Armazenar credenciais
   const credentials = {
     clientId,
@@ -121,7 +121,3 @@ function createHotmartClient(clientId, clientSecret, environment = 'production')
     listActiveSubscriptions
   };
 }
-
-module.exports = {
-  createHotmartClient
-};
