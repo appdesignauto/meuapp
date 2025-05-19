@@ -207,31 +207,72 @@ export default function SimpleFormMultiDialog({
           
           console.log(`Artes encontradas no grupo: ${groupArts.length}`);
           
-          if (Array.isArray(groupArts) && groupArts.length > 0) {
+          // Importante: Verificar se temos pelo menos duas artes no grupo
+          // para garantir que realmente é um grupo válido
+          if (Array.isArray(groupArts) && groupArts.length > 1) {
             // Extrair os formatos das artes do grupo
             const formatSlugs = groupArts.map(art => art.format);
             console.log(`Formatos encontrados: ${formatSlugs.join(', ')}`);
             
-            // Vamos garantir que os formatos sejam registrados no formulário
-            step1Form.setValue('selectedFormats', formatSlugs);
+            // Vamos garantir que todos os formatos estejam disponíveis na lista
+            const formatosValidos = formatSlugs.filter(slug => {
+              const formatoExiste = formats.some((f: any) => f.slug === slug);
+              if (!formatoExiste) {
+                console.warn(`Formato ${slug} não encontrado na lista de formatos!`);
+              }
+              return formatoExiste;
+            });
             
-            // Importante: Força o valor global selectedFormats também para garantir
-            // que todos os formatos sejam incluídos corretamente
-            setSelectedFormats(formatSlugs);
+            // Agora definimos apenas os formatos válidos
+            step1Form.setValue('selectedFormats', formatosValidos);
+            
+            // Adicionamos um log para facilitar diagnóstico futuro
+            console.log(`Definidos ${formatosValidos.length} formatos válidos no formulário: ${JSON.stringify(formatosValidos)}`);
+            
+            // Configurar formulário para modo de edição múltipla
+            console.log("Configurando formulário para edição de múltiplas artes");
             
             // Preencher os detalhes de cada formato
             const initialDetails: Record<string, FormatValues> = {};
+            const formatSlugsValidos = step1Form.getValues('selectedFormats');
+            console.log(`Processando ${groupArts.length} artes do grupo com formatos válidos: ${formatSlugsValidos.join(', ')}`);
+            
+            // Mapeamento de todas as artes do grupo por formato para fácil referência
+            const artesPorFormato: Record<string, any> = {};
             groupArts.forEach(art => {
-              initialDetails[art.format] = {
-                format: art.format,
-                fileType: art.fileType || 'canva',
-                title: art.title || '',
-                description: art.description || '',
-                imageUrl: art.imageUrl || '',
-                previewUrl: art.previewUrl || '',
-                editUrl: art.editUrl || '',
-              };
-              console.log(`Formato ${art.format} carregado: ${art.title}`);
+              if (art && art.format) {
+                artesPorFormato[art.format] = art;
+              }
+            });
+            
+            // Agora processamos apenas os formatos válidos
+            formatSlugsValidos.forEach(formato => {
+              const arte = artesPorFormato[formato];
+              if (arte) {
+                console.log(`Processando formato ${formato} com arte ID ${arte.id}`);
+                initialDetails[formato] = {
+                  format: formato,
+                  fileType: arte.fileType || 'canva',
+                  title: arte.title || '',
+                  description: arte.description || '',
+                  imageUrl: arte.imageUrl || '',
+                  previewUrl: arte.previewUrl || '',
+                  editUrl: arte.editUrl || '',
+                };
+              } else {
+                console.warn(`Formato ${formato} selecionado mas não encontrado no grupo de artes!`);
+                // Criar um formato vazio para não quebrar a interface
+                initialDetails[formato] = {
+                  format: formato,
+                  fileType: step1Form.getValues('globalFileType') || 'canva',
+                  title: '',
+                  description: '',
+                  imageUrl: '',
+                  previewUrl: '',
+                  editUrl: '',
+                };
+              }
+              console.log(`Formato ${formato} configurado para edição de grupo`);
             });
             
             setFormatDetails(initialDetails);
@@ -248,11 +289,19 @@ export default function SimpleFormMultiDialog({
             setCurrentTab(editingArt.format);
             console.log(`Definindo aba ativa: ${editingArt.format}`);
             
-            // Guardar as imagens
+            // Guardar as imagens apenas dos formatos válidos selecionados
             const imageMap: Record<string, string> = {};
-            groupArts.forEach(art => {
-              imageMap[art.format] = art.imageUrl || '';
+            const formatosSelecionados = step1Form.getValues('selectedFormats');
+            
+            // Usar o mesmo mapeamento de artes por formato
+            formatosSelecionados.forEach(formato => {
+              const arte = artesPorFormato[formato];
+              if (arte && arte.imageUrl) {
+                imageMap[formato] = arte.imageUrl;
+                console.log(`Imagem registrada para o formato ${formato}: ${arte.imageUrl.substring(0, 50)}...`);
+              }
             });
+            
             setImages(imageMap);
             
             // Avançar direto para a etapa 2 (upload) depois de carregar os dados
