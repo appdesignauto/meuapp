@@ -167,6 +167,10 @@ export default function SimpleFormMultiDialog({
           return res.json();
         })
         .then(data => {
+          console.log('Dados completos da verificação de grupo:', JSON.stringify(data));
+          return data;
+        })
+        .then(data => {
           const groupId = data.groupId;
           console.log(`Verificação de groupId para arte ${artId}: ${groupId}`);
           
@@ -187,7 +191,10 @@ export default function SimpleFormMultiDialog({
         })
         .then(data => {
           // Só processar esta parte se tivermos um groupId
-          if (!data || !data.arts) return;
+          if (!data || !data.arts) {
+            console.log('Nenhuma arte encontrada nos dados recebidos:', data);
+            return;
+          }
           
           console.log(`Dados recebidos do grupo:`, data);
           const groupArts = data.arts || [];
@@ -199,7 +206,12 @@ export default function SimpleFormMultiDialog({
             const formatSlugs = groupArts.map(art => art.format);
             console.log(`Formatos encontrados: ${formatSlugs.join(', ')}`);
             
+            // Vamos garantir que os formatos sejam registrados no formulário
             step1Form.setValue('selectedFormats', formatSlugs);
+            
+            // Importante: Força o valor global selectedFormats também para garantir
+            // que todos os formatos sejam incluídos corretamente
+            setSelectedFormats(formatSlugs);
             
             // Preencher os detalhes de cada formato
             const initialDetails: Record<string, FormatValues> = {};
