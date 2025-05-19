@@ -57,6 +57,10 @@ router.put('/api/admin/arts/multi/:id', isAuthenticated, async (req: Request, re
     
     const id = parseInt(req.params.id);
     
+    // Debug: Log dos dados recebidos para identificar o problema
+    console.log('Dados recebidos para atualização de arte multi-formato:');
+    console.log(JSON.stringify(req.body, null, 2));
+    
     // Validar os dados recebidos
     const artGroupData = ArtGroupSchema.parse(req.body);
     
