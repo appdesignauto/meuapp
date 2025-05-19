@@ -7,7 +7,7 @@
 
 const express = require('express');
 const router = express.Router();
-const axios = require('axios');
+const { createHotmartClient } = require('../hotmart-client');
 
 // Middleware CORS específico para permitir requisições de qualquer origem
 router.use((req, res, next) => {
@@ -24,79 +24,16 @@ router.use((req, res, next) => {
 });
 
 /**
- * Testa as credenciais da API Hotmart
- * 
- * @param {string} clientId - O Client ID da API Hotmart
- * @param {string} clientSecret - O Client Secret da API Hotmart
- * @param {string} environment - O ambiente (sandbox ou production)
- * @returns {Promise<Object>} - Resultado do teste
- */
-async function testHotmartCredentials(clientId, clientSecret, environment) {
-  try {
-    const baseUrl = environment === 'production' 
-      ? 'https://developers.hotmart.com' 
-      : 'https://sandbox.hotmart.com';
-    
-    // Cria o token básico de autenticação
-    const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
-    
-    // Tenta obter um token de acesso
-    const tokenResponse = await axios({
-      method: 'post',
-      url: `${baseUrl}/security/oauth/token`,
-      headers: {
-        'Authorization': `Basic ${basicAuth}`,
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      data: 'grant_type=client_credentials&scope=payments+sales+subscriptions+users+reports+webhook+campaigns+catalogs',
-      validateStatus: function (status) {
-        // Permite qualquer código de status para podermos capturar erros específicos
-        return true;
-      }
-    });
-
-    // Verifica a resposta da API
-    if (tokenResponse.status === 200 && tokenResponse.data.access_token) {
-      return {
-        success: true,
-        message: `Conexão com a API Hotmart (${environment}) realizada com sucesso`,
-        data: {
-          accessToken: tokenResponse.data.access_token.substring(0, 10) + '...',
-          tokenType: tokenResponse.data.token_type,
-          expiresIn: tokenResponse.data.expires_in,
-          scope: tokenResponse.data.scope
-        }
-      };
-    } else {
-      return {
-        success: false,
-        message: `Falha na autenticação com a API Hotmart (${environment})`,
-        error: {
-          status: tokenResponse.status,
-          data: tokenResponse.data
-        }
-      };
-    }
-  } catch (error) {
-    console.error('Erro ao testar credenciais Hotmart:', error.message);
-    
-    return {
-      success: false,
-      message: `Erro ao conectar com a API Hotmart (${environment})`,
-      error: {
-        message: error.message,
-        code: error.code || 'UNKNOWN_ERROR'
-      }
-    };
-  }
-}
-
-/**
  * Rota para testar credenciais da API Hotmart
  */
 router.post('/test-credentials', async (req, res) => {
   try {
     const { clientId, clientSecret, environment } = req.body;
+    
+    console.log(`Recebida requisição de teste para API Hotmart:
+      - Ambiente: ${environment}
+      - Client ID: ${clientId ? clientId.substring(0, 5) + '...' : 'não fornecido'}
+      - Client Secret: ${clientSecret ? '***********' : 'não fornecido'}`);
     
     // Validação dos parâmetros
     if (!clientId || !clientSecret) {
@@ -106,11 +43,16 @@ router.post('/test-credentials', async (req, res) => {
       });
     }
     
-    // Define o ambiente padrão como sandbox se não for especificado
-    const env = environment || 'sandbox';
+    // Define o ambiente padrão como production se não for especificado
+    const env = environment || 'production';
     
-    // Testa as credenciais
-    const result = await testHotmartCredentials(clientId, clientSecret, env);
+    // Cria um cliente da API Hotmart com as credenciais fornecidas
+    const hotmartClient = createHotmartClient(clientId, clientSecret, env);
+    
+    // Testa a conexão usando o cliente
+    const result = await hotmartClient.testConnection();
+    
+    console.log('Resultado do teste:', JSON.stringify(result, null, 2));
     
     // Retorna o resultado
     return res.json(result);
