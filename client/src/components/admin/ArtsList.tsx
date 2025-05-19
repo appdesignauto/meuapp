@@ -67,7 +67,8 @@ const ArtsList = () => {
       await apiRequest('DELETE', `/api/admin/artes/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
+      // Invalidar a consulta principal que busca a lista de artes
+      queryClient.invalidateQueries({ queryKey: ['/api/artes'] });
       toast({
         title: 'Arte excluída',
         description: 'A arte foi excluída com sucesso.',
@@ -89,7 +90,7 @@ const ArtsList = () => {
       await apiRequest('PUT', `/api/admin/arts/${id}`, { isPremium });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
+      // Invalidar apenas a consulta principal que está em uso
       queryClient.invalidateQueries({ queryKey: ['/api/artes'] });
       toast({
         title: 'Status premium atualizado',
