@@ -533,4 +533,14 @@ router.put('/api/admin/artes/group/:groupId', isAuthenticated, async (req: Reque
   next();
 });
 
+// Excluir arte - "/api/admin/artes/:id"
+router.delete('/api/admin/artes/:id', isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
+  // Redirecionar para versão em inglês da rota
+  const artId = req.params.id;
+  req.url = `/api/admin/arts/${artId}`;
+  
+  // Passar para o próximo handler que processa a versão em inglês da rota
+  next();
+});
+
 export default router;
