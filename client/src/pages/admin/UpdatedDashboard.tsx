@@ -967,7 +967,7 @@ const AdminDashboard = () => {
       <div 
         className={`
           fixed lg:relative z-40 h-full bg-white border-r
-          ${sidebarOpen ? 'w-64 translate-x-0 shadow-lg' : 'w-0 -translate-x-full lg:translate-x-0 lg:w-[5rem]'} 
+          ${sidebarOpen ? 'w-64 translate-x-0 shadow-lg' : 'w-0 -translate-x-full lg:translate-x-0 lg:w-[4.5rem]'} 
           transition-all duration-300 ease-in-out overflow-hidden
         `}
       >
@@ -983,7 +983,7 @@ const AdminDashboard = () => {
             </button>
           </div>
         </div>
-        <div className="p-4 overflow-hidden">
+        <div className="p-3 overflow-hidden">
           <div className={`flex items-center mb-6 ${!sidebarOpen ? 'justify-center' : ''}`}>
             <div className={`w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 ${sidebarOpen ? 'mr-3' : ''}`}>
               {user?.name?.charAt(0) || 'A'}
@@ -999,7 +999,7 @@ const AdminDashboard = () => {
             {/* Dashboard principal */}
             <button
               onClick={() => setActiveTab('stats')}
-              className={`flex items-center w-full px-4 py-3 rounded-lg ${
+              className={`flex items-center w-full px-3 py-2.5 rounded-lg ${
                 activeTab === 'stats' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
               } ${!sidebarOpen ? 'lg:justify-center lg:px-0' : ''}`}
               title="Visão Geral"
