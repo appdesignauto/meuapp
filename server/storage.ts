@@ -2080,6 +2080,7 @@ export class DatabaseStorage implements IStorage {
           a."categoryId", 
           a."collectionId", 
           a.title, 
+          a.description,
           a."imageUrl", 
           a.format, 
           a."fileType", 
