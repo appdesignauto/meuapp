@@ -1197,12 +1197,12 @@ const AdminDashboard = () => {
             {/* Analytics - Agora como um item principal no menu */}
             <button
               onClick={() => setActiveTab('analytics')}
-              className={`flex items-center w-full py-2.5 rounded-lg ${
+              className={`flex items-center w-full px-4 py-2.5 rounded-lg ${
                 activeTab === 'analytics' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-              } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
+              } ${!sidebarOpen ? 'justify-center px-0' : ''} transition-colors duration-200`}
               title="Analytics"
             >
-              <BarChart3 className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+              <BarChart3 className={`w-5 h-5 ${!sidebarOpen ? 'mx-auto' : 'mr-3'}`} />
               {sidebarOpen && <span>Analytics</span>}
             </button>
             
