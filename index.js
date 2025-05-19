@@ -1,49 +1,51 @@
-/**
- * Servidor dedicado para webhooks da Hotmart
- * Este arquivo usa CommonJS para evitar problemas de compatibilidade
- */
+import express from 'express';
+import fs from 'fs';
+import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const express = require('express');
-const cors = require('cors');
-const fs = require('fs');
-const path = require('path');
+// Obter o diretório atual em ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
+// Inicialização do servidor
 const app = express();
+const PORT = process.env.PORT || 3000;
 
-// Configurações do servidor
+// Middlewares
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Diretório para logs
+// Criar pasta de logs se não existir
 const logsDir = path.join(process.cwd(), 'logs');
 if (!fs.existsSync(logsDir)) {
   fs.mkdirSync(logsDir, { recursive: true });
 }
 
 // Arquivo de log
-const logFile = path.join(logsDir, 'webhook-log.json');
+const logFile = path.join(logsDir, 'webhook-logs.json');
 if (!fs.existsSync(logFile)) {
   fs.writeFileSync(logFile, '[\n', 'utf8');
 }
 
-// Rota de status
+// Rota de verificação (healthcheck)
 app.get('/', (req, res) => {
-  res.json({
-    status: 'online',
-    message: 'Servidor de webhooks da Hotmart',
-    time: new Date().toISOString()
+  res.json({ 
+    status: 'online', 
+    message: 'Servidor de webhooks da Hotmart', 
+    time: new Date().toISOString() 
   });
 });
 
-// Rota principal para webhooks da Hotmart
+// Rota principal para webhook da Hotmart
 app.post('/api/webhook-hotmart', async (req, res) => {
   try {
     const payload = req.body;
     
     console.log('🔔 Webhook recebido da Hotmart:', JSON.stringify(payload, null, 2));
 
-    // 💾 Salvar no log com timestamp
+    // Salvar no log com timestamp
     const logEntry = {
       receivedAt: new Date().toISOString(),
       payload
@@ -57,7 +59,7 @@ app.post('/api/webhook-hotmart', async (req, res) => {
     
     fs.appendFileSync(logFile, appendData, 'utf8');
 
-    // 🧠 Processamento baseado no tipo de evento
+    // Processamento baseado no tipo de evento
     const type = payload?.event;
     const email = payload?.data?.buyer?.email || payload?.buyer?.email;
 
@@ -88,12 +90,9 @@ app.post('/api/webhook-hotmart', async (req, res) => {
   }
 });
 
-// IMPORTANTE: Centralizar uso de app.listen em um único lugar
-const PORT = process.env.PORT || 3000;
-
-// Usar somente um listener para evitar conflitos no Replit
+// Iniciar o servidor
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ Servidor de webhooks escutando na porta ${PORT}`);
+  console.log(`✅ Servidor escutando na porta ${PORT}`);
   console.log(`🔗 Webhook da Hotmart disponível em: /api/webhook-hotmart`);
   console.log(`📊 Logs salvos em: ${logFile}`);
 });
