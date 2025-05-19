@@ -4,6 +4,11 @@ import path from 'path';
 import { db } from '../../db';
 import { eq } from 'drizzle-orm';
 import { users } from '../../../shared/schema';
+import { fileURLToPath } from 'url';
+
+// Obter o diretório atual em ambiente de ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Criar uma instância do roteador
 const router = Router();
@@ -48,14 +53,18 @@ router.post('/webhook-hotmart', async (req: Request, res: Response) => {
         JSON.stringify(logData, null, 2)
       );
       
-      // Método 2: No diretório do servidor
-      const serverDir = path.join(__dirname, '..', '..', '..');
+      // Método 2: No diretório logs (criar se não existir)
+      const logsDir = path.join(process.cwd(), 'logs');
+      if (!fs.existsSync(logsDir)) {
+        fs.mkdirSync(logsDir, { recursive: true });
+      }
+      
       fs.writeFileSync(
-        path.join(serverDir, `webhook-log-${timestamp}.json`), 
+        path.join(logsDir, `webhook-log-${timestamp}.json`), 
         JSON.stringify(logData, null, 2)
       );
       
-      // Método 3: No diretório temporário do sistema
+      // Método 3: Arquivo de log consolidado
       fs.appendFileSync(
         'webhook-log.txt',
         `\n--- WEBHOOK ${timestamp} ---\n${JSON.stringify(logData, null, 2)}\n-----------------------\n`
@@ -155,7 +164,7 @@ router.post('/webhook-hotmart', async (req: Request, res: Response) => {
     // Mesmo em caso de erro, retornar 200 para a Hotmart não reenviar
     res.status(200).json({ 
       success: false, 
-      message: 'Erro ao processar webhook, mas foi recebido pelo servidor',
+      message: 'Erro ao processar webhook, mas foi recebido para análise',
       error: error instanceof Error ? error.message : 'Erro desconhecido'
     });
   }
