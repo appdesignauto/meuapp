@@ -534,13 +534,120 @@ router.put('/api/admin/artes/group/:groupId', isAuthenticated, async (req: Reque
 });
 
 // Excluir arte - "/api/admin/artes/:id"
-router.delete('/api/admin/artes/:id', isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
-  // Redirecionar para versão em inglês da rota
-  const artId = req.params.id;
-  req.url = `/api/admin/arts/${artId}`;
-  
-  // Passar para o próximo handler que processa a versão em inglês da rota
-  next();
+router.delete('/api/admin/artes/:id', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    // Verificar se o usuário é admin ou designer autorizado
+    const userRole = req.user?.nivelacesso;
+    if (userRole !== 'admin' && userRole !== 'designer_adm') {
+      return res.status(403).json({
+        success: false,
+        message: 'Acesso negado. Você não tem permissão para excluir artes.'
+      });
+    }
+    
+    const artId = parseInt(req.params.id);
+    console.log(`[DELETE] Iniciando exclusão da arte ID: ${artId} via rota em português`);
+    
+    // Verificar se a arte existe usando SQL direto
+    const checkResult = await db.execute(sql`
+      SELECT id, "groupId" FROM arts WHERE id = ${artId}
+    `);
+    
+    if (!checkResult.rows || checkResult.rows.length === 0) {
+      console.log(`[DELETE] Arte ID ${artId} não encontrada no banco de dados`);
+      return res.status(404).json({
+        success: false,
+        message: 'Arte não encontrada'
+      });
+    }
+    
+    // Obter o groupId da arte (se existir)
+    const groupId = checkResult.rows[0]?.groupId;
+    console.log(`[DELETE] Arte ${artId} groupId: ${groupId || 'sem grupo'}`);
+    
+    // IMPORTANTE: Resolver a restrição de chave estrangeira
+    // Primeiro excluir registros de views que referenciam essa arte
+    console.log(`[DELETE] Removendo registros de visualizações para a arte ID: ${artId}`);
+    await db.execute(sql`
+      DELETE FROM views WHERE "artId" = ${artId}
+    `);
+    
+    // Excluir registros de favoritos que referenciam essa arte
+    console.log(`[DELETE] Removendo registros de favoritos para a arte ID: ${artId}`);
+    await db.execute(sql`
+      DELETE FROM favorites WHERE "artId" = ${artId}
+    `);
+    
+    // Excluir registros de downloads que referenciam essa arte
+    console.log(`[DELETE] Removendo registros de downloads para a arte ID: ${artId}`);
+    await db.execute(sql`
+      DELETE FROM downloads WHERE "artId" = ${artId}
+    `);
+    
+    // Excluir registros de designerStats que referenciam essa arte
+    console.log(`[DELETE] Removendo registros de estatísticas de designer para a arte ID: ${artId}`);
+    await db.execute(sql`
+      DELETE FROM "designerStats" WHERE "artId" = ${artId}
+    `);
+    
+    // Excluir registros de shares que referenciam essa arte
+    console.log(`[DELETE] Removendo registros de compartilhamentos para a arte ID: ${artId}`);
+    await db.execute(sql`
+      DELETE FROM shares WHERE "artId" = ${artId}
+    `);
+    
+    // Excluir registros de artVariations que referenciam essa arte
+    console.log(`[DELETE] Removendo registros de variações para a arte ID: ${artId}`);
+    await db.execute(sql`
+      DELETE FROM "artVariations" WHERE artid = ${artId}
+    `);
+    
+    // Excluir registros de reports que referenciam essa arte
+    console.log(`[DELETE] Removendo registros de denúncias para a arte ID: ${artId}`);
+    await db.execute(sql`
+      DELETE FROM reports WHERE "artId" = ${artId}
+    `);
+    
+    // Agora podemos excluir a arte com segurança
+    console.log(`[DELETE] Excluindo a arte ID: ${artId}`);
+    const deleteResult = await db.execute(sql`
+      DELETE FROM arts WHERE id = ${artId} RETURNING id
+    `);
+    
+    // Verificar se a exclusão foi bem-sucedida
+    if (!deleteResult.rows || deleteResult.rows.length === 0) {
+      console.log(`[DELETE] Falha ao excluir arte ID ${artId}. Nenhuma linha afetada.`);
+      return res.status(500).json({
+        success: false,
+        message: 'Falha ao excluir arte. Operação não afetou nenhuma linha no banco de dados.'
+      });
+    }
+    
+    console.log(`[DELETE] Arte ID ${artId} excluída com sucesso. ID retornado: ${deleteResult.rows[0]?.id}`);
+    
+    // Verificar se há outras artes no mesmo grupo
+    if (groupId) {
+      const groupArtsResult = await db.execute(sql`
+        SELECT id FROM arts WHERE "groupId" = ${groupId}
+      `);
+      
+      const remainingCount = groupArtsResult.rowCount || 0;
+      console.log(`[DELETE] Restam ${remainingCount} artes no grupo ${groupId}`);
+    }
+    
+    return res.json({
+      success: true,
+      message: 'Arte excluída com sucesso',
+      id: artId
+    });
+  } catch (error) {
+    console.error(`[DELETE] Erro ao excluir arte ${req.params.id}:`, error);
+    return res.status(500).json({
+      success: false,
+      message: 'Erro ao excluir arte',
+      error: String(error)
+    });
+  }
 });
 
 export default router;
