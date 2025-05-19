@@ -750,18 +750,7 @@ export default function SimpleFormMultiDialog({
                     )}
                   </div>
                   
-                  <div className="mt-6">
-                    <Label htmlFor="globalDescription" className="flex items-center mb-1.5">
-                      <AlignLeft className="h-4 w-4 mr-1.5 text-gray-500" />
-                      Descrição da Arte
-                    </Label>
-                    <Textarea
-                      {...step1Form.register("globalDescription")}
-                      placeholder="Descrição opcional da arte"
-                      rows={3}
-                      className="bg-white"
-                    />
-                  </div>
+                  {/* Campo de descrição global removido para evitar inconsistências no multi-formato */}
                   
                   <div className="mt-6 p-3 bg-blue-50 rounded-md border border-blue-100 flex items-center">
                     <div className="flex items-center mr-3">
@@ -937,16 +926,7 @@ export default function SimpleFormMultiDialog({
                               </Select>
                             </div>
                             
-                            <div>
-                              <Label htmlFor={`${formatSlug}-description`}>Descrição</Label>
-                              <Textarea
-                                id={`${formatSlug}-description`}
-                                value={formatDetails[formatSlug]?.description || ''}
-                                onChange={(e) => saveFormatDetails(formatSlug, { description: e.target.value })}
-                                placeholder="Descrição específica para este formato"
-                                rows={3}
-                              />
-                            </div>
+                            {/* Campo de descrição removido por não funcionar corretamente com multi-formato */}
                             
                             <div>
                               <Label htmlFor={`${formatSlug}-editUrl`}>URL de Edição <span className="text-red-500">*</span></Label>
