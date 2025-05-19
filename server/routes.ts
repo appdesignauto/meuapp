@@ -4660,22 +4660,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
                              req.body?.data?.purchase?.transaction_code || 'unknown';
       const purchaseData = req.body?.data?.purchase || {};
       
-      // Salvar na fila de webhooks para processamento assíncrono
-      const db = await getDatabase();
-      await db.query(
-        `INSERT INTO webhook_queue (
-          event_type, 
-          transaction_code, 
-          raw_data, 
-          status, 
-          created_at
-        ) VALUES ($1, $2, $3, $4, NOW())`,
-        [
+      // Importar dependências necessárias
+      const fs = require('fs');
+      const path = require('path');
+      
+      // Salvar webhook em arquivo para análise
+      const webhookFilePath = path.join(__dirname, '../webhook-data.json');
+      fs.writeFileSync(
+        webhookFilePath, 
+        JSON.stringify({
+          timestamp: new Date().toISOString(),
           eventType,
           transactionCode,
-          JSON.stringify(req.body),
-          'pending'
-        ]
+          payload: req.body
+        }, null, 2)
       );
       
       // Responder imediatamente para não bloquear o servidor
@@ -4685,9 +4683,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         eventType,
         transactionCode
       });
-      
-      // Log para análise posterior
-      console.log(`Webhook Hotmart enfileirado: ${eventType}, Transação: ${transactionCode}`);
+      console.log(`Webhook salvo em ${webhookFilePath} para análise`);
       
     } catch (error) {
       console.error('Erro ao processar webhook da Hotmart:', error);
