@@ -1327,6 +1327,15 @@ const AdminDashboard = () => {
                   <BarChart3 className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
                   {sidebarOpen && <span>Analytics</span>}
                 </button>
+                <Link 
+                  href="/admin/settings"
+                  className={`flex items-center w-full py-2.5 rounded-md text-gray-600 hover:bg-gray-100 
+                  ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
+                  title="Configurações do Sistema"
+                >
+                  <Wrench className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+                  {sidebarOpen && <span>Config Sistema</span>}
+                </Link>
 
                 {user?.role === 'admin' && (
                   <>
