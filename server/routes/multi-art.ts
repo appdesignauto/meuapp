@@ -131,6 +131,7 @@ router.put('/api/admin/arts/multi/:id', isAuthenticated, async (req: Request, re
             UPDATE arts 
             SET 
               title = ${format.title},
+              description = ${format.description || ''},
               "imageUrl" = ${format.imageUrl},
               "editUrl" = ${format.editUrl || ''},
               "categoryId" = ${artGroupData.categoryId},
@@ -149,6 +150,7 @@ router.put('/api/admin/arts/multi/:id', isAuthenticated, async (req: Request, re
           const result = await db.execute(sql`
             INSERT INTO arts (
               title, 
+              description,
               "imageUrl", 
               format, 
               "fileType", 
@@ -161,6 +163,7 @@ router.put('/api/admin/arts/multi/:id', isAuthenticated, async (req: Request, re
             ) 
             VALUES (
               ${format.title},
+              ${format.description || ''},
               ${format.imageUrl},
               ${format.format},
               ${format.fileType},
