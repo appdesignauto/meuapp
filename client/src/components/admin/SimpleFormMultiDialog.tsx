@@ -546,6 +546,9 @@ export default function SimpleFormMultiDialog({
           formattedData.artId = editingArt.id;
           response = await apiRequest('PUT', `/api/admin/arts/multi/${editingArt.id}`, formattedData);
         }
+        
+        // Invalidar o cache para atualizar a UI imediatamente após a edição
+        queryClient.invalidateQueries({ queryKey: ['/api/artes'] });
         successMessage = "Arte atualizada com sucesso";
       } else {
         // Criar nova arte multi-formato
