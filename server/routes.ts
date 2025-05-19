@@ -4649,20 +4649,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Rota para testar verificação de assinaturas expiradas
   
-  // Rota direta de teste para o webhook da Hotmart
-  app.post("/api/webhook-hotmart", (req, res) => {
-    console.log("WEBHOOK HOTMART DIRETO - BODY:", JSON.stringify(req.body, null, 2));
-    console.log("WEBHOOK HOTMART DIRETO - HEADERS:", JSON.stringify(req.headers, null, 2));
-    
-    res.status(200).json({
-      success: true,
-      message: "Webhook direto recebido com sucesso",
-      receivedData: req.body
-    });
+  // Rota para receber webhooks da Hotmart e processar de forma assíncrona
+  app.post("/api/webhook-hotmart", async (req, res) => {
+    try {
+      console.log("WEBHOOK HOTMART RECEBIDO - BODY:", JSON.stringify(req.body, null, 2));
+      
+      // Extrair dados relevantes do webhook
+      const eventType = req.body?.event || 'unknown';
+      const transactionCode = req.body?.data?.purchase?.transaction || 
+                             req.body?.data?.purchase?.transaction_code || 'unknown';
+      const purchaseData = req.body?.data?.purchase || {};
+      
+      // Salvar na fila de webhooks para processamento assíncrono
+      const db = await getDatabase();
+      await db.query(
+        `INSERT INTO webhook_queue (
+          event_type, 
+          transaction_code, 
+          raw_data, 
+          status, 
+          created_at
+        ) VALUES ($1, $2, $3, $4, NOW())`,
+        [
+          eventType,
+          transactionCode,
+          JSON.stringify(req.body),
+          'pending'
+        ]
+      );
+      
+      // Responder imediatamente para não bloquear o servidor
+      res.status(200).json({
+        success: true,
+        message: "Webhook recebido e registrado com sucesso para análise",
+        eventType,
+        transactionCode
+      });
+      
+      // Log para análise posterior
+      console.log(`Webhook Hotmart enfileirado: ${eventType}, Transação: ${transactionCode}`);
+      
+    } catch (error) {
+      console.error('Erro ao processar webhook da Hotmart:', error);
+      
+      // Mesmo em caso de erro, retornar 200 para a Hotmart não reenviar
+      res.status(200).json({ 
+        success: false, 
+        message: 'Erro ao processar webhook, mas foi recebido para análise',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
   });
-  
-  // Registrar a rota para receber webhooks da Hotmart (para análise da estrutura dos dados)
-  // app.use('/api', hotmartWebhookRouter);
   app.post("/api/test/expireSubscriptions", async (req, res) => {
     try {
       const result = await SubscriptionService.checkExpiredSubscriptions();
