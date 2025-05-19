@@ -269,6 +269,30 @@ router.delete('/api/admin/arts/:id', isAuthenticated, async (req: Request, res: 
       DELETE FROM downloads WHERE "artId" = ${artId}
     `);
     
+    // Excluir registros de designerStats que referenciam essa arte
+    console.log(`[DELETE] Removendo registros de estatísticas de designer para a arte ID: ${artId}`);
+    await db.execute(sql`
+      DELETE FROM "designerStats" WHERE "artId" = ${artId}
+    `);
+    
+    // Excluir registros de shares que referenciam essa arte
+    console.log(`[DELETE] Removendo registros de compartilhamentos para a arte ID: ${artId}`);
+    await db.execute(sql`
+      DELETE FROM shares WHERE "artId" = ${artId}
+    `);
+    
+    // Excluir registros de artVariations que referenciam essa arte
+    console.log(`[DELETE] Removendo registros de variações para a arte ID: ${artId}`);
+    await db.execute(sql`
+      DELETE FROM "artVariations" WHERE artid = ${artId}
+    `);
+    
+    // Excluir registros de reports que referenciam essa arte
+    console.log(`[DELETE] Removendo registros de denúncias para a arte ID: ${artId}`);
+    await db.execute(sql`
+      DELETE FROM reports WHERE "artId" = ${artId}
+    `);
+    
     // Agora podemos excluir a arte com segurança
     console.log(`[DELETE] Excluindo a arte ID: ${artId}`);
     const deleteResult = await db.execute(sql`
