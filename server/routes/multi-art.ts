@@ -79,14 +79,12 @@ router.put('/api/admin/arts/multi/:id', isAuthenticated, async (req: Request, re
     
     const primaryFormat = artGroupData.formats[0];
     
-    // Atualizar a arte diretamente com SQL
+    // Atualizar a arte diretamente com SQL - removendo campos que não existem
     await db.execute(sql`
       UPDATE arts 
       SET 
         title = ${primaryFormat.title},
-        description = ${primaryFormat.description || ''},
         "imageUrl" = ${primaryFormat.imageUrl},
-        "previewUrl" = ${primaryFormat.previewUrl || null},
         "editUrl" = ${primaryFormat.editUrl || ''},
         "categoryId" = ${artGroupData.categoryId},
         "isPremium" = ${artGroupData.isPremium},
