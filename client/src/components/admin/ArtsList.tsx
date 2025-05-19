@@ -420,6 +420,7 @@ const ArtsList = () => {
                     <TableHead className="w-[100px]">Premium</TableHead>
                     <TableHead className="w-[100px]">Visível</TableHead>
                     <TableHead className="w-[100px]">Criado em</TableHead>
+                    <TableHead className="w-[100px]">Grupo</TableHead>
                     <TableHead className="text-right w-[120px]">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -471,6 +472,16 @@ const ArtsList = () => {
                           />
                         </TableCell>
                         <TableCell>{formatDate(art.createdAt)}</TableCell>
+                        <TableCell>
+                          {art.groupId ? (
+                            <div className="flex items-center gap-1">
+                              <div className="h-3 w-3 rounded-full bg-green-500"></div>
+                              <span className="text-xs text-gray-600" title="Esta arte faz parte de um grupo">Parte de grupo</span>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-400">-</span>
+                          )}
+                        </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
                             <Button 
