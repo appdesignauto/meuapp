@@ -552,7 +552,7 @@ export default function SimpleFormMultiDialog({
         successMessage = "Arte atualizada com sucesso";
       } else {
         // Criar nova arte multi-formato
-        response = await apiRequest('POST', '/api/admin/arts/multi', formattedData);
+        response = await apiRequest('POST', '/api/admin/artes/multi', formattedData);
         successMessage = "Arte criada com sucesso";
       }
 
