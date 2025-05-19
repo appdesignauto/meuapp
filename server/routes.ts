@@ -5204,6 +5204,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Registrar rota para testar credenciais da Hotmart
   app.use(hotmartTestCredentialsRouter);
 
+  // Registrar rota assíncrona para webhooks da Hotmart
+  app.use('/api', webhookQueueRouter);
+  
   const httpServer = createServer(app);
   
   // Inicializar o serviço da Hotmart se as credenciais estiverem disponíveis
