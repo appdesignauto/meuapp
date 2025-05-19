@@ -4590,29 +4590,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Rota para webhook da Hotmart
-  app.post("/api/webhooks/hotmart", async (req, res) => {
+  app.post("/api/webhook-hotmart", async (req, res) => {
     try {
-      console.log("Webhook da Hotmart recebido:", req.body);
+      // Registrar recebimento do webhook com horário
+      const timestamp = new Date().toISOString();
+      console.log(`[${timestamp}] Webhook da Hotmart recebido:`, JSON.stringify(req.body, null, 2));
       
       // Validação básica do webhook
       if (!req.body || !req.body.data || !req.body.event) {
+        console.error(`[${timestamp}] Webhook inválido - estrutura incorreta:`, JSON.stringify(req.body, null, 2));
         return res.status(400).json({ 
           success: false, 
-          message: "Webhook inválido" 
+          message: "Webhook inválido - estrutura incorreta" 
         });
+      }
+      
+      // Log detalhado do evento recebido
+      const event = req.body.event;
+      const data = req.body.data;
+      
+      console.log(`[${timestamp}] Tipo de evento recebido: ${event}`);
+      console.log(`[${timestamp}] Dados principais:`);
+      
+      // Log de informações principais sem expor dados sensíveis completos
+      if (data.buyer && data.buyer.email) {
+        const emailParts = data.buyer.email.split('@');
+        const maskedEmail = emailParts.length === 2 
+          ? `${emailParts[0].substring(0, 3)}***@${emailParts[1]}`
+          : '[email inválido]';
+        console.log(`- Comprador: ${maskedEmail}`);
+      }
+      
+      if (data.purchase && data.purchase.transaction) {
+        console.log(`- ID da Transação: ${data.purchase.transaction}`);
+      }
+      
+      if (data.subscription) {
+        console.log(`- Plano: ${data.subscription.plan?.name || 'N/A'}`);
+        console.log(`- Data de Expiração: ${data.subscription.end_date || 'N/A'}`);
       }
       
       // Processar o webhook usando o serviço
       const result = await SubscriptionService.processHotmartWebhook(req.body);
       
-      res.json({ 
+      // Log do resultado do processamento
+      console.log(`[${timestamp}] Resultado do processamento:`, JSON.stringify(result, null, 2));
+      
+      // Retornar resposta de sucesso conforme especificação da Hotmart
+      // A Hotmart espera um código 200 para confirmar o recebimento
+      res.status(200).json({ 
         success: true, 
         message: "Webhook processado com sucesso", 
         result 
       });
     } catch (error) {
-      console.error("Erro ao processar webhook da Hotmart:", error);
-      res.status(500).json({ 
+      // Log detalhado do erro
+      console.error("[ERRO WEBHOOK HOTMART]", error);
+      
+      if (error instanceof Error) {
+        console.error("Detalhes do erro:", {
+          mensagem: error.message,
+          stack: error.stack
+        });
+      }
+      
+      // Mesmo em caso de erro no processamento, retornar 200 para a Hotmart
+      // para evitar reenvios desnecessários, mas com flag de success=false
+      res.status(200).json({ 
         success: false, 
         message: "Erro ao processar webhook", 
         error: error instanceof Error ? error.message : String(error)
