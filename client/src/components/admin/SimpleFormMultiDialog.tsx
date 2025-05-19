@@ -178,6 +178,12 @@ export default function SimpleFormMultiDialog({
             // Agora temos o groupId confirmado, buscar todas as artes do grupo
             console.log(`Buscando artes do grupo: ${groupId}`);
             
+            // Forçar a definição do groupId na arte que está sendo editada
+            // Isso garante consistência mesmo que o objeto original não o tenha
+            if (editingArt) {
+              editingArt.groupId = groupId;
+            }
+            
             return apiRequest('GET', `/api/admin/artes/group/${groupId}`)
               .then(res => {
                 console.log(`Resposta recebida, status: ${res.status}`);
