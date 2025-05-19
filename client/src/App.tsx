@@ -244,11 +244,7 @@ function AppRoutes() {
         component={StorageTestPage}
         roles={['admin']}
       />
-      <ProtectedRoute
-        path="/admin/hotmart-test"
-        component={HotmartTestPage}
-        roles={['admin']}
-      />
+      {/* Removido link separado para hotmart-test, agora como aba no Dashboard */}
       <ProtectedRoute 
         path="/admin/logo-upload" 
         component={LogoUploadPage}

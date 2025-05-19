@@ -5,6 +5,7 @@ import AnalyticsSettings from '@/components/admin/AnalyticsSettings';
 import ReportsManagement from '@/components/admin/ReportsManagement';
 import SubscriptionManagement from '@/components/admin/SubscriptionManagement';
 import SubscriptionSettings from '@/components/admin/SubscriptionSettings';
+import HotmartCredentialTester from '@/components/admin/HotmartCredentialTester';
 import {
   LayoutGrid,
   Image,
@@ -1388,16 +1389,16 @@ const AdminDashboard = () => {
                       <HardDrive className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
                       {sidebarOpen && <span className="truncate">Testar Armazenamento</span>}
                     </Link>
-                    <Link 
-                      href="/admin/hotmart-test"
+                    <button
+                      onClick={() => setActiveTab('hotmart-test')}
+                      className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
+                        activeTab === 'hotmart-test' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                      } ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
                       title="Testar Credenciais Hotmart"
-                      className={`flex items-center w-full py-2 rounded-md transition-all duration-200
-                      text-gray-600 hover:bg-gray-50 
-                      ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
                     >
                       <Zap className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
-                      {sidebarOpen && <span className="truncate">Testar Credenciais Hotmart</span>}
-                    </Link>
+                      {sidebarOpen && <span className="truncate text-sm">Testar Credenciais Hotmart</span>}
+                    </button>
                     <button
                       onClick={() => setActiveTab('analytics')}
                       className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
@@ -1625,6 +1626,32 @@ const AdminDashboard = () => {
               <CourseStatisticsPanel />
             </TabsContent>
 
+            <TabsContent value="hotmart-test">
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-3xl font-bold tracking-tight">Testador de Credenciais Hotmart</h2>
+                  <p className="text-muted-foreground">
+                    Verifique se suas credenciais da API Hotmart estão funcionando corretamente
+                  </p>
+                </div>
+                
+                <div className="grid gap-6">
+                  <HotmartCredentialTester />
+                  
+                  <div className="bg-amber-50 border border-amber-200 p-4 rounded-md">
+                    <h3 className="text-lg font-medium text-amber-800 mb-2">Dicas para solução de problemas</h3>
+                    <ul className="space-y-2 text-amber-700">
+                      <li>• Se suas credenciais não funcionarem, verifique se elas estão ativas no painel da Hotmart.</li>
+                      <li>• Certifique-se de que o Client ID e Client Secret estão corretos e sem espaços extras.</li>
+                      <li>• Verifique se as credenciais têm as permissões necessárias para acessar os recursos que você precisa.</li>
+                      <li>• Se você estiver usando o ambiente de produção, certifique-se de que sua aplicação já foi aprovada.</li>
+                      <li>• Experimente testar no ambiente de sandbox primeiro para confirmar que a conexão está funcionando.</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+            
             <TabsContent value="stats">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="bg-white rounded-lg shadow-sm p-6">
