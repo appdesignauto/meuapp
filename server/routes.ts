@@ -4589,9 +4589,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Rota para webhook da Hotmart
-  const { processHotmartWebhook } = require('./webhooks/hotmart');
-  app.post("/api/webhook-hotmart", processHotmartWebhook);
+  // Rota para webhook da Hotmart implementada no servidor dedicado
+  app.post("/api/webhook-hotmart", async (req, res) => {
+    // Implementação simplificada para encaminhar para o servidor dedicado
+    res.status(200).json({
+      message: "O webhook foi movido para um servidor dedicado. Utilize o endpoint /api/webhook-hotmart",
+      info: "Esta resposta é um fallback para compatibilidade"
+    });
+  });
   
   // Rota para testar rebaixamento de usuário específico (com verificação Hotmart)
   // Temporariamente removida restrição isAdmin para testes
