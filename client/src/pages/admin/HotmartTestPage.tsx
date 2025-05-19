@@ -1,10 +1,10 @@
 import React from 'react';
-import { AdminLayout } from '@/components/admin/AdminLayout';
+import { AdminLayout } from '@/components/layout/AdminLayout';
 import HotmartCredentialTester from '@/components/admin/HotmartCredentialTester';
 
 export default function HotmartTestPage() {
   return (
-    <AdminLayout>
+    <AdminLayout title="Testador de Credenciais Hotmart">
       <div className="space-y-6">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Testador de Credenciais Hotmart</h2>

@@ -1,276 +1,181 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
-import { CheckCircle2, ClipboardCopy, Loader2, XCircle } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { CheckCircle, XCircle, Loader2, AlertCircle } from "lucide-react";
 
-export default function HotmartCredentialTester() {
-  const { toast } = useToast();
-  const [environment, setEnvironment] = useState<'prod' | 'sandbox'>('prod');
-  const [clientId, setClientId] = useState('');
-  const [clientSecret, setClientSecret] = useState('');
-  const [basicToken, setBasicToken] = useState('');
-  const [showTestForm, setShowTestForm] = useState(false);
+// Tipos para os resultados dos testes
+type TestResult = {
+  success: boolean;
+  message: string;
+  data?: any;
+  error?: string;
+};
+
+const HotmartCredentialTester = () => {
+  // Estados para armazenar as credenciais
+  const [clientId, setClientId] = useState("");
+  const [clientSecret, setClientSecret] = useState("");
+  const [environment, setEnvironment] = useState("sandbox"); // 'sandbox' ou 'production'
+  const [testResult, setTestResult] = useState<TestResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [testResult, setTestResult] = useState<{
-    success: boolean;
-    data?: any;
-    error?: string;
-  } | null>(null);
 
-  // Gera o token Basic a partir do Client ID e Client Secret
-  const generateBasicToken = () => {
-    if (!clientId || !clientSecret) {
-      toast({
-        title: "Campos incompletos",
-        description: "Por favor, preencha o Client ID e o Client Secret.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const token = btoa(`${clientId}:${clientSecret}`);
-      setBasicToken(`Basic ${token}`);
-      setShowTestForm(true);
-      
-      toast({
-        title: "Token gerado com sucesso",
-        description: "Seu token Basic foi gerado. Agora você pode testar suas credenciais.",
-      });
-    } catch (error) {
-      toast({
-        title: "Erro ao gerar token",
-        description: "Ocorreu um erro ao gerar o token Basic. Verifique as credenciais.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Copia o token para a área de transferência
-  const copyTokenToClipboard = () => {
-    navigator.clipboard.writeText(basicToken);
-    toast({
-      title: "Token copiado",
-      description: "O token foi copiado para a área de transferência.",
-    });
-  };
-
-  // Testa as credenciais na API da Hotmart
+  // Função para testar as credenciais
   const testCredentials = async () => {
+    setIsLoading(true);
+    setTestResult(null);
+    
     try {
-      setIsLoading(true);
-      setTestResult(null);
-
-      // Configuração da URL de acordo com o ambiente
-      const baseUrl = environment === 'prod' 
-        ? 'https://developers.hotmart.com' 
-        : 'https://sandbox.hotmart.com';
-      
-      const authUrl = `${baseUrl}/security/oauth/token`;
-      
-      // Prepara os parâmetros da requisição
-      const params = new URLSearchParams();
-      params.append('grant_type', 'client_credentials');
-      
-      // Configuração da requisição
-      const response = await fetch(authUrl, {
-        method: 'POST',
+      const response = await fetch("/api/hotmart/test-credentials", {
+        method: "POST",
         headers: {
-          'Authorization': basicToken,
-          'Content-Type': 'application/x-www-form-urlencoded'
+          "Content-Type": "application/json",
         },
-        body: params,
+        body: JSON.stringify({
+          clientId,
+          clientSecret,
+          environment
+        }),
       });
       
       const data = await response.json();
       
-      if (response.ok && data.access_token) {
-        setTestResult({
-          success: true,
-          data: data,
-        });
-        
-        toast({
-          title: "Credenciais válidas!",
-          description: "Suas credenciais foram testadas com sucesso.",
-        });
-      } else {
-        setTestResult({
-          success: false,
-          error: data.error_description || 'Erro ao verificar credenciais',
-          data: data,
-        });
-        
-        toast({
-          title: "Credenciais inválidas",
-          description: data.error_description || "Não foi possível autenticar com estas credenciais.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('Erro ao testar credenciais:', error);
+      setTestResult({
+        success: data.success,
+        message: data.message,
+        data: data.data
+      });
+    } catch (error: any) {
       setTestResult({
         success: false,
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
-      });
-      
-      toast({
-        title: "Erro ao testar",
-        description: "Ocorreu um erro ao testar as credenciais. Verifique o console para mais detalhes.",
-        variant: "destructive",
+        message: "Erro ao testar credenciais",
+        error: error.message || "Erro desconhecido"
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Resetar o formulário
-  const resetForm = () => {
-    setShowTestForm(false);
-    setTestResult(null);
-    setClientId('');
-    setClientSecret('');
-    setBasicToken('');
-  };
+  // Verifica se o formulário está válido
+  const isFormValid = clientId.trim() !== "" && clientSecret.trim() !== "";
 
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Testador de API Hotmart</CardTitle>
+        <CardTitle>Testar Credenciais da API Hotmart</CardTitle>
         <CardDescription>
-          Teste suas credenciais de API da Hotmart para garantir que estão funcionando corretamente
+          Preencha as credenciais da API Hotmart para verificar se elas estão funcionando corretamente.
         </CardDescription>
       </CardHeader>
-      
       <CardContent>
-        {!showTestForm ? (
-          <div className="space-y-4">
+        <Tabs defaultValue={environment} onValueChange={setEnvironment}>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="sandbox">Ambiente Sandbox</TabsTrigger>
+            <TabsTrigger value="production">Ambiente de Produção</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="sandbox" className="space-y-4 mt-4">
             <div className="space-y-2">
-              <Label htmlFor="environment">Ambiente</Label>
-              <Select
-                value={environment}
-                onValueChange={(value) => setEnvironment(value as 'prod' | 'sandbox')}
-              >
-                <SelectTrigger id="environment">
-                  <SelectValue placeholder="Selecione o ambiente" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="prod">Produção</SelectItem>
-                  <SelectItem value="sandbox">Sandbox</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="client-id">Client ID</Label>
+              <Label htmlFor="sandbox-client-id">Client ID (Sandbox)</Label>
               <Input
-                id="client-id"
+                id="sandbox-client-id"
                 value={clientId}
                 onChange={(e) => setClientId(e.target.value)}
-                placeholder="Digite seu Client ID"
+                placeholder="Digite o Client ID do ambiente sandbox"
               />
             </div>
-            
             <div className="space-y-2">
-              <Label htmlFor="client-secret">Client Secret</Label>
+              <Label htmlFor="sandbox-client-secret">Client Secret (Sandbox)</Label>
               <Input
-                id="client-secret"
+                id="sandbox-client-secret"
                 type="password"
                 value={clientSecret}
                 onChange={(e) => setClientSecret(e.target.value)}
-                placeholder="Digite seu Client Secret"
+                placeholder="Digite o Client Secret do ambiente sandbox"
               />
             </div>
-          </div>
-        ) : (
-          <div className="space-y-4">
+          </TabsContent>
+          
+          <TabsContent value="production" className="space-y-4 mt-4">
             <div className="space-y-2">
-              <Label htmlFor="basic-token">Token Basic</Label>
-              <div className="flex">
-                <Input
-                  id="basic-token"
-                  value={basicToken}
-                  readOnly
-                  className="rounded-r-none"
-                />
-                <Button
-                  variant="outline"
-                  className="rounded-l-none"
-                  onClick={copyTokenToClipboard}
-                >
-                  <ClipboardCopy className="h-4 w-4" />
-                </Button>
-              </div>
-              <p className="text-sm text-muted-foreground mt-1">
-                Este é seu token Basic que será usado na autenticação
-              </p>
+              <Label htmlFor="production-client-id">Client ID (Produção)</Label>
+              <Input
+                id="production-client-id"
+                value={clientId}
+                onChange={(e) => setClientId(e.target.value)}
+                placeholder="Digite o Client ID do ambiente de produção"
+              />
             </div>
-            
-            {testResult && (
-              <div className="mt-4">
-                <Alert variant={testResult.success ? "default" : "destructive"}>
-                  <div className="flex items-center gap-2">
-                    {testResult.success ? (
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
-                    ) : (
-                      <XCircle className="h-4 w-4" />
-                    )}
-                    <AlertTitle>
-                      {testResult.success ? "Credenciais válidas!" : "Credenciais inválidas"}
-                    </AlertTitle>
-                  </div>
-                  <AlertDescription className="mt-2">
-                    {testResult.success 
-                      ? "Suas credenciais foram verificadas com sucesso. Você recebeu um token de acesso válido."
-                      : `Erro: ${testResult.error}`
-                    }
-                  </AlertDescription>
-                </Alert>
-                
-                <div className="mt-4 bg-muted p-4 rounded overflow-auto max-h-48">
-                  <pre className="text-xs">
-                    {JSON.stringify(testResult.data, null, 2)}
-                  </pre>
-                </div>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="production-client-secret">Client Secret (Produção)</Label>
+              <Input
+                id="production-client-secret"
+                type="password"
+                value={clientSecret}
+                onChange={(e) => setClientSecret(e.target.value)}
+                placeholder="Digite o Client Secret do ambiente de produção"
+              />
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        {/* Área de resultado do teste */}
+        {testResult && (
+          <div className="mt-6">
+            {testResult.success ? (
+              <Alert className="bg-green-50 border-green-200">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                <AlertTitle className="text-green-800">Credenciais válidas!</AlertTitle>
+                <AlertDescription className="text-green-700">
+                  {testResult.message}
+                  {testResult.data && (
+                    <pre className="mt-2 p-2 bg-green-100 rounded text-xs overflow-x-auto">
+                      {JSON.stringify(testResult.data, null, 2)}
+                    </pre>
+                  )}
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <Alert className="bg-red-50 border-red-200">
+                <XCircle className="h-5 w-5 text-red-600" />
+                <AlertTitle className="text-red-800">Erro nas credenciais</AlertTitle>
+                <AlertDescription className="text-red-700">
+                  {testResult.message}
+                  {testResult.error && (
+                    <pre className="mt-2 p-2 bg-red-100 rounded text-xs overflow-x-auto">
+                      {testResult.error}
+                    </pre>
+                  )}
+                </AlertDescription>
+              </Alert>
             )}
           </div>
         )}
       </CardContent>
-      
-      <CardFooter className={`${!showTestForm ? 'justify-end' : 'justify-between'}`}>
-        {!showTestForm ? (
-          <Button onClick={generateBasicToken}>
-            Gerar Token Basic
-          </Button>
-        ) : (
-          <>
-            <Button variant="outline" onClick={resetForm}>
-              Voltar
-            </Button>
-            
-            {testResult ? (
-              <Button onClick={resetForm}>
-                Novo Teste
-              </Button>
-            ) : (
-              <Button 
-                onClick={testCredentials}
-                disabled={isLoading}
-                className="gap-2"
-              >
-                {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-                {isLoading ? 'Testando...' : 'Testar Credenciais'}
-              </Button>
-            )}
-          </>
-        )}
+      <CardFooter className="flex justify-between">
+        <div className="text-sm text-muted-foreground">
+          <AlertCircle className="inline-block mr-1 h-4 w-4" />
+          As credenciais serão usadas apenas para teste, não serão armazenadas
+        </div>
+        <Button 
+          onClick={testCredentials} 
+          disabled={!isFormValid || isLoading}
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Testando...
+            </>
+          ) : (
+            'Testar Credenciais'
+          )}
+        </Button>
       </CardFooter>
     </Card>
   );
-}
+};
+
+export default HotmartCredentialTester;
