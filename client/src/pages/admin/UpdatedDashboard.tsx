@@ -967,8 +967,8 @@ const AdminDashboard = () => {
       <div 
         className={`
           fixed lg:relative z-40 h-full bg-white border-r
-          ${sidebarOpen ? 'w-64 translate-x-0 shadow-lg' : 'w-0 -translate-x-full lg:translate-x-0 lg:w-[4.5rem]'} 
-          transition-all duration-300 ease-in-out overflow-hidden
+          ${sidebarOpen ? 'w-64 translate-x-0 shadow-lg' : 'w-0 -translate-x-full lg:translate-x-0 lg:w-[4.5rem]'}
+          transition-all duration-300 ease-in-out overflow-hidden flex flex-col
         `}
       >
         <div className="p-4 border-b flex justify-between items-center">
@@ -999,9 +999,9 @@ const AdminDashboard = () => {
             {/* Dashboard principal */}
             <button
               onClick={() => setActiveTab('stats')}
-              className={`flex items-center w-full px-3 py-2.5 rounded-lg ${
+              className={`flex items-center w-full px-4 py-3 rounded-lg ${
                 activeTab === 'stats' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-              } ${!sidebarOpen ? 'lg:justify-center lg:px-0' : ''}`}
+              } ${!sidebarOpen ? 'lg:justify-center lg:px-0' : ''} transition-colors duration-200`}
               title="Visão Geral"
             >
               <LayoutDashboard className="w-6 h-6 mx-auto" />
