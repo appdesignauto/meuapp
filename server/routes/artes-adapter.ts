@@ -1,9 +1,10 @@
 import express from 'express';
 import { storage } from '../storage';
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { sql } from 'drizzle-orm';
 import { db } from '../db';
 import { supabaseStorageService } from '../services/supabase-storage';
+import { isAuthenticated } from '../middlewares/auth';
 
 /**
  * Arquivo que implementa rotas em português como adaptadores para as rotas em inglês
@@ -479,6 +480,57 @@ router.post('/api/favoritos/toggle/:id', async (req: Request, res: Response) => 
     console.error("Erro ao alternar favorito:", error);
     res.status(500).json({ message: "Erro ao alternar favorito" });
   }
+});
+
+// ==== Adaptadores para rotas de admin em português ====
+
+// Verificar se arte pertence a um grupo - "/api/admin/artes/:id/check-group"
+router.get('/api/admin/artes/:id/check-group', isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
+  // Redirecionar para versão em inglês da rota
+  const artId = req.params.id;
+  req.url = `/api/admin/arts/${artId}/check-group`;
+  
+  // Passar para o próximo handler que processa a versão em inglês da rota
+  next();
+});
+
+// Obter todas as artes de um grupo - "/api/admin/artes/group/:groupId"
+router.get('/api/admin/artes/group/:groupId', isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
+  // Redirecionar para versão em inglês da rota
+  const groupId = req.params.groupId;
+  req.url = `/api/admin/arts/group/${groupId}`;
+  
+  // Passar para o próximo handler que processa a versão em inglês da rota
+  next();
+});
+
+// Criar arte multi-formato - "/api/admin/artes/multi"
+router.post('/api/admin/artes/multi', isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
+  // Redirecionar para versão em inglês da rota
+  req.url = '/api/admin/arts/multi';
+  
+  // Passar para o próximo handler que processa a versão em inglês da rota
+  next();
+});
+
+// Atualizar arte multi-formato - "/api/admin/artes/multi/:id"
+router.put('/api/admin/artes/multi/:id', isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
+  // Redirecionar para versão em inglês da rota
+  const artId = req.params.id;
+  req.url = `/api/admin/arts/multi/${artId}`;
+  
+  // Passar para o próximo handler que processa a versão em inglês da rota
+  next();
+});
+
+// Atualizar grupo de artes - "/api/admin/artes/group/:groupId"
+router.put('/api/admin/artes/group/:groupId', isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
+  // Redirecionar para versão em inglês da rota
+  const groupId = req.params.groupId;
+  req.url = `/api/admin/arts/group/${groupId}`;
+  
+  // Passar para o próximo handler que processa a versão em inglês da rota
+  next();
 });
 
 export default router;
