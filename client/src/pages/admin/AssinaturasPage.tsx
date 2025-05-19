@@ -19,6 +19,7 @@ import SubscriptionManagement from '@/components/admin/SubscriptionManagement';
 import SubscriptionSettings from '@/components/admin/SubscriptionSettings';
 import HotmartProductMapping from '@/components/admin/HotmartProductMapping';
 import HotmartConnectionTest from '@/components/admin/HotmartConnectionTest';
+import HotmartCredentialTester from '@/components/admin/HotmartCredentialTester';
 import { 
   Card, 
   CardContent, 
@@ -537,7 +538,18 @@ export default function AssinaturasPage() {
             </div>
           </div>
           
-          <SubscriptionSettings />
+          <div className="grid gap-6">
+            <SubscriptionSettings />
+            
+            <div className="my-6">
+              <h3 className="text-xl font-semibold mb-4">Testar Credenciais da API Hotmart</h3>
+              <p className="text-gray-500 mb-4">
+                Use esta ferramenta para verificar se suas credenciais da API Hotmart estão funcionando corretamente. 
+                Isso ajudará a identificar problemas de conexão ou autenticação.
+              </p>
+              <HotmartCredentialTester />
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </AdminLayout>

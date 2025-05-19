@@ -1,0 +1,146 @@
+// script.js
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Elementos do DOM
+    const credentialsForm = document.getElementById('credentials-form');
+    const testForm = document.getElementById('test-form');
+    const environmentSelect = document.getElementById('environment');
+    const clientIdInput = document.getElementById('client-id');
+    const clientSecretInput = document.getElementById('client-secret');
+    const basicTokenInput = document.getElementById('basic-token');
+    const generateTokenButton = document.getElementById('generate-token');
+    const copyTokenButton = document.getElementById('copy-token');
+    const backButton = document.getElementById('back-button');
+    const testButton = document.getElementById('test-button');
+    const resultContainer = document.getElementById('result-container');
+    const resultJsonPre = document.getElementById('result-json');
+    const resetButton = document.getElementById('reset-button');
+    const errorContainer = document.getElementById('error-container');
+    const errorMessage = document.getElementById('error-message');
+
+    // Estado
+    let isLoading = false;
+
+    // Eventos
+    generateTokenButton.addEventListener('click', generateBasicToken);
+    copyTokenButton.addEventListener('click', copyToClipboard);
+    backButton.addEventListener('click', goBackToCredentials);
+    testButton.addEventListener('click', testCredentials);
+    resetButton.addEventListener('click', resetTest);
+
+    // Funções
+    function generateBasicToken() {
+        const clientId = clientIdInput.value.trim();
+        const clientSecret = clientSecretInput.value.trim();
+
+        if (!clientId || !clientSecret) {
+            showError('Por favor, preencha o Client ID e o Client Secret');
+            return;
+        }
+
+        const token = btoa(`${clientId}:${clientSecret}`);
+        basicTokenInput.value = token;
+        showTestForm();
+        hideError();
+    }
+
+    function copyToClipboard() {
+        basicTokenInput.select();
+        document.execCommand('copy');
+        alert('Copiado para a área de transferência!');
+    }
+
+    function goBackToCredentials() {
+        credentialsForm.style.display = 'block';
+        testForm.style.display = 'none';
+    }
+
+    function testCredentials() {
+        const basicToken = basicTokenInput.value;
+        const environment = environmentSelect.value;
+
+        if (!basicToken) {
+            showError('Token Basic não gerado');
+            return;
+        }
+
+        setLoading(true);
+        hideError();
+
+        // Simulamos a chamada à API com setTimeout
+        // Em um ambiente real, você usaria fetch para chamar a API
+        setTimeout(() => {
+            try {
+                const baseUrl = environment === 'prod'
+                    ? 'https://api-hot-connect.hotmart.com'
+                    : 'https://api-hot-connect-sandbox.hotmart.com';
+
+                // Simulação da resposta da API
+                const simulatedResponse = {
+                    success: true,
+                    token_type: "bearer",
+                    access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                    expires_in: 43199,
+                    scope: "read write"
+                };
+
+                showResult(simulatedResponse);
+                setLoading(false);
+            } catch (err) {
+                showError('Erro ao testar as credenciais: ' + err.message);
+                setLoading(false);
+            }
+        }, 1500);
+    }
+
+    function resetTest() {
+        resultContainer.style.display = 'none';
+        hideError();
+    }
+
+    // Funções auxiliares
+    function showTestForm() {
+        credentialsForm.style.display = 'none';
+        testForm.style.display = 'block';
+    }
+
+    function showError(message) {
+        errorContainer.style.display = 'block';
+        errorMessage.textContent = message;
+    }
+
+    function hideError() {
+        errorContainer.style.display = 'none';
+    }
+
+    function setLoading(loading) {
+        isLoading = loading;
+        testButton.disabled = loading;
+        testButton.textContent = loading ? 'Testando...' : 'Testar Credenciais';
+    }
+
+    function showResult(result) {
+        resultContainer.style.display = 'block';
+        resultJsonPre.textContent = JSON.stringify(result, null, 2);
+    }
+
+    // Implementação real da chamada à API (comentada)
+    /*
+    async function realApiCall(baseUrl, basicToken) {
+        const response = await fetch(`${baseUrl}/oauth/token`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Basic ${basicToken}`,
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: 'grant_type=client_credentials'
+        });
+
+        if (!response.ok) {
+            throw new Error(`Erro HTTP: ${response.status}`);
+        }
+
+        return await response.json();
+    }
+    */
+});
