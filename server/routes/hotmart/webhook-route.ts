@@ -3,48 +3,134 @@ import fs from 'fs';
 import path from 'path';
 import { Pool } from 'pg';
 import { db } from '../../db';
+import { eq } from 'drizzle-orm';
+import { users } from '../../../shared/schema';
 
 // Criar uma instância do roteador
 const router = Router();
 
+// Interface para o payload do webhook da Hotmart
+interface HotmartWebhookPayload {
+  id: string;
+  creation_date: number;
+  event: string;
+  version: string;
+  data: {
+    product: {
+      id: number;
+      ucode: string;
+      name: string;
+      // outros campos do produto
+    };
+    buyer: {
+      email: string;
+      name: string;
+      first_name: string;
+      last_name: string;
+      // outros campos do comprador
+    };
+    purchase: {
+      approved_date: number;
+      status: string;
+      transaction: string;
+      // outros campos da compra
+    };
+    subscription?: {
+      status: string;
+      plan: {
+        id: number;
+        name: string;
+      };
+      subscriber: {
+        code: string;
+      };
+    };
+  };
+}
+
 router.post('/webhook-hotmart', async (req: Request, res: Response) => {
   try {
-    // Log completo para análise da estrutura dos dados
     console.log('===================== WEBHOOK HOTMART RECEBIDO =====================');
-    console.log('Headers:', JSON.stringify(req.headers, null, 2));
-    console.log('Body completo:', JSON.stringify(req.body, null, 2));
-    console.log('==================================================================');
     
-    // Extrair dados mínimos para logging rápido
-    const eventType = req.body?.event || req.body?.data?.purchase?.status || 'unknown';
-    const transactionCode = req.body?.data?.purchase?.transaction || 
-                           req.body?.data?.purchase?.transaction_code || 'unknown';
+    // Extrair dados do webhook
+    const payload = req.body as HotmartWebhookPayload;
+    const eventType = payload.event;
+    const transactionCode = payload.data.purchase.transaction;
+    const buyerEmail = payload.data.buyer.email;
+    const status = payload.data.purchase.status;
+    const productName = payload.data.product.name;
+    const subscriberCode = payload.data?.subscription?.subscriber?.code || null;
     
-    console.log(`Tipo de evento: ${eventType}, Transação: ${transactionCode}`);
+    console.log(`Evento: ${eventType}`);
+    console.log(`Transação: ${transactionCode}`);
+    console.log(`Email do comprador: ${buyerEmail}`);
+    console.log(`Status: ${status}`);
+    console.log(`Produto: ${productName}`);
+    console.log(`Código de assinante: ${subscriberCode}`);
     
-    // Criar um arquivo de log com os dados do webhook para análise posterior
-    const logFile = path.join(__dirname, '..', '..', '..', 'webhook-hotmart.log');
-    const logEntry = `
-[${new Date().toISOString()}] Webhook Hotmart recebido
-Tipo de evento: ${eventType}
-Transação: ${transactionCode}
-Headers: ${JSON.stringify(req.headers)}
-Body: ${JSON.stringify(req.body)}
----------------------------------------------
-`;
+    // Salvar webhook em arquivo para análise
+    const timestamp = new Date().toISOString().replace(/:/g, '-');
+    const logFile = path.join(process.cwd(), `webhook-${timestamp}.json`);
     
-    // Tentar salvar o log
     try {
-      fs.appendFileSync(logFile, logEntry);
-      console.log(`Webhook registrado no arquivo ${logFile}`);
-    } catch (logError) {
-      console.error('Erro ao salvar log do webhook:', logError);
+      fs.writeFileSync(logFile, JSON.stringify(payload, null, 2));
+      console.log(`Webhook salvo em ${logFile}`);
+    } catch (fileError) {
+      console.error('Erro ao salvar arquivo de webhook:', fileError);
     }
     
-    // Responder imediatamente para não bloquear o servidor
+    // INÍCIO DO PROCESSAMENTO REAL DO WEBHOOK
+    // Esta parte só executa para eventos de compra aprovada
+    if (eventType === 'PURCHASE_APPROVED' && status === 'APPROVED') {
+      console.log('Processando compra aprovada...');
+      
+      try {
+        // Verificar se o usuário existe com este email
+        const existingUser = await db.query.users.findFirst({
+          where: eq(users.email, buyerEmail)
+        });
+        
+        if (existingUser) {
+          console.log(`Usuário encontrado: ${existingUser.username} (ID: ${existingUser.id})`);
+          
+          // Determinar a data de expiração da assinatura (1 ano a partir de hoje)
+          const dataAssinatura = new Date();
+          const dataExpiracao = new Date();
+          dataExpiracao.setFullYear(dataExpiracao.getFullYear() + 1);
+          
+          // Determinar o tipo de plano baseado no nome do produto
+          const tipoPlanoPadrao = 'premium'; // Pode ser ajustado conforme os produtos reais
+          
+          // Atualizar assinatura do usuário
+          await db.update(users)
+            .set({
+              origemassinatura: 'hotmart',
+              tipoplano: tipoPlanoPadrao,
+              dataassinatura: dataAssinatura,
+              dataexpiracao: dataExpiracao,
+              codigoassinante: subscriberCode || transactionCode,
+              transaction_code: transactionCode,
+              acessovitalicio: false
+            })
+            .where(eq(users.id, existingUser.id));
+          
+          console.log(`Assinatura atualizada para o usuário ${existingUser.username}`);
+          console.log(`Plano: ${tipoPlanoPadrao}, Válido até: ${dataExpiracao.toISOString()}`);
+        } else {
+          console.log(`Usuário com email ${buyerEmail} não encontrado no sistema`);
+          // Aqui poderia implementar a criação automática de usuários se necessário
+        }
+        
+      } catch (dbError) {
+        console.error('Erro ao processar assinatura no banco de dados:', dbError);
+      }
+    }
+    // FIM DO PROCESSAMENTO REAL DO WEBHOOK
+    
+    // Responder imediatamente para a Hotmart
     res.status(200).json({ 
       success: true, 
-      message: 'Webhook recebido e registrado com sucesso',
+      message: 'Webhook recebido e processado com sucesso',
       eventType,
       transactionCode
     });
