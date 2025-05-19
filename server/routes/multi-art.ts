@@ -182,7 +182,18 @@ router.get('/api/admin/arts/group/:groupId', isAuthenticated, async (req: Reques
       });
     }
     
-    console.log(`Buscando artes do grupo ID: ${groupId}`);
+    console.log(`[DEBUG] Buscando artes do grupo ID: ${groupId}`);
+    
+    // Adicionar logs para debug
+    console.log(`[DEBUG] Usuário autenticado: ${req.isAuthenticated ? 'Sim' : 'Não'}`);
+    console.log(`[DEBUG] Usuário: ${JSON.stringify(req.user || {})}`);
+    
+    // Verificar primeiro quantas artes existem com esse groupId
+    const countResult = await db.execute(sql`
+      SELECT COUNT(*) as count FROM arts WHERE "groupId" = ${groupId}
+    `);
+    const count = countResult.rows[0]?.count || 0;
+    console.log(`[DEBUG] Encontradas ${count} artes com groupId = ${groupId} no banco`);
     
     // Buscar todas as artes do grupo ordenadas por formato
     const result = await db.execute(sql`
@@ -194,11 +205,12 @@ router.get('/api/admin/arts/group/:groupId', isAuthenticated, async (req: Reques
     
     // Se não encontrou nenhuma arte, retornar array vazio
     if (!result.rows || result.rows.length === 0) {
-      console.log(`Nenhuma arte encontrada para o grupo ${groupId}`);
+      console.log(`[DEBUG] Nenhuma arte encontrada para o grupo ${groupId}`);
       return res.json({ arts: [] });
     }
     
-    console.log(`Encontradas ${result.rows.length} artes no grupo ${groupId}`);
+    console.log(`[DEBUG] Encontradas ${result.rows.length} artes no grupo ${groupId}`);
+    console.log(`[DEBUG] IDs das artes encontradas: ${result.rows.map(art => art.id).join(', ')}`);
     
     // Retornar as artes encontradas
     return res.json({
@@ -207,7 +219,7 @@ router.get('/api/admin/arts/group/:groupId', isAuthenticated, async (req: Reques
       arts: result.rows
     });
   } catch (error) {
-    console.error(`Erro ao buscar artes do grupo ${req.params.groupId}:`, error);
+    console.error(`[ERROR] Erro ao buscar artes do grupo ${req.params.groupId}:`, error);
     return res.status(500).json({
       message: 'Erro ao buscar artes do grupo'
     });
