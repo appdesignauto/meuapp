@@ -18,6 +18,8 @@ import path from "path";
 import fs from "fs";
 // Importações adicionais para o upload de imagem
 import uploadRouter from "./routes/upload-image";
+// Importação para webhook da Hotmart
+import hotmartWebhookRouter from "./routes/hotmart/webhook-route";
 // Usando apenas Supabase Storage para armazenamento de imagens
 import { supabaseStorageService } from "./services/supabase-storage";
 import { SubscriptionService } from "./services/subscription-service";
@@ -4646,6 +4648,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Rota para testar verificação de assinaturas expiradas
+  
+  // Registrar a rota para receber webhooks da Hotmart (para análise da estrutura dos dados)
+  app.use('/api', hotmartWebhookRouter);
   app.post("/api/test/expireSubscriptions", async (req, res) => {
     try {
       const result = await SubscriptionService.checkExpiredSubscriptions();
