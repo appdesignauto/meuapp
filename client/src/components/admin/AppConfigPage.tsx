@@ -19,6 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import HotmartCredentialTester from './HotmartCredentialTester';
 
 // Definindo o schema para validação do formulário
 const appConfigSchema = z.object({
@@ -250,6 +251,7 @@ export default function AppConfigPage() {
             <TabsTrigger value="general">Informações Gerais</TabsTrigger>
             <TabsTrigger value="icons">Ícones</TabsTrigger>
             <TabsTrigger value="preview">Visualização</TabsTrigger>
+            <TabsTrigger value="integrations">Integrações</TabsTrigger>
           </TabsList>
           
           {/* Informações Gerais */}
@@ -519,6 +521,39 @@ export default function AppConfigPage() {
                       </AlertDescription>
                     </Alert>
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Aba de Integrações */}
+          <TabsContent value="integrations">
+            <Card>
+              <CardHeader>
+                <CardTitle>Integração com Hotmart</CardTitle>
+                <CardDescription>
+                  Teste suas credenciais da API Hotmart para verificar se a conexão está funcionando corretamente.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Testador de Credenciais da API Hotmart</h3>
+                    <p className="text-gray-500 mb-4">
+                      Use esta ferramenta para verificar se suas credenciais da API Hotmart estão funcionando corretamente. 
+                      Isso ajudará a identificar problemas de conexão ou autenticação.
+                    </p>
+                    <HotmartCredentialTester />
+                  </div>
+                  
+                  <Alert className="mt-4">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Importante</AlertTitle>
+                    <AlertDescription>
+                      Se suas credenciais não estiverem funcionando, verifique no painel da Hotmart se elas estão ativas 
+                      e se você tem as permissões corretas. Você pode precisar gerar novas credenciais caso as atuais tenham expirado.
+                    </AlertDescription>
+                  </Alert>
                 </div>
               </CardContent>
             </Card>
