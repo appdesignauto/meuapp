@@ -1194,17 +1194,7 @@ const AdminDashboard = () => {
               </CollapsibleContent>
             </Collapsible>
             
-            {/* Analytics - Agora como um item principal no menu */}
-            <button
-              onClick={() => setActiveTab('analytics')}
-              className={`flex items-center w-full px-4 py-2.5 rounded-lg ${
-                activeTab === 'analytics' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-              } ${!sidebarOpen ? 'justify-center px-0' : ''} transition-colors duration-200`}
-              title="Analytics"
-            >
-              <BarChart3 className={`w-5 h-5 ${!sidebarOpen ? 'mx-auto' : 'mr-3'}`} />
-              {sidebarOpen && <span>Analytics</span>}
-            </button>
+
             
             {/* Marketing - Apenas Popups agora */}
             <Collapsible 
@@ -1322,10 +1312,20 @@ const AdminDashboard = () => {
                   className={`flex items-center w-full py-2.5 rounded-md ${
                     activeTab === 'settings' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
                   } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
-                  title="Configurações do Site"
+                  title="Config Site"
                 >
                   <Settings className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-                  {sidebarOpen && <span>Configurações do Site</span>}
+                  {sidebarOpen && <span>Config Site</span>}
+                </button>
+                <button
+                  onClick={() => setActiveTab('analytics')}
+                  className={`flex items-center w-full py-2.5 rounded-md ${
+                    activeTab === 'analytics' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
+                  title="Analytics"
+                >
+                  <BarChart3 className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
+                  {sidebarOpen && <span>Analytics</span>}
                 </button>
                 <button
                   onClick={() => setActiveTab('collections')}
