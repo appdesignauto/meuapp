@@ -48,6 +48,7 @@ import multiArtRouter from './routes/multi-art'; // Rota para artes multi-format
 import testCreateGroupRouter from './routes/test-create-group'; // Rota de teste para criar grupos
 import videoaulasRouter from './routes/videoaulas-routes'; // Rotas para as videoaulas
 import courseRouter from './routes/course-routes'; // Rotas para gerenciamento de módulos e aulas
+import hotmartTestCredentialsRouter from './routes/hotmart/test-credentials'; // Rotas para testar credenciais da Hotmart
 import imageProxyRouter from './routes/image-proxy'; // Proxy para imagens do Supabase
 import coursesRouter from './routes/courses-routes'; // Rotas para gerenciamento de cursos
 import { registerPostPositionRoute } from './routes/post-position-route'; // Rota para calcular posição
