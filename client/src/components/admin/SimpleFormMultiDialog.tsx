@@ -926,7 +926,16 @@ export default function SimpleFormMultiDialog({
                               </Select>
                             </div>
                             
-                            {/* Campo de descrição removido por não funcionar corretamente com multi-formato */}
+                            <div>
+                              <Label htmlFor={`${formatSlug}-description`}>Descrição</Label>
+                              <Textarea
+                                id={`${formatSlug}-description`}
+                                value={formatDetails[formatSlug]?.description || ''}
+                                onChange={(e) => saveFormatDetails(formatSlug, { description: e.target.value })}
+                                placeholder="Descrição específica para este formato"
+                                rows={3}
+                              />
+                            </div>
                             
                             <div>
                               <Label htmlFor={`${formatSlug}-editUrl`}>URL de Edição <span className="text-red-500">*</span></Label>
