@@ -22,60 +22,25 @@ router.post('/webhook-hotmart', async (req: Request, res: Response) => {
     
     console.log(`Tipo de evento: ${eventType}, Transação: ${transactionCode}`);
     
-    // Salvar webhook em arquivo para análise
-    const timestamp = new Date().toISOString().replace(/:/g, '-');
-    const webhookFilePath = path.join(__dirname, '../../../webhook-logs', `webhook-${timestamp}-${transactionCode}.json`);
-    
-    // Garantir que o diretório existe
-    const webhookDir = path.join(__dirname, '../../../webhook-logs');
-    if (!fs.existsSync(webhookDir)) {
-      fs.mkdirSync(webhookDir, { recursive: true });
-    }
-    
-    // Salvar arquivo de log
-    fs.writeFileSync(
-      webhookFilePath, 
-      JSON.stringify({
+    // Salvar webhook em arquivo simples para análise
+    try {
+      // Tentativa alternativa de salvar em um local mais simples
+      const webhookData = {
         timestamp: new Date().toISOString(),
         eventType,
         transactionCode,
         headers: req.headers,
         payload: req.body
-      }, null, 2)
-    );
-    
-    // Salvar na fila de processamento
-    try {
-      // Conectar ao banco usando Pool para garantir conexões eficientes
-      const pool = new Pool({
-        connectionString: process.env.DATABASE_URL,
-      });
+      };
       
-      // Inserir na tabela webhook_queue
-      await pool.query(
-        `INSERT INTO webhook_queue (
-          event_type, 
-          transaction_code, 
-          raw_data, 
-          status, 
-          created_at
-        ) VALUES ($1, $2, $3, $4, NOW())`,
-        [
-          eventType,
-          transactionCode,
-          JSON.stringify(req.body),
-          'pending'
-        ]
+      fs.writeFileSync(
+        'webhook-data.json', 
+        JSON.stringify(webhookData, null, 2)
       );
       
-      console.log(`Webhook Hotmart enfileirado: ${eventType}, Transação: ${transactionCode}`);
-      
-      // Liberar pool
-      pool.end();
-      
-    } catch (dbError) {
-      console.error('Erro ao salvar webhook na fila:', dbError);
-      // Não deixa falhar o processamento mesmo que o banco falhe
+      console.log('Webhook salvo em webhook-data.json');
+    } catch (fileError) {
+      console.error('Erro ao salvar arquivo de webhook:', fileError);
     }
     
     // Responder imediatamente para não bloquear o servidor
