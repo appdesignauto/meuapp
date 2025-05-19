@@ -69,6 +69,7 @@ import { convertImageUrlsMiddleware } from './routes/image-url-proxy'; // Middle
 import imageProxyTestRouter from './routes/image-proxy-test'; // Rota para testar o proxy de imagens
 import reportsRouter from './routes/reports'; // Rotas para o sistema de denúncias (original)
 import reportsV2Router from './routes/reports-v2'; // Rotas para o sistema de denúncias (reescrito)
+import hotmartTestCredentialsRouter from './routes/hotmart/test-credentials'; // Rota para testar credenciais da Hotmart
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Aplicar middleware global para converter URLs de imagens para todas as respostas JSON
@@ -5174,6 +5175,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Registrar rotas para sitemap.xml e robots.txt (acessíveis na raiz do site)
   app.use(sitemapRouter);
+  
+  // Registrar rota para testar credenciais da Hotmart
+  app.use(hotmartTestCredentialsRouter);
 
   const httpServer = createServer(app);
   

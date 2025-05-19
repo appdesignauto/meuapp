@@ -207,4 +207,5 @@ const AdminLayout = ({ children, title, backLink }: AdminLayoutProps) => {
   );
 };
 
+export { AdminLayout };
 export default AdminLayout;
