@@ -20,6 +20,7 @@ import SubscriptionSettings from '@/components/admin/SubscriptionSettings';
 import HotmartProductMapping from '@/components/admin/HotmartProductMapping';
 import HotmartConnectionTest from '@/components/admin/HotmartConnectionTest';
 import HotmartCredentialTester from '@/components/admin/HotmartCredentialTester';
+import HotmartSubscriptionsList from '@/components/admin/HotmartSubscriptionsList';
 import { 
   Card, 
   CardContent, 

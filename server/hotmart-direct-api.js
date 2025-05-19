@@ -5,8 +5,8 @@
  * sem depender de bibliotecas externas que possam complicar o processo.
  */
 
-const https = require('https');
-const querystring = require('querystring');
+import https from 'https';
+import querystring from 'querystring';
 
 /**
  * Realiza uma requisição HTTPS
@@ -339,7 +339,7 @@ async function listHotmartSubscriptions(accessToken, environment = 'production')
   }
 }
 
-module.exports = {
+export {
   testHotmartCredentials,
   listHotmartSubscriptions
 };
