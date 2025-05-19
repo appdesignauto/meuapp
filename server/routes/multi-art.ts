@@ -220,4 +220,61 @@ router.put('/api/admin/arts/multi/:id', isAuthenticated, async (req: Request, re
   }
 });
 
+// Rota para excluir arte
+router.delete('/api/admin/arts/:id', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    // Verificar se o usuário é admin ou designer autorizado
+    const userRole = req.user?.nivelacesso;
+    if (userRole !== 'admin' && userRole !== 'designer_adm') {
+      return res.status(403).json({
+        message: 'Acesso negado. Você não tem permissão para excluir artes.'
+      });
+    }
+    
+    const artId = parseInt(req.params.id);
+    console.log(`Excluindo arte ID: ${artId}`);
+    
+    // Verificar se a arte existe
+    const art = await storage.getArtById(artId);
+    if (!art) {
+      return res.status(404).json({
+        message: 'Arte não encontrada'
+      });
+    }
+    
+    // Primeiro, verificamos se a arte faz parte de um grupo
+    // Se fizer parte de um grupo, podemos querer tratar isso de forma especial
+    const result = await db.execute(sql`
+      SELECT "groupId" FROM arts WHERE id = ${artId}
+    `);
+    
+    const groupId = result.rows[0]?.groupId;
+    console.log(`Arte ${artId} groupId: ${groupId}`);
+    
+    // Excluir a arte do banco de dados usando SQL direto
+    await db.execute(sql`
+      DELETE FROM arts WHERE id = ${artId}
+    `);
+    
+    // Verificar se há outras artes no mesmo grupo
+    if (groupId) {
+      const groupArtsResult = await db.execute(sql`
+        SELECT id FROM arts WHERE "groupId" = ${groupId} AND id != ${artId}
+      `);
+      
+      console.log(`Encontradas ${groupArtsResult.rowCount || 0} outras artes no mesmo grupo`);
+    }
+    
+    return res.json({
+      message: 'Arte excluída com sucesso',
+      id: artId
+    });
+  } catch (error) {
+    console.error(`Erro ao excluir arte ${req.params.id}:`, error);
+    return res.status(500).json({
+      message: 'Erro ao excluir arte'
+    });
+  }
+});
+
 export default router;
