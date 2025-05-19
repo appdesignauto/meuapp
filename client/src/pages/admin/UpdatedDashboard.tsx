@@ -1327,16 +1327,7 @@ const AdminDashboard = () => {
                   <BarChart3 className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
                   {sidebarOpen && <span>Analytics</span>}
                 </button>
-                <button
-                  onClick={() => setActiveTab('collections')}
-                  className={`flex items-center w-full py-2.5 rounded-md ${
-                    activeTab === 'collections' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
-                  } ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
-                  title="Coleções"
-                >
-                  <ListChecks className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-                  {sidebarOpen && <span>Coleções</span>}
-                </button>
+
                 {user?.role === 'admin' && (
                   <>
                     <Link 
