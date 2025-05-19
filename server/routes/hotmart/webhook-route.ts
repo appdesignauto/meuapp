@@ -22,31 +22,29 @@ router.post('/webhook-hotmart', async (req: Request, res: Response) => {
     
     console.log(`Tipo de evento: ${eventType}, Transação: ${transactionCode}`);
     
-    // Salvar webhook em arquivo simples para análise
+    // Criar um arquivo de log com os dados do webhook para análise posterior
+    const logFile = path.join(__dirname, '..', '..', '..', 'webhook-hotmart.log');
+    const logEntry = `
+[${new Date().toISOString()}] Webhook Hotmart recebido
+Tipo de evento: ${eventType}
+Transação: ${transactionCode}
+Headers: ${JSON.stringify(req.headers)}
+Body: ${JSON.stringify(req.body)}
+---------------------------------------------
+`;
+    
+    // Tentar salvar o log
     try {
-      // Tentativa alternativa de salvar em um local mais simples
-      const webhookData = {
-        timestamp: new Date().toISOString(),
-        eventType,
-        transactionCode,
-        headers: req.headers,
-        payload: req.body
-      };
-      
-      fs.writeFileSync(
-        'webhook-data.json', 
-        JSON.stringify(webhookData, null, 2)
-      );
-      
-      console.log('Webhook salvo em webhook-data.json');
-    } catch (fileError) {
-      console.error('Erro ao salvar arquivo de webhook:', fileError);
+      fs.appendFileSync(logFile, logEntry);
+      console.log(`Webhook registrado no arquivo ${logFile}`);
+    } catch (logError) {
+      console.error('Erro ao salvar log do webhook:', logError);
     }
     
     // Responder imediatamente para não bloquear o servidor
     res.status(200).json({ 
       success: true, 
-      message: 'Webhook recebido e registrado com sucesso para análise',
+      message: 'Webhook recebido e registrado com sucesso',
       eventType,
       transactionCode
     });
@@ -57,7 +55,7 @@ router.post('/webhook-hotmart', async (req: Request, res: Response) => {
     // Mesmo em caso de erro, retornar 200 para a Hotmart não reenviar
     res.status(200).json({ 
       success: false, 
-      message: 'Erro ao processar webhook, mas foi recebido para análise',
+      message: 'Erro no processamento do webhook',
       error: error instanceof Error ? error.message : 'Erro desconhecido'
     });
   }
