@@ -1388,6 +1388,16 @@ const AdminDashboard = () => {
                       <HardDrive className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
                       {sidebarOpen && <span className="truncate">Testar Armazenamento</span>}
                     </Link>
+                    <Link 
+                      href="/admin/hotmart-test"
+                      title="Testar Credenciais Hotmart"
+                      className={`flex items-center w-full py-2 rounded-md transition-all duration-200
+                      text-gray-600 hover:bg-gray-50 
+                      ${sidebarOpen ? 'px-4 justify-start' : 'px-2 justify-center'}`}
+                    >
+                      <Zap className={`w-4 h-4 ${sidebarOpen ? 'mr-2' : 'mx-auto'}`} />
+                      {sidebarOpen && <span className="truncate">Testar Credenciais Hotmart</span>}
+                    </Link>
                     <button
                       onClick={() => setActiveTab('analytics')}
                       className={`flex items-center w-full py-2 rounded-md transition-all duration-200 ${
