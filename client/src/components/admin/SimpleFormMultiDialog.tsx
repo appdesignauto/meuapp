@@ -581,6 +581,8 @@ export default function SimpleFormMultiDialog({
       onClose();
       
       // Invalidar a consulta para atualizar a lista de artes
+      // Garantir que tanto a versão em português quanto a versão em inglês da rota sejam invalidadas
+      queryClient.invalidateQueries({ queryKey: ['/api/artes'] });
       queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
     } catch (error: any) {
       toast({
