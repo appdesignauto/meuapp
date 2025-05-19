@@ -4025,6 +4025,21 @@ const AdminDashboard = () => {
                 </div>
               </div>
             </TabsContent>
+            
+            <TabsContent value="configuracoes" className="mt-0">
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <div className="flex flex-col space-y-6">
+                  <div>
+                    <h2 className="text-2xl font-bold tracking-tight mb-2">Configurações do Sistema</h2>
+                    <p className="text-muted-foreground">
+                      Gerencie as configurações e integrações do sistema.
+                    </p>
+                  </div>
+                  
+                  <AnalyticsSettings />
+                </div>
+              </div>
+            </TabsContent>
           </Tabs>
         </main>
       </div>
