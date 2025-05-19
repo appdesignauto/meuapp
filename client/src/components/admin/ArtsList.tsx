@@ -167,9 +167,36 @@ const ArtsList = () => {
     },
   });
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     if (window.confirm('Tem certeza que deseja excluir esta arte?')) {
-      deleteMutation.mutate(id);
+      try {
+        // Adiciona tratamento para potenciais erros durante a exclusão
+        console.log(`Iniciando exclusão da arte ID: ${id}`);
+        await deleteMutation.mutateAsync(id);
+        
+        // Forçar a atualização da lista após exclusão bem-sucedida
+        console.log(`Arte ID: ${id} excluída com sucesso`);
+        
+        // Remover manualmente da lista local se necessário
+        queryClient.setQueryData(['/api/artes'], (oldData: any) => {
+          if (!oldData || !oldData.arts) return oldData;
+          
+          return {
+            ...oldData,
+            arts: oldData.arts.filter((art: Art) => art.id !== id)
+          };
+        });
+        
+        // Recarregar dados após exclusão
+        queryClient.invalidateQueries({ queryKey: ['/api/artes'] });
+      } catch (error) {
+        console.error(`Falha ao excluir arte ID: ${id}`, error);
+        toast({
+          title: 'Erro',
+          description: 'Não foi possível excluir a arte. Tente novamente.',
+          variant: 'destructive',
+        });
+      }
     }
   };
 
