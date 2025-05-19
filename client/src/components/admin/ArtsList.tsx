@@ -64,11 +64,23 @@ const ArtsList = () => {
   // Delete art mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest('DELETE', `/api/admin/artes/${id}`);
+      const response = await apiRequest('DELETE', `/api/admin/artes/${id}`);
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.message || 'Falha ao excluir a arte');
+      }
+      
+      return result;
     },
-    onSuccess: () => {
-      // Invalidar a consulta principal que busca a lista de artes
+    onSuccess: (data) => {
+      // Forçar atualização das consultas de artes para refletir a exclusão
       queryClient.invalidateQueries({ queryKey: ['/api/artes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
+      
+      // Forçar refetch imediato
+      queryClient.refetchQueries({ queryKey: ['/api/artes'] });
+      
       toast({
         title: 'Arte excluída',
         description: 'A arte foi excluída com sucesso.',
@@ -76,6 +88,7 @@ const ArtsList = () => {
       });
     },
     onError: (error: any) => {
+      console.error('Erro detalhado ao excluir arte:', error);
       toast({
         title: 'Erro',
         description: error.message || 'Ocorreu um erro ao excluir a arte.',

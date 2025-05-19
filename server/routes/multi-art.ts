@@ -232,47 +232,60 @@ router.delete('/api/admin/arts/:id', isAuthenticated, async (req: Request, res: 
     }
     
     const artId = parseInt(req.params.id);
-    console.log(`Excluindo arte ID: ${artId}`);
+    console.log(`[DELETE] Iniciando exclusão da arte ID: ${artId}`);
     
-    // Verificar se a arte existe
-    const art = await storage.getArtById(artId);
-    if (!art) {
+    // Verificar se a arte existe usando SQL direto
+    const checkResult = await db.execute(sql`
+      SELECT id, "groupId" FROM arts WHERE id = ${artId}
+    `);
+    
+    if (!checkResult.rows || checkResult.rows.length === 0) {
+      console.log(`[DELETE] Arte ID ${artId} não encontrada no banco de dados`);
       return res.status(404).json({
         message: 'Arte não encontrada'
       });
     }
     
-    // Primeiro, verificamos se a arte faz parte de um grupo
-    // Se fizer parte de um grupo, podemos querer tratar isso de forma especial
-    const result = await db.execute(sql`
-      SELECT "groupId" FROM arts WHERE id = ${artId}
+    // Obter o groupId da arte (se existir)
+    const groupId = checkResult.rows[0]?.groupId;
+    console.log(`[DELETE] Arte ${artId} groupId: ${groupId || 'sem grupo'}`);
+    
+    // Executar a exclusão com SQL direto para garantir que seja processada
+    const deleteResult = await db.execute(sql`
+      DELETE FROM arts WHERE id = ${artId} RETURNING id
     `);
     
-    const groupId = result.rows[0]?.groupId;
-    console.log(`Arte ${artId} groupId: ${groupId}`);
+    // Verificar se a exclusão foi bem-sucedida
+    if (!deleteResult.rows || deleteResult.rows.length === 0) {
+      console.log(`[DELETE] Falha ao excluir arte ID ${artId}. Nenhuma linha afetada.`);
+      return res.status(500).json({
+        message: 'Falha ao excluir arte. Operação não afetou nenhuma linha no banco de dados.'
+      });
+    }
     
-    // Excluir a arte do banco de dados usando SQL direto
-    await db.execute(sql`
-      DELETE FROM arts WHERE id = ${artId}
-    `);
+    console.log(`[DELETE] Arte ID ${artId} excluída com sucesso. ID retornado: ${deleteResult.rows[0]?.id}`);
     
     // Verificar se há outras artes no mesmo grupo
     if (groupId) {
       const groupArtsResult = await db.execute(sql`
-        SELECT id FROM arts WHERE "groupId" = ${groupId} AND id != ${artId}
+        SELECT id FROM arts WHERE "groupId" = ${groupId}
       `);
       
-      console.log(`Encontradas ${groupArtsResult.rowCount || 0} outras artes no mesmo grupo`);
+      const remainingCount = groupArtsResult.rowCount || 0;
+      console.log(`[DELETE] Restam ${remainingCount} artes no grupo ${groupId}`);
     }
     
     return res.json({
+      success: true,
       message: 'Arte excluída com sucesso',
       id: artId
     });
   } catch (error) {
-    console.error(`Erro ao excluir arte ${req.params.id}:`, error);
+    console.error(`[DELETE] Erro ao excluir arte ${req.params.id}:`, error);
     return res.status(500).json({
-      message: 'Erro ao excluir arte'
+      success: false,
+      message: 'Erro ao excluir arte',
+      error: String(error)
     });
   }
 });
