@@ -30,6 +30,7 @@ import UpdatedDashboard from "@/pages/admin/UpdatedDashboard";
 import LogoUploadPage from "@/pages/admin/LogoUploadPage";
 import TestSubscriptionSettingsPage from "@/pages/admin/TestSubscriptionSettingsPage";
 import StorageTestPage from "@/pages/admin/StorageTestPage";
+import HotmartTestPage from "@/pages/admin/HotmartTestPage";
 import AddArtMultiFormatPage from "@/pages/admin/AddArtMultiFormat";
 import GerenciarCursosPage from "@/pages/admin/GerenciarCursos";
 import AuthPage from "@/pages/auth-page";
@@ -241,6 +242,11 @@ function AppRoutes() {
       <ProtectedRoute
         path="/admin/storage-test"
         component={StorageTestPage}
+        roles={['admin']}
+      />
+      <ProtectedRoute
+        path="/admin/hotmart-test"
+        component={HotmartTestPage}
         roles={['admin']}
       />
       <ProtectedRoute 
