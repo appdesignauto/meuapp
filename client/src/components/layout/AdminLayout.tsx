@@ -1,3 +1,4 @@
+
 import React, { ReactNode } from 'react';
 import { Link, useLocation } from 'wouter';
 import {
@@ -15,7 +16,10 @@ import {
   Menu,
   X,
   BarChart,
-  LineChart
+  LineChart,
+  Home,
+  PanelLeftClose,
+  PanelLeftOpen
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -34,197 +38,171 @@ type AdminLayoutProps = {
   backLink?: string;
 };
 
-type NavItem = {
-  title: string;
-  href: string;
-  icon: React.ReactNode;
-  badge?: string;
-};
-
-export const AdminLayout: React.FC<AdminLayoutProps> = ({ 
-  children, 
-  title,
-  backLink
-}) => {
-  const { user } = useAuth();
+const AdminLayout = ({ children, title, backLink }: AdminLayoutProps) => {
+  const [sidebarOpen, setSidebarOpen] = React.useState(true);
   const [location] = useLocation();
+  const { user } = useAuth();
 
-  const navItems: NavItem[] = [
+  const menuItems = [
     {
-      title: 'Dashboard',
+      icon: <Home className="w-5 h-5" />,
+      label: 'Dashboard',
       href: '/admin',
-      icon: <Gauge className="h-5 w-5" />,
     },
     {
-      title: 'Usuários',
-      href: '/admin/users',
-      icon: <Users className="h-5 w-5" />,
+      icon: <Image className="w-5 h-5" />, 
+      label: 'Artes',
+      href: '/admin/add-art-multi',
     },
     {
-      title: 'Artes',
-      href: '/admin/arts',
-      icon: <Image className="h-5 w-5" />,
+      icon: <BookOpen className="w-5 h-5" />,
+      label: 'Cursos',
+      href: '/admin/gerenciar-cursos',
     },
     {
-      title: 'Cursos',
-      href: '/admin/courses',
-      icon: <BookOpen className="h-5 w-5" />,
-    },
-    {
-      title: 'Comunidade',
-      href: '/admin/community',
-      icon: <MessageSquare className="h-5 w-5" />,
-    },
-    {
-      title: 'Ranking',
-      href: '/admin/ranking',
-      icon: <Award className="h-5 w-5" />,
-    },
-    {
-      title: 'Ferramentas',
+      icon: <Wrench className="w-5 h-5" />,
+      label: 'Ferramentas',
       href: '/admin/ferramentas',
-      icon: <Wrench className="h-5 w-5" />,
     },
     {
-      title: 'Uploads',
-      href: '/admin/uploads',
-      icon: <Upload className="h-5 w-5" />,
+      icon: <MessageSquare className="w-5 h-5" />,
+      label: 'Comunidade',
+      href: '/admin/community',
     },
     {
-      title: 'Páginas',
-      href: '/admin/pages',
-      icon: <FileText className="h-5 w-5" />,
+      icon: <Users className="w-5 h-5" />,
+      label: 'Usuários',
+      href: '/admin/users',
     },
     {
-      title: 'Analytics',
+      icon: <BarChart className="w-5 h-5" />,
+      label: 'Analytics',
       href: '/admin/analytics',
-      icon: <BarChart className="h-5 w-5" />,
     },
     {
-      title: 'Configurações',
+      icon: <Settings className="w-5 h-5" />,
+      label: 'Configurações',
       href: '/admin/settings',
-      icon: <Settings className="h-5 w-5" />,
     },
   ];
 
-  const NavLinks = () => (
-    <nav className="space-y-1 mt-4">
-      {navItems.map((item) => (
-        <Link key={item.href} href={item.href}>
-          <a
-            className={cn(
-              'flex items-center px-4 py-2.5 text-sm font-medium rounded-lg',
-              location === item.href || location.startsWith(`${item.href}/`)
-                ? 'bg-primary text-primary-foreground'
-                : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
-            )}
-          >
-            {item.icon}
-            <span className="ml-3">{item.title}</span>
-            {item.badge && (
-              <span className="ml-auto px-2 py-0.5 text-xs rounded-full bg-primary/20 text-primary dark:bg-primary/30">
-                {item.badge}
-              </span>
-            )}
-          </a>
-        </Link>
-      ))}
-    </nav>
-  );
-
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Mobile top navigation */}
-      <div className="lg:hidden flex items-center justify-between p-4 border-b bg-white dark:bg-gray-800">
-        <div className="flex items-center">
-          {backLink && (
-            <Button variant="ghost" size="icon" asChild className="mr-2">
-              <Link href={backLink}>
-                <ChevronLeft className="h-5 w-5" />
-              </Link>
+    <div className="min-h-screen bg-gray-100 flex">
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 w-64 bg-white border-r shadow-sm transition-transform duration-300 ease-in-out lg:relative lg:transform-none",
+          !sidebarOpen && "transform -translate-x-full"
+        )}
+      >
+        <div className="flex flex-col h-full">
+          {/* Header do Sidebar */}
+          <div className="h-16 flex items-center justify-between px-4 border-b">
+            <Link href="/admin" className="flex items-center space-x-2">
+              <span className="font-bold text-xl">Design Auto</span>
+            </Link>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="lg:flex hidden"
+            >
+              {sidebarOpen ? (
+                <PanelLeftClose className="h-5 w-5" />
+              ) : (
+                <PanelLeftOpen className="h-5 w-5" />
+              )}
             </Button>
-          )}
-          <h1 className="text-xl font-semibold text-gray-900 dark:text-white">{title}</h1>
-        </div>
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <Menu className="h-5 w-5" />
-              <span className="sr-only">Abrir menu</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-72 p-0">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Painel Admin</h2>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <X className="h-5 w-5" />
-                  <span className="sr-only">Fechar menu</span>
-                </Button>
-              </SheetTrigger>
-            </div>
-            <div className="p-4">
-              <NavLinks />
-            </div>
-          </SheetContent>
-        </Sheet>
-      </div>
+          </div>
 
-      <div className="flex">
-        {/* Desktop sidebar */}
-        <aside className="hidden lg:flex flex-col w-64 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 h-screen sticky top-0">
-          <div className="p-4 border-b">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Painel Admin</h2>
-          </div>
-          <div className="p-4">
-            <NavLinks />
-          </div>
-          <div className="p-4 mt-auto border-t">
-            <div className="flex items-center">
-              <Avatar className="h-8 w-8">
-                {user?.profileimageurl ? (
-                  <AvatarImage src={user.profileimageurl} alt={user?.name || ''} />
-                ) : (
-                  <AvatarFallback>{user?.name?.charAt(0) || user?.username?.charAt(0) || 'U'}</AvatarFallback>
-                )}
+          {/* Menu Items */}
+          <nav className="flex-1 overflow-y-auto py-4">
+            <ul className="space-y-1 px-3">
+              {menuItems.map((item) => (
+                <li key={item.href}>
+                  <Link href={item.href}>
+                    <a
+                      className={cn(
+                        "flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors",
+                        "hover:bg-gray-100",
+                        location === item.href
+                          ? "bg-gray-100 text-blue-600"
+                          : "text-gray-700"
+                      )}
+                    >
+                      {item.icon}
+                      <span className="font-medium">{item.label}</span>
+                    </a>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          {/* Footer do Sidebar */}
+          <div className="border-t p-4">
+            <div className="flex items-center space-x-3">
+              <Avatar className="h-9 w-9">
+                <AvatarImage src={user?.profileimageurl} />
+                <AvatarFallback>{user?.name?.charAt(0)}</AvatarFallback>
               </Avatar>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-gray-900 dark:text-white">{user?.name || user?.username}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Administrador</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">
+                  {user?.name}
+                </p>
+                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
               </div>
             </div>
           </div>
-        </aside>
+        </div>
+      </aside>
 
-        {/* Main content */}
-        <main className="flex-1">
-          {/* Desktop top header */}
-          <div className="hidden lg:flex items-center justify-between p-4 border-b bg-white dark:bg-gray-800">
-            <div className="flex items-center">
-              {backLink && (
-                <Button variant="ghost" size="icon" asChild className="mr-2">
-                  <Link href={backLink}>
-                    <ChevronLeft className="h-5 w-5" />
-                  </Link>
-                </Button>
-              )}
-              <h1 className="text-xl font-semibold text-gray-900 dark:text-white">{title}</h1>
-            </div>
-            <div className="flex items-center">
-              <Button variant="outline" size="sm" asChild>
-                <Link href="/">
-                  Ver site
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Mobile Header */}
+        <header className="h-16 lg:hidden flex items-center justify-between px-4 border-b bg-white">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
+            {sidebarOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
+          </Button>
+          <span className="font-semibold">{title}</span>
+          <div className="w-10" /> {/* Espaçador para centralizar o título */}
+        </header>
+
+        {/* Desktop Header */}
+        <header className="hidden lg:flex h-16 items-center justify-between px-6 border-b bg-white">
+          <div className="flex items-center space-x-3">
+            {backLink && (
+              <Button variant="ghost" size="icon" asChild>
+                <Link href={backLink}>
+                  <ChevronLeft className="h-5 w-5" />
                 </Link>
               </Button>
-            </div>
+            )}
+            <h1 className="text-xl font-semibold">{title}</h1>
           </div>
+        </header>
 
-          {/* Page content */}
-          <div className="p-6">
-            {children}
-          </div>
+        {/* Page Content */}
+        <main className="flex-1 overflow-y-auto p-6">
+          {children}
         </main>
       </div>
+
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
     </div>
   );
 };
