@@ -355,6 +355,172 @@ export class SubscriptionService {
   }
   
   /**
+   * Ativa uma assinatura com base nos dados recebidos da Hotmart
+   * Esta função é usada pelo processador de webhooks assíncrono
+   */
+  static async activateSubscriptionFromHotmart(data: {
+    email: string;
+    nome?: string;
+    productId?: string;
+    transactionCode?: string;
+    payload: any;
+  }) {
+    try {
+      // Verificar se o email existe
+      if (!data.email) {
+        throw new Error('Email não fornecido para ativação de assinatura');
+      }
+      
+      // Buscar usuário pelo email
+      const [existingUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, data.email));
+      
+      let userId: number;
+      
+      // Se o usuário não existe, criá-lo
+      if (!existingUser) {
+        console.log(`Criando novo usuário para ${data.email}`);
+        
+        // Gerar nome de usuário único baseado no email
+        const username = data.email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '') + 
+                       Date.now().toString().substring(9);
+        
+        // Criar novo usuário
+        const [newUser] = await db
+          .insert(users)
+          .values({
+            username: username,
+            email: data.email,
+            name: data.nome || username,
+            isactive: true,
+            role: 'premium', // Já criamos como premium
+            nivelacesso: 'premium',
+            origemassinatura: 'hotmart_webhook',
+            password: '', // Senha vazia porque login será por email
+            emailconfirmed: true, // Já confirmamos o email pois vem da Hotmart
+            createdat: new Date(),
+            updatedat: new Date()
+          })
+          .returning();
+        
+        userId = newUser.id;
+        
+        console.log(`Novo usuário criado: ID ${userId}, username ${username}`);
+      } else {
+        userId = existingUser.id;
+      }
+      
+      // Determinar tipo de plano e duração com base nas informações do payload
+      const plan = data.payload?.data?.product?.name || data.payload?.data?.purchase?.plan?.name || 'Mensal';
+      let planType = 'mensal'; // padrão
+      
+      if (plan) {
+        const planLower = plan.toLowerCase();
+        if (planLower.includes('anual') || planLower.includes('annual')) {
+          planType = 'anual';
+        } else if (planLower.includes('vitalic') || planLower.includes('lifetime') || 
+                 planLower.includes('vitalício')) {
+          planType = 'vitalicio';
+        }
+      }
+      
+      // Calcular data de expiração
+      let endDate: Date | null = null;
+      if (planType === 'mensal') {
+        endDate = new Date();
+        endDate.setMonth(endDate.getMonth() + 1);
+      } else if (planType === 'anual') {
+        endDate = new Date();
+        endDate.setFullYear(endDate.getFullYear() + 1);
+      }
+      // vitalicio tem endDate = null
+      
+      // Atualizar assinatura
+      await this.createOrUpdateSubscription(
+        userId,
+        planType,
+        new Date(),
+        endDate,
+        'hotmart_webhook'
+      );
+      
+      return {
+        userId,
+        subscriptionId: 0, // ID da assinatura não é necessário aqui
+        action: existingUser ? 'subscription_updated' : 'user_created',
+        message: `Assinatura ${existingUser ? 'atualizada' : 'criada'} com sucesso`
+      };
+    } catch (error) {
+      console.error('Erro ao ativar assinatura da Hotmart:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Desativa uma assinatura com base nos dados recebidos da Hotmart
+   * Esta função é usada pelo processador de webhooks assíncrono
+   */
+  static async deactivateSubscriptionFromHotmart(data: {
+    email?: string;
+    transactionCode?: string;
+    payload: any;
+  }) {
+    try {
+      if (!data.email && !data.transactionCode) {
+        throw new Error('Email ou código de transação são necessários para desativar assinatura');
+      }
+      
+      // Buscar usuário pelo email
+      let user = null;
+      
+      if (data.email) {
+        const [foundUser] = await db
+          .select()
+          .from(users)
+          .where(eq(users.email, data.email));
+        
+        if (foundUser) {
+          user = foundUser;
+        }
+      }
+      
+      // Se não encontrou por email, tentar pelo código de transação
+      if (!user && data.transactionCode) {
+        // Aqui precisaríamos ter um campo para armazenar o código de transação
+        // Por enquanto, apenas logamos o problema
+        console.log(`Não foi possível encontrar usuário pelo código de transação: ${data.transactionCode}`);
+        return {
+          userId: null,
+          action: 'not_found',
+          message: 'Usuário não encontrado pelo código de transação'
+        };
+      }
+      
+      if (!user) {
+        return {
+          userId: null,
+          action: 'not_found',
+          message: 'Usuário não encontrado'
+        };
+      }
+      
+      // Rebaixar o usuário para free
+      await this.downgradeUserToFree(user.id, true);
+      
+      return {
+        userId: user.id,
+        action: 'downgraded',
+        message: 'Assinatura desativada com sucesso'
+      };
+    } catch (error) {
+      console.error('Erro ao desativar assinatura da Hotmart:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Processa um webhook recebido da Hotmart
    * @param webhookData Dados do webhook
    * @returns Resultado do processamento
