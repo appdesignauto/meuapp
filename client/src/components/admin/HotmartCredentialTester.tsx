@@ -29,7 +29,7 @@ const HotmartCredentialTester = () => {
     setTestResult(null);
     
     try {
-      const response = await fetch("/api/hotmart/test-credentials", {
+      const response = await fetch("/api/hotmart-test/test-credentials", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
