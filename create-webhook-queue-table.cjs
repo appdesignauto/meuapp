@@ -6,10 +6,9 @@
  * no servidor principal.
  */
 
-// Usando require em vez de import para compatibilidade
+// Usando require para compatibilidade
 require('dotenv').config();
 const { Pool } = require('pg');
-const { drizzle } = require('drizzle-orm/pg-server-postgres');
 const { sql } = require('drizzle-orm');
 
 // Configurar conexão com o banco de dados
@@ -21,14 +20,12 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL
 });
 
-const db = drizzle(pool);
-
 async function createWebhookQueueTable() {
   try {
     console.log('Criando tabela de fila de webhooks da Hotmart...');
     
     // Verificar se a tabela já existe
-    const checkTableExists = await db.execute(sql`
+    const checkTableExists = await pool.query(`
       SELECT EXISTS (
         SELECT FROM information_schema.tables 
         WHERE table_name = 'hotmart_webhooks'
@@ -43,7 +40,7 @@ async function createWebhookQueueTable() {
     }
     
     // Criar a tabela de fila de webhooks
-    await db.execute(sql`
+    await pool.query(`
       CREATE TABLE hotmart_webhooks (
         id SERIAL PRIMARY KEY,
         received_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -59,7 +56,7 @@ async function createWebhookQueueTable() {
     `);
     
     // Criar índices para melhorar a performance
-    await db.execute(sql`
+    await pool.query(`
       CREATE INDEX idx_hotmart_webhooks_status ON hotmart_webhooks (status);
       CREATE INDEX idx_hotmart_webhooks_event_type ON hotmart_webhooks (event_type);
       CREATE INDEX idx_hotmart_webhooks_purchase_transaction ON hotmart_webhooks (purchase_transaction);
@@ -70,6 +67,9 @@ async function createWebhookQueueTable() {
   } catch (error) {
     console.error('Erro ao criar tabela de fila de webhooks:', error);
     throw error;
+  } finally {
+    // Encerrar a conexão com o banco de dados
+    await pool.end();
   }
 }
 
