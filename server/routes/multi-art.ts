@@ -440,11 +440,134 @@ router.put('/api/admin/arts/multi/:id', isAuthenticated, async (req: Request, re
     
     console.log(`Atualizando arte ID ${id} com ${artGroupData.formats.length} formatos`);
     
-    // Se a arte faz parte de um grupo, vamos usar a rota de grupo
+    // Se a arte faz parte de um grupo, vamos usar a lógica de grupo, mas sem redirecionamento
     if (art.groupId) {
-      console.log(`Arte ${id} faz parte do grupo ${art.groupId}, redirecionando para atualização de grupo`);
-      // Redirecionar para a rota de atualização de grupo
-      return res.redirect(307, `/api/admin/arts/group/${art.groupId}`);
+      console.log(`Arte ${id} faz parte do grupo ${art.groupId}, usando lógica de atualização de grupo`);
+      
+      // Buscar todas as artes existentes do grupo
+      const result = await db.execute(sql`
+        SELECT * FROM arts 
+        WHERE "groupId" = ${art.groupId}
+      `);
+      
+      const existingArts = result.rows || [];
+      
+      if (!existingArts || existingArts.length === 0) {
+        return res.status(404).json({
+          message: 'Grupo de artes não encontrado'
+        });
+      }
+      
+      console.log(`Atualizando grupo ${art.groupId}. Artes existentes: ${existingArts.length}, Formatos novos: ${artGroupData.formats.length}`);
+      
+      // Criar um mapa de formatos existentes para facilitar atualizações
+      const existingFormats = new Map();
+      existingArts.forEach(existingArt => {
+        existingFormats.set(existingArt.format, existingArt);
+      });
+      
+      // Arrays para rastrear mudanças
+      const updatedArts = [];
+      const newArts = [];
+      
+      // ID da coleção padrão (se necessário)
+      const defaultCollectionId = 1;
+      
+      // Atualizar artes existentes e criar novas quando necessário
+      for (const format of artGroupData.formats) {
+        // Verificar se esse formato já existe no grupo
+        const existingArt = existingFormats.get(format.format);
+        
+        if (existingArt) {
+          // Atualizar arte existente
+          const updateData = {
+            title: format.title,
+            description: format.description || '',
+            imageUrl: format.imageUrl,
+            previewUrl: format.previewUrl || null,
+            editUrl: format.editUrl || '',
+            categoryId: artGroupData.categoryId,
+            isPremium: artGroupData.isPremium,
+            fileType: format.fileType,
+            updatedAt: new Date()
+          };
+          
+          // Realizar a atualização no banco de dados
+          const [updatedArt] = await db
+            .update(arts)
+            .set(updateData)
+            .where(eq(arts.id, existingArt.id))
+            .returning();
+          
+          updatedArts.push({
+            id: updatedArt.id,
+            format: format.format,
+            title: format.title,
+            action: 'updated'
+          });
+          
+          // Remover do mapa para rastrear o que foi atualizado
+          existingFormats.delete(format.format);
+        } else {
+          // Criar nova arte para o formato que não existia
+          const artData = {
+            title: format.title,
+            description: format.description || '',
+            imageUrl: format.imageUrl,
+            previewUrl: format.previewUrl || null,
+            editUrl: format.editUrl || '', // Garantir que nunca é null
+            categoryId: artGroupData.categoryId,
+            isPremium: artGroupData.isPremium,
+            format: format.format,
+            fileType: format.fileType,
+            isVisible: true,
+            designerid: req.user?.id || 1,
+            collectionId: defaultCollectionId,
+            groupId: art.groupId
+          };
+          
+          // Criar a arte no banco de dados
+          const newArt = await storage.createArt(artData);
+          
+          // Verificar se o groupId foi salvo corretamente
+          if (!newArt.groupId) {
+            console.warn(`ALERTA: Nova arte ID ${newArt.id} no grupo ${art.groupId} foi criada sem groupId. Tentando atualizar...`);
+            try {
+              // Tentar atualizar o groupId usando SQL direto
+              const result = await db.execute(sql`
+                UPDATE arts 
+                SET "groupId" = ${art.groupId}
+                WHERE id = ${newArt.id}
+              `);
+              
+              console.log(`SQL executado para atualizar groupId da nova arte ${newArt.id} no grupo ${art.groupId}`);
+              
+              if (result.rowCount > 0) {
+                console.log(`Nova arte ID ${newArt.id} atualizada com groupId ${art.groupId}`);
+              } else {
+                console.error(`Nenhuma linha atualizada para nova arte ${newArt.id}`);
+              }
+            } catch (updateError) {
+              console.error(`Erro ao atualizar groupId para nova arte ${newArt.id}:`, updateError);
+            }
+          }
+          
+          newArts.push({
+            id: newArt.id,
+            format: format.format,
+            title: format.title,
+            action: 'created',
+            groupId: newArt.groupId || art.groupId
+          });
+        }
+      }
+      
+      return res.json({
+        message: 'Grupo de artes atualizado com sucesso',
+        groupId: art.groupId,
+        updated: updatedArts,
+        created: newArts
+      });
     }
     
     // Se não tem groupId, vamos criar um para esta arte
