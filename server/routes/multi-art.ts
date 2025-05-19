@@ -125,14 +125,21 @@ router.post('/api/admin/arts/multi', isAuthenticated, async (req: Request, res: 
 router.get('/api/admin/arts/:id/check-group', isAuthenticated, async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id);
-    console.log(`Verificando groupId para arte ${id}`);
+    console.log(`[DEBUG] Verificando groupId para arte ${id}`);
+    
+    // Verificar se o usuário está autenticado
+    console.log(`[DEBUG] Usuário autenticado: ${req.isAuthenticated ? 'Sim' : 'Não'}`);
+    console.log(`[DEBUG] Usuário: ${JSON.stringify(req.user || {})}`);
     
     // Usar SQL direto para evitar problemas com o método entries()
     const result = await db.execute(sql`
-      SELECT "groupId" FROM arts WHERE id = ${id}
+      SELECT id, "groupId" FROM arts WHERE id = ${id}
     `);
     
+    console.log(`[DEBUG] Resultado da consulta: ${JSON.stringify(result.rows || [])}`);
+    
     if (!result || !result.rows || result.rows.length === 0) {
+      console.log(`[DEBUG] Arte ${id} não encontrada no banco de dados`);
       return res.status(404).json({
         message: 'Arte não encontrada'
       });
@@ -141,13 +148,23 @@ router.get('/api/admin/arts/:id/check-group', isAuthenticated, async (req: Reque
     // Extrair o groupId do resultado
     const groupId = result.rows[0]?.groupId;
     
-    console.log(`Arte ${id} groupId: ${groupId}`);
+    console.log(`[DEBUG] Arte ${id} groupId: ${groupId || 'null/undefined'}`);
+    
+    // Se tiver groupId, verificar quantas artes existem nesse grupo
+    if (groupId) {
+      const countResult = await db.execute(sql`
+        SELECT COUNT(*) as count FROM arts WHERE "groupId" = ${groupId}
+      `);
+      const count = countResult.rows[0]?.count || 0;
+      console.log(`[DEBUG] Grupo ${groupId} contém ${count} artes`);
+    }
+    
     return res.json({ 
       id: id,
       groupId: groupId
     });
   } catch (error) {
-    console.error(`Erro ao verificar grupo da arte ${req.params.id}:`, error);
+    console.error(`[ERROR] Erro ao verificar grupo da arte ${req.params.id}:`, error);
     return res.status(500).json({
       message: 'Erro ao verificar grupo da arte'
     });
