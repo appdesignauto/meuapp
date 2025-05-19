@@ -45,7 +45,13 @@ export class WebhookProcessor {
         RETURNING id;
       `);
       
-      return result.rows[0]?.id;
+      // Converter o id para number de forma segura
+      const id = result.rows[0]?.id;
+      if (id === undefined) {
+        throw new Error('Falha ao obter ID do webhook inserido');
+      }
+      
+      return Number(id);
     } catch (error) {
       console.error('Erro ao salvar webhook da Hotmart:', error);
       throw error;
@@ -70,18 +76,25 @@ export class WebhookProcessor {
       let processedCount = 0;
       
       // Processar cada webhook pendente
-      for (const webhook of pendingWebhooks.rows as WebhookRecord[]) {
+      for (const webhook of pendingWebhooks.rows) {
+        // Validar que o webhook tem a estrutura correta
+        if (!this.isValidWebhookRecord(webhook)) {
+          console.error(`Webhook inválido encontrado na fila:`, webhook);
+          continue;
+        }
+        
         try {
-          await this.processWebhook(webhook);
+          await this.processWebhook(webhook as WebhookRecord);
           processedCount++;
         } catch (error) {
-          console.error(`Erro ao processar webhook ID ${webhook.id}:`, error);
+          const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+          console.error(`Erro ao processar webhook ID ${webhook.id}:`, errorMessage);
           
           // Atualizar contagem de tentativas e erro
           await db.execute(sql`
             UPDATE hotmart_webhooks 
             SET processing_attempts = processing_attempts + 1,
-                processing_error = ${String(error)},
+                processing_error = ${errorMessage},
                 status = CASE WHEN processing_attempts + 1 >= 3 THEN 'failed' ELSE 'pending' END
             WHERE id = ${webhook.id};
           `);
@@ -90,9 +103,22 @@ export class WebhookProcessor {
       
       return processedCount;
     } catch (error) {
-      console.error('Erro ao processar fila de webhooks:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      console.error('Erro ao processar fila de webhooks:', errorMessage);
       throw error;
     }
+  }
+  
+  /**
+   * Verifica se um registro de webhook é válido
+   */
+  private static isValidWebhookRecord(webhook: any): webhook is WebhookRecord {
+    return (
+      webhook &&
+      typeof webhook.id === 'number' &&
+      webhook.event_type !== undefined &&
+      webhook.status !== undefined
+    );
   }
 
   /**
@@ -191,10 +217,11 @@ export class WebhookProcessor {
         action: result.action
       };
     } catch (error) {
-      console.error('Erro ao processar ativação de assinatura:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      console.error('Erro ao processar ativação de assinatura:', errorMessage);
       return {
         success: false,
-        message: `Erro ao processar ativação: ${error.message || 'Erro desconhecido'}`,
+        message: `Erro ao processar ativação: ${errorMessage}`,
         userId: null,
         action: 'error'
       };
@@ -235,10 +262,11 @@ export class WebhookProcessor {
         action: 'deactivated'
       };
     } catch (error) {
-      console.error('Erro ao processar desativação de assinatura:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      console.error('Erro ao processar desativação de assinatura:', errorMessage);
       return {
         success: false,
-        message: `Erro ao processar desativação: ${error.message || 'Erro desconhecido'}`,
+        message: `Erro ao processar desativação: ${errorMessage}`,
         userId: null,
         action: 'error'
       };

@@ -70,6 +70,7 @@ import { convertImageUrlsMiddleware } from './routes/image-url-proxy'; // Middle
 import imageProxyTestRouter from './routes/image-proxy-test'; // Rota para testar o proxy de imagens
 import reportsRouter from './routes/reports'; // Rotas para o sistema de denúncias (original)
 import reportsV2Router from './routes/reports-v2'; // Rotas para o sistema de denúncias (reescrito)
+import webhookQueueRouter from './routes/hotmart/webhook-queue'; // Rota para receber webhooks da Hotmart de forma assíncrona
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Aplicar middleware global para converter URLs de imagens para todas as respostas JSON
