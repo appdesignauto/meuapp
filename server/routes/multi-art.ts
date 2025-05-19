@@ -250,7 +250,27 @@ router.delete('/api/admin/arts/:id', isAuthenticated, async (req: Request, res: 
     const groupId = checkResult.rows[0]?.groupId;
     console.log(`[DELETE] Arte ${artId} groupId: ${groupId || 'sem grupo'}`);
     
-    // Executar a exclusão com SQL direto para garantir que seja processada
+    // IMPORTANTE: Resolver a restrição de chave estrangeira
+    // Primeiro excluir registros de views que referenciam essa arte
+    console.log(`[DELETE] Removendo registros de visualizações para a arte ID: ${artId}`);
+    await db.execute(sql`
+      DELETE FROM views WHERE "artId" = ${artId}
+    `);
+    
+    // Excluir registros de favoritos que referenciam essa arte
+    console.log(`[DELETE] Removendo registros de favoritos para a arte ID: ${artId}`);
+    await db.execute(sql`
+      DELETE FROM favorites WHERE "artId" = ${artId}
+    `);
+    
+    // Excluir registros de downloads que referenciam essa arte
+    console.log(`[DELETE] Removendo registros de downloads para a arte ID: ${artId}`);
+    await db.execute(sql`
+      DELETE FROM downloads WHERE "artId" = ${artId}
+    `);
+    
+    // Agora podemos excluir a arte com segurança
+    console.log(`[DELETE] Excluindo a arte ID: ${artId}`);
     const deleteResult = await db.execute(sql`
       DELETE FROM arts WHERE id = ${artId} RETURNING id
     `);
