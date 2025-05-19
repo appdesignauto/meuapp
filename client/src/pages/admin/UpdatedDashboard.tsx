@@ -1327,15 +1327,16 @@ const AdminDashboard = () => {
                   <BarChart3 className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
                   {sidebarOpen && <span>Analytics</span>}
                 </button>
-                <Link 
-                  href="/admin/settings"
+                <button 
+                  onClick={() => setActiveTab('configuracoes')}
                   className={`flex items-center w-full py-2.5 rounded-md text-gray-600 hover:bg-gray-100 
+                  ${activeTab === 'configuracoes' ? 'bg-gray-100 text-gray-900 font-medium' : ''}
                   ${sidebarOpen ? 'px-4 justify-start' : 'px-0 justify-center'}`}
                   title="Configurações do Sistema"
                 >
                   <Wrench className={`w-5 h-5 ${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
                   {sidebarOpen && <span>Config Sistema</span>}
-                </Link>
+                </button>
 
                 {user?.role === 'admin' && (
                   <>
@@ -1416,6 +1417,7 @@ const AdminDashboard = () => {
                 {activeTab === 'courseStats' && 'Estatísticas dos Cursos'}
                 {activeTab === 'comments' && 'Gerenciamento de Comentários'}
                 {activeTab === 'popups' && 'Gerenciamento de Popups'}
+                {activeTab === 'configuracoes' && 'Configurações do Sistema'}
               </h1>
             </div>
             
