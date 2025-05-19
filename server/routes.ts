@@ -5154,6 +5154,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Rotas para upload de imagens de ferramentas
   app.use(ferramentasUploadRouter);
   
+  // Rota para testar credenciais da Hotmart
+  app.use('/api', hotmartTestCredentialsRouter);
+  
+  // Rota para obter informações das variáveis de ambiente (sem expor valores)
+  app.get('/api/env-info', isAdmin, (req, res) => {
+    try {
+      // Verificar quais integrações estão configuradas, sem expor os valores
+      const envInfo = {
+        hotmartConfigured: !!(process.env.HOTMART_CLIENT_ID && process.env.HOTMART_CLIENT_SECRET),
+        supabaseConfigured: !!(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY),
+        r2Configured: !!(process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY),
+        brevoConfigured: !!process.env.BREVO_API_KEY
+      };
+      
+      res.json(envInfo);
+    } catch (error) {
+      console.error('Erro ao obter informações de variáveis de ambiente:', error);
+      res.status(500).json({ 
+        error: 'Erro ao obter informações de ambiente',
+        message: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
+  
   // Rotas para gerenciamento de analytics
   app.use('/api/analytics', analyticsRouter);
   
