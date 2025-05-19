@@ -549,40 +549,4 @@ router.get('/:id/stats', async (req, res) => {
   }
 });
 
-// Alternar status de ativo/inativo do popup (toggle)
-router.put('/:id/toggle', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { isActive } = req.body;
-    
-    // Verificar usuário autenticado
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: 'Não autorizado' });
-    }
-    
-    // Verificar se popup existe
-    const existingPopup = await db.query.popups.findFirst({
-      where: eq(popups.id, parseInt(id)),
-    });
-    
-    if (!existingPopup) {
-      return res.status(404).json({ message: 'Popup não encontrado' });
-    }
-    
-    // Atualizar somente o status de ativo/inativo
-    const [updatedPopup] = await db.update(popups)
-      .set({
-        isActive: isActive,
-        updatedAt: new Date(),
-      })
-      .where(eq(popups.id, parseInt(id)))
-      .returning();
-    
-    res.json(updatedPopup);
-  } catch (error) {
-    console.error('Erro ao alterar status do popup:', error);
-    res.status(500).json({ message: 'Erro ao alterar status do popup' });
-  }
-});
-
 export default router;

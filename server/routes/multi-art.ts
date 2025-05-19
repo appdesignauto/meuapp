@@ -28,124 +28,6 @@ router.post('/api/admin/arts/multi', isAuthenticated, async (req: Request, res: 
     // Gerar um ID de grupo único para vincular as artes
     const artGroupId = uuidv4();
     
-    // Verificar se estamos editando uma arte existente
-    // Adicionar log detalhado para debug
-    console.log('Body completo recebido:', JSON.stringify(req.body, null, 2));
-    console.log('artId na requisição:', req.body.artId);
-    const existingArtId = req.body.artId ? parseInt(req.body.artId) : null;
-    console.log('existingArtId convertido:', existingArtId);
-    
-    if (existingArtId) {
-      console.log(`Atualizando arte existente ID: ${existingArtId} e convertendo para grupo ${artGroupId}`);
-      
-      // Verificar se a arte existe (usando getArtById que é a função existente)
-      const existingArt = await storage.getArtById(existingArtId);
-      if (!existingArt) {
-        return res.status(404).json({
-          message: `Arte com ID ${existingArtId} não encontrada`
-        });
-      }
-      
-      console.log(`Arte existente encontrada: ${existingArt.id}, título: ${existingArt.title}, formato: ${existingArt.format}`);
-      
-      
-      // Pegar o formato da arte atual para atualização
-      const existingFormat = existingArt.format;
-      
-      // Atualizar apenas a arte existente
-      // Encontrar o formato correspondente nos dados enviados
-      console.log(`Formatos disponíveis:`, JSON.stringify(artGroupData.formats.map(f => f.format)));
-      console.log(`Procurando formato: ${existingFormat}`);
-      
-      // Se não encontrar o formato específico, usar o primeiro formato disponível
-      const formatToUpdate = artGroupData.formats.find(f => f.format === existingFormat) || artGroupData.formats[0];
-      
-      if (formatToUpdate) {
-        console.log(`Formato selecionado para atualização: ${formatToUpdate.format}`);
-        console.log(`Detalhes do formato:`, JSON.stringify(formatToUpdate, null, 2));
-        
-        // Preparar dados para atualização com verificações de segurança
-        const updateData = {
-          title: formatToUpdate.title || artGroupData.formats[0].title,
-          description: formatToUpdate.description || '',
-          imageUrl: formatToUpdate.imageUrl,
-          editUrl: formatToUpdate.editUrl || '',
-          categoryId: artGroupData.categoryId,
-          isPremium: artGroupData.isPremium,
-          fileType: formatToUpdate.fileType || artGroupData.formats[0].fileType,
-          groupId: artGroupId,
-          updatedAt: new Date()
-        };
-        
-        // Atualizar a arte no banco
-        await db.update(arts)
-          .set(updateData)
-          .where(eq(arts.id, existingArtId));
-        
-        console.log(`Arte ID ${existingArtId} atualizada com sucesso.`);
-        
-        // Criar outros formatos como novas artes se houver mais de um formato
-        const otherFormats = artGroupData.formats.filter(f => f.format !== existingFormat);
-        const createdArts = [{
-          id: existingArtId,
-          format: existingFormat,
-          title: formatToUpdate.title,
-          groupId: artGroupId,
-          action: 'updated'
-        }];
-        
-        // ID da coleção padrão
-        const defaultCollectionId = 1;
-        
-        // Criar os outros formatos
-        for (const format of otherFormats) {
-          // Preparar dados para criação da arte
-          const artData = {
-            title: format.title,
-            description: format.description || '',
-            imageUrl: format.imageUrl,
-            previewUrl: format.previewUrl || null,
-            editUrl: format.editUrl || null,
-            categoryId: artGroupData.categoryId,
-            isPremium: artGroupData.isPremium,
-            format: format.format,
-            fileType: format.fileType,
-            isVisible: true,
-            designerid: req.user?.id || 1,
-            collectionId: defaultCollectionId,
-            groupId: artGroupId
-          };
-          
-          console.log(`Criando arte adicional formato: ${format.format}, groupId: ${artGroupId}`);
-          
-          // Criar nova arte
-          const newArt = await storage.createArt(artData);
-          
-          // Adicionar ao array
-          createdArts.push({
-            id: newArt.id,
-            format: format.format,
-            title: format.title,
-            groupId: newArt.groupId || artGroupId,
-            action: 'created'
-          });
-        }
-        
-        // Retornar sucesso
-        return res.status(200).json({
-          message: `Arte ${existingArtId} convertida para grupo com sucesso`,
-          groupId: artGroupId,
-          totalArts: createdArts.length,
-          arts: createdArts
-        });
-      } else {
-        return res.status(400).json({
-          message: `Formato da arte existente não encontrado nos dados enviados`
-        });
-      }
-    }
-    
-    // Se não for edição de arte existente, continuar com criação normal
     // Registrar o início do processo com log detalhado
     console.log(`Criando grupo de arte ${artGroupId} com ${artGroupData.formats.length} formatos`);
     console.log(`Categoria: ${artGroupData.categoryId}, Usuário: ${req.user?.id}`);
@@ -185,6 +67,7 @@ router.post('/api/admin/arts/multi', isAuthenticated, async (req: Request, res: 
         console.warn(`ALERTA: Arte ID ${newArt.id} foi criada sem groupId. Tentando atualizar...`);
         try {
           // Tentar atualizar o groupId usando SQL direto para evitar problemas com o nome da coluna
+          // Importante: no PostgreSQL, a sintaxe correta tem um WHERE separado por espaço
           const result = await db.execute(sql`
             UPDATE arts 
             SET "groupId" = ${artGroupId}

@@ -28,9 +28,7 @@ import PlanosPage from "@/pages/PlanosPage";
 import ProfilePage from "@/pages/profile-page";
 import UpdatedDashboard from "@/pages/admin/UpdatedDashboard";
 import LogoUploadPage from "@/pages/admin/LogoUploadPage";
-import TestSubscriptionSettingsPage from "@/pages/admin/TestSubscriptionSettingsPage";
 import StorageTestPage from "@/pages/admin/StorageTestPage";
-import HotmartTestPage from "@/pages/admin/HotmartTestPage";
 import AddArtMultiFormatPage from "@/pages/admin/AddArtMultiFormat";
 import GerenciarCursosPage from "@/pages/admin/GerenciarCursos";
 import AuthPage from "@/pages/auth-page";
@@ -40,8 +38,6 @@ import SupabaseAuthTestPage from "@/pages/SupabaseAuthTestPage";
 import VideoaulasPage from "@/pages/videoaulas";
 import ComunidadePage from "@/pages/comunidade";
 import FerramentasPage from "@/pages/ferramentas";
-import WebhookDiagnostics from "@/pages/webhook-diagnostics";
-import WebhookLogsPage from "@/pages/admin/WebhookLogs";
 
 // Páginas do Painel do Usuário
 import { ProtectedPainelRoute } from "@/components/painel/ProtectedPainelRoute";
@@ -244,7 +240,6 @@ function AppRoutes() {
         component={StorageTestPage}
         roles={['admin']}
       />
-      {/* Removido link separado para hotmart-test, agora como aba no Dashboard */}
       <ProtectedRoute 
         path="/admin/logo-upload" 
         component={LogoUploadPage}
@@ -255,30 +250,9 @@ function AppRoutes() {
         component={AddArtMultiFormatPage}
         roles={['admin', 'designer_adm']} 
       />
-      {/* Rota normal protegida que requer papel de admin */}
-      <ProtectedRoute 
-        path="/admin/test-subscription-settings" 
-        component={TestSubscriptionSettingsPage}
-        roles={['admin']} 
-      />
-      
-      {/* Rota alternativa sem proteção para teste */}
-      <Route path="/test-subscription-settings">
-        <TestSubscriptionSettingsPage />
-      </Route>
       <ProtectedRoute 
         path="/admin/gerenciar-cursos" 
         component={GerenciarCursosPage}
-        roles={['admin']} 
-      />
-      <ProtectedRoute 
-        path="/admin/webhook-diagnostics" 
-        component={WebhookDiagnostics}
-        roles={['admin']} 
-      />
-      <ProtectedRoute 
-        path="/admin/webhooks" 
-        component={WebhookLogsPage}
         roles={['admin']} 
       />
       <ProtectedRoute
@@ -292,35 +266,6 @@ function AppRoutes() {
           );
         }}
         roles={['admin']}
-      />
-      <ProtectedRoute
-        path="/admin/app-config"
-        component={() => {
-          const AppConfigPage = lazy(() => import("@/pages/admin/AppConfigPage"));
-          return (
-            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
-              <AppConfigPage />
-            </Suspense>
-          );
-        }}
-        roles={['admin']}
-      />
-      <ProtectedRoute
-        path="/admin/assinaturas"
-        component={() => {
-          const AssinaturasPage = lazy(() => import("@/pages/admin/AssinaturasPage"));
-          return (
-            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
-              <AssinaturasPage />
-            </Suspense>
-          );
-        }}
-        roles={['admin']}
-      />
-      <ProtectedRoute 
-        path="/admin/webhooks" 
-        component={WebhookLogsPage}
-        roles={['admin']} 
       />
       <ProtectedRoute 
         path="/admin/:page" 

@@ -64,68 +64,32 @@ const ArtsList = () => {
   // Delete art mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      // Adiciona timestamp para prevenir cache
-      const timestamp = Date.now();
-      const response = await apiRequest('DELETE', `/api/admin/artes/${id}?_t=${timestamp}`, {
-        _timestamp: timestamp
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erro ao excluir arte');
-      }
-      
-      return response.json();
+      await apiRequest('DELETE', `/api/admin/artes/${id}`);
     },
     onSuccess: () => {
-      // Estratégia anti-cache menos agressiva para evitar tela branca
+      queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
       toast({
         title: 'Arte excluída',
         description: 'A arte foi excluída com sucesso.',
         variant: 'default',
       });
-      
-      // Invalidar apenas as queries relevantes
-      queryClient.invalidateQueries({ queryKey: ['/api/artes'] });
-      
-      // Usar métodos de refetch em vez de recarregar a página
-      queryClient.refetchQueries({ 
-        queryKey: ['/api/artes', { page, limit, ...filter }],
-        exact: true 
-      });
     },
     onError: (error: any) => {
       toast({
-        title: 'Erro ao excluir',
+        title: 'Erro',
         description: error.message || 'Ocorreu um erro ao excluir a arte.',
         variant: 'destructive',
       });
-      
-      // Mesmo com erro, tentar atualizar os dados
-      queryClient.invalidateQueries({ queryKey: ['/api/artes'] });
     },
   });
 
   // Toggle premium status mutation
   const togglePremiumMutation = useMutation({
     mutationFn: async ({ id, isPremium }: { id: number; isPremium: boolean }) => {
-      // Adiciona timestamp para prevenir cache
-      const timestamp = Date.now();
-      await apiRequest('PUT', `/api/admin/artes/${id}?_t=${timestamp}`, { 
-        isPremium,
-        _timestamp: timestamp 
-      });
+      await apiRequest('PUT', `/api/admin/artes/${id}`, { isPremium });
     },
     onSuccess: () => {
-      // Corrigido: invalidateQueries com a chave correta '/api/artes' (não '/api/arts')
-      queryClient.invalidateQueries({ queryKey: ['/api/artes'] });
-      
-      // Refetch explícito para garantir atualização
-      queryClient.refetchQueries({ 
-        queryKey: ['/api/artes', { page, limit, ...filter }],
-        exact: true 
-      });
-      
+      queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
       toast({
         title: 'Status premium atualizado',
         description: 'O status premium da arte foi atualizado com sucesso.',
@@ -144,23 +108,10 @@ const ArtsList = () => {
   // Toggle visibility status mutation
   const toggleVisibilityMutation = useMutation({
     mutationFn: async ({ id, isVisible }: { id: number; isVisible: boolean }) => {
-      // Adiciona timestamp para prevenir cache
-      const timestamp = Date.now();
-      await apiRequest('PUT', `/api/admin/artes/${id}?_t=${timestamp}`, { 
-        isVisible,
-        _timestamp: timestamp
-      });
+      await apiRequest('PUT', `/api/admin/artes/${id}/visibility`, { isVisible });
     },
     onSuccess: () => {
-      // Corrigido: invalidateQueries com a chave correta '/api/artes' (não '/api/arts')
-      queryClient.invalidateQueries({ queryKey: ['/api/artes'] });
-      
-      // Refetch explícito para garantir atualização
-      queryClient.refetchQueries({ 
-        queryKey: ['/api/artes', { page, limit, ...filter }],
-        exact: true 
-      });
-      
+      queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
       toast({
         title: 'Visibilidade atualizada',
         description: 'A visibilidade da arte foi atualizada com sucesso.',
@@ -179,23 +130,11 @@ const ArtsList = () => {
   // Mutation para atribuir o admin como designer de todas as artes
   const updateDesignersMutation = useMutation({
     mutationFn: async () => {
-      // Adiciona timestamp para prevenir cache
-      const timestamp = Date.now();
-      const response = await apiRequest('POST', `/api/admin/update-designers?_t=${timestamp}`, {
-        _timestamp: timestamp
-      });
+      const response = await apiRequest('POST', '/api/admin/update-designers');
       return await response.json();
     },
     onSuccess: () => {
-      // Corrigido: invalidateQueries com a chave correta '/api/artes' (não '/api/arts')
-      queryClient.invalidateQueries({ queryKey: ['/api/artes'] });
-      
-      // Refetch explícito para garantir atualização
-      queryClient.refetchQueries({ 
-        queryKey: ['/api/artes', { page, limit, ...filter }],
-        exact: true 
-      });
-      
+      queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
       toast({
         title: 'Designers atualizados',
         description: 'Todas as artes foram atribuídas ao usuário administrador como designer.',
@@ -225,53 +164,8 @@ const ArtsList = () => {
     // O valor enviado ao backend deve ser o novo valor desejado
     // Quando currentValue é true, queremos tornar invisible (false)
     // Quando currentValue é false, queremos tornar visible (true)
-    const newVisibilityValue = !currentValue;
-    
-    console.log(`[TOGGLE_VISIBILITY] Alterando visibilidade da arte ${id}: de ${currentValue ? 'visível' : 'oculta'} para ${newVisibilityValue ? 'visível' : 'oculta'}`);
-    
-    // Uso direto para debug de valores e fluxo
-    const timestamp = Date.now();
-    
-    fetch(`/api/admin/artes/${id}?_t=${timestamp}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        isVisible: newVisibilityValue,
-        _timestamp: timestamp
-      })
-    })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Erro ao atualizar visibilidade');
-      }
-      return response.json();
-    })
-    .then(data => {
-      console.log('[TOGGLE_VISIBILITY] Resposta do servidor:', data);
-      
-      // Atualizar o cache
-      queryClient.invalidateQueries({ queryKey: ['/api/artes'] });
-      queryClient.refetchQueries({ 
-        queryKey: ['/api/artes', { page, limit, ...filter }],
-        exact: true 
-      });
-      
-      toast({
-        title: 'Visibilidade atualizada',
-        description: `A arte foi ${newVisibilityValue ? 'tornada visível' : 'ocultada'} com sucesso.`,
-        variant: 'default',
-      });
-    })
-    .catch(error => {
-      console.error('[TOGGLE_VISIBILITY] Erro:', error);
-      toast({
-        title: 'Erro',
-        description: error.message || 'Ocorreu um erro ao atualizar a visibilidade.',
-        variant: 'destructive',
-      });
-    });
+    console.log(`Alterando visibilidade da arte ${id}: de ${currentValue ? 'visível' : 'oculta'} para ${!currentValue ? 'visível' : 'oculta'}`);
+    toggleVisibilityMutation.mutate({ id, isVisible: !currentValue });
   };
 
   const formatDate = (dateString: string | Date) => {
@@ -288,49 +182,9 @@ const ArtsList = () => {
     setIsFormOpen(true);
   };
   
-  const handleEdit = async (art: Art) => {
+  const handleEdit = (art: Art) => {
     console.log('Editando arte:', art);
     console.log('Grupo ID da arte:', art.groupId);
-    
-    // Se a arte tiver um groupId, precisamos verificar e carregar as artes do grupo
-    if (art.groupId) {
-      try {
-        console.log(`Verificando grupo para arte ${art.id} usando endpoint check-group`);
-        
-        // Verificar o groupId e obter todas as artes do grupo
-        // CORRIGIDO: Mudando de 'artes' para 'arts' para corresponder com o backend
-        const checkResponse = await apiRequest('GET', `/api/admin/arts/${art.id}/check-group`);
-        const checkData = await checkResponse.json();
-        
-        if (checkData.groupId) {
-          // Se confirmado que existe um grupo, buscamos todas as artes do grupo
-          console.log(`Buscando artes do grupo: ${checkData.groupId}`);
-          // CORRIGIDO: Mudando de 'artes' para 'arts' para corresponder com o backend
-          const groupResponse = await apiRequest('GET', `/api/admin/arts/group/${checkData.groupId}`);
-          const groupData = await groupResponse.json();
-          
-          if (groupData && groupData.arts && groupData.arts.length > 0) {
-            console.log(`Grupo encontrado com ${groupData.arts.length} artes`);
-            
-            // Passamos a arte original para manter o foco no formato que foi clicado
-            // mas o dialog irá mostrar todas as artes do grupo
-            setEditingArt({
-              ...art,
-              groupArts: groupData.arts,
-              // Definimos o formato selecionado inicialmente baseado na arte que foi clicada
-              initialFormat: art.format
-            });
-            setIsFormOpen(true);
-            return;
-          }
-        }
-      } catch (error) {
-        console.error('Erro ao verificar ou carregar artes do grupo:', error);
-        // Em caso de erro, continuamos com a edição normal da arte
-      }
-    }
-    
-    // Caso não tenha grupo ou ocorra algum erro, editamos apenas a arte individual
     setEditingArt(art);
     setIsFormOpen(true);
   };

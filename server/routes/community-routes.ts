@@ -2359,55 +2359,12 @@ router.delete('/api/community/posts/:id', async (req, res) => {
       return res.status(403).json({ message: 'Apenas administradores podem excluir posts na comunidade' });
     }
     
-    // Iniciar uma transação para excluir o post e seus registros relacionados
-    console.log('- Iniciando transação para excluir o post e seus registros relacionados');
+    // Excluir post
+    await db
+      .delete(communityPosts)
+      .where(eq(communityPosts.id, postId));
     
-    try {
-      // 1. Excluir comentários do post
-      console.log('- Excluindo comentários do post');
-      await db
-        .delete(communityComments)
-        .where(eq(communityComments.postId, postId));
-      
-      // 2. Excluir comentários likes do post
-      // Não precisamos buscar os comentários, pois já os excluímos no passo anterior
-      // Vamos direto excluir todos os likes de comentários deste post
-      console.log('- Excluindo likes de comentários do post - usando JOIN em vez de inArray');
-      await db.execute(sql`
-        DELETE FROM "communityCommentLikes"
-        WHERE "commentId" IN (
-          SELECT id FROM "communityComments" 
-          WHERE "postId" = ${postId}
-        )
-      `);
-      
-      // 3. Excluir likes do post
-      console.log('- Excluindo likes do post');
-      await db
-        .delete(communityLikes)
-        .where(eq(communityLikes.postId, postId));
-      
-      // 4. Excluir saves do post
-      console.log('- Excluindo saves do post');
-      await db
-        .delete(communitySaves)
-        .where(eq(communitySaves.postId, postId));
-      
-      // 5. Finalmente excluir o post
-      console.log('- Excluindo o post');
-      await db
-        .delete(communityPosts)
-        .where(eq(communityPosts.id, postId));
-      
-      console.log('- Post e registros relacionados excluídos com sucesso');
-      
-      // 6. Adicionar cabeçalho especial para indicar que o post foi excluído
-      //    Isso ajuda o service worker a não cachear esta resposta
-      res.setHeader('X-Post-Deleted', 'true');
-    } catch (innerError) {
-      console.error('Erro durante a transação de exclusão:', innerError);
-      throw new Error(`Erro ao excluir dados relacionados: ${innerError instanceof Error ? innerError.message : String(innerError)}`);
-    }
+    console.log('- Post excluído com sucesso');
     
     return res.json({
       message: 'Post excluído com sucesso'

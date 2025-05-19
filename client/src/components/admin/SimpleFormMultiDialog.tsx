@@ -97,7 +97,6 @@ export default function SimpleFormMultiDialog({
   const [uploadError, setUploadError] = useState<Record<string, string>>({});
   const [formatsComplete, setFormatsComplete] = useState<Record<string, boolean>>({});
   const [uploadAllComplete, setUploadAllComplete] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Consultas para obter dados
   const { data: categories = [], isLoading: isLoadingCategories } = useQuery({
@@ -138,77 +137,8 @@ export default function SimpleFormMultiDialog({
       console.log(`Grupo da arte: ${editingArt.groupId}`);
       console.log(`Tipo de dados do groupId: ${typeof editingArt.groupId}`);
       
-      // Verificar se temos groupArts (artes agrupadas) no objeto editingArt
-      if (editingArt.groupArts && Array.isArray(editingArt.groupArts) && editingArt.groupArts.length > 0) {
-        console.log(`Arte pertence a um grupo com ${editingArt.groupArts.length} formatos`);
-        console.log("Artes do grupo:", editingArt.groupArts);
-        
-        // Verificar se temos um formato inicial definido
-        if (editingArt.initialFormat) {
-          console.log(`Formato inicial a ser exibido: ${editingArt.initialFormat}`);
-          
-          // Definir a aba inicial com base no formato que foi clicado
-          setCurrentTab(editingArt.initialFormat);
-        }
-        
-        // Como já recebemos as artes agrupadas do ArtsList, vamos processá-las diretamente
-        const groupArts = editingArt.groupArts;
-        
-        // Extrair os formatos das artes do grupo
-        const formatSlugs = groupArts.map(art => art.format);
-        console.log(`Formatos encontrados: ${formatSlugs.join(', ')}`);
-        
-        step1Form.setValue('selectedFormats', formatSlugs);
-        
-        // Usar o primeiro item do grupo para as informações globais
-        const primeiraArte = groupArts[0];
-        step1Form.setValue('categoryId', primeiraArte.categoryId?.toString() || '');
-        step1Form.setValue('globalFileType', primeiraArte.fileType || 'canva');
-        step1Form.setValue('isPremium', primeiraArte.isPremium || false);
-        step1Form.setValue('globalTitle', primeiraArte.title || '');
-        step1Form.setValue('globalDescription', primeiraArte.description || '');
-        
-        // Preencher os detalhes de cada formato
-        const initialDetails: Record<string, FormatValues> = {};
-        groupArts.forEach(art => {
-          initialDetails[art.format] = {
-            format: art.format,
-            fileType: art.fileType || 'canva',
-            title: art.title || '',
-            description: art.description || '',
-            imageUrl: art.imageUrl || '',
-            previewUrl: art.previewUrl || '',
-            editUrl: art.editUrl || '',
-          };
-          console.log(`Formato ${art.format} carregado: ${art.title}`);
-        });
-        
-        setFormatDetails(initialDetails);
-        
-        // Verificar quais formatos estão completos
-        const updatedFormatsComplete: Record<string, boolean> = {};
-        Object.entries(initialDetails).forEach(([formatSlug, details]) => {
-          const isComplete = !!(details.title && details.editUrl && details.imageUrl);
-          updatedFormatsComplete[formatSlug] = isComplete;
-        });
-        setFormatsComplete(updatedFormatsComplete);
-        
-        // Guardar as imagens
-        const imageMap: Record<string, string> = {};
-        groupArts.forEach(art => {
-          imageMap[art.format] = art.imageUrl || '';
-        });
-        setImages(imageMap);
-        
-        // Avançar direto para a etapa 2 (upload) depois de carregar os dados
-        console.log(`Avançando para etapa 2 após carregar dados do grupo`);
-        setTimeout(() => {
-          setStep(2);
-        }, 100);
-        
-        // Não prosseguir com a verificação HTTP já que temos todos os dados
-        return;
-      }
+      // Log para ajudar na depuração da API recém-implementada
+      console.log("DEPURAÇÃO: Nova API de grupo implementada - testando carregamento de artes do grupo");
       
       // Atualizar o formulário da etapa 1 com os dados da arte
       step1Form.setValue('categoryId', editingArt.categoryId?.toString() || '');
@@ -231,8 +161,7 @@ export default function SimpleFormMultiDialog({
       console.log(`Verificando grupo para arte ${artId} usando endpoint check-group`);
       
       // Tentar buscar informações do grupo para esta arte, mesmo se o groupId não estiver no objeto
-      // CORRIGIDO: Mudando de 'artes' para 'arts' para corresponder com o backend
-      apiRequest('GET', `/api/admin/arts/${artId}/check-group`)
+      apiRequest('GET', `/api/admin/artes/${artId}/check-group`)
         .then(res => {
           console.log(`Resposta da verificação de grupo recebida, status: ${res.status}`);
           return res.json();
@@ -245,8 +174,7 @@ export default function SimpleFormMultiDialog({
             // Agora temos o groupId confirmado, buscar todas as artes do grupo
             console.log(`Buscando artes do grupo: ${groupId}`);
             
-            // CORRIGIDO: Mudando de 'artes' para 'arts' para corresponder com o backend
-            return apiRequest('GET', `/api/admin/arts/group/${groupId}`)
+            return apiRequest('GET', `/api/admin/artes/group/${groupId}`)
               .then(res => {
                 console.log(`Resposta recebida, status: ${res.status}`);
                 return res.json();
@@ -591,8 +519,6 @@ export default function SimpleFormMultiDialog({
       });
       return;
     }
-    
-    setIsSubmitting(true);
 
     try {
       // Converter dados para o formato esperado pela API
@@ -611,136 +537,48 @@ export default function SimpleFormMultiDialog({
       // Verificar se estamos editando ou criando
       if (isEditing && editingArt) {
         // Adicionar ID da arte existente para edição
-        // Verificar primeiro se temos groupArts (modo de edição de grupo)
-        if (editingArt.groupArts && Array.isArray(editingArt.groupArts) && editingArt.groupArts.length > 0) {
-          // Se temos groupArts do ArtsList, usamos as informações do grupo diretamente
-          
-          // Obter o groupId a partir de qualquer uma das artes do grupo
-          const groupId = editingArt.groupArts[0].groupId;
-          
-          if (groupId) {
-            // Atualizar os dados formatados com o groupId
-            formattedData.groupId = groupId;
-            console.log(`Atualizando grupo de artes a partir de groupArts: ${groupId}`);
-            try {
-              response = await apiRequest('PUT', `/api/admin/arts/group/${groupId}`, formattedData);
-              const responseText = await response.clone().text();
-              console.log('Resposta da API (grupo existente):', responseText);
-            } catch (error) {
-              console.error('Erro ao atualizar grupo existente:', error);
-              toast({
-                title: "Erro na atualização",
-                description: `Falha ao atualizar o grupo de artes: ${error.message}`,
-                variant: "destructive",
-              });
-              setIsSubmitting(false);
-              return;
-            }
-            return; // Não continuar com o fluxo original
-          }
-        }
-        
-        // Verificação original para compatibilidade com código legado
         if (editingArt.groupId) {
           // Se tem groupId, atualizar o grupo inteiro
           formattedData.groupId = editingArt.groupId;
-          console.log(`Atualizando grupo de artes: ${editingArt.groupId}`);
-          try {
-            response = await apiRequest('PUT', `/api/admin/arts/group/${editingArt.groupId}`, formattedData);
-            const responseText = await response.clone().text();
-            console.log('Resposta da API (grupo existente):', responseText);
-          } catch (error) {
-            console.error('Erro ao atualizar grupo existente:', error);
-            toast({
-              title: "Erro na atualização",
-              description: `Falha ao atualizar o grupo de artes: ${error.message}`,
-              variant: "destructive",
-            });
-            setIsSubmitting(false);
-            return;
-          }
+          response = await apiRequest('PUT', `/api/admin/arts/group/${editingArt.groupId}`, formattedData);
         } else {
-          // Se não tem groupId e estamos editando uma arte única, criar um novo grupo
-          console.log(`Criando novo grupo para arte individual: ${editingArt.id}`);
+          // Se não tem groupId, mas estamos adicionando múltiplos formatos a uma arte existente
           formattedData.artId = editingArt.id;
-          
-          // Adicionar logs detalhados dos dados enviados
-          console.log('Dados formatados enviados para a API:', JSON.stringify(formattedData, null, 2));
-          
-          try {
-            // CORRIGIDO: Usamos POST para criar um novo grupo 
-            response = await apiRequest('POST', `/api/admin/arts/multi`, formattedData);
-            const responseText = await response.clone().text();
-            console.log('Resposta da API (novo grupo):', responseText);
-          } catch (error) {
-            console.error('Erro ao criar novo grupo:', error);
-            toast({
-              title: "Erro na criação",
-              description: `Falha ao criar o grupo de artes: ${error.message}`,
-              variant: "destructive",
-            });
-            setIsSubmitting(false);
-            return;
-          }
+          response = await apiRequest('PUT', `/api/admin/arts/multi/${editingArt.id}`, formattedData);
         }
         successMessage = "Arte atualizada com sucesso";
       } else {
         // Criar nova arte multi-formato
-        console.log("Criando nova arte multi-formato");
-        try {
-          response = await apiRequest('POST', '/api/admin/arts/multi', formattedData);
-          const responseText = await response.clone().text();
-          console.log('Resposta da API (criação):', responseText);
-        } catch (error) {
-          console.error('Erro ao criar nova arte multi-formato:', error);
-          toast({
-            title: "Erro na criação",
-            description: `Falha ao criar a arte: ${error.message}`,
-            variant: "destructive",
-          });
-          setIsSubmitting(false);
-          return;
-        }
+        response = await apiRequest('POST', '/api/admin/arts/multi', formattedData);
         successMessage = "Arte criada com sucesso";
       }
 
-      try {
-        const result = await response.json();
-        
-        toast({
-          title: successMessage,
-          description: isEditing 
-            ? "As alterações foram salvas."
-            : "A arte com múltiplos formatos foi criada.",
-        });
+      const result = await response.json();
 
-        // Resetar o formulário
-        step1Form.reset({
-          categoryId: '',
-          globalFileType: 'canva',
-          isPremium: true,
-          globalTitle: '',
-          globalDescription: '',
-          selectedFormats: []
-        });
-        
-        setFormatDetails({});
-        setImages({});
-        setStep(1);
-        onClose();
-        
-        // Invalidar a consulta para atualizar a lista de artes
-        queryClient.invalidateQueries({ queryKey: ['/api/artes'] });
-      } catch (error) {
-        console.error('Erro ao processar resposta JSON:', error);
-        toast({
-          title: "Erro no processamento",
-          description: "A operação foi concluída mas ocorreu um erro ao processar a resposta.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsSubmitting(false);
-      }
+      toast({
+        title: successMessage,
+        description: isEditing 
+          ? "As alterações foram salvas."
+          : "A arte com múltiplos formatos foi criada.",
+      });
+
+      // Resetar o formulário
+      step1Form.reset({
+        categoryId: '',
+        globalFileType: 'canva',
+        isPremium: true,
+        globalTitle: '',
+        globalDescription: '',
+        selectedFormats: []
+      });
+      
+      setFormatDetails({});
+      setImages({});
+      setStep(1);
+      onClose();
+      
+      // Invalidar a consulta para atualizar a lista de artes
+      queryClient.invalidateQueries({ queryKey: ['/api/arts'] });
     } catch (error: any) {
       toast({
         title: "Erro ao salvar",

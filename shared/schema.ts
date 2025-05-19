@@ -519,8 +519,6 @@ export const insertSiteSettingsSchema = createInsertSchema(siteSettings).omit({
 export type SiteSettings = typeof siteSettings.$inferSelect;
 export type InsertSiteSettings = z.infer<typeof insertSiteSettingsSchema>;
 
-// Nota: A configuração do PWA já está definida no final do arquivo
-
 // Tabela para armazenar códigos de verificação de e-mail
 export const emailVerificationCodes = pgTable("emailVerificationCodes", {
   id: serial("id").primaryKey(),
@@ -848,52 +846,6 @@ export const popupsRelations = relations(popups, ({ one, many }) => ({
   }),
   views: many(popupViews),
 }));
-
-// Schema para mapeamento de produtos da Hotmart
-export const hotmartProductMappings = pgTable("hotmartProductMappings", {
-  id: serial("id").primaryKey(),
-  productId: text("productId").notNull(), // ID do produto na Hotmart
-  offerId: text("offerId").notNull().unique(), // ID da oferta na Hotmart
-  productName: text("productName").notNull(), // Nome do produto/oferta na Hotmart (informativo)
-  planType: text("planType").notNull(), // 'premium', 'pro', 'basic', etc. no DesignAuto
-  durationDays: integer("durationDays"), // Número de dias de acesso (nulo se for vitalício)
-  isLifetime: boolean("isLifetime").default(false), // Indica se o acesso é vitalício
-  isActive: boolean("isActive").default(true), // Se este mapeamento está ativo
-  createdAt: timestamp("createdAt").notNull().defaultNow(),
-  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
-});
-
-export const insertHotmartProductMappingSchema = createInsertSchema(hotmartProductMappings).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export type HotmartProductMapping = typeof hotmartProductMappings.$inferSelect;
-export type InsertHotmartProductMapping = z.infer<typeof insertHotmartProductMappingSchema>;
-
-// Mapeamento de produtos Doppus para planos no DesignAuto
-export const doppusProductMappings = pgTable("doppusProductMappings", {
-  id: serial("id").primaryKey(),
-  productId: text("productId").notNull(), // ID do produto na Doppus
-  planId: text("planId").notNull().unique(), // ID do plano na Doppus
-  productName: text("productName").notNull(), // Nome do produto/plano na Doppus (informativo)
-  planType: text("planType").notNull(), // 'premium_30', 'premium_180', 'premium_365', 'premium_lifetime' no DesignAuto
-  durationDays: integer("durationDays"), // Número de dias de acesso (nulo se for vitalício)
-  isLifetime: boolean("isLifetime").default(false), // Indica se o acesso é vitalício
-  isActive: boolean("isActive").default(true), // Se este mapeamento está ativo
-  createdAt: timestamp("createdAt").notNull().defaultNow(),
-  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
-});
-
-export const insertDoppusProductMappingSchema = createInsertSchema(doppusProductMappings).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export type DoppusProductMapping = typeof doppusProductMappings.$inferSelect;
-export type InsertDoppusProductMapping = z.infer<typeof insertDoppusProductMappingSchema>;
 
 export const popupViewsRelations = relations(popupViews, ({ one }) => ({
   popup: one(popups, {
@@ -1286,136 +1238,7 @@ export const insertReportSchema = createInsertSchema(reports).omit({
   isResolved: true,
 });
 
-// Tabela para configurações do PWA
-export const appConfig = pgTable("app_config", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull().default("DesignAuto"),
-  short_name: text("short_name").notNull().default("DesignAuto"),
-  theme_color: text("theme_color").notNull().default("#1e40af"),
-  background_color: text("background_color").notNull().default("#ffffff"),
-  icon_192: text("icon_192").notNull().default("/icons/icon-192.png"),
-  icon_512: text("icon_512").notNull().default("/icons/icon-512.png"),
-  created_at: timestamp("created_at").notNull().defaultNow(),
-  updated_at: timestamp("updated_at").notNull().defaultNow(),
-  updated_by: integer("updated_by").references(() => users.id),
-});
-
-export const appConfigRelations = relations(appConfig, ({ one }) => ({
-  updatedByUser: one(users, {
-    fields: [appConfig.updated_by],
-    references: [users.id],
-  }),
-}));
-
-export const insertAppConfigSchema = createInsertSchema(appConfig).omit({
-  id: true,
-  created_at: true,
-  updated_at: true,
-});
-
-export type AppConfig = typeof appConfig.$inferSelect;
-export type InsertAppConfig = z.infer<typeof insertAppConfigSchema>;
-
 export type ReportType = typeof reportTypes.$inferSelect;
 export type InsertReportType = z.infer<typeof insertReportTypeSchema>;
 export type Report = typeof reports.$inferSelect;
 export type InsertReport = z.infer<typeof insertReportSchema>;
-
-// Schema para logs de webhooks
-export const webhookLogs = pgTable("webhookLogs", {
-  id: serial("id").primaryKey(),
-  eventType: text("eventType").notNull(),
-  payloadData: text("payloadData"),
-  status: text("status").notNull(),
-  errorMessage: text("errorMessage"),
-  userId: integer("userId").references(() => users.id),
-  sourceIp: text("sourceIp"),
-  source: text("source").default("hotmart"), // 'hotmart', 'doppus', 'manual', 'outro'
-  retryCount: integer("retryCount").default(0),
-  transactionId: text("transactionId"),
-  email: text("email"), // Email associado ao webhook (da payload ou do usuário)
-  createdAt: timestamp("createdAt").notNull().defaultNow(),
-  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
-});
-
-export const insertWebhookLogSchema = createInsertSchema(webhookLogs).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export type WebhookLog = typeof webhookLogs.$inferSelect;
-export type InsertWebhookLog = z.infer<typeof insertWebhookLogSchema>;
-
-// Schema para configurações de assinaturas
-export const subscriptionSettings = pgTable("subscriptionSettings", {
-  id: serial("id").primaryKey(),
-  // Campos para integração da Hotmart
-  webhookUrl: text("webhookUrl"),
-  webhookSecretKey: text("webhookSecretKey"),
-  hotmartEnvironment: text("hotmartEnvironment").default("sandbox").notNull(),
-  hotmartClientId: text("hotmartClientId"),
-  hotmartClientSecret: text("hotmartClientSecret"),
-  hotmartBasicPlanId: text("hotmartBasicPlanId"),
-  hotmartProPlanId: text("hotmartProPlanId"),
-  hotmartWebhookUrl: text("hotmartWebhookUrl"),
-  
-  // Campos para integração da Doppus
-  doppusClientId: text("doppusClientId"),
-  doppusClientSecret: text("doppusClientSecret"),
-  doppusSecretKey: text("doppusSecretKey"),
-  doppusBasicPlanId: text("doppusBasicPlanId"),
-  doppusProPlanId: text("doppusProPlanId"),
-  doppusWebhookUrl: text("doppusWebhookUrl"),
-  
-  // Campos para configurações de comportamento
-  defaultSubscriptionDuration: integer("defaultSubscriptionDuration").default(12).notNull(),
-  graceHoursAfterExpiration: integer("graceHoursAfterExpiration").default(48).notNull(),
-  autoDowngradeAfterExpiration: boolean("autoDowngradeAfterExpiration").default(true).notNull(),
-  autoMapProductCodes: boolean("autoMapProductCodes").default(true).notNull(),
-  
-  // Campos para configurações de notificações
-  sendExpirationWarningDays: integer("sendExpirationWarningDays").default(3).notNull(),
-  sendExpirationWarningEmails: boolean("sendExpirationWarningEmails").default(true).notNull(),
-  notificationEmailSubject: text("notificationEmailSubject"),
-  notificationEmailTemplate: text("notificationEmailTemplate"),
-  
-  // Campos de controle
-  createdAt: timestamp("createdAt").notNull().defaultNow(),
-  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
-});
-
-export const insertSubscriptionSettingsSchema = createInsertSchema(subscriptionSettings).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export type SubscriptionSetting = typeof subscriptionSettings.$inferSelect;
-export type InsertSubscriptionSetting = z.infer<typeof insertSubscriptionSettingsSchema>;
-
-// Interfaces para estatísticas e tendências de assinaturas
-export interface SubscriptionTrendData {
-  date: string;
-  total: number;
-  active: number;
-  expired: number;
-  growth: number;
-}
-
-export interface SubscriptionStats {
-  total: number;
-  active: number;
-  expired: number;
-  trial: number;
-  expiringIn7Days: number;
-  expiringIn30Days: number;
-  byOrigin: Record<string, number>;
-  // Métricas financeiras
-  mrr: number;  // Receita Mensal Recorrente
-  averageValue: number;  // Valor médio por assinatura
-  annualRevenue: number;  // Projeção de receita anual
-  churnRate: number;  // Taxa de cancelamento
-  averageRetention: number;  // Tempo médio de permanência (dias)
-  averageLTV: number;  // Lifetime Value (valor médio ao longo da vida)
-}

@@ -97,15 +97,11 @@ const defaultFormValues: PopupFormValues = {
 
 const availablePages = [
   { id: 'home', name: 'Página inicial' },
-  { id: 'artes', name: 'Galeria de artes' },
-  { id: 'categorias', name: 'Categorias' },
+  { id: 'arts', name: 'Galeria de artes' },
+  { id: 'categories', name: 'Categorias' },
   { id: 'designers', name: 'Designers' },
   { id: 'planos', name: 'Planos' },
-  { id: 'videoaulas', name: 'Videoaulas' },
-  { id: 'ferramentas', name: 'Ferramentas' },
-  { id: 'comunidade', name: 'Comunidade' },
-  { id: 'profile', name: 'Perfil do usuário' },
-  { id: 'painel', name: 'Painel do usuário' }
+  { id: 'videoaulas', name: 'Videoaulas' }
 ];
 
 const availableRoles = [
