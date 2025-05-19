@@ -154,6 +154,49 @@ router.get('/api/admin/arts/:id/check-group', isAuthenticated, async (req: Reque
   }
 });
 
+// Rota para buscar todas as artes de um grupo específico
+router.get('/api/admin/arts/group/:groupId', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const groupId = req.params.groupId;
+    
+    if (!groupId) {
+      return res.status(400).json({
+        message: 'ID do grupo não fornecido'
+      });
+    }
+    
+    console.log(`Buscando artes do grupo ID: ${groupId}`);
+    
+    // Buscar todas as artes do grupo ordenadas por formato
+    const result = await db.execute(sql`
+      SELECT id, title, description, format, "imageUrl", "editUrl", "fileType", "categoryId", "isPremium", "isVisible", "previewUrl"
+      FROM arts 
+      WHERE "groupId" = ${groupId}
+      ORDER BY format
+    `);
+    
+    // Se não encontrou nenhuma arte, retornar array vazio
+    if (!result.rows || result.rows.length === 0) {
+      console.log(`Nenhuma arte encontrada para o grupo ${groupId}`);
+      return res.json({ arts: [] });
+    }
+    
+    console.log(`Encontradas ${result.rows.length} artes no grupo ${groupId}`);
+    
+    // Retornar as artes encontradas
+    return res.json({
+      groupId: groupId,
+      totalArts: result.rows.length,
+      arts: result.rows
+    });
+  } catch (error) {
+    console.error(`Erro ao buscar artes do grupo ${req.params.groupId}:`, error);
+    return res.status(500).json({
+      message: 'Erro ao buscar artes do grupo'
+    });
+  }
+});
+
 // Rota simplificada para editar uma arte multi-formato
 router.put('/api/admin/arts/multi/:id', isAuthenticated, async (req: Request, res: Response) => {
   try {
