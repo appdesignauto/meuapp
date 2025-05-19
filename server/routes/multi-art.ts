@@ -79,7 +79,7 @@ router.put('/api/admin/arts/multi/:id', isAuthenticated, async (req: Request, re
     
     const primaryFormat = artGroupData.formats[0];
     
-    // Atualizar a arte diretamente com SQL - incluindo a coluna description
+    // Atualizar a arte principal diretamente com SQL - incluindo a coluna description
     await db.execute(sql`
       UPDATE arts 
       SET 
@@ -93,15 +93,110 @@ router.put('/api/admin/arts/multi/:id', isAuthenticated, async (req: Request, re
       WHERE id = ${id}
     `);
     
+    // Se for uma edição de grupo existente, buscar o groupId da arte
+    const artResult = await db.execute(sql`
+      SELECT "groupId" FROM arts WHERE id = ${id}
+    `);
+    
+    const groupId = artResult.rows[0]?.groupId || uuidv4();
+    
+    // Array para armazenar os IDs das artes atualizadas
+    const updatedArts = [{
+      id: id,
+      format: primaryFormat.format,
+      title: primaryFormat.title
+    }];
+    
+    // Processar os formatos adicionais (se houver mais de um)
+    if (artGroupData.formats.length > 1) {
+      // Aplicar as atualizações para cada formato adicional
+      for (let i = 1; i < artGroupData.formats.length; i++) {
+        const format = artGroupData.formats[i];
+        
+        // Verificar se já existe uma arte neste formato para este grupo
+        const existingFormatArt = await db.execute(sql`
+          SELECT id FROM arts 
+          WHERE "groupId" = ${groupId} AND format = ${format.format} AND id != ${id}
+        `);
+        
+        if (existingFormatArt.rows.length > 0) {
+          // Se existir, atualizar
+          const formatArtId = existingFormatArt.rows[0].id;
+          
+          await db.execute(sql`
+            UPDATE arts 
+            SET 
+              title = ${format.title},
+              description = ${format.description || ''},
+              "imageUrl" = ${format.imageUrl},
+              "editUrl" = ${format.editUrl || ''},
+              "categoryId" = ${artGroupData.categoryId},
+              "isPremium" = ${artGroupData.isPremium},
+              "fileType" = ${format.fileType}
+            WHERE id = ${formatArtId}
+          `);
+          
+          updatedArts.push({
+            id: formatArtId,
+            format: format.format,
+            title: format.title
+          });
+        } else {
+          // Se não existir, criar novo
+          const result = await db.execute(sql`
+            INSERT INTO arts (
+              title, 
+              description,
+              "imageUrl", 
+              format, 
+              "fileType", 
+              "editUrl", 
+              "categoryId",
+              "isPremium",
+              "isVisible",
+              "groupId",
+              designerid
+            ) 
+            VALUES (
+              ${format.title},
+              ${format.description || ''},
+              ${format.imageUrl},
+              ${format.format},
+              ${format.fileType},
+              ${format.editUrl || ''},
+              ${artGroupData.categoryId},
+              ${artGroupData.isPremium},
+              TRUE,
+              ${groupId},
+              ${art.designerid || 1}
+            )
+            RETURNING id
+          `);
+          
+          if (result.rows.length > 0) {
+            const newArtId = result.rows[0].id;
+            updatedArts.push({
+              id: newArtId,
+              format: format.format,
+              title: format.title
+            });
+          }
+        }
+      }
+    }
+    
+    // Atualizar o groupId da arte principal, se necessário
+    if (!art.groupId) {
+      await db.execute(sql`
+        UPDATE arts SET "groupId" = ${groupId} WHERE id = ${id}
+      `);
+    }
+    
     // Responder com sucesso
     return res.json({
       message: 'Arte atualizada com sucesso',
       id: id,
-      updated: [{
-        id: id,
-        format: primaryFormat.format,
-        title: primaryFormat.title
-      }]
+      updated: updatedArts
     });
   } catch (error) {
     console.error('Erro ao atualizar arte multi-formato:', error);
