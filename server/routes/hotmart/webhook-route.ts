@@ -11,10 +11,19 @@ const router = Router();
 router.post('/webhook-hotmart', async (req: Request, res: Response) => {
   try {
     console.log('===================== WEBHOOK HOTMART RECEBIDO =====================');
-    console.log('Payload:', JSON.stringify(req.body, null, 2));
+    
+    // Criar um arquivo de teste imediato para verificar se a rota está sendo acessada
+    try {
+      fs.writeFileSync('webhook-test.txt', `Webhook recebido em ${new Date().toISOString()}\n`);
+    } catch (e) {
+      console.error('Erro ao criar arquivo de teste:', e);
+    }
+    
+    // Tentar extrair dados do payload
+    const payload = req.body || {};
+    console.log('Payload recebido:', JSON.stringify(payload, null, 2));
     
     // Extrair dados básicos do webhook para logging
-    const payload = req.body;
     const eventType = payload.event || 'unknown';
     const transactionCode = payload.data?.purchase?.transaction || 'unknown';
     
@@ -23,14 +32,36 @@ router.post('/webhook-hotmart', async (req: Request, res: Response) => {
     console.log(`Transação: ${transactionCode}`);
     console.log(`Hora: ${new Date().toISOString()}`);
     
-    // Salvar webhook para análise posterior (com nome baseado no timestamp)
+    // Salvar webhook em vários formatos/locais para garantir que pelo menos um funcione
     try {
+      // Tentar salvar no diretório atual
       const timestamp = new Date().toISOString().replace(/:/g, '-');
+      const logData = {
+        timestamp: new Date().toISOString(),
+        headers: req.headers,
+        body: payload
+      };
+      
+      // Método 1: No diretório raiz
       fs.writeFileSync(
         `webhook-${timestamp}.json`, 
-        JSON.stringify(payload, null, 2)
+        JSON.stringify(logData, null, 2)
       );
-      console.log(`Webhook salvo em webhook-${timestamp}.json`);
+      
+      // Método 2: No diretório do servidor
+      const serverDir = path.join(__dirname, '..', '..', '..');
+      fs.writeFileSync(
+        path.join(serverDir, `webhook-log-${timestamp}.json`), 
+        JSON.stringify(logData, null, 2)
+      );
+      
+      // Método 3: No diretório temporário do sistema
+      fs.appendFileSync(
+        'webhook-log.txt',
+        `\n--- WEBHOOK ${timestamp} ---\n${JSON.stringify(logData, null, 2)}\n-----------------------\n`
+      );
+      
+      console.log(`Webhook salvo em vários arquivos de log`);
     } catch (fileError) {
       console.error('Erro ao salvar arquivo de log do webhook:', fileError);
     }
@@ -38,7 +69,7 @@ router.post('/webhook-hotmart', async (req: Request, res: Response) => {
     // Processamento básico do webhook para eventos de compra
     let processingResult = {
       success: false,
-      message: 'Evento não processado'
+      message: `Evento ${eventType} recebido mas não processado completamente`
     };
     
     // Processar evento de compra aprovada
@@ -103,11 +134,23 @@ router.post('/webhook-hotmart', async (req: Request, res: Response) => {
     res.status(200).json({ 
       success: true, 
       message: 'Webhook recebido e processado',
+      eventType,
+      transactionCode,
       processingResult
     });
     
   } catch (error) {
     console.error('Erro ao processar webhook:', error);
+    
+    // Tentar salvar informações do erro
+    try {
+      fs.appendFileSync(
+        'webhook-errors.txt',
+        `\n--- ERRO ${new Date().toISOString()} ---\n${error}\n${error instanceof Error ? error.stack : ''}\n-----------------------\n`
+      );
+    } catch (e) {
+      console.error('Não foi possível salvar log de erro:', e);
+    }
     
     // Mesmo em caso de erro, retornar 200 para a Hotmart não reenviar
     res.status(200).json({ 
