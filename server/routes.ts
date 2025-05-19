@@ -4649,8 +4649,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Rota para testar verificação de assinaturas expiradas
   
+  // Rota direta de teste para o webhook da Hotmart
+  app.post("/api/webhook-hotmart", (req, res) => {
+    console.log("WEBHOOK HOTMART DIRETO - BODY:", JSON.stringify(req.body, null, 2));
+    console.log("WEBHOOK HOTMART DIRETO - HEADERS:", JSON.stringify(req.headers, null, 2));
+    
+    res.status(200).json({
+      success: true,
+      message: "Webhook direto recebido com sucesso",
+      receivedData: req.body
+    });
+  });
+  
   // Registrar a rota para receber webhooks da Hotmart (para análise da estrutura dos dados)
-  app.use('/api', hotmartWebhookRouter);
+  // app.use('/api', hotmartWebhookRouter);
   app.post("/api/test/expireSubscriptions", async (req, res) => {
     try {
       const result = await SubscriptionService.checkExpiredSubscriptions();
