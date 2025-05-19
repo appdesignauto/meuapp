@@ -18,8 +18,6 @@ import path from "path";
 import fs from "fs";
 // Importações adicionais para o upload de imagem
 import uploadRouter from "./routes/upload-image";
-// Importação para webhook da Hotmart desativada - implementamos diretamente
-// import hotmartWebhookRouter from "./routes/hotmart/webhook-route";
 // Usando apenas Supabase Storage para armazenamento de imagens
 import { supabaseStorageService } from "./services/supabase-storage";
 import { SubscriptionService } from "./services/subscription-service";
@@ -72,7 +70,6 @@ import { convertImageUrlsMiddleware } from './routes/image-url-proxy'; // Middle
 import imageProxyTestRouter from './routes/image-proxy-test'; // Rota para testar o proxy de imagens
 import reportsRouter from './routes/reports'; // Rotas para o sistema de denúncias (original)
 import reportsV2Router from './routes/reports-v2'; // Rotas para o sistema de denúncias (reescrito)
-import webhookQueueRouter from './routes/hotmart/webhook-queue'; // Rota para receber webhooks da Hotmart de forma assíncrona
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Aplicar middleware global para converter URLs de imagens para todas as respostas JSON
@@ -4648,54 +4645,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Rota para testar verificação de assinaturas expiradas
-  
-  // Rota para receber webhooks da Hotmart e processar de forma assíncrona
-  app.post("/api/webhook-hotmart", async (req, res) => {
-    try {
-      console.log("WEBHOOK HOTMART RECEBIDO - BODY:", JSON.stringify(req.body, null, 2));
-      
-      // Extrair dados relevantes do webhook
-      const eventType = req.body?.event || 'unknown';
-      const transactionCode = req.body?.data?.purchase?.transaction || 
-                             req.body?.data?.purchase?.transaction_code || 'unknown';
-      const purchaseData = req.body?.data?.purchase || {};
-      
-      // Importar dependências necessárias
-      const fs = require('fs');
-      const path = require('path');
-      
-      // Salvar webhook em arquivo para análise
-      const webhookFilePath = path.join(__dirname, '../webhook-data.json');
-      fs.writeFileSync(
-        webhookFilePath, 
-        JSON.stringify({
-          timestamp: new Date().toISOString(),
-          eventType,
-          transactionCode,
-          payload: req.body
-        }, null, 2)
-      );
-      
-      // Responder imediatamente para não bloquear o servidor
-      res.status(200).json({
-        success: true,
-        message: "Webhook recebido e registrado com sucesso para análise",
-        eventType,
-        transactionCode
-      });
-      console.log(`Webhook salvo em ${webhookFilePath} para análise`);
-      
-    } catch (error) {
-      console.error('Erro ao processar webhook da Hotmart:', error);
-      
-      // Mesmo em caso de erro, retornar 200 para a Hotmart não reenviar
-      res.status(200).json({ 
-        success: false, 
-        message: 'Erro ao processar webhook, mas foi recebido para análise',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
-      });
-    }
-  });
   app.post("/api/test/expireSubscriptions", async (req, res) => {
     try {
       const result = await SubscriptionService.checkExpiredSubscriptions();
@@ -5254,9 +5203,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Registrar rota para testar credenciais da Hotmart
   app.use(hotmartTestCredentialsRouter);
 
-  // Registrar rota assíncrona para webhooks da Hotmart
-  app.use('/api', webhookQueueRouter);
-  
   const httpServer = createServer(app);
   
   // Inicializar o serviço da Hotmart se as credenciais estiverem disponíveis
