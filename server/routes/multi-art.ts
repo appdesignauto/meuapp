@@ -11,6 +11,116 @@ import { eq, and, sql } from 'drizzle-orm';
 
 const router = Router();
 
+// Rota para criação de artes em múltiplos formatos
+router.post('/api/admin/arts/multi', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    // Verificar se o usuário é admin ou designer_adm
+    const userRole = req.user?.nivelacesso;
+    if (userRole !== 'admin' && userRole !== 'designer_adm') {
+      return res.status(403).json({
+        message: 'Acesso negado. Você não tem permissão para criar artes.'
+      });
+    }
+
+    // Validar os dados recebidos usando o esquema ArtGroupSchema
+    const artGroupData = ArtGroupSchema.parse(req.body);
+    
+    // Gerar um ID de grupo único para vincular as artes
+    const artGroupId = uuidv4();
+    
+    // Registrar o início do processo com log detalhado
+    console.log(`Criando grupo de arte ${artGroupId} com ${artGroupData.formats.length} formatos`);
+    console.log(`Categoria: ${artGroupData.categoryId}, Usuário: ${req.user?.id}`);
+
+    // Array para armazenar os IDs das artes criadas
+    const createdArts = [];
+
+    // ID da coleção padrão (se necessário)
+    const defaultCollectionId = 1; // Altere conforme necessário
+
+    // Processar cada formato como uma arte individual, mas vinculada ao grupo
+    for (const format of artGroupData.formats) {
+      // Preparar dados para criação da arte
+      const artData = {
+        title: format.title,
+        description: format.description || '',
+        imageUrl: format.imageUrl,
+        previewUrl: format.previewUrl || null,
+        editUrl: format.editUrl || null,
+        categoryId: artGroupData.categoryId,
+        isPremium: artGroupData.isPremium,
+        format: format.format,
+        fileType: format.fileType,
+        isVisible: true, // Por padrão, visível
+        designerid: req.user?.id || 1, // Usar ID do usuário logado ou padrão
+        collectionId: defaultCollectionId,
+        groupId: artGroupId // ID do grupo para vincular as artes relacionadas
+      };
+
+      console.log(`Criando arte formato: ${format.format}, groupId: ${artGroupId}`);
+
+      // Criar a arte no banco de dados
+      const newArt = await storage.createArt(artData);
+      
+      // Verificar se o groupId foi salvo corretamente
+      if (!newArt.groupId) {
+        console.warn(`ALERTA: Arte ID ${newArt.id} foi criada sem groupId. Tentando atualizar...`);
+        try {
+          // Tentar atualizar o groupId usando SQL direto para evitar problemas com o nome da coluna
+          // Importante: no PostgreSQL, a sintaxe correta tem um WHERE separado por espaço
+          const result = await db.execute(sql`
+            UPDATE arts 
+            SET "groupId" = ${artGroupId}
+            WHERE id = ${newArt.id}
+          `);
+          
+          // Log de confirmação
+          console.log(`SQL executado para atualizar groupId da arte ${newArt.id}`);
+          
+          if (result.rowCount > 0) {
+            console.log(`Arte ID ${newArt.id} atualizada com groupId ${artGroupId}`);
+          } else {
+            console.error(`Nenhuma linha atualizada para arte ${newArt.id}`);
+          }
+        } catch (updateError) {
+          console.error(`Erro ao atualizar groupId para arte ${newArt.id}:`, updateError);
+        }
+      }
+      
+      // Adicionar ao array de artes criadas
+      createdArts.push({
+        id: newArt.id,
+        format: format.format,
+        title: format.title,
+        groupId: newArt.groupId || artGroupId // Garantir que o groupId seja retornado
+      });
+    }
+
+    // Retornar sucesso com informações das artes criadas
+    return res.status(201).json({
+      message: 'Grupo de artes criado com sucesso',
+      groupId: artGroupId,
+      totalArts: createdArts.length,
+      arts: createdArts
+    });
+  } catch (error) {
+    console.error('Erro ao criar grupo de artes:', error);
+    
+    // Tratar erros de validação do Zod
+    if (error instanceof ZodError) {
+      return res.status(400).json({
+        message: 'Dados inválidos',
+        errors: fromZodError(error).message
+      });
+    }
+    
+    // Erro genérico
+    return res.status(500).json({
+      message: 'Erro ao processar o grupo de artes'
+    });
+  }
+});
+
 // Rota para verificar o groupId de uma arte específica
 router.get('/api/admin/arts/:id/check-group', isAuthenticated, async (req: Request, res: Response) => {
   try {
