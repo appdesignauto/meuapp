@@ -234,8 +234,7 @@ export default function SimpleFormMultiDialog({
             
             // Preencher os detalhes de cada formato
             const initialDetails: Record<string, FormatValues> = {};
-            const formatSlugsValidos = step1Form.getValues('selectedFormats');
-            console.log(`Processando ${groupArts.length} artes do grupo com formatos válidos: ${formatSlugsValidos.join(', ')}`);
+            console.log(`Processando ${groupArts.length} artes do grupo com formatos válidos: ${formatosValidos.join(', ')}`);
             
             // Mapeamento de todas as artes do grupo por formato para fácil referência
             const artesPorFormato: Record<string, any> = {};
@@ -246,7 +245,7 @@ export default function SimpleFormMultiDialog({
             });
             
             // Agora processamos apenas os formatos válidos
-            formatSlugsValidos.forEach(formato => {
+            formatosValidos.forEach(formato => {
               const arte = artesPorFormato[formato];
               if (arte) {
                 console.log(`Processando formato ${formato} com arte ID ${arte.id}`);
@@ -291,10 +290,9 @@ export default function SimpleFormMultiDialog({
             
             // Guardar as imagens apenas dos formatos válidos selecionados
             const imageMap: Record<string, string> = {};
-            const formatosSelecionados = step1Form.getValues('selectedFormats');
             
             // Usar o mesmo mapeamento de artes por formato
-            formatosSelecionados.forEach(formato => {
+            formatosValidos.forEach(formato => {
               const arte = artesPorFormato[formato];
               if (arte && arte.imageUrl) {
                 imageMap[formato] = arte.imageUrl;
