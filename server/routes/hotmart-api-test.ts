@@ -8,6 +8,18 @@ import hotmartAPI from '../services/hotmart-api';
 
 const router = Router();
 
+// Middleware para verificar se o usuário é admin
+const isAdmin = (req: any, res: any, next: any) => {
+  if (req.user && (req.user.role === 'admin' || req.user.nivelacesso === 'admin')) {
+    next();
+  } else {
+    res.status(403).json({
+      success: false,
+      message: "Acesso negado. É necessário ser administrador para acessar este recurso."
+    });
+  }
+};
+
 // Rota para testar conexão com a API da Hotmart
 router.get('/test-connection', async (req, res) => {
   try {
@@ -100,6 +112,80 @@ router.get('/test-connection', async (req, res) => {
       details: errorDetails,
       timestamp: new Date().toISOString(),
       environment: process.env.HOTMART_SANDBOX_MODE === 'true' ? 'Sandbox' : 'Produção'
+    });
+  }
+});
+
+// Rota para listar assinaturas ativas da Hotmart
+router.get('/active-subscriptions', async (req, res) => {
+  try {
+    console.log("🔍 Buscando assinaturas ativas na Hotmart");
+    
+    try {
+      // Verificar se o token de acesso está disponível
+      await hotmartAPI.getAccessToken();
+      
+      // Buscar assinaturas ativas
+      // Parâmetros para filtrar apenas assinaturas ativas
+      const params = {
+        'status': 'ACTIVE',
+        'max_results': 100 // Limitar para evitar sobrecarga
+      };
+      
+      const subscriptions = await hotmartAPI.getSubscriptions(params);
+      
+      // Processar e formatar os dados para a resposta
+      let formattedSubscriptions = [];
+      
+      if (subscriptions && subscriptions.items && Array.isArray(subscriptions.items)) {
+        formattedSubscriptions = subscriptions.items.map((sub: any) => {
+          return {
+            id: sub.id || 'N/A',
+            plan: sub.plan?.name || 'Plano não especificado',
+            status: sub.status || 'Status desconhecido',
+            customer: {
+              name: sub.subscriber?.name || 'Nome não disponível',
+              email: sub.subscriber?.email || 'Email não disponível'
+            },
+            product: {
+              id: sub.product?.id || 'N/A',
+              name: sub.product?.name || 'Produto não especificado'
+            },
+            startDate: sub.accessionDate || 'Data não disponível',
+            nextPayment: sub.nextChargeDate || 'Data não disponível',
+            price: {
+              value: sub.price?.value || 0,
+              currency: sub.price?.currency || 'BRL'
+            }
+          };
+        });
+      }
+      
+      return res.json({
+        success: true,
+        environment: process.env.HOTMART_SANDBOX_MODE === 'true' ? 'Sandbox' : 'Produção',
+        timestamp: new Date().toISOString(),
+        totalCount: formattedSubscriptions.length,
+        subscriptions: formattedSubscriptions
+      });
+    } catch (apiError: any) {
+      console.error("⚠️ Erro ao obter assinaturas:", apiError);
+      
+      return res.status(400).json({
+        success: false,
+        message: "Não foi possível obter as assinaturas ativas da Hotmart",
+        error: apiError?.message || 'Erro desconhecido',
+        timestamp: new Date().toISOString()
+      });
+    }
+  } catch (error: any) {
+    console.error("❌ Erro ao buscar assinaturas ativas:", error);
+    
+    return res.status(500).json({
+      success: false,
+      message: "Erro interno ao buscar assinaturas ativas",
+      error: error?.message || 'Erro desconhecido',
+      timestamp: new Date().toISOString()
     });
   }
 });
