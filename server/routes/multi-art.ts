@@ -488,8 +488,8 @@ router.put('/api/admin/arts/multi/:id', isAuthenticated, async (req: Request, re
             editUrl: format.editUrl || '',
             categoryId: artGroupData.categoryId,
             isPremium: artGroupData.isPremium,
-            fileType: format.fileType,
-            updatedAt: new Date()
+            fileType: format.fileType
+            // Removido o campo updatedAt que estava causando erros
           };
           
           // Realizar a atualização no banco de dados
