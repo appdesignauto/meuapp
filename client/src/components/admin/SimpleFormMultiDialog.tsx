@@ -540,11 +540,11 @@ export default function SimpleFormMultiDialog({
         if (editingArt.groupId) {
           // Se tem groupId, atualizar o grupo inteiro
           formattedData.groupId = editingArt.groupId;
-          response = await apiRequest('PUT', `/api/admin/arts/group/${editingArt.groupId}`, formattedData);
+          response = await apiRequest('PUT', `/api/admin/artes/group/${editingArt.groupId}`, formattedData);
         } else {
           // Se não tem groupId, mas estamos adicionando múltiplos formatos a uma arte existente
           formattedData.artId = editingArt.id;
-          response = await apiRequest('PUT', `/api/admin/arts/multi/${editingArt.id}`, formattedData);
+          response = await apiRequest('PUT', `/api/admin/artes/multi/${editingArt.id}`, formattedData);
         }
         
         // Invalidar o cache para atualizar a UI imediatamente após a edição
