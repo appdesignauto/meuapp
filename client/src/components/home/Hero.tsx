@@ -49,7 +49,7 @@ const Hero = () => {
     e.preventDefault();
     if (searchQuery.trim()) {
       // Redirecionar para a página de artes com o parâmetro de pesquisa
-      setLocation(`/arts?search=${encodeURIComponent(searchQuery)}`);
+      setLocation(`/artes?search=${encodeURIComponent(searchQuery)}`);
     }
   };
 
