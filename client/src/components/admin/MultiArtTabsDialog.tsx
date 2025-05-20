@@ -125,7 +125,7 @@ export default function MultiArtTabsDialog({
       setArtsGroup(artes);
       
       // Determinar qual aba deve ser ativa inicialmente
-      const currentArtData = artes.find(art => art.id === artId);
+      const currentArtData = artes.find((art: ArtItem) => art.id === artId);
       if (currentArtData && currentArtData.format) {
         setActiveTab(currentArtData.format);
         console.log(`[MultiArtTabs] Definindo aba ativa como: ${currentArtData.format}`);
