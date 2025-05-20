@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Edit, Trash2, Eye, Filter, ArrowUpDown, Plus, UserCircle } from 'lucide-react';
+import { Edit, Trash2, Eye, Filter, ArrowUpDown, Plus, UserCircle, Layers } from 'lucide-react';
 import { Art } from '@/types';
 import {
   Table,
@@ -24,6 +24,7 @@ import {
 import { apiRequest } from '@/lib/queryClient';
 import ArtForm from './ArtForm';
 import SimpleFormMultiDialog from './SimpleFormMultiDialog';
+import MultiArtTabsDialog from './MultiArtTabsDialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -231,13 +232,36 @@ const ArtsList = () => {
   const handleEdit = (art: Art) => {
     console.log('Editando arte:', art);
     console.log('Grupo ID da arte:', art.groupId);
-    setEditingArt(art);
-    setIsFormOpen(true);
+    
+    // Verificar se a arte pertence a um grupo
+    if (art.groupId) {
+      // Para artes em grupo, abrir o novo diálogo de múltiplas abas
+      setSelectedArtId(art.id);
+      setIsMultiArtDialogOpen(true);
+      console.log(`Arte pertence ao grupo ${art.groupId}, abrindo diálogo de múltiplas abas`);
+    } else {
+      // Para artes individuais, manter o comportamento original
+      setEditingArt(art);
+      setIsFormOpen(true);
+      console.log(`Arte individual, abrindo formulário padrão`);
+    }
   };
   
   const handleCloseForm = () => {
     setIsFormOpen(false);
     setEditingArt(null);
+  };
+  
+  // Nova função para fechar o diálogo de múltiplas abas
+  const handleCloseMultiArtDialog = () => {
+    setIsMultiArtDialogOpen(false);
+    setSelectedArtId(null);
+  };
+  
+  // Função para atualizar a lista após a edição
+  const handleEditComplete = () => {
+    // Recarregar dados após a conclusão da edição
+    queryClient.invalidateQueries({ queryKey: ['/api/admin/artes'] });
   };
 
   const arts = data?.arts || [];
@@ -544,13 +568,20 @@ const ArtsList = () => {
         )}
       </Card>
 
-      {/* Formulário para adicionar/editar artes */}
-      {/* Utilizando o novo formulário multi-formato para qualquer operação de edição */}
+      {/* Formulário para adicionar/editar artes individuais */}
       <SimpleFormMultiDialog
         isOpen={isFormOpen}
         onClose={handleCloseForm}
         editingArt={editingArt}
         isEditing={!!editingArt}
+      />
+      
+      {/* Novo componente para editar artes em grupo com abas */}
+      <MultiArtTabsDialog 
+        isOpen={isMultiArtDialogOpen}
+        onClose={handleCloseMultiArtDialog}
+        artId={selectedArtId}
+        onEditComplete={handleEditComplete}
       />
     </>
   );
