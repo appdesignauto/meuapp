@@ -129,7 +129,33 @@ export default function SimpleFormMultiDialog({
 
   // Efeito para carregar dados da arte quando em modo de edição
   useEffect(() => {
-    if (isEditing && editingArt && !isLoading) {
+    // Reset completo quando o modal for aberto em modo de adição
+    if (isOpen && !isEditing) {
+      console.log("=== MODO DE ADIÇÃO INICIADO ===");
+      // Limpar completamente todos os dados do formulário
+      step1Form.reset({
+        categoryId: '',
+        globalFileType: 'canva',
+        isPremium: true,
+        globalTitle: '',
+        globalDescription: '',
+        selectedFormats: []
+      });
+      
+      // Limpar todos os estados
+      setFormatDetails({});
+      setImages({});
+      setUploading({});
+      setUploadError({});
+      setFormatsComplete({});
+      setUploadAllComplete(false);
+      setStep(1);
+      setCurrentTab("");
+      return;
+    }
+    
+    // Modo de edição
+    if (isOpen && isEditing && editingArt && !isLoading) {
       console.log("=== MODO DE EDIÇÃO INICIADO ===");
       console.log("Dados completos da arte:", editingArt);
       console.log(`ID da arte: ${editingArt.id}`);
