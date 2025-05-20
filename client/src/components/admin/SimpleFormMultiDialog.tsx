@@ -219,19 +219,32 @@ export default function SimpleFormMultiDialog({
           
           console.log(`Artes encontradas no grupo: ${groupArts.length}`);
           
-          // Importante: Verificar se temos pelo menos duas artes no grupo
-          // para garantir que realmente é um grupo válido
-          if (Array.isArray(groupArts) && groupArts.length > 1) {
+          // Importante: Verificar se temos pelo menos uma arte no grupo
+          // mesmo com uma arte, podemos editá-la como grupo (mais flexível)
+          if (Array.isArray(groupArts) && groupArts.length > 0) {
             // Extrair os formatos das artes do grupo
             const formatSlugs = groupArts.map(art => art.format);
             console.log(`Formatos encontrados: ${formatSlugs.join(', ')}`);
             
             // Vamos garantir que todos os formatos estejam disponíveis na lista
             const formatosValidos = formatSlugs.filter(slug => {
-              const formatoExiste = formats.some((f: any) => f.slug === slug);
+              // Verificar se o slug é válido 
+              if (!slug) {
+                console.warn(`Formato inválido encontrado (null/undefined)`);
+                return false;
+              }
+              
+              // Verificar se o formato existe na lista de formatos
+              const formatoExiste = Array.isArray(formats) && formats.some((f: any) => {
+                return f && f.slug === slug;
+              });
+              
               if (!formatoExiste) {
                 console.warn(`Formato ${slug} não encontrado na lista de formatos!`);
+              } else {
+                console.log(`Formato válido encontrado: ${slug}`);
               }
+              
               return formatoExiste;
             });
             
