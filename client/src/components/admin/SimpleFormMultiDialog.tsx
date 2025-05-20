@@ -186,8 +186,11 @@ export default function SimpleFormMultiDialog({
             
             return apiRequest('GET', `/api/admin/artes/group/${groupId}`)
               .then(res => {
-                console.log(`Resposta recebida, status: ${res.status}`);
+                console.log(`Resposta recebida da API /api/admin/artes/group/${groupId}, status: ${res.status}`);
                 return res.json();
+              }).catch(err => {
+                console.error(`Erro ao buscar grupo de artes: ${err}`, err);
+                return { arts: [] };
               });
           } else {
             console.log(`Arte ${artId} não pertence a nenhum grupo`);
@@ -243,6 +246,9 @@ export default function SimpleFormMultiDialog({
                 artesPorFormato[art.format] = art;
               }
             });
+            
+            console.log('Formatos válidos para processar:', formatosValidos);
+            console.log('Artes disponíveis por formato:', artesPorFormato);
             
             // Agora processamos apenas os formatos válidos
             formatosValidos.forEach(formato => {
